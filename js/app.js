@@ -141,12 +141,58 @@ function renderPlayers() {
     const ratingRows = (player.ratingHistory ?? []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.opponent || 'Partido')} · ${item.rating}/5</li>`).join('');
     const seasonRatingRows = Object.entries((player.ratingHistory ?? []).reduce((acc, item) => { const s = seasonKey(item.date); (acc[s] ??= []).push(item.rating); return acc; }, {})).sort(([a], [b]) => b.localeCompare(a)).map(([season, ratings]) => `<li><strong>${escapeHtml(season)}</strong> · media ${(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)}/5 (${ratings.length} partidos)</li>`).join('');
     const historyRows = history.map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${item.type === 'callup' ? 'Convocatoria' : item.kind === 'match' ? 'Partido' : 'Entrenamiento'} · ${escapeHtml(labels[item.detail] ?? item.detail)}</li>`).join('');
+    const incidentRows = playerIncidentRows(player.id).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.label)}${item.note ? `: ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-player-incident" data-key="${escapeHtml(item.key)}" aria-label="Borrar incidencia">×</button></li>`).join('');
     return `<article class="card player">
     ${playerCardPhoto(player)}
-    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</div>
+    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</div>
     <div><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
+}
+
+function playerIncidentRows(playerId) {
+  const rows = [];
+  for (const match of state.matches) {
+    const push = (field, label, item, index) => {
+      if (item.playerId !== playerId) return;
+      rows.push({ key: `match:${match.id}:${field}:${index}`, date: match.date, label, note: item.note || '' });
+    };
+    (match.goals ?? []).forEach((item, i) => push('goals', 'Gol', item, i));
+    (match.cards ?? []).forEach((item, i) => push('cards', item.type === 'red' ? 'Tarjeta roja' : 'Tarjeta amarilla', item, i));
+    (match.injuries ?? []).forEach((item, i) => push('injuries', 'Lesión', item, i));
+    (match.incidents ?? []).forEach((item, i) => push('incidents', 'Incidencia', item, i));
+  }
+  for (const record of state.trainings) {
+    const entry = record.attendance?.find((item) => item.playerId === playerId);
+    if (entry?.note) {
+      const label = entry.status === 'late' ? 'Tardanza' : entry.status === 'absent' ? 'Falta' : 'Nota de asistencia';
+      rows.push({ key: `training:${record.id}:note:${playerId}`, date: record.date, label, note: entry.note });
+    }
+  }
+  return rows.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+async function removePlayerIncident(key) {
+  const [type, ...rest] = key.split(':');
+  if (type === 'match') {
+    const [matchId, field, indexStr] = rest;
+    const match = state.matches.find((m) => m.id === matchId);
+    if (!match) return;
+    const next = { ...match };
+    const items = [...(next[field] ?? [])];
+    const removed = items.splice(Number(indexStr), 1)[0];
+    next[field] = items;
+    if (field === 'goals' && removed) next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
+    await put('matches', next);
+  } else if (type === 'training') {
+    const [trainingId, , playerId] = rest;
+    const record = state.trainings.find((r) => r.id === trainingId);
+    if (!record) return;
+    const next = { ...record, attendance: record.attendance.map((item) => item.playerId === playerId ? { ...item, note: '' } : item) };
+    await put('trainings', next);
+  }
+  await refresh();
+  toast('Incidencia eliminada.');
 }
 
 async function photoToDataUrl(file) {
@@ -496,7 +542,25 @@ function startTicks() {
       return toast(state.timer.phase === 'halftime' ? 'Pausa automática al minuto 38.' : 'Pausa automática al minuto 74. Finaliza el partido cuando corresponda.');
     }
     maybeShowUrgentSubstitution(played, seconds);
+    maybeShowMinuteAlert(played, seconds);
   }, 1000);
+}
+
+function maybeShowMinuteAlert(played, elapsedSeconds) {
+  if (!state.timer || state.timer.phase === 'halftime' || state.timer.phase === 'ready') return;
+  const minute = Math.floor(elapsedSeconds / 60);
+  if (minute < 1 || minute % 15 !== 0) return;
+  const alertKey = `min-${minute}`;
+  if (state.timer.lastMinuteAlert === alertKey) return;
+  state.timer.lastMinuteAlert = alertKey;
+  const callup = state.callups.find(({ id }) => id === state.matches.find(({ id }) => id === state.timer.matchId)?.callupId);
+  if (!callup) return;
+  const onField = state.timer.onField;
+  const bench = callup.availableIds.filter((id) => !onField.includes(id));
+  const least = [...onField, ...bench].sort((a, b) => (played[a] ?? 0) - (played[b] ?? 0));
+  const low = least.filter((id) => (played[id] ?? 0) < minute * 60 - 5 * 60).slice(0, 3);
+  if (!low.length) return;
+  toast(`Minuto ${minute}: ${low.map((id) => `${playerName(id)} (${Math.floor((played[id] ?? 0) / 60)} min)`).join(', ')} ha(n) jugado menos.`);
 }
 
 function maybeShowUrgentSubstitution(played, elapsedSeconds) {
@@ -972,6 +1036,7 @@ function wireEvents() {
     if (target.matches('.add-detail-event')) await addDetailEvent(target.dataset.id);
     if (target.matches('.remove-match-event')) await removeMatchEvent($('#match-detail-dialog').dataset.matchId, target.dataset.kind, Number(target.dataset.index));
     if (target.matches('.reopen-match')) await reopenMatch(target.dataset.id);
+    if (target.matches('.remove-player-incident')) await removePlayerIncident(target.dataset.key);
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
