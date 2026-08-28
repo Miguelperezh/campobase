@@ -21,7 +21,27 @@ import {
   hashPin,
   verifyPin,
   buildPlayerRatings,
+  sortPlayersByName,
+  updateRotationCounters,
 } from '../js/domain.js';
+
+test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acentos', () => {
+  const players = [{ id: '3', name: 'zoe' }, { id: '2', name: 'Álvaro' }, { id: '1', name: 'ana' }];
+  assert.deepEqual(sortPlayersByName(players).map(({ id }) => id), ['2', '1', '3']);
+  assert.deepEqual(players.map(({ id }) => id), ['3', '2', '1'], 'no debe mutar la lista original');
+});
+
+test('recalcula los contadores de rotación al editar una convocatoria', () => {
+  const players = [{ id: 'p1', outsideCount: 3 }, { id: 'p2', outsideCount: 0 }];
+  const callups = [
+    { id: 'c1', createdAt: 10, exclusions: [{ playerId: 'p2', automatic: true }] },
+    { id: 'c2', createdAt: 20, exclusions: [{ playerId: 'p2', automatic: true }, { playerId: 'p1', automatic: false }] },
+  ];
+  assert.deepEqual(updateRotationCounters(players, callups), [
+    { id: 'p1', outsideCount: 0, lastExcludedAt: null },
+    { id: 'p2', outsideCount: 2, lastExcludedAt: 20 },
+  ]);
+});
 
 test('reparte exactamente 490 minutos entre 10 disponibles en F7', () => {
   const targets = calculateMinuteTargets(

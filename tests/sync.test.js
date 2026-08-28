@@ -17,7 +17,7 @@ test('mapea cada almacén local a su tabla de Supabase', () => {
   });
 });
 
-test('elimina los hashes y la sal de PIN antes de enviar ajustes a la nube', () => {
+test('sincroniza la configuración única de los PIN para no volver a crearla en cada dispositivo', () => {
   const local = {
     id: 'main',
     format: 'F11',
@@ -25,16 +25,30 @@ test('elimina los hashes y la sal de PIN antes de enviar ajustes a la nube', () 
     ownerPinHash: 'hash-migue',
     delegatePinHash: 'hash-delegado',
   };
-  assert.deepEqual(sanitizeRecordForCloud('settings', local), { id: 'main', format: 'F11' });
+  assert.deepEqual(sanitizeRecordForCloud('settings', local), local);
   assert.deepEqual(sanitizeRecordForCloud('players', { id: 'p1', name: 'Leo' }), { id: 'p1', name: 'Leo' });
 });
 
-test('al bajar ajustes conserva los PIN locales y aplica la configuración de la nube', () => {
+test('al bajar ajustes aplica los PIN configurados una vez en la nube', () => {
+  const local = { id: 'main', format: 'F7' };
+  const cloud = { id: 'main', format: 'F11', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd' };
+  assert.deepEqual(mergeCloudRecord('settings', local, cloud), {
+    id: 'main', format: 'F11', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd',
+  });
+});
+
+test('durante la migración conserva los PIN ya creados si la nube todavía no los tiene', () => {
   const local = { id: 'main', format: 'F7', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd' };
   const cloud = { id: 'main', format: 'F11' };
   assert.deepEqual(mergeCloudRecord('settings', local, cloud), {
     id: 'main', format: 'F11', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd',
   });
+});
+
+test('la ficha permite elegir una foto o abrir la cámara del móvil', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /name="photo"[^>]*type="file"[^>]*accept="image\/\*"[^>]*capture="environment"/);
 });
 
 test('crea mutaciones reproducibles para altas y borrados offline', () => {

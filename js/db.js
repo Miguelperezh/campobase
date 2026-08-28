@@ -162,6 +162,18 @@ export async function syncFromCloud() {
         await flushSyncQueue();
         continue;
       }
+      if (store === 'settings') {
+        const localMain = localRecords.find(({ id }) => id === 'main');
+        const cloudMainIndex = snapshot.records.findIndex(({ id }) => id === 'main');
+        if (localMain && cloudMainIndex >= 0) {
+          const mergedMain = mergeCloudRecord(store, localMain, snapshot.records[cloudMainIndex]);
+          if (JSON.stringify(mergedMain) !== JSON.stringify(snapshot.records[cloudMainIndex])) {
+            snapshot.records[cloudMainIndex] = mergedMain;
+            await queueInitialRecords(store, [mergedMain]);
+            await flushSyncQueue();
+          }
+        }
+      }
       await replaceLocalStore(store, snapshot.records);
       downloaded += snapshot.records.length;
     }

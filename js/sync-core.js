@@ -6,8 +6,6 @@ export const CLOUD_TABLES = Object.freeze({
   settings: 'configuracion',
 });
 
-const LOCAL_PIN_FIELDS = ['pinSalt', 'ownerPinHash', 'delegatePinHash'];
-
 function assertStore(store) {
   if (!Object.hasOwn(CLOUD_TABLES, store)) {
     throw new TypeError('El almacén no es sincronizable.');
@@ -16,22 +14,18 @@ function assertStore(store) {
 
 export function sanitizeRecordForCloud(store, record) {
   assertStore(store);
-  const sanitized = structuredClone(record);
-  if (store === 'settings' && sanitized.id === 'main') {
-    for (const field of LOCAL_PIN_FIELDS) delete sanitized[field];
-  }
-  return sanitized;
+  return structuredClone(record);
 }
 
 export function mergeCloudRecord(store, localRecord, cloudRecord) {
   assertStore(store);
-  if (store !== 'settings' || cloudRecord.id !== 'main') return structuredClone(cloudRecord);
-  const localPins = Object.fromEntries(
-    LOCAL_PIN_FIELDS
-      .filter((field) => localRecord?.[field])
-      .map((field) => [field, localRecord[field]]),
-  );
-  return { ...structuredClone(cloudRecord), ...localPins };
+  const merged = structuredClone(cloudRecord);
+  if (store === 'settings' && cloudRecord.id === 'main') {
+    for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash']) {
+      if (!merged[field] && localRecord?.[field]) merged[field] = localRecord[field];
+    }
+  }
+  return merged;
 }
 
 export function buildMutation(store, operation, recordOrId, queuedAt = Date.now()) {

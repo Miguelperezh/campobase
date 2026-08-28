@@ -1,6 +1,6 @@
 import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters } from './domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -45,6 +45,7 @@ function showView(viewId) {
 
 async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
+  state.players = sortPlayersByName(state.players);
   const settings = await getOne('settings', 'main');
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
@@ -61,7 +62,7 @@ function renderAll() {
 function renderPlayers() {
   const totalMinutes = state.players.reduce((sum, player) => sum + (player.totalMinutes ?? 0), 0);
   $('#squad-stats').innerHTML = `<div class="stat"><strong>${state.players.length}</strong><span>jugadores</span></div><div class="stat"><strong>${totalMinutes}</strong><span>minutos acumulados</span></div><div class="stat"><strong>${state.players.reduce((sum, player) => sum + (player.outsideCount ?? 0), 0)}</strong><span>ausencias por rotación</span></div>`;
-  const sorted = [...state.players].sort((a, b) => (b.totalMinutes ?? 0) - (a.totalMinutes ?? 0));
+  const sorted = state.players;
   $('#players-list').innerHTML = sorted.length ? sorted.map((player, index) => {
     const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación' };
     const history = buildPlayerHistory(player.id, state.trainings, state.callups);
@@ -72,7 +73,7 @@ function renderPlayers() {
     return `<article class="card player">
     ${playerCardPhoto(player)}
     <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial de incidencias y comentarios (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin incidencias ni comentarios.</p>'}</div>
-    <div><button class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
+    <div><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
 }
@@ -209,19 +210,22 @@ async function saveCallup(event) {
   }
   const { availableIds, exclusions } = selection;
   if (!availableIds.length) return toast('La convocatoria no puede quedar vacía.');
-  if (manualMatch) await put('matches', match);
   const excludedIds = exclusions.map(({ playerId }) => playerId);
   const format = existing?.format ?? state.format;
   const config = FORMATS[format];
   const targets = calculateMinuteTargets(availableIds, config.duration, config.players);
   const callup = { id: existing?.id ?? uid(), matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? Date.now(), updatedAt: Date.now() };
-  await put('callups', callup);
+  const nextCallups = [...state.callups.filter(({ id }) => id !== callup.id), callup];
+  const matchesToSave = [{ ...match, callupId: callup.id, format }];
   if (existing?.matchId && existing.matchId !== match.id) {
     const oldMatch = state.matches.find(({ id }) => id === existing.matchId);
-    if (oldMatch) await put('matches', { ...oldMatch, callupId: null });
+    if (oldMatch) matchesToSave.push({ ...oldMatch, callupId: null });
   }
-  await put('matches', { ...match, callupId: callup.id, format });
-  await synchronizeRotationCounters();
+  await putBatch({
+    callups: [callup],
+    matches: matchesToSave,
+    players: updateRotationCounters(state.players, nextCallups),
+  });
   $('#callup-builder').classList.add('hidden'); await refresh(); showView('convocatorias'); toast(existing ? 'Convocatoria actualizada.' : 'Convocatoria guardada.');
 }
 
@@ -240,7 +244,7 @@ function renderCallups() {
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? callup.excludedIds.map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map(({ playerId, reason }) => `<li><strong>${escapeHtml(playerName(playerId))}</strong> — ${escapeHtml(EXCLUSION_REASONS[reason] ?? reason)}</li>`).join('') || '<li>Nadie</li>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button class="edit-callup secondary" data-id="${callup.id}">Editar</button><button class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
   }).join('') : empty('Todavía no hay convocatorias.');
 }
 
@@ -634,7 +638,7 @@ function showAuth() {
   state.role = null;
   const initial = !state.settings.ownerPinHash || !state.settings.delegatePinHash;
   $('#auth-title').textContent = initial ? 'Configurar acceso' : 'Acceso a CampoBase';
-  $('#auth-help').textContent = initial ? 'Crea dos PIN distintos. Este primer acceso queda como Migue.' : 'Introduce el PIN de Migue o del delegado.';
+  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue (acceso total) o el PIN del delegado (acceso al partido).';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
   $('#login-pin-field').classList.toggle('hidden', initial);
   const form = $('#auth-form');

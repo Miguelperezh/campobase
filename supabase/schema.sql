@@ -1,4 +1,4 @@
--- CampoBase 1.5.0 · esquema Supabase para un solo equipo.
+-- CampoBase 1.6.0 · esquema Supabase para un solo equipo.
 -- Ejecutar una vez en Supabase > SQL Editor.
 --
 -- MODELO: cada fila conserva el documento que ya usa CampoBase en `payload`.
@@ -10,7 +10,7 @@
 --             comentarios (comments), cambios y minutos.
 --   convocatorias: seleccionados, excluidos, motivos y objetivos de minutos.
 --   asistencias: actividad, fecha, comentarios y lista attendance por jugador.
---   configuracion: formato y partido en vivo. Los hashes/sal de PIN NO se suben.
+--   configuracion: formato, partido en vivo y hashes/sal de los dos PIN.
 --
 -- SEGURIDAD: las políticas permiten CRUD con la publishable key. RLS está activo,
 -- pero no aporta confidencialidad sin Supabase Auth. El PIN solo bloquea la interfaz.

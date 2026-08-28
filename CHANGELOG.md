@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 — 2026-08-28
+
+- La ficha permite abrir la cámara trasera o elegir una imagen del móvil; la foto se guarda como `data:image` dentro del documento del jugador y se sincroniza con el flujo Supabase existente, sin bucket adicional.
+- Jugadores y fichas se muestran alfabéticamente por nombre en todas las vistas.
+- Editar una convocatoria actualiza convocatoria, partido y contadores de rotación en un único lote local antes de sincronizar, sin cerrar la sesión ni pedir de nuevo el PIN.
+- Los botones de edición declaran `type="button"` para impedir envíos de formulario accidentales.
+- Los hashes salados de los dos PIN se sincronizan en `configuracion`: se configuran una vez y después se pide el PIN de Migue o del delegado al entrar; el error sigue siendo explícito: “PIN incorrecto.”
+- La migración conserva los PIN locales de 1.5.0 y los sube cuando la nube todavía no contiene la configuración de acceso.
+
 ## 1.5.0 — 2026-08-28
 
 - Supabase pasa a ser la fuente compartida para jugadores, partidos, convocatorias, asistencias y configuración operativa.

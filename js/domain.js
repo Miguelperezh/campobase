@@ -5,6 +5,23 @@ export function normalizePositions(player = {}) {
   return [...new Set(positions.map((position) => String(position).trim()).filter(Boolean))];
 }
 
+export function sortPlayersByName(players) {
+  if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
+  return [...players].sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
+    sensitivity: 'base',
+  }));
+}
+
+export function updateRotationCounters(players, callups) {
+  if (!Array.isArray(players) || !Array.isArray(callups)) throw new TypeError('Jugadores y convocatorias deben ser listas.');
+  return players.map((player) => {
+    const rotations = callups
+      .filter((callup) => (callup.exclusions ?? []).some((entry) => entry.playerId === player.id && entry.automatic))
+      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    return { ...player, outsideCount: rotations.length, lastExcludedAt: rotations[0]?.createdAt ?? null };
+  });
+}
+
 function positiveInteger(value, label) {
   if (!Number.isInteger(value) || value <= 0) {
     throw new TypeError(`${label} debe ser un entero positivo.`);
