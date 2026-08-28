@@ -12,10 +12,10 @@
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="auth-locked">
   <header class="topbar">
     <div><p class="eyebrow">Gestión de equipo</p><h1>CampoBase</h1></div>
-    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="network-dot" aria-hidden="true"></span><span id="network-label">Local</span></div>
+    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label">Local</span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
   </header>
 
   <main id="app" tabindex="-1">
@@ -54,7 +54,8 @@
       <div class="settings-grid">
         <article class="panel"><h3>Modalidad</h3><p>F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p><label>Formato<select id="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label></article>
         <article class="panel"><h3>Copia de seguridad</h3><p>IndexedDB no sincroniza dispositivos. Exporta una copia antes de cambiar de dispositivo.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
-        <article class="panel warning"><h3>Privacidad y límites</h3><p>Fotos, notas y datos deportivos permanecen en este navegador. No hay nube, cuentas ni recuperación automática.</p><p><strong>CampoBase 1.3.0 · Fase 1</strong></p></article>
+        <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
+        <article class="panel warning"><h3>Privacidad y límites</h3><p>Fotos, notas y datos deportivos permanecen en este navegador. La sincronización inmediata solo funciona entre pestañas del mismo navegador; IndexedDB no puede sincronizar dos móviles.</p><p><strong>CampoBase 1.4.0 · Fase 1</strong></p></article>
       </div>
     </section>
   </main>
@@ -68,6 +69,8 @@
   <dialog id="match-dialog"><form id="match-form"><div class="dialog-head"><h2>Partido</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><div class="form-row"><label>Fecha y hora (24 h)<input name="date" type="datetime-local" lang="es-ES" step="300" required></label><label>Jornada<input name="round" maxlength="30" placeholder="Ej. 8"></label></div><label>Tipo de partido<select name="type"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Rival<input name="opponent" required maxlength="100"></label><label>Lugar<input name="location" maxlength="120"></label><div class="form-row"><label>Goles a favor<input name="goalsFor" type="number" min="0"></label><label>Goles en contra<input name="goalsAgainst" type="number" min="0"></label></div><div class="button-row"><button class="primary" type="submit">Guardar partido</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
 
   <dialog id="urgent-dialog"><div class="dialog-head"><h2>Cambio recomendado</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p id="urgent-message"></p><div class="button-row"><button id="urgent-change" type="button" class="primary">Cambio</button><button type="button" class="secondary" data-close>Ahora no</button></div></dialog>
+
+  <dialog id="auth-dialog" class="auth-dialog"><form id="auth-form"><h2 id="auth-title">Acceso a CampoBase</h2><p id="auth-help">Introduce tu PIN.</p><div id="initial-pin-fields" class="hidden"><label>Crear PIN de Migue<input name="newOwnerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label><label>Crear PIN del delegado<input name="newDelegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label></div><label id="login-pin-field">PIN<input name="pin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password"></label><button class="primary" type="submit">Entrar</button><p id="auth-error" class="error" role="alert"></p></form></dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="js/app.js"></script>

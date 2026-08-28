@@ -15,6 +15,11 @@ import {
   sortAttendanceRecords,
   suggestDelegateSubstitution,
   shouldSuggestUrgentSubstitution,
+  seasonKey,
+  accumulateSeasonMinutes,
+  shouldAutoPause,
+  hashPin,
+  verifyPin,
 } from '../js/domain.js';
 
 test('reparte exactamente 490 minutos entre 10 disponibles en F7', () => {
@@ -253,4 +258,36 @@ test('la vista delegado puede registrar siete cambios simultáneos de forma expl
   const field = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
   const bench = ['h', 'i', 'j', 'k', 'l', 'm', 'n'];
   assert.deepEqual(applySubstitution(field, field, bench, [...field, ...bench], 7), bench);
+});
+
+test('acumula los minutos en la temporada de la fecha y conserva el motivo de menos minutos', () => {
+  const player = accumulateSeasonMinutes(
+    { id: 'a', totalMinutes: 10, seasonMinutes: { '2025-2026': 10 }, minuteReasons: [] },
+    '2026-09-12T13:00',
+    1850,
+    { matchId: 'm1', reason: 'illness' },
+  );
+  assert.equal(seasonKey('2026-06-30'), '2025-2026');
+  assert.equal(seasonKey('2026-07-01'), '2026-2027');
+  assert.equal(player.totalMinutes, 41);
+  assert.equal(player.seasonMinutes['2026-2027'], 31);
+  assert.deepEqual(player.minuteReasons, [{ matchId: 'm1', date: '2026-09-12T13:00', season: '2026-2027', reason: 'illness' }]);
+  assert.throws(() => accumulateSeasonMinutes(player, '2026-09-12', 60, { reason: 'otro' }), /motivo/i);
+});
+
+test('indica la pausa automática exactamente en 38 y 74 minutos', () => {
+  assert.equal(shouldAutoPause('first_half', 2279), false);
+  assert.equal(shouldAutoPause('first_half', 2280), true);
+  assert.equal(shouldAutoPause('second_half', 4439), false);
+  assert.equal(shouldAutoPause('second_half', 4440), true);
+  assert.equal(shouldAutoPause('halftime', 9999), false);
+});
+
+test('protege los dos accesos con PIN validado y hash salado', async () => {
+  const digest = await hashPin('2468', 'sal-local');
+  assert.notEqual(digest, '2468');
+  assert.equal(await verifyPin('2468', 'sal-local', digest), true);
+  assert.equal(await verifyPin('2469', 'sal-local', digest), false);
+  await assert.rejects(() => hashPin('12', 'sal-local'), /4 y 8/);
+  await assert.rejects(() => hashPin('abcd', 'sal-local'), /numérico/i);
 });

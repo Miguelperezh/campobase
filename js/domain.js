@@ -206,6 +206,74 @@ export function shouldSuggestUrgentSubstitution(benchIds, playedSeconds, remaini
     && benchIds.some((id) => (playedSeconds[id] ?? 0) <= 8 * 60);
 }
 
+export function seasonKey(dateValue) {
+  const match = /^(\d{4})-(\d{2})/.exec(String(dateValue ?? ''));
+  if (!match) throw new TypeError('La fecha del partido no es válida.');
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) throw new TypeError('La fecha del partido no es válida.');
+  const startYear = month >= 7 ? year : year - 1;
+  return `${startYear}-${startYear + 1}`;
+}
+
+export function accumulateSeasonMinutes(player, matchDate, playedSeconds, context = {}) {
+  if (!Number.isFinite(playedSeconds) || playedSeconds < 0) {
+    throw new RangeError('Los segundos jugados no son válidos.');
+  }
+  const allowedReasons = new Set(['discipline', 'absence', 'illness', 'goalkeeper_rotation']);
+  if (context.reason && !allowedReasons.has(context.reason)) {
+    throw new TypeError('El motivo de menos minutos no es válido.');
+  }
+  const season = seasonKey(matchDate);
+  const minutes = Math.round(playedSeconds / 60);
+  const seasonMinutes = { ...(player.seasonMinutes ?? {}) };
+  seasonMinutes[season] = (seasonMinutes[season] ?? 0) + minutes;
+  const minuteReasons = [...(player.minuteReasons ?? [])];
+  if (context.reason) {
+    minuteReasons.push({ matchId: context.matchId, date: matchDate, season, reason: context.reason });
+  }
+  return {
+    ...player,
+    totalMinutes: (player.totalMinutes ?? 0) + minutes,
+    seasonMinutes,
+    minuteReasons,
+  };
+}
+
+export function shouldAutoPause(phase, elapsedSeconds) {
+  if (!Number.isFinite(elapsedSeconds)) return false;
+  if (phase === 'first_half') return elapsedSeconds >= 38 * 60;
+  if (phase === 'second_half') return elapsedSeconds >= 74 * 60;
+  return false;
+}
+
+function validatePin(pin) {
+  if (!/^\d+$/.test(String(pin))) throw new TypeError('El PIN debe ser numérico.');
+  if (String(pin).length < 4 || String(pin).length > 8) throw new RangeError('El PIN debe tener entre 4 y 8 cifras.');
+}
+
+export async function hashPin(pin, salt) {
+  validatePin(pin);
+  if (!salt) throw new TypeError('Falta la sal local del PIN.');
+  const bytes = new TextEncoder().encode(`${salt}:${pin}`);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function verifyPin(pin, salt, expectedDigest) {
+  try {
+    const actual = await hashPin(pin, salt);
+    if (actual.length !== String(expectedDigest ?? '').length) return false;
+    let difference = 0;
+    for (let index = 0; index < actual.length; index += 1) {
+      difference |= actual.charCodeAt(index) ^ expectedDigest.charCodeAt(index);
+    }
+    return difference === 0;
+  } catch {
+    return false;
+  }
+}
+
 export function calculatePlayedSeconds(initialOnField, events, finalSecond) {
   if (!Number.isFinite(finalSecond) || finalSecond < 0) {
     throw new RangeError('El final del partido no es válido.');

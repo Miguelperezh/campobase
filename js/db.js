@@ -54,6 +54,20 @@ export async function put(store, value) {
   return value;
 }
 
+export async function putBatch(recordsByStore) {
+  const storeNames = Object.keys(recordsByStore);
+  if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
+    throw new TypeError('La operación contiene almacenes no válidos.');
+  }
+  const db = await openDatabase();
+  const transaction = db.transaction(storeNames, 'readwrite');
+  for (const [storeName, records] of Object.entries(recordsByStore)) {
+    if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
+    for (const record of records) transaction.objectStore(storeName).put(record);
+  }
+  await transactionDone(transaction);
+}
+
 export async function remove(store, id) {
   const db = await openDatabase();
   const transaction = db.transaction(store, 'readwrite');

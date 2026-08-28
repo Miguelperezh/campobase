@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 — 2026-08-28
+
+- Minutos acumulados por temporada en la ficha y motivo de menor participación.
+- Contadores por jugador en tiempo real, guardado atómico del partido y registro de marcador, goleadores, tarjetas, lesiones y comentarios.
+- Flujo Comienzo, Descanso, Segundo tiempo y Final, con auto-pausa a 38:00 y 74:00.
+- Cambios manuales de 1–7, automáticos de 2–3 y rotación de un portero por tiempo.
+- Doble PIN local con vista limitada del delegado; solo Migue puede cambiar ambos PIN.
+- Actualización del vivo entre pestañas del mismo navegador mediante IndexedDB. La sincronización entre móviles requiere backend y queda bloqueada por la arquitectura estática autorizada.
+
 ## 1.3.0 — 2026-08-28
 
 - Convocatorias editables y recálculo seguro de contadores de rotación.
