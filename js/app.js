@@ -1,4 +1,5 @@
-import { getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase } from './db.js';
+import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
+import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings } from './domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -19,7 +20,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false };
+const state = { players: [], callups: [], matches: [], trainings: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 let toastTimer;
 
 function toast(message) {
@@ -813,13 +814,39 @@ function wireEvents() {
 }
 
 function handleError(error) { console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
-function networkStatus() { document.body.classList.toggle('offline', !navigator.onLine); $('#network-label').textContent = navigator.onLine ? 'Guardado local' : 'Sin conexión'; }
+function networkStatus() {
+  document.body.classList.toggle('offline', !navigator.onLine);
+  $('#network-label').textContent = !navigator.onLine
+    ? 'Sin conexión · caché local'
+    : state.cloudConnected ? 'Supabase sincronizado' : 'Supabase pendiente';
+  $('#network-label').title = state.cloudError;
+}
+
+async function synchronizeCloud() {
+  if (!navigator.onLine) return networkStatus();
+  try {
+    const result = await syncFromCloud();
+    state.cloudConnected = result.online;
+    state.cloudError = '';
+    await refresh();
+  } catch (error) {
+    state.cloudConnected = false;
+    state.cloudError = error.message || 'No se pudo sincronizar con Supabase.';
+    console.warn('Sincronización Supabase no disponible:', error.message);
+  }
+  networkStatus();
+}
 
 async function init() {
-  wireEvents(); networkStatus(); window.addEventListener('online', networkStatus); window.addEventListener('offline', networkStatus);
+  wireEvents(); networkStatus();
+  configureCloudStore(createCampoBaseCloudStore());
+  window.addEventListener('online', () => synchronizeCloud().catch(handleError));
+  window.addEventListener('offline', networkStatus);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
+  await synchronizeCloud();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate(); showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
+  setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }
 
 init().catch(handleError);

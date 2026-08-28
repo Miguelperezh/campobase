@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 — 2026-08-28
+
+- Supabase pasa a ser la fuente compartida para jugadores, partidos, convocatorias, asistencias y configuración operativa.
+- IndexedDB se mantiene como caché y añade una cola persistente: las escrituras sin conexión se reintentan al recuperar red.
+- Las bajas usan tombstones para propagarse a otros dispositivos; la app consulta la nube cada 10 segundos.
+- El doble PIN sigue siendo local y sus hashes/sal nunca se envían a Supabase.
+- Se incorpora `@supabase/supabase-js` 2.57.4 (MIT) como recurso vendorizado para que la PWA siga arrancando offline.
+- Se documenta el límite crítico: la publishable key y las políticas RLS públicas no protegen datos en el servidor.
+
 ## 1.4.1 — 2026-08-28
 
 - Al finalizar el segundo tiempo, Migue debe puntuar a cada convocado del 1 al 5 antes de guardar el partido.

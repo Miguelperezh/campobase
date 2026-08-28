@@ -50,12 +50,12 @@
     </section>
 
     <section id="ajustes" class="view" aria-labelledby="title-settings">
-      <div class="section-head"><div><p class="eyebrow">Datos locales</p><h2 id="title-settings">Ajustes</h2></div></div>
+      <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
       <div class="settings-grid">
         <article class="panel"><h3>Modalidad</h3><p>F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p><label>Formato<select id="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label></article>
-        <article class="panel"><h3>Copia de seguridad</h3><p>IndexedDB no sincroniza dispositivos. Exporta una copia antes de cambiar de dispositivo.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
+        <article class="panel"><h3>Copia de seguridad</h3><p>Supabase sincroniza los dispositivos e IndexedDB conserva una caché para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
-        <article class="panel warning"><h3>Privacidad y límites</h3><p>Fotos, notas y datos deportivos permanecen en este navegador. La sincronización inmediata solo funciona entre pestañas del mismo navegador; IndexedDB no puede sincronizar dos móviles.</p><p><strong>CampoBase 1.4.1 · Fase 1</strong></p></article>
+        <article class="panel warning"><h3>Privacidad y límites</h3><p>La publishable key está incluida en la app pública y las políticas permiten leer y escribir sin cuenta. El PIN solo bloquea la interfaz: no protege los datos en el servidor. No guardes información médica sensible.</p><p><strong>CampoBase 1.5.0 · Sincronización Supabase</strong></p></article>
       </div>
     </section>
   </main>
@@ -75,6 +75,7 @@
   <dialog id="auth-dialog" class="auth-dialog"><form id="auth-form"><h2 id="auth-title">Acceso a CampoBase</h2><p id="auth-help">Introduce tu PIN.</p><div id="initial-pin-fields" class="hidden"><label>Crear PIN de Migue<input name="newOwnerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label><label>Crear PIN del delegado<input name="newDelegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label></div><label id="login-pin-field">PIN<input name="pin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password"></label><button class="primary" type="submit">Entrar</button><p id="auth-error" class="error" role="alert"></p></form></dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>
+  <script src="vendor/supabase.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
