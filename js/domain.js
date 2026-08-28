@@ -1,5 +1,10 @@
 const BACKUP_STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 
+export function normalizePositions(player = {}) {
+  const positions = Array.isArray(player.positions) ? player.positions : (player.position ? [player.position] : []);
+  return [...new Set(positions.map((position) => String(position).trim()).filter(Boolean))];
+}
+
 function positiveInteger(value, label) {
   if (!Number.isInteger(value) || value <= 0) {
     throw new TypeError(`${label} debe ser un entero positivo.`);
@@ -36,6 +41,56 @@ export function suggestExcludedPlayers(players, count) {
       return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es');
     })
     .slice(0, count);
+}
+
+export function buildCallupSelection(players, options = {}) {
+  if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
+  const limit = options.limit ?? 14;
+  positiveInteger(limit, 'El máximo de convocados');
+  const matchType = options.matchType ?? 'league';
+  const playerIds = new Set(players.map(({ id }) => id));
+  const selected = new Set(options.selectedIds ?? []);
+  const manualExclusions = options.manualExclusions ?? [];
+  const manuallyExcluded = new Set(manualExclusions.map(({ playerId }) => playerId));
+  if ([...selected, ...manuallyExcluded].some((id) => !playerIds.has(id))) {
+    throw new RangeError('La selección contiene un jugador que no está en la plantilla.');
+  }
+  if ([...selected].some((id) => manuallyExcluded.has(id))) {
+    throw new RangeError('Un jugador no puede estar convocado y fuera a la vez.');
+  }
+  if (selected.size > limit) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+
+  const eligible = players.filter(({ id }) => !manuallyExcluded.has(id));
+  const exclusions = manualExclusions.map(({ playerId, reason }) => ({ playerId, reason, automatic: false }));
+  if (matchType !== 'league') {
+    if (eligible.length > limit) throw new RangeError(`En amistosos y torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
+    return { availableIds: eligible.map(({ id }) => id), exclusions };
+  }
+
+  const automaticCount = Math.max(0, eligible.length - limit);
+  const candidates = eligible.filter(({ id }) => !selected.has(id));
+  if (automaticCount > candidates.length) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+  const automatic = suggestExcludedPlayers(candidates, automaticCount);
+  const automaticIds = new Set(automatic.map(({ id }) => id));
+  exclusions.push(...automatic.map(({ id }) => ({ playerId: id, reason: 'rotation', automatic: true })));
+  return { availableIds: eligible.filter(({ id }) => !automaticIds.has(id)).map(({ id }) => id), exclusions };
+}
+
+export function buildTrainingRecord(players, values, metadata = {}) {
+  if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
+  const allowedStatuses = new Set(['present', 'late', 'absent']);
+  const attendance = players.map(({ id }) => {
+    const status = values[`status-${id}`];
+    if (!allowedStatuses.has(status)) throw new TypeError('El estado de asistencia no es válido.');
+    return { playerId: id, status, note: String(values[`note-${id}`] ?? '').trim() };
+  });
+  return {
+    id: metadata.id,
+    date: String(values.date ?? ''),
+    notes: String(values.notes ?? '').trim(),
+    attendance,
+    createdAt: metadata.createdAt,
+  };
 }
 
 export function calculatePlayedSeconds(initialOnField, events, finalSecond) {

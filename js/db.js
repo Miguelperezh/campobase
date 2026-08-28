@@ -28,6 +28,14 @@ function requestResult(request) {
   });
 }
 
+function transactionDone(transaction) {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error ?? new Error('La operación local se canceló.'));
+  });
+}
+
 export async function getAll(store) {
   const db = await openDatabase();
   return requestResult(db.transaction(store, 'readonly').objectStore(store).getAll());
@@ -40,13 +48,17 @@ export async function getOne(store, id) {
 
 export async function put(store, value) {
   const db = await openDatabase();
-  await requestResult(db.transaction(store, 'readwrite').objectStore(store).put(value));
+  const transaction = db.transaction(store, 'readwrite');
+  transaction.objectStore(store).put(value);
+  await transactionDone(transaction);
   return value;
 }
 
 export async function remove(store, id) {
   const db = await openDatabase();
-  await requestResult(db.transaction(store, 'readwrite').objectStore(store).delete(id));
+  const transaction = db.transaction(store, 'readwrite');
+  transaction.objectStore(store).delete(id);
+  await transactionDone(transaction);
 }
 
 export async function exportDatabase() {
