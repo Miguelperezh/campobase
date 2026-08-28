@@ -409,11 +409,11 @@ test('la ficha resume goles, tarjetas, lesiones, incidencias, asistencia, minuto
   ];
   const callups = [
     { id: 'c1', availableIds: ['a'], exclusions: [] },
-    { id: 'c2', availableIds: [], exclusions: [{ playerId: 'a', reason: 'rotation' }] },
+    { id: 'c2', availableIds: [], exclusions: [{ playerId: 'a', reason: 'rotation', automatic: true }] },
   ];
   assert.deepEqual(buildPlayerSummary('a', matches, attendance, callups), {
     goals: 2, yellowCards: 1, redCards: 1, injuries: 1, incidents: 1,
-    callups: 1, notCalled: 1, present: 0, late: 1, absent: 1,
+    callups: 1, notCalled: 1, rotations: 1, present: 0, late: 1, absent: 1,
     minutes: 31, ratings: 1, averageRating: 4,
   });
   const history = buildPlayerHistory('a', attendance, callups, matches);

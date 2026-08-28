@@ -243,6 +243,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
     incidents: countEvents('incidents'),
     callups: callups.filter((callup) => callup.availableIds?.includes(playerId)).length,
     notCalled: callups.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId)).length,
+    rotations: callups.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId && item.automatic)).length,
     present: attendance.filter((entry) => entry.status === 'present').length,
     late: attendance.filter((entry) => entry.status === 'late').length,
     absent: attendance.filter((entry) => entry.status === 'absent').length,
@@ -318,7 +319,7 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
   if (!Number.isFinite(playedSeconds) || playedSeconds < 0) {
     throw new RangeError('Los segundos jugados no son válidos.');
   }
-  const allowedReasons = new Set(['discipline', 'absence', 'illness', 'goalkeeper_rotation']);
+  const allowedReasons = new Set(['discipline', 'absence', 'illness', 'goalkeeper_rotation', 'sin_indicar']);
   if (context.reason && !allowedReasons.has(context.reason)) {
     throw new TypeError('El motivo de menos minutos no es válido.');
   }
