@@ -262,11 +262,13 @@ async function saveCallup(event) {
     match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
+  console.log('[saveCallup] manualExclusions=', JSON.stringify(manualExclusions));
   if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
   const rotationDecisions = {};
   let selection;
   while (true) {
     selection = callupSelectionFromForm(form, rotationDecisions);
+    console.log('[saveCallup] selection availableIds=', selection.availableIds?.length, 'exclusions=', selection.exclusions?.length);
     const pending = selection.pendingRotationDecisions?.find(({ playerId }) => !rotationDecisions[playerId]);
     if (!pending) break;
     const history = pending.history.map(({ reason, date }) => `${localDate(date)}: ${EXCLUSION_REASONS[reason] ?? reason}`).join('\n');
