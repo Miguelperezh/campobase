@@ -26,3 +26,14 @@ test('la sesión autenticada se restaura al recargar y el PIN no se abre incondi
   assert.match(app, /state\.settings\.ownerPinHash/);
   assert.doesNotMatch(app, /renderDelegate\(\);\s*showAuth\(\)/);
 });
+
+test('la iteración 9 expone equipo, localía, marcador de estadio y oculta comentarios al delegado', async () => {
+  const [html, app] = await Promise.all([projectFile('index.html'), projectFile('js/app.js')]);
+  assert.match(html, /Nombre de mi equipo/);
+  assert.match(html, /name="venue"/);
+  assert.match(app, /calledPlayerOptions/);
+  assert.match(app, /data-score-team=/);
+  assert.match(app, /state\.role === 'owner'.*Comentarios/s);
+  assert.doesNotMatch(app, /normalizePositions\(player\)\.includes\('Portero'\).*keeperOptions/s);
+  assert.match(app, /getAttribute\('id'\)/, 'conserva el arreglo del listener de convocatorias');
+});

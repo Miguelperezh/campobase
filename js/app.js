@@ -1,6 +1,6 @@
 import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -98,6 +98,11 @@ function formObject(form) { return Object.fromEntries(new FormData(form)); }
 function checkedValues(name, root = document) { return $$(`input[name="${name}"]:checked`, root).map((input) => input.value); }
 function playerName(id) { return state.players.find((player) => player.id === id)?.name ?? 'Jugador eliminado'; }
 function matchTypeLabel(type) { return MATCH_TYPES[type] ?? MATCH_TYPES.league; }
+function myTeamName() { return state.settings.teamName?.trim() || 'Mi equipo'; }
+function matchTeams(match) {
+  const away = match?.venue === 'away';
+  return { home: away ? match.opponent : myTeamName(), away: away ? myTeamName() : match.opponent, mySide: away ? 'away' : 'home' };
+}
 function playerPositions(player) { return normalizePositions(player).join(', ') || 'Sin posición'; }
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
 function showView(viewId) {
@@ -113,6 +118,7 @@ async function refresh() {
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
   $('#format').value = state.format;
+  $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
   renderAll();
 }
 
@@ -128,14 +134,15 @@ function renderPlayers() {
   const sorted = state.players;
   $('#players-list').innerHTML = sorted.length ? sorted.map((player, index) => {
     const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación' };
-    const history = buildPlayerHistory(player.id, state.trainings, state.callups);
+    const history = buildPlayerHistory(player.id, state.trainings, state.callups, state.matches);
+    const summary = buildPlayerSummary(player.id, state.matches, state.trainings, state.callups);
     const seasonRows = Object.entries(player.seasonMinutes ?? {}).sort(([a], [b]) => b.localeCompare(a)).map(([season, minutes]) => `<li><strong>${escapeHtml(season)}</strong> · ${minutes} min</li>`).join('');
     const minuteReasonRows = (player.minuteReasons ?? []).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(MINUTE_REASONS[item.reason] ?? item.reason)}</li>`).join('');
     const ratingRows = (player.ratingHistory ?? []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.opponent || 'Partido')} · ${item.rating}/5</li>`).join('');
     const historyRows = history.map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${item.type === 'callup' ? 'Convocatoria' : item.kind === 'match' ? 'Partido' : 'Entrenamiento'} · ${escapeHtml(labels[item.detail] ?? item.detail)}</li>`).join('');
     return `<article class="card player">
     ${playerCardPhoto(player)}
-    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial de incidencias y comentarios (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin incidencias ni comentarios.</p>'}</div>
+    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</div>
     <div><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
@@ -182,7 +189,7 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
   const options = state.matches.filter((match) => match.status !== 'finished' || match.id === selectedMatchId).sort((a,b)=>a.date.localeCompare(b.date)).map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`).join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend><input name="manualDateDay" type="date" aria-label="Fecha del partido manual">${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Rival<input name="manualOpponent" maxlength="100"></label></div><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend><input name="manualDateDay" type="date" aria-label="Fecha del partido manual">${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -257,7 +264,7 @@ async function saveCallup(event) {
   if (!match) return toast('Selecciona un partido del calendario.');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
-    match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
+    match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, venue: form.elements.manualVenue.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
   if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
@@ -323,29 +330,35 @@ function timerSeconds(timer = state.timer) {
 }
 
 function ensureLiveDetails() {
-  state.timer.details ??= { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], comments: '', minuteReasons: {} };
+  state.timer.details = { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {}, ...(state.timer.details ?? {}) };
   return state.timer.details;
 }
 
-function liveDetailsMarkup(prefix, availableIds) {
+function liveDetailsMarkup(prefix, availableIds, match) {
   const details = ensureLiveDetails();
+  const teams = matchTeams(match);
+  const homeScore = teams.mySide === 'home' ? details.goalsFor : details.goalsAgainst;
+  const awayScore = teams.mySide === 'away' ? details.goalsFor : details.goalsAgainst;
+  const homeTeam = teams.mySide === 'home' ? 'for' : 'against';
+  const awayTeam = teams.mySide === 'away' ? 'for' : 'against';
   const options = availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
   const minuteReasons = availableIds.map((id) => `<label>${escapeHtml(playerName(id))}<select data-minute-reason="${id}"><option value="">Sin motivo</option>${Object.entries(MINUTE_REASONS).map(([value, label]) => `<option value="${value}" ${details.minuteReasons[id] === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`).join('');
   const events = [
     ...details.goals.map((item) => `${formatMatchClock(item.second)} · Gol: ${playerName(item.playerId)}`),
     ...details.cards.map((item) => `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? 'roja' : 'amarilla'}: ${playerName(item.playerId)}`),
     ...details.injuries.map((item) => `${formatMatchClock(item.second)} · Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
+    ...details.incidents.map((item) => `${formatMatchClock(item.second)} · Incidencia: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
   ];
-  return `<details class="match-log" open><summary>Marcador, incidencias y comentarios</summary><div class="score-editor"><label>CampoBase<input id="${prefix}-goals-for" type="number" min="0" value="${details.goalsFor}"></label><strong>—</strong><label>Rival<input id="${prefix}-goals-against" type="number" min="0" value="${details.goalsAgainst}"></label><button class="save-score secondary" data-prefix="${prefix}">Guardar marcador</button></div><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option></select></label><label>Detalle lesión<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas ni lesiones registrados.</p>'}<label>Comentarios para vestuario o siguiente entrenamiento<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button><details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+  const comments = state.role === 'owner' ? `<label>Comentarios solo de Migue<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
+  const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
+  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
 function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => match.callupId && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
-    const goalkeepers = state.players.filter((player) => normalizePositions(player).includes('Portero'));
-    const keeperOptions = goalkeepers.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
-    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper"><option value="">Selecciona…</option>${keeperOptions}</select></label><label>Portero segundo tiempo<select id="second-keeper"><option value="">Selecciona…</option>${keeperOptions}</select></label></div><p class="meta">Si hay dos porteros convocados, selecciona uno por tiempo.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
     return;
   }
   const match = state.matches.find((item) => item.id === state.timer.matchId);
@@ -356,9 +369,9 @@ function renderLive() {
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField;
-  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(match.opponent)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${state.role === 'owner' ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div></div>
+  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${state.role === 'owner' ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div></div>
   <div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>
-  <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds)}`;
+  <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds, match)}`;
   startTicks();
 }
 
@@ -393,7 +406,7 @@ function renderDelegate() {
     : 'No hay jugadores disponibles en el banquillo.';
   const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(match.opponent)}</h2></div>${state.role === 'owner' ? '<button id="close-delegate" class="secondary">Volver a Migue</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button></div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (2–3)</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds)}`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${state.role === 'owner' ? '<button id="close-delegate" class="secondary">Volver a Migue</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button></div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (2–3)</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
 }
 
 function enterDelegateMode() {
@@ -432,18 +445,30 @@ async function registerDelegateSubstitution(outIds, inIds) {
   renderLive(); renderDelegate(); toast('Cambio del delegado registrado.');
 }
 
+function updateKeeperOptions(matchId) {
+  const match = state.matches.find((item) => item.id === matchId);
+  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const players = calledPlayerOptions(state.players, callup?.availableIds ?? []);
+  const options = players.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
+  for (const [index, select] of [$('#first-keeper'), $('#second-keeper')].entries()) {
+    if (!select) continue;
+    select.disabled = !players.length;
+    select.innerHTML = players.length ? `<option value="">Selecciona…</option>${options}` : '<option value="">Sin convocados</option>';
+    select.value = players[index]?.id ?? players[0]?.id ?? '';
+  }
+}
+
 async function prepareLive() {
   const match = state.matches.find((item) => item.id === $('#live-select').value); const callup = state.callups.find((item) => item.id === match?.callupId);
   if (!callup) return toast('Selecciona un partido.');
   const config = FORMATS[callup.format];
   if (callup.availableIds.length < config.players) return toast(`Faltan jugadores: ${callup.format} necesita ${config.players} en campo.`);
-  const calledGoalkeepers = state.players.filter((player) => callup.availableIds.includes(player.id) && normalizePositions(player).includes('Portero'));
-  const firstKeeper = $('#first-keeper').value || calledGoalkeepers[0]?.id || '';
-  const secondKeeper = $('#second-keeper').value || calledGoalkeepers[1]?.id || firstKeeper;
-  if (calledGoalkeepers.length && (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper))) return toast('Los porteros deben estar convocados.');
-  if (calledGoalkeepers.length > 1 && firstKeeper === secondKeeper) return toast('Selecciona un portero distinto para cada tiempo.');
+  const firstKeeper = $('#first-keeper').value;
+  const secondKeeper = $('#second-keeper').value;
+  if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
+  if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   const initialOnField = [firstKeeper, ...callup.availableIds.filter((id) => id !== firstKeeper)].filter(Boolean).slice(0, config.players);
-  state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], comments: '', minuteReasons: {} } };
+  state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
   await persistTimer(); renderLive();
 }
 
@@ -580,7 +605,7 @@ async function saveMatchRatings(event) {
   const ratingValues = Object.fromEntries(players.map(({ id }) => [id, values[`rating-${id}`]]));
   const rated = buildPlayerRatings(players, ratingValues, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
   const updatedPlayers = rated.players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id] }));
-  const completedMatch = { ...match, status: 'finished', playedSeconds: state.timer.elapsed, minuteTotals: totals, ratings: rated.ratings, substitutionEvents: state.timer.events, goalsFor: details.goalsFor, goalsAgainst: details.goalsAgainst, goals: details.goals, cards: details.cards, injuries: details.injuries, comments: details.comments, minuteReasons: details.minuteReasons, goalkeeperRotation: { firstKeeper: state.timer.firstKeeper, secondKeeper: state.timer.secondKeeper }, finishedAt: Date.now() };
+  const completedMatch = { ...match, status: 'finished', playedSeconds: state.timer.elapsed, minuteTotals: totals, ratings: rated.ratings, substitutionEvents: state.timer.events, goalsFor: details.goalsFor, goalsAgainst: details.goalsAgainst, goals: details.goals, cards: details.cards, injuries: details.injuries, incidents: details.incidents, comments: details.comments, minuteReasons: details.minuteReasons, goalkeeperRotation: { firstKeeper: state.timer.firstKeeper, secondKeeper: state.timer.secondKeeper }, finishedAt: Date.now() };
   const existingAttendance = state.trainings.find((record) => record.kind === 'match' && record.matchId === match.id);
   const trainingRecords = [];
   if (!existingAttendance) {
@@ -606,19 +631,19 @@ async function saveMatch(event) {
   event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const existing = values.id ? await getOne('matches', values.id) : null;
   const goalsFor = values.goalsFor === '' ? null : Number(values.goalsFor); const goalsAgainst = values.goalsAgainst === '' ? null : Number(values.goalsAgainst);
   const date = composeDateTime24(values.dateDay, values.dateHour, values.dateMinute);
-  await put('matches', { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
+  await put('matches', { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, venue: values.venue, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
   form.closest('dialog').close(); form.reset(); await refresh(); toast('Partido guardado.');
 }
 
 function renderMatches() {
   const list = [...state.matches].sort((a,b)=>a.date.localeCompare(b.date));
-  $('#matches-list').innerHTML = list.length ? list.map((match) => `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill">${escapeHtml(matchTypeLabel(match.type))}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${match.goalsFor} — ${match.goalsAgainst}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`).join('') : empty('Añade el calendario de partidos manualmente.');
+  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
 }
 
 function editMatch(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
   const form = $('#match-form');
-  for (const key of ['id', 'round', 'type', 'opponent', 'location', 'goalsFor', 'goalsAgainst']) form.elements[key].value = match[key] ?? (key === 'type' ? 'league' : '');
+  for (const key of ['id', 'round', 'type', 'venue', 'opponent', 'location', 'goalsFor', 'goalsAgainst']) form.elements[key].value = match[key] ?? (key === 'type' ? 'league' : key === 'venue' ? 'home' : '');
   setDateTimeFields(form, 'date', match.date);
   $('#match-dialog').showModal();
 }
@@ -677,6 +702,19 @@ async function importData(event) {
   const file = event.target.files[0]; if (!file) return;
   if (file.size > 20_000_000) return toast('La copia supera el límite de 20 MB.');
   try { const backup = validateBackup(JSON.parse(await file.text())); if (!await askConfirmation({ title: 'Importar copia', message: 'La importación sustituirá todos los datos locales.', acceptLabel: 'Importar y sustituir', danger: true })) return; await importDatabase(backup); state.timer = null; await refresh(); toast('Copia importada correctamente.'); } catch (error) { console.error(error); toast(`No se pudo importar: ${error.message}`); } finally { event.target.value = ''; }
+}
+
+async function saveTeamSettings(event) {
+  event.preventDefault();
+  if (state.role !== 'owner') return toast('Solo Migue puede cambiar los ajustes del equipo.');
+  const values = formObject(event.currentTarget);
+  const teamName = values.teamName.trim();
+  if (!teamName) return toast('Escribe el nombre de tu equipo.');
+  state.format = values.format;
+  state.settings = { ...state.settings, id: 'main', format: state.format, teamName };
+  await put('settings', state.settings);
+  renderAll();
+  toast('Nombre y modalidad del equipo guardados.');
 }
 
 async function savePins(ownerPin, delegatePin) {
@@ -761,12 +799,10 @@ async function changePins(event) {
   toast('PIN de Migue y delegado actualizados.');
 }
 
-async function saveLiveScore(prefix) {
-  const details = ensureLiveDetails();
-  details.goalsFor = Math.max(0, Number($(`#${prefix}-goals-for`).value) || 0);
-  details.goalsAgainst = Math.max(0, Number($(`#${prefix}-goals-against`).value) || 0);
+async function changeLiveScore(team, delta) {
+  state.timer.details = adjustLiveScore(ensureLiveDetails(), team, Number(delta));
   await persistTimer();
-  renderLive(); renderDelegate(); toast('Marcador guardado.');
+  renderLive(); renderDelegate(); toast('Marcador actualizado.');
 }
 
 async function addLiveEvent(prefix) {
@@ -774,11 +810,7 @@ async function addLiveEvent(prefix) {
   const kind = $(`#${prefix}-event-kind`).value;
   const note = $(`#${prefix}-event-note`).value.trim();
   if (!playerId) return toast('Selecciona un jugador.');
-  const entry = { id: uid(), playerId, second: timerSeconds(), note };
-  const details = ensureLiveDetails();
-  if (kind === 'goal') details.goals.push(entry);
-  else if (kind === 'injury') details.injuries.push(entry);
-  else details.cards.push({ ...entry, type: kind });
+  state.timer.details = addPlayerMatchEvent(ensureLiveDetails(), { id: uid(), kind, playerId, second: timerSeconds(), note });
   await persistTimer(); renderLive(); renderDelegate(); toast('Incidencia registrada.');
 }
 
@@ -800,6 +832,7 @@ function wireEvents() {
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
+  $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
   $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder());
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
   $('#format').addEventListener('change', async (event) => {
@@ -811,6 +844,7 @@ function wireEvents() {
     toast(`Modalidad ${state.format} guardada y aplicada en toda la app.`);
   });
   document.addEventListener('change', (event) => {
+    if (event.target.id === 'live-select') return updateKeeperOptions(event.target.value);
     if (event.target.matches('[data-minute-reason]')) {
       ensureLiveDetails().minuteReasons[event.target.dataset.minuteReason] = event.target.value;
       persistTimer().catch(handleError);
@@ -892,9 +926,10 @@ function wireEvents() {
       const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, livePlayedSeconds(), count);
       if (await askConfirmation({ title: `Cambio automático de ${count}`, message: `Entran ${suggestion.inIds.map(playerName).join(', ')} y salen ${suggestion.outIds.map(playerName).join(', ')}.`, acceptLabel: 'Registrar cambio' })) await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
     }
-    if (target.matches('.save-score')) await saveLiveScore(target.dataset.prefix);
+    if (target.matches('.score-step')) await changeLiveScore(target.dataset.scoreTeam, Number(target.dataset.delta));
     if (target.matches('.add-live-event')) await addLiveEvent(target.dataset.prefix);
     if (target.matches('.save-live-comments')) {
+      if (state.role !== 'owner') return toast('Los comentarios son solo de Migue.');
       ensureLiveDetails().comments = $(`#${target.dataset.prefix}-comments`).value.trim();
       await persistTimer(); renderLive(); renderDelegate(); toast('Comentarios guardados.');
     }

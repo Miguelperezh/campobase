@@ -5,6 +5,15 @@ export function normalizePositions(player = {}) {
   return [...new Set(positions.map((position) => String(position).trim()).filter(Boolean))];
 }
 
+export function calledPlayerOptions(players, availableIds) {
+  if (!Array.isArray(players) || !Array.isArray(availableIds)) throw new TypeError('Jugadores y convocados deben ser listas.');
+  const byId = new Map(players.map((player) => [player.id, player]));
+  return availableIds.flatMap((id) => {
+    const player = byId.get(id);
+    return player ? [{ id: player.id, name: String(player.name ?? '') }] : [];
+  });
+}
+
 export function sortPlayersByName(players) {
   if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
   return [...players].sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', {
@@ -185,8 +194,8 @@ export function sortAttendanceRecords(records) {
   return [...records].sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')) || (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
-export function buildPlayerHistory(playerId, attendanceRecords, callups) {
-  if (!Array.isArray(attendanceRecords) || !Array.isArray(callups)) {
+export function buildPlayerHistory(playerId, attendanceRecords, callups, matches = []) {
+  if (!Array.isArray(attendanceRecords) || !Array.isArray(callups) || !Array.isArray(matches)) {
     throw new TypeError('Los históricos deben ser listas.');
   }
   const attendance = attendanceRecords.flatMap((record) => {
@@ -198,8 +207,73 @@ export function buildPlayerHistory(playerId, attendanceRecords, callups) {
   const exclusions = callups.flatMap((callup) => (callup.exclusions ?? [])
     .filter((entry) => entry.playerId === playerId)
     .map((entry) => ({ type: 'callup', id: callup.id, date: callup.date, kind: 'callup', detail: entry.reason, automatic: Boolean(entry.automatic), createdAt: callup.createdAt ?? 0 })));
-  return [...attendance, ...exclusions]
+  const matchEvents = matches.flatMap((match) => {
+    const details = [];
+    const goals = (match.goals ?? []).filter((item) => item.playerId === playerId).length;
+    if (goals) details.push(`Gol x${goals}`);
+    const yellowCards = (match.cards ?? []).filter((item) => item.playerId === playerId && item.type === 'yellow').length;
+    const redCards = (match.cards ?? []).filter((item) => item.playerId === playerId && item.type === 'red').length;
+    if (yellowCards) details.push(`Amarilla x${yellowCards}`);
+    if (redCards) details.push(`Roja x${redCards}`);
+    details.push(...(match.injuries ?? []).filter((item) => item.playerId === playerId).map((item) => `Lesión${item.note ? `: ${item.note}` : ''}`));
+    details.push(...(match.incidents ?? []).filter((item) => item.playerId === playerId).map((item) => `Incidencia${item.note ? `: ${item.note}` : ''}`));
+    const seconds = match.minuteTotals?.[playerId];
+    if (Number.isFinite(seconds)) details.push(`${Math.round(seconds / 60)} min`);
+    const rating = match.ratings?.[playerId];
+    if (Number.isFinite(rating)) details.push(`Puntuación ${rating}/5`);
+    return details.length ? [{ type: 'match', id: match.id, date: match.date, kind: 'match', detail: details.join(' · '), createdAt: match.finishedAt ?? match.createdAt ?? 0 }] : [];
+  });
+  return [...attendance, ...exclusions, ...matchEvents]
     .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')) || b.createdAt - a.createdAt);
+}
+
+export function buildPlayerSummary(playerId, matches, attendanceRecords, callups) {
+  if (![matches, attendanceRecords, callups].every(Array.isArray)) throw new TypeError('Los históricos deben ser listas.');
+  const playerMatches = matches.filter((match) => match.minuteTotals?.[playerId] !== undefined
+    || match.ratings?.[playerId] !== undefined
+    || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
+  const ratings = playerMatches.map((match) => match.ratings?.[playerId]).filter(Number.isFinite);
+  const attendance = attendanceRecords.flatMap((record) => record.attendance?.filter((entry) => entry.playerId === playerId) ?? []);
+  const countEvents = (field, predicate = () => true) => playerMatches.reduce((total, match) => total + (match[field] ?? []).filter((item) => item.playerId === playerId && predicate(item)).length, 0);
+  return {
+    goals: countEvents('goals'),
+    yellowCards: countEvents('cards', (item) => item.type === 'yellow'),
+    redCards: countEvents('cards', (item) => item.type === 'red'),
+    injuries: countEvents('injuries'),
+    incidents: countEvents('incidents'),
+    callups: callups.filter((callup) => callup.availableIds?.includes(playerId)).length,
+    notCalled: callups.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId)).length,
+    present: attendance.filter((entry) => entry.status === 'present').length,
+    late: attendance.filter((entry) => entry.status === 'late').length,
+    absent: attendance.filter((entry) => entry.status === 'absent').length,
+    minutes: Math.round(playerMatches.reduce((total, match) => total + (match.minuteTotals?.[playerId] ?? 0), 0) / 60),
+    ratings: ratings.length,
+    averageRating: ratings.length ? Number((ratings.reduce((total, rating) => total + rating, 0) / ratings.length).toFixed(1)) : null,
+  };
+}
+
+export function adjustLiveScore(details, team, delta) {
+  if (!['for', 'against'].includes(team) || !Number.isInteger(delta)) throw new TypeError('El ajuste del marcador no es válido.');
+  const next = structuredClone(details);
+  next.goals ??= [];
+  const field = team === 'for' ? 'goalsFor' : 'goalsAgainst';
+  next[field] = Math.max(0, (Number(next[field]) || 0) + delta);
+  if (team === 'for' && delta < 0) next.goals.splice(Math.max(0, next.goals.length + delta), Math.abs(delta));
+  return next;
+}
+
+export function addPlayerMatchEvent(details, event) {
+  if (!event?.playerId || !['goal', 'yellow', 'red', 'injury', 'incident'].includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
+  const next = structuredClone(details);
+  for (const field of ['goals', 'cards', 'injuries', 'incidents']) next[field] ??= [];
+  const { kind, ...entry } = event;
+  if (kind === 'goal') {
+    next.goals.push(entry);
+    next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+  } else if (kind === 'injury') next.injuries.push(entry);
+  else if (kind === 'incident') next.incidents.push(entry);
+  else next.cards.push({ ...entry, type: kind });
+  return next;
 }
 
 export function applySubstitution(onFieldIds, outIds, inIds, availableIds, maxChanges = 3) {

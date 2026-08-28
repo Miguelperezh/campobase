@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0 — 2026-08-28
+
+- Nombre de equipo configurable y condición local/visitante en calendario, convocatoria manual y partido en vivo.
+- Porteros elegibles entre todos los convocados y persistidos para cada tiempo.
+- Marcador de estadio con controles +/−, goleadores, tarjetas, lesiones e incidencias compartidos con el delegado; comentarios exclusivos de Migue.
+- Ficha con resumen e historial de goles, tarjetas, lesiones, incidencias, convocatorias, asistencia, minutos y puntuaciones.
+
 ## 1.7.0 — 2026-08-28
 
 - Sustituidos todos los controles nativos con hora por selectores propios `00–23` y `00–59` en convocatoria manual, calendario y llegadas de asistencia; iOS ya no puede imponer AM/PM.

@@ -23,6 +23,10 @@ import {
   buildPlayerRatings,
   sortPlayersByName,
   updateRotationCounters,
+  calledPlayerOptions,
+  adjustLiveScore,
+  addPlayerMatchEvent,
+  buildPlayerSummary,
 } from '../js/domain.js';
 
 test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acentos', () => {
@@ -364,4 +368,56 @@ test('el delegado no puede puntuar y se rechazan notas incompletas o fuera de 1 
   assert.throws(() => buildPlayerRatings(players, { a: '5', b: '3' }, { ...metadata, role: 'delegate' }), /Solo Migue/i);
   assert.throws(() => buildPlayerRatings(players, { a: '5' }, { ...metadata, role: 'owner' }), /todos los jugadores/i);
   assert.throws(() => buildPlayerRatings(players, { a: '5', b: '6' }, { ...metadata, role: 'owner' }), /entre 1 y 5/i);
+});
+
+test('los selectores de portero incluyen a todos los convocados aunque no tengan posición de portero', () => {
+  const players = [
+    { id: 'a', name: 'Ana', positions: ['Central'] },
+    { id: 'b', name: 'Biel', positions: ['Portero'] },
+    { id: 'c', name: 'Cris', positions: ['Extremo'] },
+  ];
+  assert.deepEqual(calledPlayerOptions(players, ['c', 'a']), [
+    { id: 'c', name: 'Cris' },
+    { id: 'a', name: 'Ana' },
+  ]);
+});
+
+test('el marcador suma y resta goles y mantiene los goleadores coherentes', () => {
+  const initial = { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [] };
+  const scored = addPlayerMatchEvent(initial, { id: 'g1', kind: 'goal', playerId: 'a', second: 90, note: '' });
+  const rivalScored = adjustLiveScore(scored, 'against', 1);
+  assert.equal(scored.goalsFor, 1);
+  assert.deepEqual(scored.goals, [{ id: 'g1', playerId: 'a', second: 90, note: '' }]);
+  assert.equal(rivalScored.goalsAgainst, 1);
+  const corrected = adjustLiveScore(rivalScored, 'for', -1);
+  assert.equal(corrected.goalsFor, 0);
+  assert.deepEqual(corrected.goals, []);
+  assert.equal(adjustLiveScore(corrected, 'against', -4).goalsAgainst, 0);
+});
+
+test('la ficha resume goles, tarjetas, lesiones, incidencias, asistencia, minutos y puntuaciones', () => {
+  const matches = [{
+    id: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base', status: 'finished',
+    minuteTotals: { a: 1860 }, ratings: { a: 4 },
+    goals: [{ playerId: 'a' }, { playerId: 'a' }],
+    cards: [{ playerId: 'a', type: 'yellow' }, { playerId: 'a', type: 'red' }],
+    injuries: [{ playerId: 'a', note: 'Golpe' }], incidents: [{ playerId: 'a', note: 'Discusión' }],
+  }];
+  const attendance = [
+    { id: 't1', kind: 'training', attendance: [{ playerId: 'a', status: 'late' }] },
+    { id: 't2', kind: 'training', attendance: [{ playerId: 'a', status: 'absent' }] },
+  ];
+  const callups = [
+    { id: 'c1', availableIds: ['a'], exclusions: [] },
+    { id: 'c2', availableIds: [], exclusions: [{ playerId: 'a', reason: 'rotation' }] },
+  ];
+  assert.deepEqual(buildPlayerSummary('a', matches, attendance, callups), {
+    goals: 2, yellowCards: 1, redCards: 1, injuries: 1, incidents: 1,
+    callups: 1, notCalled: 1, present: 0, late: 1, absent: 1,
+    minutes: 31, ratings: 1, averageRating: 4,
+  });
+  const history = buildPlayerHistory('a', attendance, callups, matches);
+  assert.ok(history.some(({ detail }) => /Gol x2/.test(detail)));
+  assert.ok(history.some(({ detail }) => /Golpe/.test(detail)));
+  assert.ok(history.some(({ detail }) => /Discusión/.test(detail)));
 });
