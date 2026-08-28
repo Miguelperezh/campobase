@@ -252,23 +252,19 @@ function updateMatchSource() {
 
 async function saveCallup(event) {
   event.preventDefault(); const form = event.target.closest('form');
-  console.log('[saveCallup] inicio, form id=', form?.getAttribute('id'));
   const existing = form.elements.id.value ? state.callups.find(({ id }) => id === form.elements.id.value) : null;
   let match = currentCallupMatch(form);
-  console.log('[saveCallup] match=', match ? (match.id || 'manual') : 'NULL');
   if (!match) return toast('Selecciona un partido del calendario.');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
     match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
-  console.log('[saveCallup] manualExclusions=', JSON.stringify(manualExclusions));
   if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
   const rotationDecisions = {};
   let selection;
   while (true) {
     selection = callupSelectionFromForm(form, rotationDecisions);
-    console.log('[saveCallup] selection availableIds=', selection.availableIds?.length, 'exclusions=', selection.exclusions?.length);
     const pending = selection.pendingRotationDecisions?.find(({ playerId }) => !rotationDecisions[playerId]);
     if (!pending) break;
     const history = pending.history.map(({ reason, date }) => `${localDate(date)}: ${EXCLUSION_REASONS[reason] ?? reason}`).join('\n');
@@ -797,7 +793,6 @@ async function pollLiveState() {
 }
 
 function wireEvents() {
-  console.log('[wireEvents] inicio');
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
@@ -850,12 +845,10 @@ function wireEvents() {
     updateTargetPreview();
   });
   document.addEventListener('submit', (event) => {
-    console.log('[submit] evento recibido, target=', event.target?.tagName);
     const form = event.target.closest ? event.target.closest('form') : event.target;
     if (!form) return;
     event.preventDefault();
     const formId = form.getAttribute('id');
-    console.log('[submit] formId=', formId);
     if (formId === 'callup-form') saveCallup(event).catch(handleError);
     else if (formId === 'training-form') saveTraining(event).catch(handleError);
     else if (formId === 'rating-form') saveMatchRatings(event).catch(handleError);
