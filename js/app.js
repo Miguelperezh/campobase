@@ -139,10 +139,11 @@ function renderPlayers() {
     const seasonRows = Object.entries(player.seasonMinutes ?? {}).sort(([a], [b]) => b.localeCompare(a)).map(([season, minutes]) => `<li><strong>${escapeHtml(season)}</strong> · ${minutes} min</li>`).join('');
     const minuteReasonRows = (player.minuteReasons ?? []).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(MINUTE_REASONS[item.reason] ?? item.reason)}</li>`).join('');
     const ratingRows = (player.ratingHistory ?? []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.opponent || 'Partido')} · ${item.rating}/5</li>`).join('');
+    const seasonRatingRows = Object.entries((player.ratingHistory ?? []).reduce((acc, item) => { const s = seasonKey(item.date); (acc[s] ??= []).push(item.rating); return acc; }, {})).sort(([a], [b]) => b.localeCompare(a)).map(([season, ratings]) => `<li><strong>${escapeHtml(season)}</strong> · media ${(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)}/5 (${ratings.length} partidos)</li>`).join('');
     const historyRows = history.map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${item.type === 'callup' ? 'Convocatoria' : item.kind === 'match' ? 'Partido' : 'Entrenamiento'} · ${escapeHtml(labels[item.detail] ?? item.detail)}</li>`).join('');
     return `<article class="card player">
     ${playerCardPhoto(player)}
-    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</div>
+    <div><h3>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h3><p class="meta">${escapeHtml(playerPositions(player))}</p><p class="meta">Pierna ${escapeHtml((player.foot || 'sin indicar').toLowerCase())} · Fuera por rotación ${player.outsideCount ?? 0} veces</p><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</div>
     <div><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
@@ -635,7 +636,7 @@ async function saveMatch(event) {
 
 function renderMatches() {
   const list = [...state.matches].sort((a,b)=>a.date.localeCompare(b.date));
-  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
+  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
 }
 
 function editMatch(id) {
@@ -644,6 +645,79 @@ function editMatch(id) {
   for (const key of ['id', 'round', 'type', 'venue', 'opponent', 'location', 'goalsFor', 'goalsAgainst']) form.elements[key].value = match[key] ?? (key === 'type' ? 'league' : key === 'venue' ? 'home' : '');
   setDateTimeFields(form, 'date', match.date);
   $('#match-dialog').showModal();
+}
+
+function showMatchDetail(id) {
+  const match = state.matches.find((item) => item.id === id); if (!match) return;
+  const teams = matchTeams(match);
+  const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst;
+  const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst;
+  const callup = state.callups.find((item) => item.id === match.callupId);
+  const availableIds = callup?.availableIds ?? [];
+  const playerOptions = availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
+  const eventList = (items, label, kind) => {
+    const list = (items ?? []).map((item, i) => `<li>${escapeHtml(playerName(item.playerId))}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`).join('');
+    return `<section><h4>${label}</h4>${list ? `<ul class="plain-list">${list}</ul>` : '<p class="meta">Sin registros.</p>'}</section>`;
+  };
+  $('#match-detail-title').textContent = `${teams.home} — ${teams.away}`;
+  $('#match-detail-dialog').dataset.matchId = match.id;
+  $('#match-detail-body').innerHTML = `
+    <p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(matchTypeLabel(match.type))} · ${match.venue === 'away' ? 'Visitante' : 'Local'}</p>
+    <div class="stadium-score"><section class="score-team"><span>${escapeHtml(teams.home)}</span><strong>${homeScore ?? 0}</strong></section><span class="score-separator">—</span><section class="score-team"><span>${escapeHtml(teams.away)}</span><strong>${awayScore ?? 0}</strong></section></div>
+    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions || '<option value="">Sin convocados</option>'}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
+    ${eventList(match.goals, 'Goles', 'goal')}
+    ${eventList(match.cards, 'Tarjetas', 'card')}
+    ${eventList(match.injuries, 'Lesiones', 'injury')}
+    ${eventList(match.incidents, 'Incidencias', 'incident')}
+    ${match.status === 'finished' ? `<div class="button-row"><button class="reopen-match secondary" data-id="${match.id}">Reabrir partido (volver a jugarlo)</button></div>` : ''}
+  `;
+  $('#match-detail-dialog').showModal();
+}
+
+async function reopenMatch(id) {
+  const match = state.matches.find((item) => item.id === id); if (!match) return;
+  if (!await askConfirmation({ title: 'Reabrir partido', message: 'Se limpiarán los goles, tarjetas, lesiones y puntuaciones de este partido para poder volver a jugarlo. Los minutos y puntuaciones ya acumulados en las fichas de los jugadores no se revierten.', acceptLabel: 'Reabrir', danger: true })) return;
+  await put('matches', { ...match, status: 'planned', goalsFor: null, goalsAgainst: null, goals: [], cards: [], injuries: [], incidents: [], ratings: null, minuteTotals: null, substitutionEvents: [], comments: '', minuteReasons: {} });
+  await refresh();
+  $('#match-detail-dialog').close();
+  toast('Partido reabierto. Ya puedes prepararlo en vivo.');
+}
+
+async function addDetailEvent(matchId) {
+  const match = state.matches.find((item) => item.id === matchId); if (!match) return;
+  const playerId = $('#detail-event-player').value;
+  const kind = $('#detail-event-kind').value;
+  const note = $('#detail-event-note').value.trim();
+  if (!playerId) return toast('Selecciona un jugador.');
+  const next = { ...match };
+  if (kind === 'goal') {
+    next.goals = [...(next.goals ?? []), { playerId, note, second: 0 }];
+    next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+  } else if (kind === 'injury') {
+    next.injuries = [...(next.injuries ?? []), { playerId, note }];
+  } else if (kind === 'incident') {
+    next.incidents = [...(next.incidents ?? []), { playerId, note }];
+  } else {
+    next.cards = [...(next.cards ?? []), { playerId, note, type: kind }];
+  }
+  await put('matches', next);
+  await refresh();
+  showMatchDetail(matchId);
+  toast('Incidencia añadida.');
+}
+
+async function removeMatchEvent(matchId, kind, index) {
+  const match = state.matches.find((item) => item.id === matchId); if (!match) return;
+  const next = { ...match };
+  const field = kind === 'goal' ? 'goals' : kind === 'card' ? 'cards' : kind === 'injury' ? 'injuries' : 'incidents';
+  const items = [...(next[field] ?? [])];
+  const removed = items.splice(index, 1)[0];
+  next[field] = items;
+  if (kind === 'goal' && removed) next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
+  await put('matches', next);
+  await refresh();
+  showMatchDetail(matchId);
+  toast('Incidencia eliminada.');
 }
 
 function attendanceBuilder(matchId = '', recordId = '') {
@@ -894,6 +968,10 @@ function wireEvents() {
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
+    if (target.matches('.match-detail')) showMatchDetail(target.dataset.id);
+    if (target.matches('.add-detail-event')) await addDetailEvent(target.dataset.id);
+    if (target.matches('.remove-match-event')) await removeMatchEvent($('#match-detail-dialog').dataset.matchId, target.dataset.kind, Number(target.dataset.index));
+    if (target.matches('.reopen-match')) await reopenMatch(target.dataset.id);
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
