@@ -8,6 +8,9 @@ import {
   normalizePositions,
   buildCallupSelection,
   buildTrainingRecord,
+  buildAttendanceRecord,
+  calculateAttendanceStats,
+  applySubstitution,
 } from '../js/domain.js';
 
 test('reparte exactamente 490 minutos entre 10 disponibles en F7', () => {
@@ -124,4 +127,42 @@ test('construye una asistencia conservando estado y notas por jugador', () => {
     ],
     createdAt: 123,
   });
+});
+
+test('construye una asistencia vinculada a un partido', () => {
+  const record = buildAttendanceRecord(
+    [{ id: 'a' }, { id: 'b' }],
+    { date: '2026-09-05', 'status-a': 'present', 'status-b': 'late', 'note-b': 'Atasco' },
+    { id: 'r1', kind: 'match', matchId: 'm1', createdAt: 456 },
+  );
+  assert.equal(record.kind, 'match');
+  assert.equal(record.matchId, 'm1');
+  assert.deepEqual(record.attendance[1], { playerId: 'b', status: 'late', note: 'Atasco' });
+});
+
+test('calcula ausencias, rachas y tardanzas del historial de un jugador', () => {
+  const records = [
+    { id: '1', kind: 'training', date: '2026-09-01', attendance: [{ playerId: 'a', status: 'present' }] },
+    { id: '2', kind: 'training', date: '2026-09-02', attendance: [{ playerId: 'a', status: 'absent' }] },
+    { id: '3', kind: 'training', date: '2026-09-03', attendance: [{ playerId: 'a', status: 'absent' }] },
+    { id: '4', kind: 'match', date: '2026-09-04', attendance: [{ playerId: 'a', status: 'late' }] },
+    { id: '5', kind: 'training', date: '2026-09-05', attendance: [{ playerId: 'a', status: 'late' }] },
+    { id: '6', kind: 'training', date: '2026-09-06', attendance: [{ playerId: 'a', status: 'late' }] },
+  ];
+  assert.deepEqual(calculateAttendanceStats('a', records), {
+    totalRecords: 6,
+    totalAbsences: 2,
+    trainingAbsences: 2,
+    matchAbsences: 0,
+    currentTrainingAbsenceStreak: 0,
+    longestTrainingAbsenceStreak: 2,
+    lateCount: 3,
+    oftenLate: true,
+  });
+});
+
+test('aplica un cambio manual de uno a tres jugadores sin alterar el tamaño del equipo', () => {
+  assert.deepEqual(applySubstitution(['a', 'b'], ['a'], ['c'], ['a', 'b', 'c']), ['b', 'c']);
+  assert.throws(() => applySubstitution(['a', 'b'], ['a'], ['c', 'd'], ['a', 'b', 'c', 'd']), /mismo número/i);
+  assert.throws(() => applySubstitution(['a', 'b'], ['a'], ['x'], ['a', 'b', 'c']), /convocado/i);
 });

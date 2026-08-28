@@ -76,9 +76,12 @@ export function buildCallupSelection(players, options = {}) {
   return { availableIds: eligible.filter(({ id }) => !automaticIds.has(id)).map(({ id }) => id), exclusions };
 }
 
-export function buildTrainingRecord(players, values, metadata = {}) {
+export function buildAttendanceRecord(players, values, metadata = {}) {
   if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
   const allowedStatuses = new Set(['present', 'late', 'absent']);
+  const kind = metadata.kind ?? 'training';
+  if (!['training', 'match'].includes(kind)) throw new TypeError('El tipo de asistencia no es válido.');
+  if (kind === 'match' && !metadata.matchId) throw new TypeError('La asistencia de partido debe estar vinculada a un partido.');
   const attendance = players.map(({ id }) => {
     const status = values[`status-${id}`];
     if (!allowedStatuses.has(status)) throw new TypeError('El estado de asistencia no es válido.');
@@ -86,11 +89,62 @@ export function buildTrainingRecord(players, values, metadata = {}) {
   });
   return {
     id: metadata.id,
+    kind,
+    matchId: kind === 'match' ? metadata.matchId : null,
     date: String(values.date ?? ''),
     notes: String(values.notes ?? '').trim(),
     attendance,
     createdAt: metadata.createdAt,
   };
+}
+
+export function buildTrainingRecord(players, values, metadata = {}) {
+  const { kind, matchId, ...record } = buildAttendanceRecord(players, values, { ...metadata, kind: 'training' });
+  return record;
+}
+
+export function calculateAttendanceStats(playerId, records) {
+  if (!Array.isArray(records)) throw new TypeError('El historial de asistencia debe ser una lista.');
+  const history = records
+    .map((record) => ({ ...record, entry: record.attendance?.find((item) => item.playerId === playerId) }))
+    .filter(({ entry }) => entry)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+  const trainingHistory = history.filter(({ kind }) => (kind ?? 'training') === 'training');
+  let longestTrainingAbsenceStreak = 0;
+  let streak = 0;
+  for (const { entry } of trainingHistory) {
+    streak = entry.status === 'absent' ? streak + 1 : 0;
+    longestTrainingAbsenceStreak = Math.max(longestTrainingAbsenceStreak, streak);
+  }
+  let currentTrainingAbsenceStreak = 0;
+  for (const { entry } of [...trainingHistory].reverse()) {
+    if (entry.status !== 'absent') break;
+    currentTrainingAbsenceStreak += 1;
+  }
+  const totalAbsences = history.filter(({ entry }) => entry.status === 'absent').length;
+  const lateCount = history.filter(({ entry }) => entry.status === 'late').length;
+  return {
+    totalRecords: history.length,
+    totalAbsences,
+    trainingAbsences: trainingHistory.filter(({ entry }) => entry.status === 'absent').length,
+    matchAbsences: history.filter(({ kind, entry }) => kind === 'match' && entry.status === 'absent').length,
+    currentTrainingAbsenceStreak,
+    longestTrainingAbsenceStreak,
+    lateCount,
+    oftenLate: lateCount >= 3,
+  };
+}
+
+export function applySubstitution(onFieldIds, outIds, inIds, availableIds) {
+  if (outIds.length !== inIds.length) throw new RangeError('Debe salir y entrar el mismo número de jugadores.');
+  if (outIds.length < 1 || outIds.length > 3) throw new RangeError('Cada cambio debe incluir entre uno y tres jugadores.');
+  const onField = new Set(onFieldIds);
+  const available = new Set(availableIds);
+  if (outIds.some((id) => !onField.has(id)) || inIds.some((id) => onField.has(id))) {
+    throw new RangeError('La selección de entradas y salidas no coincide con el estado del campo.');
+  }
+  if ([...outIds, ...inIds].some((id) => !available.has(id))) throw new RangeError('El cambio contiene un jugador no convocado.');
+  return onFieldIds.filter((id) => !outIds.includes(id)).concat(inIds);
 }
 
 export function calculatePlayedSeconds(initialOnField, events, finalSecond) {
