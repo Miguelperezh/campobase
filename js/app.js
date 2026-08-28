@@ -545,7 +545,7 @@ function startTicks() {
 function maybeShowMinuteAlert(played, elapsedSeconds) {
   if (!state.timer || state.timer.phase === 'halftime' || state.timer.phase === 'ready') return;
   const minute = Math.floor(elapsedSeconds / 60);
-  if (minute < 1 || minute % 15 !== 0) return;
+  if (minute < 1 || minute % 5 !== 0) return;
   const alertKey = `min-${minute}`;
   if (state.timer.lastMinuteAlert === alertKey) return;
   state.timer.lastMinuteAlert = alertKey;
