@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CampoBase</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><p class="eyebrow">Gestión de equipo</p><h1>CampoBase</h1></div>
+    <div class="status"><span id="network-dot" aria-hidden="true"></span><span id="network-label">Local</span></div>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <section id="plantilla" class="view active" aria-labelledby="title-plantilla">
+      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><button data-dialog="player-dialog" class="primary">+ Jugador</button></div>
+      <div id="squad-stats" class="stats"></div><div id="players-list" class="card-grid"></div>
+    </section>
+
+    <section id="convocatorias" class="view" aria-labelledby="title-callups">
+      <div class="section-head"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><button id="new-callup" class="primary">+ Convocatoria</button></div>
+      <div id="callup-builder" class="panel hidden"></div><div id="callups-list" class="stack"></div>
+    </section>
+
+    <section id="partido" class="view" aria-labelledby="title-live">
+      <div class="section-head"><div><p class="eyebrow">Calculadora en tiempo real</p><h2 id="title-live">Partido en vivo</h2></div></div>
+      <div id="live-match" class="panel"></div>
+    </section>
+
+    <section id="calendario" class="view" aria-labelledby="title-calendar">
+      <div class="section-head"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><button data-dialog="match-dialog" class="primary">+ Partido</button></div>
+      <div id="matches-list" class="stack"></div>
+    </section>
+
+    <section id="asistencia" class="view" aria-labelledby="title-training">
+      <div class="section-head"><div><p class="eyebrow">Entrenamientos</p><h2 id="title-training">Asistencia</h2></div><button id="new-training" class="primary">+ Entreno</button></div>
+      <div id="training-builder" class="panel hidden"></div><div id="trainings-list" class="stack"></div>
+    </section>
+
+    <section id="ajustes" class="view" aria-labelledby="title-settings">
+      <div class="section-head"><div><p class="eyebrow">Datos locales</p><h2 id="title-settings">Ajustes</h2></div></div>
+      <div class="settings-grid">
+        <article class="panel"><h3>Modalidad</h3><p>F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p><label>Formato<select id="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label></article>
+        <article class="panel"><h3>Copia de seguridad</h3><p>IndexedDB no sincroniza dispositivos. Exporta una copia antes de cambiar de dispositivo.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
+        <article class="panel warning"><h3>Privacidad y límites</h3><p>Fotos, notas y datos deportivos permanecen en este navegador. No hay nube, cuentas ni recuperación automática.</p><p><strong>CampoBase 1.0.0 · Fase 1</strong></p></article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button data-view="plantilla" class="active">Plantilla</button><button data-view="convocatorias">Convoc.</button><button data-view="partido">En vivo</button><button data-view="calendario">Calendario</button><button data-view="asistencia">Asistencia</button><button data-view="ajustes">Ajustes</button>
+  </nav>
+
+  <dialog id="player-dialog"><form id="player-form"><div class="dialog-head"><h2>Ficha de jugador</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><label>Foto<input name="photo" type="file" accept="image/*"></label><label>Nombre<input name="name" required maxlength="80" autocomplete="off"></label><div class="form-row"><label>Dorsal<input name="number" type="number" min="0" max="99"></label><label>Posición<select name="position"><option>Portero</option><option>Defensa</option><option>Centrocampista</option><option>Delantero</option><option>Polivalente</option></select></label></div><label>Pierna dominante<select name="foot"><option>Derecha</option><option>Izquierda</option><option>Ambas</option></select></label><label>Notas internas<textarea name="notes" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar jugador</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <dialog id="match-dialog"><form id="match-form"><div class="dialog-head"><h2>Partido</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><label>Fecha y hora<input name="date" type="datetime-local" required></label><label>Rival<input name="opponent" required maxlength="100"></label><label>Lugar<input name="location" maxlength="120"></label><div class="form-row"><label>Goles a favor<input name="goalsFor" type="number" min="0"></label><label>Goles en contra<input name="goalsAgainst" type="number" min="0"></label></div><div class="button-row"><button class="primary" type="submit">Guardar partido</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
