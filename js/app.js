@@ -18,7 +18,7 @@ const empty = (text) => `<div class="panel empty">${escapeHtml(text)}</div>`;
 const FORMATS = { F7: { players: 7, duration: 70, half: 35 }, F11: { players: 11, duration: 90, half: 45 } };
 const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo' };
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
-const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros' };
+const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
@@ -582,9 +582,7 @@ async function finishMatch() {
   const maximum = Math.max(...Object.values(totals));
   const missingReason = callup.availableIds.find((id) => (totals[id] ?? 0) < maximum && !details.minuteReasons[id]);
   if (missingReason) {
-    toast(`Indica el motivo de menos minutos de ${playerName(missingReason)}.`);
-    renderLive(); renderDelegate();
-    return;
+    details.minuteReasons[missingReason] = 'sin_indicar';
   }
   const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
   $('#rating-match-name').textContent = `Puntuación contra ${match.opponent}`;
