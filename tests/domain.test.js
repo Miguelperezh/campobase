@@ -20,6 +20,7 @@ import {
   shouldAutoPause,
   hashPin,
   verifyPin,
+  buildPlayerRatings,
 } from '../js/domain.js';
 
 test('reparte exactamente 490 minutos entre 10 disponibles en F7', () => {
@@ -290,4 +291,29 @@ test('protege los dos accesos con PIN validado y hash salado', async () => {
   assert.equal(await verifyPin('2469', 'sal-local', digest), false);
   await assert.rejects(() => hashPin('12', 'sal-local'), /4 y 8/);
   await assert.rejects(() => hashPin('abcd', 'sal-local'), /numérico/i);
+});
+
+test('Migue puntúa del 1 al 5 y la nota queda en el historial de cada jugador', () => {
+  const result = buildPlayerRatings(
+    [{ id: 'a', ratingHistory: [] }, { id: 'b' }],
+    { a: '5', b: '3' },
+    { role: 'owner', matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base' },
+  );
+
+  assert.deepEqual(result.ratings, { a: 5, b: 3 });
+  assert.deepEqual(result.players[0].ratingHistory, [
+    { matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base', rating: 5 },
+  ]);
+  assert.deepEqual(result.players[1].ratingHistory, [
+    { matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base', rating: 3 },
+  ]);
+});
+
+test('el delegado no puede puntuar y se rechazan notas incompletas o fuera de 1 a 5', () => {
+  const players = [{ id: 'a' }, { id: 'b' }];
+  const metadata = { matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base' };
+
+  assert.throws(() => buildPlayerRatings(players, { a: '5', b: '3' }, { ...metadata, role: 'delegate' }), /Solo Migue/i);
+  assert.throws(() => buildPlayerRatings(players, { a: '5' }, { ...metadata, role: 'owner' }), /todos los jugadores/i);
+  assert.throws(() => buildPlayerRatings(players, { a: '5', b: '6' }, { ...metadata, role: 'owner' }), /entre 1 y 5/i);
 });

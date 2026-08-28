@@ -240,6 +240,34 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
   };
 }
 
+export function buildPlayerRatings(players, values, metadata = {}) {
+  if (metadata.role !== 'owner') throw new TypeError('Solo Migue puede puntuar a los jugadores.');
+  if (!Array.isArray(players) || !players.length) throw new TypeError('Debe haber jugadores para puntuar.');
+  if (!metadata.matchId || !metadata.date) throw new TypeError('La puntuación debe estar vinculada a un partido.');
+
+  const ratings = {};
+  const updatedPlayers = players.map((player) => {
+    const rawRating = values[player.id];
+    if (rawRating === undefined || rawRating === null || rawRating === '') {
+      throw new TypeError('Debes puntuar a todos los jugadores.');
+    }
+    const rating = Number(rawRating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      throw new RangeError('Cada puntuación debe ser un número entero entre 1 y 5.');
+    }
+    ratings[player.id] = rating;
+    return {
+      ...player,
+      ratingHistory: [
+        ...(player.ratingHistory ?? []),
+        { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating },
+      ],
+    };
+  });
+
+  return { ratings, players: updatedPlayers };
+}
+
 export function shouldAutoPause(phase, elapsedSeconds) {
   if (!Number.isFinite(elapsedSeconds)) return false;
   if (phase === 'first_half') return elapsedSeconds >= 38 * 60;

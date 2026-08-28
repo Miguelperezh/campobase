@@ -1,4 +1,4 @@
-# CampoBase 1.4.0 — Fase 1
+# CampoBase 1.4.1 — Fase 1
 
 Estado: candidato con pruebas de dominio y sintaxis superadas. PWA estática en español, sin backend ni dependencias de ejecución.
 
@@ -6,7 +6,7 @@ Estado: candidato con pruebas de dominio y sintaxis superadas. PWA estática en 
 
 1. Plantilla: crear jugadores.
 2. Convocatorias: crear o editar, marcar exclusiones y revisar la lista. Si la rotación alcanza a alguien excluido antes por enfermedad o decisión técnica, decidir expresamente si entra.
-3. Partido en vivo: preparar porteros, pulsar Comienzo, registrar cambios, marcador e incidencias; Descanso/Segundo tiempo/Final controlan el flujo. Auto-pausa a 38:00 y 74:00.
+3. Partido en vivo: preparar porteros, pulsar Comienzo, registrar cambios, marcador e incidencias; Descanso/Segundo tiempo/Final controlan el flujo. Al finalizar, Migue puntúa obligatoriamente a cada convocado del 1 al 5. El delegado solo pausa y avisa a Migue. Auto-pausa a 38:00 y 74:00.
 4. Calendario: crear partidos con hora en formato 24 h.
 5. Asistencia: registrar o editar cualquier fecha; indicar hora si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
 6. Acceso: el primer uso crea dos PIN distintos. Migue ve toda la app; el delegado solo ve tiempos, cambios e incidencias del partido.
@@ -20,13 +20,13 @@ Estado: candidato con pruebas de dominio y sintaxis superadas. PWA estática en 
 
 ## Datos y permisos
 
-IndexedDB y Cache Storage del navegador. No usa red salvo para descargar los estáticos del hosting. No requiere cuenta, credenciales ni permisos externos. La asistencia de partido se crea automáticamente al finalizar y puede corregirse desde Asistencia.
+IndexedDB y Cache Storage del navegador. No usa red salvo para descargar los estáticos del hosting. No requiere cuenta, credenciales ni permisos externos. La asistencia de partido se crea automáticamente al finalizar y puede corregirse desde Asistencia. Las puntuaciones quedan tanto en `matches.ratings` como en `players.ratingHistory` dentro de la misma transacción.
 
 ## Pruebas observadas
 
-- `npm test`: 25/25 en verde.
+- `npm test`: 27/27 en verde.
 - `npm run check`: sintaxis válida.
-- Navegador real en localhost: pendiente de repetir para 1.4.0 antes de publicar.
+- Navegador real en localhost: formulario 1–5 visible para Migue al finalizar. La persistencia se cubre con pruebas de dominio y escritura atómica `putBatch`; queda pendiente repetir una comprobación E2E completa de lectura posterior en navegador.
 
 ## Límites
 
@@ -39,7 +39,7 @@ IndexedDB y Cache Storage del navegador. No usa red salvo para descargar los est
 
 ## Recuperación / rollback
 
-Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.4.0 falla, volver a servir 1.3.0; el esquema de copia sigue en versión 1 y es compatible.
+Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.4.1 falla, volver a servir 1.4.0; el esquema de copia sigue en versión 1 y es compatible.
 
 ## Desarrollo
 

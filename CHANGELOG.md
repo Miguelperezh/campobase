@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 — 2026-08-28
+
+- Al finalizar el segundo tiempo, Migue debe puntuar a cada convocado del 1 al 5 antes de guardar el partido.
+- Las puntuaciones se guardan atómicamente en el partido y en el historial de la ficha de cada jugador mediante IndexedDB.
+- El delegado solo puede pausar al final y avisar a Migue; no ve el formulario ni puede guardar puntuaciones.
+
 ## 1.4.0 — 2026-08-28
 
 - Minutos acumulados por temporada en la ficha y motivo de menor participación.
