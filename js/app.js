@@ -252,8 +252,10 @@ function updateMatchSource() {
 
 async function saveCallup(event) {
   event.preventDefault(); const form = event.target.closest('form');
+  console.log('[saveCallup] inicio, form id=', form?.getAttribute('id'));
   const existing = form.elements.id.value ? state.callups.find(({ id }) => id === form.elements.id.value) : null;
   let match = currentCallupMatch(form);
+  console.log('[saveCallup] match=', match ? (match.id || 'manual') : 'NULL');
   if (!match) return toast('Selecciona un partido del calendario.');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
