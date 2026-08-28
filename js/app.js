@@ -251,7 +251,7 @@ function updateMatchSource() {
 }
 
 async function saveCallup(event) {
-  event.preventDefault(); const form = event.target;
+  event.preventDefault(); const form = event.target.closest('form');
   const existing = form.elements.id.value ? state.callups.find(({ id }) => id === form.elements.id.value) : null;
   let match = currentCallupMatch(form);
   if (!match) return toast('Selecciona un partido del calendario.');
@@ -576,7 +576,7 @@ async function saveMatchRatings(event) {
   const match = state.matches.find((item) => item.id === state.timer.matchId); const callup = state.callups.find((item) => item.id === match.callupId);
   const details = ensureLiveDetails();
   const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
-  const values = formObject(event.target);
+  const values = formObject(event.target.closest('form'));
   const ratingValues = Object.fromEntries(players.map(({ id }) => [id, values[`rating-${id}`]]));
   const rated = buildPlayerRatings(players, ratingValues, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
   const updatedPlayers = rated.players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id] }));
@@ -644,7 +644,7 @@ function attendanceBuilder(matchId = '', recordId = '') {
 }
 
 async function saveTraining(event) {
-  event.preventDefault(); const form = event.target; const values = formObject(form);
+  event.preventDefault(); const form = event.target.closest('form'); const values = formObject(form);
   const existing = values.id ? state.trainings.find(({ id }) => id === values.id) : null;
   const match = values.kind === 'match' ? state.matches.find(({ id }) => id === values.matchId) : null;
   const callup = state.callups.find(({ id }) => id === match?.callupId);
