@@ -1,0 +1,300 @@
+// Ejercicios reales de Migue (Unión Viera Alevín D) — extraídos de sus PDFs de entrenamiento.
+// Formato rico: desarrollo paso a paso, diagrama específico con leyenda, qué se trabaja,
+// qué busco, qué observar, correcciones breves, si sale mal / si sale bien.
+
+const xml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
+
+// Diagrama específico: lista de elementos con coordenadas en viewBox 0..100.
+// players: [{x,y,n}] · defenders: [{x,y,n}] · cones: [{x,y}] · goals: [{x,y,dir}]
+// arrows: [{x1,y1,x2,y2,kind}] kind = pass|move|dribble|shot
+export function renderRealDiagram(item) {
+  const d = item.diagram || {};
+  const markerId = `arr-${String(item.id).replace(/[^a-z0-9-]/gi, '')}`;
+  const parts = [];
+  parts.push(`<rect class="diagram-field" x="4" y="6" width="92" height="88" rx="3"/>`);
+  parts.push(`<path class="diagram-line" d="M50 6v88 M4 50h92"/>`);
+  parts.push(`<circle class="diagram-line" cx="50" cy="50" r="10"/>`);
+  for (const g of (d.goals || [])) {
+    if (g.dir === 'right') parts.push(`<path class="diagram-goal" d="M96 ${g.y - 12} h4 v24 h-4"/>`);
+    else if (g.dir === 'left') parts.push(`<path class="diagram-goal" d="M4 ${g.y - 12} h-4 v24 h4"/>`);
+    else if (g.dir === 'top') parts.push(`<path class="diagram-goal" d="M${g.x - 12} 4 v-4 h24 v4"/>`);
+    else parts.push(`<path class="diagram-goal" d="M${g.x - 12} 96 v4 h24 v-4"/>`);
+  }
+  for (const c of (d.cones || [])) parts.push(`<path class="diagram-cone" d="M${c.x} ${c.y} l2.5 -6 l2.5 6z"/>`);
+  for (const a of (d.arrows || [])) {
+    const cls = a.kind === 'move' ? 'diagram-move' : a.kind === 'dribble' ? 'diagram-dribble' : a.kind === 'shot' ? 'diagram-shot' : 'diagram-pass';
+    parts.push(`<path class="${cls}" d="M${a.x1} ${a.y1} L${a.x2} ${a.y2}" marker-end="url(#${markerId})"/>`);
+  }
+  for (const p of (d.players || [])) parts.push(`<g class="diagram-player"><circle cx="${p.x}" cy="${p.y}" r="4.5"/><text x="${p.x}" y="${p.y + 1.7}">${xml(p.n)}</text></g>`);
+  for (const p of (d.defenders || [])) parts.push(`<g class="diagram-defender"><circle cx="${p.x}" cy="${p.y}" r="4.5"/><text x="${p.x}" y="${p.y + 1.7}">${xml(p.n)}</text></g>`);
+  if (d.ball) parts.push(`<circle class="diagram-ball" cx="${d.ball.x}" cy="${d.ball.y}" r="2.4"/>`);
+  return `<svg class="exercise-diagram" viewBox="0 0 100 100" role="img" aria-label="Diagrama de ${xml(item.name)}"><defs><marker id="${markerId}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z"/></marker></defs>${parts.join('')}</svg>`;
+}
+
+const ex = (data) => Object.freeze({ recordType: 'exercise', favorite: false, example: true, createdAt: 1, updatedAt: 1, ...data });
+
+export const REAL_EXERCISES = Object.freeze([
+  // ===== LUNES — Técnica básica, conducción, 1x1, finalización =====
+  ex({
+    id: 'lun-c1a', code: 'C1A', name: 'Conducción libre con balón', category: 'Técnica', duration: 4,
+    players: 'Todos. Cada jugador con 1 balón.', material: '4 conos + 1 balón por jugador.',
+    space: '20 × 20 m aprox. Los conos solo delimitan.', intensity: 'Baja al inicio → media al final.',
+    objective: 'Activar progresivamente, empezar a moverse con balón y observar el nivel de conducción.',
+    steps: ['Todos entran en el cuadrado con balón y conducen libremente sin salir.', 'Indico cambios de dirección a mi señal.', 'Pido alternar interior y exterior del pie.', 'Cuando pito, cada jugador detiene por completo el balón colocando la planta encima.', 'Vuelven inmediatamente a conducir.'],
+    works: ['Conducción cercana', 'Uso de ambos pies', 'Orientación', 'Percepción'],
+    lookFor: 'Que el balón no se aleje demasiado y que empiecen a mirar alrededor.',
+    observe: ['Balón demasiado lejos', 'Uso exclusivo de un pie', 'Choques frecuentes', 'Mirada siempre al balón'],
+    corrections: ['«Balón más cerca»', '«Mira antes de girar»', '«Prueba con el otro pie»'],
+    ifBad: 'Amplío un poco el espacio y reduzco consignas.', ifGood: 'Pido más cambios de dirección y uso más claro de ambos pies.',
+    diagram: { cones: [{x:10,y:10},{x:90,y:10},{x:10,y:90},{x:90,y:90}], players: [{x:30,y:30,n:'A'},{x:60,y:40,n:'B'},{x:40,y:65,n:'C'},{x:70,y:70,n:'D'}], ball: {x:30,y:30}, arrows: [{x1:30,y1:30,x2:60,y2:40,kind:'dribble'},{x1:60,y1:40,x2:40,y2:65,kind:'dribble'},{x1:40,y1:65,x2:70,y2:70,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-c1b', code: 'C1B', name: 'Puertas de conducción', category: 'Técnica', duration: 3,
+    players: 'Todos. Cada jugador con balón.', material: '12 conos formando 6 puertas + balones.',
+    space: '20 × 20 m. Cada puerta ~1,5 m.', intensity: 'Media.',
+    objective: 'Conducir, levantar la vista, localizar puerta libre y cambiar de dirección.',
+    steps: ['Cada jugador conduce libremente.', 'Busca una puerta libre.', 'Atraviesa la puerta con balón controlado.', 'Al salir cambia de dirección.', 'Busca otra puerta distinta.', 'No puede usar la misma puerta dos veces seguidas.'],
+    works: ['Conducción', 'Percepción', 'Cambio de dirección', 'Decisión'],
+    lookFor: 'Que antes de llegar a una puerta empiecen a localizar la siguiente.',
+    observe: ['Mirada solo al balón', 'Entrar a puerta ocupada', 'Control largo al girar'],
+    corrections: ['«Mira la siguiente antes de llegar»', '«Balón cerca al girar»', '«Busca una puerta libre»'],
+    ifBad: 'Aumento el espacio.', ifGood: 'Pido alternar pie derecho e izquierdo.',
+    diagram: { cones: [{x:20,y:20},{x:26,y:20},{x:50,y:15},{x:56,y:15},{x:80,y:20},{x:86,y:20},{x:20,y:80},{x:26,y:80},{x:50,y:85},{x:56,y:85},{x:80,y:80},{x:86,y:80}], players: [{x:40,y:50,n:'A'}], ball: {x:40,y:50}, arrows: [{x1:40,y1:50,x2:50,y2:15,kind:'dribble'},{x1:50,y1:15,x2:80,y2:20,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-c1c', code: 'C1C', name: 'Aceleraciones cortas', category: 'Preparación física', duration: 3,
+    players: 'Grupos de 3-4.', material: '2 conos por grupo.',
+    space: '7 m entre salida y final.', intensity: '80-90 %. No sprint máximo.',
+    objective: 'Activar reacción y aceleración corta sin fatigar.',
+    steps: ['A espera detrás de salida.', 'A mi señal acelera 7 m hasta superar final.', 'La aceleración dura aprox. 2-3 s.', 'A vuelve andando por fuera.', 'Sale B, después C y D.', 'Cada jugador hace 3 aceleraciones.'],
+    works: ['Reacción', 'Primeros pasos', 'Aceleración corta'],
+    lookFor: 'Activar velocidad sin cansar.',
+    observe: ['Fatiga', 'Salida desequilibrada', 'Vuelta corriendo'],
+    corrections: ['«Primeros pasos rápidos»', '«Acelera y vuelve andando»'],
+    ifBad: 'Elimino la tercera repetición.', ifGood: 'Mantengo; no aumento volumen.',
+    diagram: { cones: [{x:15,y:50},{x:85,y:50}], players: [{x:15,y:50,n:'A'}], ball: {x:15,y:50}, arrows: [{x1:15,y1:50,x2:85,y2:50,kind:'move'}] },
+  }),
+  ex({
+    id: 'lun-e2a', code: 'E2A', name: 'Pase y sigo en cuadrado', category: 'Técnica', duration: 6,
+    players: '8-16. Si hay muchos, 2 cuadrados. 2-4 jugadores por cono.', material: '4 conos + 1 balón por cuadrado.',
+    space: 'Cuadrado ~8 × 8 m.', intensity: 'Media.',
+    objective: 'Pase, control y movimiento después del pase.',
+    steps: ['A pasa a B.', 'A corre al cono de B.', 'B controla y pasa a C.', 'B corre al cono de C.', 'C controla, pasa a D y corre a D.', 'D controla, pasa al siguiente situado en A y corre a A.', 'A mitad del tiempo cambio el sentido.'],
+    works: ['Pase raso', 'Control', 'Orientación corporal', 'Movimiento después del pase'],
+    lookFor: 'Que entiendan que después de pasar no se quedan quietos.',
+    observe: ['Pase impreciso', 'Control largo', 'Se queda parado', 'No mira antes de recibir'],
+    corrections: ['«Pase raso»', '«Control y cabeza arriba»', '«Después de pasar, te mueves»', '«Perfílate antes de recibir»'],
+    ifBad: 'Amplío el cuadrado y permito más toques.', ifGood: 'Máximo 2 toques o control orientado.',
+    diagram: { cones: [{x:25,y:25},{x:75,y:25},{x:75,y:75},{x:25,y:75}], players: [{x:25,y:25,n:'A'},{x:75,y:25,n:'B'},{x:75,y:75,n:'C'},{x:25,y:75,n:'D'}], ball: {x:25,y:25}, arrows: [{x1:25,y1:25,x2:75,y2:25,kind:'pass'},{x1:75,y1:25,x2:75,y2:75,kind:'pass'},{x1:75,y1:75,x2:25,y2:75,kind:'pass'},{x1:25,y1:75,x2:25,y2:25,kind:'pass'}] },
+  }),
+  ex({
+    id: 'lun-e2b', code: 'E2B', name: 'Pase, devolución y tercer jugador', category: 'Técnica', duration: 6,
+    players: 'Grupos de 3.', material: '3 conos + 1 balón por grupo.',
+    space: 'Triángulo de 6-8 m por lado.', intensity: 'Media.',
+    objective: 'Pase, apoyo, devolución y continuidad con tercer compañero.',
+    steps: ['A pasa a B.', 'B devuelve a A.', 'A pasa a C.', 'A corre al cono de B.', 'B corre al cono de C.', 'C conduce hasta el cono A.', 'C queda en A con el balón y comienza la siguiente repetición.'],
+    works: ['Pase', 'Devolución', 'Apoyo', 'Juego de cara', 'Coordinación'],
+    lookFor: 'Que empiecen a usar un apoyo para continuar la jugada.',
+    observe: ['B no se ofrece', 'Devolución fuerte', 'A no preparado', 'Rotación confusa'],
+    corrections: ['«Apóyate bien»', '«Devuelve fácil»', '«Prepárate antes de recibir»', '«Pasa y cambia de sitio»'],
+    ifBad: 'Quito rotación y hago solo A-B-A-C.', ifGood: 'Máximo 2 toques o devolución de primeras.',
+    diagram: { cones: [{x:20,y:80},{x:80,y:80},{x:50,y:20}], players: [{x:20,y:80,n:'A'},{x:80,y:80,n:'B'},{x:50,y:20,n:'C'}], ball: {x:20,y:80}, arrows: [{x1:20,y1:80,x2:80,y2:80,kind:'pass'},{x1:80,y1:80,x2:20,y2:80,kind:'pass'},{x1:20,y1:80,x2:50,y2:20,kind:'pass'},{x1:50,y1:20,x2:20,y2:80,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-e3a', code: 'E3A', name: 'Conducción con cambios de dirección', category: 'Técnica', duration: 6,
+    players: 'Grupos de 4-6. Si hay muchos, 2 recorridos.', material: '1 cono salida + 3 de cambio + 2 de puerta final + balón por jugador.',
+    space: '12-15 m de largo.', intensity: 'Media; aumenta tras último cono.',
+    objective: 'Conducción cercana, giros y aceleración con balón.',
+    steps: ['A sale conduciendo.', 'Rodea cono 1 por fuera.', 'Va a cono 2 y cambia dirección.', 'Va a cono 3 y vuelve a cambiar.', 'Acelera con balón hacia puerta final.', 'Atraviesa puerta con control.', 'Vuelve andando por fuera; sale siguiente cuando A supera cono 2.'],
+    works: ['Conducción', 'Cambios de dirección', 'Ambos pies', 'Aceleración con balón'],
+    lookFor: 'Cambiar de dirección sin perder control y acelerar después.',
+    observe: ['Balón lejos', 'Siempre mismo pie', 'Se para para girar', 'Pierde balón al acelerar'],
+    corrections: ['«Balón cerca al cono»', '«Gira y sal»', '«Prueba con el otro pie»', '«Después del último cono, acelera»'],
+    ifBad: 'Separo conos y quito aceleración final.', ifGood: 'Alterno pie y reduzco ligeramente distancias.',
+    diagram: { cones: [{x:10,y:50},{x:30,y:30},{x:50,y:70},{x:70,y:30},{x:88,y:42},{x:88,y:58}], players: [{x:10,y:50,n:'A'}], ball: {x:10,y:50}, arrows: [{x1:10,y1:50,x2:30,y2:30,kind:'dribble'},{x1:30,y1:30,x2:50,y2:70,kind:'dribble'},{x1:50,y1:70,x2:70,y2:30,kind:'dribble'},{x1:70,y1:30,x2:88,y2:50,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-e3b', code: 'E3B', name: '1 contra 1 en calle', category: 'Táctica', duration: 6,
+    players: 'Grupos de 4-6. A atacante, B defensor.', material: '4 conos calle + 2 puerta final + balones.',
+    space: '10 × 6 m aprox.', intensity: 'Media-alta en acciones cortas.',
+    objective: 'Regate/protección en ataque y temporización en defensa.',
+    steps: ['A empieza con balón.', 'B empieza varios metros delante.', 'A mi señal comienza 1x1.', 'A intenta superar a B y cruzar puerta con balón controlado.', 'B intenta impedirlo y recuperar.', 'Termina con puerta, robo o balón fuera.', 'A pasa a fila defensores y B a fila atacantes.'],
+    works: ['Regate', 'Cambio de ritmo', 'Protección', 'Defensa individual', 'Temporización'],
+    lookFor: 'Atacante: engañar y cambiar ritmo. Defensor: frenar sin lanzarse.',
+    observe: ['A va directo', 'A no cambia ritmo', 'B se tira pronto', 'B pierde posición'],
+    corrections: ['«Fíjalo antes de salir»', '«Engaña y cambia»', '«No te tires»', '«Ponte entre él y la puerta»'],
+    ifBad: 'Ensacho calle.', ifGood: 'Estrecho ligeramente.',
+    diagram: { cones: [{x:15,y:20},{x:15,y:80},{x:40,y:20},{x:40,y:80},{x:88,y:42},{x:88,y:58}], players: [{x:25,y:50,n:'A'}], defenders: [{x:55,y:50,n:'B'}], ball: {x:25,y:50}, arrows: [{x1:25,y1:50,x2:55,y2:50,kind:'dribble'},{x1:55,y1:50,x2:88,y2:50,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-e4a', code: 'E4A', name: 'Pase, control y disparo', category: 'Técnica', duration: 6,
+    players: 'Grupos de 4-6.', material: '4 conos + 2-3 balones.',
+    space: '12-15 m; portería de conos ~3 m.', intensity: 'Media.',
+    objective: 'Recibir, orientar y finalizar con precisión.',
+    steps: ['A pasa a B.', 'B recibe y controla hacia delante.', 'B da uno o dos pasos preparando cuerpo.', 'B dispara entre los dos conos.', 'A ocupa B.', 'B recoge balón y vuelve a fila A.'],
+    works: ['Pase', 'Control orientado', 'Golpeo', 'Precisión'],
+    lookFor: 'Que preparen la finalización y no busquen solo fuerza.',
+    observe: ['Control debajo del cuerpo', 'Control largo', 'Dispara sin mirar', 'Solo potencia'],
+    corrections: ['«Control hacia delante»', '«Prepárate antes de tirar»', '«Mira la portería»', '«Coloca antes que pegar fuerte»'],
+    ifBad: 'Acerco y agrando portería.', ifGood: 'Máximo 2 toques y alterno pierna.',
+    diagram: { cones: [{x:88,y:40},{x:88,y:60}], players: [{x:20,y:50,n:'A'},{x:60,y:50,n:'B'}], ball: {x:20,y:50}, arrows: [{x1:20,y1:50,x2:60,y2:50,kind:'pass'},{x1:60,y1:50,x2:88,y2:50,kind:'shot'}] },
+  }),
+  ex({
+    id: 'lun-e4b', code: 'E4B', name: '2 contra 1 con finalización', category: 'Táctica', duration: 6,
+    players: 'Grupos de ~6. A y B atacan; C defiende.', material: '4 conos zona + 2 portería + balones.',
+    space: '12 × 10 m aprox.', intensity: 'Media-alta en acciones cortas.',
+    objective: 'Reconocer si conviene pasar o conducir en 2x1.',
+    steps: ['A empieza con balón y B acompaña separado.', 'C defiende entre atacantes y portería.', 'Si C sale a A, A puede pasar a B.', 'Si C protege mucho pase a B, A puede conducir.', 'Termina con gol, robo o fuera.', 'Rotan roles.'],
+    works: ['Decisión', 'Pase', 'Conducción', 'Desmarque', 'Finalización'],
+    lookFor: 'Que A mire al defensor y B se separe para ser opción.',
+    observe: ['A no mira a B', 'B corre detrás', 'C se lanza', 'Ataque sin decisión'],
+    corrections: ['«Mira a tu compañero»', '«Sepárate»', '«Fija al defensor»', '«Si te deja espacio, sigue»', '«Aguanta»'],
+    ifBad: 'Ensacho espacio.', ifGood: 'Estrecho ligeramente.',
+    diagram: { cones: [{x:88,y:40},{x:88,y:60}], players: [{x:25,y:40,n:'A'},{x:25,y:60,n:'B'}], defenders: [{x:60,y:50,n:'C'}], ball: {x:25,y:40}, arrows: [{x1:25,y1:40,x2:25,y2:60,kind:'pass'},{x1:25,y1:40,x2:88,y2:50,kind:'dribble'}] },
+  }),
+  ex({
+    id: 'lun-p1', code: 'P1', name: 'Partidillo de observación', category: 'Partido condicionado / Small-sided games', duration: 14,
+    players: 'Preferente 7x7. Rotaciones si sobran.', material: '2 porterías + petos + balones.',
+    space: 'Medio campo F7 aprox.', intensity: 'Media-alta natural.',
+    objective: 'Ver si aparece lo trabajado y obtener lectura del grupo.',
+    steps: ['Min 0-5: juego libre. Intervengo muy poco.', 'Min 5-9: una consigna: después de pasar, vuelvo a ayudar.', 'Min 9-14: juego libre otra vez.', 'En entrenamiento aprovecho pausas naturales para una corrección breve, sin cortar cada jugada.'],
+    works: ['Juego real', 'Observación', 'Aplicación técnica'],
+    lookFor: 'Conocer nivel, actitud y posibles posiciones.',
+    observe: ['Quién busca balón', 'Quién se esconde', 'Quién levanta cabeza', 'Quién reacciona al perder'],
+    corrections: ['«Ábrete»', '«Muévete después»', '«Mira antes»', '«Ayuda»', '«No te tires»'],
+    ifBad: 'Quito condición si atasca.', ifGood: 'Mantengo juego libre.',
+    diagram: { goals: [{x:50,y:6,dir:'top'},{x:50,y:94,dir:'bottom'}], players: [{x:30,y:25,n:'7'},{x:50,y:20,n:'9'},{x:70,y:25,n:'11'},{x:50,y:40,n:'4'},{x:35,y:55,n:'3'},{x:65,y:55,n:'2'},{x:50,y:70,n:'1'}], defenders: [{x:30,y:75,n:'7'},{x:50,y:80,n:'9'},{x:70,y:75,n:'11'},{x:50,y:60,n:'4'},{x:35,y:45,n:'3'},{x:65,y:45,n:'2'},{x:50,y:30,n:'1'}], ball: {x:50,y:50} },
+  }),
+
+  // ===== MIÉRCOLES — Pase y apoyo, presión, defensa individual y posesión =====
+  ex({
+    id: 'mie-c2a', code: 'C2A', name: 'Pase por parejas en movimiento', category: 'Técnica', duration: 4,
+    players: 'Todos por parejas. Grupo de 3 si sobra uno.', material: '1 balón por pareja + 4 conos límite.',
+    space: '20 × 20 m aprox.', intensity: 'Baja → media.',
+    objective: 'Activar con pase/control mientras siguen moviéndose.',
+    steps: ['A pasa a B.', 'A se desplaza a una nueva posición.', 'B controla y levanta la vista.', 'B pasa a A.', 'B se desplaza.', 'La pareja sigue moviéndose por todo el espacio.'],
+    works: ['Pase', 'Control', 'Orientación', 'Movilidad'],
+    lookFor: 'Preparar el concepto de apoyo: pasar y volver a ofrecerse.',
+    observe: ['Parejas quietas', 'Pase fuerte', 'Control largo', 'Mirada solo al balón'],
+    corrections: ['«Pase raso»', '«Después del pase, muévete»', '«Mira antes de recibir»', '«Control hacia espacio libre»'],
+    ifBad: 'Amplío espacio.', ifGood: 'Pido orientar primer control.',
+    diagram: { cones: [{x:10,y:10},{x:90,y:10},{x:10,y:90},{x:90,y:90}], players: [{x:30,y:40,n:'A'},{x:60,y:40,n:'B'},{x:30,y:70,n:'C'},{x:60,y:70,n:'D'}], ball: {x:30,y:40}, arrows: [{x1:30,y1:40,x2:60,y2:40,kind:'pass'},{x1:30,y1:70,x2:60,y2:70,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-c2b', code: 'C2B', name: 'Pase, devolución y reacción a puerta', category: 'Técnica', duration: 3,
+    players: 'Grupos de 3. A y B participan; C espera y rota.', material: '2 conos formando puerta + 1 balón.',
+    space: 'A a 5-6 m de B; puerta delante de B.', intensity: 'Media.',
+    objective: 'Pasar, devolver, desmarcar sin balón y volver a recibir tras cruzar puerta.',
+    steps: ['A pasa a B.', 'B devuelve el balón a A.', 'B corre SIN BALÓN y atraviesa la puerta.', 'Cuando B ya cruza, A pasa el balón al espacio.', 'B recibe al otro lado.', 'Rotación: A ocupa B; B ocupa C; C pasa a A.'],
+    works: ['Pase', 'Devolución', 'Desmarque corto', 'Timing', 'Recepción tras movimiento'],
+    lookFor: 'Paso, devuelvo, me muevo y vuelvo a participar.',
+    observe: ['B corre antes de devolver', 'A pasa pronto', 'B no cruza puerta', 'Pase no va al espacio'],
+    corrections: ['«Primero devuelve»', '«Ahora muévete»', '«Cruza la puerta»', '«Espera el momento»', '«Pásala al espacio»'],
+    ifBad: 'Simplifico quitando el pase final 1-2 repeticiones.', ifGood: 'Pido recepción orientada.',
+    diagram: { cones: [{x:70,y:40},{x:70,y:60}], players: [{x:20,y:50,n:'A'},{x:50,y:50,n:'B'}], ball: {x:20,y:50}, arrows: [{x1:20,y1:50,x2:50,y2:50,kind:'pass'},{x1:50,y1:50,x2:20,y2:50,kind:'pass'},{x1:50,y1:50,x2:70,y2:50,kind:'move'},{x1:20,y1:50,x2:70,y2:50,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-c2c', code: 'C2C', name: 'Reacción + aceleración corta', category: 'Preparación física', duration: 3,
+    players: 'Grupos de 3-4.', material: '1 cono salida + 2 conos finales.',
+    space: '6 m desde salida a cada final.', intensity: '80-90 %, 2-3 s por acción.',
+    objective: 'Activar reacción y primeros pasos sin fatigar.',
+    steps: ['A espera en salida.', 'Indico izquierda o derecha.', 'A acelera al cono indicado.', 'Supera cono y vuelve andando.', 'Salen B, C y D.', 'Cada jugador hace unas 3 aceleraciones.'],
+    works: ['Reacción', 'Primer paso', 'Aceleración'],
+    lookFor: 'Activar acciones rápidas sin cansancio.',
+    observe: ['Fatiga', 'Resbalones', 'Reacción lenta'],
+    corrections: ['«Reacciona a la señal»', '«Primeros pasos rápidos»', '«Después, andando»'],
+    ifBad: 'Reduzco a 2 repeticiones.', ifGood: 'Mantengo.',
+    diagram: { cones: [{x:50,y:20},{x:20,y:80},{x:80,y:80}], players: [{x:50,y:20,n:'A'}], ball: {x:50,y:20}, arrows: [{x1:50,y1:20,x2:20,y2:80,kind:'move'},{x1:50,y1:20,x2:80,y2:80,kind:'move'}] },
+  }),
+  ex({
+    id: 'mie-e5a', code: 'E5A', name: 'Rondo 4 contra 1', category: 'Táctica', duration: 6,
+    players: 'Grupos de 5. Cuatro fuera, uno dentro.', material: '4 conos + 1 balón.',
+    space: '8 × 8 m aprox.', intensity: 'Media.',
+    objective: 'Crear líneas de pase y reacción tras pérdida.',
+    steps: ['A, B, C y D ocupan exterior; E defiende dentro.', 'No hay orden obligatorio de pase.', 'El poseedor busca compañero libre y los demás ajustan para ofrecer línea.', 'E intenta interceptar.', 'Si E roba o balón sale, entra a defender quien perdió.', 'Si nivel bajo, sin límite de toques; si progresa, 2-3.'],
+    works: ['Pase', 'Control', 'Apoyo', 'Percepción', 'Reacción tras pérdida'],
+    lookFor: 'Que el poseedor tenga más de una opción y quien pierde reaccione.',
+    observe: ['Jugadores escondidos', 'Pases sin mirar', 'Todos pegados al cono', 'Defensor persigue sin orientar'],
+    corrections: ['«Dale una opción»', '«No te escondas»', '«Mira antes»', '«Si pierdes, entra rápido»'],
+    ifBad: 'Amplío a 10 × 10 m.', ifGood: '5 pases = 1 punto o máximo 2 toques.',
+    diagram: { cones: [{x:25,y:25},{x:75,y:25},{x:75,y:75},{x:25,y:75}], players: [{x:25,y:25,n:'A'},{x:75,y:25,n:'B'},{x:75,y:75,n:'C'},{x:25,y:75,n:'D'}], defenders: [{x:50,y:50,n:'E'}], ball: {x:25,y:25}, arrows: [{x1:25,y1:25,x2:75,y2:25,kind:'pass'},{x1:75,y1:25,x2:75,y2:75,kind:'pass'},{x1:75,y1:75,x2:25,y2:75,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-e5b', code: 'E5B', name: 'Rondo 4 contra 2', category: 'Táctica', duration: 6,
+    players: 'Grupos de 6. Cuatro conservan, dos defienden.', material: '4 conos + 1 balón.',
+    space: '10 × 8 m aprox.', intensity: 'Media-alta en defensores.',
+    objective: 'Introducir presión de dos defensores y cobertura.',
+    steps: ['A, B, C y D conservan.', 'E y F defienden juntos.', 'Defensor más cercano presiona.', 'Segundo defensor cierra línea cercana, no va al mismo jugador.', 'Si roban, cambio defensores según criterio sencillo.', 'Si cuesta, hago cambios cada 45-60 s.'],
+    works: ['Pase', 'Apoyo', 'Presión', 'Cobertura', 'Decisión'],
+    lookFor: 'Diferenciar: uno aprieta y otro ayuda.',
+    observe: ['Dos defensores van al balón', 'Poseedores se esconden', 'Pases al centro sin mirar'],
+    corrections: ['«Uno aprieta, otro ayuda»', '«Dale una salida»', '«No vayáis los dos»', '«Mira antes»'],
+    ifBad: 'Vuelvo a 4x1.', ifGood: '6 pases = 1 punto.',
+    diagram: { cones: [{x:25,y:25},{x:75,y:25},{x:75,y:75},{x:25,y:75}], players: [{x:25,y:25,n:'A'},{x:75,y:25,n:'B'},{x:75,y:75,n:'C'},{x:25,y:75,n:'D'}], defenders: [{x:45,y:45,n:'E'},{x:60,y:60,n:'F'}], ball: {x:25,y:25}, arrows: [{x1:25,y1:25,x2:75,y2:25,kind:'pass'},{x1:75,y1:25,x2:75,y2:75,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-e6a', code: 'E6A', name: '1 contra 1 defensivo · aguantar y orientar', category: 'Táctica', duration: 6,
+    players: 'Grupos de 4-6. A atacante, B defensor.', material: '4 conos calle + 2 puerta + balones.',
+    space: '10 × 6 m.', intensity: 'Media-alta, acciones cortas.',
+    objective: 'Enseñar al defensor a no lanzarse y proteger objetivo.',
+    steps: ['A sale con balón.', 'B empieza 3-4 m delante.', 'B retrocede y ajusta distancia orientando a A a un lateral.', 'B roba solo cuando balón se separa o A pierde control.', 'Termina con puerta, robo o fuera.', 'Rotan.'],
+    works: ['Defensa individual', 'Temporización', 'Perfil', 'Momento de robo'],
+    lookFor: 'Que B primero proteja la puerta.',
+    observe: ['B se lanza', 'B no frena', 'A supera siempre por centro'],
+    corrections: ['«Aguanta»', '«No te tires»', '«Protege el centro»', '«Espera que se le vaya»'],
+    ifBad: 'Acorto distancia A-B o estrecho puerta.', ifGood: 'Aumento ligeramente espacio.',
+    diagram: { cones: [{x:15,y:20},{x:15,y:80},{x:40,y:20},{x:40,y:80},{x:88,y:42},{x:88,y:58}], players: [{x:25,y:50,n:'A'}], defenders: [{x:55,y:50,n:'B'}], ball: {x:25,y:50}, arrows: [{x1:25,y1:50,x2:55,y2:50,kind:'dribble'},{x1:55,y1:50,x2:40,y2:35,kind:'move'}] },
+  }),
+  ex({
+    id: 'mie-e6b', code: 'E6B', name: '2 contra 2 · presión y ayuda', category: 'Táctica', duration: 6,
+    players: 'Grupos de 6-8. A-B atacan; C-D defienden.', material: '4 conos zona + 2 puerta + balones.',
+    space: '12 × 10 m.', intensity: 'Media-alta.',
+    objective: 'Relacionar presión del cercano con ayuda del compañero.',
+    steps: ['A empieza con balón; B se abre.', 'C, defensor más cercano, sale a presionar A.', 'D no va también a A: cubre detrás/lado y vigila B.', 'A y B intentan superar y cruzar puerta.', 'C y D roban o fuerzan salida.', 'Rotan roles.'],
+    works: ['Presión', 'Cobertura', '2x2', 'Pase', 'Desmarque'],
+    lookFor: 'Que los defensores no vayan los dos al balón y atacantes se separen.',
+    observe: ['C y D persiguen A', 'D demasiado lejos', 'B pegado a A', 'A no mira'],
+    corrections: ['«Uno aprieta, otro ayuda»', '«Sepárate»', '«Mira a tu compañero»', '«Cubre detrás»'],
+    ifBad: 'Hago 2x1.', ifGood: 'Estrecho espacio si ataque progresa fácil.',
+    diagram: { cones: [{x:88,y:40},{x:88,y:60}], players: [{x:25,y:40,n:'A'},{x:25,y:60,n:'B'}], defenders: [{x:55,y:40,n:'C'},{x:60,y:65,n:'D'}], ball: {x:25,y:40}, arrows: [{x1:25,y1:40,x2:25,y2:60,kind:'pass'},{x1:55,y1:40,x2:25,y2:40,kind:'move'}] },
+  }),
+  ex({
+    id: 'mie-e7a', code: 'E7A', name: '3 contra 3 + 2 apoyos exteriores', category: 'Táctica', duration: 6,
+    players: '8 por espacio: 3v3 dentro + 2 apoyos.', material: '4 conos + petos + balón.',
+    space: '14 × 12 m.', intensity: 'Media-alta.',
+    objective: 'Trabajar apoyo y conservación con superioridad exterior.',
+    steps: ['3 blancos contra 3 negros dentro.', 'Dos apoyos exteriores juegan con el equipo que tiene balón.', 'El equipo puede usar apoyo y recibir devolución.', 'Apoyos no entran.', 'Al cambiar posesión, apoyos ayudan al nuevo poseedor.', 'Cada 2 min cambio apoyos.'],
+    works: ['Apoyo', 'Pase', 'Cambio de orientación', 'Percepción', 'Presión tras pérdida'],
+    lookFor: 'Buscar compañero libre y valorar apoyo exterior.',
+    observe: ['Todos juntos', 'No usan apoyos', 'Pierden y se desconectan'],
+    corrections: ['«Usa el apoyo»', '«Ábrete»', '«Si pierdes, reacciona»', '«Dale una salida»'],
+    ifBad: 'Aumento espacio o añado un apoyo.', ifGood: 'Máximo 3 toques.',
+    diagram: { cones: [{x:15,y:15},{x:85,y:15},{x:15,y:85},{x:85,y:85}], players: [{x:35,y:35,n:'A'},{x:50,y:50,n:'B'},{x:35,y:65,n:'C'}], defenders: [{x:65,y:35,n:'D'},{x:65,y:65,n:'E'},{x:50,y:50,n:'F'}], ball: {x:35,y:35}, arrows: [{x1:35,y1:35,x2:15,y2:15,kind:'pass'},{x1:15,y1:15,x2:35,y2:35,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-e7b', code: 'E7B', name: '3 contra 3 a dos puertas · transición', category: 'Táctica', duration: 6,
+    players: '6 por campo.', material: '8 conos + petos + balones.',
+    space: '15 × 10 m.', intensity: 'Media-alta.',
+    objective: 'Pasar rápido de ataque a defensa al perder.',
+    steps: ['Dos equipos de 3 juegan.', 'Cada equipo ataca una puerta.', 'Punto al atravesar puerta con balón controlado.', 'Al perder, el más cercano frena al nuevo poseedor.', 'Los otros dos vuelven hacia su puerta y cierran por dentro.', 'No uso cronómetro de 5 s; busco reacción simple.'],
+    works: ['Transición', 'Presión cercana', 'Repliegue', 'Conducción', 'Pase'],
+    lookFor: 'Que al perder nadie se quede mirando.',
+    observe: ['Tres van al balón', 'Nadie vuelve', 'Equipo largo'],
+    corrections: ['«El más cercano aprieta»', '«Los otros vuelven»', '«Juntos»', '«Mira antes»'],
+    ifBad: 'Agrando espacio.', ifGood: 'Reduzco ligeramente.',
+    diagram: { cones: [{x:10,y:40},{x:10,y:60},{x:90,y:40},{x:90,y:60}], players: [{x:30,y:35,n:'A'},{x:30,y:50,n:'B'},{x:30,y:65,n:'C'}], defenders: [{x:70,y:35,n:'D'},{x:70,y:50,n:'E'},{x:70,y:65,n:'F'}], ball: {x:30,y:50}, arrows: [{x1:30,y1:50,x2:70,y2:50,kind:'pass'}] },
+  }),
+  ex({
+    id: 'mie-p2', code: 'P2', name: 'Partidillo · apoyo y reacción tras pérdida', category: 'Partido condicionado / Small-sided games', duration: 14,
+    players: '7x7 si es posible.', material: '2 porterías + petos + balones.',
+    space: 'Medio campo F7.', intensity: 'Media-alta natural.',
+    objective: 'Comprobar apoyo y reacción defensiva sin demasiadas reglas.',
+    steps: ['Min 0-5: libre.', 'Min 5-9: al perder, el más cercano aprieta y los demás vuelven a ayudar.', 'Min 9-14: libre de nuevo.', 'En pausas naturales del entrenamiento recuerdo una idea breve, no paro cada jugada.'],
+    works: ['Juego real', 'Apoyo', 'Presión', 'Repliegue'],
+    lookFor: 'Ver si trasladan lo trabajado a juego libre.',
+    observe: ['Apoyos', 'Distancias', 'Reacción tras pérdida'],
+    corrections: ['«Dale una opción»', '«El más cercano aprieta»', '«Los otros ayudan»', '«Juntos»'],
+    ifBad: 'Quito condición.', ifGood: 'Mantengo.',
+    diagram: { goals: [{x:50,y:6,dir:'top'},{x:50,y:94,dir:'bottom'}], players: [{x:30,y:25,n:'7'},{x:50,y:20,n:'9'},{x:70,y:25,n:'11'},{x:50,y:40,n:'4'},{x:35,y:55,n:'3'},{x:65,y:55,n:'2'},{x:50,y:70,n:'1'}], defenders: [{x:30,y:75,n:'7'},{x:50,y:80,n:'9'},{x:70,y:75,n:'11'},{x:50,y:60,n:'4'},{x:35,y:45,n:'3'},{x:65,y:45,n:'2'},{x:50,y:30,n:'1'}], ball: {x:50,y:50} },
+  }),
+]);

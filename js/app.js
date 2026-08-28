@@ -2,6 +2,7 @@ import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatab
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { REAL_EXERCISES, renderRealDiagram } from './real-exercises.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -846,11 +847,34 @@ function renderExercises() {
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
-  $('#exercises-list').innerHTML = exercises.length ? exercises.map((item) => `<article class="panel exercise-card">
-    <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><span class="pill">${escapeHtml(item.difficulty)}</span><h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
-    <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)} jugadores</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div><p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p><details class="diagram-details"><summary>Ver demostración</summary>${renderExerciseDiagram(item)}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: movimiento o pase</p></details>${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
-    <div class="button-row"><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
-  </article>`).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+  $('#exercises-list').innerHTML = exercises.length ? exercises.map((item) => {
+    const isReal = Array.isArray(item.steps);
+    const diagram = isReal ? renderRealDiagram(item) : renderExerciseDiagram(item);
+    const body = isReal ? `
+      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
+      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
+      <p><strong>Intensidad:</strong> ${escapeHtml(item.intensity || '—')}</p>
+      <p><strong>Objetivo:</strong> ${escapeHtml(item.objective || '')}</p>
+      <details class="diagram-details" open><summary>Ver demostración</summary>${diagram}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: pase, movimiento o conducción</p></details>
+      <details><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol></details>
+      <details><summary>Qué se trabaja</summary><ul class="plain-list">${item.works.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>
+      <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor || '')}</p>
+      <details><summary>Qué debo observar</summary><ul class="plain-list">${item.observe.map((o) => `<li>${escapeHtml(o)}</li>`).join('')}</ul></details>
+      <details><summary>Correcciones breves</summary><ul class="plain-list">${item.corrections.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul></details>
+      <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad || '')}</p>
+      <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood || '')}</p>
+    ` : `
+      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)} jugadores</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
+      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p>
+      <details class="diagram-details"><summary>Ver demostración</summary>${diagram}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: movimiento o pase</p></details>
+      ${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
+    `;
+    return `<article class="panel exercise-card">
+      <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
+      ${body}
+      <div class="button-row"><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
+    </article>`;
+  }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
 }
 
 function editExercise(id) {
@@ -946,6 +970,14 @@ async function ensurePhase2V3Seeded() {
   if (await getOne('settings', 'phase2-v3-seeded')) return;
   const current = await getAll('settings');
   await putBatch({ settings: planPhase2V3Seed(current) });
+}
+
+async function ensureRealExercisesSeeded() {
+  if (await getOne('settings', 'real-exercises-seeded')) return;
+  const current = await getAll('settings');
+  const existingIds = new Set(current.filter(({ recordType }) => recordType === 'exercise').map(({ id }) => id));
+  const additions = REAL_EXERCISES.filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
+  await putBatch({ settings: [...additions, { id: 'real-exercises-seeded', recordType: 'migration', version: 5, createdAt: Date.now() }] });
 }
 
 async function exportData() {
@@ -1252,6 +1284,7 @@ async function init() {
   await ensurePhase2Seeded();
   await ensurePhase2V2Seeded();
   await ensurePhase2V3Seeded();
+  await ensureRealExercisesSeeded();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
   if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
