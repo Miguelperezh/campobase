@@ -1,4 +1,4 @@
-# CampoBase 2.0.0 — ejercicios y sesiones de entrenamiento
+# CampoBase 2.1.0 — demostraciones y biblioteca ampliada
 
 Estado: candidato. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -11,7 +11,7 @@ Estado: candidato. PWA estática en español con Supabase como fuente compartida
 5. Asistencia: registrar o editar cualquier fecha; indicar la llegada con selectores propios de 24 horas si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
 6. Acceso: el primer uso configura una sola vez dos PIN distintos. Después, cada sesión pide el PIN una vez. El rol se conserva mientras siga abierta la pestaña, incluso si el navegador recarga la PWA; “Cerrar sesión” o una pestaña nueva vuelven a pedirlo. El de Migue da acceso total; el del delegado solo permite tiempos, cambios e incidencias del partido. Un valor erróneo muestra “PIN incorrecto”.
 7. Ajustes: guardar el nombre del equipo, elegir Fútbol 7 o Fútbol 11, consultar la sincronización y exportar copias JSON. Cada partido indica local o visitante.
-8. Ejercicios: filtrar la base inicial, marcar favoritos y crear, editar o borrar ejercicios. En la misma pestaña se crean sesiones con calentamiento, 2-3 ejercicios principales y juego final.
+8. Ejercicios: filtrar 80 ejemplos, abrir “Ver demostración” para consultar el diagrama SVG, marcar favoritos y crear, editar o borrar ejercicios. El número de jugadores se destaca en la tarjeta. En la misma pestaña se crean sesiones con calentamiento, 2-3 ejercicios principales y juego final; cada opción indica jugadores y duración.
 
 ## Modalidades
 
@@ -37,7 +37,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 50 pruebas automatizadas en 2.0.0.
+- `npm test`: 52 pruebas automatizadas en 2.1.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 
@@ -54,7 +54,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Recuperación / rollback
 
-Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 2.0.0 falla, volver a servir 1.10.2 e importar la copia. No requiere SQL adicional; los documentos nuevos viven dentro del `payload` JSON de `configuracion`.
+Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 2.1.0 falla, volver a servir 2.0.0 e importar la copia. No requiere SQL adicional; los ejercicios nuevos y sus diagramas viven dentro del `payload` JSON de `configuracion`.
 
 ## Desarrollo
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0 — 2026-08-28
+
+- Biblioteca ampliada de 36 a 80 ejercicios, con 44 incorporaciones y 10 tareas específicas de porteros.
+- Diagramas SVG de pizarra accesibles y adaptables mediante diez plantillas reutilizables: pase, rondo, circuito, posesión, duelo, superioridad, finalización, partido reducido, calentamiento y porteros.
+- Número de jugadores destacado en cada tarjeta y visible junto al nombre y la duración en los selectores de sesiones.
+- Migración idempotente `phase2-v2-seeded`: añade solo identificadores ausentes y completa diagramas en ejercicios existentes sin sobrescribir nombre, favoritos ni otros cambios del usuario.
+- Caché PWA elevada a `campobase-v2.1.0` y 52 pruebas automatizadas.
+
 ## 2.0.0 — 2026-08-28
 
 - Nueva pestaña Ejercicios con 36 ejemplos iniciales, siete categorías, filtros por categoría, jugadores, material y dificultad, favoritos y CRUD completo.

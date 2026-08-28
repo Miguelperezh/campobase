@@ -1,7 +1,7 @@
 import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
-import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, planPhase2V2Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -848,7 +848,7 @@ function renderExercises() {
     .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
   $('#exercises-list').innerHTML = exercises.length ? exercises.map((item) => `<article class="panel exercise-card">
     <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><span class="pill">${escapeHtml(item.difficulty)}</span><h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
-    <p class="meta">${escapeHtml(item.players)} jugadores · ${item.duration} min · ${escapeHtml(item.space)}</p><p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p>${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
+    <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)} jugadores</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div><p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p><details class="diagram-details"><summary>Ver demostración</summary>${renderExerciseDiagram(item)}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: movimiento o pase</p></details>${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
     <div class="button-row"><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
   </article>`).join('') : empty('No hay ejercicios que coincidan con los filtros.');
 }
@@ -870,7 +870,7 @@ async function saveExercise(event) {
   const existing = values.id ? state.exercises.find(({ id }) => id === values.id) : null;
   const saved = buildExercise(values, {
     id: existing?.id ?? uid(), favorite: existing?.favorite ?? false,
-    createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
+    createdAt: existing?.createdAt ?? Date.now(), now: Date.now(), diagram: existing?.diagram,
   });
   await put('settings', { ...existing, ...saved, recordType: 'exercise', example: existing?.example ?? false });
   $('#exercise-dialog').close();
@@ -882,7 +882,7 @@ async function saveExercise(event) {
 
 function exerciseOptions(selectedId = '', predicate = () => true) {
   return state.exercises.filter(predicate).sort((a, b) => a.name.localeCompare(b.name, 'es'))
-    .map((item) => `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${escapeHtml(item.name)} · ${item.duration} min</option>`).join('');
+    .map((item) => `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${escapeHtml(item.name)} · 👥 ${escapeHtml(item.players)} jugadores · ${item.duration} min</option>`).join('');
 }
 
 function sessionBuilder(editId = '') {
@@ -934,6 +934,12 @@ async function ensurePhase2Seeded() {
     ...INITIAL_EXERCISES.map((item) => structuredClone(item)),
     { id: 'phase2-seeded', recordType: 'migration', version: 2, createdAt: Date.now() },
   ] });
+}
+
+async function ensurePhase2V2Seeded() {
+  if (await getOne('settings', 'phase2-v2-seeded')) return;
+  const current = await getAll('settings');
+  await putBatch({ settings: planPhase2V2Seed(current) });
 }
 
 async function exportData() {
@@ -1238,6 +1244,7 @@ async function init() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
   await synchronizeCloud();
   await ensurePhase2Seeded();
+  await ensurePhase2V2Seeded();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
   if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);

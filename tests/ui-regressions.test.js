@@ -51,3 +51,14 @@ test('la fase 2 expone ejercicios, filtros, favoritos, CRUD y sesiones por bloqu
   assert.match(app, /form\.getAttribute\('id'\)/, 'los formularios dinámicos mantienen el patrón seguro');
   assert.match(sw, /training-domain\.js/);
 });
+
+test('la mejora de fase 2 muestra diagramas y jugadores destacados también en selectores', async () => {
+  const [app, css] = await Promise.all([projectFile('js/app.js'), projectFile('styles.css')]);
+  assert.match(app, /renderExerciseDiagram\(item\)/);
+  assert.match(app, /class="player-count"/);
+  assert.match(app, /👥.*jugadores/);
+  assert.match(app, /item\.players.*item\.duration.*min/s);
+  assert.match(app, /phase2-v2-seeded/);
+  assert.match(css, /\.player-count/);
+  assert.match(css, /\.exercise-diagram/);
+});
