@@ -845,9 +845,12 @@ function wireEvents() {
     updateTargetPreview();
   });
   document.addEventListener('submit', (event) => {
-    if (event.target.id === 'callup-form') saveCallup(event).catch(handleError);
-    if (event.target.id === 'training-form') saveTraining(event).catch(handleError);
-    if (event.target.id === 'rating-form') saveMatchRatings(event).catch(handleError);
+    const form = event.target.closest ? event.target.closest('form') : event.target;
+    if (!form) return;
+    event.preventDefault();
+    if (form.id === 'callup-form') saveCallup(event).catch(handleError);
+    else if (form.id === 'training-form') saveTraining(event).catch(handleError);
+    else if (form.id === 'rating-form') saveMatchRatings(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
     const target = event.target;
