@@ -11,6 +11,10 @@ import {
   buildAttendanceRecord,
   calculateAttendanceStats,
   applySubstitution,
+  buildPlayerHistory,
+  sortAttendanceRecords,
+  suggestDelegateSubstitution,
+  shouldSuggestUrgentSubstitution,
 } from '../js/domain.js';
 
 test('reparte exactamente 490 minutos entre 10 disponibles en F7', () => {
@@ -122,8 +126,8 @@ test('construye una asistencia conservando estado y notas por jugador', () => {
     date: '2026-09-02',
     notes: 'Trabajo defensivo',
     attendance: [
-      { playerId: 'a', status: 'late', note: 'Cinco minutos tarde' },
-      { playerId: 'b', status: 'absent', note: 'Enfermo' },
+      { playerId: 'a', status: 'late', arrivalTime: '', note: 'Cinco minutos tarde' },
+      { playerId: 'b', status: 'absent', arrivalTime: '', note: 'Enfermo' },
     ],
     createdAt: 123,
   });
@@ -137,7 +141,7 @@ test('construye una asistencia vinculada a un partido', () => {
   );
   assert.equal(record.kind, 'match');
   assert.equal(record.matchId, 'm1');
-  assert.deepEqual(record.attendance[1], { playerId: 'b', status: 'late', note: 'Atasco' });
+  assert.deepEqual(record.attendance[1], { playerId: 'b', status: 'late', arrivalTime: '', note: 'Atasco' });
 });
 
 test('calcula ausencias, rachas y tardanzas del historial de un jugador', () => {
@@ -165,4 +169,88 @@ test('aplica un cambio manual de uno a tres jugadores sin alterar el tamaño del
   assert.deepEqual(applySubstitution(['a', 'b'], ['a'], ['c'], ['a', 'b', 'c']), ['b', 'c']);
   assert.throws(() => applySubstitution(['a', 'b'], ['a'], ['c', 'd'], ['a', 'b', 'c', 'd']), /mismo número/i);
   assert.throws(() => applySubstitution(['a', 'b'], ['a'], ['x'], ['a', 'b', 'c']), /convocado/i);
+});
+
+test('la rotación pide decisión si al jugador ya le dejaron fuera por enfermedad o decisión técnica', () => {
+  const players = [
+    { id: 'a', name: 'Ana', outsideCount: 0 },
+    { id: 'b', name: 'Biel', outsideCount: 1 },
+    { id: 'c', name: 'Cris', outsideCount: 2 },
+  ];
+  const protectedHistories = { a: [{ reason: 'sick', date: '2026-09-01' }] };
+  const pending = buildCallupSelection(players, { limit: 2, protectedHistories });
+  assert.deepEqual(pending.pendingRotationDecisions, [{ playerId: 'a', history: protectedHistories.a }]);
+  assert.equal(pending.exclusions.some(({ playerId }) => playerId === 'a'), false);
+});
+
+test('si el entrenador mantiene dentro al jugador protegido, deja fuera al siguiente de la rotación', () => {
+  const players = [
+    { id: 'a', name: 'Ana', outsideCount: 0 },
+    { id: 'b', name: 'Biel', outsideCount: 1 },
+    { id: 'c', name: 'Cris', outsideCount: 2 },
+  ];
+  const protectedHistories = { a: [{ reason: 'coach_decision', date: '2026-09-01' }] };
+  const result = buildCallupSelection(players, {
+    limit: 2,
+    protectedHistories,
+    rotationDecisions: { a: 'include' },
+  });
+  assert.deepEqual(result.pendingRotationDecisions, []);
+  assert.deepEqual(result.exclusions.map(({ playerId }) => playerId), ['b']);
+});
+
+test('guarda la hora de llegada únicamente cuando el jugador llega tarde', () => {
+  const record = buildTrainingRecord(
+    [{ id: 'a' }, { id: 'b' }],
+    {
+      date: '2026-09-02',
+      'status-a': 'late', 'arrivalTime-a': '18:17', 'note-a': 'Atasco',
+      'status-b': 'present', 'arrivalTime-b': '18:20', 'note-b': 'Bien',
+    },
+    { id: 't2', createdAt: 123 },
+  );
+  assert.equal(record.attendance[0].arrivalTime, '18:17');
+  assert.equal(record.attendance[1].arrivalTime, '');
+});
+
+test('ordena asistencias por fecha y conserva el orden de creación en fechas iguales', () => {
+  const records = [
+    { id: 'new', date: '2026-09-03', createdAt: 3 },
+    { id: 'old-second', date: '2026-08-20', createdAt: 2 },
+    { id: 'old-first', date: '2026-08-20', createdAt: 1 },
+  ];
+  assert.deepEqual(sortAttendanceRecords(records).map(({ id }) => id), ['new', 'old-second', 'old-first']);
+});
+
+test('reúne en la ficha del jugador incidencias, comentarios y motivos de convocatorias', () => {
+  const history = buildPlayerHistory('a', [
+    { id: 't1', kind: 'training', date: '2026-09-02', notes: 'Carga suave', attendance: [{ playerId: 'a', status: 'late', arrivalTime: '18:17', note: 'Atasco' }] },
+  ], [
+    { id: 'c1', date: '2026-09-03', exclusions: [{ playerId: 'a', reason: 'sick', automatic: false }] },
+  ]);
+  assert.equal(history.length, 2);
+  assert.deepEqual(history.map(({ type }) => type), ['callup', 'attendance']);
+  assert.match(history[0].detail, /sick/);
+  assert.match(history[1].detail, /Atasco/);
+});
+
+test('sugiere meter al que menos ha jugado y sacar al que más lleva', () => {
+  const suggestion = suggestDelegateSubstitution(
+    ['a', 'b'], ['c', 'd'],
+    { a: 1200, b: 900, c: 300, d: 600 },
+    1,
+  );
+  assert.deepEqual(suggestion, { outIds: ['a'], inIds: ['c'] });
+});
+
+test('avisa de cambio urgente si quedan diez minutos o menos y alguien lleva ocho o menos', () => {
+  assert.equal(shouldSuggestUrgentSubstitution(['c'], { c: 480 }, 600), true);
+  assert.equal(shouldSuggestUrgentSubstitution(['c'], { c: 481 }, 600), false);
+  assert.equal(shouldSuggestUrgentSubstitution(['c'], { c: 480 }, 601), false);
+});
+
+test('la vista delegado puede registrar siete cambios simultáneos de forma explícita', () => {
+  const field = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const bench = ['h', 'i', 'j', 'k', 'l', 'm', 'n'];
+  assert.deepEqual(applySubstitution(field, field, bench, [...field, ...bench], 7), bench);
 });

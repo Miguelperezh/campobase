@@ -70,10 +70,27 @@ export function buildCallupSelection(players, options = {}) {
   const automaticCount = Math.max(0, eligible.length - limit);
   const candidates = eligible.filter(({ id }) => !selected.has(id));
   if (automaticCount > candidates.length) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
-  const automatic = suggestExcludedPlayers(candidates, automaticCount);
+  const protectedHistories = options.protectedHistories ?? {};
+  const rotationDecisions = options.rotationDecisions ?? {};
+  const pendingRotationDecisions = [];
+  const automatic = [];
+  for (const player of suggestExcludedPlayers(candidates, candidates.length)) {
+    if (automatic.length >= automaticCount) break;
+    const history = protectedHistories[player.id] ?? [];
+    if (history.length && !rotationDecisions[player.id]) {
+      pendingRotationDecisions.push({ playerId: player.id, history });
+      continue;
+    }
+    if (rotationDecisions[player.id] === 'include') continue;
+    automatic.push(player);
+  }
   const automaticIds = new Set(automatic.map(({ id }) => id));
   exclusions.push(...automatic.map(({ id }) => ({ playerId: id, reason: 'rotation', automatic: true })));
-  return { availableIds: eligible.filter(({ id }) => !automaticIds.has(id)).map(({ id }) => id), exclusions };
+  return {
+    availableIds: eligible.filter(({ id }) => !automaticIds.has(id)).map(({ id }) => id),
+    exclusions,
+    pendingRotationDecisions,
+  };
 }
 
 export function buildAttendanceRecord(players, values, metadata = {}) {
@@ -85,7 +102,11 @@ export function buildAttendanceRecord(players, values, metadata = {}) {
   const attendance = players.map(({ id }) => {
     const status = values[`status-${id}`];
     if (!allowedStatuses.has(status)) throw new TypeError('El estado de asistencia no es válido.');
-    return { playerId: id, status, note: String(values[`note-${id}`] ?? '').trim() };
+    const arrivalTime = status === 'late' ? String(values[`arrivalTime-${id}`] ?? '').trim() : '';
+    if (arrivalTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(arrivalTime)) {
+      throw new TypeError('La hora de llegada no es válida.');
+    }
+    return { playerId: id, status, arrivalTime, note: String(values[`note-${id}`] ?? '').trim() };
   });
   return {
     id: metadata.id,
@@ -135,9 +156,33 @@ export function calculateAttendanceStats(playerId, records) {
   };
 }
 
-export function applySubstitution(onFieldIds, outIds, inIds, availableIds) {
+export function sortAttendanceRecords(records) {
+  if (!Array.isArray(records)) throw new TypeError('El historial de asistencia debe ser una lista.');
+  return [...records].sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')) || (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
+export function buildPlayerHistory(playerId, attendanceRecords, callups) {
+  if (!Array.isArray(attendanceRecords) || !Array.isArray(callups)) {
+    throw new TypeError('Los históricos deben ser listas.');
+  }
+  const attendance = attendanceRecords.flatMap((record) => {
+    const entry = record.attendance?.find((item) => item.playerId === playerId);
+    if (!entry) return [];
+    const detail = [entry.status, entry.arrivalTime ? `Hora ${entry.arrivalTime}` : '', entry.note, record.notes].filter(Boolean).join(' · ');
+    return [{ type: 'attendance', id: record.id, date: record.date, kind: record.kind ?? 'training', detail, createdAt: record.createdAt ?? 0 }];
+  });
+  const exclusions = callups.flatMap((callup) => (callup.exclusions ?? [])
+    .filter((entry) => entry.playerId === playerId)
+    .map((entry) => ({ type: 'callup', id: callup.id, date: callup.date, kind: 'callup', detail: entry.reason, automatic: Boolean(entry.automatic), createdAt: callup.createdAt ?? 0 })));
+  return [...attendance, ...exclusions]
+    .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')) || b.createdAt - a.createdAt);
+}
+
+export function applySubstitution(onFieldIds, outIds, inIds, availableIds, maxChanges = 3) {
   if (outIds.length !== inIds.length) throw new RangeError('Debe salir y entrar el mismo número de jugadores.');
-  if (outIds.length < 1 || outIds.length > 3) throw new RangeError('Cada cambio debe incluir entre uno y tres jugadores.');
+  if (!Number.isInteger(maxChanges) || maxChanges < 1 || outIds.length < 1 || outIds.length > maxChanges) {
+    throw new RangeError(`Cada cambio debe incluir entre uno y ${maxChanges} jugadores.`);
+  }
   const onField = new Set(onFieldIds);
   const available = new Set(availableIds);
   if (outIds.some((id) => !onField.has(id)) || inIds.some((id) => onField.has(id))) {
@@ -145,6 +190,20 @@ export function applySubstitution(onFieldIds, outIds, inIds, availableIds) {
   }
   if ([...outIds, ...inIds].some((id) => !available.has(id))) throw new RangeError('El cambio contiene un jugador no convocado.');
   return onFieldIds.filter((id) => !outIds.includes(id)).concat(inIds);
+}
+
+export function suggestDelegateSubstitution(onFieldIds, benchIds, playedSeconds, count = 1) {
+  if (!Number.isInteger(count) || count < 1) throw new RangeError('El número de cambios debe ser positivo.');
+  const size = Math.min(count, onFieldIds.length, benchIds.length);
+  const byMostPlayed = [...onFieldIds].sort((a, b) => (playedSeconds[b] ?? 0) - (playedSeconds[a] ?? 0) || String(a).localeCompare(String(b)));
+  const byLeastPlayed = [...benchIds].sort((a, b) => (playedSeconds[a] ?? 0) - (playedSeconds[b] ?? 0) || String(a).localeCompare(String(b)));
+  return { outIds: byMostPlayed.slice(0, size), inIds: byLeastPlayed.slice(0, size) };
+}
+
+export function shouldSuggestUrgentSubstitution(benchIds, playedSeconds, remainingSeconds) {
+  return remainingSeconds <= 10 * 60
+    && remainingSeconds >= 0
+    && benchIds.some((id) => (playedSeconds[id] ?? 0) <= 8 * 60);
 }
 
 export function calculatePlayedSeconds(initialOnField, events, finalSecond) {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-08-28
+
+- Convocatorias editables y recálculo seguro de contadores de rotación.
+- Memoria de exclusiones por enfermedad o decisión técnica con decisión explícita del entrenador antes de una futura rotación.
+- Salida clara del partido en vivo para descartar el control actual y preparar otro.
+- Entrenamientos antiguos editables, hora de llegada para tardanzas y listados ordenados por fecha sin cambiar de pantalla al guardar.
+- Historial de incidencias, comentarios y exclusiones consultable en la ficha de Plantilla.
+- Vista delegado limitada a tiempos y cambios: sugerencia del que menos juega, alerta urgente, cambios manuales de 1/3/7 y automático de 2–3.
+
 ## 1.2.0 — 2026-08-28
 
 - Modalidad F7/F11 persistente, visible y aplicada a duración, jugadores en campo y reparto.

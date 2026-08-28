@@ -1,15 +1,16 @@
-# CampoBase 1.2.0 — Fase 1
+# CampoBase 1.3.0 — Fase 1
 
 Estado: candidato verificado localmente. PWA estática en español, sin backend ni dependencias de ejecución.
 
 ## Flujo de uso
 
 1. Plantilla: crear jugadores.
-2. Convocatorias: elegir partido, marcar exclusiones manuales y revisar la lista completa manual + automática.
-3. Partido en vivo: preparar el partido; el reloj comienza en el primer tiempo. Registrar cambios indicando quién sale y entra. Usar Fin primer tiempo → Descanso → Fin segundo tiempo.
+2. Convocatorias: crear o editar, marcar exclusiones y revisar la lista. Si la rotación alcanza a alguien excluido antes por enfermedad o decisión técnica, decidir expresamente si entra.
+3. Partido en vivo: preparar el partido; registrar cambios o usar “Salir del partido en vivo” para descartar ese control y preparar otro.
 4. Calendario: crear partidos con hora en formato 24 h.
-5. Asistencia: registrar o editar entrenamientos y partidos; consultar historial y estadísticas por jugador.
-6. Ajustes: elegir Fútbol 7 o Fútbol 11 y exportar copias JSON.
+5. Asistencia: registrar o editar cualquier fecha; indicar hora si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
+6. Vista delegado: desde un partido en vivo, abrir el modo limitado para consultar tiempos, aplicar sugerencias y registrar cambios 1/3/7 o automáticos de 2–3.
+7. Ajustes: elegir Fútbol 7 o Fútbol 11 y exportar copias JSON.
 
 ## Modalidades
 
@@ -23,9 +24,9 @@ IndexedDB y Cache Storage del navegador. No usa red salvo para descargar los est
 
 ## Pruebas observadas
 
-- `npm test`: 14/14 en verde.
+- `npm test`: 22/22 en verde.
 - `npm run check`: sintaxis válida.
-- Navegador real en localhost: carga de 1.2.0, orden de navegación y distintivo F7 verificados.
+- Navegador real en localhost: pendiente de repetir para 1.3.0 antes de publicar.
 
 ## Límites
 
@@ -37,7 +38,7 @@ IndexedDB y Cache Storage del navegador. No usa red salvo para descargar los est
 
 ## Recuperación / rollback
 
-Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.2.0 falla, volver a servir 1.1.0; el esquema de copia sigue en versión 1 y es compatible.
+Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.3.0 falla, volver a servir 1.2.0; el esquema de copia sigue en versión 1 y es compatible.
 
 ## Desarrollo
 
