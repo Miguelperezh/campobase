@@ -48,35 +48,35 @@ const coordination = [
 ].map((item) => exercise(...item.slice(0, 2), 'Coordinación', ...item.slice(2)));
 
 const technical = [
-  ['tech-01', 'Libera las líneas de pase', '6-12', 'Balones, conos y petos', 12, 'Conservar el balón moviéndose para abrir líneas de pase.', 'Media', '20x20 m'],
-  ['tech-02', 'Pase — Real Madrid CF', '8-16', 'Balones y conos', 12, 'Circuito de pase, apoyo y orientación corporal inspirado en tareas del Real Madrid CF.', 'Media', '25x20 m'],
-  ['tech-03', 'Activación técnica 2 contra 1', '6-15', 'Balones, conos y petos', 10, 'Resolver superioridades 2 contra 1 con pase, conducción y temporización.', 'Media', '15x12 m'],
-  ['tech-04', 'Triangulación, pases y tiro — Bayer Leverkusen', '8-16', 'Balones, conos y portería', 15, 'Triangulación rápida con tercer hombre y finalización.', 'Alta', 'Media cancha'],
-  ['tech-05', 'Conducción de balón y tiro al objetivo — AFC Ajax', '6-14', 'Balones, conos y miniporterías', 12, 'Conducción a velocidad, cambio de dirección y tiro a zona objetivo.', 'Media', '25x15 m'],
-  ['tech-06', '2 contra 2 en un cuadrado (dribling y posesión)', '4-12', 'Balones, conos y petos', 12, 'Duelo 2 contra 2 para proteger, regatear y conservar.', 'Media', '12x12 m'],
-  ['tech-07', 'Posesión 8 contra 8 + 2 comodines (control orientado)', '18', 'Balones, conos y petos', 18, 'Posesión con comodines priorizando control orientado y continuidad.', 'Alta', '40x35 m'],
-  ['tech-08', 'Circuito de perfeccionamiento técnico', '6-18', 'Balones, conos, picas y porterías', 15, 'Estaciones de pase, control, conducción, regate y finalización.', 'Media', 'Media cancha'],
-  ['tech-09', 'Circuito técnico-motor: juego de la bandera', '8-18', 'Balones, conos y petos', 12, 'Circuito motor con reacción a señal y conquista de la bandera con balón.', 'Media', '25x20 m'],
-  ['tech-10', 'Circuito motriz psicocinético con 1 contra 1', '6-16', 'Balones, conos y petos', 15, 'Estímulo visual, decisión de recorrido y duelo final 1 contra 1.', 'Alta', '30x20 m'],
+  ['tech-01', 'Libera las líneas de pase', '5', '3 siluetas, 6 palos y balones', 24, 'Área 15x15 m. Coloca 3 siluetas (defensores) y 6 palos formando puertas. Los 5 jugadores circulan el balón moviéndose para abrir líneas de pase libres entre las siluetas. 2 series de 10 min con 2 min de recuperación. Trabaja pase, control orientado, desmarque y toca-y-vete.', 'Media', '15x15 m', 'Añade un defensor real que presione; limita a 2 toques.'],
+  ['tech-02', 'Pase — Real Madrid CF', '6', '4 conos y balones', 12, 'Área 15x20 m. Circuito de pase y apoyo: los jugadores se colocan en las esquinas y el centro, encadenando pases cortos, medios y largos con orientación corporal correcta. 3 series de 3 min con 1 min de recuperación para rotar roles. Trabaja interior del pie, apoyo, lectura de trayectorias.', 'Media', '15x20 m', 'Cambia la dirección del circuito; exige pase a un toque.'],
+  ['tech-03', 'Activación técnica 2 contra 1', '10', '6 chinos, 2 siluetas, 4 palos, 4 miniporterías y balones', 20, 'Área 15x20 m. Circuito técnico que termina en situación de 2 contra 1: dos atacantes superan a un defensor con pase, desmarque y control orientado para finalizar en una de las miniporterías. 2 series. Trabaja contra-movimiento, desmarque y tiro.', 'Media', '15x20 m', 'Añade un segundo defensor para 2 contra 2.'],
+  ['tech-04', 'Triangulación, pases y tiro — Bayer Leverkusen', '8-16', 'Balones, conos y portería', 15, 'Triangulación rápida con tercer hombre: pase, pared y devolución para dejar al compañero de cara a portería y finalizar. Trabaja pase, recepción y posesión en progresión hacia el remate.', 'Alta', 'Media cancha', 'Limita a 2 toques; añade oposición pasiva.'],
+  ['tech-05', 'Conducción de balón y tiro al objetivo — AFC Ajax', '6-14', 'Balones, conos y miniporterías', 12, 'Circuito de conducción a velocidad con cambios de dirección entre conos y tiro final a zona objetivo. Trabaja conducción, control del balón en carrera y precisión de remate.', 'Media', '25x15 m', 'Aumenta la velocidad; compite por tiempo.'],
+  ['tech-06', '2 contra 2 en un cuadrado (dribling y posesión)', '4-12', 'Balones, conos y petos', 12, 'Duelo 2 contra 2 en un cuadrado de 12x12 m: proteger el balón, regatear y conservar la posesión ante la presión de la pareja rival. Trabaja atención, dribling y posesión.', 'Media', '12x12 m', 'Añade comodines en los lados.'],
+  ['tech-07', 'Posesión 8 contra 8 + 2 comodines (control orientado)', '18', 'Balones, conos y petos', 18, 'Posesión 8 contra 8 con 2 comodines que juegan con el equipo que tiene el balón. Prioriza el control orientado y la continuidad del juego. Trabaja control orientado y exigencia cognitiva.', 'Alta', '40x35 m', 'Limita toques; reduce el espacio.'],
+  ['tech-08', 'Circuito de perfeccionamiento técnico', '6-18', 'Balones, conos, picas y porterías', 15, 'Estaciones rotativas de pase, control, conducción, regate y finalización. Cada estación entrena un gesto técnico distinto y los jugadores rotan. Trabaja varios gestos técnicos en una sola tarea.', 'Media', 'Media cancha', 'Añade tiempo límite por estación.'],
+  ['tech-09', 'Circuito técnico-motor: juego de la bandera', '8-18', 'Balones, conos y petos', 12, 'Circuito motor con reacción a señal: los jugadores conducen, reaccionan a un estímulo y conquistan la bandera con balón. Trabaja reactividad neuromuscular y conducción.', 'Media', '25x20 m', 'Cambia el estímulo (color, número, sonido).'],
+  ['tech-10', 'Circuito motriz psicocinético con 1 contra 1', '6-16', 'Balones, conos y petos', 15, 'Estación motriz con estímulos cognitivos: el jugador decide el recorrido según la señal y termina en un duelo 1 contra 1. Trabaja esquemas motrices básicos y toma de decisión.', 'Alta', '30x20 m', 'Varía el estímulo y el recorrido.'],
 ].map((item) => exercise(...item.slice(0, 2), 'Técnica', ...item.slice(2)));
 
 const tactical = [
-  ['tact-01', 'Juego condicionado: cuadrícula de posesión — Real Madrid CF', '10-18', 'Balones, conos y petos', 15, 'Posesión por cuadrículas con obligación de ocupar y liberar espacios.', 'Alta', '35x30 m'],
-  ['tact-02', 'Posesión posicional 5 contra 3 con dos porterías', '8', 'Balones, conos, petos y miniporterías', 15, 'El 5 contra 3 progresa hacia una de dos porterías tras fijar la presión.', 'Alta', '25x20 m'],
-  ['tact-03', 'Fase ofensiva: amplitud y profundidad (6v6 o 7v7)', '12-14', 'Balones, conos, petos y porterías', 20, 'Ataque organizado ocupando carriles exteriores y profundidad.', 'Alta', 'Media cancha'],
-  ['tact-04', 'Rondo 3vs1 en dos cuadrados', '8', 'Balones y conos', 12, 'Dos rondos conectados; el balón cambia de cuadrado tras una secuencia de pases.', 'Media', 'Dos cuadrados de 8x8 m'],
-  ['tact-05', 'Partido por sectores: de la construcción a la finalización', '12-18', 'Balones, conos, petos y porterías', 20, 'Progresar por sectores respetando apoyos y ocupación racional.', 'Alta', 'Campo 60x40 m'],
-  ['tact-06', 'Partido a tema: ataque rápido de la profundidad', '10-18', 'Balones, petos y porterías', 18, 'Tras recuperar, buscar pase vertical y desmarque profundo.', 'Alta', 'Media cancha'],
-  ['tact-07', 'Partido condicionado 7 contra 7 — FC Barcelona', '14', 'Balones, conos, petos y porterías', 20, 'Juego 7 contra 7 con condiciones de posición y circulación.', 'Alta', 'Campo 55x40 m'],
-  ['tact-08', 'Partido condicionado 8 contra 8 + 2 comodines laterales', '18', 'Balones, conos, petos y porterías', 20, 'Los comodines laterales generan amplitud y superioridad exterior.', 'Alta', 'Campo 60x45 m'],
-  ['tact-09', 'Small-sided game 3 contra 2 (finalización)', '5-15', 'Balones, petos y portería', 15, 'Ataque 3 contra 2 para fijar, soltar y finalizar.', 'Media', '30x25 m'],
-  ['tact-10', 'Small-sided game 4 contra 4 + 2 comodines', '10', 'Balones, conos y petos', 15, 'Juego reducido con dos comodines para crear superioridades.', 'Media', '25x20 m'],
-  ['tact-11', 'Small-sided game: El pentágono', '6-12', 'Balones, conos y petos', 15, 'Juego de apoyos y desmarques en espacio pentagonal.', 'Alta', 'Pentágono de 20 m'],
-  ['tact-12', 'Ataque contra defensa en tres zonas', '10-18', 'Balones, conos, petos y porterías', 20, 'El ataque progresa por tres zonas ante una defensa organizada.', 'Alta', 'Media cancha'],
-  ['tact-13', 'Recibir y defender el balón', 'Parejas', 'Balones y conos', 10, 'Un jugador recibe de espaldas y protege ante oposición activa.', 'Media', 'Cuadrados de 8x8 m'],
+  ['tact-01', 'Juego condicionado: cuadrícula de posesión — Real Madrid CF', '10-18', 'Balones, conos y petos', 15, 'Posesión por cuadrículas: el equipo debe ocupar y liberar espacios formando triángulos de posesión. Trabaja la circulación y la búsqueda constante del pase libre.', 'Alta', '35x30 m', 'Limita toques; obliga a cambiar de cuadrícula cada X pases.'],
+  ['tact-02', 'Posesión posicional 5 contra 3 con dos porterías', '8', 'Balones, conos, petos y miniporterías', 15, 'El 5 contra 3 progresa hacia una de las dos porterías tras fijar la presión rival. Trabaja posesión, superioridad y finalización.', 'Alta', '25x20 m', 'Añade un comodín; reduce el espacio.'],
+  ['tact-03', 'Fase ofensiva: amplitud y profundidad (6v6 o 7v7)', '12-14', 'Balones, conos, petos y porterías', 20, 'Partido a tema 6 contra 6 o 7 contra 7: ataque organizado ocupando carriles exteriores (amplitud) y buscando la espalda de la defensa (profundidad).', 'Alta', 'Media cancha', 'Obliga a tocar en banda antes de centrar.'],
+  ['tact-04', 'Rondo 3vs1 en dos cuadrados', '8', '8 chinos, 2 balones y 2 petos', 14, 'Área 6x15 m dividida en dos cuadrados. Dos rondos 3 contra 1 conectados: el balón cambia de cuadrado tras una secuencia de pases. 8 series de 1\'30" con 2 min de recuperación a mitad. Trabaja desmarque, líneas de pase libres y transiciones.', 'Media', '6x15 m', 'Añade un segundo defensor; limita a 2 toques.'],
+  ['tact-05', 'Partido por sectores: de la construcción a la finalización', '12-18', 'Balones, conos, petos y porterías', 20, 'Partido a tema por sectores: progresar desde la construcción respetando apoyos y ocupación racional hasta la finalización. Trabaja salida de balón y progresión.', 'Alta', 'Campo 60x40 m', 'Limita toques por sector; añade presión.'],
+  ['tact-06', 'Partido a tema: ataque rápido de la profundidad', '10-18', 'Balones, petos y porterías', 18, 'Tras recuperar el balón, buscar pase vertical y desmarque profundo con contraataque y transiciones rápidas. Trabaja penetración y velocidad de ataque.', 'Alta', 'Media cancha', 'Limita el tiempo para finalizar.'],
+  ['tact-07', 'Partido condicionado 7 contra 7 — FC Barcelona', '14', 'Balones, conos, petos y porterías', 20, 'Juego 7 contra 7 con obligación de posición y circulación, priorizando la consolidación de la posesión. Trabaja juego posicional.', 'Alta', 'Campo 55x40 m', 'Obliga a un mínimo de pases antes de finalizar.'],
+  ['tact-08', 'Partido condicionado 8 contra 8 + 2 comodines laterales', '18', 'Balones, conos, petos y porterías', 20, 'Los 2 comodines laterales generan amplitud y superioridad exterior. Trabaja amplitud y finalización desde banda.', 'Alta', 'Campo 60x45 m', 'Los comodines solo juegan a un toque.'],
+  ['tact-09', 'Small-sided game 3 contra 2 (finalización)', '5-15', 'Balones, petos y portería', 15, 'Ataque 3 contra 2 para fijar al defensor, soltar al compañero libre y finalizar. Trabaja superioridad orientada a la finalización.', 'Media', '30x25 m', 'Añade un defensor que recupera desde atrás.'],
+  ['tact-10', 'Small-sided game 4 contra 4 + 2 comodines', '10', 'Balones, conos y petos', 15, 'Juego reducido 4 contra 4 con 2 comodines que crean superioridades. Trabaja posesión y finalización.', 'Media', '25x20 m', 'Los comodines juegan a un toque.'],
+  ['tact-11', 'Small-sided game: El pentágono', '6-12', 'Balones, conos y petos', 15, 'Juego de apoyos y desmarques en espacio pentagonal para mejorar la técnica a alta intensidad. Trabaja reacción y apoyos.', 'Alta', 'Pentágono de 20 m', 'Limita toques; añade porterías en los lados.'],
+  ['tact-12', 'Ataque contra defensa en tres zonas', '10-18', 'Balones, conos, petos y porterías', 20, 'El ataque progresa por tres zonas ante una defensa organizada, buscando superioridad por dentro y por fuera. Trabaja atraer y progresar.', 'Alta', 'Media cancha', 'Obliga a superar cada zona con pase.'],
+  ['tact-13', 'Recibir y defender el balón', '2', '4 conos, 6 palos (2 de cada color), 1 peto y balones', 18, 'Área 20x20 m. Situaciones de 1 contra 1: un jugador recibe de espaldas y protege el balón ante oposición activa. 3 series de 5 min alternando 3 parejas (6 jugadores), con 1 min de recuperación. Trabaja control, protección, dribling y orientación.', 'Media', '20x20 m', 'Añade un segundo defensor; reduce el espacio.'],
 ].map((item) => exercise(...item.slice(0, 2), item[1].startsWith('Small-sided') || item[1].startsWith('Partido condicionado') ? 'Partido condicionado / Small-sided games' : 'Táctica', ...item.slice(2)));
 
-const physical = [exercise('physical-01', 'Circuito físico: El cuadrado', 'Preparación física', '8-20', 'Conos y petos', 15, 'Circuito en cuatro lados con velocidad, agilidad, resistencia y recuperación activa.', 'Media', 'Cuadrado de 20x20 m')];
+const physical = [exercise('physical-01', 'Circuito físico: El cuadrado', 'Preparación física', '8-20', 'Conos y petos', 15, 'Circuito en cuatro lados con velocidad, agilidad, resistencia y recuperación activa. Cada lado entrena una cualidad distinta y los jugadores rotan.', 'Media', 'Cuadrado de 20x20 m', 'Aumenta la intensidad o el número de vueltas.')];
 
 const technicalV2 = [
   ['tech-11', 'Regate en puertas de colores', '6-16', 'Balones y conos', 12, 'Conducir y superar la puerta indicada con un cambio de ritmo.', 'Baja', '20x20 m'],
@@ -152,6 +152,14 @@ export const PHASE2_V2_EXERCISES = Object.freeze([
   ...technicalV2, ...coordinationV2, ...tacticalV2, ...physicalV2, ...warmupsV2, ...smallSidedV2, ...goalkeepersV2,
 ]);
 
+export const PHASE2_V3_EXERCISES = Object.freeze([
+  exercise('physical-06', 'Velocidad de reacción con salida', 'Preparación física', '6-16', 'Conos y silbato', 10, 'Salidas explosivas desde distintas posiciones (sentado, tumbado, de espaldas) a la señal. Trabaja velocidad de reacción y aceleración.', 'Media', 'Carril de 15x5 m', 'Varía la posición de salida y la señal.'),
+  exercise('physical-07', 'Circuito de agilidad con conos', 'Preparación física', '6-18', 'Conos y picas', 12, 'Recorrido de agilidad con cambios de dirección, frenadas y aceleraciones entre conos. Trabaja agilidad y coordinación de carrera.', 'Media', '20x15 m', 'Compite por tiempo; añade balón.'),
+  exercise('physical-08', 'Resistencia aeróbica con balón', 'Preparación física', '8-20', 'Balones y conos', 18, 'Carrera continua a ritmo medio combinada con conducción y pases. Trabaja resistencia aeróbica manteniendo el contacto con el balón.', 'Media', 'Campo 40x30 m', 'Ajusta la intensidad según la edad.'),
+  exercise('physical-09', 'Fuerza funcional por parejas', 'Preparación física', 'Parejas', 'Conos y bandas elásticas', 12, 'Ejercicios de fuerza por parejas (empujes, tracciones, sentadillas asistidas) seguidos de aceleración corta. Trabaja fuerza y potencia.', 'Media', 'Carril de 15x5 m', 'Adapta la resistencia a la edad.'),
+  exercise('physical-10', 'Intervalos de alta intensidad (HIIT)', 'Preparación física', '6-18', 'Conos y silbato', 14, 'Series cortas de máxima intensidad (20-30 s) con recuperación activa. Trabaja potencia aeróbica y anaeróbica.', 'Alta', 'Campo 30x25 m', 'Ajusta duración y recuperación al nivel.'),
+]);
+
 export const INITIAL_EXERCISES = Object.freeze([...coordination, ...technical, ...tactical, ...physical, ...WARMUP_TEMPLATES, ...PHASE2_V2_EXERCISES]);
 
 const clean = (value) => String(value ?? '').trim();
@@ -176,6 +184,8 @@ export function renderExerciseDiagram(item) {
   const layout = DIAGRAM_LAYOUTS[diagram.type] ?? DIAGRAM_LAYOUTS.passing;
   const players = Array.from({ length: Math.min(diagram.players || 6, layout.length) }, (_, index) => layout[index]);
   const markerId = `arrow-${String(item.id ?? diagram.type).replace(/[^a-z0-9-]/gi, '')}`;
+  const pathId = `seq-${String(item.id ?? diagram.type).replace(/[^a-z0-9-]/gi, '')}`;
+  const seqPath = players.map(([x, y], index) => `${index === 0 ? 'M' : 'L'}${x} ${y}`).join(' ');
   const cones = Array.from({ length: Math.min(diagram.cones || 0, 4) }, (_, index) => `<path class="diagram-cone" d="M${14 + index * 24} 86 l3 -7 l3 7z"/>`).join('');
   const goals = diagram.goals > 0 ? `<path class="diagram-goal" d="M92 36 h5 v28 h-5"/>${diagram.goals > 1 ? '<path class="diagram-goal" d="M8 36 h-5 v28 h5"/>' : ''}` : '';
   const movement = players.slice(0, -1).map(([x, y], index) => {
@@ -183,7 +193,8 @@ export function renderExerciseDiagram(item) {
     return `<path class="diagram-movement" d="M${x} ${y} L${nextX} ${nextY}" marker-end="url(#${markerId})"/>`;
   }).join('');
   const dots = players.map(([x, y], index) => `<g class="diagram-player"><circle cx="${x}" cy="${y}" r="4"/><text x="${x}" y="${y + 1.6}">${index + 1}</text></g>`).join('');
-  return `<svg class="exercise-diagram" viewBox="0 0 100 100" role="img" aria-label="Diagrama de ${xml(item.name || 'ejercicio')}"><defs><marker id="${markerId}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z"/></marker></defs><rect class="diagram-field" x="5" y="7" width="90" height="86" rx="3"/><path class="diagram-line" d="M50 7v86 M5 50h90"/><circle class="diagram-line" cx="50" cy="50" r="11"/><circle class="diagram-ball" cx="50" cy="50" r="2.2"/>${goals}${cones}${movement}${dots}</svg>`;
+  const ball = `<circle class="diagram-ball" r="2.4"><animateMotion dur="4s" repeatCount="indefinite" path="${seqPath}"/></circle>`;
+  return `<svg class="exercise-diagram" viewBox="0 0 100 100" role="img" aria-label="Diagrama animado de ${xml(item.name || 'ejercicio')}"><defs><marker id="${markerId}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z"/></marker></defs><rect class="diagram-field" x="5" y="7" width="90" height="86" rx="3"/><path class="diagram-line" d="M50 7v86 M5 50h90"/><circle class="diagram-line" cx="50" cy="50" r="11"/>${goals}${cones}${movement}${dots}${ball}</svg>`;
 }
 
 export function planPhase2V2Seed(existingRecords, now = Date.now()) {
@@ -197,6 +208,26 @@ export function planPhase2V2Seed(existingRecords, now = Date.now()) {
   }));
   return [...additions, ...enriched, { id: 'phase2-v2-seeded', recordType: 'migration', version: 3, createdAt: now }];
 }
+
+export function planPhase2V3Seed(existingRecords, now = Date.now()) {
+  const exercises = (existingRecords ?? []).filter(({ recordType }) => recordType === 'exercise');
+  const existingIds = new Set(exercises.map(({ id }) => id));
+  const additions = PHASE2_V3_EXERCISES.filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
+  const refreshed = exercises.map((item) => {
+    const improved = IMPROVED_DESCRIPTIONS[item.id];
+    if (!improved) return item;
+    return { ...item, ...improved, diagram: inferExerciseDiagram({ ...item, ...improved }), updatedAt: now };
+  });
+  return [...additions, ...refreshed, { id: 'phase2-v3-seeded', recordType: 'migration', version: 4, createdAt: now }];
+}
+
+const IMPROVED_DESCRIPTIONS = Object.freeze({
+  'tech-01': { players: '5', material: '3 siluetas, 6 palos y balones', duration: 24, description: 'Área 15x15 m. Coloca 3 siluetas (defensores) y 6 palos formando puertas. Los 5 jugadores circulan el balón moviéndose para abrir líneas de pase libres entre las siluetas. 2 series de 10 min con 2 min de recuperación. Trabaja pase, control orientado, desmarque y toca-y-vete.', space: '15x15 m', variants: 'Añade un defensor real que presione; limita a 2 toques.' },
+  'tech-02': { players: '6', material: '4 conos y balones', duration: 12, description: 'Área 15x20 m. Circuito de pase y apoyo: los jugadores se colocan en las esquinas y el centro, encadenando pases cortos, medios y largos con orientación corporal correcta. 3 series de 3 min con 1 min de recuperación para rotar roles. Trabaja interior del pie, apoyo, lectura de trayectorias.', space: '15x20 m', variants: 'Cambia la dirección del circuito; exige pase a un toque.' },
+  'tech-03': { players: '10', material: '6 chinos, 2 siluetas, 4 palos, 4 miniporterías y balones', duration: 20, description: 'Área 15x20 m. Circuito técnico que termina en situación de 2 contra 1: dos atacantes superan a un defensor con pase, desmarque y control orientado para finalizar en una de las miniporterías. 2 series. Trabaja contra-movimiento, desmarque y tiro.', space: '15x20 m', variants: 'Añade un segundo defensor para 2 contra 2.' },
+  'tact-04': { players: '8', material: '8 chinos, 2 balones y 2 petos', duration: 14, description: 'Área 6x15 m dividida en dos cuadrados. Dos rondos 3 contra 1 conectados: el balón cambia de cuadrado tras una secuencia de pases. 8 series de 1\'30" con 2 min de recuperación a mitad. Trabaja desmarque, líneas de pase libres y transiciones.', space: '6x15 m', variants: 'Añade un segundo defensor; limita a 2 toques.' },
+  'tact-13': { players: '2', material: '4 conos, 6 palos (2 de cada color), 1 peto y balones', duration: 18, description: 'Área 20x20 m. Situaciones de 1 contra 1: un jugador recibe de espaldas y protege el balón ante oposición activa. 3 series de 5 min alternando 3 parejas (6 jugadores), con 1 min de recuperación. Trabaja control, protección, dribling y orientación.', space: '20x20 m', variants: 'Añade un segundo defensor; reduce el espacio.' },
+});
 
 export function buildExercise(values, metadata = {}) {
   const name = clean(values.name);
