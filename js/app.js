@@ -795,6 +795,7 @@ async function pollLiveState() {
 }
 
 function wireEvents() {
+  console.log('[wireEvents] inicio');
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
@@ -847,10 +848,12 @@ function wireEvents() {
     updateTargetPreview();
   });
   document.addEventListener('submit', (event) => {
+    console.log('[submit] evento recibido, target=', event.target?.tagName);
     const form = event.target.closest ? event.target.closest('form') : event.target;
     if (!form) return;
     event.preventDefault();
     const formId = form.getAttribute('id');
+    console.log('[submit] formId=', formId);
     if (formId === 'callup-form') saveCallup(event).catch(handleError);
     else if (formId === 'training-form') saveTraining(event).catch(handleError);
     else if (formId === 'rating-form') saveMatchRatings(event).catch(handleError);
