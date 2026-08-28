@@ -129,6 +129,33 @@ test('completa una convocatoria de liga hasta 14 respetando inclusiones, exclusi
   assert.equal(result.exclusions.filter(({ automatic }) => automatic).length, 2);
 });
 
+test('la convocatoria automática ignora fichas duplicadas y completa 14 jugadores únicos', () => {
+  const uniquePlayers = Array.from({ length: 16 }, (_, index) => ({
+    id: `p${index + 1}`,
+    name: `Jugador ${index + 1}`,
+    outsideCount: index,
+  }));
+  const result = buildCallupSelection([...uniquePlayers, uniquePlayers[0]], {
+    matchType: 'league',
+    selectedIds: ['p1'],
+  });
+  assert.equal(result.availableIds.length, 14);
+  assert.equal(new Set(result.availableIds).size, 14);
+  assert.equal(result.exclusions.filter(({ automatic }) => automatic).length, 2);
+});
+
+test('una decisión de rotación pendiente conserva provisionalmente el máximo de 14', () => {
+  const players = Array.from({ length: 15 }, (_, index) => ({
+    id: `p${index + 1}`,
+    name: `Jugador ${index + 1}`,
+    outsideCount: index,
+  }));
+  const protectedHistories = { p1: [{ reason: 'sick', date: '2026-09-01' }] };
+  const result = buildCallupSelection(players, { protectedHistories });
+  assert.equal(result.availableIds.length, 14);
+  assert.deepEqual(result.pendingRotationDecisions, [{ playerId: 'p1', history: protectedHistories.p1 }]);
+});
+
 test('en amistosos y torneos convoca a todos sin rotación y mantiene el máximo de 14', () => {
   const fourteen = Array.from({ length: 14 }, (_, index) => ({ id: `p${index + 1}` }));
   assert.deepEqual(buildCallupSelection(fourteen, { matchType: 'friendly' }).availableIds, fourteen.map(({ id }) => id));
@@ -206,7 +233,8 @@ test('la rotación pide decisión si al jugador ya le dejaron fuera por enfermed
   const protectedHistories = { a: [{ reason: 'sick', date: '2026-09-01' }] };
   const pending = buildCallupSelection(players, { limit: 2, protectedHistories });
   assert.deepEqual(pending.pendingRotationDecisions, [{ playerId: 'a', history: protectedHistories.a }]);
-  assert.equal(pending.exclusions.some(({ playerId }) => playerId === 'a'), false);
+  assert.equal(pending.availableIds.length, 2);
+  assert.deepEqual(pending.exclusions.find(({ playerId }) => playerId === 'a'), { playerId: 'a', reason: 'rotation', automatic: true });
 });
 
 test('si el entrenador mantiene dentro al jugador protegido, deja fuera al siguiente de la rotación', () => {

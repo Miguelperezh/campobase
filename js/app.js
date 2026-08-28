@@ -21,7 +21,70 @@ const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
+const SESSION_ROLE_KEY = 'campobase.sessionRole';
 let toastTimer;
+
+function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
+  const options = includeEmpty ? '<option value="">—</option>' : '';
+  return options + Array.from({ length: Math.ceil(max / step) }, (_, index) => String(index * step).padStart(2, '0'))
+    .map((value) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${value}</option>`).join('');
+}
+
+function splitTime24(value = '') {
+  const match = /^(?:\d{4}-\d{2}-\d{2}T)?([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  return { hour: match?.[1] ?? '', minute: match?.[2] ?? '' };
+}
+
+function time24Markup(name, value = '', label = 'Hora') {
+  const { hour, minute } = splitTime24(value);
+  return `<div class="time-24"><select name="${name}Hour" aria-label="${escapeHtml(label)}, hora de 00 a 23">${selectOptions(24, 1, hour, true)}</select><span aria-hidden="true">:</span><select name="${name}Minute" aria-label="${escapeHtml(label)}, minuto">${selectOptions(60, 1, minute, true)}</select></div>`;
+}
+
+function composeTime24(hour, minute, required = false) {
+  if (!hour && !minute && !required) return '';
+  const value = `${hour}:${minute}`;
+  if (!/^([01]\d|2[0-3]):(?:[0-5]\d)$/.test(value)) throw new TypeError('Selecciona una hora válida en formato 24 h.');
+  return value;
+}
+
+function composeDateTime24(day, hour, minute) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day ?? '')) throw new TypeError('Selecciona una fecha válida.');
+  return `${day}T${composeTime24(hour, minute, true)}`;
+}
+
+function setDateTimeFields(form, name, value = '') {
+  const [day = '', time = ''] = value.split('T');
+  const { hour, minute } = splitTime24(time);
+  form.elements[`${name}Day`].value = day;
+  form.elements[`${name}Hour`].value = hour || '00';
+  form.elements[`${name}Minute`].value = minute || '00';
+}
+
+function askConfirmation({ title = 'Confirmar acción', message, acceptLabel = 'Confirmar', danger = false }) {
+  const dialog = $('#confirmation-dialog');
+  if (dialog.open) return Promise.resolve(false);
+  $('#confirmation-title').textContent = title;
+  $('#confirmation-message').textContent = message;
+  const accept = $('#confirmation-accept');
+  const cancel = $('#confirmation-cancel');
+  accept.textContent = acceptLabel;
+  accept.className = danger ? 'danger' : 'primary';
+  return new Promise((resolve) => {
+    const finish = (result) => {
+      accept.removeEventListener('click', onAccept);
+      cancel.removeEventListener('click', onCancel);
+      dialog.removeEventListener('cancel', onCancel);
+      dialog.close();
+      resolve(result);
+    };
+    const onAccept = () => finish(true);
+    const onCancel = (event) => { event?.preventDefault(); finish(false); };
+    accept.addEventListener('click', onAccept);
+    cancel.addEventListener('click', onCancel);
+    dialog.addEventListener('cancel', onCancel);
+    dialog.showModal();
+  });
+}
 
 function toast(message) {
   const element = $('#toast');
@@ -119,7 +182,7 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
   const options = state.matches.filter((match) => match.status !== 'finished' || match.id === selectedMatchId).sort((a,b)=>a.date.localeCompare(b.date)).map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`).join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><label>Fecha y hora (24 h)<input name="manualDate" type="datetime-local" lang="es-ES" step="300"></label><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Rival<input name="manualOpponent" maxlength="100"></label></div><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div><p class="meta">Reparto: ${config.duration} min × ${config.players} en campo entre los convocados.</p></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend><input name="manualDateDay" type="date" aria-label="Fecha del partido manual">${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Rival<input name="manualOpponent" maxlength="100"></label></div><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -183,7 +246,7 @@ function updateMatchSource() {
   const manual = form.elements.matchSource.value === 'manual';
   $('#manual-match-fields').classList.toggle('hidden', !manual);
   $('#calendar-match-fields').classList.toggle('hidden', manual);
-  for (const name of ['manualDate', 'manualOpponent']) form.elements[name].required = manual;
+  for (const name of ['manualDateDay', 'manualDateHour', 'manualDateMinute', 'manualOpponent']) form.elements[name].required = manual;
   form.elements.matchId.required = !manual;
 }
 
@@ -194,7 +257,7 @@ async function saveCallup(event) {
   if (!match) return toast('Selecciona un partido del calendario.');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
-    match = { id: uid(), date: form.elements.manualDate.value, round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
+    match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
   if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
@@ -205,7 +268,7 @@ async function saveCallup(event) {
     const pending = selection.pendingRotationDecisions?.find(({ playerId }) => !rotationDecisions[playerId]);
     if (!pending) break;
     const history = pending.history.map(({ reason, date }) => `${localDate(date)}: ${EXCLUSION_REASONS[reason] ?? reason}`).join('\n');
-    const include = confirm(`${playerName(pending.playerId)} ya se quedó fuera por:\n${history}\n\n¿Quieres que ENTRE en esta convocatoria?\nAceptar: entra y se queda fuera el siguiente.\nCancelar: se queda fuera por rotación.`);
+    const include = await askConfirmation({ title: 'Revisar rotación', message: `${playerName(pending.playerId)} ya se quedó fuera por:\n${history}\n\n¿Quieres que ENTRE en esta convocatoria? Si entra, CampoBase dejará fuera al siguiente jugador de la rotación.`, acceptLabel: 'Sí, que entre' });
     rotationDecisions[pending.playerId] = include ? 'include' : 'exclude';
   }
   const { availableIds, exclusions } = selection;
@@ -249,7 +312,7 @@ function renderCallups() {
 }
 
 async function deleteCallup(id) {
-  const callup = state.callups.find((item) => item.id === id); if (!callup || !confirm('¿Borrar esta convocatoria y deshacer sus contadores de rotación?')) return;
+  const callup = state.callups.find((item) => item.id === id); if (!callup || !await askConfirmation({ title: 'Borrar convocatoria', message: 'Se borrará esta convocatoria y se recalcularán sus contadores de rotación.', acceptLabel: 'Borrar', danger: true })) return;
   const match = state.matches.find((item) => item.callupId === id); if (match) await put('matches', { ...match, callupId: null });
   await remove('callups', id); await synchronizeRotationCounters(); await refresh(); toast('Convocatoria borrada.');
 }
@@ -347,7 +410,7 @@ function closeDelegateMode() {
 }
 
 async function cancelLiveMatch() {
-  if (!state.timer || !confirm('¿Salir de este partido en vivo? Se descartarán el reloj y los cambios registrados, pero no la convocatoria.')) return;
+  if (!state.timer || !await askConfirmation({ title: 'Salir del partido en vivo', message: 'Se descartarán el reloj y los cambios registrados, pero no la convocatoria.', acceptLabel: 'Salir y descartar', danger: true })) return;
   state.timer = null;
   state.urgentAlertKey = '';
   clearInterval(state.tick);
@@ -542,7 +605,8 @@ async function saveMatchRatings(event) {
 async function saveMatch(event) {
   event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const existing = values.id ? await getOne('matches', values.id) : null;
   const goalsFor = values.goalsFor === '' ? null : Number(values.goalsFor); const goalsAgainst = values.goalsAgainst === '' ? null : Number(values.goalsAgainst);
-  await put('matches', { ...existing, id: values.id || uid(), date: values.date, round: values.round.trim(), type: values.type, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
+  const date = composeDateTime24(values.dateDay, values.dateHour, values.dateMinute);
+  await put('matches', { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
   form.closest('dialog').close(); form.reset(); await refresh(); toast('Partido guardado.');
 }
 
@@ -551,7 +615,13 @@ function renderMatches() {
   $('#matches-list').innerHTML = list.length ? list.map((match) => `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill">${escapeHtml(matchTypeLabel(match.type))}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${match.goalsFor} — ${match.goalsAgainst}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`).join('') : empty('Añade el calendario de partidos manualmente.');
 }
 
-function editMatch(id) { const match = state.matches.find((item) => item.id === id); if (!match) return; const form = $('#match-form'); for (const key of ['id','date','round','type','opponent','location','goalsFor','goalsAgainst']) form.elements[key].value = match[key] ?? (key === 'type' ? 'league' : ''); $('#match-dialog').showModal(); }
+function editMatch(id) {
+  const match = state.matches.find((item) => item.id === id); if (!match) return;
+  const form = $('#match-form');
+  for (const key of ['id', 'round', 'type', 'opponent', 'location', 'goalsFor', 'goalsAgainst']) form.elements[key].value = match[key] ?? (key === 'type' ? 'league' : '');
+  setDateTimeFields(form, 'date', match.date);
+  $('#match-dialog').showModal();
+}
 
 function attendanceBuilder(matchId = '', recordId = '') {
   const root = $('#training-builder');
@@ -566,7 +636,7 @@ function attendanceBuilder(matchId = '', recordId = '') {
   const attendanceByPlayer = Object.fromEntries((existing?.attendance ?? []).map((item) => [item.playerId, item]));
   const rows = players.map((player) => {
     const entry = attendanceByPlayer[player.id] ?? { status: 'present', note: '' };
-    return `<div class="check-row attendance-row"><strong>${escapeHtml(player.name)}</strong><select name="status-${player.id}" aria-label="Estado de ${escapeHtml(player.name)}"><option value="present" ${entry.status === 'present' ? 'selected' : ''}>Presente</option><option value="late" ${entry.status === 'late' ? 'selected' : ''}>Tarde</option><option value="absent" ${entry.status === 'absent' ? 'selected' : ''}>Ausente</option></select><label class="arrival-time ${entry.status === 'late' ? '' : 'hidden'}">Hora de llegada<input type="time" name="arrivalTime-${player.id}" value="${escapeHtml(entry.arrivalTime ?? '')}" aria-label="Hora de llegada de ${escapeHtml(player.name)}"></label><input name="note-${player.id}" value="${escapeHtml(entry.note)}" maxlength="200" placeholder="Incidencia o comentario" aria-label="Nota de ${escapeHtml(player.name)}"></div>`;
+    return `<div class="check-row attendance-row"><strong>${escapeHtml(player.name)}</strong><select name="status-${player.id}" aria-label="Estado de ${escapeHtml(player.name)}"><option value="present" ${entry.status === 'present' ? 'selected' : ''}>Presente</option><option value="late" ${entry.status === 'late' ? 'selected' : ''}>Tarde</option><option value="absent" ${entry.status === 'absent' ? 'selected' : ''}>Ausente</option></select><div class="arrival-time ${entry.status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span>${time24Markup(`arrivalTime-${player.id}`, entry.arrivalTime, `Hora de llegada de ${player.name}`)}</div><input name="note-${player.id}" value="${escapeHtml(entry.note)}" maxlength="200" placeholder="Incidencia o comentario" aria-label="Nota de ${escapeHtml(player.name)}"></div>`;
   }).join('');
   root.classList.remove('hidden');
   root.innerHTML = `<form id="training-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><div class="form-row"><label>Tipo de registro<select name="kind"><option value="training" ${kind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match" ${kind === 'match' ? 'selected' : ''}>Partido</option></select></label><label>Fecha<input name="date" type="date" value="${escapeHtml(existing?.date ?? match?.date.slice(0, 10) ?? today)}" required></label></div><label class="${kind === 'match' ? '' : 'hidden'}">Partido<select name="matchId" ${kind === 'match' ? 'required' : ''}><option value="">Selecciona…</option>${matchOptions}</select></label>${kind === 'match' && !callup ? '<p class="warning panel">Selecciona un partido con convocatoria.</p>' : `<div class="check-list">${rows}</div>`}<label>Notas del registro<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div></form>`;
@@ -580,6 +650,7 @@ async function saveTraining(event) {
   const callup = state.callups.find(({ id }) => id === match?.callupId);
   if (values.kind === 'match' && !callup) return toast('Selecciona un partido con convocatoria.');
   const players = values.kind === 'match' ? state.players.filter(({ id }) => callup.availableIds.includes(id)) : state.players;
+  for (const { id } of players) values[`arrivalTime-${id}`] = composeTime24(values[`arrivalTime-${id}Hour`], values[`arrivalTime-${id}Minute`]);
   const record = buildAttendanceRecord(players, values, { id: existing?.id ?? uid(), kind: values.kind, matchId: values.matchId, createdAt: existing?.createdAt ?? Date.now() });
   await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
 }
@@ -605,7 +676,7 @@ async function exportData() {
 async function importData(event) {
   const file = event.target.files[0]; if (!file) return;
   if (file.size > 20_000_000) return toast('La copia supera el límite de 20 MB.');
-  try { const backup = validateBackup(JSON.parse(await file.text())); if (!confirm('La importación sustituirá todos los datos locales. ¿Continuar?')) return; await importDatabase(backup); state.timer = null; await refresh(); toast('Copia importada correctamente.'); } catch (error) { console.error(error); toast(`No se pudo importar: ${error.message}`); } finally { event.target.value = ''; }
+  try { const backup = validateBackup(JSON.parse(await file.text())); if (!await askConfirmation({ title: 'Importar copia', message: 'La importación sustituirá todos los datos locales.', acceptLabel: 'Importar y sustituir', danger: true })) return; await importDatabase(backup); state.timer = null; await refresh(); toast('Copia importada correctamente.'); } catch (error) { console.error(error); toast(`No se pudo importar: ${error.message}`); } finally { event.target.value = ''; }
 }
 
 async function savePins(ownerPin, delegatePin) {
@@ -618,6 +689,7 @@ async function savePins(ownerPin, delegatePin) {
 
 function applyRole(role) {
   state.role = role;
+  try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
   document.body.classList.remove('auth-locked');
   $('#role-label').textContent = role === 'owner' ? 'Migue' : 'Delegado';
   if (role === 'delegate') {
@@ -632,7 +704,16 @@ function applyRole(role) {
   }
 }
 
+function restoreSessionRole() {
+  let role;
+  try { role = sessionStorage.getItem(SESSION_ROLE_KEY); } catch { return false; }
+  if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
+  applyRole(role);
+  return true;
+}
+
 function showAuth() {
+  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistente que limpiar. */ }
   document.body.classList.add('auth-locked');
   document.body.classList.remove('delegate-mode');
   state.role = null;
@@ -739,7 +820,7 @@ function wireEvents() {
     if (attendanceForm && event.target.name.startsWith('status-')) {
       const arrival = event.target.closest('.attendance-row').querySelector('.arrival-time');
       arrival.classList.toggle('hidden', event.target.value !== 'late');
-      if (event.target.value !== 'late') arrival.querySelector('input').value = '';
+      if (event.target.value !== 'late') $$('select', arrival).forEach((select) => { select.value = ''; });
       return;
     }
     if (attendanceForm && event.target.name === 'kind') {
@@ -773,14 +854,14 @@ function wireEvents() {
     if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.edit-player')) editPlayer(target.dataset.id);
-    if (target.matches('.delete-player') && confirm('¿Borrar este jugador? Los históricos conservarán sus datos numéricos.')) { await remove('players', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-player') && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', target.dataset.id); await refresh(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
-    if (target.matches('.delete-match') && confirm('¿Borrar este partido y su registro de asistencia asociado?')) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
-    if (target.matches('.delete-training') && confirm('¿Borrar este registro de asistencia?')) { await remove('trainings', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();
     if (target.id === 'make-sub') await makeSubstitution();
@@ -805,7 +886,7 @@ function wireEvents() {
       const count = Math.min(3, bench.length, state.timer.onField.length);
       if (count < 2) return toast('No hay suficientes jugadores para un cambio automático de 2–3.');
       const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, livePlayedSeconds(), count);
-      if (confirm(`Cambio automático de ${count}: entran ${suggestion.inIds.map(playerName).join(', ')} y salen ${suggestion.outIds.map(playerName).join(', ')}. ¿Confirmar?`)) await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
+      if (await askConfirmation({ title: `Cambio automático de ${count}`, message: `Entran ${suggestion.inIds.map(playerName).join(', ')} y salen ${suggestion.outIds.map(playerName).join(', ')}.`, acceptLabel: 'Registrar cambio' })) await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
     }
     if (target.matches('.save-score')) await saveLiveScore(target.dataset.prefix);
     if (target.matches('.add-live-event')) await addLiveEvent(target.dataset.prefix);
@@ -842,13 +923,17 @@ async function synchronizeCloud() {
 }
 
 async function init() {
+  const matchForm = $('#match-form');
+  matchForm.elements.dateHour.innerHTML = selectOptions(24);
+  matchForm.elements.dateMinute.innerHTML = selectOptions(60);
   wireEvents(); networkStatus();
   configureCloudStore(createCampoBaseCloudStore());
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
   await synchronizeCloud();
-  await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate(); showAuth();
+  await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
+  if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }

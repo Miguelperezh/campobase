@@ -65,7 +65,8 @@ export function buildCallupSelection(players, options = {}) {
   const limit = options.limit ?? 14;
   positiveInteger(limit, 'El máximo de convocados');
   const matchType = options.matchType ?? 'league';
-  const playerIds = new Set(players.map(({ id }) => id));
+  const uniquePlayers = [...new Map(players.map((player) => [player.id, player])).values()];
+  const playerIds = new Set(uniquePlayers.map(({ id }) => id));
   const selected = new Set(options.selectedIds ?? []);
   const manualExclusions = options.manualExclusions ?? [];
   const manuallyExcluded = new Set(manualExclusions.map(({ playerId }) => playerId));
@@ -77,7 +78,7 @@ export function buildCallupSelection(players, options = {}) {
   }
   if (selected.size > limit) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
 
-  const eligible = players.filter(({ id }) => !manuallyExcluded.has(id));
+  const eligible = uniquePlayers.filter(({ id }) => !manuallyExcluded.has(id));
   const exclusions = manualExclusions.map(({ playerId, reason }) => ({ playerId, reason, automatic: false }));
   if (matchType !== 'league') {
     if (eligible.length > limit) throw new RangeError(`En amistosos y torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
@@ -96,10 +97,16 @@ export function buildCallupSelection(players, options = {}) {
     const history = protectedHistories[player.id] ?? [];
     if (history.length && !rotationDecisions[player.id]) {
       pendingRotationDecisions.push({ playerId: player.id, history });
+      automatic.push(player);
       continue;
     }
     if (rotationDecisions[player.id] === 'include') continue;
     automatic.push(player);
+  }
+  if (automatic.length < automaticCount) {
+    const fallback = suggestExcludedPlayers(candidates, candidates.length)
+      .filter(({ id }) => rotationDecisions[id] === 'include' && !automatic.some((player) => player.id === id));
+    automatic.push(...fallback.slice(0, automaticCount - automatic.length));
   }
   const automaticIds = new Set(automatic.map(({ id }) => id));
   exclusions.push(...automatic.map(({ id }) => ({ playerId: id, reason: 'rotation', automatic: true })));

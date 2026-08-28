@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0 — 2026-08-28
+
+- Sustituidos todos los controles nativos con hora por selectores propios `00–23` y `00–59` en convocatoria manual, calendario y llegadas de asistencia; iOS ya no puede imponer AM/PM.
+- La rotación trabaja con jugadores únicos, mantiene provisionalmente el máximo de 14 durante decisiones pendientes y completa la convocatoria aunque existan fichas duplicadas.
+- Eliminadas todas las llamadas a `confirm()`: las decisiones y borrados usan un diálogo HTML propio compatible con móvil.
+- El rol autenticado se conserva en `sessionStorage` durante la pestaña actual. Una recarga causada por navegador o service worker restaura la sesión; el PIN solo reaparece al cerrar sesión o abrir una sesión nueva.
+- Caché PWA elevada a `campobase-v1.7.0` y añadidas regresiones automáticas para los tres fallos.
+
 ## 1.6.0 — 2026-08-28
 
 - La ficha permite abrir la cámara trasera o elegir una imagen del móvil; la foto se guarda como `data:image` dentro del documento del jugador y se sincroniza con el flujo Supabase existente, sin bucket adicional.

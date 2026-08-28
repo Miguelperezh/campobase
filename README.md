@@ -1,15 +1,15 @@
-# CampoBase 1.6.0 — fotos y acceso sincronizados
+# CampoBase 1.7.0 — horarios 24 h y sesión estable
 
 Estado: candidato. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
 ## Flujo de uso
 
 1. Plantilla: crear jugadores en orden alfabético y añadir una foto desde la cámara o galería del móvil.
-2. Convocatorias: crear o editar, marcar exclusiones y revisar la lista. Si la rotación alcanza a alguien excluido antes por enfermedad o decisión técnica, decidir expresamente si entra.
+2. Convocatorias: crear o editar, marcar exclusiones y revisar la lista. La rotación completa hasta 14 jugadores únicos. Si alcanza a alguien excluido antes por enfermedad o decisión técnica, un diálogo propio permite decidir expresamente si entra.
 3. Partido en vivo: preparar porteros, pulsar Comienzo, registrar cambios, marcador e incidencias; Descanso/Segundo tiempo/Final controlan el flujo. Al finalizar, Migue puntúa obligatoriamente a cada convocado del 1 al 5. El delegado solo pausa y avisa a Migue. Auto-pausa a 38:00 y 74:00.
-4. Calendario: crear partidos con hora en formato 24 h.
-5. Asistencia: registrar o editar cualquier fecha; indicar hora si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
-6. Acceso: el primer uso configura una sola vez dos PIN distintos. Después, cada entrada pide el PIN. El de Migue da acceso total; el del delegado solo permite tiempos, cambios e incidencias del partido. Un valor erróneo muestra “PIN incorrecto”.
+4. Calendario: crear partidos con selectores propios de hora `00–23` y minuto `00–59`, independientes del formato regional del dispositivo.
+5. Asistencia: registrar o editar cualquier fecha; indicar la llegada con selectores propios de 24 horas si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
+6. Acceso: el primer uso configura una sola vez dos PIN distintos. Después, cada sesión pide el PIN una vez. El rol se conserva mientras siga abierta la pestaña, incluso si el navegador recarga la PWA; “Cerrar sesión” o una pestaña nueva vuelven a pedirlo. El de Migue da acceso total; el del delegado solo permite tiempos, cambios e incidencias del partido. Un valor erróneo muestra “PIN incorrecto”.
 7. Ajustes: elegir Fútbol 7 o Fútbol 11, consultar el estado de sincronización y exportar copias JSON.
 
 ## Modalidades
@@ -36,7 +36,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: ejecutar tras cada cambio.
+- `npm test`: 40 pruebas automatizadas en 1.7.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 
@@ -48,12 +48,12 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 - Dos ediciones offline del mismo registro se resuelven por la última que llegue al servidor, sin combinación de campos.
 - El reloj depende del dispositivo y no sustituye el acta arbitral.
 - “Tardanzas frecuentes” se activa desde 3 tardanzas registradas.
-- El selector nativo `datetime-local` depende visualmente del navegador, pero la app etiqueta 24 h y todas las fechas renderizadas fuerzan ciclo horario 00–23.
+- Todos los campos que incluyen hora son controles HTML propios de 24 horas; solo la fecha sin hora conserva el selector nativo de calendario.
 - Borrar un jugador conserva identificadores en históricos como “Jugador eliminado”.
 
 ## Recuperación / rollback
 
-Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.6.0 falla, volver a servir 1.5.0 e importar la copia. El SQL no cambia en 1.6.0 ni elimina datos. Al volver a 1.5.0, los PIN seguirán funcionando en el dispositivo donde ya existían, pero dejarán de descargarse en dispositivos nuevos.
+Exportar JSON antes de actualizar. Para restaurar, Ajustes → Importar JSON. Si 1.7.0 falla, volver a servir 1.6.0 e importar la copia. El SQL y el formato de datos no cambian en 1.7.0; las fechas y horas siguen guardándose como `AAAA-MM-DDTHH:MM` y `HH:MM`.
 
 ## Desarrollo
 
