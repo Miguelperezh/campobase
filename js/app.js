@@ -2,7 +2,7 @@ import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatab
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
-import { REAL_EXERCISES, renderRealDiagram } from './real-exercises.js';
+import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -857,7 +857,8 @@ function renderExercises() {
       <p><strong>Objetivo:</strong> ${escapeHtml(item.objective || '')}</p>
       <details class="diagram-details" open><summary>Ver demostración</summary>${diagram}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: pase, movimiento o conducción</p></details>
       <details><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol></details>
-      <details><summary>Qué se trabaja</summary><ul class="plain-list">${item.works.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>
+      ${item.physical ? `<details><summary>Aspectos físicos</summary><ul class="plain-list">${item.physical.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>` : ''}
+      <details><summary>Qué se trabaja (técnico)</summary><ul class="plain-list">${item.works.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>
       <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor || '')}</p>
       <details><summary>Qué debo observar</summary><ul class="plain-list">${item.observe.map((o) => `<li>${escapeHtml(o)}</li>`).join('')}</ul></details>
       <details><summary>Correcciones breves</summary><ul class="plain-list">${item.corrections.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul></details>
@@ -976,8 +977,16 @@ async function ensureRealExercisesSeeded() {
   if (await getOne('settings', 'real-exercises-seeded')) return;
   const current = await getAll('settings');
   const existingIds = new Set(current.filter(({ recordType }) => recordType === 'exercise').map(({ id }) => id));
-  const additions = REAL_EXERCISES.filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
+  const additions = [...REAL_EXERCISES, ...SLIDESHARE_EXERCISES].filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
   await putBatch({ settings: [...additions, { id: 'real-exercises-seeded', recordType: 'migration', version: 5, createdAt: Date.now() }] });
+}
+
+async function ensureSlideshareSeeded() {
+  if (await getOne('settings', 'slideshare-seeded')) return;
+  const current = await getAll('settings');
+  const existingIds = new Set(current.filter(({ recordType }) => recordType === 'exercise').map(({ id }) => id));
+  const additions = SLIDESHARE_EXERCISES.filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
+  await putBatch({ settings: [...additions, { id: 'slideshare-seeded', recordType: 'migration', version: 6, createdAt: Date.now() }] });
 }
 
 async function exportData() {
@@ -1285,6 +1294,7 @@ async function init() {
   await ensurePhase2V2Seeded();
   await ensurePhase2V3Seeded();
   await ensureRealExercisesSeeded();
+  await ensureSlideshareSeeded();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
   if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
