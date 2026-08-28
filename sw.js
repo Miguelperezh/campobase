@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v1.10.0';
+const CACHE = 'campobase-v1.10.1';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/domain.js', './js/sync-core.js', './js/supabase-client.js',
