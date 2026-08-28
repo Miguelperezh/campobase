@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v1.7.1';
+const CACHE = 'campobase-v1.7.2';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/domain.js', './js/sync-core.js', './js/supabase-client.js',
@@ -16,13 +16,22 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Network-first: siempre intenta la red primero (versión más reciente).
+// Solo cae a caché si no hay conexión. Así las actualizaciones se ven al instante.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  event.respondWith(caches.match(event.request).then((cached) => cached ?? fetch(event.request).then((response) => {
-    if (response.ok && new URL(event.request.url).origin === self.location.origin) {
-      const copy = response.clone();
-      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-    }
-    return response;
-  }).catch(() => caches.match('./index.html'))));
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('./index.html')))
+  );
 });
