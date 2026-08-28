@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0 — 2026-08-28
+
+- Nueva pestaña Ejercicios con 36 ejemplos iniciales, siete categorías, filtros por categoría, jugadores, material y dificultad, favoritos y CRUD completo.
+- Sesiones de entrenamiento por fecha con calentamiento, 2-3 ejercicios principales, juego final, duración, material y consignas.
+- Plantillas reutilizables de calentamiento de entreno (10 min) y partido (15 min).
+- Ejercicios y sesiones se sincronizan en la tabla `configuracion` como documentos tipados, sin SQL ni tablas nuevas, y forman parte de la copia JSON existente.
+- Caché PWA elevada a `campobase-v2.0.0` y 50 pruebas automatizadas.
+
 ## 1.8.0 — 2026-08-28
 
 - Nombre de equipo configurable y condición local/visitante en calendario, convocatoria manual y partido en vivo.

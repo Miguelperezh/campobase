@@ -37,3 +37,17 @@ test('la iteración 9 expone equipo, localía, marcador de estadio y oculta come
   assert.doesNotMatch(app, /normalizePositions\(player\)\.includes\('Portero'\).*keeperOptions/s);
   assert.match(app, /getAttribute\('id'\)/, 'conserva el arreglo del listener de convocatorias');
 });
+
+test('la fase 2 expone ejercicios, filtros, favoritos, CRUD y sesiones por bloques', async () => {
+  const [html, app, sw] = await Promise.all([
+    projectFile('index.html'), projectFile('js/app.js'), projectFile('sw.js'),
+  ]);
+  assert.match(html, /data-view="ejercicios"/);
+  assert.match(html, /id="exercise-filters"/);
+  assert.match(html, /id="exercise-form"/);
+  assert.match(app, /id="session-form"/);
+  assert.match(app, /INITIAL_EXERCISES/);
+  assert.match(app, /recordType === 'trainingSession'/);
+  assert.match(app, /form\.getAttribute\('id'\)/, 'los formularios dinámicos mantienen el patrón seguro');
+  assert.match(sw, /training-domain\.js/);
+});

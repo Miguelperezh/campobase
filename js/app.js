@@ -1,6 +1,7 @@
 import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
+import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -20,7 +21,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 let toastTimer;
 
@@ -114,7 +115,10 @@ function showView(viewId) {
 async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   state.players = sortPlayersByName(state.players);
-  const settings = await getOne('settings', 'main');
+  const settingRecords = await getAll('settings');
+  state.exercises = settingRecords.filter(({ recordType }) => recordType === 'exercise');
+  state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
+  const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
   $('#format').value = state.format;
@@ -125,7 +129,7 @@ async function refresh() {
 function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
-  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings();
+  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions();
 }
 
 function renderPlayers() {
@@ -826,6 +830,112 @@ function renderTrainings() {
   }).join('')}` : empty('Todavía no hay registros de asistencia.');
 }
 
+function exerciseName(id) {
+  return state.exercises.find((item) => item.id === id)?.name ?? 'Ejercicio eliminado';
+}
+
+function renderExercises() {
+  const form = $('#exercise-filters');
+  if (!form) return;
+  const filters = {
+    category: form.elements.category.value,
+    players: form.elements.players.value,
+    material: form.elements.material.value,
+    difficulty: form.elements.difficulty.value,
+    favorites: form.elements.favorites.checked,
+  };
+  const exercises = filterExercises(state.exercises, filters)
+    .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
+  $('#exercises-list').innerHTML = exercises.length ? exercises.map((item) => `<article class="panel exercise-card">
+    <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><span class="pill">${escapeHtml(item.difficulty)}</span><h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
+    <p class="meta">${escapeHtml(item.players)} jugadores · ${item.duration} min · ${escapeHtml(item.space)}</p><p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p>${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
+    <div class="button-row"><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
+  </article>`).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+}
+
+function editExercise(id) {
+  const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
+  if (!item) return;
+  const form = $('#exercise-form');
+  for (const key of ['id', 'name', 'category', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
+    form.elements[key].value = item[key] ?? '';
+  }
+  $('#exercise-dialog').showModal();
+}
+
+async function saveExercise(event) {
+  event.preventDefault();
+  const form = event.target.closest('form');
+  const values = formObject(form);
+  const existing = values.id ? state.exercises.find(({ id }) => id === values.id) : null;
+  const saved = buildExercise(values, {
+    id: existing?.id ?? uid(), favorite: existing?.favorite ?? false,
+    createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
+  });
+  await put('settings', { ...existing, ...saved, recordType: 'exercise', example: existing?.example ?? false });
+  $('#exercise-dialog').close();
+  form.reset();
+  await refresh();
+  showView('ejercicios');
+  toast(existing ? 'Ejercicio actualizado.' : 'Ejercicio creado.');
+}
+
+function exerciseOptions(selectedId = '', predicate = () => true) {
+  return state.exercises.filter(predicate).sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    .map((item) => `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${escapeHtml(item.name)} · ${item.duration} min</option>`).join('');
+}
+
+function sessionBuilder(editId = '') {
+  const existing = state.trainingSessions.find(({ id }) => id === editId);
+  const blocks = existing?.blocks ?? [];
+  const warmup = blocks.find(({ type }) => type === 'warmup');
+  const main = blocks.filter(({ type }) => type === 'main');
+  const final = blocks.find(({ type }) => type === 'final');
+  const warmupIds = new Set(WARMUP_TEMPLATES.map(({ id }) => id));
+  const warmupOptions = exerciseOptions(warmup?.exerciseId, (item) => item.category === 'Calentamiento' || warmupIds.has(item.id));
+  const allOptions = (selected = '') => `<option value="">Selecciona…</option>${exerciseOptions(selected)}`;
+  const mainRow = (index) => `<div class="session-block"><label>Ejercicio ${index + 1}${index === 2 ? ' (opcional)' : ''}<select name="mainExerciseId" ${index < 2 ? 'required' : ''}>${allOptions(main[index]?.exerciseId)}</select></label><label>Duración (min)<input name="mainDuration" type="number" min="1" max="240" value="${main[index]?.duration ?? ''}" ${index < 2 ? 'required' : ''}></label><label>Consignas / observaciones<input name="mainNotes" maxlength="300" value="${escapeHtml(main[index]?.notes ?? '')}"></label></div>`;
+  const today = new Date().toISOString().slice(0, 10);
+  const root = $('#session-builder');
+  root.classList.remove('hidden');
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${existing?.id ?? ''}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${existing?.date ?? today}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(existing?.name ?? '')}" placeholder="Ej. Salida de balón"></label></div><fieldset><legend>Calentamiento</legend><div class="session-block"><label>Plantilla reutilizable<select name="warmupId" required><option value="">Selecciona…</option>${warmupOptions}</select></label><label>Duración (min)<input name="warmupDuration" type="number" min="1" max="240" required value="${warmup?.duration ?? ''}"></label><label>Consignas / observaciones<input name="warmupNotes" maxlength="300" value="${escapeHtml(warmup?.notes ?? '')}"></label></div></fieldset><fieldset><legend>Parte principal (2-3 ejercicios)</legend>${[0, 1, 2].map(mainRow).join('')}</fieldset><fieldset><legend>Juego final</legend><div class="session-block"><label>Ejercicio<select name="finalExerciseId" required>${allOptions(final?.exerciseId)}</select></label><label>Duración (min)<input name="finalDuration" type="number" min="1" max="240" required value="${final?.duration ?? ''}"></label><label>Consignas / observaciones<input name="finalNotes" maxlength="300" value="${escapeHtml(final?.notes ?? '')}"></label></div></fieldset><label>Material total<input name="material" maxlength="300" value="${escapeHtml(existing?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function saveTrainingSession(event) {
+  event.preventDefault();
+  const form = event.target.closest('form');
+  const values = formObject(form);
+  const mainIds = $$('select[name="mainExerciseId"]', form).map(({ value }) => value).filter(Boolean);
+  const mainDurations = $$('input[name="mainDuration"]', form).slice(0, mainIds.length).map(({ value }) => value);
+  const mainNotes = $$('input[name="mainNotes"]', form).slice(0, mainIds.length).map(({ value }) => value);
+  const existing = values.id ? state.trainingSessions.find(({ id }) => id === values.id) : null;
+  const session = buildTrainingSession({
+    ...values, mainExerciseIds: mainIds, mainDurations, mainNotes,
+  }, {
+    id: existing?.id ?? uid(), availableExerciseIds: state.exercises.map(({ id }) => id),
+    createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
+  });
+  await put('settings', session);
+  $('#session-builder').classList.add('hidden');
+  await refresh();
+  showView('ejercicios');
+  toast(existing ? 'Sesión actualizada.' : 'Sesión guardada.');
+}
+
+function renderTrainingSessions() {
+  const sessions = sortTrainingSessions(state.trainingSessions);
+  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `<article class="panel"><div class="section-head"><div><span class="pill accent">${session.totalDuration} min</span><h3>${escapeHtml(session.name)}</h3><p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques</p></div><div class="button-row"><button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button><button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button></div></div><ol class="session-plan">${session.blocks.map((block) => `<li><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</li>`).join('')}</ol>${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}</article>`).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
+}
+
+async function ensurePhase2Seeded() {
+  if (await getOne('settings', 'phase2-seeded')) return;
+  await putBatch({ settings: [
+    ...INITIAL_EXERCISES.map((item) => structuredClone(item)),
+    { id: 'phase2-seeded', recordType: 'migration', version: 2, createdAt: Date.now() },
+  ] });
+}
+
 async function exportData() {
   const backup = await exportDatabase(); const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `campobase-copia-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('Copia exportada.');
 }
@@ -965,7 +1075,9 @@ function wireEvents() {
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
-  $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder());
+  $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder());
+  $('#exercise-filters').addEventListener('input', renderExercises);
+  $('#exercise-filters').addEventListener('change', renderExercises);
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
   $('#format').addEventListener('change', async (event) => {
     state.format = event.target.value;
@@ -994,6 +1106,12 @@ function wireEvents() {
       return event.target.value === 'match' ? attendanceBuilder(firstMatchId) : attendanceBuilder();
     }
     if (attendanceForm && event.target.name === 'matchId') return attendanceBuilder(event.target.value);
+    const sessionForm = event.target.closest('#session-form');
+    if (sessionForm && event.target.name === 'warmupId') {
+      const selected = state.exercises.find(({ id }) => id === event.target.value);
+      if (selected) sessionForm.elements.warmupDuration.value = selected.duration;
+      return;
+    }
     const form = event.target.closest('#callup-form'); if (!form) return;
     if (event.target.matches('input[name="matchSource"]')) updateMatchSource();
     if (event.target.matches('input[name="manualExcluded"]')) {
@@ -1018,11 +1136,14 @@ function wireEvents() {
     if (formId === 'callup-form') saveCallup(event).catch(handleError);
     else if (formId === 'training-form') saveTraining(event).catch(handleError);
     else if (formId === 'rating-form') saveMatchRatings(event).catch(handleError);
+    else if (formId === 'exercise-form') saveExercise(event).catch(handleError);
+    else if (formId === 'session-form') saveTrainingSession(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
     const target = event.target;
     if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
+    if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
     if (target.matches('.edit-player')) editPlayer(target.dataset.id);
     if (target.matches('.delete-player') && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', target.dataset.id); await refresh(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
@@ -1037,6 +1158,11 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
+    if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
+    if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
+    if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
+    if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
+    if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();
     if (target.id === 'make-sub') await makeSubstitution();
@@ -1102,12 +1228,16 @@ async function init() {
   const matchForm = $('#match-form');
   matchForm.elements.dateHour.innerHTML = selectOptions(24);
   matchForm.elements.dateMinute.innerHTML = selectOptions(60);
+  const categoryOptions = EXERCISE_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
+  $('#exercise-form').elements.category.innerHTML = categoryOptions;
+  $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
   wireEvents(); networkStatus();
   configureCloudStore(createCampoBaseCloudStore());
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
   await synchronizeCloud();
+  await ensurePhase2Seeded();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
   if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
