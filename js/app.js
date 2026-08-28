@@ -153,14 +153,10 @@ function renderPlayers() {
 function playerIncidentRows(playerId) {
   const rows = [];
   for (const match of state.matches) {
-    const push = (field, label, item, index) => {
+    (match.incidents ?? []).forEach((item, i) => {
       if (item.playerId !== playerId) return;
-      rows.push({ key: `match:${match.id}:${field}:${index}`, date: match.date, label, note: item.note || '' });
-    };
-    (match.goals ?? []).forEach((item, i) => push('goals', 'Gol', item, i));
-    (match.cards ?? []).forEach((item, i) => push('cards', item.type === 'red' ? 'Tarjeta roja' : 'Tarjeta amarilla', item, i));
-    (match.injuries ?? []).forEach((item, i) => push('injuries', 'Lesión', item, i));
-    (match.incidents ?? []).forEach((item, i) => push('incidents', 'Incidencia', item, i));
+      rows.push({ key: `match:${match.id}:incidents:${i}`, date: match.date, label: 'Incidencia', note: item.note || '' });
+    });
   }
   for (const record of state.trainings) {
     const entry = record.attendance?.find((item) => item.playerId === playerId);
