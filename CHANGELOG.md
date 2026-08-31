@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.10.0 — 2026-08-31
+
+- Fase 3 mejorada: la pizarra táctica ahora precarga las 3 formaciones del manual de Migue (1-3-2-1, 1-2-3-1, 1-2-2-2) con sus posiciones.
+- Cada formación incluye la explicación táctica: qué busco, con balón, sin balón/defensa y al perder el balón.
+- Leyenda corregida: mi equipo en rojo y rival en negro (antes ambos del mismo color).
+- 66 pruebas automatizadas en verde.
+
 ## 2.9.0 — 2026-08-31
 
 - Fase 3: nueva pestaña «Tácticas» con pizarra táctica (F7 y F11).

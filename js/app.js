@@ -4,7 +4,7 @@ import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, ca
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
-import { TACTIC_FORMATS, buildTactic, defaultTactic, renderTacticBoard, sortTactics } from './tactics.js';
+import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, buildTactic, defaultTactic, renderTacticBoard, sortTactics } from './tactics.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -1047,8 +1047,14 @@ function tacticBuilder(editId = '') {
   const existing = state.tactics.find(({ id }) => id === editId);
   const root = $('#tactic-builder');
   root.classList.remove('hidden');
-  const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7'), name: '', rival: '', situation: '', notes: '' };
-  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div>${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
+  const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
+  const guideHTML = guide ? `
+    <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
+    <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+    <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+    <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
+  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${renderTacticBoard(t)}${guideHTML}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1277,6 +1283,24 @@ function wireEvents() {
   $('#exercise-filters').addEventListener('change', renderExercises);
   document.addEventListener('input', (event) => {
     if (event.target.matches('#session-form [name="blockDuration"]')) refreshSessionDurationStatus();
+  });
+  document.addEventListener('change', (event) => {
+    if (event.target.matches('#tactic-form [name="formation"]')) {
+      const form = event.target.closest('#tactic-form');
+      const values = formObject(form);
+      const t = { ...defaultTactic(values.format || 'F7', values.formation), name: values.name, rival: values.rival, situation: values.situation, notes: values.notes };
+      const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
+      const guideHTML = guide ? `
+        <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
+        <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+        <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+        <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
+      const board = form.querySelector('.tactic-board');
+      if (board) board.outerHTML = renderTacticBoard(t);
+      form.querySelectorAll('.tactic-guide').forEach((el) => el.remove());
+      const notesLabel = form.querySelector('label:has(textarea[name="notes"])');
+      if (notesLabel) notesLabel.insertAdjacentHTML('beforebegin', guideHTML);
+    }
   });
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
   $('#format').addEventListener('change', async (event) => {
