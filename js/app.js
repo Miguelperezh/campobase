@@ -1267,7 +1267,7 @@ function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
-  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError)); $('#tactic-form').addEventListener('submit', (event) => saveTactic(event).catch(handleError));
+  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
