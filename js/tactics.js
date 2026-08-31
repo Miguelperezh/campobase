@@ -204,7 +204,7 @@ export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
   };
 }
 
-const xml = (value) => clean(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
+const xml = (value) => clean(value).replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' })[c]);
 
 const arrowStyle = (kind) => {
   const styles = {
@@ -212,20 +212,27 @@ const arrowStyle = (kind) => {
     move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',    weight: 1.2 },
     dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',    weight: 2.2 },
     shot:   { cls: 'tac-arrow tiq',  stroke: '#c8102e', dash: 'none',    weight: 2.6 },
-    sprint: { cls: 'tac-arrow spr',  stroke: '#0f766e', dash: '3 1.5',  weight: 2.0 },
+    sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',  weight: 2.0 },
   };
   return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
 };
 
+// Barras de color para la leyenda (mini rectángulos del color de cada flecha).
+const legendSwatch = (color, dash) => {
+  const style = `display:inline-block;width:12px;height:3px;background:${color};vertical-align:middle;margin-right:4px`;
+  return `<span style="${style}"></span>`;
+};
+
 const actionLabel = (kind) => {
-  const labels = {
-    pass:   '→ azul claro = pase',
-    move:   '→ gris rayado = movimiento sin balón',
-    dribble:'→ púrpura = conducción',
-    shot:   '→ rojo = disparo',
-    sprint: '→ verde = sprint',
+  const defs = {
+    pass:   { color: '#2b6cb0', label: 'Pase' },
+    move:   { color: '#6b6b6b', label: 'Movimiento sin balón', dash: '6 4' },
+    dribble:{ color: '#7c3aed', label: 'Conducción' },
+    shot:   { color: '#c8102e', label: 'Disparo' },
+    sprint: { color: '#f6cf4c', label: 'Sprint' },
   };
-  return labels[kind] ?? '→ = pase';
+  const d = defs[kind] ?? { color: '#2b6cb0', label: 'Pase' };
+  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${legendSwatch(d.color, d.dash || 'none')}${d.label}</span>`;
 };
 
 // Herramientas de la pizarra interactiva.
@@ -281,23 +288,35 @@ export function renderTacticBoard(tactic = {}, options = {}) {
   }
   for (let i = 0; i < (t.team || []).length; i++) {
     const p = t.team[i];
-    const tx = p.x + 3.6;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${tx}" y="${p.y + 1.6}" class="tac-player-num">${xml(p.n)}</text></g>`);
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num">${xml(p.n)}</text></g>`);
   }
   for (let i = 0; i < (t.opponent || []).length; i++) {
     const p = t.opponent[i];
-    const tx = p.x + 3.6;
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${tx}" y="${p.y + 1.6}" class="tac-opp-num">${xml(p.n)}</text></g>`);
+    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${xml(p.n)}</text></g>`);
   }
   const ball = t.ball || { x: 50, y: 50 };
   parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
-  const usedKinds = [...new Set((t.moves || []).map((m) => m.kind || 'pass'))];
-  const labels = ['<span class="tac-legend-team">●</span> = mi equipo', '<span class="tac-legend-rival">●</span> = rival', '⚽ = balón'];
-  labels.push(...usedKinds.map(actionLabel));
-  return `<figure class="tactic-board"><svg viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica de ${xml(t.name || 'táctica')}">${marker(markerId)}${parts.join('')}</svg><p class="board-legend"><strong>Leyenda:</strong> ${labels.join(' · ')}</p></figure>`;
+  const swatches = `<span class="tac-legend-team">●</span> = mi equipo<span class="tac-legend-rival">●</span> = rival<span style="display:inline-flex;align-items:center;margin-right:.6rem"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1px solid #111;margin-right:4px"></span>balón</span>`;
+  const arrowSwatches = (t.moves || []).length > 0
+    ? [...new Set((t.moves || []).map((m) => m.kind || 'pass'))].map(actionLabel).join('')
+    : '<span style="color:#888">dibujar flechas con las herramientas de arriba</span>';
+  return `<figure class="tactic-board"><svg viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica de ${xml(t.name || 'táctica')}">${marker(markerId)}${parts.join('')}</svg><p class="board-legend"><strong>Leyenda:</strong> ${swatches} ${arrowSwatches}</p></figure>`;
 }
 
-const marker = (id) => `<defs><marker id="${id}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z"/></marker></defs>`;
+// Genera los markers SVG para las flechas. Usa fill="context-stroke" para que
+// el marker herede el color del trazo de la flecha padre (no negro fijo).
+// Tamaño reducido (2×2) para que la punta no sea enorme.
+const marker = (id) => {
+  const colors = ['#2b6cb0', '#6b6b6b', '#7c3aed', '#c8102e', '#f6cf4c'];
+  let defs = '<defs>';
+  for (const color of colors) {
+    const mid = `${id}-${color.replace('#', '')}`;
+    defs += `<marker id="${mid}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+  }
+  defs += `<marker id="${id}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+  defs += '</defs>';
+  return defs;
+};
 
 export function buildTactic(values, metadata = {}) {
   const name = clean(values.name);
