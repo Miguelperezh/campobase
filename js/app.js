@@ -1029,10 +1029,10 @@ function showSessionDetail(sessionId) {
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
   $('#session-detail-body').innerHTML = `
     <p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques · ${status.total} / ${session.targetDuration || 60} min</p>
-    <ol class="session-plan">${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}</ol>
+    <ol class="session-plan">${session.blocks.map((block) => `<li><div class="session-exercise-row"><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button><button type="button" class="view-exercise secondary compact" data-exercise-id="${block.exerciseId}">Ver</button></div></li>`).join('')}</ol>
     ${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}
     ${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
-    <p class="meta">Pulsa en un ejercicio para verlo completo con su explicación.</p>`;
+    <p class="meta">Pulsa en un ejercicio o en «Ver» para verlo completo con su explicación.</p>`;
   $('#session-detail-dialog').showModal();
 }
 
@@ -1340,7 +1340,7 @@ function wireEvents() {
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
     if (target.matches('.view-session')) showSessionDetail(target.dataset.id);
-    if (target.matches('.session-exercise-link')) showExerciseDetail(target.dataset.exerciseId);
+    if (target.matches('.session-exercise-link, .view-exercise')) showExerciseDetail(target.dataset.exerciseId);
     if (target.matches('.move-session-block')) { syncSessionDraft(); sessionDraftBlocks = moveSessionBlock(sessionDraftBlocks, Number(target.dataset.index), Number(target.dataset.direction)); renderSessionDraft(); }
     if (target.matches('.remove-session-block')) { syncSessionDraft(); sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index)); renderSessionDraft(); }
     if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
