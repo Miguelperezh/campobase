@@ -16,6 +16,18 @@
 - 5 formaciones F7 explicadas (1-3-2-1, 1-2-3-1, 1-2-2-2, 1-3-1-2, 1-1-3-2) con ataque y defensa.
 - 69 pruebas automatizadas en verde.
 
+## 2.12.2 — 2026-08-31
+
+### Corregido
+- Flechas de color real: los markers SVG ahora usan `fill="context-stroke"` para heredar el color del trazo (antes eran todas negras). Sprint en amarillo `#f6cf4c` para contraste sobre campo verde.
+- Números de jugadores centrados dentro del círculo (`text-anchor:middle`) en jugadores y rivales (antes desplazados a la derecha).
+- Leyenda visual con barras de color real de cada tipo de flecha: pase/azul, movimiento/gris, conducción/púrpura, disparo/rojo, sprint/amarillo.
+
+## 2.12.1 — 2026-08-31
+
+### Corregido
+- Reaparecen las reglas CSS `.tac-arrow.spr` y `.tac-sprint` con trazo verde diferenciado para las flechas de sprint. Sin esto, las flechas de sprint se renderizaban en negro y la leyenda perdía correspondencia.
+
 ## 2.10.0 — 2026-08-31
 
 - Fase 3 mejorada: la pizarra táctica ahora precarga las 3 formaciones del manual de Migue (1-3-2-1, 1-2-3-1, 1-2-2-2) con sus posiciones.
