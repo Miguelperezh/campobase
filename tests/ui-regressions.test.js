@@ -4,6 +4,18 @@ import { readFile } from 'node:fs/promises';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
+test('la versión 2.13.0 está sincronizada en paquete, lock y caché PWA', async () => {
+  const [pkgText, lockText, sw] = await Promise.all([
+    projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
+  ]);
+  const pkg = JSON.parse(pkgText);
+  const lock = JSON.parse(lockText);
+  assert.equal(pkg.version, '2.13.0');
+  assert.equal(lock.version, '2.13.0');
+  assert.equal(lock.packages[''].version, '2.13.0');
+  assert.match(sw, /campobase-v2\.13\.0/);
+});
+
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
   const [html, app] = await Promise.all([projectFile('index.html'), projectFile('js/app.js')]);
   assert.doesNotMatch(html, /type=["'](?:time|datetime-local)["']/i);
@@ -88,7 +100,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.12\.2/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.13\.0/, 'caché actualizada');
 });
 
 test('la pizarra táctica permite arrastrar piezas, colocar balón y dibujar cinco tipos de flecha', async () => {
@@ -99,6 +111,22 @@ test('la pizarra táctica permite arrastrar piezas, colocar balón y dibujar cin
   assert.match(app, /createTacticMove/, 'guarda flechas dibujadas a mano');
   assert.match(tactics, /data-piece="ball"/, 'el balón es una pieza colocable');
   assert.match(css, /\.tac-sprint/, 'el sprint tiene trazo diferenciado');
+});
+
+test('la guía táctica se oculta en el builder y aparece al abrir el detalle guardado', async () => {
+  const app = await projectFile('js/app.js');
+  const builder = app.slice(app.indexOf('function tacticBuilder'), app.indexOf('async function saveTactic'));
+  const save = app.slice(app.indexOf('async function saveTactic'), app.indexOf('function showTacticDetail'));
+  const detail = app.slice(app.indexOf('function showTacticDetail'), app.indexOf('function tacticPoint'));
+
+  assert.doesNotMatch(builder, /tactic-guide|FORMATION_GUIDES/, 'el editor no muestra explicaciones');
+  assert.match(save, /classList\.add\('hidden'\)/, 'guardar cierra el editor');
+  assert.match(detail, /FORMATION_GUIDES\[tactic\.formation\]/, 'el detalle usa la guía de la formación guardada');
+  assert.match(detail, /qué busco/);
+  assert.match(detail, /Con balón/);
+  assert.match(detail, /Sin balón \/ defensa/);
+  assert.match(detail, /Al perder el balón/);
+  assert.match(app, /view-tactic[^\n]+showTacticDetail/, 'abrir una táctica guardada muestra su detalle');
 });
 
 test('las sesiones son una pestaña aparte, con ejercicios pinchables y tiempo configurable', async () => {

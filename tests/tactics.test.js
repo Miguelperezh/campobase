@@ -13,17 +13,33 @@ test('la pizarra táctica genera formaciones F7 y F11 con jugadores y rival', ()
   assert.ok(f11.team.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y) && p.n));
 });
 
-test('precarga cinco formaciones F7 explicadas con sus posiciones', () => {
-  assert.deepEqual(FORMATION_NAMES, ['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2']);
+test('precarga ocho formaciones F7 explicadas con sus posiciones', () => {
+  assert.deepEqual(FORMATION_NAMES, ['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3', '1-4-1-1', '1-2-1-3']);
   for (const formation of FORMATION_NAMES) {
     const t = defaultTactic('F7', formation);
     assert.equal(t.team.length, 7, `${formation} debe tener 7 jugadores`);
     assert.ok(t.team.every((p) => p.pos), `${formation}: cada jugador tiene posición`);
+    assert.ok(t.team.every((p) => p.x >= 4 && p.x <= 96 && p.y >= 4 && p.y <= 96), `${formation}: todos los jugadores están dentro del campo`);
+    const board = renderTacticBoard(t, { editable: false });
+    assert.equal((board.match(/class="tac-player"/g) || []).length, 7, `${formation}: renderiza exactamente 7 jugadores`);
     assert.ok(FORMATION_GUIDES[formation], `${formation}: tiene guía táctica`);
     assert.ok(FORMATION_GUIDES[formation].queBusco, `${formation}: tiene qué busco`);
     assert.ok(FORMATION_GUIDES[formation].conBalon.length, `${formation}: tiene con balón`);
     assert.ok(FORMATION_GUIDES[formation].sinBalon.length, `${formation}: tiene sin balón`);
   }
+});
+
+test('la formación 1-3-3 dispone tres defensas y tres atacantes con la guía específica', () => {
+  const tactic = defaultTactic('F7', '1-3-3');
+  assert.deepEqual(tactic.team.map(({ pos }) => pos), [
+    'Portero', 'Lateral izq.', 'Defensa central', 'Lateral der.',
+    'Extremo izq.', 'Delantero centro', 'Extremo der.',
+  ]);
+  const guideText = JSON.stringify(FORMATION_GUIDES['1-3-3']);
+  assert.match(guideText, /equilibrada/i);
+  assert.match(guideText, /central.*cobertura/i);
+  assert.match(guideText, /extremos.*amplitud/i);
+  assert.match(guideText, /delantero centro.*móvil/i);
 });
 
 test('mueve jugadores, rivales y balón sin mutar la táctica original y limita al campo', () => {
@@ -63,7 +79,7 @@ test('construye una táctica validando nombre, formato y formación', () => {
 });
 
 test('renderiza la pizarra táctica editable con piezas pequeñas, balón fijo y sprint', () => {
-  const tactic = { ...defaultTactic('F7', '1-3-2-1'), id: 't1', name: 'Salida', moves: [{ from: { x: 50, y: 46 }, to: { x: 50, y: 30 }, kind: 'sprint' }] };
+  const tactic = { ...defaultTactic('F7', '1-3-3'), id: 't1', name: 'Salida', moves: [{ from: { x: 50, y: 46 }, to: { x: 50, y: 30 }, kind: 'sprint' }] };
   const html = renderTacticBoard(tactic, { editable: true });
   assert.match(html, /<svg/);
   assert.match(html, /class="tac-player"/);
@@ -76,6 +92,16 @@ test('renderiza la pizarra táctica editable con piezas pequeñas, balón fijo y
   assert.match(html, /tac-arrow.spr/, 'el sprint tiene trazo diferenciado');
   assert.match(html, /tac-legend-team/, 'mi equipo tiene color propio en la leyenda');
   assert.match(html, /tac-legend-rival/, 'rival tiene color propio en la leyenda');
+});
+
+test('cada formación incluye una guía completa de ataque y defensa', () => {
+  for (const formation of FORMATION_NAMES) {
+    const guide = FORMATION_GUIDES[formation];
+    assert.ok(guide.queBusco, `${formation}: tiene qué busco`);
+    assert.ok(Array.isArray(guide.conBalon) && guide.conBalon.length > 0, `${formation}: tiene con balón (ataque)`);
+    assert.ok(Array.isArray(guide.sinBalon) && guide.sinBalon.length > 0, `${formation}: tiene sin balón / defensa`);
+    assert.ok(Array.isArray(guide.alPerder) && guide.alPerder.length > 0, `${formation}: tiene al perder el balón`);
+  }
 });
 
 test('ordena tácticas por fecha de actualización descendente', () => {

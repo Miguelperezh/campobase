@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.13.0 — 2026-08-31
+
+- Fase 3: catálogo F7 ampliado de cinco a ocho formaciones con 1-3-3, 1-4-1-1 y 1-2-1-3.
+- El 1-3-3 aporta dos líneas de tres: central libre para coberturas, extremos con amplitud y delantero centro móvil.
+- Cada formación nueva incluye siete jugadores posicionados y una guía con objetivo, juego con balón, defensa sin balón y reacción tras pérdida.
+- La guía táctica ya no aparece durante la edición: se muestra únicamente al abrir el detalle de una táctica guardada.
+- Gramática y coherencia deportiva revisadas en los textos incorporados en esta iteración.
+- 73 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.13.0`.
+
 ## 2.12.0 — 2026-08-31
 
 - Fase 3: pizarra táctica con flechas de colores por acción (azul = pase, gris rayado = movimiento, púrpura = conducción, rojo = disparo, verde = sprint), balón blanco con borde oscuro y jugadores con número legible.

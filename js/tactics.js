@@ -2,7 +2,7 @@
 // de ataque y defensa, basada en el manual de campo de Migue (Unión Viera Alevín D).
 // Formato de una táctica:
 //   { id, recordType:'tactic', name, rival, situation, format:'F7'|'F11',
-//     formation:'1-3-2-1'|'1-2-3-1'|'1-2-2-2'|'custom',
+//     formation:'1-3-2-1'|'1-2-3-1'|'1-2-2-2'|'1-3-3'|'custom',
 //     team:[{x,y,n,pos}], opponent:[{x,y,n}], ball:{x,y},
 //     moves:[{from:{x,y},to:{x,y},kind:'pass'|'move'|'dribble'|'shot',label}],
 //     attack:[...], defense:[...], notes, createdAt, updatedAt }
@@ -63,6 +63,39 @@ const FORMATION_1132 = Object.freeze([
   { x: 76, y: 55, n: '3', pos: 'Medio der.' },
   { x: 36, y: 34, n: '11', pos: 'Delantero izq.' },
   { x: 64, y: 34, n: '9', pos: 'Delantero der.' },
+]);
+
+// 1-3-3: 1 portero · 3 defensas · 3 atacantes (dos líneas sencillas y equilibradas)
+const FORMATION_133 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 24, y: 72, n: '2', pos: 'Lateral izq.' },
+  { x: 50, y: 76, n: '4', pos: 'Defensa central' },
+  { x: 76, y: 72, n: '3', pos: 'Lateral der.' },
+  { x: 22, y: 36, n: '7', pos: 'Extremo izq.' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero centro' },
+  { x: 78, y: 36, n: '11', pos: 'Extremo der.' },
+]);
+
+// 1-4-1-1: 1 portero · 4 defensas · 1 medio · 1 delantero (muy defensiva)
+const FORMATION_1411 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 20, y: 76, n: '2', pos: 'Defensa izq.' },
+  { x: 40, y: 78, n: '3', pos: 'Central izq.' },
+  { x: 60, y: 78, n: '4', pos: 'Central der.' },
+  { x: 80, y: 76, n: '5', pos: 'Defensa der.' },
+  { x: 50, y: 55, n: '7', pos: 'Medio' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero' },
+]);
+
+// 1-2-1-3: 1 portero · 2 defensas · 1 medio · 3 delanteros (muy ofensiva)
+const FORMATION_1213 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 30, y: 76, n: '2', pos: 'Defensa izq.' },
+  { x: 70, y: 76, n: '3', pos: 'Defensa der.' },
+  { x: 50, y: 58, n: '4', pos: 'Medio' },
+  { x: 25, y: 34, n: '7', pos: 'Delantero izq.' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero centro' },
+  { x: 75, y: 34, n: '11', pos: 'Delantero der.' },
 ]);
 
 const F7_OPPONENT = Object.freeze([
@@ -182,13 +215,63 @@ export const FORMATION_GUIDES = Object.freeze({
     ],
     alPerder: ['El medio más cercano presiona; los otros dos cierran dentro y uno de los delanteros baja a ayudar.'],
   },
+  '1-3-3': {
+    name: 'Variante 5 · 1-3-3 (dos líneas equilibradas)',
+    queBusco: 'Busco una estructura equilibrada, sencilla de enseñar y comprender: una línea de tres defensas y otra de tres atacantes. El central queda libre para dar coberturas, los extremos aportan amplitud y el delantero centro es móvil.',
+    conBalon: [
+      'Los extremos mantienen amplitud para abrir el campo y buscar el uno contra uno, el centro o la finalización.',
+      'El delantero centro se mueve para ofrecer apoyo y atacar el área, sin ocupar siempre la misma zona.',
+      'El central inicia y distribuye hacia los atacantes; puede incorporarse de forma puntual si los laterales guardan la cobertura.',
+      'Los laterales apoyan por turno y pueden desdoblar a los extremos sin romper el equilibrio de la línea defensiva.',
+    ],
+    sinBalon: [
+      'El central juega libre de marcaje para cubrir al lateral que salta a banda y proteger el espacio interior.',
+      'Los tres defensas basculan juntos y los atacantes se acercan para evitar una separación excesiva entre líneas.',
+      'Los extremos ayudan a cerrar las bandas y el delantero centro orienta la salida rival hacia un lado.',
+    ],
+    alPerder: [
+      'El atacante más cercano frena la salida; los otros dos repliegan para juntar las líneas.',
+      'Los laterales cierran hacia dentro y el central conserva la cobertura, evitando que la pérdida deje duelos abiertos a su espalda.',
+    ],
+  },
+  '1-4-1-1': {
+    name: 'Variante 6 · 1-4-1-1 (defensa compacta)',
+    queBusco: 'Busco muy poco riesgo en zona propia y una vía de progresión por el medio. Me conviene cuando quiero proteger bien la portería, cuando el rival tiene un delantero muy fuerte o cuando tengo defensas laterales que cubren bien la banda.',
+    conBalon: [
+      'La progresión pasa por el medio (7): recibe entre líneas, decide si circula o pasa al 9.',
+      'Los laterales (2 y 5) suben por turno si el medio lo necesita; no suben siempre.',
+      'Los centrales (3 y 4) mantienen la estructura: si uno sube, el otro cubre el centro.',
+    ],
+    sinBalon: [
+      'Cuatro jugadores en la primera línea: laterales y centrales juntos cubren el campo.',
+      'El medio recorta el espacio entre la defensa y el delantero.',
+      'No permitir pases directos al 9 por detrás de la línea; forzar al rival hacia el lateral.',
+    ],
+    alPerder: ['Los laterales repliegan, el medio baja si es necesario y el delantero regresa por dentro.'],
+  },
+  '1-2-1-3': {
+    name: 'Variante 7 · 1-2-1-3 (ataque con tres delanteros)',
+    queBusco: 'Busco superioridad en zona de ataque con tres jugadores avanzados. Me conviene cuando tengo superioridad numérica, contra defensas que no presionan o cuando necesito generar ventajas por fuera con un trío delantero.',
+    conBalon: [
+      'Los tres delanteros se separan por carriles: uno central, dos por fuera.',
+      'El medio (4) busca el pase decisivo y, después de soltar el balón, mantiene una posición de apoyo.',
+      'Los defensas (2 y 3) avanzan por turno para dar una línea de pase, sin dejar desprotegida la espalda.',
+      'El delantero central atrae a los defensas rivales y libera a los otros dos.',
+    ],
+    sinBalon: [
+      'Solo dos defensas cubren el campo: cuidan el equilibrio por detrás del balón.',
+      'Los tres delanteros presionan juntos si el rival sale desde el portero.',
+      'El medio debe recuperar rápido y reconstruir la línea de defensa.',
+    ],
+    alPerder: ['El medio retrocede primero; los delanteros orientan la presión y los defensas protegen el centro antes de salir a banda.'],
+  },
 });
 
-export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2']);
+export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3', '1-4-1-1', '1-2-1-3']);
 
 export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
   const isF11 = format === 'F11';
-  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222, '1-3-1-2': FORMATION_1312, '1-1-3-2': FORMATION_1132 };
+  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222, '1-3-1-2': FORMATION_1312, '1-1-3-2': FORMATION_1132, '1-3-3': FORMATION_133, '1-4-1-1': FORMATION_1411, '1-2-1-3': FORMATION_1213 };
   const team = isF11
     ? F11_TEAM.map((p) => ({ ...p }))
     : (formations[formation] || FORMATION_1321).map((p) => ({ ...p }));

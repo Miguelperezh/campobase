@@ -1051,14 +1051,8 @@ function tacticBuilder(editId = '') {
   root.classList.remove('hidden');
   const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
   tacticTool = 'select';
-  const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
-  const guideHTML = guide ? `
-    <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
-    <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
-    <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
-    <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
   const toolsHTML = `<div class="tactic-tools" role="toolbar" aria-label="Herramientas de la pizarra">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}"><span aria-hidden="true">${tool.icon}</span>${tool.label}</button>`).join('')}</div>`;
-  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}${renderTacticBoard(t)}${guideHTML}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
   initTacticDraft();
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1089,7 +1083,13 @@ function showTacticDetail(tacticId) {
   const tactic = state.tactics.find(({ id }) => id === tacticId);
   if (!tactic) return toast('La táctica ya no está disponible.');
   $('#tactic-detail-title').textContent = tactic.name || 'Táctica';
-  $('#tactic-detail-body').innerHTML = `<p class="meta">${escapeHtml(tactic.format)}${tactic.rival ? ` · vs ${escapeHtml(tactic.rival)}` : ''}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}`;
+  const guide = FORMATION_GUIDES[tactic.formation] || FORMATION_GUIDES['1-3-2-1'];
+  const guideHTML = guide ? `
+    <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
+    <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+    <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
+    <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
+  $('#tactic-detail-body').innerHTML = `<p class="meta">${escapeHtml(tactic.format)}${tactic.rival ? ` · vs ${escapeHtml(tactic.rival)}` : ''}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p>${renderTacticBoard(tactic)}${guideHTML}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}`;
   $('#tactic-detail-dialog').showModal();
 }
 
@@ -1364,17 +1364,8 @@ function wireEvents() {
       const base = defaultTactic(values.format || 'F7', values.formation);
       tacticDraft = { ...base, id: values.id, name: values.name, rival: values.rival, situation: values.situation, formation: values.formation, team: base.team, opponent: base.opponent, ball: base.ball, moves: [], notes: values.notes };
       const t = tacticDraft;
-      const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
-      const guideHTML = guide ? `
-        <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
-        <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
-        <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
-        <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
       const board = form.querySelector('.tactic-board');
       if (board) board.outerHTML = renderTacticBoard(t);
-      form.querySelectorAll('.tactic-guide').forEach((el) => el.remove());
-      const notesLabel = form.querySelector('label:has(textarea[name="notes"])');
-      if (notesLabel) notesLabel.insertAdjacentHTML('beforebegin', guideHTML);
     }
   });
   // Interacción de la pizarra táctica: arrastrar jugadores, dibujar flechas, colocar balón.
