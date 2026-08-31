@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0 — 2026-08-31
+
+- Fase 3: pizarra táctica con flechas de colores por acción (azul = pase, gris rayado = movimiento, púrpura = conducción, rojo = disparo, verde = sprint), balón blanco con borde oscuro y jugadores con número legible.
+- Leyenda corregida para que corresponda con cada tipo de flecha.
+- 69 pruebas automatizadas en verde.
+
 ## 2.11.0 — 2026-08-31
 
 - Fase 3: pizarra táctica interactiva tipo RenderFoot/TacticalPad.

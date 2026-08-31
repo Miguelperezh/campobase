@@ -206,8 +206,27 @@ export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
 
 const xml = (value) => clean(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
-const arrowClass = (kind) => ({ move: 'tac-move', dribble: 'tac-dribble', shot: 'tac-shot', pass: 'tac-pass', sprint: 'tac-sprint' }[kind] || 'tac-pass');
-const actionLabel = (kind) => ({ move: '- - - → = movimiento sin balón', dribble: '════→ = conducción', shot: '━━━━→ = disparo', pass: '────→ = pase', sprint: '≋≋≋→ = sprint' }[kind] || '────→ = pase');
+const arrowStyle = (kind) => {
+  const styles = {
+    pass:   { cls: 'tac-arrow pac',  stroke: '#2b6cb0', dash: 'none',    weight: 1.4 },
+    move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',    weight: 1.2 },
+    dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',    weight: 2.2 },
+    shot:   { cls: 'tac-arrow tiq',  stroke: '#c8102e', dash: 'none',    weight: 2.6 },
+    sprint: { cls: 'tac-arrow spr',  stroke: '#0f766e', dash: '3 1.5',  weight: 2.0 },
+  };
+  return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
+};
+
+const actionLabel = (kind) => {
+  const labels = {
+    pass:   '→ azul claro = pase',
+    move:   '→ gris rayado = movimiento sin balón',
+    dribble:'→ púrpura = conducción',
+    shot:   '→ rojo = disparo',
+    sprint: '→ verde = sprint',
+  };
+  return labels[kind] ?? '→ = pase';
+};
 
 // Herramientas de la pizarra interactiva.
 export const TACTIC_TOOLS = Object.freeze([
@@ -232,8 +251,8 @@ export function createTacticMove(from, to, kind) {
 // Mueve una pieza (jugador, rival o balón) sin mutar la táctica original y
 // limitando las coordenadas al campo (4..96).
 export function moveTacticPiece(tactic, side, idx, point) {
-  const t = { ...tactic, team: tactic.team.map((p) => ({ ...p })), opponent: tactic.opponent.map((p) => ({ ...p })), ball: { ...tactic.ball } };
   const clamp = (v) => Math.max(4, Math.min(96, v));
+  const t = { ...tactic, team: tactic.team.map((p) => ({ ...p })), opponent: tactic.opponent.map((p) => ({ ...p })), ball: { ...tactic.ball } };
   const p = { x: clamp(point.x), y: clamp(point.y) };
   if (side === 'team') { if (!t.team[idx]) throw new TypeError('Pieza no válida.'); t.team[idx] = { ...t.team[idx], ...p }; }
   else if (side === 'opponent') { if (!t.opponent[idx]) throw new TypeError('Pieza no válida.'); t.opponent[idx] = { ...t.opponent[idx], ...p }; }
@@ -257,19 +276,21 @@ export function renderTacticBoard(tactic = {}, options = {}) {
   parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
   if (editable) parts.push('<rect class="tac-capture" x="4" y="4" width="92" height="92" data-piece="capture"/>');
   for (const move of (t.moves || [])) {
-    const cls = arrowClass(move.kind);
-    parts.push(`<path class="tac-arrow ${cls}" d="M${move.from.x} ${move.from.y} L${move.to.x} ${move.to.y}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(move.kind)}"/>`);
+    const s = arrowStyle(move.kind);
+    parts.push(`<path class="${s.cls}" d="M${move.from.x} ${move.from.y} L${move.to.x} ${move.to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(move.kind)}"/>`);
   }
   for (let i = 0; i < (t.team || []).length; i++) {
     const p = t.team[i];
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="3.2"/><text x="${p.x}" y="${p.y + 1.2}">${xml(p.n)}</text></g>`);
+    const tx = p.x + 3.6;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${tx}" y="${p.y + 1.6}" class="tac-player-num">${xml(p.n)}</text></g>`);
   }
   for (let i = 0; i < (t.opponent || []).length; i++) {
     const p = t.opponent[i];
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="3.2"/><text x="${p.x}" y="${p.y + 1.2}">${xml(p.n)}</text></g>`);
+    const tx = p.x + 3.6;
+    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${tx}" y="${p.y + 1.6}" class="tac-opp-num">${xml(p.n)}</text></g>`);
   }
   const ball = t.ball || { x: 50, y: 50 };
-  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.2"/></g>`);
+  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
   const usedKinds = [...new Set((t.moves || []).map((m) => m.kind || 'pass'))];
   const labels = ['<span class="tac-legend-team">●</span> = mi equipo', '<span class="tac-legend-rival">●</span> = rival', '⚽ = balón'];
   labels.push(...usedKinds.map(actionLabel));

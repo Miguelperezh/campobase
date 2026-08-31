@@ -69,12 +69,11 @@ test('renderiza la pizarra táctica editable con piezas pequeñas, balón fijo y
   assert.match(html, /class="tac-player"/);
   assert.match(html, /class="tac-opponent"/);
   assert.match(html, /class="tac-ball"/);
-  assert.match(html, /r="3\.2"/, 'los jugadores son más pequeños');
+  assert.match(html, /r="4\.2"/, 'los jugadores son legibles con número a la derecha');
   assert.match(html, /data-piece="team"/, 'los jugadores se identifican para arrastrarlos');
   assert.match(html, /data-piece="ball"/, 'el balón es una pieza colocable');
-  assert.match(html, /<circle cx="50" cy="50" r="2\.2"\/>/, 'el balón tiene posición fija y arrastrable');
-  assert.match(html, /tac-sprint/);
-  assert.match(html, /sprint/i);
+  assert.match(html, /class="tac-ball"/, 'el balón tiene clase propia');
+  assert.match(html, /tac-arrow.spr/, 'el sprint tiene trazo diferenciado');
   assert.match(html, /tac-legend-team/, 'mi equipo tiene color propio en la leyenda');
   assert.match(html, /tac-legend-rival/, 'rival tiene color propio en la leyenda');
 });
