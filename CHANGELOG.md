@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.7.0 — 2026-08-31
+
+- Limpieza automática de los ejercicios precargados genéricos (los "6 chinos, 2 siluetas, 4 palos") que quedaron guardados en versiones anteriores. Solo se borran los precargados; los creados o editados a mano se conservan.
+- Builder de sesión intuitivo: al pulsar «+ Sesión» y poner la fecha, se abre la lista de ejercicios bien hechos con un botón «+ Añadir» en cada uno que lo mete directo en la sesión (calentamiento, parte principal o juego final según su categoría).
+- Restaurado `js/training-domain.js` (estaba sobrescrito y roto, faltaban los exports que la app y los tests necesitan).
+- 60 pruebas automatizadas en verde.
+
+## 2.5.0 — 2026-08-28
+
+- Pizarras SVG blancas y negras con leyenda calculada por ejercicio.
+- Formato de ficha operativa completo para todos los ejercicios.
+- Flujo «Añadir a sesión» para crear o ampliar sesiones.
+- Bloques reordenables, eliminables y con duración editable.
+- Indicador en vivo de total, minutos restantes o exceso sobre 60.
+- Nueva batería de pruebas de pizarra, normalización y sesiones.
+- Caché PWA subida a `campobase-v2.5.0`.
+
 ## 2.1.0 — 2026-08-28
 
 - Biblioteca ampliada de 36 a 80 ejercicios, con 44 incorporaciones y 10 tareas específicas de porteros.

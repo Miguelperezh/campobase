@@ -1,11 +1,11 @@
 {
   "name": "campobase",
-  "version": "2.1.0",
+  "version": "2.7.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "check": "node --check js/domain.js && node --check js/training-domain.js && node --check js/sync-core.js && node --check js/supabase-client.js && node --check js/db.js && node --check js/app.js && node --check sw.js"
+    "check": "node --check js/domain.js && node --check js/training-domain.js && node --check js/exercise-planning.js && node --check js/real-exercises.js && node --check js/sync-core.js && node --check js/supabase-client.js && node --check js/db.js && node --check js/app.js && node --check sw.js"
   },
   "engines": {
     "node": ">=18"

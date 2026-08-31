@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Limpiar ejercicios malos — CampoBase</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+           max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    .card { background: #f7f5f0; border: 1px solid #d4cfc7; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    .status { font-weight: 600; }
+    .ok { color: #1a7a3a; }
+    .bad { color: #b00020; }
+    button { background: #c8102e; color: #fff; border: none; padding: 0.6rem 1.2rem;
+             border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    button.secondary { background: #555; }
+  </style>
+</head>
+<body>
+  <h1>Limpiar ejercicios malos de CampoBase</h1>
+  <div id="status" class="card">Esperando...</div>
+  <div class="card">
+    <p><strong>Ejercicios malos a eliminar:</strong></p>
+    <ul id="bad-list" style="columns:2; list-style:none; padding:0;"></ul>
+  </div>
+  <div class="card">
+    <button id="start">Ejecutar limpieza</button>
+    <button id="open-app" class="secondary" style="margin-left:0.5rem;">Abrir app después</button>
+  </div>
+
+  <script>
+    const BAD_IDS = [
+      'tech-01','tech-02','tech-03','tech-04','tech-05','tech-06','tech-07','tech-08','tech-09','tech-10',
+      'tact-01','tact-02','tact-03','tact-04','tact-05','tact-06','tact-07','tact-08','tact-09','tact-10','tact-11','tact-12','tact-13',
+      'coord-01','coord-02','coord-03','coord-04','coord-05','coord-06','coord-07','coord-08','coord-09','coord-10',
+      'physical-01','warmup-training-10','warmup-match-15',
+      'tech-11','tech-12','tech-13','tech-14','tech-15','tech-16','tech-17','tech-18','tech-19','tech-20',
+      'coord-11','coord-12','coord-13','coord-14','coord-15','coord-16',
+      'tact-14','tact-15','tact-16','tact-17',
+      'physical-02','physical-03','physical-04','physical-05',
+      'warmup-03','warmup-04','warmup-05','warmup-06',
+      'ssg-01','ssg-02','ssg-03','ssg-04','ssg-05','ssg-06',
+      'keeper-01','keeper-02','keeper-03','keeper-04','keeper-05','keeper-06','keeper-07','keeper-08','keeper-09','keeper-10',
+      'physical-06','physical-07','physical-08','physical-09','physical-10',
+    ];
+    const BAD_NAMES = {
+      'tech-03': 'Activación técnica 2 contra 1 (6 chinos...)',
+      'tech-01': 'Libera las líneas de pase (3 siluetas...)',
+      'tact-04': 'Rondo 3vs1 en dos cuadrados (8 chinos...)',
+      'tact-13': 'Recibir y defender el balón (6 palos...)',
+    };
+
+    function status(msg, ok=false, bad=false) {
+      const el = document.getElementById('status');
+      el.innerHTML = msg;
+      el.className = 'card status' + (ok ? ' ok' : '') + (bad ? ' bad' : '');
+    }
+
+    function renderBadList() {
+      const list = document.getElementById('bad-list');
+      list.innerHTML = BAD_IDS.map(id => `<li style="break-inside:avoid;"><strong style="color:#b00020;">${id}</strong> — ${BAD_NAMES[id] || 'Material erróneo'}</li>`).join('');
+    }
+    renderBadList();
+
+    document.getElementById('start').addEventListener('click', async () => {
+      status('Abriendo IndexedDB...');
+      try {
+        const dbName = 'campobase';
+        const version = 2;
+        const request = indexedDB.open(dbName, version);
+        await new Promise((resolve, reject) => {
+          request.onsuccess = resolve;
+          request.onerror = () => reject(request.error);
+          request.onblocked = () => reject(new Error('Otra pestaña tiene la base abierta. Ciérrala e inténtalo de nuevo.'));
+        });
+        const db = request.result;
+        const tx = db.transaction('settings', 'readwrite');
+        const store = tx.objectStore('settings');
+        let removed = 0;
+        let errors = 0;
+        for (const id of BAD_IDS) {
+          try {
+            const keyRange = IDBKeyRange.only(id);
+            const req = store.delete(keyRange);
+            await new Promise((resolve, reject) => {
+              req.onsuccess = resolve;
+              req.onerror = () => reject(req.error);
+            });
+            removed++;
+          } catch (e) {
+            errors++;
+            console.warn('No se pudo eliminar', id, e);
+          }
+        }
+        await new Promise((resolve, reject) => {
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+        const msg = `<span class="ok">✓ Limpieza completada.</span> Eliminados: <strong>${removed}</strong> ejercicios malos. Errores: ${errors}.`;
+        status(msg, true, errors > 0);
+        document.getElementById('start').textContent = 'Ya limpiado';
+        document.getElementById('start').disabled = true;
+      } catch (e) {
+        status(`<span class="bad">✗ Error:</span> ${e.message}`, false, true);
+      }
+    });
+
+    document.getElementById('open-app').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

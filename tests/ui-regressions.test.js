@@ -54,11 +54,39 @@ test('la fase 2 expone ejercicios, filtros, favoritos, CRUD y sesiones por bloqu
 
 test('la mejora de fase 2 muestra diagramas y jugadores destacados también en selectores', async () => {
   const [app, css] = await Promise.all([projectFile('js/app.js'), projectFile('styles.css')]);
-  assert.match(app, /renderExerciseDiagram\(item\)/);
+  assert.match(app, /renderBoardDiagrams\(item\)/);
   assert.match(app, /class="player-count"/);
   assert.match(app, /👥.*jugadores/);
   assert.match(app, /item\.players.*item\.duration.*min/s);
   assert.match(app, /phase2-v2-seeded/);
   assert.match(css, /\.player-count/);
   assert.match(css, /\.exercise-diagram/);
+});
+
+test('la pizarra completa y el flujo añadir a sesión están conectados en la interfaz', async () => {
+  const [html, app, css, sw] = await Promise.all([
+    projectFile('index.html'), projectFile('js/app.js'), projectFile('styles.css'), projectFile('sw.js'),
+  ]);
+  assert.match(html, /id="add-session-dialog"/);
+  assert.match(app, /Añadir a sesión/);
+  assert.match(app, /completeExercise\(rawItem\)/);
+  assert.match(app, /renderBoardDiagrams\(item\)/);
+  assert.match(app, /sessionDurationStatus/);
+  assert.match(app, /move-session-block/);
+  assert.match(app, /remove-session-block/);
+  assert.match(app, /form\.getAttribute\('id'\)/, 'conserva el listener global seguro');
+  assert.match(css, /\.exercise-board/);
+  assert.match(css, /background:#fff/);
+  assert.match(sw, /exercise-planning\.js/);
+});
+
+test('la limpieza elimina los ejercicios precargados malos y el builder de sesión es intuitivo', async () => {
+  const [app, sw] = await Promise.all([projectFile('js/app.js'), projectFile('sw.js')]);
+  assert.match(app, /ensureLegacyExercisesNotPresent/, 'existe la migración que limpia los malos');
+  assert.match(app, /legacy-exercises-not-present/, 'la migración tiene su flag');
+  assert.match(app, /example === true/, 'solo borra los precargados, no los creados a mano');
+  assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
+  assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
+  assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
+  assert.match(sw, /campobase-v2\.7\.0/, 'caché actualizada');
 });

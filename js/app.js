@@ -3,6 +3,7 @@ import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
+import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -25,6 +26,9 @@ const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'E
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 let toastTimer;
+let sessionDraftBlocks = [];
+let sessionDraftMeta = null;
+let pendingExerciseId = '';
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -847,33 +851,26 @@ function renderExercises() {
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
-  $('#exercises-list').innerHTML = exercises.length ? exercises.map((item) => {
-    const isReal = Array.isArray(item.steps);
-    const diagram = isReal ? renderRealDiagram(item) : renderExerciseDiagram(item);
-    const body = isReal ? `
-      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
-      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
-      <p><strong>Intensidad:</strong> ${escapeHtml(item.intensity || '—')}</p>
-      <p><strong>Objetivo:</strong> ${escapeHtml(item.objective || '')}</p>
-      <details class="diagram-details" open><summary>Ver demostración</summary>${diagram}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: pase, movimiento o conducción</p></details>
-      <details><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol></details>
-      ${item.physical ? `<details><summary>Aspectos físicos</summary><ul class="plain-list">${item.physical.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>` : ''}
-      <details><summary>Qué se trabaja (técnico)</summary><ul class="plain-list">${item.works.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul></details>
-      <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor || '')}</p>
-      <details><summary>Qué debo observar</summary><ul class="plain-list">${item.observe.map((o) => `<li>${escapeHtml(o)}</li>`).join('')}</ul></details>
-      <details><summary>Correcciones breves</summary><ul class="plain-list">${item.corrections.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul></details>
-      <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad || '')}</p>
-      <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood || '')}</p>
-    ` : `
-      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)} jugadores</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
-      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p><p>${escapeHtml(item.description)}</p>
-      <details class="diagram-details"><summary>Ver demostración</summary>${diagram}<p class="diagram-legend">Círculos: jugadores · triángulos: conos · flechas: movimiento o pase</p></details>
-      ${item.variants ? `<details><summary>Variantes</summary><p>${escapeHtml(item.variants)}</p></details>` : ''}
-    `;
+  $('#exercises-list').innerHTML = exercises.length ? exercises.map((rawItem) => {
+    const item = completeExercise(rawItem);
+    const list = (values) => `<ul class="plain-list">${values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')}</ul>`;
     return `<article class="panel exercise-card">
       <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
-      ${body}
-      <div class="button-row"><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
+      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
+      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
+      <p><strong>Intensidad:</strong> ${escapeHtml(item.intensity)}</p>
+      <p><strong>Objetivo:</strong> ${escapeHtml(item.objective)}</p>
+      <details class="diagram-details" open><summary>Gráfico tipo pizarra</summary>${renderBoardDiagrams(item)}</details>
+      <details open><summary>Montaje · antes de llamar a los jugadores</summary><ol class="plain-list">${item.montage.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
+      <details open><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
+      <p><strong>Rotación:</strong> ${escapeHtml(item.rotation)}</p>
+      <details><summary>Qué se trabaja</summary>${list(item.works)}</details>
+      <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor)}</p>
+      <details><summary>Qué debo observar</summary>${list(item.observe)}</details>
+      <details><summary>Correcciones breves</summary>${list(item.corrections)}</details>
+      <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad)}</p>
+      <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood)}</p>
+      <div class="button-row"><button type="button" class="add-exercise-to-session primary" data-id="${item.id}">Añadir a sesión</button><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
     </article>`;
   }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
 }
@@ -910,42 +907,102 @@ function exerciseOptions(selectedId = '', predicate = () => true) {
     .map((item) => `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${escapeHtml(item.name)} · 👥 ${escapeHtml(item.players)} jugadores · ${item.duration} min</option>`).join('');
 }
 
-function sessionBuilder(editId = '') {
-  const existing = state.trainingSessions.find(({ id }) => id === editId);
-  const blocks = existing?.blocks ?? [];
-  const warmup = blocks.find(({ type }) => type === 'warmup');
-  const main = blocks.filter(({ type }) => type === 'main');
-  const final = blocks.find(({ type }) => type === 'final');
-  const warmupIds = new Set(WARMUP_TEMPLATES.map(({ id }) => id));
-  const warmupOptions = exerciseOptions(warmup?.exerciseId, (item) => item.category === 'Calentamiento' || warmupIds.has(item.id));
-  const allOptions = (selected = '') => `<option value="">Selecciona…</option>${exerciseOptions(selected)}`;
-  const mainRow = (index) => `<div class="session-block"><label>Ejercicio ${index + 1}${index === 2 ? ' (opcional)' : ''}<select name="mainExerciseId" ${index < 2 ? 'required' : ''}>${allOptions(main[index]?.exerciseId)}</select></label><label>Duración (min)<input name="mainDuration" type="number" min="1" max="240" value="${main[index]?.duration ?? ''}" ${index < 2 ? 'required' : ''}></label><label>Consignas / observaciones<input name="mainNotes" maxlength="300" value="${escapeHtml(main[index]?.notes ?? '')}"></label></div>`;
-  const today = new Date().toISOString().slice(0, 10);
+function syncSessionDraft() {
+  const form = $('#session-form');
+  if (!form) return;
+  sessionDraftMeta = { ...sessionDraftMeta, ...formObject(form) };
+  sessionDraftBlocks = $$('.session-block', form).map((row) => ({
+    type: row.querySelector('[name="blockType"]').value,
+    exerciseId: row.querySelector('[name="blockExerciseId"]').value,
+    duration: Number(row.querySelector('[name="blockDuration"]').value) || 1,
+    notes: row.querySelector('[name="blockNotes"]').value.trim(),
+  }));
+}
+
+function sessionBlockLabel(type) {
+  return type === 'warmup' ? 'Calentamiento' : type === 'final' ? 'Juego final' : 'Parte principal';
+}
+
+function refreshSessionDurationStatus() {
+  const form = $('#session-form');
+  const root = form?.querySelector('.session-duration');
+  if (!root) return;
+  const blocks = $$('[name="blockDuration"]', form).map(({ value }) => ({ duration: Number(value) || 0 }));
+  const status = sessionDurationStatus(blocks);
+  root.className = `session-duration ${status.exact ? 'exact' : 'warning'}`;
+  root.innerHTML = `<strong>${status.total} / 60 min</strong><span>${status.message}</span>`;
+}
+
+function renderSessionDraft() {
   const root = $('#session-builder');
+  const status = sessionDurationStatus(sessionDraftBlocks);
   root.classList.remove('hidden');
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${existing?.id ?? ''}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${existing?.date ?? today}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(existing?.name ?? '')}" placeholder="Ej. Salida de balón"></label></div><fieldset><legend>Calentamiento</legend><div class="session-block"><label>Plantilla reutilizable<select name="warmupId" required><option value="">Selecciona…</option>${warmupOptions}</select></label><label>Duración (min)<input name="warmupDuration" type="number" min="1" max="240" required value="${warmup?.duration ?? ''}"></label><label>Consignas / observaciones<input name="warmupNotes" maxlength="300" value="${escapeHtml(warmup?.notes ?? '')}"></label></div></fieldset><fieldset><legend>Parte principal (2-3 ejercicios)</legend>${[0, 1, 2].map(mainRow).join('')}</fieldset><fieldset><legend>Juego final</legend><div class="session-block"><label>Ejercicio<select name="finalExerciseId" required>${allOptions(final?.exerciseId)}</select></label><label>Duración (min)<input name="finalDuration" type="number" min="1" max="240" required value="${final?.duration ?? ''}"></label><label>Consignas / observaciones<input name="finalNotes" maxlength="300" value="${escapeHtml(final?.notes ?? '')}"></label></div></fieldset><label>Material total<input name="material" maxlength="300" value="${escapeHtml(existing?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
-  root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const picker = `<div class="session-exercise-picker"><h3>Añadir ejercicios</h3><p class="meta">Pulsa <strong>+ Añadir</strong> en cada ejercicio. Entra como calentamiento, parte principal o juego final según su categoría.</p><div class="exercise-grid">${state.exercises.map((rawItem) => {
+    const item = completeExercise(rawItem);
+    return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
+  }).join('')}</div></div>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${escapeHtml(sessionDraftMeta?.date ?? '')}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / 60 min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+}
+
+function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
+  const existing = state.trainingSessions.find(({ id }) => id === editId);
+  const today = new Date().toISOString().slice(0, 10);
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, name: seedMeta.name || '', material: '', notes: '' };
+  sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
+  if (seedExerciseId) {
+    const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
+    if (exercise) sessionDraftBlocks = addExerciseToSession({ blocks: sessionDraftBlocks }, exercise).blocks;
+  }
+  renderSessionDraft();
+  $('#session-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openAddToSession(exerciseId) {
+  pendingExerciseId = exerciseId;
+  const form = $('#add-session-form');
+  form.reset();
+  form.elements.date.value = new Date().toISOString().slice(0, 10);
+  form.elements.existingSessionId.innerHTML = state.trainingSessions.length
+    ? sortTrainingSessions(state.trainingSessions).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))} · ${session.totalDuration} min</option>`).join('')
+    : '<option value="">No hay sesiones guardadas</option>';
+  $('#add-session-dialog').showModal();
+}
+
+async function saveAddToSession(event) {
+  const form = event.target.closest('form');
+  const values = formObject(form);
+  const exercise = state.exercises.find(({ id }) => id === pendingExerciseId);
+  if (!exercise) throw new TypeError('El ejercicio ya no está disponible.');
+  if (values.destination === 'existing') {
+    const existing = state.trainingSessions.find(({ id }) => id === values.existingSessionId);
+    if (!existing) throw new TypeError('Selecciona una sesión existente.');
+    const updated = addExerciseToSession(existing, exercise);
+    updated.updatedAt = Date.now();
+    await put('settings', updated);
+    $('#add-session-dialog').close();
+    await refresh();
+    toast(sessionDurationStatus(updated.blocks).message);
+    return;
+  }
+  if (!values.name.trim()) throw new TypeError('Escribe el nombre de la nueva sesión.');
+  $('#add-session-dialog').close();
+  sessionBuilder('', exercise.id, { date: values.date, name: values.name });
 }
 
 async function saveTrainingSession(event) {
-  event.preventDefault();
   const form = event.target.closest('form');
-  const values = formObject(form);
-  const mainIds = $$('select[name="mainExerciseId"]', form).map(({ value }) => value).filter(Boolean);
-  const mainDurations = $$('input[name="mainDuration"]', form).slice(0, mainIds.length).map(({ value }) => value);
-  const mainNotes = $$('input[name="mainNotes"]', form).slice(0, mainIds.length).map(({ value }) => value);
-  const existing = values.id ? state.trainingSessions.find(({ id }) => id === values.id) : null;
-  const session = buildTrainingSession({
-    ...values, mainExerciseIds: mainIds, mainDurations, mainNotes,
-  }, {
+  syncSessionDraft();
+  const existing = sessionDraftMeta.id ? state.trainingSessions.find(({ id }) => id === sessionDraftMeta.id) : null;
+  const session = buildFlexibleTrainingSession({ ...sessionDraftMeta, blocks: sessionDraftBlocks }, {
     id: existing?.id ?? uid(), availableExerciseIds: state.exercises.map(({ id }) => id),
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
   });
   await put('settings', session);
-  $('#session-builder').classList.add('hidden');
+  form.closest('#session-builder').classList.add('hidden');
   await refresh();
   showView('ejercicios');
-  toast(existing ? 'Sesión actualizada.' : 'Sesión guardada.');
+  const status = sessionDurationStatus(session.blocks);
+  toast(status.exact ? 'Sesión guardada con 60 minutos exactos.' : `Sesión guardada. ${status.message}`);
 }
 
 function renderTrainingSessions() {
@@ -955,10 +1012,14 @@ function renderTrainingSessions() {
 
 async function ensurePhase2Seeded() {
   if (await getOne('settings', 'phase2-seeded')) return;
-  await putBatch({ settings: [
-    ...INITIAL_EXERCISES.map((item) => structuredClone(item)),
-    { id: 'phase2-seeded', recordType: 'migration', version: 2, createdAt: Date.now() },
-  ] });
+  const current = await getAll('settings');
+  const existingIds = new Set(current.filter(({ recordType }) => recordType === 'exercise').map(({ id }) => id));
+  const goodExercises = [
+    ...REAL_EXERCISES,
+    ...SLIDESHARE_EXERCISES,
+    ...PHASE2_V3_EXERCISES,
+  ].filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
+  await putBatch({ settings: [...goodExercises, { id: 'phase2-seeded', recordType: 'migration', version: 5, createdAt: Date.now() }] });
 }
 
 async function ensurePhase2V2Seeded() {
@@ -987,6 +1048,24 @@ async function ensureSlideshareSeeded() {
   const existingIds = new Set(current.filter(({ recordType }) => recordType === 'exercise').map(({ id }) => id));
   const additions = SLIDESHARE_EXERCISES.filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
   await putBatch({ settings: [...additions, { id: 'slideshare-seeded', recordType: 'migration', version: 6, createdAt: Date.now() }] });
+}
+
+// Plan A+C: elimina del navegador los ejercicios precargados genéricos (los "6 chinos,
+// 2 siluetas, 4 palos") que quedaron guardados en versiones anteriores. Solo borra los
+// que tienen example:true (precargados) y cuyo id NO está en la lista de buenos, para no
+// tocar los ejercicios que Migue haya creado o editado a mano.
+async function ensureLegacyExercisesNotPresent() {
+  if (await getOne('settings', 'legacy-exercises-not-present')) return;
+  const current = await getAll('settings');
+  const goodIds = new Set([
+    ...REAL_EXERCISES,
+    ...SLIDESHARE_EXERCISES,
+    ...PHASE2_V3_EXERCISES,
+  ].map(({ id }) => id));
+  const toRemove = current.filter(({ recordType, example, id }) =>
+    recordType === 'exercise' && example === true && !goodIds.has(id));
+  for (const record of toRemove) await remove('settings', record.id);
+  await put('settings', { id: 'legacy-exercises-not-present', recordType: 'migration', version: 7, createdAt: Date.now() });
 }
 
 async function exportData() {
@@ -1131,6 +1210,9 @@ function wireEvents() {
   $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder());
   $('#exercise-filters').addEventListener('input', renderExercises);
   $('#exercise-filters').addEventListener('change', renderExercises);
+  document.addEventListener('input', (event) => {
+    if (event.target.matches('#session-form [name="blockDuration"]')) refreshSessionDurationStatus();
+  });
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
   $('#format').addEventListener('change', async (event) => {
     state.format = event.target.value;
@@ -1160,6 +1242,15 @@ function wireEvents() {
     }
     if (attendanceForm && event.target.name === 'matchId') return attendanceBuilder(event.target.value);
     const sessionForm = event.target.closest('#session-form');
+    if (sessionForm && event.target.name === 'blockExerciseId') {
+      const exercise = state.exercises.find(({ id }) => id === event.target.value);
+      const row = event.target.closest('.session-block');
+      if (exercise && row) {
+        row.querySelector('[name="blockType"]').value = exercise.category === 'Calentamiento' ? 'warmup' : exercise.category === 'Partido condicionado / Small-sided games' ? 'final' : 'main';
+        row.querySelector('.pill').textContent = sessionBlockLabel(row.querySelector('[name="blockType"]').value);
+      }
+      return;
+    }
     if (sessionForm && event.target.name === 'warmupId') {
       const selected = state.exercises.find(({ id }) => id === event.target.value);
       if (selected) sessionForm.elements.warmupDuration.value = selected.duration;
@@ -1191,6 +1282,7 @@ function wireEvents() {
     else if (formId === 'rating-form') saveMatchRatings(event).catch(handleError);
     else if (formId === 'exercise-form') saveExercise(event).catch(handleError);
     else if (formId === 'session-form') saveTrainingSession(event).catch(handleError);
+    else if (formId === 'add-session-form') saveAddToSession(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
     const target = event.target;
@@ -1212,9 +1304,17 @@ function wireEvents() {
     if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
+    if (target.matches('.add-exercise-to-session')) {
+      if (!$('#session-builder').classList.contains('hidden')) {
+        const exercise = state.exercises.find(({ id }) => id === target.dataset.id);
+        if (exercise) { syncSessionDraft(); sessionDraftBlocks = addExerciseToSession({ blocks: sessionDraftBlocks }, exercise).blocks; renderSessionDraft(); toast(`${exercise.name} añadido a la sesión.`); }
+      } else openAddToSession(target.dataset.id);
+    }
     if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
+    if (target.matches('.move-session-block')) { syncSessionDraft(); sessionDraftBlocks = moveSessionBlock(sessionDraftBlocks, Number(target.dataset.index), Number(target.dataset.direction)); renderSessionDraft(); }
+    if (target.matches('.remove-session-block')) { syncSessionDraft(); sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index)); renderSessionDraft(); }
     if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();
@@ -1295,6 +1395,7 @@ async function init() {
   await ensurePhase2V3Seeded();
   await ensureRealExercisesSeeded();
   await ensureSlideshareSeeded();
+  await ensureLegacyExercisesNotPresent();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
   if (!restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);

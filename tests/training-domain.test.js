@@ -4,6 +4,7 @@ import {
   EXERCISE_CATEGORIES,
   INITIAL_EXERCISES,
   PHASE2_V2_EXERCISES,
+  PHASE2_V3_EXERCISES,
   WARMUP_TEMPLATES,
   buildExercise,
   filterExercises,
@@ -12,6 +13,38 @@ import {
   buildTrainingSession,
   sortTrainingSessions,
 } from '../js/training-domain.js';
+import { REAL_EXERCISES, SLIDESHARE_EXERCISES } from '../js/real-exercises.js';
+
+test('los 30 ejercicios autorizados cumplen el formato operativo de los PDF', () => {
+  const exercises = [...REAL_EXERCISES, ...SLIDESHARE_EXERCISES];
+  const textFields = ['code', 'name', 'category', 'players', 'material', 'space', 'intensity', 'objective', 'lookFor', 'ifBad', 'ifGood'];
+  const listFields = ['steps', 'works', 'observe', 'corrections'];
+
+  assert.deepEqual(
+    [REAL_EXERCISES.length, SLIDESHARE_EXERCISES.length, exercises.length],
+    [20, 10, 30],
+  );
+  assert.equal(new Set(exercises.map(({ id }) => id)).size, 30, 'los identificadores deben ser únicos');
+
+  for (const exercise of exercises) {
+    for (const field of textFields) {
+      assert.equal(typeof exercise[field], 'string', `${exercise.id}: ${field} debe ser texto`);
+      assert.ok(exercise[field].trim(), `${exercise.id}: falta ${field}`);
+    }
+    assert.match(exercise.code, /^[CEPT]/, `${exercise.id}: el código debe empezar por C, E, P o T`);
+    assert.ok(Number.isInteger(exercise.duration) && exercise.duration > 0, `${exercise.id}: duración inválida`);
+    for (const field of listFields) {
+      assert.ok(Array.isArray(exercise[field]) && exercise[field].length, `${exercise.id}: falta ${field}`);
+      assert.ok(exercise[field].every((value) => typeof value === 'string' && value.trim()), `${exercise.id}: ${field} contiene valores vacíos`);
+    }
+    assert.equal(typeof exercise.diagram, 'object', `${exercise.id}: falta diagram`);
+    assert.ok(Array.isArray(exercise.diagram.players) && exercise.diagram.players.length, `${exercise.id}: diagram.players necesita coordenadas`);
+    assert.ok(
+      ['defenders', 'cones', 'goals', 'arrows'].some((field) => Array.isArray(exercise.diagram[field]) && exercise.diagram[field].length),
+      `${exercise.id}: el diagrama necesita elementos tácticos con coordenadas`,
+    );
+  }
+});
 
 test('precarga 80 ejercicios completos, con porteros y diagrama de pizarra', () => {
   assert.equal(INITIAL_EXERCISES.length, 80);
