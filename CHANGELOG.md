@@ -1,6 +1,14 @@
 # Changelog
 
-## 2.8.0 — 2026-08-31
+## 2.9.0 — 2026-08-31
+
+- Fase 3: nueva pestaña «Tácticas» con pizarra táctica (F7 y F11).
+- Formaciones iniciales automáticas por formato (7 y 11 jugadores) con rival.
+- Pizarra SVG con movimientos animados (pase, movimiento, conducción, disparo) y leyenda.
+- Tácticas guardadas por rival o situación, con CRUD completo (crear, ver, editar, borrar).
+- 65 pruebas automatizadas en verde.
+
+## 2.8.2 — 2026-08-31
 
 - Sesiones en pestaña propia (navegación inferior), separadas de Ejercicios.
 - Desde la pestaña de sesiones se pueden incluir ejercicios con el botón «+ Añadir» de cada tarjeta.

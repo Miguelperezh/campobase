@@ -4,6 +4,7 @@ import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, ca
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { TACTIC_FORMATS, buildTactic, defaultTactic, renderTacticBoard, sortTactics } from './tactics.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -23,7 +24,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 let toastTimer;
 let sessionDraftBlocks = [];
@@ -123,6 +124,7 @@ async function refresh() {
   const settingRecords = await getAll('settings');
   state.exercises = settingRecords.filter(({ recordType }) => recordType === 'exercise');
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
+  state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
@@ -134,7 +136,7 @@ async function refresh() {
 function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
-  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions();
+  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics();
 }
 
 function renderPlayers() {
@@ -1036,6 +1038,43 @@ function showSessionDetail(sessionId) {
   $('#session-detail-dialog').showModal();
 }
 
+function renderTactics() {
+  const tactics = sortTactics(state.tactics);
+  $('#tactics-list').innerHTML = tactics.length ? tactics.map((tactic) => `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button><button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`).join('') : empty('Todavía no hay tácticas guardadas. Pulsa «+ Táctica» para crear la primera.');
+}
+
+function tacticBuilder(editId = '') {
+  const existing = state.tactics.find(({ id }) => id === editId);
+  const root = $('#tactic-builder');
+  root.classList.remove('hidden');
+  const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7'), name: '', rival: '', situation: '', notes: '' };
+  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div>${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function saveTactic(event) {
+  event.preventDefault();
+  const form = event.target.closest('form');
+  const values = formObject(form);
+  const existing = values.id ? state.tactics.find(({ id }) => id === values.id) : null;
+  const saved = buildTactic(values, {
+    id: existing?.id ?? uid(), createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
+  });
+  await put('settings', { ...existing, ...saved, recordType: 'tactic' });
+  form.closest('#tactic-builder').classList.add('hidden');
+  await refresh();
+  showView('tacticas');
+  toast(existing ? 'Táctica actualizada.' : 'Táctica creada.');
+}
+
+function showTacticDetail(tacticId) {
+  const tactic = state.tactics.find(({ id }) => id === tacticId);
+  if (!tactic) return toast('La táctica ya no está disponible.');
+  $('#tactic-detail-title').textContent = tactic.name || 'Táctica';
+  $('#tactic-detail-body').innerHTML = `<p class="meta">${escapeHtml(tactic.format)}${tactic.rival ? ` · vs ${escapeHtml(tactic.rival)}` : ''}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}`;
+  $('#tactic-detail-dialog').showModal();
+}
+
 async function ensurePhase2Seeded() {
   if (await getOne('settings', 'phase2-seeded')) return;
   const current = await getAll('settings');
@@ -1228,12 +1267,12 @@ function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
-  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
+  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError)); $('#tactic-form').addEventListener('submit', (event) => saveTactic(event).catch(handleError));
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
-  $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder()); $('#new-session-exercises').addEventListener('click', () => { showView('sesiones'); sessionBuilder(); });
+  $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder()); $('#new-session-exercises').addEventListener('click', () => { showView('sesiones'); sessionBuilder(); }); $('#new-tactic').addEventListener('click', () => tacticBuilder());
   $('#exercise-filters').addEventListener('input', renderExercises);
   $('#exercise-filters').addEventListener('change', renderExercises);
   document.addEventListener('input', (event) => {
@@ -1309,12 +1348,17 @@ function wireEvents() {
     else if (formId === 'exercise-form') saveExercise(event).catch(handleError);
     else if (formId === 'session-form') saveTrainingSession(event).catch(handleError);
     else if (formId === 'add-session-form') saveAddToSession(event).catch(handleError);
+    else if (formId === 'tactic-form') saveTactic(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
     const target = event.target;
     if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
+    if (target.matches('.cancel-tactic')) $('#tactic-builder').classList.add('hidden');
+    if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
+    if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
+    if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-player')) editPlayer(target.dataset.id);
     if (target.matches('.delete-player') && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', target.dataset.id); await refresh(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);

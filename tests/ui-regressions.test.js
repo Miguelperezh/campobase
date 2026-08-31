@@ -88,7 +88,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.8\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.9\.0/, 'caché actualizada');
 });
 
 test('las sesiones son una pestaña aparte, con ejercicios pinchables y tiempo configurable', async () => {
