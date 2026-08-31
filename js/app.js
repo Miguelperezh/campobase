@@ -1,7 +1,7 @@
 import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary } from './domain.js';
-import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
