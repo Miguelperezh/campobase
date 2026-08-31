@@ -162,13 +162,14 @@ export function removeSessionBlock(blocks, index) {
   return (blocks || []).filter((_, blockIndex) => blockIndex !== index).map((block) => ({ ...block }));
 }
 
-export function sessionDurationStatus(blocks = []) {
+export function sessionDurationStatus(blocks = [], target = 60) {
+  const goal = Number(target) > 0 ? Number(target) : 60;
   const total = blocks.reduce((sum, block) => sum + (Number(block.duration) || 0), 0);
-  const difference = 60 - total;
+  const difference = goal - total;
   const exact = difference === 0;
   const message = exact
-    ? 'Sesión completa: 60 min exactos.'
-    : difference > 0 ? `Faltan ${difference} min para llegar a 60.` : `Sobran ${Math.abs(difference)} min: ajusta los bloques hasta 60.`;
+    ? `Sesión completa: ${goal} min exactos.`
+    : difference > 0 ? `Faltan ${difference} min para llegar a ${goal}.` : `Sobran ${Math.abs(difference)} min: ajusta los bloques hasta ${goal}.`;
   return { total, difference, exact, message };
 }
 
@@ -183,12 +184,14 @@ export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
     return { type: block.type, exerciseId: block.exerciseId, duration, notes: clean(block.notes) };
   });
   if (!blocks.length) throw new RangeError('Añade al menos un ejercicio a la sesión.');
-  const status = sessionDurationStatus(blocks);
+  const target = Number(values.targetDuration) > 0 ? Number(values.targetDuration) : 60;
+  const status = sessionDurationStatus(blocks, target);
   return {
     id: metadata.id,
     recordType: 'trainingSession',
     date,
     name: clean(values.name) || 'Sesión de entrenamiento',
+    targetDuration: target,
     material: clean(values.material),
     notes: clean(values.notes),
     blocks,

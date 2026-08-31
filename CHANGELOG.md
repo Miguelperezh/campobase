@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.8.0 — 2026-08-31
+
+- Sesiones en pestaña propia (navegación inferior), separadas de Ejercicios.
+- Desde la pestaña de sesiones se pueden incluir ejercicios con el botón «+ Añadir» de cada tarjeta.
+- Tiempo total de la sesión configurable (no fijo a 60): el indicador avisa si faltan minutos, están cubiertos o te pasas.
+- Opción de marcar la sesión como calentamiento de partido/amistoso.
+- Cada ejercicio dentro de una sesión guardada es pinchable y abre su ficha completa (diagrama, montaje, desarrollo, correcciones) para consultarlo durante el entreno.
+- 61 pruebas automatizadas en verde.
+
 ## 2.7.0 — 2026-08-31
 
 - Limpieza automática de los ejercicios precargados genéricos (los "6 chinos, 2 siluetas, 4 palos") que quedaron guardados en versiones anteriores. Solo se borran los precargados; los creados o editados a mano se conservan.

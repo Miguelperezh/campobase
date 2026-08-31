@@ -839,6 +839,29 @@ function exerciseName(id) {
   return state.exercises.find((item) => item.id === id)?.name ?? 'Ejercicio eliminado';
 }
 
+function exerciseCardHTML(rawItem) {
+  const item = completeExercise(rawItem);
+  const list = (values) => `<ul class="plain-list">${values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')}</ul>`;
+  return `<article class="panel exercise-card">
+    <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
+    <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
+    <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
+    <p><strong>Intensidad:</strong> ${escapeHtml(item.intensity)}</p>
+    <p><strong>Objetivo:</strong> ${escapeHtml(item.objective)}</p>
+    <details class="diagram-details" open><summary>Gráfico tipo pizarra</summary>${renderBoardDiagrams(item)}</details>
+    <details open><summary>Montaje · antes de llamar a los jugadores</summary><ol class="plain-list">${item.montage.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
+    <details open><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
+    <p><strong>Rotación:</strong> ${escapeHtml(item.rotation)}</p>
+    <details><summary>Qué se trabaja</summary>${list(item.works)}</details>
+    <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor)}</p>
+    <details><summary>Qué debo observar</summary>${list(item.observe)}</details>
+    <details><summary>Correcciones breves</summary>${list(item.corrections)}</details>
+    <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad)}</p>
+    <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood)}</p>
+    <div class="button-row"><button type="button" class="add-exercise-to-session primary" data-id="${item.id}">Añadir a sesión</button><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
+  </article>`;
+}
+
 function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
@@ -851,28 +874,7 @@ function renderExercises() {
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
-  $('#exercises-list').innerHTML = exercises.length ? exercises.map((rawItem) => {
-    const item = completeExercise(rawItem);
-    const list = (values) => `<ul class="plain-list">${values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')}</ul>`;
-    return `<article class="panel exercise-card">
-      <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
-      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
-      <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
-      <p><strong>Intensidad:</strong> ${escapeHtml(item.intensity)}</p>
-      <p><strong>Objetivo:</strong> ${escapeHtml(item.objective)}</p>
-      <details class="diagram-details" open><summary>Gráfico tipo pizarra</summary>${renderBoardDiagrams(item)}</details>
-      <details open><summary>Montaje · antes de llamar a los jugadores</summary><ol class="plain-list">${item.montage.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
-      <details open><summary>Desarrollo paso a paso</summary><ol class="plain-list">${item.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></details>
-      <p><strong>Rotación:</strong> ${escapeHtml(item.rotation)}</p>
-      <details><summary>Qué se trabaja</summary>${list(item.works)}</details>
-      <p><strong>Qué busco:</strong> ${escapeHtml(item.lookFor)}</p>
-      <details><summary>Qué debo observar</summary>${list(item.observe)}</details>
-      <details><summary>Correcciones breves</summary>${list(item.corrections)}</details>
-      <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad)}</p>
-      <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood)}</p>
-      <div class="button-row"><button type="button" class="add-exercise-to-session primary" data-id="${item.id}">Añadir a sesión</button><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
-    </article>`;
-  }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+  $('#exercises-list').innerHTML = exercises.length ? exercises.map((rawItem) => exerciseCardHTML(rawItem)).join('') : empty('No hay ejercicios que coincidan con los filtros.');
 }
 
 function editExercise(id) {
@@ -927,27 +929,29 @@ function refreshSessionDurationStatus() {
   const form = $('#session-form');
   const root = form?.querySelector('.session-duration');
   if (!root) return;
+  const target = Number(form.elements.targetDuration?.value) > 0 ? Number(form.elements.targetDuration.value) : 60;
   const blocks = $$('[name="blockDuration"]', form).map(({ value }) => ({ duration: Number(value) || 0 }));
-  const status = sessionDurationStatus(blocks);
+  const status = sessionDurationStatus(blocks, target);
   root.className = `session-duration ${status.exact ? 'exact' : 'warning'}`;
-  root.innerHTML = `<strong>${status.total} / 60 min</strong><span>${status.message}</span>`;
+  root.innerHTML = `<strong>${status.total} / ${target} min</strong><span>${status.message}</span>`;
 }
 
 function renderSessionDraft() {
   const root = $('#session-builder');
-  const status = sessionDurationStatus(sessionDraftBlocks);
+  const target = Number(sessionDraftMeta?.targetDuration) > 0 ? Number(sessionDraftMeta.targetDuration) : 60;
+  const status = sessionDurationStatus(sessionDraftBlocks, target);
   root.classList.remove('hidden');
   const picker = `<div class="session-exercise-picker"><h3>Añadir ejercicios</h3><p class="meta">Pulsa <strong>+ Añadir</strong> en cada ejercicio. Entra como calentamiento, parte principal o juego final según su categoría.</p><div class="exercise-grid">${state.exercises.map((rawItem) => {
     const item = completeExercise(rawItem);
     return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${escapeHtml(sessionDraftMeta?.date ?? '')}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / 60 min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${escapeHtml(sessionDraftMeta?.date ?? '')}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const existing = state.trainingSessions.find(({ id }) => id === editId);
   const today = new Date().toISOString().slice(0, 10);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, name: seedMeta.name || '', material: '', notes: '' };
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
@@ -1000,14 +1004,22 @@ async function saveTrainingSession(event) {
   await put('settings', session);
   form.closest('#session-builder').classList.add('hidden');
   await refresh();
-  showView('ejercicios');
-  const status = sessionDurationStatus(session.blocks);
-  toast(status.exact ? 'Sesión guardada con 60 minutos exactos.' : `Sesión guardada. ${status.message}`);
+  showView('sesiones');
+  const status = sessionDurationStatus(session.blocks, session.targetDuration);
+  toast(status.exact ? `Sesión guardada con ${session.targetDuration} minutos exactos.` : `Sesión guardada. ${status.message}`);
+}
+
+function showExerciseDetail(exerciseId) {
+  const item = state.exercises.find(({ id }) => id === exerciseId);
+  if (!item) return toast('El ejercicio ya no está disponible.');
+  $('#exercise-detail-title').textContent = item.name;
+  $('#exercise-detail-body').innerHTML = exerciseCardHTML(item);
+  $('#exercise-detail-dialog').showModal();
 }
 
 function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions);
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `<article class="panel"><div class="section-head"><div><span class="pill accent">${session.totalDuration} min</span><h3>${escapeHtml(session.name)}</h3><p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques</p></div><div class="button-row"><button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button><button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button></div></div><ol class="session-plan">${session.blocks.map((block) => `<li><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</li>`).join('')}</ol>${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}</article>`).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
+  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `<article class="panel"><div class="section-head"><div><span class="pill accent">${session.totalDuration} min</span><h3>${escapeHtml(session.name)}</h3><p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques</p></div><div class="button-row"><button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button><button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button></div></div><ol class="session-plan">${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}</ol>${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}</article>`).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
 }
 
 async function ensurePhase2Seeded() {
@@ -1313,6 +1325,7 @@ function wireEvents() {
     if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
+    if (target.matches('.session-exercise-link')) showExerciseDetail(target.dataset.exerciseId);
     if (target.matches('.move-session-block')) { syncSessionDraft(); sessionDraftBlocks = moveSessionBlock(sessionDraftBlocks, Number(target.dataset.index), Number(target.dataset.direction)); renderSessionDraft(); }
     if (target.matches('.remove-session-block')) { syncSessionDraft(); sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index)); renderSessionDraft(); }
     if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }

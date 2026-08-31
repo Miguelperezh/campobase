@@ -88,5 +88,18 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.7\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.8\.0/, 'caché actualizada');
+});
+
+test('las sesiones son una pestaña aparte, con ejercicios pinchables y tiempo configurable', async () => {
+  const [html, app] = await Promise.all([projectFile('index.html'), projectFile('js/app.js')]);
+  assert.match(html, /data-view="sesiones"/, 'hay pestaña de sesiones en la navegación');
+  assert.match(html, /id="sesiones"/, 'existe la sección de sesiones');
+  assert.match(html, /id="title-sessions"/, 'la sección de sesiones tiene título propio');
+  assert.match(app, /showView\('sesiones'\)/, 'al guardar una sesión se muestra la pestaña de sesiones');
+  assert.match(app, /session-exercise-link/, 'cada ejercicio de la sesión es pinchable');
+  assert.match(app, /showExerciseDetail/, 'existe la función que muestra el detalle del ejercicio');
+  assert.match(app, /targetDuration/, 'la sesión guarda el tiempo objetivo');
+  assert.match(app, /sessionKind/, 'la sesión guarda si es calentamiento de partido/amistoso');
+  assert.match(app, /sessionDurationStatus\(blocks, target\)/, 'el indicador usa el tiempo configurable');
 });
