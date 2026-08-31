@@ -45,6 +45,26 @@ const FORMATION_1222 = Object.freeze([
   { x: 65, y: 38, n: '9', pos: 'Delantero der.' },
 ]);
 
+const FORMATION_1312 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 24, y: 72, n: '2', pos: 'Defensa izq.' },
+  { x: 50, y: 75, n: '4', pos: 'Defensa central' },
+  { x: 76, y: 72, n: '3', pos: 'Defensa der.' },
+  { x: 50, y: 55, n: '7', pos: 'Mediocentro' },
+  { x: 34, y: 34, n: '11', pos: 'Delantero izq.' },
+  { x: 66, y: 34, n: '9', pos: 'Delantero der.' },
+]);
+
+const FORMATION_1132 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 50, y: 73, n: '4', pos: 'Cierre' },
+  { x: 24, y: 55, n: '2', pos: 'Medio izq.' },
+  { x: 50, y: 57, n: '7', pos: 'Mediocentro' },
+  { x: 76, y: 55, n: '3', pos: 'Medio der.' },
+  { x: 36, y: 34, n: '11', pos: 'Delantero izq.' },
+  { x: 64, y: 34, n: '9', pos: 'Delantero der.' },
+]);
+
 const F7_OPPONENT = Object.freeze([
   { x: 50, y: 10, n: '1' },
   { x: 30, y: 28, n: '2' },
@@ -132,13 +152,43 @@ export const FORMATION_GUIDES = Object.freeze({
     ],
     alPerder: ['Un medio mantiene equilibrio mientras el otro presiona.'],
   },
+  '1-3-1-2': {
+    name: 'Variante 3 · 1-3-1-2',
+    queBusco: 'Mantengo una primera línea de tres y añado dos referencias arriba. Es útil para fijar a los defensas rivales y atacar con apoyos cercanos sin renunciar a la protección de la portería.',
+    conBalon: [
+      'Los dos delanteros se separan para no ocupar el mismo carril.',
+      'El 7 se ofrece por detrás del balón y decide hacia qué lado continuar.',
+      '2 y 3 avanzan por turno; si uno sube, los otros dos defensas guardan equilibrio.',
+    ],
+    sinBalon: [
+      'El 7 protege el espacio central delante de los tres defensas.',
+      'El punta más cercano orienta la salida rival hacia una banda y el otro cierra el pase interior.',
+      'La línea de tres bascula junta, sin perseguir fuera de su zona.',
+    ],
+    alPerder: ['El 7 frena el primer pase y los dos delanteros regresan por dentro antes de abrirse.'],
+  },
+  '1-1-3-2': {
+    name: 'Variante 4 · 1-1-3-2',
+    queBusco: 'Busco superioridad en mediocampo y dos jugadores cerca de portería. Es una estructura ofensiva para momentos controlados: exige que el cierre lea bien la cobertura y que los medios reaccionen juntos tras pérdida.',
+    conBalon: [
+      'Los medios exteriores dan amplitud y el 7 ofrece apoyo por dentro.',
+      'Los dos delanteros alternan apoyo y profundidad: uno viene y el otro ataca el espacio.',
+      'El cierre conduce solo si un medio ocupa su espalda y existe pase seguro.',
+    ],
+    sinBalon: [
+      'Los tres medios forman una línea estrecha delante del cierre.',
+      'No permitir un pase directo por el centro; orientar al rival hacia fuera.',
+      'El portero juega adelantado para proteger el espacio a la espalda del cierre.',
+    ],
+    alPerder: ['El medio más cercano presiona; los otros dos cierran dentro y uno de los delanteros baja a ayudar.'],
+  },
 });
 
-export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2']);
+export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2']);
 
 export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
   const isF11 = format === 'F11';
-  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222 };
+  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222, '1-3-1-2': FORMATION_1312, '1-1-3-2': FORMATION_1132 };
   const team = isF11
     ? F11_TEAM.map((p) => ({ ...p }))
     : (formations[formation] || FORMATION_1321).map((p) => ({ ...p }));
@@ -156,12 +206,48 @@ export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
 
 const xml = (value) => clean(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
-const arrowClass = (kind) => ({ move: 'tac-move', dribble: 'tac-dribble', shot: 'tac-shot', pass: 'tac-pass' }[kind] || 'tac-pass');
-const actionLabel = (kind) => ({ move: '- - - → = movimiento sin balón', dribble: '════→ = conducción', shot: '━━━━→ = disparo', pass: '────→ = pase' }[kind] || '────→ = pase');
+const arrowClass = (kind) => ({ move: 'tac-move', dribble: 'tac-dribble', shot: 'tac-shot', pass: 'tac-pass', sprint: 'tac-sprint' }[kind] || 'tac-pass');
+const actionLabel = (kind) => ({ move: '- - - → = movimiento sin balón', dribble: '════→ = conducción', shot: '━━━━→ = disparo', pass: '────→ = pase', sprint: '≋≋≋→ = sprint' }[kind] || '────→ = pase');
 
-// Renderiza la pizarra táctica como SVG con movimientos animados.
-export function renderTacticBoard(tactic = {}) {
+// Herramientas de la pizarra interactiva.
+export const TACTIC_TOOLS = Object.freeze([
+  { id: 'select', label: 'Mover', icon: '✋' },
+  { id: 'pass', label: 'Pase', icon: '➜' },
+  { id: 'move', label: 'Movimiento', icon: '↝' },
+  { id: 'dribble', label: 'Conducción', icon: '⚡' },
+  { id: 'shot', label: 'Disparo', icon: '🎯' },
+  { id: 'sprint', label: 'Sprint', icon: '💨' },
+  { id: 'ball', label: 'Balón', icon: '⚽' },
+]);
+
+const TOOL_KINDS = new Set(['pass', 'move', 'dribble', 'shot', 'sprint']);
+
+// Crea una flecha táctica; devuelve null si el trazo es demasiado corto.
+export function createTacticMove(from, to, kind) {
+  if (!TOOL_KINDS.has(kind)) throw new TypeError('Herramienta de flecha no válida.');
+  if (Math.hypot(to.x - from.x, to.y - from.y) <= 2) return null;
+  return { from: { ...from }, to: { ...to }, kind };
+}
+
+// Mueve una pieza (jugador, rival o balón) sin mutar la táctica original y
+// limitando las coordenadas al campo (4..96).
+export function moveTacticPiece(tactic, side, idx, point) {
+  const t = { ...tactic, team: tactic.team.map((p) => ({ ...p })), opponent: tactic.opponent.map((p) => ({ ...p })), ball: { ...tactic.ball } };
+  const clamp = (v) => Math.max(4, Math.min(96, v));
+  const p = { x: clamp(point.x), y: clamp(point.y) };
+  if (side === 'team') { if (!t.team[idx]) throw new TypeError('Pieza no válida.'); t.team[idx] = { ...t.team[idx], ...p }; }
+  else if (side === 'opponent') { if (!t.opponent[idx]) throw new TypeError('Pieza no válida.'); t.opponent[idx] = { ...t.opponent[idx], ...p }; }
+  else if (side === 'ball') { t.ball = p; }
+  else throw new TypeError('Pieza no válida.');
+  return t;
+}
+
+// Renderiza la pizarra táctica como SVG interactivo (arrastrar jugadores,
+// dibujar flechas, colocar balón). Los elementos llevan data-atributos para
+// que app.js maneje los eventos de puntero.
+export function renderTacticBoard(tactic = {}, options = {}) {
   const t = { ...defaultTactic(tactic.format || 'F7', tactic.formation), ...tactic };
+  const editable = options.editable !== false;
   const markerId = `tac-arrow-${clean(t.id || 'nueva').replace(/[^a-z0-9-]/gi, '')}`;
   const parts = [];
   parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
@@ -169,20 +255,21 @@ export function renderTacticBoard(tactic = {}) {
   parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
   parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
   parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  if (editable) parts.push('<rect class="tac-capture" x="4" y="4" width="92" height="92" data-piece="capture"/>');
   for (const move of (t.moves || [])) {
     const cls = arrowClass(move.kind);
-    parts.push(`<path class="tac-arrow ${cls}" d="M${move.from.x} ${move.from.y} L${move.to.x} ${move.to.y}" marker-end="url(#${markerId})"/>`);
+    parts.push(`<path class="tac-arrow ${cls}" d="M${move.from.x} ${move.from.y} L${move.to.x} ${move.to.y}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(move.kind)}"/>`);
   }
-  for (const p of (t.team || [])) {
-    parts.push(`<g class="tac-player"><circle cx="${p.x}" cy="${p.y}" r="4.5"/><text x="${p.x}" y="${p.y + 1.7}">${xml(p.n)}</text></g>`);
+  for (let i = 0; i < (t.team || []).length; i++) {
+    const p = t.team[i];
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="3.2"/><text x="${p.x}" y="${p.y + 1.2}">${xml(p.n)}</text></g>`);
   }
-  for (const p of (t.opponent || [])) {
-    parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.5"/><text x="${p.x}" y="${p.y + 1.7}">${xml(p.n)}</text></g>`);
+  for (let i = 0; i < (t.opponent || []).length; i++) {
+    const p = t.opponent[i];
+    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="3.2"/><text x="${p.x}" y="${p.y + 1.2}">${xml(p.n)}</text></g>`);
   }
   const ball = t.ball || { x: 50, y: 50 };
-  const firstMove = (t.moves || [])[0];
-  const ballPath = firstMove ? `M${firstMove.from.x} ${firstMove.from.y} L${firstMove.to.x} ${firstMove.to.y}` : `M${ball.x} ${ball.y} L${ball.x} ${ball.y}`;
-  parts.push(`<circle class="tac-ball" r="2.4"><animateMotion dur="3s" repeatCount="indefinite" path="${ballPath}"/></circle>`);
+  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.2"/></g>`);
   const usedKinds = [...new Set((t.moves || []).map((m) => m.kind || 'pass'))];
   const labels = ['<span class="tac-legend-team">●</span> = mi equipo', '<span class="tac-legend-rival">●</span> = rival', '⚽ = balón'];
   labels.push(...usedKinds.map(actionLabel));

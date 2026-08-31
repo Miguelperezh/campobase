@@ -88,7 +88,17 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.10\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.11\.0/, 'caché actualizada');
+});
+
+test('la pizarra táctica permite arrastrar piezas, colocar balón y dibujar cinco tipos de flecha', async () => {
+  const [app, tactics, css] = await Promise.all([projectFile('js/app.js'), projectFile('js/tactics.js'), projectFile('styles.css')]);
+  assert.match(tactics, /id: 'sprint'/, 'incluye la herramienta sprint');
+  assert.match(app, /pointerdown/, 'inicia interacción táctil o con ratón');
+  assert.match(app, /moveTacticPiece/, 'actualiza posiciones del tablero');
+  assert.match(app, /createTacticMove/, 'guarda flechas dibujadas a mano');
+  assert.match(tactics, /data-piece="ball"/, 'el balón es una pieza colocable');
+  assert.match(css, /\.tac-sprint/, 'el sprint tiene trazo diferenciado');
 });
 
 test('las sesiones son una pestaña aparte, con ejercicios pinchables y tiempo configurable', async () => {

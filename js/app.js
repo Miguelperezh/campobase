@@ -4,7 +4,7 @@ import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, ca
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
-import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, buildTactic, defaultTactic, renderTacticBoard, sortTactics } from './tactics.js';
+import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -30,6 +30,8 @@ let toastTimer;
 let sessionDraftBlocks = [];
 let sessionDraftMeta = null;
 let pendingExerciseId = '';
+let tacticTool = 'select';
+let tacticDraft = null;
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -1048,13 +1050,16 @@ function tacticBuilder(editId = '') {
   const root = $('#tactic-builder');
   root.classList.remove('hidden');
   const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
+  tacticTool = 'select';
   const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
   const guideHTML = guide ? `
     <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
     <details class="tactic-guide"><summary>Con balón</summary><ul class="plain-list">${guide.conBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
     <details class="tactic-guide"><summary>Sin balón / defensa</summary><ul class="plain-list">${guide.sinBalon.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>
     <details class="tactic-guide"><summary>Al perder el balón</summary><ul class="plain-list">${guide.alPerder.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul></details>` : '';
-  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${renderTacticBoard(t)}${guideHTML}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  const toolsHTML = `<div class="tactic-tools" role="toolbar" aria-label="Herramientas de la pizarra">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}"><span aria-hidden="true">${tool.icon}</span>${tool.label}</button>`).join('')}</div>`;
+  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}${renderTacticBoard(t)}${guideHTML}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  initTacticDraft();
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1063,7 +1068,14 @@ async function saveTactic(event) {
   const form = event.target.closest('form');
   const values = formObject(form);
   const existing = values.id ? state.tactics.find(({ id }) => id === values.id) : null;
-  const saved = buildTactic(values, {
+  const draft = tacticDraft || syncTacticDraft();
+  const saved = buildTactic({
+    ...values,
+    team: draft?.team,
+    opponent: draft?.opponent,
+    ball: draft?.ball,
+    moves: draft?.moves,
+  }, {
     id: existing?.id ?? uid(), createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
   });
   await put('settings', { ...existing, ...saved, recordType: 'tactic' });
@@ -1079,6 +1091,67 @@ function showTacticDetail(tacticId) {
   $('#tactic-detail-title').textContent = tactic.name || 'Táctica';
   $('#tactic-detail-body').innerHTML = `<p class="meta">${escapeHtml(tactic.format)}${tactic.rival ? ` · vs ${escapeHtml(tactic.rival)}` : ''}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}`;
   $('#tactic-detail-dialog').showModal();
+}
+
+// Convierte un evento de puntero a coordenadas del viewBox (0..100) del SVG.
+function tacticPoint(event, svg) {
+  const rect = svg.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(96, y)) };
+}
+
+// Sincroniza el borrador de la táctica con el estado actual de la pizarra.
+function syncTacticDraft() {
+  const form = $('#tactic-form');
+  if (!form) return;
+  const values = formObject(form);
+  const base = defaultTactic(values.format || 'F7', values.formation);
+  tacticDraft = {
+    ...base,
+    id: values.id,
+    name: values.name,
+    rival: values.rival,
+    situation: values.situation,
+    formation: values.formation,
+    team: tacticDraft?.team || base.team,
+    opponent: tacticDraft?.opponent || base.opponent,
+    ball: tacticDraft?.ball || base.ball,
+    moves: tacticDraft?.moves || [],
+    notes: values.notes,
+  };
+  return tacticDraft;
+}
+
+// Re-renderiza la pizarra conservando el borrador actual.
+function rerenderTacticBoard() {
+  const form = $('#tactic-form');
+  if (!form) return;
+  const board = form.querySelector('.tactic-board');
+  if (!board) return;
+  const t = tacticDraft || syncTacticDraft();
+  board.outerHTML = renderTacticBoard(t);
+}
+
+// Inicializa el borrador al abrir el builder.
+function initTacticDraft() {
+  const form = $('#tactic-form');
+  if (!form) return;
+  const values = formObject(form);
+  const base = defaultTactic(values.format || 'F7', values.formation);
+  tacticDraft = {
+    ...base,
+    id: values.id,
+    name: values.name,
+    rival: values.rival,
+    situation: values.situation,
+    formation: values.formation,
+    team: base.team,
+    opponent: base.opponent,
+    ball: base.ball,
+    moves: [],
+    notes: values.notes,
+  };
 }
 
 async function ensurePhase2Seeded() {
@@ -1288,7 +1361,9 @@ function wireEvents() {
     if (event.target.matches('#tactic-form [name="formation"]')) {
       const form = event.target.closest('#tactic-form');
       const values = formObject(form);
-      const t = { ...defaultTactic(values.format || 'F7', values.formation), name: values.name, rival: values.rival, situation: values.situation, notes: values.notes };
+      const base = defaultTactic(values.format || 'F7', values.formation);
+      tacticDraft = { ...base, id: values.id, name: values.name, rival: values.rival, situation: values.situation, formation: values.formation, team: base.team, opponent: base.opponent, ball: base.ball, moves: [], notes: values.notes };
+      const t = tacticDraft;
       const guide = FORMATION_GUIDES[t.formation] || FORMATION_GUIDES['1-3-2-1'];
       const guideHTML = guide ? `
         <details class="tactic-guide" open><summary>${escapeHtml(guide.name)} · qué busco</summary><p>${escapeHtml(guide.queBusco)}</p></details>
@@ -1300,6 +1375,56 @@ function wireEvents() {
       form.querySelectorAll('.tactic-guide').forEach((el) => el.remove());
       const notesLabel = form.querySelector('label:has(textarea[name="notes"])');
       if (notesLabel) notesLabel.insertAdjacentHTML('beforebegin', guideHTML);
+    }
+  });
+  // Interacción de la pizarra táctica: arrastrar jugadores, dibujar flechas, colocar balón.
+  document.addEventListener('pointerdown', (event) => {
+    const svg = event.target.closest('.tactic-board svg');
+    if (!svg) return;
+    const form = svg.closest('#tactic-form');
+    if (!form) return;
+    const piece = event.target.closest('[data-piece]')?.dataset.piece;
+    const point = tacticPoint(event, svg);
+    if (tacticTool === 'select' && (piece === 'team' || piece === 'opponent')) {
+      const idx = Number(event.target.closest('[data-idx]').dataset.idx);
+      const side = piece;
+      const move = (ev) => {
+        const p = tacticPoint(ev, svg);
+        tacticDraft = moveTacticPiece(tacticDraft, side, idx, p);
+        const el = svg.querySelector(`[data-piece="${side}"][data-idx="${idx}"]`);
+        if (el) { el.querySelector('circle').setAttribute('cx', tacticDraft[side][idx].x); el.querySelector('circle').setAttribute('cy', tacticDraft[side][idx].y); el.querySelector('text').setAttribute('x', tacticDraft[side][idx].x); el.querySelector('text').setAttribute('y', tacticDraft[side][idx].y + 1.2); }
+      };
+      const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    } else if (tacticTool === 'ball') {
+      tacticDraft = moveTacticPiece(tacticDraft, 'ball', 0, point);
+      const ball = svg.querySelector('[data-piece="ball"]');
+      if (ball) { ball.querySelector('circle').setAttribute('cx', tacticDraft.ball.x); ball.querySelector('circle').setAttribute('cy', tacticDraft.ball.y); }
+    } else if (['pass', 'move', 'dribble', 'shot', 'sprint'].includes(tacticTool)) {
+      const start = point;
+      const cls = { pass: 'tac-pass', move: 'tac-move', dribble: 'tac-dribble', shot: 'tac-shot', sprint: 'tac-sprint' }[tacticTool] || 'tac-pass';
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', start.x); line.setAttribute('y1', start.y); line.setAttribute('x2', start.x); line.setAttribute('y2', start.y);
+      line.setAttribute('class', `tac-arrow ${cls}`);
+      svg.appendChild(line);
+      const move = (ev) => {
+        const p = tacticPoint(ev, svg);
+        line.setAttribute('x2', p.x); line.setAttribute('y2', p.y);
+      };
+      const up = () => {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        const to = { x: Number(line.getAttribute('x2')), y: Number(line.getAttribute('y2')) };
+        line.remove();
+        const created = createTacticMove(start, to, tacticTool);
+        if (created) {
+          tacticDraft = { ...tacticDraft, moves: [...(tacticDraft.moves || []), created] };
+          rerenderTacticBoard();
+        }
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
     }
   });
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
@@ -1380,6 +1505,10 @@ function wireEvents() {
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
     if (target.matches('.cancel-tactic')) $('#tactic-builder').classList.add('hidden');
+    if (target.matches('.tactic-tool')) {
+      tacticTool = target.dataset.tacticTool;
+      $$('.tactic-tool').forEach((btn) => btn.classList.toggle('active', btn.dataset.tacticTool === tacticTool));
+    }
     if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }

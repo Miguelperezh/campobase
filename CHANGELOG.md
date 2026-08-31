@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.11.0 — 2026-08-31
+
+- Fase 3: pizarra táctica interactiva tipo RenderFoot/TacticalPad.
+- Herramientas: mover jugadores (arrastrar), pase, movimiento, conducción, disparo, sprint y balón colocable.
+- Círculos de jugadores más pequeños (r=3.2).
+- Flechas dibujadas a mano con 5 tipos (pase, movimiento, conducción, disparo, sprint) y leyenda.
+- Guardar táctica persiste posiciones movidas, balón y flechas dibujadas.
+- 5 formaciones F7 explicadas (1-3-2-1, 1-2-3-1, 1-2-2-2, 1-3-1-2, 1-1-3-2) con ataque y defensa.
+- 69 pruebas automatizadas en verde.
+
 ## 2.10.0 — 2026-08-31
 
 - Fase 3 mejorada: la pizarra táctica ahora precarga las 3 formaciones del manual de Migue (1-3-2-1, 1-2-3-1, 1-2-2-2) con sus posiciones.
