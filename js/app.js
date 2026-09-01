@@ -5,6 +5,7 @@ import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXE
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
+import { planSquadSeed } from './squad-seed.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -1166,6 +1167,12 @@ async function ensurePhase2Seeded() {
   await putBatch({ settings: [...goodExercises, { id: 'phase2-seeded', recordType: 'migration', version: 5, createdAt: Date.now() }] });
 }
 
+async function ensureSquadSeeded() {
+  if (await getOne('settings', 'squad-26-27-seeded')) return;
+  const currentPlayers = await getAll('players');
+  await putBatch(planSquadSeed(currentPlayers));
+}
+
 async function ensurePhase2V2Seeded() {
   if (await getOne('settings', 'phase2-v2-seeded')) return;
   const current = await getAll('settings');
@@ -1606,6 +1613,7 @@ async function init() {
   window.addEventListener('offline', networkStatus);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
   await synchronizeCloud();
+  await ensureSquadSeeded();
   await ensurePhase2Seeded();
   await ensurePhase2V2Seeded();
   await ensurePhase2V3Seeded();

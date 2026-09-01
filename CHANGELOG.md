@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.14.0 — 2026-09-01
+
+- Precarga idempotente de los 13 jugadores de Unión Viera Alevín D 2026/27 cuando la plantilla local está vacía.
+- Ramiro Casati se crea como portero con dorsal 1; los otros doce jugadores quedan sin dorsal ni posición para completarlos desde el CRUD existente.
+- Las plantillas que ya contienen jugadores se conservan sin cambios y la migración se registra mediante `squad-26-27-seeded` para evitar repeticiones.
+- El módulo de precarga forma parte de la caché offline `campobase-v2.14.0`.
+
 ## 2.13.0 — 2026-08-31
 
 - Fase 3: catálogo F7 ampliado de cinco a ocho formaciones con 1-3-3, 1-4-1-1 y 1-2-1-3.
