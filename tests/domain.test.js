@@ -28,6 +28,7 @@ import {
   adjustLiveScore,
   addPlayerMatchEvent,
   buildPlayerSummary,
+  buildPlayerRecord,
 } from '../js/domain.js';
 
 test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acentos', () => {
@@ -45,6 +46,19 @@ test('ordena la plantilla por dorsal y deja al final los jugadores que aún no l
   ];
   assert.deepEqual(sortPlayersBySquadNumber(players).map(({ id }) => id), ['1', '12', 'sin-2', 'sin-1']);
   assert.deepEqual(players.map(({ id }) => id), ['sin-2', '12', '1', 'sin-1'], 'no debe mutar la lista original');
+});
+
+test('guarda la pierna dominante aunque el jugador todavía no tenga posición', () => {
+  const player = buildPlayerRecord({
+    id: 'p1',
+    name: 'Aitor Navarro',
+    number: '',
+    foot: 'Izquierda',
+    notes: '',
+  }, [], null, '', 1_788_272_000_000);
+
+  assert.equal(player.foot, 'Izquierda');
+  assert.deepEqual(player.positions, []);
 });
 
 test('recalcula los contadores de rotación al editar una convocatoria', () => {

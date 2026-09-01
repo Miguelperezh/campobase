@@ -21,6 +21,31 @@ export function sortPlayersByName(players) {
   }));
 }
 
+export function buildPlayerRecord(values, positions, existing = null, photo = '', createdAt = Date.now()) {
+  if (!values || typeof values !== 'object') throw new TypeError('Los datos del jugador no son válidos.');
+  if (!Array.isArray(positions)) throw new TypeError('Las posiciones deben ser una lista.');
+  const name = String(values.name ?? '').trim();
+  if (!name) throw new TypeError('El nombre del jugador es obligatorio.');
+  const foot = String(values.foot ?? '');
+  if (!['', 'Derecha', 'Izquierda', 'Ambas'].includes(foot)) throw new TypeError('La pierna dominante no es válida.');
+  return {
+    ...existing,
+    id: values.id,
+    name,
+    number: values.number ?? '',
+    positions: [...positions],
+    foot,
+    notes: String(values.notes ?? '').trim(),
+    photo: photo || existing?.photo || '',
+    outsideCount: existing?.outsideCount ?? 0,
+    lastExcludedAt: existing?.lastExcludedAt ?? null,
+    totalMinutes: existing?.totalMinutes ?? 0,
+    seasonMinutes: existing?.seasonMinutes ?? {},
+    minuteReasons: existing?.minuteReasons ?? [],
+    createdAt: existing?.createdAt ?? createdAt,
+  };
+}
+
 export function sortPlayersBySquadNumber(players) {
   if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
   return [...players].sort((a, b) => {

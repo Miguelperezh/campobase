@@ -45,8 +45,13 @@ test('las fichas de plantilla muestran dorsal, posición, pierna y rotaciones co
   assert.match(app, />Posición</);
   assert.match(app, />Pierna</);
   assert.match(app, />Rotaciones</);
+  assert.match(app, /class="player-head"/);
+  assert.match(app, /class="player-performance"/);
+  assert.match(app, />Ver actividad y estadísticas</);
   assert.doesNotMatch(app, /<div><h3>\$\{escapeHtml\(player\.name\)\} <span class="pill">#/);
   assert.match(css, /\.player-data/);
+  assert.match(css, /\.player-head/);
+  assert.match(css, /\.player-performance/);
   assert.match(css, /overflow-wrap:anywhere/);
 });
 
