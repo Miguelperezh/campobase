@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { validateBackup } from '../js/domain.js';
 import { planSquadSeed } from '../js/squad-seed.js';
 
 const EXPECTED_NAMES = [
@@ -52,4 +54,11 @@ test('si ya hay jugadores conserva la plantilla y solo registra la migración', 
     version: 1,
     createdAt: 1_788_268_816_000,
   }]);
+});
+
+test('la plantilla JSON incluida es una copia importable por CampoBase', async () => {
+  const file = await readFile(new URL('../plantilla-jugadores-union-viera.json', import.meta.url), 'utf8');
+  const backup = JSON.parse(file);
+
+  assert.equal(validateBackup(backup), backup);
 });

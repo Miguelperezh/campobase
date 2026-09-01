@@ -22,6 +22,7 @@ import {
   verifyPin,
   buildPlayerRatings,
   sortPlayersByName,
+  sortPlayersBySquadNumber,
   updateRotationCounters,
   calledPlayerOptions,
   adjustLiveScore,
@@ -33,6 +34,17 @@ test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acen
   const players = [{ id: '3', name: 'zoe' }, { id: '2', name: 'Álvaro' }, { id: '1', name: 'ana' }];
   assert.deepEqual(sortPlayersByName(players).map(({ id }) => id), ['2', '1', '3']);
   assert.deepEqual(players.map(({ id }) => id), ['3', '2', '1'], 'no debe mutar la lista original');
+});
+
+test('ordena la plantilla por dorsal y deja al final los jugadores que aún no lo tienen', () => {
+  const players = [
+    { id: 'sin-2', name: 'Álvaro', number: '' },
+    { id: '12', name: 'Doce', number: '12' },
+    { id: '1', name: 'Uno', number: '1' },
+    { id: 'sin-1', name: 'Ana', number: '' },
+  ];
+  assert.deepEqual(sortPlayersBySquadNumber(players).map(({ id }) => id), ['1', '12', 'sin-2', 'sin-1']);
+  assert.deepEqual(players.map(({ id }) => id), ['sin-2', '12', '1', 'sin-1'], 'no debe mutar la lista original');
 });
 
 test('recalcula los contadores de rotación al editar una convocatoria', () => {

@@ -21,6 +21,17 @@ export function sortPlayersByName(players) {
   }));
 }
 
+export function sortPlayersBySquadNumber(players) {
+  if (!Array.isArray(players)) throw new TypeError('La plantilla debe ser una lista.');
+  return [...players].sort((a, b) => {
+    const aHasNumber = a.number !== '' && a.number !== null && a.number !== undefined;
+    const bHasNumber = b.number !== '' && b.number !== null && b.number !== undefined;
+    if (aHasNumber !== bHasNumber) return aHasNumber ? -1 : 1;
+    if (aHasNumber && Number(a.number) !== Number(b.number)) return Number(a.number) - Number(b.number);
+    return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'es', { sensitivity: 'base' });
+  });
+}
+
 export function updateRotationCounters(players, callups) {
   if (!Array.isArray(players) || !Array.isArray(callups)) throw new TypeError('Jugadores y convocatorias deben ser listas.');
   return players.map((player) => {

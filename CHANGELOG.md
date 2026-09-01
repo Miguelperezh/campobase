@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.14.1 — 2026-09-01
+
+- Corregido el guardado al añadir o editar jugadores sin posición asignada.
+- Las fichas de Plantilla separan con claridad dorsal, posición, pierna y rotaciones, y ajustan los textos largos dentro de cada recuadro.
+- La Plantilla se ordena por dorsal ascendente; los jugadores sin dorsal quedan después, ordenados por nombre.
+- Se mantienen sin cambios el borrado de jugadores y el resto de módulos ya validados.
+
 ## 2.14.0 — 2026-09-01
 
 - Precarga idempotente de los 13 jugadores de Unión Viera Alevín D 2026/27 cuando la plantilla local está vacía.

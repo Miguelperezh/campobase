@@ -4,16 +4,16 @@ import { readFile } from 'node:fs/promises';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.14.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.14.1 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.14.0');
-  assert.equal(lock.version, '2.14.0');
-  assert.equal(lock.packages[''].version, '2.14.0');
-  assert.match(sw, /campobase-v2\.14\.0/);
+  assert.equal(pkg.version, '2.14.1');
+  assert.equal(lock.version, '2.14.1');
+  assert.equal(lock.packages[''].version, '2.14.1');
+  assert.match(sw, /campobase-v2\.14\.1/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -29,6 +29,25 @@ test('la aplicación no usa confirmaciones nativas', async () => {
   const app = await projectFile('js/app.js');
   assert.doesNotMatch(app, /\bconfirm\s*\(/);
   assert.match(app, /confirmation-dialog/);
+});
+
+test('permite añadir y editar jugadores aunque todavía no tengan posición', async () => {
+  const [html, app] = await Promise.all([projectFile('index.html'), projectFile('js/app.js')]);
+  assert.match(html, /Posiciones \(puedes marcar varias\)/);
+  assert.match(app, /const positions = checkedValues\('positions', form\)/);
+  assert.doesNotMatch(app, /if \(!positions\.length\).*Selecciona al menos una posición/);
+});
+
+test('las fichas de plantilla muestran dorsal, posición, pierna y rotaciones con etiquetas claras', async () => {
+  const [app, css] = await Promise.all([projectFile('js/app.js'), projectFile('styles.css')]);
+  assert.match(app, /class="player-data"/);
+  assert.match(app, />Dorsal</);
+  assert.match(app, />Posición</);
+  assert.match(app, />Pierna</);
+  assert.match(app, />Rotaciones</);
+  assert.doesNotMatch(app, /<div><h3>\$\{escapeHtml\(player\.name\)\} <span class="pill">#/);
+  assert.match(css, /\.player-data/);
+  assert.match(css, /overflow-wrap:anywhere/);
 });
 
 test('la sesión autenticada se restaura al recargar y el PIN no se abre incondicionalmente', async () => {
@@ -100,7 +119,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.14\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.14\.1/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {
