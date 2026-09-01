@@ -38,10 +38,10 @@ test('al bajar ajustes aplica los PIN configurados una vez en la nube', () => {
 });
 
 test('durante la migración conserva los PIN ya creados si la nube todavía no los tiene', () => {
-  const local = { id: 'main', format: 'F7', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd' };
+  const local = { id: 'main', format: 'F7', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd', demoPinSalt: 'sal-demo', demoPinHash: 'demo' };
   const cloud = { id: 'main', format: 'F11' };
   assert.deepEqual(mergeCloudRecord('settings', local, cloud), {
-    id: 'main', format: 'F11', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd',
+    id: 'main', format: 'F11', pinSalt: 'sal', ownerPinHash: 'm', delegatePinHash: 'd', demoPinSalt: 'sal-demo', demoPinHash: 'demo',
   });
 });
 

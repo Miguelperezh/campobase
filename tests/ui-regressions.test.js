@@ -4,16 +4,16 @@ import { readFile } from 'node:fs/promises';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.14.1 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.15.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.14.1');
-  assert.equal(lock.version, '2.14.1');
-  assert.equal(lock.packages[''].version, '2.14.1');
-  assert.match(sw, /campobase-v2\.14\.1/);
+  assert.equal(pkg.version, '2.15.0');
+  assert.equal(lock.version, '2.15.0');
+  assert.equal(lock.packages[''].version, '2.15.0');
+  assert.match(sw, /campobase-v2\.15\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -69,7 +69,7 @@ test('la iteración 9 expone equipo, localía, marcador de estadio y oculta come
   assert.match(html, /name="venue"/);
   assert.match(app, /calledPlayerOptions/);
   assert.match(app, /data-score-team=/);
-  assert.match(app, /state\.role === 'owner'.*Comentarios/s);
+  assert.match(app, /roleCanUseOwnerFeatures\(state\.role\).*Comentarios/s);
   assert.doesNotMatch(app, /normalizePositions\(player\)\.includes\('Portero'\).*keeperOptions/s);
   assert.match(app, /getAttribute\('id'\)/, 'conserva el arreglo del listener de convocatorias');
 });
@@ -124,7 +124,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.14\.1/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.15\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {
@@ -172,4 +172,36 @@ test('las sesiones son una pestaña aparte, con ejercicios pinchables y tiempo c
   assert.match(app, /targetDuration/, 'la sesión guarda el tiempo objetivo');
   assert.match(app, /sessionKind/, 'la sesión guarda si es calentamiento de partido/amistoso');
   assert.match(app, /sessionDurationStatus\(blocks, target\)/, 'el indicador usa el tiempo configurable');
+});
+
+test('el PIN demo abre una sesión aislada de dos horas sin ajustes ni datos reales', async () => {
+  const [html, app, db, css, sw] = await Promise.all([
+    projectFile('index.html'), projectFile('js/app.js'), projectFile('js/db.js'), projectFile('styles.css'), projectFile('sw.js'),
+  ]);
+
+  assert.match(html, /id="demo-pin-settings-form"/);
+  assert.match(html, /name="demoPin"/);
+  assert.match(html, /id="demo-team-form"/);
+  assert.match(html, /data-view="ajustes"[^>]*id="settings-nav"/);
+  assert.match(app, /demoPinSalt/);
+  assert.match(app, /demoPinHash/);
+  assert.match(app, /applyRole\('demo'/);
+  assert.match(app, /configureDemoDatabase/);
+  assert.match(app, /deleteDemoDatabase/);
+  assert.match(app, /classList\.toggle\('demo-mode'/);
+  assert.match(app, /settings-nav[^\n]+hidden/);
+  assert.match(app, /DEMO_DURATION_MS/);
+  assert.match(db, /if \(isDemoDatabase\(\)\) return \{ online: false, pending: 0, demo: true \}/);
+  assert.match(css, /\.demo-mode \.club-crest\{display:none\}/);
+  assert.match(sw, /demo-session\.js/);
+});
+
+test('la demo conserva toda la operativa de Migue pero nunca precarga su plantilla', async () => {
+  const app = await projectFile('js/app.js');
+  const startDemo = app.slice(app.indexOf('async function startDemoSession'), app.indexOf('async function endDemoSession'));
+
+  assert.match(app, /roleCanUseOwnerFeatures\(state\.role\)/);
+  assert.match(startDemo, /ensurePhase2Seeded\(\)/);
+  assert.doesNotMatch(startDemo, /ensureSquadSeeded\(\)/);
+  assert.match(startDemo, /await refresh\(\)/);
 });

@@ -1,7 +1,7 @@
-const CACHE = 'campobase-v2.14.1';
+const CACHE = 'campobase-v2.15.0';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
-  './js/app.js', './js/db.js', './js/domain.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/tactics.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js',
+  './js/app.js', './js/db.js', './js/domain.js', './js/demo-session.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/tactics.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js',
   './vendor/supabase.js',
   './icons/icon-192.svg', './icons/icon-512.svg', './icons/escudo.png',
 ];

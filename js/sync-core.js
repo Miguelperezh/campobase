@@ -21,7 +21,7 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
   assertStore(store);
   const merged = structuredClone(cloudRecord);
   if (store === 'settings' && cloudRecord.id === 'main') {
-    for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash']) {
+    for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash', 'demoPinSalt', 'demoPinHash']) {
       if (!merged[field] && localRecord?.[field]) merged[field] = localRecord[field];
     }
   }

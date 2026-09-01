@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.15.0 — 2026-09-01
+
+- PIN de demostración: Migue puede crear un PIN temporal que abre una sesión aislada de dos horas, sin acceso a sus datos reales ni a Ajustes.
+- La demo conserva toda la operativa de Migue (incluida la puntuación de jugadores) pero nunca precarga su plantilla; los datos viven solo en memoria y se eliminan al cerrar o al caducar.
+- El delegado mantiene su acceso limitado al partido; Migue, la demo y el delegado usan cada uno su propio PIN.
+- 90 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.15.0`.
+
 ## 2.14.1 — 2026-09-01
 
 - Corregido el guardado al añadir o editar jugadores sin posición asignada.

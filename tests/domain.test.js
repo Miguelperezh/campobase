@@ -396,6 +396,16 @@ test('el delegado no puede puntuar y se rechazan notas incompletas o fuera de 1 
   assert.throws(() => buildPlayerRatings(players, { a: '5', b: '6' }, { ...metadata, role: 'owner' }), /entre 1 y 5/i);
 });
 
+test('la demo puede completar y puntuar su partido temporal como Migue', () => {
+  const players = [{ id: 'p1', name: 'Jugador demo', ratingHistory: [] }];
+  const result = buildPlayerRatings(players, { p1: '4' }, {
+    role: 'demo', matchId: 'm-demo', date: '2026-09-01', opponent: 'Rival demo',
+  });
+
+  assert.equal(result.ratings.p1, 4);
+  assert.equal(result.players[0].ratingHistory[0].matchId, 'm-demo');
+});
+
 test('los selectores de portero incluyen a todos los convocados aunque no tengan posición de portero', () => {
   const players = [
     { id: 'a', name: 'Ana', positions: ['Central'] },

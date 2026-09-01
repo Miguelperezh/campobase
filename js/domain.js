@@ -1,3 +1,5 @@
+import { roleCanUseOwnerFeatures } from './demo-session.js';
+
 const BACKUP_STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 
 export function normalizePositions(player = {}) {
@@ -376,7 +378,7 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
 }
 
 export function buildPlayerRatings(players, values, metadata = {}) {
-  if (metadata.role !== 'owner') throw new TypeError('Solo Migue puede puntuar a los jugadores.');
+  if (!roleCanUseOwnerFeatures(metadata.role)) throw new TypeError('Solo Migue puede puntuar a los jugadores.');
   if (!Array.isArray(players) || !players.length) throw new TypeError('Debe haber jugadores para puntuar.');
   if (!metadata.matchId || !metadata.date) throw new TypeError('La puntuación debe estar vinculada a un partido.');
 

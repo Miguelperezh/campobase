@@ -1,17 +1,47 @@
 import { buildMutation, mergeCloudRecord } from './sync-core.js';
+import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 
-const DB_NAME = 'campobase';
+const REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
 
-let databasePromise;
+const databasePromises = new Map();
+let activeDatabaseName = REAL_DB_NAME;
+let demoSession = null;
+let demoStores = null;
 let cloudStore;
 let syncPromise;
 
+export function currentDatabaseName() {
+  return activeDatabaseName;
+}
+
+export function isDemoDatabase() {
+  return Boolean(demoSession);
+}
+
+export function configureDemoDatabase(session, now = Date.now()) {
+  if (!isDemoSessionActive(session, now)) throw new TypeError('La sesión demo está caducada o no es válida.');
+  if (demoSession?.id !== session.id) demoStores = Object.fromEntries(STORES.map((store) => [store, new Map()]));
+  demoSession = structuredClone(session);
+  activeDatabaseName = demoDatabaseName(session);
+}
+
+export function configureRealDatabase() {
+  demoSession = null;
+  activeDatabaseName = REAL_DB_NAME;
+}
+
+export async function deleteDemoDatabase(session) {
+  demoDatabaseName(session);
+  if (demoSession?.id === session.id) demoStores = Object.fromEntries(STORES.map((store) => [store, new Map()]));
+}
+
 export function openDatabase() {
-  databasePromise ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+  const name = activeDatabaseName;
+  if (!databasePromises.has(name)) databasePromises.set(name, new Promise((resolve, reject) => {
+    const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
       for (const store of [...STORES, SYNC_QUEUE]) {
         if (!request.result.objectStoreNames.contains(store)) {
@@ -22,8 +52,8 @@ export function openDatabase() {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(new Error('Cierra otras pestañas de CampoBase para actualizar la base de datos.'));
-  });
-  return databasePromise;
+  }));
+  return databasePromises.get(name);
 }
 
 function requestResult(request) {
@@ -42,11 +72,13 @@ function transactionDone(transaction) {
 }
 
 async function localGetAll(store) {
+  if (isDemoDatabase()) return [...demoStores[store].values()].map((value) => structuredClone(value));
   const db = await openDatabase();
   return requestResult(db.transaction(store, 'readonly').objectStore(store).getAll());
 }
 
 async function localGetOne(store, id) {
+  if (isDemoDatabase()) return structuredClone(demoStores[store].get(id));
   const db = await openDatabase();
   return requestResult(db.transaction(store, 'readonly').objectStore(store).get(id));
 }
@@ -75,6 +107,10 @@ export async function getOne(store, id) {
 }
 
 export async function put(store, value) {
+  if (isDemoDatabase()) {
+    demoStores[store].set(value.id, structuredClone(value));
+    return value;
+  }
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).put(value);
@@ -88,6 +124,13 @@ export async function putBatch(recordsByStore) {
   const storeNames = Object.keys(recordsByStore);
   if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
     throw new TypeError('La operación contiene almacenes no válidos.');
+  }
+  if (isDemoDatabase()) {
+    for (const [storeName, records] of Object.entries(recordsByStore)) {
+      if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
+      for (const record of records) demoStores[storeName].set(record.id, structuredClone(record));
+    }
+    return;
   }
   const db = await openDatabase();
   const transaction = db.transaction([...storeNames, SYNC_QUEUE], 'readwrite');
@@ -103,6 +146,10 @@ export async function putBatch(recordsByStore) {
 }
 
 export async function remove(store, id) {
+  if (isDemoDatabase()) {
+    demoStores[store].delete(id);
+    return;
+  }
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).delete(id);
@@ -112,6 +159,7 @@ export async function remove(store, id) {
 }
 
 export async function flushSyncQueue() {
+  if (isDemoDatabase()) return false;
   if (!canUseCloud()) return false;
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
@@ -149,6 +197,7 @@ async function queueInitialRecords(store, records) {
 }
 
 export async function syncFromCloud() {
+  if (isDemoDatabase()) return { online: false, pending: 0, demo: true };
   if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
   if (syncPromise) return syncPromise;
   syncPromise = (async () => {
@@ -189,6 +238,13 @@ export async function exportDatabase() {
 }
 
 export async function importDatabase(backup) {
+  if (isDemoDatabase()) {
+    for (const storeName of STORES) {
+      demoStores[storeName].clear();
+      for (const record of backup.data[storeName]) demoStores[storeName].set(record.id, structuredClone(record));
+    }
+    return;
+  }
   const db = await openDatabase();
   const transaction = db.transaction([...STORES, SYNC_QUEUE], 'readwrite');
   for (const storeName of STORES) {

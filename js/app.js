@@ -1,4 +1,4 @@
-import { configureCloudStore, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, syncFromCloud } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, buildPlayerRecord } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -6,6 +6,7 @@ import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
 import { planSquadSeed } from './squad-seed.js';
+import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -25,8 +26,9 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
+const DEMO_SESSION_KEY = 'campobase.demoSession';
 let toastTimer;
 let sessionDraftBlocks = [];
 let sessionDraftMeta = null;
@@ -116,6 +118,7 @@ function matchTeams(match) {
 function playerPositions(player) { return normalizePositions(player).join(', ') || 'Sin posición'; }
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
 function showView(viewId) {
+  if (state.role === 'demo' && viewId === 'ajustes') return;
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   $('#app').focus();
@@ -133,6 +136,8 @@ async function refresh() {
   state.format = settings?.format ?? 'F7';
   $('#format').value = state.format;
   $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
+  $('#demo-team-form').elements.teamName.value = state.settings.teamName ?? '';
+  $('#demo-team-form').elements.format.value = state.format;
   renderAll();
 }
 
@@ -404,7 +409,7 @@ function liveDetailsMarkup(prefix, availableIds, match) {
     ...details.injuries.map((item) => `${formatMatchClock(item.second)} · Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
     ...details.incidents.map((item) => `${formatMatchClock(item.second)} · Incidencia: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
   ];
-  const comments = state.role === 'owner' ? `<label>Comentarios solo de Migue<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
+  const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
   const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
@@ -424,7 +429,7 @@ function renderLive() {
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField;
-  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${state.role === 'owner' ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div></div>
+  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div></div>
   <div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>
   <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds, match)}`;
   startTicks();
@@ -444,7 +449,7 @@ function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
   if (!state.timer) {
-    root.innerHTML = `${empty('No hay un partido en vivo. Migue debe prepararlo primero.')}${state.role === 'owner' ? '<button id="close-delegate" class="secondary">Volver a Migue</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}`;
+    root.innerHTML = `${empty('No hay un partido en vivo. Migue debe prepararlo primero.')}${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}`;
     return;
   }
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
@@ -461,7 +466,7 @@ function renderDelegate() {
     : 'No hay jugadores disponibles en el banquillo.';
   const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${state.role === 'owner' ? '<button id="close-delegate" class="secondary">Volver a Migue</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button></div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (2–3)</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button></div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (2–3)</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
 }
 
 function enterDelegateMode() {
@@ -645,7 +650,7 @@ async function finishMatch() {
     state.timer.runningSince = null;
     await persistTimer();
   }
-  if (state.role !== 'owner') {
+  if (!roleCanUseOwnerFeatures(state.role)) {
     renderLive(); renderDelegate();
     return toast('Partido pausado. Solo Migue puede finalizarlo y puntuar a los jugadores.');
   }
@@ -1240,6 +1245,19 @@ async function saveTeamSettings(event) {
   toast('Nombre y modalidad del equipo guardados.');
 }
 
+async function saveDemoTeam(event) {
+  event.preventDefault();
+  if (state.role !== 'demo' || !isDemoDatabase()) return toast('Este formulario solo está disponible en la demo.');
+  const values = formObject(event.currentTarget);
+  const teamName = values.teamName.trim();
+  if (!teamName) return toast('Escribe el nombre del equipo de prueba.');
+  state.format = values.format;
+  state.settings = { ...state.settings, id: 'main', format: state.format, teamName };
+  await put('settings', state.settings);
+  renderAll();
+  toast('Equipo de prueba guardado temporalmente.');
+}
+
 async function savePins(ownerPin, delegatePin) {
   if (ownerPin === delegatePin) throw new TypeError('Los PIN de Migue y delegado deben ser distintos.');
   const salt = crypto.randomUUID();
@@ -1252,7 +1270,10 @@ function applyRole(role) {
   state.role = role;
   try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
   document.body.classList.remove('auth-locked');
-  $('#role-label').textContent = role === 'owner' ? 'Migue' : 'Delegado';
+  $('#role-label').textContent = role === 'owner' ? 'Migue' : role === 'demo' ? 'Demo temporal' : 'Delegado';
+  document.body.classList.toggle('demo-mode', role === 'demo');
+  $('#settings-nav').hidden = role === 'demo';
+  $('#demo-team-panel').classList.toggle('hidden', role !== 'demo');
   if (role === 'delegate') {
     state.delegateMode = true;
     document.body.classList.add('delegate-mode');
@@ -1265,9 +1286,55 @@ function applyRole(role) {
   }
 }
 
-function restoreSessionRole() {
+async function startDemoSession(session) {
+  configureDemoDatabase(session);
+  state.demoSession = session;
+  try { sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(session)); } catch { throw new Error('El navegador debe permitir almacenamiento de sesión para usar la demo.'); }
+  await ensurePhase2Seeded();
+  await ensurePhase2V2Seeded();
+  await ensurePhase2V3Seeded();
+  await ensureRealExercisesSeeded();
+  await ensureSlideshareSeeded();
+  await ensureLegacyExercisesNotPresent();
+  await refresh();
+  const live = await getOne('settings', 'live');
+  state.timer = live?.timer ?? null;
+  state.liveUpdatedAt = live?.updatedAt ?? 0;
+  applyRole('demo');
+  networkStatus();
+}
+
+async function endDemoSession(message = '') {
+  const session = state.demoSession;
+  state.demoSession = null;
+  state.timer = null;
+  clearInterval(state.tick);
+  if (session) await deleteDemoDatabase(session).catch((error) => console.warn('No se pudo eliminar la base demo:', error.message));
+  configureRealDatabase();
+  try {
+    sessionStorage.removeItem(DEMO_SESSION_KEY);
+    sessionStorage.removeItem(SESSION_ROLE_KEY);
+  } catch { /* La base temporal ya no está activa. */ }
+  await synchronizeCloud();
+  showAuth();
+  if (message) $('#auth-error').textContent = message;
+}
+
+async function restoreSessionRole() {
   let role;
   try { role = sessionStorage.getItem(SESSION_ROLE_KEY); } catch { return false; }
+  if (role === 'demo') {
+    let session;
+    try { session = JSON.parse(sessionStorage.getItem(DEMO_SESSION_KEY)); } catch { return false; }
+    if (!isDemoSessionActive(session)) {
+      if (session?.id) await deleteDemoDatabase(session).catch(() => false);
+      configureRealDatabase();
+      try { sessionStorage.removeItem(DEMO_SESSION_KEY); sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión que limpiar. */ }
+      return false;
+    }
+    await startDemoSession(session);
+    return true;
+  }
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
   applyRole(role);
   return true;
@@ -1277,10 +1344,13 @@ function showAuth() {
   try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistente que limpiar. */ }
   document.body.classList.add('auth-locked');
   document.body.classList.remove('delegate-mode');
+  document.body.classList.remove('demo-mode');
+  $('#settings-nav').hidden = false;
+  $('#demo-team-panel').classList.add('hidden');
   state.role = null;
   const initial = !state.settings.ownerPinHash || !state.settings.delegatePinHash;
   $('#auth-title').textContent = initial ? 'Configurar acceso' : 'Acceso a CampoBase';
-  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue (acceso total) o el PIN del delegado (acceso al partido).';
+  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado o el PIN temporal de demo.';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
   $('#login-pin-field').classList.toggle('hidden', initial);
   const form = $('#auth-form');
@@ -1304,6 +1374,9 @@ async function submitAuth(event) {
       const pin = form.elements.pin.value;
       if (await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) applyRole('owner');
       else if (await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) applyRole('delegate');
+      else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
+        await startDemoSession(createDemoSession(crypto.randomUUID()));
+      }
       else throw new TypeError('PIN incorrecto.');
     }
     $('#auth-dialog').close();
@@ -1320,6 +1393,23 @@ async function changePins(event) {
   await savePins(values.ownerPin, values.delegatePin);
   event.currentTarget.reset();
   toast('PIN de Migue y delegado actualizados.');
+}
+
+async function changeDemoPin(event) {
+  event.preventDefault();
+  if (state.role !== 'owner') return toast('Solo Migue puede cambiar el PIN de demo.');
+  const values = formObject(event.currentTarget);
+  if (!await verifyPin(values.currentPin, state.settings.pinSalt, state.settings.ownerPinHash)) return toast('El PIN actual de Migue no es correcto.');
+  if (await verifyPin(values.demoPin, state.settings.pinSalt, state.settings.ownerPinHash)
+      || await verifyPin(values.demoPin, state.settings.pinSalt, state.settings.delegatePinHash)) {
+    return toast('El PIN de demo debe ser distinto de los PIN de Migue y delegado.');
+  }
+  const demoPinSalt = crypto.randomUUID();
+  const demoPinHash = await hashPin(values.demoPin, demoPinSalt);
+  state.settings = { ...state.settings, demoPinSalt, demoPinHash };
+  await put('settings', state.settings);
+  event.currentTarget.reset();
+  toast('PIN de demo guardado.');
 }
 
 async function changeLiveScore(team, delta) {
@@ -1339,6 +1429,10 @@ async function addLiveEvent(prefix) {
 
 async function pollLiveState() {
   if (!state.role) return;
+  if (state.role === 'demo' && !isDemoSessionActive(state.demoSession)) {
+    await endDemoSession('La demostración ha finalizado al cumplirse el límite de dos horas.');
+    return;
+  }
   const live = await getOne('settings', 'live');
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
@@ -1355,7 +1449,9 @@ function wireEvents() {
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
+  $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
+  $('#demo-team-form').addEventListener('submit', (event) => saveDemoTeam(event).catch(handleError));
   $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder()); $('#new-session-exercises').addEventListener('click', () => { showView('sesiones'); sessionBuilder(); }); $('#new-tactic').addEventListener('click', () => tacticBuilder());
   $('#exercise-filters').addEventListener('input', renderExercises);
   $('#exercise-filters').addEventListener('change', renderExercises);
@@ -1566,16 +1662,25 @@ function wireEvents() {
     if (target.matches('.score-step')) await changeLiveScore(target.dataset.scoreTeam, Number(target.dataset.delta));
     if (target.matches('.add-live-event')) await addLiveEvent(target.dataset.prefix);
     if (target.matches('.save-live-comments')) {
-      if (state.role !== 'owner') return toast('Los comentarios son solo de Migue.');
+      if (!roleCanUseOwnerFeatures(state.role)) return toast('Los comentarios son solo de Migue.');
       ensureLiveDetails().comments = $(`#${target.dataset.prefix}-comments`).value.trim();
       await persistTimer(); renderLive(); renderDelegate(); toast('Comentarios guardados.');
     }
-    if (target.id === 'logout') showAuth();
+    if (target.id === 'logout') {
+      if (state.role === 'demo') await endDemoSession();
+      else showAuth();
+    }
   });
 }
 
 function handleError(error) { console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
 function networkStatus() {
+  if (isDemoDatabase()) {
+    document.body.classList.remove('offline');
+    $('#network-label').textContent = `Demo temporal · máximo ${DEMO_DURATION_MS / 3_600_000} h`;
+    $('#network-label').title = 'Datos aislados: no se envían a Supabase.';
+    return;
+  }
   document.body.classList.toggle('offline', !navigator.onLine);
   $('#network-label').textContent = !navigator.onLine
     ? 'Sin conexión · caché local'
@@ -1584,6 +1689,10 @@ function networkStatus() {
 }
 
 async function synchronizeCloud() {
+  if (isDemoDatabase()) {
+    await refresh();
+    return networkStatus();
+  }
   if (!navigator.onLine) return networkStatus();
   try {
     const result = await syncFromCloud();
@@ -1619,7 +1728,7 @@ async function init() {
   await ensureSlideshareSeeded();
   await ensureLegacyExercisesNotPresent();
   await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
-  if (!restoreSessionRole()) showAuth();
+  if (!await restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }
