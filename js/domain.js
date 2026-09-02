@@ -337,6 +337,37 @@ export function suggestDelegateSubstitution(onFieldIds, benchIds, playedSeconds,
   return { outIds: byMostPlayed.slice(0, size), inIds: byLeastPlayed.slice(0, size) };
 }
 
+export function summarizeMinuteTargets(targets) {
+  if (!Array.isArray(targets)) throw new TypeError('Los objetivos de minutos deben ser una lista.');
+  const counts = new Map();
+  for (const target of targets) {
+    const minutes = Number(target?.minutes);
+    if (!Number.isFinite(minutes)) continue;
+    counts.set(minutes, (counts.get(minutes) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([minutes, count]) => ({ minutes, count }))
+    .sort((a, b) => b.minutes - a.minutes);
+}
+
+export function suggestRepartoSubstitutions(onFieldIds, benchIds, playedSeconds, targets) {
+  if (!Array.isArray(onFieldIds) || !Array.isArray(benchIds) || !Array.isArray(targets)) {
+    throw new TypeError('Campo, banquillo y objetivos deben ser listas.');
+  }
+  const targetByPlayer = new Map(targets.map((target) => [target.playerId, Number(target.minutes) * 60]));
+  const targetOf = (id) => targetByPlayer.get(id) ?? 0;
+  // Jugadores del banquillo que aún no alcanzan su objetivo, ordenados por mayor déficit.
+  const benchBelow = benchIds
+    .filter((id) => (playedSeconds[id] ?? 0) < targetOf(id))
+    .sort((a, b) => (targetOf(a) - (playedSeconds[a] ?? 0)) - (targetOf(b) - (playedSeconds[b] ?? 0)));
+  // Jugadores en campo que ya superan su objetivo, ordenados por mayor exceso.
+  const fieldAbove = onFieldIds
+    .filter((id) => (playedSeconds[id] ?? 0) > targetOf(id))
+    .sort((a, b) => (playedSeconds[b] ?? 0) - (playedSeconds[a] ?? 0));
+  const size = Math.min(benchBelow.length, fieldAbove.length);
+  return { outIds: fieldAbove.slice(0, size), inIds: benchBelow.slice(0, size) };
+}
+
 export function shouldSuggestUrgentSubstitution(benchIds, playedSeconds, remainingSeconds) {
   return remainingSeconds <= 10 * 60
     && remainingSeconds >= 0
@@ -400,6 +431,33 @@ export function buildPlayerRatings(players, values, metadata = {}) {
         { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating },
       ],
     };
+  });
+
+  return { ratings, players: updatedPlayers };
+}
+
+export function replacePlayerRatings(players, values, metadata = {}) {
+  if (!roleCanUseOwnerFeatures(metadata.role)) throw new TypeError('Solo Migue puede puntuar a los jugadores.');
+  if (!Array.isArray(players) || !players.length) throw new TypeError('Debe haber jugadores para puntuar.');
+  if (!metadata.matchId || !metadata.date) throw new TypeError('La puntuación debe estar vinculada a un partido.');
+
+  const ratings = {};
+  const updatedPlayers = players.map((player) => {
+    const rawRating = values[player.id];
+    if (rawRating === undefined || rawRating === null || rawRating === '') {
+      throw new TypeError('Debes puntuar a todos los jugadores.');
+    }
+    const rating = Number(rawRating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      throw new RangeError('Cada puntuación debe ser un número entero entre 1 y 5.');
+    }
+    ratings[player.id] = rating;
+    const history = [...(player.ratingHistory ?? [])];
+    const existingIndex = history.findIndex((item) => item.matchId === metadata.matchId);
+    const entry = { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating };
+    if (existingIndex >= 0) history[existingIndex] = entry;
+    else history.push(entry);
+    return { ...player, ratingHistory: history };
   });
 
   return { ratings, players: updatedPlayers };

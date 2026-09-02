@@ -1,4 +1,4 @@
-# CampoBase 2.15.1 — PIN demo corregido
+# CampoBase 2.16.0 — cambios libres, reparto y puntuación en casa
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 91 pruebas automatizadas en 2.15.1.
+- `npm test`: 97 pruebas automatizadas en 2.16.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 

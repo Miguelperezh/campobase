@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.16.0 — 2026-09-02
+
+- Cambio manual libre de 1 a 7 jugadores para Migue y el delegado (antes el delegado solo podía 1, 3 o 7).
+- Cambio automático de 1 a 3 jugadores (antes exigía mínimo 2).
+- Recordatorio fijo «Minutos por jugador» en el partido en vivo, con el reparto objetivo de cada convocado.
+- Botón «Proponer reparto» que sugiere todos los cambios necesarios para que cada convocado alcance su objetivo de minutos, con aviso automático al quedar 10 minutos.
+- Los selectores de portero muestran solo los convocados con posición «Portero»; con uno solo se asigna a ambos tiempos.
+- Puntuar en casa: el partido se finaliza sin obligar a puntuar, y las notas se pueden dar o corregir después desde el detalle del partido.
+- Corregido el «null» que aparecía en el marcador cuando un partido no tenía goles registrados.
+- Corregido el cierre automático de desplegables y el desmarcado de cambios: la sincronización ya no re-renderiza la pantalla mientras se interactúa.
+- Diálogos de detalle de partido y puntuación más anchos.
+- 97 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.0`.
+
 ## 2.15.1 — 2026-09-02
 
 - Corregido el error que aparecía después de guardar el PIN demo porque la referencia del formulario se perdía durante las operaciones asíncronas.

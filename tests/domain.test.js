@@ -14,6 +14,8 @@ import {
   buildPlayerHistory,
   sortAttendanceRecords,
   suggestDelegateSubstitution,
+  suggestRepartoSubstitutions,
+  summarizeMinuteTargets,
   shouldSuggestUrgentSubstitution,
   seasonKey,
   accumulateSeasonMinutes,
@@ -21,6 +23,7 @@ import {
   hashPin,
   verifyPin,
   buildPlayerRatings,
+  replacePlayerRatings,
   sortPlayersByName,
   sortPlayersBySquadNumber,
   updateRotationCounters,
@@ -333,6 +336,57 @@ test('avisa de cambio urgente si quedan diez minutos o menos y alguien lleva och
   assert.equal(shouldSuggestUrgentSubstitution(['c'], { c: 480 }, 601), false);
 });
 
+test('resume los objetivos de minutos agrupando cuántos jugadores tienen cada objetivo', () => {
+  const targets = [
+    { playerId: 'a', minutes: 33 },
+    { playerId: 'b', minutes: 33 },
+    { playerId: 'c', minutes: 32 },
+  ];
+  assert.deepEqual(summarizeMinuteTargets(targets), [
+    { minutes: 33, count: 2 },
+    { minutes: 32, count: 1 },
+  ]);
+});
+
+test('el resumen de objetivos ordena de mayor a menor minutos', () => {
+  const targets = [
+    { playerId: 'a', minutes: 32 },
+    { playerId: 'b', minutes: 34 },
+    { playerId: 'c', minutes: 33 },
+  ];
+  assert.deepEqual(summarizeMinuteTargets(targets), [
+    { minutes: 34, count: 1 },
+    { minutes: 33, count: 1 },
+    { minutes: 32, count: 1 },
+  ]);
+});
+
+test('propone todos los cambios necesarios para que cada convocado alcance su objetivo', () => {
+  // 7 en campo, 3 en banquillo. Objetivo 33 min (1980 s) para todos.
+  const onField = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const bench = ['h', 'i', 'j'];
+  const played = { a: 2400, b: 2400, c: 2400, d: 2400, e: 2400, f: 2400, g: 2400, h: 0, i: 0, j: 0 };
+  const targets = [
+    { playerId: 'a', minutes: 33 }, { playerId: 'b', minutes: 33 }, { playerId: 'c', minutes: 33 },
+    { playerId: 'd', minutes: 33 }, { playerId: 'e', minutes: 33 }, { playerId: 'f', minutes: 33 },
+    { playerId: 'g', minutes: 33 }, { playerId: 'h', minutes: 33 }, { playerId: 'i', minutes: 33 },
+    { playerId: 'j', minutes: 33 },
+  ];
+  const result = suggestRepartoSubstitutions(onField, bench, played, targets);
+  // Los tres del banquillo van por debajo y deben entrar; salen los tres que más llevan.
+  assert.deepEqual(result.inIds.sort(), ['h', 'i', 'j']);
+  assert.equal(result.outIds.length, 3);
+});
+
+test('no propone cambios si todos los convocados ya alcanzan su objetivo', () => {
+  const onField = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const bench = ['h', 'i', 'j'];
+  const played = { a: 1980, b: 1980, c: 1980, d: 1980, e: 1980, f: 1980, g: 1980, h: 1980, i: 1980, j: 1980 };
+  const targets = onField.concat(bench).map((playerId) => ({ playerId, minutes: 33 }));
+  const result = suggestRepartoSubstitutions(onField, bench, played, targets);
+  assert.deepEqual(result, { outIds: [], inIds: [] });
+});
+
 test('la vista delegado puede registrar siete cambios simultáneos de forma explícita', () => {
   const field = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
   const bench = ['h', 'i', 'j', 'k', 'l', 'm', 'n'];
@@ -404,6 +458,25 @@ test('la demo puede completar y puntuar su partido temporal como Migue', () => {
 
   assert.equal(result.ratings.p1, 4);
   assert.equal(result.players[0].ratingHistory[0].matchId, 'm-demo');
+});
+
+test('reemplaza la nota de un partido ya puntuado sin duplicar el historial', () => {
+  const players = [{
+    id: 'a',
+    ratingHistory: [{ matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base', rating: 3 }],
+  }];
+  const result = replacePlayerRatings(players, { a: '5' }, { role: 'owner', matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Atlético Base' });
+
+  assert.deepEqual(result.ratings, { a: 5 });
+  assert.equal(result.players[0].ratingHistory.length, 1);
+  assert.equal(result.players[0].ratingHistory[0].rating, 5);
+});
+
+test('reemplazar la nota exige ser Migue y una nota válida', () => {
+  const players = [{ id: 'a', ratingHistory: [{ matchId: 'm1', date: '2026-09-12T13:00', opponent: 'X', rating: 3 }] }];
+  const metadata = { matchId: 'm1', date: '2026-09-12T13:00', opponent: 'X' };
+  assert.throws(() => replacePlayerRatings(players, { a: '5' }, { ...metadata, role: 'delegate' }), /Solo Migue/i);
+  assert.throws(() => replacePlayerRatings(players, { a: '9' }, { ...metadata, role: 'owner' }), /entre 1 y 5/i);
 });
 
 test('los selectores de portero incluyen a todos los convocados aunque no tengan posición de portero', () => {

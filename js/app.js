@@ -1,6 +1,6 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, buildPlayerRecord } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, buildPlayerRecord } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
@@ -26,7 +26,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', finishing: false, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
 let toastTimer;
@@ -124,6 +124,14 @@ function showView(viewId) {
   $('#app').focus();
 }
 
+function isUserInteracting() {
+  if (document.querySelector('dialog[open]')) return true;
+  const active = document.activeElement;
+  if (active && active.matches('select, input, textarea')) return true;
+  if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
+  return false;
+}
+
 async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   state.players = sortPlayersByName(state.players);
@@ -138,7 +146,7 @@ async function refresh() {
   $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.format.value = state.format;
-  renderAll();
+  if (!isUserInteracting()) renderAll();
 }
 
 function renderAll() {
@@ -390,7 +398,17 @@ function timerSeconds(timer = state.timer) {
 }
 
 function ensureLiveDetails() {
-  state.timer.details = { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {}, ...(state.timer.details ?? {}) };
+  const existing = state.timer.details ?? {};
+  state.timer.details = {
+    goalsFor: Number.isFinite(existing.goalsFor) ? existing.goalsFor : 0,
+    goalsAgainst: Number.isFinite(existing.goalsAgainst) ? existing.goalsAgainst : 0,
+    goals: existing.goals ?? [],
+    cards: existing.cards ?? [],
+    injuries: existing.injuries ?? [],
+    incidents: existing.incidents ?? [],
+    comments: existing.comments ?? '',
+    minuteReasons: existing.minuteReasons ?? {},
+  };
   return state.timer.details;
 }
 
@@ -429,9 +447,9 @@ function renderLive() {
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField;
-  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div></div>
+  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   <div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>
-  <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds, match)}`;
+  <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button><button id="propose-reparto" class="secondary" ${!state.timer.runningSince ? 'disabled' : ''}>Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds, match)}`;
   startTicks();
 }
 
@@ -443,6 +461,24 @@ function livePlayerSeconds(id) {
 function livePlayedSeconds() {
   if (!state.timer) return {};
   return calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, timerSeconds());
+}
+
+function liveCallup() {
+  const match = state.matches.find(({ id }) => id === state.timer?.matchId);
+  return state.callups.find(({ id }) => id === match?.callupId) ?? null;
+}
+
+function liveTargetSummary() {
+  const callup = liveCallup();
+  if (!callup?.targets?.length) return [];
+  return summarizeMinuteTargets(callup.targets);
+}
+
+function targetSummaryMarkup() {
+  const summary = liveTargetSummary();
+  if (!summary.length) return '';
+  const parts = summary.map(({ minutes, count }) => `${count} × ${minutes} min`);
+  return `<p class="target-summary"><strong>Minutos por jugador:</strong> ${parts.join(' · ')}</p>`;
 }
 
 function renderDelegate() {
@@ -466,7 +502,7 @@ function renderDelegate() {
     : 'No hay jugadores disponibles en el banquillo.';
   const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button></div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (2–3)</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
 }
 
 function enterDelegateMode() {
@@ -501,20 +537,43 @@ async function registerDelegateSubstitution(outIds, inIds) {
   state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'delegate' });
   state.timer.onField = nextOnField;
   state.urgentAlertKey = '';
+  state.repartoAlertKey = '';
   await persistTimer();
   renderLive(); renderDelegate(); toast('Cambio del delegado registrado.');
+}
+
+async function proposeReparto() {
+  const callup = liveCallup();
+  if (!callup) return toast('No hay partido en vivo.');
+  const played = livePlayedSeconds();
+  const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets ?? []);
+  if (!suggestion.inIds.length) return toast('Todos los convocados ya alcanzan su objetivo de minutos.');
+  const lines = suggestion.inIds.map((id, index) => `Entra ${playerName(id)} · sale ${playerName(suggestion.outIds[index])}`).join('\n');
+  if (await askConfirmation({ title: `Reparto de minutos (${suggestion.inIds.length} cambios)`, message: lines, acceptLabel: 'Registrar cambios' })) {
+    await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
+  }
 }
 
 function updateKeeperOptions(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
   const callup = state.callups.find((item) => item.id === match?.callupId);
-  const players = calledPlayerOptions(state.players, callup?.availableIds ?? []);
-  const options = players.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
-  for (const [index, select] of [$('#first-keeper'), $('#second-keeper')].entries()) {
+  const called = calledPlayerOptions(state.players, callup?.availableIds ?? []);
+  const keepers = called.filter(({ id }) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  const options = keepers.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
+  const first = $('#first-keeper');
+  const second = $('#second-keeper');
+  for (const select of [first, second]) {
     if (!select) continue;
-    select.disabled = !players.length;
-    select.innerHTML = players.length ? `<option value="">Selecciona…</option>${options}` : '<option value="">Sin convocados</option>';
-    select.value = players[index]?.id ?? players[0]?.id ?? '';
+    select.disabled = !keepers.length;
+    select.innerHTML = keepers.length ? `<option value="">Selecciona…</option>${options}` : '<option value="">Sin porteros convocados</option>';
+  }
+  if (keepers.length === 1) {
+    first.value = keepers[0].id;
+    second.value = keepers[0].id;
+  } else if (keepers.length >= 2) {
+    first.value = keepers[0].id;
+    second.value = keepers[1].id;
   }
 }
 
@@ -556,7 +615,25 @@ function startTicks() {
     }
     maybeShowUrgentSubstitution(played, seconds);
     maybeShowMinuteAlert(played, seconds);
+    maybeShowRepartoAlert(seconds);
   }, 1000);
+}
+
+function maybeShowRepartoAlert(elapsedSeconds) {
+  if (!state.timer || state.timer.phase === 'halftime' || state.timer.phase === 'ready') return;
+  const callup = liveCallup();
+  if (!callup?.targets?.length) return;
+  const config = FORMATS[callup.format];
+  const remainingSeconds = Math.max(0, config.duration * 60 - elapsedSeconds);
+  if (remainingSeconds > 10 * 60) return;
+  const played = livePlayedSeconds();
+  const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets);
+  if (!suggestion.inIds.length) return;
+  const key = `${state.timer.events.length}:${suggestion.inIds.join(',')}`;
+  if (state.repartoAlertKey === key) return;
+  state.repartoAlertKey = key;
+  toast(`Quedan ${Math.ceil(remainingSeconds / 60)} min: hay ${suggestion.inIds.length} cambio(s) pendientes para completar el reparto. Pulsa «Proponer reparto».`);
 }
 
 function maybeShowMinuteAlert(played, elapsedSeconds) {
@@ -652,25 +729,44 @@ async function finishMatch() {
   }
   if (!roleCanUseOwnerFeatures(state.role)) {
     renderLive(); renderDelegate();
-    return toast('Partido pausado. Solo Migue puede finalizarlo y puntuar a los jugadores.');
+    return toast('Partido pausado. Solo Migue puede finalizarlo.');
   }
-  const totals = calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, state.timer.elapsed);
-  const match = state.matches.find((item) => item.id === state.timer.matchId); const callup = state.callups.find((item) => item.id === match.callupId);
-  const details = ensureLiveDetails();
-  const maximum = Math.max(...Object.values(totals));
-  const missingReason = callup.availableIds.find((id) => (totals[id] ?? 0) < maximum && !details.minuteReasons[id]);
-  if (missingReason) {
-    details.minuteReasons[missingReason] = 'sin_indicar';
+  state.finishing = true;
+  try {
+    const totals = calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, state.timer.elapsed);
+    const match = state.matches.find((item) => item.id === state.timer.matchId); const callup = state.callups.find((item) => item.id === match.callupId);
+    const details = ensureLiveDetails();
+    const maximum = Math.max(...Object.values(totals));
+    const missingReason = callup.availableIds.find((id) => (totals[id] ?? 0) < maximum && !details.minuteReasons[id]);
+    if (missingReason) details.minuteReasons[missingReason] = 'sin_indicar';
+    const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
+    const updatedPlayers = players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id] }));
+    const completedMatch = { ...match, status: 'finished', playedSeconds: state.timer.elapsed, minuteTotals: totals, ratings: match.ratings ?? null, substitutionEvents: state.timer.events, goalsFor: details.goalsFor, goalsAgainst: details.goalsAgainst, goals: details.goals, cards: details.cards, injuries: details.injuries, incidents: details.incidents, comments: details.comments, minuteReasons: details.minuteReasons, goalkeeperRotation: { firstKeeper: state.timer.firstKeeper, secondKeeper: state.timer.secondKeeper }, finishedAt: Date.now() };
+    const existingAttendance = state.trainings.find((record) => record.kind === 'match' && record.matchId === match.id);
+    const trainingRecords = [];
+    if (!existingAttendance) {
+      const values = { date: match.date.slice(0, 10), notes: 'Registro creado automáticamente al finalizar el partido.' };
+      for (const id of callup.availableIds) values[`status-${id}`] = 'present';
+      trainingRecords.push(buildAttendanceRecord(
+        state.players.filter(({ id }) => callup.availableIds.includes(id)),
+        values,
+        { id: uid(), kind: 'match', matchId: match.id, createdAt: Date.now() },
+      ));
+    }
+    await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
+    state.timer = null; clearInterval(state.tick); await refresh();
+    closeDelegateMode(); showView('partido');
+    toast('Partido finalizado. Puedes puntuar a los jugadores desde el detalle del partido cuando quieras.');
+  } finally {
+    state.finishing = false;
   }
-  const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
-  $('#rating-match-name').textContent = `Puntuación contra ${match.opponent}`;
-  $('#rating-players').innerHTML = players.map((player) => `<label>${escapeHtml(player.name)}<select name="rating-${player.id}" required><option value="">Selecciona…</option>${[1, 2, 3, 4, 5].map((rating) => `<option value="${rating}">${rating}</option>`).join('')}</select></label>`).join('');
-  $('#rating-dialog').showModal();
 }
 
 async function saveMatchRatings(event) {
   event.preventDefault();
-  if (state.finishing || !state.timer) return;
+  if (state.finishing) return;
+  if (state.ratingMatchId) return saveRateMatch(event);
+  if (!state.timer) return;
   state.finishing = true;
   try {
   const totals = calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, state.timer.elapsed);
@@ -703,6 +799,47 @@ async function saveMatchRatings(event) {
   }
 }
 
+function openRateMatch(matchId) {
+  const match = state.matches.find((item) => item.id === matchId);
+  if (!match) return;
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede puntuar a los jugadores.');
+  const callup = state.callups.find((item) => item.id === match.callupId);
+  const players = state.players.filter(({ id }) => (callup?.availableIds ?? []).includes(id));
+  if (!players.length) return toast('Este partido no tiene convocados para puntuar.');
+  state.ratingMatchId = matchId;
+  $('#rating-match-name').textContent = `Puntuación contra ${match.opponent}`;
+  $('#rating-players').innerHTML = players.map((player) => {
+    const current = match.ratings?.[player.id];
+    return `<label>${escapeHtml(player.name)}<select name="rating-${player.id}" required><option value="">Selecciona…</option>${[1, 2, 3, 4, 5].map((rating) => `<option value="${rating}" ${Number(current) === rating ? 'selected' : ''}>${rating}</option>`).join('')}</select></label>`;
+  }).join('');
+  $('#match-detail-dialog').close();
+  $('#rating-dialog').showModal();
+}
+
+async function saveRateMatch(event) {
+  event.preventDefault();
+  if (state.finishing) return;
+  const matchId = state.ratingMatchId;
+  const match = state.matches.find((item) => item.id === matchId);
+  if (!match) return;
+  state.finishing = true;
+  try {
+    const callup = state.callups.find((item) => item.id === match.callupId);
+    const players = state.players.filter(({ id }) => (callup?.availableIds ?? []).includes(id));
+    const values = formObject(event.target.closest('form'));
+    const ratingValues = Object.fromEntries(players.map(({ id }) => [id, values[`rating-${id}`]]));
+    const rated = replacePlayerRatings(players, ratingValues, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
+    const updatedMatch = { ...match, ratings: rated.ratings };
+    await putBatch({ players: rated.players, matches: [updatedMatch] });
+    $('#rating-dialog').close();
+    state.ratingMatchId = null;
+    await refresh();
+    toast('Puntuaciones guardadas.');
+  } finally {
+    state.finishing = false;
+  }
+}
+
 async function saveMatch(event) {
   event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const existing = values.id ? await getOne('matches', values.id) : null;
   const goalsFor = values.goalsFor === '' ? null : Number(values.goalsFor); const goalsAgainst = values.goalsAgainst === '' ? null : Number(values.goalsAgainst);
@@ -713,7 +850,7 @@ async function saveMatch(event) {
 
 function renderMatches() {
   const list = [...state.matches].sort((a,b)=>a.date.localeCompare(b.date));
-  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${match.goalsFor !== null && match.goalsFor !== undefined ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
+  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; const hasScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst); return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
 }
 
 function editMatch(id) {
@@ -746,7 +883,7 @@ function showMatchDetail(id) {
     ${eventList(match.cards, 'Tarjetas', 'card')}
     ${eventList(match.injuries, 'Lesiones', 'injury')}
     ${eventList(match.incidents, 'Incidencias', 'incident')}
-    ${match.status === 'finished' ? `<div class="button-row"><button class="reopen-match secondary" data-id="${match.id}">Reabrir partido (volver a jugarlo)</button></div>` : ''}
+    ${match.status === 'finished' ? `<div class="button-row"><button class="rate-match secondary" data-id="${match.id}">Puntuar jugadores</button><button class="reopen-match secondary" data-id="${match.id}">Reabrir partido (volver a jugarlo)</button></div>` : ''}
   `;
   $('#match-detail-dialog').showModal();
 }
@@ -1614,6 +1751,7 @@ function wireEvents() {
     if (target.matches('.add-detail-event')) await addDetailEvent(target.dataset.id);
     if (target.matches('.remove-match-event')) await removeMatchEvent($('#match-detail-dialog').dataset.matchId, target.dataset.kind, Number(target.dataset.index));
     if (target.matches('.reopen-match')) await reopenMatch(target.dataset.id);
+    if (target.matches('.rate-match')) openRateMatch(target.dataset.id);
     if (target.matches('.remove-player-incident')) await removePlayerIncident(target.dataset.key);
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
@@ -1642,7 +1780,7 @@ function wireEvents() {
     if (target.id === 'close-delegate') closeDelegateMode();
     if (target.id === 'delegate-manual-sub') {
       const outIds = checkedValues('delegate-out'); const inIds = checkedValues('delegate-in');
-      if (![1, 3, 7].includes(outIds.length) || outIds.length !== inIds.length) return toast('Selecciona el mismo número de entradas y salidas: 1, 3 o 7.');
+      if (outIds.length < 1 || outIds.length > 7 || outIds.length !== inIds.length) return toast('Selecciona el mismo número de entradas y salidas: de 1 a 7.');
       try { await registerDelegateSubstitution(outIds, inIds); } catch (error) { handleError(error); }
     }
     if (target.id === 'apply-delegate-suggestion' || target.id === 'urgent-change') {
@@ -1656,9 +1794,12 @@ function wireEvents() {
       const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = state.callups.find(({ id }) => id === match?.callupId);
       const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
       const count = Math.min(3, bench.length, state.timer.onField.length);
-      if (count < 2) return toast('No hay suficientes jugadores para un cambio automático de 2–3.');
+      if (count < 1) return toast('No hay suficientes jugadores para un cambio automático.');
       const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, livePlayedSeconds(), count);
       if (await askConfirmation({ title: `Cambio automático de ${count}`, message: `Entran ${suggestion.inIds.map(playerName).join(', ')} y salen ${suggestion.outIds.map(playerName).join(', ')}.`, acceptLabel: 'Registrar cambio' })) await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
+    }
+    if (target.id === 'propose-reparto' || target.id === 'delegate-propose-reparto') {
+      await proposeReparto();
     }
     if (target.matches('.score-step')) await changeLiveScore(target.dataset.scoreTeam, Number(target.dataset.delta));
     if (target.matches('.add-live-event')) await addLiveEvent(target.dataset.prefix);
