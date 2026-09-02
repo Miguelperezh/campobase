@@ -116,6 +116,10 @@ function matchTeams(match) {
   return { home: away ? match.opponent : myTeamName(), away: away ? myTeamName() : match.opponent, mySide: away ? 'away' : 'home' };
 }
 function playerPositions(player) { return normalizePositions(player).join(', ') || 'Sin posición'; }
+function keeperIdsFromCallup(callup) {
+  const ids = callup?.availableIds ?? [];
+  return ids.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+}
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
@@ -307,7 +311,8 @@ function updateTargetPreview() {
   try {
     const selection = callupSelectionFromForm(form);
     if (!selection.availableIds.length) { preview.innerHTML = '<p class="warning panel">No hay jugadores convocados.</p>'; return; }
-    const targets = calculateMinuteTargets(selection.availableIds, FORMATS[state.format].duration, FORMATS[state.format].players);
+    const keeperIds = selection.availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+    const targets = calculateMinuteTargets(selection.availableIds, FORMATS[state.format].duration, FORMATS[state.format].players, keeperIds);
     const manual = selection.exclusions.filter(({ automatic }) => !automatic);
     const automatic = selection.exclusions.filter(({ automatic: isAutomatic }) => isAutomatic);
     const exclusionList = (items) => items.length ? `<ul class="plain-list">${items.map(({ playerId, reason }) => `<li><strong>${escapeHtml(playerName(playerId))}</strong> — ${escapeHtml(EXCLUSION_REASONS[reason] ?? reason)}</li>`).join('')}</ul>` : '<p class="meta">Nadie.</p>';
@@ -351,7 +356,8 @@ async function saveCallup(event) {
   const excludedIds = exclusions.map(({ playerId }) => playerId);
   const format = existing?.format ?? state.format;
   const config = FORMATS[format];
-  const targets = calculateMinuteTargets(availableIds, config.duration, config.players);
+  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  const targets = calculateMinuteTargets(availableIds, config.duration, config.players, keeperIds);
   const callup = { id: existing?.id ?? uid(), matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? Date.now(), updatedAt: Date.now() };
   const nextCallups = [...state.callups.filter(({ id }) => id !== callup.id), callup];
   const matchesToSave = [{ ...match, callupId: callup.id, format }];
@@ -468,6 +474,11 @@ function liveCallup() {
   return state.callups.find(({ id }) => id === match?.callupId) ?? null;
 }
 
+function liveKeeperIds() {
+  const ids = [state.timer?.firstKeeper, state.timer?.secondKeeper].filter(Boolean);
+  return [...new Set(ids)];
+}
+
 function liveTargetSummary() {
   const callup = liveCallup();
   if (!callup?.targets?.length) return [];
@@ -496,7 +507,7 @@ function renderDelegate() {
   const played = livePlayedSeconds();
   const fieldIds = state.timer.onField;
   const benchIds = callup.availableIds.filter((id) => !fieldIds.includes(id));
-  const suggestion = suggestDelegateSubstitution(fieldIds, benchIds, played, 1);
+  const suggestion = suggestDelegateSubstitution(fieldIds, benchIds, played, 1, liveKeeperIds());
   const suggestionText = suggestion.inIds.length
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
     : 'No hay jugadores disponibles en el banquillo.';
@@ -547,7 +558,7 @@ async function proposeReparto() {
   if (!callup) return toast('No hay partido en vivo.');
   const played = livePlayedSeconds();
   const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets ?? []);
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets ?? [], liveKeeperIds());
   if (!suggestion.inIds.length) return toast('Todos los convocados ya alcanzan su objetivo de minutos.');
   const lines = suggestion.inIds.map((id, index) => `Entra ${playerName(id)} · sale ${playerName(suggestion.outIds[index])}`).join('\n');
   if (await askConfirmation({ title: `Reparto de minutos (${suggestion.inIds.length} cambios)`, message: lines, acceptLabel: 'Registrar cambios' })) {
@@ -628,7 +639,7 @@ function maybeShowRepartoAlert(elapsedSeconds) {
   if (remainingSeconds > 10 * 60) return;
   const played = livePlayedSeconds();
   const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets);
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets, liveKeeperIds());
   if (!suggestion.inIds.length) return;
   const key = `${state.timer.events.length}:${suggestion.inIds.join(',')}`;
   if (state.repartoAlertKey === key) return;
@@ -662,7 +673,7 @@ function maybeShowUrgentSubstitution(played, elapsedSeconds) {
   const benchIds = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
   const remainingSeconds = Math.max(0, config.duration * 60 - elapsedSeconds);
   if (!shouldSuggestUrgentSubstitution(benchIds, played, remainingSeconds)) return;
-  const suggestion = suggestDelegateSubstitution(state.timer.onField, benchIds, played, 1);
+  const suggestion = suggestDelegateSubstitution(state.timer.onField, benchIds, played, 1, liveKeeperIds());
   const key = `${state.timer.events.length}:${suggestion.inIds[0] ?? ''}`;
   if (!suggestion.inIds.length || state.urgentAlertKey === key) return;
   state.urgentAlertKey = key;
@@ -1786,7 +1797,7 @@ function wireEvents() {
     if (target.id === 'apply-delegate-suggestion' || target.id === 'urgent-change') {
       const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = state.callups.find(({ id }) => id === match?.callupId);
       const played = livePlayedSeconds(); const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-      const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, played, 1);
+      const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, played, 1, liveKeeperIds());
       $('#urgent-dialog')?.close();
       try { await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds); } catch (error) { handleError(error); }
     }
@@ -1795,7 +1806,7 @@ function wireEvents() {
       const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
       const count = Math.min(3, bench.length, state.timer.onField.length);
       if (count < 1) return toast('No hay suficientes jugadores para un cambio automático.');
-      const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, livePlayedSeconds(), count);
+      const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, livePlayedSeconds(), count, liveKeeperIds());
       if (await askConfirmation({ title: `Cambio automático de ${count}`, message: `Entran ${suggestion.inIds.map(playerName).join(', ')} y salen ${suggestion.outIds.map(playerName).join(', ')}.`, acceptLabel: 'Registrar cambio' })) await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds);
     }
     if (target.id === 'propose-reparto' || target.id === 'delegate-propose-reparto') {

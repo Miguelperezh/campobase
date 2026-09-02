@@ -75,18 +75,26 @@ function positiveInteger(value, label) {
   }
 }
 
-export function calculateMinuteTargets(playerIds, durationMinutes, playersOnField) {
+export function calculateMinuteTargets(playerIds, durationMinutes, playersOnField, keeperIds = []) {
   if (!Array.isArray(playerIds) || playerIds.length === 0) {
     throw new TypeError('Debe haber al menos un jugador disponible.');
   }
   positiveInteger(durationMinutes, 'La duración');
   positiveInteger(playersOnField, 'Los jugadores en campo');
+  const keepers = new Set(Array.isArray(keeperIds) ? keeperIds : []);
   const totalMinutes = durationMinutes * playersOnField;
-  const base = Math.floor(totalMinutes / playerIds.length);
-  const remainder = totalMinutes % playerIds.length;
-  return playerIds.map((playerId, index) => ({
+  // Los porteros tienen minutos fijos: uno juega el partido completo; dos, un tiempo cada uno.
+  const keeperCount = playerIds.filter((id) => keepers.has(id)).length;
+  const keeperMinutes = keeperCount === 1 ? durationMinutes : keeperCount >= 2 ? durationMinutes / 2 : 0;
+  const keeperTotal = keeperCount * keeperMinutes;
+  const fieldIds = playerIds.filter((id) => !keepers.has(id));
+  const fieldTotal = totalMinutes - keeperTotal;
+  const base = fieldIds.length ? Math.floor(fieldTotal / fieldIds.length) : 0;
+  const remainder = fieldIds.length ? fieldTotal % fieldIds.length : 0;
+  const fieldTargets = new Map(fieldIds.map((playerId, index) => [playerId, base + (index < remainder ? 1 : 0)]));
+  return playerIds.map((playerId) => ({
     playerId,
-    minutes: base + (index < remainder ? 1 : 0),
+    minutes: keepers.has(playerId) ? keeperMinutes : (fieldTargets.get(playerId) ?? 0),
   }));
 }
 
@@ -329,11 +337,14 @@ export function applySubstitution(onFieldIds, outIds, inIds, availableIds, maxCh
   return onFieldIds.filter((id) => !outIds.includes(id)).concat(inIds);
 }
 
-export function suggestDelegateSubstitution(onFieldIds, benchIds, playedSeconds, count = 1) {
+export function suggestDelegateSubstitution(onFieldIds, benchIds, playedSeconds, count = 1, keeperIds = []) {
   if (!Number.isInteger(count) || count < 1) throw new RangeError('El número de cambios debe ser positivo.');
-  const size = Math.min(count, onFieldIds.length, benchIds.length);
-  const byMostPlayed = [...onFieldIds].sort((a, b) => (playedSeconds[b] ?? 0) - (playedSeconds[a] ?? 0) || String(a).localeCompare(String(b)));
-  const byLeastPlayed = [...benchIds].sort((a, b) => (playedSeconds[a] ?? 0) - (playedSeconds[b] ?? 0) || String(a).localeCompare(String(b)));
+  const keepers = new Set(Array.isArray(keeperIds) ? keeperIds : []);
+  const eligibleOnField = onFieldIds.filter((id) => !keepers.has(id));
+  const eligibleBench = benchIds.filter((id) => !keepers.has(id));
+  const size = Math.min(count, eligibleOnField.length, eligibleBench.length);
+  const byMostPlayed = [...eligibleOnField].sort((a, b) => (playedSeconds[b] ?? 0) - (playedSeconds[a] ?? 0) || String(a).localeCompare(String(b)));
+  const byLeastPlayed = [...eligibleBench].sort((a, b) => (playedSeconds[a] ?? 0) - (playedSeconds[b] ?? 0) || String(a).localeCompare(String(b)));
   return { outIds: byMostPlayed.slice(0, size), inIds: byLeastPlayed.slice(0, size) };
 }
 
@@ -350,19 +361,20 @@ export function summarizeMinuteTargets(targets) {
     .sort((a, b) => b.minutes - a.minutes);
 }
 
-export function suggestRepartoSubstitutions(onFieldIds, benchIds, playedSeconds, targets) {
+export function suggestRepartoSubstitutions(onFieldIds, benchIds, playedSeconds, targets, keeperIds = []) {
   if (!Array.isArray(onFieldIds) || !Array.isArray(benchIds) || !Array.isArray(targets)) {
     throw new TypeError('Campo, banquillo y objetivos deben ser listas.');
   }
+  const keepers = new Set(Array.isArray(keeperIds) ? keeperIds : []);
   const targetByPlayer = new Map(targets.map((target) => [target.playerId, Number(target.minutes) * 60]));
   const targetOf = (id) => targetByPlayer.get(id) ?? 0;
-  // Jugadores del banquillo que aún no alcanzan su objetivo, ordenados por mayor déficit.
+  // Jugadores del banquillo (sin porteros) que aún no alcanzan su objetivo, ordenados por mayor déficit.
   const benchBelow = benchIds
-    .filter((id) => (playedSeconds[id] ?? 0) < targetOf(id))
+    .filter((id) => !keepers.has(id) && (playedSeconds[id] ?? 0) < targetOf(id))
     .sort((a, b) => (targetOf(a) - (playedSeconds[a] ?? 0)) - (targetOf(b) - (playedSeconds[b] ?? 0)));
-  // Jugadores en campo que ya superan su objetivo, ordenados por mayor exceso.
+  // Jugadores en campo (sin porteros) que ya superan su objetivo, ordenados por mayor exceso.
   const fieldAbove = onFieldIds
-    .filter((id) => (playedSeconds[id] ?? 0) > targetOf(id))
+    .filter((id) => !keepers.has(id) && (playedSeconds[id] ?? 0) > targetOf(id))
     .sort((a, b) => (playedSeconds[b] ?? 0) - (playedSeconds[a] ?? 0));
   const size = Math.min(benchBelow.length, fieldAbove.length);
   return { outIds: fieldAbove.slice(0, size), inIds: benchBelow.slice(0, size) };

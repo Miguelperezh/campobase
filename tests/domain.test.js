@@ -96,6 +96,28 @@ test('rechaza un reparto imposible sin jugadores disponibles', () => {
   assert.throws(() => calculateMinuteTargets([], 70, 7), /disponible/i);
 });
 
+test('con un portero, este juega el partido completo y el resto se reparte entre los de campo', () => {
+  const ids = ['gk', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+  const targets = calculateMinuteTargets(ids, 70, 7, ['gk']);
+  const byId = Object.fromEntries(targets.map((t) => [t.playerId, t.minutes]));
+  assert.equal(byId.gk, 70);
+  // 9 jugadores de campo reparten 420 minutos (70 * 6 plazas de campo).
+  const field = ids.filter((id) => id !== 'gk');
+  assert.equal(field.reduce((sum, id) => sum + byId[id], 0), 420);
+  assert.equal(targets.reduce((sum, t) => sum + t.minutes, 0), 490);
+});
+
+test('con dos porteros, cada uno juega un tiempo (35 min) y el resto se reparte entre los de campo', () => {
+  const ids = ['gk1', 'gk2', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  const targets = calculateMinuteTargets(ids, 70, 7, ['gk1', 'gk2']);
+  const byId = Object.fromEntries(targets.map((t) => [t.playerId, t.minutes]));
+  assert.equal(byId.gk1, 35);
+  assert.equal(byId.gk2, 35);
+  const field = ids.filter((id) => id !== 'gk1' && id !== 'gk2');
+  assert.equal(field.reduce((sum, id) => sum + byId[id], 0), 420);
+  assert.equal(targets.reduce((sum, t) => sum + t.minutes, 0), 490);
+});
+
 test('propone dejar fuera primero a quienes menos veces han quedado fuera', () => {
   const players = [
     { id: 'a', name: 'Ana', outsideCount: 2, lastExcludedAt: 5 },
@@ -385,6 +407,29 @@ test('no propone cambios si todos los convocados ya alcanzan su objetivo', () =>
   const targets = onField.concat(bench).map((playerId) => ({ playerId, minutes: 33 }));
   const result = suggestRepartoSubstitutions(onField, bench, played, targets);
   assert.deepEqual(result, { outIds: [], inIds: [] });
+});
+
+test('el reparto nunca propone sacar ni meter al portero', () => {
+  const onField = ['gk', 'a', 'b', 'c', 'd', 'e', 'f'];
+  const bench = ['h', 'i', 'j'];
+  const played = { gk: 2400, a: 2400, b: 2400, c: 2400, d: 2400, e: 2400, f: 2400, h: 0, i: 0, j: 0 };
+  const targets = [
+    { playerId: 'gk', minutes: 70 },
+    { playerId: 'a', minutes: 33 }, { playerId: 'b', minutes: 33 }, { playerId: 'c', minutes: 33 },
+    { playerId: 'd', minutes: 33 }, { playerId: 'e', minutes: 33 }, { playerId: 'f', minutes: 33 },
+    { playerId: 'h', minutes: 33 }, { playerId: 'i', minutes: 33 }, { playerId: 'j', minutes: 33 },
+  ];
+  const result = suggestRepartoSubstitutions(onField, bench, played, targets, ['gk']);
+  assert.ok(!result.outIds.includes('gk'), 'el portero no sale');
+  assert.ok(!result.inIds.includes('gk'), 'el portero no entra');
+});
+
+test('el cambio automático nunca propone sacar al portero', () => {
+  const onField = ['gk', 'a', 'b', 'c', 'd', 'e', 'f'];
+  const bench = ['h', 'i', 'j'];
+  const played = { gk: 2400, a: 2400, b: 2400, c: 2400, d: 2400, e: 2400, f: 2400, h: 0, i: 0, j: 0 };
+  const result = suggestDelegateSubstitution(onField, bench, played, 3, ['gk']);
+  assert.ok(!result.outIds.includes('gk'), 'el portero no sale en el automático');
 });
 
 test('la vista delegado puede registrar siete cambios simultáneos de forma explícita', () => {
