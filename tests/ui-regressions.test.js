@@ -1,19 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.15.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.15.1 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.15.0');
-  assert.equal(lock.version, '2.15.0');
-  assert.equal(lock.packages[''].version, '2.15.0');
-  assert.match(sw, /campobase-v2\.15\.0/);
+  assert.equal(pkg.version, '2.15.1');
+  assert.equal(lock.version, '2.15.1');
+  assert.equal(lock.packages[''].version, '2.15.1');
+  assert.match(sw, /campobase-v2\.15\.1/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -124,7 +125,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.15\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.15\.1/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {
@@ -194,6 +195,40 @@ test('el PIN demo abre una sesión aislada de dos horas sin ajustes ni datos rea
   assert.match(db, /if \(isDemoDatabase\(\)\) return \{ online: false, pending: 0, demo: true \}/);
   assert.match(css, /\.demo-mode \.club-crest\{display:none\}/);
   assert.match(sw, /demo-session\.js/);
+});
+
+test('guardar el PIN demo conserva el formulario durante las operaciones asíncronas', async () => {
+  const app = await projectFile('js/app.js');
+  const source = app.slice(app.indexOf('async function changeDemoPin'), app.indexOf('async function changeLiveScore'));
+  const form = { resetCalled: false, reset() { this.resetCalled = true; } };
+  let currentTargetReads = 0;
+  const event = {
+    preventDefault() {},
+    get currentTarget() {
+      currentTargetReads += 1;
+      return currentTargetReads === 1 ? form : null;
+    },
+  };
+  const state = { role: 'owner', settings: { id: 'main', pinSalt: 'owner-salt', ownerPinHash: 'owner-hash', delegatePinHash: 'delegate-hash' } };
+  const verifications = [true, false, false];
+  let message = '';
+
+  await runInNewContext(`${source}; changeDemoPin(event);`, {
+    state,
+    toast: (value) => { message = value; },
+    formObject: () => ({ currentPin: '2468', demoPin: '9999' }),
+    verifyPin: async () => verifications.shift(),
+    hashPin: async () => 'demo-hash',
+    put: async () => {},
+    crypto: { randomUUID: () => 'demo-salt' },
+    event,
+  });
+
+  assert.equal(currentTargetReads, 1);
+  assert.equal(form.resetCalled, true);
+  assert.equal(message, 'PIN de demo guardado.');
+  assert.equal(state.settings.demoPinSalt, 'demo-salt');
+  assert.equal(state.settings.demoPinHash, 'demo-hash');
 });
 
 test('la demo conserva toda la operativa de Migue pero nunca precarga su plantilla', async () => {

@@ -1398,7 +1398,8 @@ async function changePins(event) {
 async function changeDemoPin(event) {
   event.preventDefault();
   if (state.role !== 'owner') return toast('Solo Migue puede cambiar el PIN de demo.');
-  const values = formObject(event.currentTarget);
+  const form = event.currentTarget;
+  const values = formObject(form);
   if (!await verifyPin(values.currentPin, state.settings.pinSalt, state.settings.ownerPinHash)) return toast('El PIN actual de Migue no es correcto.');
   if (await verifyPin(values.demoPin, state.settings.pinSalt, state.settings.ownerPinHash)
       || await verifyPin(values.demoPin, state.settings.pinSalt, state.settings.delegatePinHash)) {
@@ -1408,7 +1409,7 @@ async function changeDemoPin(event) {
   const demoPinHash = await hashPin(values.demoPin, demoPinSalt);
   state.settings = { ...state.settings, demoPinSalt, demoPinHash };
   await put('settings', state.settings);
-  event.currentTarget.reset();
+  form.reset();
   toast('PIN de demo guardado.');
 }
 

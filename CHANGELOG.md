@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.15.1 — 2026-09-02
+
+- Corregido el error que aparecía después de guardar el PIN demo porque la referencia del formulario se perdía durante las operaciones asíncronas.
+- Verificado de extremo a extremo: el PIN demo se crea, se guarda y abre una sesión temporal aislada, sin plantilla real ni acceso a Ajustes.
+- 91 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.15.1`.
+
 ## 2.15.0 — 2026-09-01
 
 - PIN de demostración: Migue puede crear un PIN temporal que abre una sesión aislada de dos horas, sin acceso a sus datos reales ni a Ajustes.
