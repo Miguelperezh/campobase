@@ -479,10 +479,16 @@ function liveKeeperIds() {
   return [...new Set(ids)];
 }
 
-function liveTargetSummary() {
+function liveTargets() {
   const callup = liveCallup();
-  if (!callup?.targets?.length) return [];
-  return summarizeMinuteTargets(callup.targets);
+  if (!callup?.availableIds?.length) return [];
+  const config = FORMATS[callup.format];
+  const keeperIds = keeperIdsFromCallup(callup);
+  return calculateMinuteTargets(callup.availableIds, config.duration, config.players, keeperIds);
+}
+
+function liveTargetSummary() {
+  return summarizeMinuteTargets(liveTargets());
 }
 
 function targetSummaryMarkup() {
@@ -558,7 +564,7 @@ async function proposeReparto() {
   if (!callup) return toast('No hay partido en vivo.');
   const played = livePlayedSeconds();
   const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets ?? [], liveKeeperIds());
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, liveTargets(), liveKeeperIds());
   if (!suggestion.inIds.length) return toast('Todos los convocados ya alcanzan su objetivo de minutos.');
   const lines = suggestion.inIds.map((id, index) => `Entra ${playerName(id)} · sale ${playerName(suggestion.outIds[index])}`).join('\n');
   if (await askConfirmation({ title: `Reparto de minutos (${suggestion.inIds.length} cambios)`, message: lines, acceptLabel: 'Registrar cambios' })) {
@@ -633,13 +639,13 @@ function startTicks() {
 function maybeShowRepartoAlert(elapsedSeconds) {
   if (!state.timer || state.timer.phase === 'halftime' || state.timer.phase === 'ready') return;
   const callup = liveCallup();
-  if (!callup?.targets?.length) return;
+  if (!callup?.availableIds?.length) return;
   const config = FORMATS[callup.format];
   const remainingSeconds = Math.max(0, config.duration * 60 - elapsedSeconds);
   if (remainingSeconds > 10 * 60) return;
   const played = livePlayedSeconds();
   const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, callup.targets, liveKeeperIds());
+  const suggestion = suggestRepartoSubstitutions(state.timer.onField, bench, played, liveTargets(), liveKeeperIds());
   if (!suggestion.inIds.length) return;
   const key = `${state.timer.events.length}:${suggestion.inIds.join(',')}`;
   if (state.repartoAlertKey === key) return;

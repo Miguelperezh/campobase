@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.16.2 — 2026-09-02
+
+- El recordatorio «Minutos por jugador» y la propuesta de reparto recalculan los objetivos en vivo con los porteros actuales, en vez de leer valores guardados con la lógica antigua.
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.2`.
+
 ## 2.16.1 — 2026-09-02
 
 - Los porteros tienen minutos fijos en el reparto: uno juega el partido completo (70 min en F7), dos juegan un tiempo cada uno (35 min).
