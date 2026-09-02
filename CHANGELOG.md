@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.1 — 2026-09-02
+
+- Los porteros tienen minutos fijos en el reparto: uno juega el partido completo (70 min en F7), dos juegan un tiempo cada uno (35 min).
+- Los porteros quedan excluidos de los cambios automáticos y de la propuesta de reparto; solo Migue puede cambiarlos a mano.
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.1`.
+
 ## 2.16.0 — 2026-09-02
 
 - Cambio manual libre de 1 a 7 jugadores para Migue y el delegado (antes el delegado solo podía 1, 3 o 7).
