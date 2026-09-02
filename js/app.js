@@ -488,7 +488,9 @@ function liveTargets() {
 }
 
 function liveTargetSummary() {
-  return summarizeMinuteTargets(liveTargets());
+  const keepers = new Set(liveKeeperIds());
+  const fieldTargets = liveTargets().filter((target) => !keepers.has(target.playerId));
+  return summarizeMinuteTargets(fieldTargets);
 }
 
 function targetSummaryMarkup() {

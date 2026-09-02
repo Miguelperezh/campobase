@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.16.3 — 2026-09-02
+
+- El recordatorio «Minutos por jugador» ya no muestra a los porteros: solo los jugadores de campo. Los minutos del portero siguen contando en su ficha de plantilla.
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.3`.
+
 ## 2.16.2 — 2026-09-02
 
 - El recordatorio «Minutos por jugador» y la propuesta de reparto recalculan los objetivos en vivo con los porteros actuales, en vez de leer valores guardados con la lógica antigua.
