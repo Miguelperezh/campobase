@@ -1851,6 +1851,666 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 164
   }
 }
+,
+{
+  "id": "CAMPOBASE-23-CENTROS-BANDA-REMATE",
+  "nombre": "Centros desde banda y remate",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Centro raso",
+      "Centro aéreo",
+      "Llegada escalonada",
+      "Remate"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Lateral + 3 rematadores activos + relevos rotativos."
+    },
+    "material": "1 portería + balones + petos + conos",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "Lateral conduce hasta línea de fondo y alterna centro raso al primer palo y alto al segundo."
+      },
+      {
+        "nombre": "Variante 1 · defensor pasivo",
+        "instruccion": "Añadir defensor pasivo en el área."
+      },
+      {
+        "nombre": "Variante 2 · ambas bandas",
+        "instruccion": "Realizar centros desde derecha e izquierda."
+      },
+      {
+        "nombre": "Variante 3 · chilena/tijera",
+        "instruccion": "El último rematador puede finalizar con chilena o tijera."
+      }
+    ],
+    "explicacion_breve": "El lateral llega a línea de fondo y el balón viaja claramente desde el pie del centrador hasta la zona de remate.",
+    "leyenda": "Azul: lateral/centro · Rojo: rematadores · Verde: portero · Morado: defensor pasivo · Balón grande durante el centro para que se vea el vuelo."
+  },
+  "detalle": {
+    "objetivos": [
+      "Centro raso y al segundo palo.",
+      "Llegada en tres tiempos.",
+      "Remate de cabeza y volea."
+    ],
+    "claves_entrenador": [
+      "Llegar a línea de fondo antes de centrar.",
+      "Centro raso 1 m antes del primer palo.",
+      "Centro alto hacia zona de penalti/segundo palo.",
+      "Llegadas en velocidad."
+    ],
+    "montaje": [
+      "Lateral con balón en banda.",
+      "Tres rematadores.",
+      "Portería con portero."
+    ],
+    "desarrollo": [
+      "Lateral conduce a fondo.",
+      "Centra.",
+      "Tres rematadores atacan primer palo, penalti y segundo.",
+      "Rotan funciones."
+    ],
+    "que_buscamos": [
+      "Timing.",
+      "Calidad del centro.",
+      "Ocupar tres alturas."
+    ],
+    "que_observar": [
+      "Llegada real a fondo.",
+      "Visibilidad del balón en el centro.",
+      "Coordinación de las entradas."
+    ],
+    "correcciones": [
+      "Hasta fondo.",
+      "Centro tenso.",
+      "No entréis los tres a la vez."
+    ],
+    "reglas": [
+      "Alternar raso/aéreo cada 2 min."
+    ],
+    "si_sale_mal": [
+      "Reducir velocidad y oposición."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "Defensor pasivo.",
+      "Ambas bandas.",
+      "Chilena/tijera último rematador."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Centros desde banda y remate",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Corregido: todas las variantes son fases reales del GIF.",
+        "Corregido: el balón se ve viajar en el centro desde línea de fondo.",
+        "Revisión final: centrador llega a unos metros de la línea de fondo y el balón se amplía visualmente durante el centro."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-23-CENTROS-BANDA-REMATE/CampoBase_23_Centros_Banda_Remate_VARIANTES_OK.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-23-CENTROS-BANDA-REMATE/frames/f",
+    "total": 188,
+    "frameMs": 139
+  }
+},
+{
+  "id": "CAMPOBASE-24-RONDO-POSICIONAL-6V3",
+  "nombre": "Rondo posicional 6v3 (medio campo)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Posesión",
+    "que_se_trabaja": [
+      "Pase entre líneas",
+      "Hombre libre",
+      "Orientación corporal",
+      "Movilidad"
+    ],
+    "tiempo_estimado_15": "18 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "6 de posesión + 3 defensores activos; relevos rotativos."
+    },
+    "material": "Balón + petos + conos para 25 x 20 m",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "4 exteriores + 2 interiores contra 3 defensores."
+      },
+      {
+        "nombre": "Variante 1 · exteriores a 1 toque",
+        "instruccion": "Exteriores a un toque."
+      },
+      {
+        "nombre": "Variante 2 · 6v4",
+        "instruccion": "Añadir un cuarto defensor."
+      },
+      {
+        "nombre": "Variante 3 · un bote interiores",
+        "instruccion": "Interiores pueden usar un solo bote antes de pasar."
+      }
+    ],
+    "explicacion_breve": "Cada fase tiene circulación distinta y movimiento real de exteriores, interiores y defensores.",
+    "leyenda": "Rojo: 4 exteriores + 2 interiores · Azul: defensores · Negro: pase · Discontinuas: movimiento real de apoyo/basculación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Pase entre líneas.",
+      "Reconocer hombre libre.",
+      "Movilidad posicional."
+    ],
+    "claves_entrenador": [
+      "Interiores orientados.",
+      "Exteriores con amplitud.",
+      "Defensores basculan juntos."
+    ],
+    "montaje": [
+      "4 exteriores.",
+      "2 interiores.",
+      "3 defensores."
+    ],
+    "desarrollo": [
+      "Circular.",
+      "Buscar interiores.",
+      "Moverse tras pase.",
+      "Defensores cierran líneas."
+    ],
+    "que_buscamos": [
+      "Recepciones entre líneas.",
+      "Cambio de orientación.",
+      "Movimiento sin balón."
+    ],
+    "que_observar": [
+      "Que no se queden estáticos.",
+      "Que cambie la ruta del balón.",
+      "Que los defensores basculen."
+    ],
+    "correcciones": [
+      "Muévete después de pasar.",
+      "Perfílate.",
+      "Defensores juntos."
+    ],
+    "reglas": [
+      "4 series de 3 min."
+    ],
+    "si_sale_mal": [
+      "Más espacio o menos presión."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "1 toque exteriores.",
+      "6v4.",
+      "1 bote interiores."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Rondo posicional 6v3 (medio campo)",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Corregido: variantes animadas de verdad.",
+        "Corregido: jugadores se mueven en cada fase y cambia la circulación.",
+        "Revisión final: se amplió el desplazamiento visual de exteriores, interiores y defensores para que el GIF enseñe claramente el movimiento sin balón."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-24-RONDO-POSICIONAL-6V3/CampoBase_24_Rondo_Posicional_6v3_VARIANTES_OK.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-24-RONDO-POSICIONAL-6V3/frames/f",
+    "total": 195,
+    "frameMs": 127
+  }
+},
+{
+  "id": "CAMPOBASE-26-4V4-DOS-ARCOS-PORTEROS",
+  "nombre": "4v4 con dos arcos y porteros",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Juego reducido",
+    "que_se_trabaja": [
+      "Decisión",
+      "Apoyos",
+      "Cobertura",
+      "Juego rápido"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "4v4 + 2 porteros; relevos rotativos."
+    },
+    "material": "2 porterías reales + balones + petos + conos",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "4v4 con porteros y saque rápido."
+      },
+      {
+        "nombre": "Variante 1 · 3 toques",
+        "instruccion": "Máximo 3 toques."
+      },
+      {
+        "nombre": "Variante 2 · comodín",
+        "instruccion": "Comodín neutral con equipo en posesión."
+      },
+      {
+        "nombre": "Variante 3 · pared x2",
+        "instruccion": "Gol tras pared vale doble."
+      }
+    ],
+    "explicacion_breve": "Cada variante es una fase real del GIF y ambos equipos atacan siempre la portería rival.",
+    "leyenda": "Azul ataca derecha · Rojo ataca izquierda · Verde porteros · Amarillo comodín · Negro pase/tiro"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aplicar fundamentos.",
+      "Decisión bajo presión.",
+      "Competición."
+    ],
+    "claves_entrenador": [
+      "Apoyos cortos.",
+      "Cobertura.",
+      "Pasar antes que conducir en exceso."
+    ],
+    "montaje": [
+      "30 x 20 m.",
+      "2 porterías reales.",
+      "4v4 + porteros."
+    ],
+    "desarrollo": [
+      "Partido.",
+      "Saque rápido.",
+      "4x4 min."
+    ],
+    "que_buscamos": [
+      "Orientación correcta.",
+      "Paredes.",
+      "Finalización rápida."
+    ],
+    "que_observar": [
+      "Dirección de ataque.",
+      "Apoyos.",
+      "Transición."
+    ],
+    "correcciones": [
+      "Ataca la rival.",
+      "Apoya cerca.",
+      "Después de pared, finaliza."
+    ],
+    "reglas": [
+      "4 series de 4 min.",
+      "1 min descanso."
+    ],
+    "si_sale_mal": [
+      "Marcar sentidos de ataque."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "3 toques.",
+      "Comodín neutral.",
+      "Gol doble tras pared."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "4v4 con dos arcos y porteros",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Corregido: las tres variantes son fases reales.",
+        "Corregido: azul finaliza a derecha y rojo a izquierda, nunca en propia."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-26-4V4-DOS-ARCOS-PORTEROS/CampoBase_26_4v4_Porteros_VARIANTES_OK.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-26-4V4-DOS-ARCOS-PORTEROS/frames/f",
+    "total": 184,
+    "frameMs": 135
+  }
+},
+{
+  "id": "CAMPOBASE-27-PRESION-BANDA-3V2",
+  "nombre": "Presión en banda 3v2",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Técnico-táctico",
+    "que_se_trabaja": [
+      "Presión",
+      "Cobertura",
+      "Cerrar el centro",
+      "Salida tras recuperación"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Un solo pasillo fuente-faithful: 3 atacantes + 2 defensores activos; 10 relevos. En 3v3: 6 activos + 9 relevos."
+    },
+    "material": "1 miniportería + balones + petos + conos para pasillo 30 x 15 m; segunda miniportería solo en variante 2.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "3 atacantes contra 2 defensores. El cercano orienta al portador hacia la línea; el segundo corta el pase interior."
+      },
+      {
+        "nombre": "Variante 1 · 3v3",
+        "instruccion": "Añadir un tercer defensor."
+      },
+      {
+        "nombre": "Variante 2 · segunda mini",
+        "instruccion": "Añadir miniportería para los defensores en la banda contraria."
+      },
+      {
+        "nombre": "Variante 3 · 2 toques",
+        "instruccion": "Atacantes a máximo 2 toques."
+      }
+    ],
+    "explicacion_breve": "Los dos defensores trabajan coordinados: uno fuerza al poseedor hacia banda y el otro protege el pase hacia el centro. Tras robo, salen con balón hacia miniportería.",
+    "leyenda": "Rojo atacantes · Azul defensores · Negro pase/salida · Azul discontinuo presión/cobertura"
+  },
+  "detalle": {
+    "objetivos": [
+      "Cerrar el centro y forzar al rival a banda.",
+      "Triangulación defensiva.",
+      "Salir con balón controlado tras recuperar."
+    ],
+    "claves_entrenador": [
+      "Defensor cercano orienta cuerpo hacia la línea.",
+      "Defensor de cobertura ve portador y hombre interior.",
+      "Comunicación: afuera, interior."
+    ],
+    "montaje": [
+      "Pasillo lateral de 30 x 15 m.",
+      "3 atacantes con balón.",
+      "2 defensores.",
+      "1 miniportería de salida."
+    ],
+    "desarrollo": [
+      "Los atacantes conservan/progresan en el pasillo.",
+      "D1 presiona al poseedor y lo orienta a banda.",
+      "D2 corta la línea interior.",
+      "Si recuperan, los defensores atacan la miniportería.",
+      "Series de 90 s."
+    ],
+    "que_buscamos": [
+      "Que no salten ambos al balón.",
+      "Que el centro quede cerrado.",
+      "Salida limpia tras robo."
+    ],
+    "que_observar": [
+      "Perfil de D1.",
+      "Posición de D2.",
+      "Comunicación."
+    ],
+    "correcciones": [
+      "Afuera.",
+      "Cierra dentro.",
+      "Uno presiona, otro cubre."
+    ],
+    "reglas": [
+      "Series de 90 s."
+    ],
+    "si_sale_mal": [
+      "Aumentar ancho del pasillo o reducir velocidad atacante."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "3v3.",
+      "Segunda miniportería defensiva.",
+      "Atacantes a 2 toques."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Presión en banda 3v2",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El GIF mantiene un único pasillo.",
+        "Los relevos representan la adaptación a 15 sin duplicar el ejercicio.",
+        "Las tres variantes son fases reales del GIF."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-27-PRESION-BANDA-3V2/CampoBase_27_Presion_Banda_3v2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-27-PRESION-BANDA-3V2/frames/f",
+    "total": 184,
+    "frameMs": 134
+  }
+},
+{
+  "id": "CAMPOBASE-28-TECNICA-DOS-TOQUES-ESTACIONES",
+  "nombre": "Técnica de dos toques en estaciones",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación",
+    "que_se_trabaja": [
+      "Pase",
+      "Control",
+      "Control orientado",
+      "Conducción",
+      "Pared"
+    ],
+    "tiempo_estimado_15": "15 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "4 estaciones simultáneas: adaptación 4+4+4+3 jugadores. La fuente indica 4 jugadores por estación; con 15 una estación queda con 3 y se rota."
+    },
+    "material": "16 conos para 4 cuadrados + 2 conos interiores extra en estación 3 + 4 balones.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "E1: pase+control interior 2 toques. E2: control orientado y un toque. E3: conducir entre 2 conos antes de pasar. E4: pared antes de pasar."
+      },
+      {
+        "nombre": "Variante 1 · pierna no dominante",
+        "instruccion": "Realizar las tareas usando la pierna no dominante."
+      },
+      {
+        "nombre": "Variante 2 · concurso",
+        "instruccion": "Cerrar con concurso de pases durante 1 minuto."
+      },
+      {
+        "nombre": "Variante 3 · defensor pasivo",
+        "instruccion": "Añadir un defensor pasivo en una estación."
+      }
+    ],
+    "explicacion_breve": "Cuatro cuadrados funcionan a la vez, cada uno con una tarea técnica diferente. El GIF muestra las cuatro simultáneamente y luego las tres variantes reales.",
+    "leyenda": "E1 pase/control · E2 control orientado · E3 conducción entre conos · E4 pared · Azul conducción · Negro pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Pase y control en cuadrados.",
+      "Dominio con ambos pies.",
+      "Desplazamiento tras pase."
+    ],
+    "claves_entrenador": [
+      "Primer toque adelantado.",
+      "Cabeza arriba al recibir.",
+      "Pie de apoyo firme."
+    ],
+    "montaje": [
+      "4 cuadrados de 4 x 4 m.",
+      "Un balón por estación.",
+      "Fuente: 4 jugadores por estación."
+    ],
+    "desarrollo": [
+      "E1: pase y control con interior, dos toques.",
+      "E2: control orientado y un toque.",
+      "E3: conducir entre dos conos antes de pasar.",
+      "E4: pared con compañero antes de pasar."
+    ],
+    "que_buscamos": [
+      "Primer toque útil.",
+      "Pase preciso.",
+      "Movimiento tras intervención."
+    ],
+    "que_observar": [
+      "Orientación corporal.",
+      "Uso de ambos pies.",
+      "Calidad de conducción."
+    ],
+    "correcciones": [
+      "Primer toque hacia delante.",
+      "Cabeza arriba.",
+      "Apoya firme."
+    ],
+    "reglas": [
+      "Cuatro estaciones independientes."
+    ],
+    "si_sale_mal": [
+      "Reducir velocidad y distancia."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "Pierna no dominante.",
+      "Concurso de pases 1 min.",
+      "Defensor pasivo en una estación."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Técnica de dos toques en estaciones",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Con 15 se usa 4+4+4+3 y se rota; la fuente plantea 4 por estación.",
+        "Las tres variantes aparecen como fases reales del GIF.",
+        "Revisión visual: en el concurso de 1 minuto no se muestran marcadores inventados; solo se identifica la fase como CONCURSO."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-28-TECNICA-DOS-TOQUES-ESTACIONES/CampoBase_28_Tecnica_Dos_Toques_Estaciones.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-28-TECNICA-DOS-TOQUES-ESTACIONES/frames/f",
+    "total": 196,
+    "frameMs": 134
+  }
+},
+{
+  "id": "CAMPOBASE-29-RECUPERACION-FINALIZACION-RAPIDA",
+  "nombre": "Recuperación y finalización rápida",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Transición",
+    "que_se_trabaja": [
+      "Robo",
+      "Primer pase vertical",
+      "Transición 3v2",
+      "Finalización rápida"
+    ],
+    "tiempo_estimado_15": "18 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Montaje único: rondo 4v2 + 1 compañero esperando + portero; 7 relevos para completar 15. Tras robo, los 2 defensores + compañero atacan 3v2."
+    },
+    "material": "1 portería real + balones + petos + conos para rondo y medio campo.",
+    "series": [
+      {
+        "nombre": "Base · 8 s",
+        "instruccion": "Tras robo, 2 defensores suman al compañero de mediocampo y atacan 3v2; finalizar antes de 8 s."
+      },
+      {
+        "nombre": "Variante 1 · 6 s",
+        "instruccion": "Reducir el límite a 6 s."
+      },
+      {
+        "nombre": "Variante 2 · usar mediocampista",
+        "instruccion": "Premiar gol que utilice al mediocampista."
+      },
+      {
+        "nombre": "Variante 3 · al menos un pase",
+        "instruccion": "Obligar a realizar al menos un pase antes de rematar."
+      }
+    ],
+    "explicacion_breve": "El ejercicio empieza como rondo 4v2. Cuando uno de los dos defensores roba, ambos se convierten en atacantes, suman al compañero adelantado y atacan 3v2 hacia la portería.",
+    "leyenda": "Rojo: atacantes del rondo que pasan a defender · Azul: defensores del rondo que pasan a atacar · M: compañero esperando"
+  },
+  "detalle": {
+    "objetivos": [
+      "Finalizar en menos de 8 s tras robo.",
+      "Primer pase vertical rápido.",
+      "Llegada coordinada al área."
+    ],
+    "claves_entrenador": [
+      "Primer pase tras robo al hombre más adelantado.",
+      "Carreras al área por banda y centro.",
+      "El que recupera sigue la acción y da cobertura."
+    ],
+    "montaje": [
+      "Rondo 4v2 fuera del área.",
+      "1 compañero esperando en mediocampo.",
+      "Portería real."
+    ],
+    "desarrollo": [
+      "4 atacantes mantienen rondo contra 2 defensores.",
+      "Cuando los defensores recuperan, suman al compañero adelantado.",
+      "Los 3 atacan portería.",
+      "2 de los 4 antiguos atacantes corren a defender.",
+      "Finalizar antes de 8 s.",
+      "Reiniciar."
+    ],
+    "que_buscamos": [
+      "Cambio mental inmediato.",
+      "Verticalidad.",
+      "Ocupar banda y centro."
+    ],
+    "que_observar": [
+      "Quién da primer pase.",
+      "Si los tres atacantes se abren.",
+      "Si los dos defensores persiguen y cierran."
+    ],
+    "correcciones": [
+      "Primer pase vertical.",
+      "Uno banda, uno centro.",
+      "El que roba sigue."
+    ],
+    "reglas": [
+      "Finalizar antes de 8 s en base."
+    ],
+    "si_sale_mal": [
+      "Dar más tiempo o reducir oposición defensiva."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "6 s.",
+      "Premiar gol usando mediocampista.",
+      "Al menos un pase antes del tiro."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Recuperación y finalización rápida",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El GIF muestra primero el rondo y después la transición real 3v2.",
+        "Las tres variantes aparecen como fases reales.",
+        "Los 7 relevos son adaptación para representar exactamente 15 sin duplicar campos."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-29-RECUPERACION-FINALIZACION-RAPIDA/CampoBase_29_Recuperacion_Finalizacion_Rapida.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-29-RECUPERACION-FINALIZACION-RAPIDA/frames/f",
+    "total": 227,
+    "frameMs": 126
+  }
+}
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
