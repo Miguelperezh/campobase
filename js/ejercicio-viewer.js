@@ -117,10 +117,12 @@ export function initValidatedExerciseViewer(root) {
   const img = root.querySelector('.frame-img');
   const btnPlay = root.querySelector('.btn-play');
 
-  let idx = 0, playing = false, speed = 1, timer = null;
+  let idx = 0, playing = false, speed = 1;
   let frames = [];        // frames precargados en memoria (objetos Image)
   let loaded = 0;         // cuántos frames se han cargado ya
   let ready = false;      // true cuando todos están precargados
+  let rafId = null;       // id de requestAnimationFrame
+  let lastTime = 0;       // timestamp del último frame mostrado
 
   function frameSrc(i) {
     return framesBase + String(i).padStart(3, '0') + '.jpg';
@@ -149,11 +151,28 @@ export function initValidatedExerciseViewer(root) {
     const lb = root.querySelector('.lightbox');
     if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
   }
-  function play() {
-    playing = true; btnPlay.textContent = '⏸'; clearInterval(timer);
-    timer = setInterval(() => { idx = idx >= total - 1 ? 0 : idx + 1; show(idx); }, frameMs / speed);
+
+  // Reproducción con requestAnimationFrame: timing suave y sin saltos.
+  function tick(now) {
+    if (!playing) return;
+    const interval = frameMs / speed;
+    if (now - lastTime >= interval) {
+      lastTime = now;
+      idx = idx >= total - 1 ? 0 : idx + 1;
+      show(idx);
+    }
+    rafId = requestAnimationFrame(tick);
   }
-  function pause() { playing = false; btnPlay.textContent = '▶'; clearInterval(timer); }
+  function play() {
+    playing = true; btnPlay.textContent = '⏸';
+    lastTime = performance.now();
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+  function pause() {
+    playing = false; btnPlay.textContent = '▶';
+    cancelAnimationFrame(rafId);
+  }
 
   btnPlay.addEventListener('click', () => playing ? pause() : play());
   root.querySelector('.btn-prev').addEventListener('click', () => { pause(); show(idx - 1); });
