@@ -118,13 +118,34 @@ export function initValidatedExerciseViewer(root) {
   const btnPlay = root.querySelector('.btn-play');
 
   let idx = 0, playing = false, speed = 1, timer = null;
+  let frames = [];        // frames precargados en memoria (objetos Image)
+  let loaded = 0;         // cuántos frames se han cargado ya
+  let ready = false;      // true cuando todos están precargados
 
   function frameSrc(i) {
     return framesBase + String(i).padStart(3, '0') + '.jpg';
   }
+
+  // Precarga todos los frames en memoria para que la reproducción sea fluida.
+  function preload() {
+    frames = new Array(total);
+    for (let i = 0; i < total; i++) {
+      const im = new Image();
+      im.onload = () => {
+        loaded++;
+        if (loaded >= total) { ready = true; }
+      };
+      im.onerror = () => { loaded++; if (loaded >= total) ready = true; };
+      im.src = frameSrc(i);
+      frames[i] = im;
+    }
+  }
+
   function show(i) {
     idx = Math.max(0, Math.min(total - 1, i));
-    img.src = frameSrc(idx);
+    // Usa el frame precargado si está listo; si no, cae a la URL directa.
+    const cached = frames[idx];
+    img.src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
     const lb = root.querySelector('.lightbox');
     if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
   }
@@ -164,6 +185,7 @@ export function initValidatedExerciseViewer(root) {
   });
 
   show(0);
+  preload();
 }
 
 // Visor genérico (se crea una vez por ficha en el HTML; aquí se inicializa el comportamiento).
