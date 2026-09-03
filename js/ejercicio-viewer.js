@@ -16,9 +16,21 @@ export function renderValidatedExerciseHTML(item) {
 
   const pillsTrabaja = (vr.que_se_trabaja || []).map((t) => `<span class="pill trabaja">${esc(t)}</span>`).join('');
 
-  const series = (vr.series || []).map((s, i) =>
-    `<div class="serie"><span class="n">${i + 1}</span><div class="t"><strong>${esc(s.nombre)}</strong>${esc(s.instruccion)}</div></div>`
-  ).join('');
+  // Series: si todas comparten la misma instrucción (o el mismo núcleo), se muestra
+  // el texto una sola vez y solo se indica cuántas series son. Si difieren, se muestra cada una.
+  const seriesList = vr.series || [];
+  const normalizar = (t) => (t || '').trim().replace(/la misma\s+/gi, 'la ');
+  const nucleo = (t) => normalizar(t).split('.')[0].trim();
+  const nucleos = seriesList.map((s) => nucleo(s.instruccion));
+  const todasIguales = seriesList.length > 1 && nucleos.every((n) => n === nucleos[0]);
+  let series;
+  if (todasIguales) {
+    series = `<div class="serie"><span class="n">${seriesList.length}×</span><div class="t">${esc(seriesList[0].instruccion)}</div></div>`;
+  } else {
+    series = seriesList.map((s, i) =>
+      `<div class="serie"><span class="n">${i + 1}</span><div class="t">${esc(s.instruccion)}</div></div>`
+    ).join('');
+  }
 
   const detalleBloques = [
     ['Objetivos', det.objetivos],
@@ -70,11 +82,6 @@ export function renderValidatedExerciseHTML(item) {
           <button type="button" data-s="1" class="on">1×</button>
           <button type="button" data-s="2">2×</button>
         </div>
-        <div class="timeline">
-          <input type="range" class="seek" min="0" max="${total - 1}" value="0" step="1">
-          <span class="t">0 / ${total - 1}</span>
-        </div>
-        <div class="stepinfo">Paso 1 de ${total}</div>
       </div>
     </div>
 
@@ -108,9 +115,6 @@ export function initValidatedExerciseViewer(root) {
   const framesBase = root.dataset.frames || '';
 
   const img = root.querySelector('.frame-img');
-  const seek = root.querySelector('.seek');
-  const timeEl = root.querySelector('.t');
-  const stepEl = root.querySelector('.stepinfo');
   const btnPlay = root.querySelector('.btn-play');
 
   let idx = 0, playing = false, speed = 1, timer = null;
@@ -121,9 +125,6 @@ export function initValidatedExerciseViewer(root) {
   function show(i) {
     idx = Math.max(0, Math.min(total - 1, i));
     img.src = frameSrc(idx);
-    seek.value = idx;
-    timeEl.textContent = idx + ' / ' + (total - 1);
-    stepEl.textContent = 'Paso ' + (idx + 1) + ' de ' + total;
     const lb = root.querySelector('.lightbox');
     if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
   }
@@ -137,7 +138,6 @@ export function initValidatedExerciseViewer(root) {
   root.querySelector('.btn-prev').addEventListener('click', () => { pause(); show(idx - 1); });
   root.querySelector('.btn-next').addEventListener('click', () => { pause(); show(idx + 1); });
   root.querySelector('.btn-restart').addEventListener('click', () => { pause(); show(0); });
-  seek.addEventListener('input', () => { pause(); show(parseInt(seek.value, 10)); });
   root.querySelectorAll('.speed button').forEach((b) => {
     b.addEventListener('click', () => {
       root.querySelectorAll('.speed button').forEach((x) => x.classList.remove('on'));
