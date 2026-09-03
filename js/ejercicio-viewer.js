@@ -175,11 +175,13 @@ export function initValidatedExerciseViewer(root) {
   }
   function play() {
     playing = true; btnPlay.textContent = '⏸';
+    window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
     lastTime = performance.now();
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tick);
   }
   function pause() {
+    if (playing) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
     playing = false; btnPlay.textContent = '▶';
     cancelAnimationFrame(rafId);
   }

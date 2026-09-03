@@ -182,6 +182,8 @@ function isUserInteracting() {
   const active = document.activeElement;
   if (active && active.matches('select, input, textarea')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
+  // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
+  if ((window.__viewersPlaying || 0) > 0) return true;
   return false;
 }
 
