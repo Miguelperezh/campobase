@@ -80,9 +80,9 @@ export function renderValidatedExerciseHTML(item) {
         <button type="button" class="btn-restart" title="Reiniciar">↺</button>
         <button type="button" class="btn-full" title="Pantalla completa">⛶</button>
         <div class="speed">
-          <button type="button" data-s="0.5">0.5×</button>
-          <button type="button" data-s="1" class="on">1×</button>
-          <button type="button" data-s="2">2×</button>
+          <button type="button" data-s="2" class="on">1×</button>
+          <button type="button" data-s="4">2×</button>
+          <button type="button" data-s="8">4×</button>
         </div>
       </div>
     </div>
@@ -122,7 +122,7 @@ export function initValidatedExerciseViewer(root) {
   const img = root.querySelector('.frame-img');
   const btnPlay = root.querySelector('.btn-play');
 
-  let idx = 0, playing = false, speed = 1;
+  let idx = 0, playing = false, speed = 2;
   let frames = [];        // frames precargados en memoria (objetos Image)
   let loaded = 0;         // cuántos frames se han cargado ya
   let ready = false;      // true cuando todos están precargados
