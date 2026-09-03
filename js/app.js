@@ -4,6 +4,8 @@ import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, ca
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
+import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
 import { planSquadSeed } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
@@ -142,6 +144,11 @@ async function refresh() {
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
   state.exercises = settingRecords.filter(({ recordType }) => recordType === 'exercise');
+  // Los ejercicios validados (formato nuevo) viven en JS y sustituyen a los precargados antiguos.
+  state.exercises = [
+    ...state.exercises.filter((item) => item.example !== true),
+    ...EJERCICIOS_VALIDADOS.map(toCampoBaseExercise),
+  ];
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   const settings = settingRecords.find(({ id }) => id === 'main');
@@ -1027,7 +1034,7 @@ function exerciseCardHTML(rawItem) {
     <details><summary>Correcciones breves</summary>${list(item.corrections)}</details>
     <p><strong>Si sale mal:</strong> ${escapeHtml(item.ifBad)}</p>
     <p><strong>Si sale bien:</strong> ${escapeHtml(item.ifGood)}</p>
-    <div class="button-row"><button type="button" class="add-exercise-to-session primary" data-id="${item.id}">Añadir a sesión</button><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
+    <div class="button-row"><button type="button" class="view-exercise secondary" data-exercise-id="${item.id}">Ver</button><button type="button" class="add-exercise-to-session primary" data-id="${item.id}">Añadir a sesión</button><button type="button" class="edit-exercise secondary" data-id="${item.id}">Editar</button><button type="button" class="delete-exercise danger" data-id="${item.id}">Borrar</button></div>
   </article>`;
 }
 
@@ -1043,7 +1050,24 @@ function renderExercises() {
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
-  $('#exercises-list').innerHTML = exercises.length ? exercises.map((rawItem) => exerciseCardHTML(rawItem)).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+  const list = $('#exercises-list');
+  list.innerHTML = exercises.length ? exercises.map((rawItem) => {
+    const validated = findValidatedExercise(rawItem.id);
+    if (validated) return renderValidatedExerciseHTML(validated);
+    return exerciseCardHTML(rawItem);
+  }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+  // Inicializa reproductores y visores de las fichas validadas.
+  list.querySelectorAll('.ejercicio-validado').forEach((root) => {
+    initValidatedExerciseViewer(root);
+    attachLightbox(root);
+    const tiempoInput = root.querySelector('.tiempo-ejercicio');
+    if (tiempoInput) {
+      tiempoInput.addEventListener('input', () => {
+        const ex = state.exercises.find(({ id }) => id === root.dataset.id);
+        if (ex) ex.duration = Number(tiempoInput.value) || 15;
+      });
+    }
+  });
 }
 
 function editExercise(id) {
@@ -1179,6 +1203,24 @@ async function saveTrainingSession(event) {
 }
 
 function showExerciseDetail(exerciseId) {
+  const validated = findValidatedExercise(exerciseId);
+  if (validated) {
+    $('#exercise-detail-title').textContent = validated.nombre;
+    const body = $('#exercise-detail-body');
+    body.innerHTML = renderValidatedExerciseHTML(validated);
+    initValidatedExerciseViewer(body.querySelector('.ejercicio-validado'));
+    attachLightbox(body);
+    // Tiempo editable: actualiza el duration del ejercicio en state para que descuente de la sesión.
+    const tiempoInput = body.querySelector('.tiempo-ejercicio');
+    if (tiempoInput) {
+      tiempoInput.addEventListener('input', () => {
+        const ex = state.exercises.find(({ id }) => id === exerciseId);
+        if (ex) ex.duration = Number(tiempoInput.value) || 15;
+      });
+    }
+    $('#exercise-detail-dialog').showModal();
+    return;
+  }
   const item = state.exercises.find(({ id }) => id === exerciseId);
   if (!item) return toast('El ejercicio ya no está disponible.');
   $('#exercise-detail-title').textContent = item.name;
@@ -1365,22 +1407,14 @@ async function ensureSlideshareSeeded() {
   await putBatch({ settings: [...additions, { id: 'slideshare-seeded', recordType: 'migration', version: 6, createdAt: Date.now() }] });
 }
 
-// Plan A+C: elimina del navegador los ejercicios precargados genéricos (los "6 chinos,
-// 2 siluetas, 4 palos") que quedaron guardados en versiones anteriores. Solo borra los
-// que tienen example:true (precargados) y cuyo id NO está en la lista de buenos, para no
-// tocar los ejercicios que Migue haya creado o editado a mano.
+// Elimina de la base todos los ejercicios precargados antiguos (example:true). Los ejercicios
+// validados (formato nuevo) viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
 async function ensureLegacyExercisesNotPresent() {
-  if (await getOne('settings', 'legacy-exercises-not-present')) return;
+  if (await getOne('settings', 'legacy-exercises-not-present-v2')) return;
   const current = await getAll('settings');
-  const goodIds = new Set([
-    ...REAL_EXERCISES,
-    ...SLIDESHARE_EXERCISES,
-    ...PHASE2_V3_EXERCISES,
-  ].map(({ id }) => id));
-  const toRemove = current.filter(({ recordType, example, id }) =>
-    recordType === 'exercise' && example === true && !goodIds.has(id));
+  const toRemove = current.filter(({ recordType, example }) => recordType === 'exercise' && example === true);
   for (const record of toRemove) await remove('settings', record.id);
-  await put('settings', { id: 'legacy-exercises-not-present', recordType: 'migration', version: 7, createdAt: Date.now() });
+  await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 8, createdAt: Date.now() });
 }
 
 async function exportData() {
