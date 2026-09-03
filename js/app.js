@@ -130,6 +130,7 @@ function showView(viewId) {
 
 function isUserInteracting() {
   if (document.querySelector('dialog[open]')) return true;
+  if (document.querySelector('details[open]')) return true;
   const active = document.activeElement;
   if (active && active.matches('select, input, textarea')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;

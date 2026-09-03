@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.16.4 — 2026-09-02
+
+- Los desplegables de «Ver actividad y estadísticas» y sus submenús (Minutos por temporada, Puntuaciones, Media por temporada, Historial completo) ya no se cierran solos: la sincronización en segundo plano no reconstruye la vista mientras haya un `<details>` abierto.
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.4`.
+
 ## 2.16.3 — 2026-09-02
 
 - El recordatorio «Minutos por jugador» ya no muestra a los porteros: solo los jugadores de campo. Los minutos del portero siguen contando en su ficha de plantilla.
