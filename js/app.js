@@ -69,9 +69,39 @@ function composeDateTime24(day, hour, minute) {
 function setDateTimeFields(form, name, value = '') {
   const [day = '', time = ''] = value.split('T');
   const { hour, minute } = splitTime24(time);
-  form.elements[`${name}Day`].value = day;
+  const { year, month, day: dayNum } = splitDate(day);
+  form.elements[`${name}Day`].value = dayNum;
+  form.elements[`${name}Month`].value = month;
+  form.elements[`${name}Year`].value = year;
   form.elements[`${name}Hour`].value = hour || '00';
   form.elements[`${name}Minute`].value = minute || '00';
+}
+
+// Fecha en formato España DD/MM/AAAA con selectores propios (independiente del locale del navegador).
+function splitDate(value = '') {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '');
+  return { year: match?.[1] ?? '', month: match?.[2] ?? '', day: match?.[3] ?? '' };
+}
+
+function dayOptions(selected = '') {
+  return '<option value="">Día</option>' + Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+}
+function monthOptions(selected = '') {
+  return '<option value="">Mes</option>' + Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+}
+function yearOptions(selected = '') {
+  const current = new Date().getFullYear();
+  return '<option value="">Año</option>' + Array.from({ length: 6 }, (_, i) => String(current - 1 + i)).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+}
+
+function dateMarkup(name, value = '', label = 'Fecha') {
+  const { year, month, day } = splitDate(value);
+  return `<div class="date-24"><select name="${name}Day" required aria-label="${escapeHtml(label)}, día">${dayOptions(day)}</select><span>/</span><select name="${name}Month" required aria-label="${escapeHtml(label)}, mes">${monthOptions(month)}</select><span>/</span><select name="${name}Year" required aria-label="${escapeHtml(label)}, año">${yearOptions(year)}</select></div>`;
+}
+
+function composeDate(day, month, year) {
+  if (!/^\d{2}$/.test(day ?? '') || !/^\d{2}$/.test(month ?? '') || !/^\d{4}$/.test(year ?? '')) throw new TypeError('Selecciona una fecha válida (día, mes y año).');
+  return `${year}-${month}-${day}`;
 }
 
 function askConfirmation({ title = 'Confirmar acción', message, acceptLabel = 'Confirmar', danger = false }) {
@@ -128,6 +158,22 @@ function showView(viewId) {
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   $('#app').focus();
+  applyGlobalSearch();
+}
+
+// Buscador global: filtra los elementos de la vista activa por nombre o palabra.
+function applyGlobalSearch() {
+  const input = $('#global-search');
+  const query = (input?.value ?? '').trim().toLocaleLowerCase('es');
+  const view = document.querySelector('.view.active');
+  if (!view) return;
+  const containers = view.querySelectorAll('.stack, .card-grid, .exercise-grid, .attendance-grid, .selection-grid');
+  containers.forEach((container) => {
+    [...container.children].forEach((child) => {
+      const text = (child.textContent || '').toLocaleLowerCase('es');
+      child.style.display = (!query || text.includes(query)) ? '' : 'none';
+    });
+  });
 }
 
 function isUserInteracting() {
@@ -165,6 +211,7 @@ function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
   renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics();
+  applyGlobalSearch();
 }
 
 function renderPlayers() {
@@ -273,7 +320,7 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
   const options = state.matches.filter((match) => match.status !== 'finished' || match.id === selectedMatchId).sort((a,b)=>a.date.localeCompare(b.date)).map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`).join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend><input name="manualDateDay" type="date" aria-label="Fecha del partido manual">${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -338,7 +385,7 @@ function updateMatchSource() {
   const manual = form.elements.matchSource.value === 'manual';
   $('#manual-match-fields').classList.toggle('hidden', !manual);
   $('#calendar-match-fields').classList.toggle('hidden', manual);
-  for (const name of ['manualDateDay', 'manualDateHour', 'manualDateMinute', 'manualOpponent']) form.elements[name].required = manual;
+  for (const name of ['manualDateDay', 'manualDateMonth', 'manualDateYear', 'manualDateHour', 'manualDateMinute', 'manualOpponent']) form.elements[name].required = manual;
   form.elements.matchId.required = !manual;
 }
 
@@ -349,7 +396,7 @@ async function saveCallup(event) {
   if (!match) return toast('Selecciona un partido del calendario.');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
-    match = { id: uid(), date: composeDateTime24(form.elements.manualDateDay.value, form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, venue: form.elements.manualVenue.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
+    match = { id: uid(), date: composeDateTime24(composeDate(form.elements.manualDateDay.value, form.elements.manualDateMonth.value, form.elements.manualDateYear.value), form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, venue: form.elements.manualVenue.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
   if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
@@ -874,7 +921,7 @@ async function saveRateMatch(event) {
 async function saveMatch(event) {
   event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const existing = values.id ? await getOne('matches', values.id) : null;
   const goalsFor = values.goalsFor === '' ? null : Number(values.goalsFor); const goalsAgainst = values.goalsAgainst === '' ? null : Number(values.goalsAgainst);
-  const date = composeDateTime24(values.dateDay, values.dateHour, values.dateMinute);
+  const date = composeDateTime24(composeDate(values.dateDay, values.dateMonth, values.dateYear), values.dateHour, values.dateMinute);
   await put('matches', { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, venue: values.venue, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
   form.closest('dialog').close(); form.reset(); await refresh(); toast('Partido guardado.');
 }
@@ -981,7 +1028,7 @@ function attendanceBuilder(matchId = '', recordId = '') {
     return `<div class="check-row attendance-row"><strong>${escapeHtml(player.name)}</strong><select name="status-${player.id}" aria-label="Estado de ${escapeHtml(player.name)}"><option value="present" ${entry.status === 'present' ? 'selected' : ''}>Presente</option><option value="late" ${entry.status === 'late' ? 'selected' : ''}>Tarde</option><option value="absent" ${entry.status === 'absent' ? 'selected' : ''}>Ausente</option></select><div class="arrival-time ${entry.status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span>${time24Markup(`arrivalTime-${player.id}`, entry.arrivalTime, `Hora de llegada de ${player.name}`)}</div><input name="note-${player.id}" value="${escapeHtml(entry.note)}" maxlength="200" placeholder="Incidencia o comentario" aria-label="Nota de ${escapeHtml(player.name)}"></div>`;
   }).join('');
   root.classList.remove('hidden');
-  root.innerHTML = `<form id="training-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><div class="form-row"><label>Tipo de registro<select name="kind"><option value="training" ${kind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match" ${kind === 'match' ? 'selected' : ''}>Partido</option></select></label><label>Fecha<input name="date" type="date" value="${escapeHtml(existing?.date ?? match?.date.slice(0, 10) ?? today)}" required></label></div><label class="${kind === 'match' ? '' : 'hidden'}">Partido<select name="matchId" ${kind === 'match' ? 'required' : ''}><option value="">Selecciona…</option>${matchOptions}</select></label>${kind === 'match' && !callup ? '<p class="warning panel">Selecciona un partido con convocatoria.</p>' : `<div class="check-list">${rows}</div>`}<label>Notas del registro<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="training-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><div class="form-row"><label>Tipo de registro<select name="kind"><option value="training" ${kind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match" ${kind === 'match' ? 'selected' : ''}>Partido</option></select></label><label>Fecha${dateMarkup('date', existing?.date ?? match?.date.slice(0, 10) ?? today, 'Fecha del registro')}</label></div><label class="${kind === 'match' ? '' : 'hidden'}">Partido<select name="matchId" ${kind === 'match' ? 'required' : ''}><option value="">Selecciona…</option>${matchOptions}</select></label>${kind === 'match' && !callup ? '<p class="warning panel">Selecciona un partido con convocatoria.</p>' : `<div class="check-list">${rows}</div>`}<label>Notas del registro<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div></form>`;
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -993,6 +1040,7 @@ async function saveTraining(event) {
   if (values.kind === 'match' && !callup) return toast('Selecciona un partido con convocatoria.');
   const players = values.kind === 'match' ? state.players.filter(({ id }) => callup.availableIds.includes(id)) : state.players;
   for (const { id } of players) values[`arrivalTime-${id}`] = composeTime24(values[`arrivalTime-${id}Hour`], values[`arrivalTime-${id}Minute`]);
+  values.date = composeDate(values.dateDay, values.dateMonth, values.dateYear);
   const record = buildAttendanceRecord(players, values, { id: existing?.id ?? uid(), kind: values.kind, matchId: values.matchId, createdAt: existing?.createdAt ?? Date.now() });
   await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
 }
@@ -1049,7 +1097,16 @@ function renderExercises() {
     favorites: form.elements.favorites.checked,
   };
   const exercises = filterExercises(state.exercises, filters)
-    .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es'));
+    .sort((a, b) => {
+      // Los ejercicios validados van primero, en orden inverso (los últimos añadidos arriba).
+      const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
+      const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
+      const aValid = aIdx !== -1, bValid = bIdx !== -1;
+      if (aValid && bValid) return bIdx - aIdx;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es');
+    });
   const list = $('#exercises-list');
   list.innerHTML = exercises.length ? exercises.map((rawItem) => {
     const validated = findValidatedExercise(rawItem.id);
@@ -1105,7 +1162,11 @@ function exerciseOptions(selectedId = '', predicate = () => true) {
 function syncSessionDraft() {
   const form = $('#session-form');
   if (!form) return;
-  sessionDraftMeta = { ...sessionDraftMeta, ...formObject(form) };
+  const values = formObject(form);
+  if (values.dateDay && values.dateMonth && values.dateYear) {
+    values.date = composeDate(values.dateDay, values.dateMonth, values.dateYear);
+  }
+  sessionDraftMeta = { ...sessionDraftMeta, ...values };
   sessionDraftBlocks = $$('.session-block', form).map((row) => ({
     type: row.querySelector('[name="blockType"]').value,
     exerciseId: row.querySelector('[name="blockExerciseId"]').value,
@@ -1138,7 +1199,7 @@ function renderSessionDraft() {
     const item = completeExercise(rawItem);
     return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha<input name="date" type="date" required value="${escapeHtml(sessionDraftMeta?.date ?? '')}"></label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
@@ -1158,7 +1219,10 @@ function openAddToSession(exerciseId) {
   pendingExerciseId = exerciseId;
   const form = $('#add-session-form');
   form.reset();
-  form.elements.date.value = new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  form.elements.dateDay.value = String(today.getDate()).padStart(2, '0');
+  form.elements.dateMonth.value = String(today.getMonth() + 1).padStart(2, '0');
+  form.elements.dateYear.value = String(today.getFullYear());
   form.elements.existingSessionId.innerHTML = state.trainingSessions.length
     ? sortTrainingSessions(state.trainingSessions).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))} · ${session.totalDuration} min</option>`).join('')
     : '<option value="">No hay sesiones guardadas</option>';
@@ -1183,7 +1247,7 @@ async function saveAddToSession(event) {
   }
   if (!values.name.trim()) throw new TypeError('Escribe el nombre de la nueva sesión.');
   $('#add-session-dialog').close();
-  sessionBuilder('', exercise.id, { date: values.date, name: values.name });
+  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), name: values.name });
 }
 
 async function saveTrainingSession(event) {
@@ -1639,6 +1703,7 @@ async function pollLiveState() {
 
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
+  $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
   $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
@@ -1909,8 +1974,15 @@ async function synchronizeCloud() {
 
 async function init() {
   const matchForm = $('#match-form');
+  matchForm.elements.dateDay.innerHTML = dayOptions();
+  matchForm.elements.dateMonth.innerHTML = monthOptions();
+  matchForm.elements.dateYear.innerHTML = yearOptions();
   matchForm.elements.dateHour.innerHTML = selectOptions(24);
   matchForm.elements.dateMinute.innerHTML = selectOptions(60);
+  const addSessionForm = $('#add-session-form');
+  addSessionForm.elements.dateDay.innerHTML = dayOptions();
+  addSessionForm.elements.dateMonth.innerHTML = monthOptions();
+  addSessionForm.elements.dateYear.innerHTML = yearOptions();
   const categoryOptions = EXERCISE_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
   $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
