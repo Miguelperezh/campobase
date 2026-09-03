@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.16.6 — 2026-09-03
+
+- Nueva biblioteca de ejercicios validados con 12 ejercicios (GIF animado + ficha con vista rápida y detalle).
+- Cada ejercicio muestra: tipo, qué se trabaja, tiempo estimado (editable), jugadores, material, series (con dígitos) y explicación breve.
+- Reproductor de la animación con play/pausa, paso a paso, velocidad (0.5×/1×/2×) y pantalla completa con zoom.
+- Botón «Ver detalles» con objetivos, claves del entrenador, montaje, desarrollo, correcciones, reglas, variantes y fuente.
+- El tiempo editable descuenta del total de la sesión (aviso corta/exacta/excedida).
+- Se eliminan los ejercicios precargados antiguos; los validados viven en `js/ejercicios-validados.js`.
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.6`.
+
 ## 2.16.5 — 2026-09-02
 
 - El «Historial completo» de la ficha de jugador se muestra ordenado: fecha, tipo (Convocatoria/Partido/Entrenamiento) y detalle en columnas claras, con el estado de asistencia traducido (Presente/Tarde/Ausente en vez de «present»).

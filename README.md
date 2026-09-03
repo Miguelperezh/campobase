@@ -1,4 +1,4 @@
-# CampoBase 2.16.5 — historial ordenado
+# CampoBase 2.16.6 — biblioteca de ejercicios validados
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 101 pruebas automatizadas en 2.16.5.
+- `npm test`: 101 pruebas automatizadas en 2.16.6.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 

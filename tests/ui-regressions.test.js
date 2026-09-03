@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.16.5 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.16.6 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.16.5');
-  assert.equal(lock.version, '2.16.5');
-  assert.equal(lock.packages[''].version, '2.16.5');
-  assert.match(sw, /campobase-v2\.16\.5/);
+  assert.equal(pkg.version, '2.16.6');
+  assert.equal(lock.version, '2.16.6');
+  assert.equal(lock.packages[''].version, '2.16.6');
+  assert.match(sw, /campobase-v2\.16\.6/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -120,12 +120,12 @@ test('la pizarra completa y el flujo añadir a sesión están conectados en la i
 test('la limpieza elimina los ejercicios precargados malos y el builder de sesión es intuitivo', async () => {
   const [app, sw] = await Promise.all([projectFile('js/app.js'), projectFile('sw.js')]);
   assert.match(app, /ensureLegacyExercisesNotPresent/, 'existe la migración que limpia los malos');
-  assert.match(app, /legacy-exercises-not-present/, 'la migración tiene su flag');
+  assert.match(app, /legacy-exercises-not-present-v2/, 'la migración tiene su flag');
   assert.match(app, /example === true/, 'solo borra los precargados, no los creados a mano');
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.16\.5/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.16\.6/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {
