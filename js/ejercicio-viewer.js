@@ -1,6 +1,8 @@
 // Renderizador y reproductor de la ficha de ejercicio validado.
 // Vista rápida (textos + GIF protagonista) + "Ver detalles" + tiempo editable.
 
+import { FRAME_DURATIONS } from './frame-durations.js';
+
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
 const list = (values) => `<ul class="plain-list">${(values || []).map((v) => `<li>${esc(v)}</li>`).join('')}</ul>`;
@@ -113,6 +115,9 @@ export function initValidatedExerciseViewer(root) {
   const total = Number(root.dataset.total) || 0;
   const frameMs = Number(root.dataset.framems) || 100;
   const framesBase = root.dataset.frames || '';
+  const exerciseId = root.dataset.id || '';
+  // Duraciones reales de cada frame (respetan las pausas entre variantes/series).
+  const durations = FRAME_DURATIONS[exerciseId] || [];
 
   const img = root.querySelector('.frame-img');
   const btnPlay = root.querySelector('.btn-play');
@@ -126,6 +131,12 @@ export function initValidatedExerciseViewer(root) {
 
   function frameSrc(i) {
     return framesBase + String(i).padStart(3, '0') + '.jpg';
+  }
+
+  // Duración real del frame actual (ms), con la velocidad aplicada.
+  function currentFrameMs() {
+    const base = durations[idx] || frameMs;
+    return base / speed;
   }
 
   // Precarga todos los frames en memoria para que la reproducción sea fluida.
@@ -152,11 +163,10 @@ export function initValidatedExerciseViewer(root) {
     if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
   }
 
-  // Reproducción con requestAnimationFrame: timing suave y sin saltos.
+  // Reproducción con requestAnimationFrame: respeta la duración real de cada frame.
   function tick(now) {
     if (!playing) return;
-    const interval = frameMs / speed;
-    if (now - lastTime >= interval) {
+    if (now - lastTime >= currentFrameMs()) {
       lastTime = now;
       idx = idx >= total - 1 ? 0 : idx + 1;
       show(idx);
