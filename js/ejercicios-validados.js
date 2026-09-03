@@ -1402,6 +1402,454 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "total": 48,
     "frameMs": 180
   }
+},
+{
+  "id": "CAMPOBASE-11-DEFENSA-2V2-COBERTURA",
+  "nombre": "Defensa 2v2 con cobertura",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Técnico-táctico",
+    "que_se_trabaja": [
+      "Marca",
+      "Cobertura",
+      "Comunicación",
+      "Salida tras recuperación"
+    ],
+    "tiempo_estimado_15": "20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 campo fuente-faithful: 2 atacantes + 2 defensores activos; 11 jugadores rotan por parejas/roles cada 90 s."
+    },
+    "material": "2 miniporterías + balones + petos + conos para 20 x 15 m",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "2v2. Entrenador entrega a atacantes; primer defensor salta y segundo cubre."
+      },
+      {
+        "nombre": "Variante 1 · 3v2",
+        "instruccion": "Añadir comodín ofensivo permanente."
+      },
+      {
+        "nombre": "Variante 2 · 2 toques",
+        "instruccion": "Limitar al atacante a 2 toques."
+      },
+      {
+        "nombre": "Variante 3 · sin entrada al suelo",
+        "instruccion": "Los defensores no pueden entrar al suelo."
+      }
+    ],
+    "explicacion_breve": "El defensor más cercano sale al poseedor y el compañero se coloca unos 2 m por detrás y hacia el interior. Si recuperan, atacan la miniportería opuesta.",
+    "leyenda": "Rojo: atacantes · Azul: defensores · Morado: entrenador · Amarillo: comodín/relevos · Negro discontinuo: pase/progresión · Azul discontinuo: ajuste defensivo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Marca y cobertura en pareja.",
+      "Comunicación defensiva.",
+      "Salida ordenada tras recuperación."
+    ],
+    "claves_entrenador": [
+      "Defensor del poseedor en línea con portería.",
+      "Cobertura unos 2 m por detrás y hacia el interior.",
+      "Comunicación: tuyo, mío, cubre."
+    ],
+    "montaje": [
+      "Un rectángulo 20 x 15 m.",
+      "Una miniportería en cada extremo.",
+      "Pareja atacante y pareja defensiva.",
+      "Entrenador inicia la acción."
+    ],
+    "desarrollo": [
+      "Entrenador entrega a atacantes.",
+      "Defensor cercano salta al poseedor.",
+      "Segundo defensor cubre detrás/interior.",
+      "Si recuperan, atacan la portería opuesta.",
+      "Series de 90 s con rotación."
+    ],
+    "que_buscamos": [
+      "Que no salten los dos al balón.",
+      "Que la cobertura esté en posición de corregir.",
+      "Transición ordenada tras robo."
+    ],
+    "que_observar": [
+      "Distancia D1-D2.",
+      "Orientación del primer defensor.",
+      "Comunicación."
+    ],
+    "correcciones": [
+      "Uno sale.",
+      "Otro cubre.",
+      "Dos metros detrás.",
+      "Cierra dentro."
+    ],
+    "reglas": [
+      "2v2 base.",
+      "Series de 90 s.",
+      "Tras robo, defensores atacan portería opuesta."
+    ],
+    "si_sale_mal": [
+      "Recolocar la pareja antes de reiniciar."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "Comodín ofensivo permanente 3v2.",
+      "Atacantes máximo 2 toques.",
+      "Defensores sin entrada al suelo."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Defensa 2v2 con cobertura",
+      "adaptacion_operativa": true,
+      "notas": [
+        "GIF corregido para mantener un único campo y dos miniporterías, como en la fuente.",
+        "La cola de 11 jugadores es adaptación para mostrar los 15 sin duplicar el ejercicio."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-11-DEFENSA-2V2-COBERTURA/CampoBase_11_Defensa_2v2_Cobertura_REVISADO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-11-DEFENSA-2V2-COBERTURA/frames/f",
+    "total": 107,
+    "frameMs": 204
+  }
+},
+{
+  "id": "CAMPOBASE-17-FINALIZACION-1V1-TRES-VIAS",
+  "nombre": "Finalización 1v1 con tres vías",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "1v1",
+      "Cambio de ritmo",
+      "Elección de pasillo",
+      "Remate"
+    ],
+    "tiempo_estimado_15": "20 min de ficha; con 15 jugadores se mantiene una sola acción 1v1 y colas, por lo que el número de acciones por jugador puede quedar por debajo de las 12 indicadas por la fuente.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 portero + 7 atacantes + 7 defensores; sale una pareja por acción y ambos vuelven al final de su fila."
+    },
+    "material": "1 portería + balones + conos para 3 pasillos",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "Atacante elige uno de 3 pasillos; defensor sale cuando elige."
+      },
+      {
+        "nombre": "Variante 1 · 3 toques",
+        "instruccion": "Máximo 3 toques antes de tirar."
+      },
+      {
+        "nombre": "Variante 2 · defensor antes",
+        "instruccion": "Defensor sale antes de que el atacante elija pasillo."
+      },
+      {
+        "nombre": "Variante 3 · pierna débil",
+        "instruccion": "Bonificar gol con pierna débil."
+      }
+    ],
+    "explicacion_breve": "El atacante conduce desde mediocampo, elige uno de tres pasillos y entra al 1v1. El defensor parte cerca del área y solo sale al elegirse la vía, salvo en la variante 2.",
+    "leyenda": "Rojo atacante · Azul defensor · Verde portero · Conos tres vías · Rojo remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Encarar 1v1 cerca del área.",
+      "Variar finalización.",
+      "Defender 1v1 dentro del área."
+    ],
+    "claves_entrenador": [
+      "Cambio de ritmo al elegir pasillo.",
+      "Cabeza arriba antes de definir.",
+      "Engañar con el cuerpo."
+    ],
+    "montaje": [
+      "Tres pasillos frente al área.",
+      "Atacante con balón desde mediocampo.",
+      "Defensor en línea de 6 m.",
+      "Portería con portero, tal como aparece en el esquema."
+    ],
+    "desarrollo": [
+      "Atacante elige pasillo.",
+      "Defensor sale al elegirlo.",
+      "Se juega 1v1 hasta remate.",
+      "Ambos rotan al final de sus filas.",
+      "Fuente indica 12 acciones por jugador."
+    ],
+    "que_buscamos": [
+      "Decisión rápida.",
+      "Cambio de ritmo.",
+      "Finalización con oposición."
+    ],
+    "que_observar": [
+      "Momento de elección.",
+      "Salida del defensor.",
+      "Cabeza levantada."
+    ],
+    "correcciones": [
+      "Elige y acelera.",
+      "Engaña con el cuerpo.",
+      "Mira portería."
+    ],
+    "reglas": [
+      "Tres vías.",
+      "1v1.",
+      "Rotación tras cada acción."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta regresión específica."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "Máximo 3 toques antes de tirar.",
+      "Defensor sale antes de elegir pasillo.",
+      "Bonificar gol con pierna débil."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Finalización 1v1 con tres vías",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Las variantes se muestran secuencialmente en el GIF como pestañas, no mezcladas.",
+        "La distribución 7 atacantes + 7 defensores + 1 portero es adaptación para exactamente 15."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-17-FINALIZACION-1V1-TRES-VIAS/CampoBase_17_Finalizacion_1v1_Tres_Vias.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-17-FINALIZACION-1V1-TRES-VIAS/frames/f",
+    "total": 153,
+    "frameMs": 137
+  }
+},
+{
+  "id": "CAMPOBASE-18-PRESION-TRAS-PERDIDA-6S",
+  "nombre": "Presión tras pérdida (counter-press 6 segundos)",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Transición",
+    "que_se_trabaja": [
+      "Presión tras pérdida",
+      "Densidad",
+      "Cierre de líneas",
+      "Repliegue"
+    ],
+    "tiempo_estimado_15": "22 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "6v6 activos + 3 relevos rotativos."
+    },
+    "material": "4 miniporterías + balones + petos + conos para 40 x 30 m",
+    "series": [
+      {
+        "nombre": "Base · 6 s",
+        "instruccion": "Tras pérdida, 6 s para recuperar."
+      },
+      {
+        "nombre": "Variante 1 · 4 s",
+        "instruccion": "Reducir a 4 s."
+      },
+      {
+        "nombre": "Variante 2 · gol bonus",
+        "instruccion": "Bonificar el gol tras counter-press."
+      },
+      {
+        "nombre": "Variante 3 · 2 toques",
+        "instruccion": "Tras recuperar, máximo 2 toques."
+      }
+    ],
+    "explicacion_breve": "Partido 6v6. Al perder, el jugador más cercano presiona al nuevo poseedor y los demás cierran líneas. Si no recuperan en el tiempo, repliegue obligatorio.",
+    "leyenda": "Azul y rojo equipos · Azul discontinuo presión/cierre · 4 miniporterías totales"
+  },
+  "detalle": {
+    "objetivos": [
+      "Recuperar en menos de 6 s tras pérdida.",
+      "Presión coordinada.",
+      "Disciplina colectiva."
+    ],
+    "claves_entrenador": [
+      "Más cercano ataca al portador.",
+      "Los demás cierran líneas de pase.",
+      "Si falla la presión, repliegue rápido y compacto."
+    ],
+    "montaje": [
+      "Campo 40 x 30 m.",
+      "2 miniporterías por equipo.",
+      "6v6.",
+      "3 relevos para completar 15."
+    ],
+    "desarrollo": [
+      "Partido normal.",
+      "Al perder, comienza cuenta.",
+      "Si recuperan a tiempo, se premia la acción según regla.",
+      "Si no, repliegue sobre línea propia.",
+      "4 series de 5 min."
+    ],
+    "que_buscamos": [
+      "Primer salto inmediato.",
+      "Cierre de opciones cercanas.",
+      "Decisión clara de continuar presión o replegar."
+    ],
+    "que_observar": [
+      "Quién salta.",
+      "Distancias entre compañeros.",
+      "Repliegue tras fallo."
+    ],
+    "correcciones": [
+      "Salta el más cercano.",
+      "Cierra líneas.",
+      "Si no llegamos, atrás juntos."
+    ],
+    "reglas": [
+      "Base 6 s.",
+      "4 series de 5 min.",
+      "Si no recuperan, repliegue."
+    ],
+    "si_sale_mal": [
+      "La fuente no define regresión."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "4 s para presionar.",
+      "Bonificar gol tras counter-press.",
+      "2 toques tras recuperación."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Presión tras pérdida (counter-press 6 segundos)",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El GIF mantiene 4 miniporterías totales, 2 por equipo.",
+        "Las variantes se muestran separadas por pestañas.",
+        "La fuente es SUB-14+; no está planteado tal cual para Alevín."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-18-PRESION-TRAS-PERDIDA-6S/CampoBase_18_Presion_Tras_Perdida_6s.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-18-PRESION-TRAS-PERDIDA-6S/frames/f",
+    "total": 184,
+    "frameMs": 134
+  }
+},
+{
+  "id": "CAMPOBASE-21-VELOCIDAD-REACCION-CONOS-COLORES",
+  "nombre": "Velocidad de reacción con conos de colores",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Reacción",
+      "Aceleración corta",
+      "Cambio de dirección"
+    ],
+    "tiempo_estimado_15": "12 min; para 15 jugadores se recomienda montar 3 estaciones idénticas de 5 como adaptación operativa, aunque el GIF representa una sola estación fuente-faithful.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "GIF: 1 jugador activo + cola. Adaptación práctica: 3 estaciones x 5 para reducir esperas."
+    },
+    "material": "Por estación: 4 conos de colores. Para 3 estaciones: 12 conos de colores; balón para variante 2.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "Un color: sprint, tocar cono y volver al centro."
+      },
+      {
+        "nombre": "Variante 1 · dos colores",
+        "instruccion": "Encadenar dos colores."
+      },
+      {
+        "nombre": "Variante 2 · balón",
+        "instruccion": "Añadir balón al final del recorrido."
+      },
+      {
+        "nombre": "Variante 3 · 20 m",
+        "instruccion": "Cerrar con sprint progresivo de 20 m."
+      }
+    ],
+    "explicacion_breve": "Jugador en el centro con cuatro conos a 5 m. A la voz de un color, sprinta, toca el cono y vuelve.",
+    "leyenda": "Cuatro conos por color · Negro: sprint/desplazamiento · Balón solo en variante 2"
+  },
+  "detalle": {
+    "objetivos": [
+      "Reacción ante estímulo.",
+      "Aceleración corta.",
+      "Cambio de dirección a máxima velocidad."
+    ],
+    "claves_entrenador": [
+      "Primer paso explosivo.",
+      "Cambio de dirección con un apoyo.",
+      "Tocar y girar sin pasarse del cono."
+    ],
+    "montaje": [
+      "Jugador en el centro.",
+      "4 conos a 5 m: rojo, azul, verde, amarillo."
+    ],
+    "desarrollo": [
+      "Entrenador dice color.",
+      "Jugador sprinta, toca y vuelve.",
+      "8 reacciones = 1 serie.",
+      "4 series con 90 s descanso."
+    ],
+    "que_buscamos": [
+      "Reacción inmediata.",
+      "Frenado corto.",
+      "Vuelta rápida al centro."
+    ],
+    "que_observar": [
+      "Primer paso.",
+      "Apoyo al girar.",
+      "Que no rebase el cono."
+    ],
+    "correcciones": [
+      "Sal ya.",
+      "Un apoyo y gira.",
+      "No te pases del cono."
+    ],
+    "reglas": [
+      "8 reacciones por serie.",
+      "4 series.",
+      "90 s descanso."
+    ],
+    "si_sale_mal": [
+      "La fuente no aporta regresión específica."
+    ],
+    "si_sale_bien": [
+      "Aplicar variantes."
+    ],
+    "variantes": [
+      "Colores combinados.",
+      "Balón al final.",
+      "Sprint progresivo 20 m."
+    ],
+    "fuente": {
+      "documento": "Libro de Entrenamientos de Futbol - Controla Club.pdf",
+      "ejercicio_original": "Velocidad de reacción con conos de colores",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El GIF representa una única estación como la fuente.",
+        "Las 3 variantes se muestran en pestañas sucesivas.",
+        "La propuesta de 3 estaciones x 5 es solo adaptación para 15, no dato de la fuente.",
+        "En la variante con balón, la fuente no especifica la acción técnica posterior; el GIF únicamente muestra el balón al terminar el recorrido y no inventa una conducción."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-21-VELOCIDAD-REACCION-CONOS-COLORES/CampoBase_21_Velocidad_Reaccion_Conos_Colores.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-21-VELOCIDAD-REACCION-CONOS-COLORES/frames/f",
+    "total": 140,
+    "frameMs": 164
+  }
 }
 ]);
 
