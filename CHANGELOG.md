@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.16.5 — 2026-09-02
+
+- El «Historial completo» de la ficha de jugador se muestra ordenado: fecha, tipo (Convocatoria/Partido/Entrenamiento) y detalle en columnas claras, con el estado de asistencia traducido (Presente/Tarde/Ausente en vez de «present»).
+- 101 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.16.5`.
+
 ## 2.16.4 — 2026-09-02
 
 - Los desplegables de «Ver actividad y estadísticas» y sus submenús (Minutos por temporada, Puntuaciones, Media por temporada, Historial completo) ya no se cierran solos: la sincronización en segundo plano no reconstruye la vista mientras haya un `<details>` abierto.

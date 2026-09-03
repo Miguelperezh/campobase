@@ -244,10 +244,11 @@ export function buildPlayerHistory(playerId, attendanceRecords, callups, matches
   if (!Array.isArray(attendanceRecords) || !Array.isArray(callups) || !Array.isArray(matches)) {
     throw new TypeError('Los históricos deben ser listas.');
   }
+  const statusLabels = { present: 'Presente', late: 'Tarde', absent: 'Ausente' };
   const attendance = attendanceRecords.flatMap((record) => {
     const entry = record.attendance?.find((item) => item.playerId === playerId);
     if (!entry) return [];
-    const detail = [entry.status, entry.arrivalTime ? `Hora ${entry.arrivalTime}` : '', entry.note, record.notes].filter(Boolean).join(' · ');
+    const detail = [statusLabels[entry.status] ?? entry.status, entry.arrivalTime ? `Hora ${entry.arrivalTime}` : '', entry.note, record.notes].filter(Boolean).join(' · ');
     return [{ type: 'attendance', id: record.id, date: record.date, kind: record.kind ?? 'training', detail, createdAt: record.createdAt ?? 0 }];
   });
   const exclusions = callups.flatMap((callup) => (callup.exclusions ?? [])
