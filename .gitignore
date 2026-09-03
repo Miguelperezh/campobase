@@ -3,3 +3,8 @@ coverage/
 node_modules/
 playwright-report/
 test-results/
+.venv-pdf/
+docs/ejercicios/_extract/
+docs/ejercicios/_galeria_controla.html
+docs/ejercicios/_gen_galeria.py
+docs/ejercicios/_piloto/

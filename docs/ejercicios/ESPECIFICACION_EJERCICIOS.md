@@ -175,90 +175,111 @@ El dibujo **no depende de píxeles**. Si la ficha mide 600 px o 2000 px, el ejer
 
 ## 3. Estructura de datos completa
 
+> **Esquema definitivo (2026-09-03, validado con Migue).** Cada ejercicio se divide en **dos bloques de presentación** sobre una misma fuente de datos:
+> - **`vista_rapida`** — lo que se ve mientras se entrena (nombre, tipo, qué se trabaja, tiempo, jugadores, material, series, explicación breve, animación/GIF y leyenda). Sin muro de texto.
+> - **`detalle`** — lo que se consulta solo si hace falta (objetivos, claves del entrenador, montaje, desarrollo, qué buscar, qué observar, correcciones, reglas, si sale mal/bien, variantes y fuente). Se abre con un botón «Ver detalles».
+>
+> El **GIF/pizarra es la vista rápida animada**, el **JSON contiene toda la lógica y los datos**, y el **PDF queda como ficha completa/referencia**.
+
 ### 3.1 Ejercicio (raíz)
 
 ```json
 {
-  "id": "TEC-CON-001",
-  "nombre": "Conducción en zig-zag",
+  "id": "TEC-CON-CAMBIOS-DIRECCION",
+  "nombre": "Circuito de conducción con cambios de dirección",
   "estado": "borrador | validado",
+  "enumerar_ejercicios": false,
 
-  "clasificacion": {
-    "categoria_principal": "Tecnificación individual",
-    "subcategorias": ["Conducción", "Control", "Cambio de dirección", "Coordinación"],
-    "momento_juego": "Técnico aislado"
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación individual",
+    "que_se_trabaja": ["Conducción", "Control", "Cambio de dirección"],
+    "tiempo_estimado_15": "14-16 min",
+    "jugadores": { "total": 15, "organizacion": "3 circuitos x 5" },
+    "material": "8 conos + 5 balones / circuito",
+    "series": [
+      { "nombre": "Serie 1 · Interior", "instruccion": "..." },
+      { "nombre": "Serie 2 · Exterior", "instruccion": "..." },
+      { "nombre": "Serie 3 · Suela / Recorte", "instruccion": "..." }
+    ],
+    "explicacion_breve": "Recorrido en zigzag entre dos filas de conos; al llegar, regreso por fuera con el balón.",
+    "animacion": {
+      "gif": "Animacion_..._VALIDADA.gif",
+      "leyenda": "Azul: jugador · Balón junto al poseedor · Cono naranja/rojo · Negro: conducción · Azul discontinua: regreso con balón"
+    }
   },
 
-  "nivel": "Principiante",
-
-  "edad": {
-    "min": 6,
-    "max": 12,
-    "recomendada": "Alevín 10-11",
-    "apto_alevin": "si"
+  "detalle": {
+    "objetivos": ["..."],
+    "claves_entrenador": ["..."],
+    "montaje": ["..."],
+    "desarrollo": ["..."],
+    "que_buscamos": ["..."],
+    "que_observar": ["..."],
+    "correcciones": ["..."],
+    "reglas": ["..."],
+    "si_sale_mal": ["..."],
+    "si_sale_bien": ["..."],
+    "variantes": ["..."],
+    "fuente": {
+      "documento": "...",
+      "ejercicio_original": "...",
+      "adaptacion_operativa": true,
+      "notas": ["..."]
+    }
   },
 
-  "apto_alevin_10_11": {
-    "estado": "si | con_adaptacion | no",
-    "motivo": "..."
+  "logica_animacion": {
+    "formas_reproduccion": ["automatica", "paso_a_paso"],
+    "series_en_orden": ["Serie 1 Interior", "Serie 2 Exterior", "Serie 3 Suela / Recorte"],
+    "acciones_permitidas": ["conduccion", "regreso_con_balon"],
+    "reglas": ["..."]
   },
 
-  "jugadores": {
-    "min": 4,
-    "max": 16,
-    "por_grupo": 1,
-    "numero_grupos": null
-  },
-
-  "duracion": {
-    "total_min": 15,
-    "total_max": 20,
-    "series": null,
-    "repeticiones": null,
-    "descanso_seg": null
-  },
-
-  "intensidad": "Media",
-
-  "espacio": { "ancho_m": 10, "largo_m": 20 },
-
-  "material": [
-    { "tipo": "cono", "cantidad": 8 },
-    { "tipo": "balon", "cantidad": "1 por jugador" }
-  ],
-
-  "objetivos": ["..."],
-  "que_se_trabaja": ["..."],
-  "que_buscamos": "...",
-  "montaje": ["..."],
-  "desarrollo": [
-    { "paso": 1, "texto": "..." },
-    { "paso": 2, "texto": "..." }
-  ],
-  "reglas": ["..."],
-  "rotacion": "A → B · B → C · C → fila de A | no aplica",
-  "que_observar": ["..."],
-  "errores_habituales": ["..."],
-  "correcciones": ["..."],
-  "si_sale_mal": ["..."],
-  "si_sale_bien": ["..."],
-  "variantes": ["..."],
-
-  "origen": {
-    "tipo": "fuente | adaptacion | propio",
-    "fuente": "...",
-    "ejercicio_original": "...",
-    "pagina": "...",
-    "url": "...",
-    "adaptado_a": "Alevin 10-11 F7",
-    "notas_adaptacion": "..."
-  },
-
-  "diagramas": []
+  "layout_visual": {
+    "paleta_plantilla": ["blanco", "negro", "rojo"],
+    "pizarra": "verde",
+    "sin_texto_explicativo_dentro_del_campo": true,
+    "series_fuera_del_campo": true,
+    "series_destacadas": ["Serie 1 Interior", "Serie 2 Exterior", "Serie 3 Suela / Recorte"],
+    "no_enumerar_ejercicios": true
+  }
 }
 ```
 
-### 3.2 Diagrama
+### 3.2 Reglas de presentación (vista rápida vs detalle)
+
+**Vista rápida (al entrenar):**
+- Nombre.
+- Tipo principal (Técnica / Táctica / Técnico-táctico / Finalización / etc.).
+- Qué se trabaja (conducción, pase, control, presión…).
+- Tiempo estimado para 15 jugadores.
+- Número de jugadores / organización.
+- Material.
+- Series o fases, si existen.
+- Explicación breve del funcionamiento.
+- Pizarra / GIF animado protagonista.
+- Leyenda.
+
+**Detalle (botón «Ver detalles»):**
+- Objetivos.
+- Montaje completo.
+- Desarrollo completo.
+- Qué observar.
+- Correcciones.
+- Si sale mal.
+- Si sale bien.
+- Variantes.
+- Fuente.
+
+**Reglas fijas:**
+- No numerar los ejercicios.
+- Tiempo estimado siempre calculado para 15 jugadores.
+- No añadir texto explicativo dentro de la pizarra salvo elementos funcionales (SALIDA / LLEGADA).
+- Si se pide cambiar una cosa de un ejercicio validado, cambiar únicamente esa cosa.
+- No inventar movimientos en la animación.
+- Las series forman parte de los datos y también se ven claramente en la animación.
+
+### 3.3 Diagrama
 
 ```json
 {
@@ -276,7 +297,7 @@ El dibujo **no depende de píxeles**. Si la ficha mide 600 px o 2000 px, el ejer
 }
 ```
 
-### 3.3 Elementos
+### 3.4 Elementos
 
 **Jugador (atacante):**
 ```json
@@ -308,7 +329,7 @@ El dibujo **no depende de píxeles**. Si la ficha mide 600 px o 2000 px, el ejer
 { "id": "salida", "tipo": "texto", "texto": "SALIDA", "posicion": { "x": 5, "y": 0.7 } }
 ```
 
-### 3.4 Acciones (flechas)
+### 3.5 Acciones (flechas)
 
 **Pase:**
 ```json
@@ -330,7 +351,7 @@ El dibujo **no depende de píxeles**. Si la ficha mide 600 px o 2000 px, el ejer
 { "id": "accion_4", "tipo": "flecha", "accion": "disparo", "origen": { "elemento": "jugador_A" }, "destino": { "elemento": "porteria_1" }, "trayectoria": "recta", "orden": 3 }
 ```
 
-### 3.5 Vocabulario de tipos de acción
+### 3.6 Vocabulario de tipos de acción
 
 ```json
 {
@@ -344,7 +365,7 @@ El dibujo **no depende de píxeles**. Si la ficha mide 600 px o 2000 px, el ejer
 }
 ```
 
-### 3.6 Acciones con orden (para animación futura)
+### 3.7 Acciones con orden (para animación futura)
 
 ```json
 {
