@@ -1323,18 +1323,35 @@ function renderTactics() {
   renderTacticasInteractivas();
 }
 
-// Rellena el desplegable selector de tácticas interactivas del manual.
+// Renderiza las tácticas del manual como tarjetas (igual que los ejercicios):
+// cada una con su pizarra táctica grande + botón "Ver interactiva" (GIF).
+// Arriba hay un selector desplegable para filtrar por formación.
 function renderTacticasInteractivas() {
-  const select = $('#tactica-interactiva-select');
-  if (!select) return;
-  if (!TACTICAS_INTERACTIVAS.length) {
-    $('#tacticas-interactivas').classList.add('hidden');
-    return;
+  const root = $('#tacticas-interactivas');
+  const select = $('#tactica-filters')?.elements.formacion;
+  if (!root) return;
+
+  // Rellenar el selector de formaciones (sin duplicados).
+  if (select) {
+    const formaciones = [...new Set(TACTICAS_INTERACTIVAS.map((t) => t.formacion))];
+    const actual = select.value;
+    select.innerHTML = '<option value="">Todas</option>' + formaciones.map((f) => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+    if (actual) select.value = actual;
   }
-  $('#tacticas-interactivas').classList.remove('hidden');
-  select.innerHTML = TACTICAS_INTERACTIVAS.map((t) =>
-    `<option value="${escapeHtml(t.id)}">${escapeHtml(t.formacion)} · ${escapeHtml(t.nombre)}</option>`
-  ).join('');
+
+  const filtro = select?.value || '';
+  const lista = TACTICAS_INTERACTIVAS.filter((t) => !filtro || t.formacion === filtro);
+
+  root.innerHTML = lista.map((t) => {
+    const vr = t.vista_rapida || {};
+    // Pizarra táctica grande de la formación correspondiente (editable en el builder).
+    const board = renderTacticBoard(defaultTactic('F7', t.formacion));
+    return `<article class="panel tactica-manual-card">
+      <div class="section-head"><div><span class="pill accent">${escapeHtml(t.formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div>
+      ${board}
+      <div class="tactica-manual-desc">${escapeHtml(vr.explicacion_breve || '')}</div>
+    </article>`;
+  }).join('') || empty('No hay tácticas del manual para esta formación.');
 }
 
 // Abre una táctica interactiva a pantalla completa (overlay).
@@ -1755,6 +1772,7 @@ function wireEvents() {
   $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder()); $('#new-session-exercises').addEventListener('click', () => { showView('sesiones'); sessionBuilder(); }); $('#new-tactic').addEventListener('click', () => tacticBuilder());
   $('#exercise-filters').addEventListener('input', renderExercises);
   $('#exercise-filters').addEventListener('change', renderExercises);
+  $('#tactica-filters').addEventListener('change', renderTacticasInteractivas);
   document.addEventListener('input', (event) => {
     if (event.target.matches('#session-form [name="blockDuration"]')) refreshSessionDurationStatus();
   });
@@ -1902,7 +1920,7 @@ function wireEvents() {
       $$('.tactic-tool').forEach((btn) => btn.classList.toggle('active', btn.dataset.tacticTool === tacticTool));
     }
     if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
-    if (target.matches('#open-tactica-interactiva')) showTacticaInteractiva($('#tactica-interactiva-select').value);
+    if (target.matches('.open-tactica-interactiva')) showTacticaInteractiva(target.dataset.id);
     if (target.matches('#tactica-interactiva-close')) closeTacticaInteractiva();
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
