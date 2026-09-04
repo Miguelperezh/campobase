@@ -12,33 +12,35 @@ const clean = (value) => String(value ?? '').trim();
 export const TACTIC_FORMATS = Object.freeze(['F7', 'F11']);
 
 // Formaciones F7 del manual de Migue (coordenadas en viewBox 0..100, campo vertical).
-// 1-3-2-1: 1 portero · 2/3 defensas · 4 central (se incorpora) · 7/11 medios · 9 delantero
+// Numeración del manual: 2 = defensa derecho · 3 = defensa izquierdo · 4 = central ·
+// 7 = medio/banda derecha · 11 = medio/banda izquierda · 9 = delantero · 1 = portero.
+// 1-3-2-1: 1 portero · 3/4/2 defensas · 11/7 medios · 9 delantero
 const FORMATION_1321 = Object.freeze([
   { x: 50, y: 90, n: '1', pos: 'Portero' },
-  { x: 25, y: 72, n: '2', pos: 'Defensa izq.' },
-  { x: 50, y: 76, n: '3', pos: 'Defensa der.' },
-  { x: 50, y: 62, n: '4', pos: 'Central (se incorpora)' },
-  { x: 30, y: 48, n: '7', pos: 'Medio/banda izq.' },
-  { x: 70, y: 48, n: '11', pos: 'Medio/banda der.' },
+  { x: 25, y: 72, n: '3', pos: 'Defensa izq.' },
+  { x: 50, y: 76, n: '4', pos: 'Central (se incorpora)' },
+  { x: 75, y: 72, n: '2', pos: 'Defensa der.' },
+  { x: 30, y: 48, n: '11', pos: 'Medio/banda izq.' },
+  { x: 70, y: 48, n: '7', pos: 'Medio/banda der.' },
   { x: 50, y: 30, n: '9', pos: 'Delantero' },
 ]);
 
-// 1-2-3-1: 1 portero · 2/3 defensas · 4 mediocentro · 7/11 medios · 9 delantero
+// 1-2-3-1: 1 portero · 3/2 defensas · 11/4/7 mediocampo · 9 delantero
 const FORMATION_1231 = Object.freeze([
   { x: 50, y: 90, n: '1', pos: 'Portero' },
-  { x: 30, y: 74, n: '2', pos: 'Defensa izq.' },
-  { x: 70, y: 74, n: '3', pos: 'Defensa der.' },
+  { x: 30, y: 74, n: '3', pos: 'Defensa izq.' },
+  { x: 70, y: 74, n: '2', pos: 'Defensa der.' },
   { x: 50, y: 60, n: '4', pos: 'Mediocentro' },
-  { x: 30, y: 46, n: '7', pos: 'Medio/banda izq.' },
-  { x: 70, y: 46, n: '11', pos: 'Medio/banda der.' },
+  { x: 30, y: 46, n: '11', pos: 'Medio/banda izq.' },
+  { x: 70, y: 46, n: '7', pos: 'Medio/banda der.' },
   { x: 50, y: 30, n: '9', pos: 'Delantero' },
 ]);
 
-// 1-2-2-2: 1 portero · 2/3 defensas · 4/7 medios · 11/9 arriba
+// 1-2-2-2: 1 portero · 3/2 defensas · 4/7 medios · 11/9 arriba
 const FORMATION_1222 = Object.freeze([
   { x: 50, y: 90, n: '1', pos: 'Portero' },
-  { x: 30, y: 74, n: '2', pos: 'Defensa izq.' },
-  { x: 70, y: 74, n: '3', pos: 'Defensa der.' },
+  { x: 30, y: 74, n: '3', pos: 'Defensa izq.' },
+  { x: 70, y: 74, n: '2', pos: 'Defensa der.' },
   { x: 40, y: 58, n: '4', pos: 'Medio' },
   { x: 60, y: 58, n: '7', pos: 'Medio' },
   { x: 35, y: 38, n: '11', pos: 'Delantero izq.' },
