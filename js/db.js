@@ -98,6 +98,17 @@ export function configureCloudStore(store) {
   cloudStore = store;
 }
 
+// Storage de vídeos: delega en el cliente Supabase configurado.
+export async function uploadVideo(path, file) {
+  if (!cloudStore?.uploadVideo) throw new Error('El almacenamiento de vídeos no está disponible.');
+  return cloudStore.uploadVideo(path, file);
+}
+
+export async function removeVideo(path) {
+  if (!cloudStore?.removeVideo) throw new Error('El almacenamiento de vídeos no está disponible.');
+  return cloudStore.removeVideo(path);
+}
+
 export async function getAll(store) {
   return localGetAll(store);
 }

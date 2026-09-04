@@ -1,4 +1,4 @@
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, buildPlayerRecord } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -6,6 +6,7 @@ import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
+import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
@@ -30,7 +31,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
 let toastTimer;
@@ -201,6 +202,7 @@ async function refresh() {
   ];
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
+  state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
@@ -1114,13 +1116,14 @@ function renderExercises() {
   const list = $('#exercises-list');
   list.innerHTML = exercises.length ? exercises.map((rawItem) => {
     const validated = findValidatedExercise(rawItem.id);
-    if (validated) return renderValidatedExerciseHTML(validated);
+    if (validated) return renderValidatedExerciseHTML(validated, { videos: videosForExercise(rawItem.id), role: state.role });
     return exerciseCardHTML(rawItem);
   }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
   // Inicializa reproductores y visores de las fichas validadas.
   list.querySelectorAll('.ejercicio-validado').forEach((root) => {
     initValidatedExerciseViewer(root);
     attachLightbox(root);
+    initVideoSection(root.querySelector('.videos'), { onUpload: handleVideoUpload, onDelete: handleVideoDelete });
     const tiempoInput = root.querySelector('.tiempo-ejercicio');
     if (tiempoInput) {
       tiempoInput.addEventListener('input', () => {
@@ -1270,14 +1273,54 @@ async function saveTrainingSession(event) {
   toast(status.exact ? `Sesión guardada con ${session.targetDuration} minutos exactos.` : `Sesión guardada. ${status.message}`);
 }
 
+function videosForExercise(exerciseId) {
+  return state.videos.filter((video) => video.exerciseId === exerciseId);
+}
+
+async function handleVideoUpload(exerciseId, file) {
+  if (state.role !== 'owner') return toast('Solo Migue puede subir vídeos.');
+  const id = uid();
+  const extension = (file.name.split('.').pop() || 'mp4').toLowerCase();
+  const path = videoPath(exerciseId, id, extension);
+  try {
+    await uploadVideo(path, file);
+  } catch (error) {
+    console.warn('Subida de vídeo fallida:', error.message);
+    return toast('No se pudo subir el vídeo. Revisa que el bucket `ejercicio-videos` esté creado en Supabase.');
+  }
+  const record = buildVideoRecord(
+    { exerciseId, nombre: file.name, path, mime: file.type, size: file.size, orden: videosForExercise(exerciseId).length },
+    { id, createdAt: Date.now(), now: Date.now() },
+  );
+  await put('settings', record);
+  await refresh();
+  toast('Vídeo subido.');
+}
+
+async function handleVideoDelete(videoId) {
+  if (state.role !== 'owner') return toast('Solo Migue puede borrar vídeos.');
+  const video = state.videos.find(({ id }) => id === videoId);
+  if (!video) return;
+  if (!await askConfirmation({ title: 'Borrar vídeo', message: 'Se eliminará el vídeo del almacenamiento y de todos los dispositivos.', acceptLabel: 'Borrar', danger: true })) return;
+  try {
+    await removeVideo(video.path);
+  } catch (error) {
+    console.warn('Borrado de vídeo fallido:', error.message);
+  }
+  await remove('settings', videoId);
+  await refresh();
+  toast('Vídeo eliminado.');
+}
+
 function showExerciseDetail(exerciseId) {
   const validated = findValidatedExercise(exerciseId);
   if (validated) {
     $('#exercise-detail-title').textContent = validated.nombre;
     const body = $('#exercise-detail-body');
-    body.innerHTML = renderValidatedExerciseHTML(validated);
+    body.innerHTML = renderValidatedExerciseHTML(validated, { videos: videosForExercise(exerciseId), role: state.role });
     initValidatedExerciseViewer(body.querySelector('.ejercicio-validado'));
     attachLightbox(body);
+    initVideoSection(body.querySelector('.videos'), { onUpload: handleVideoUpload, onDelete: handleVideoDelete });
     // Tiempo editable: actualiza el duration del ejercicio en state para que descuente de la sesión.
     const tiempoInput = body.querySelector('.tiempo-ejercicio');
     if (tiempoInput) {
@@ -1347,7 +1390,7 @@ function renderTacticasInteractivas() {
     // Pizarra táctica grande de la formación correspondiente (editable en el builder).
     const board = renderTacticBoard(defaultTactic('F7', t.formacion));
     return `<article class="panel tactica-manual-card">
-      <div class="section-head"><div><span class="pill accent">${escapeHtml(t.formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div>
+      <div class="section-head"><div><span class="pill accent">${escapeHtml(t.formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="edit-tactica-manual secondary" data-formacion="${escapeHtml(t.formacion)}">Editar</button><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div>
       ${board}
       <div class="tactica-manual-desc">${escapeHtml(vr.explicacion_breve || '')}</div>
     </article>`;
@@ -1372,11 +1415,11 @@ function closeTacticaInteractiva() {
   $('#tactica-interactiva-body').innerHTML = '';
 }
 
-function tacticBuilder(editId = '') {
+function tacticBuilder(editId = '', formation = '') {
   const existing = state.tactics.find(({ id }) => id === editId);
   const root = $('#tactic-builder');
   root.classList.remove('hidden');
-  const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
+  const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', formation || '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
   tacticTool = 'select';
   const toolsHTML = `<div class="tactic-tools" role="toolbar" aria-label="Herramientas de la pizarra">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}"><span aria-hidden="true">${tool.icon}</span>${tool.label}</button>`).join('')}</div>`;
   root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
@@ -1921,6 +1964,7 @@ function wireEvents() {
     }
     if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
     if (target.matches('.open-tactica-interactiva')) showTacticaInteractiva(target.dataset.id);
+    if (target.matches('.edit-tactica-manual')) tacticBuilder('', target.dataset.formacion);
     if (target.matches('#tactica-interactiva-close')) closeTacticaInteractiva();
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }

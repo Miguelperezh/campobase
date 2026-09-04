@@ -2,12 +2,13 @@
 // Vista rápida (textos + GIF protagonista) + "Ver detalles" + tiempo editable.
 
 import { FRAME_DURATIONS } from './frame-durations.js';
+import { renderVideoSectionHTML } from './ejercicio-videos.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
 const list = (values) => `<ul class="plain-list">${(values || []).map((v) => `<li>${esc(v)}</li>`).join('')}</ul>`;
 
-export function renderValidatedExerciseHTML(item) {
+export function renderValidatedExerciseHTML(item, options = {}) {
   const vr = item.vista_rapida || {};
   const det = item.detalle || {};
   const anim = item.animacion || {};
@@ -15,6 +16,7 @@ export function renderValidatedExerciseHTML(item) {
   const frameMs = anim.frameMs || 100;
   const framesBase = anim.frames || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
+  const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
 
   const pillsTrabaja = (vr.que_se_trabaja || []).map((t) => `<span class="pill trabaja">${esc(t)}</span>`).join('');
 
@@ -88,6 +90,8 @@ export function renderValidatedExerciseHTML(item) {
     </div>
 
     <div class="leyenda"><strong>Leyenda:</strong> ${esc(vr.leyenda)}</div>
+
+    ${videosHTML}
 
     <div class="acciones">
       <button type="button" class="add-exercise-to-session primary" data-id="${esc(item.id)}">+ Añadir a sesión</button>
