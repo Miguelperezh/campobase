@@ -264,6 +264,7 @@ export function filterExercises(exercises, filters = {}) {
   return exercises.filter((item) => (!filters.category || item.category === filters.category)
     && (!filters.difficulty || item.difficulty === filters.difficulty)
     && (!filters.favorites || item.favorite)
+    && (!filters.video || Boolean(item.video))
     && (!material || clean(item.material).toLocaleLowerCase('es').includes(material))
     && (!players || clean(item.players).toLocaleLowerCase('es').includes(players)));
 }

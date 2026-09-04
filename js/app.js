@@ -1101,6 +1101,7 @@ function renderExercises() {
     material: form.elements.material.value,
     difficulty: form.elements.difficulty.value,
     favorites: form.elements.favorites.checked,
+    video: form.elements.video.checked,
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => {

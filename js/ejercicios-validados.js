@@ -3272,6 +3272,7 @@ export function toCampoBaseExercise(item) {
     example: false,
     validated: true,
     source: 'validado',
+    video: item.video || '',
     createdAt: 1,
     updatedAt: 1,
   };
