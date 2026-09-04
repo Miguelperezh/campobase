@@ -1,7 +1,8 @@
 // Renderizador y reproductor de la ficha de ejercicio validado.
-// Vista rápida (textos + GIF protagonista) + "Ver detalles" + tiempo editable.
+// Vista rápida (textos + vídeo protagonista) + "Ver detalles" + tiempo editable.
+// El GIF se convierte a MP4 y se reproduce con <video> nativo (fluidez real,
+// sin efecto "fotogramas"). Las pausas entre variantes se conservan en el MP4.
 
-import { FRAME_DURATIONS } from './frame-durations.js';
 import { renderVideoSectionHTML } from './ejercicio-videos.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
@@ -12,9 +13,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   const vr = item.vista_rapida || {};
   const det = item.detalle || {};
   const anim = item.animacion || {};
-  const total = anim.total || 0;
-  const frameMs = anim.frameMs || 100;
-  const framesBase = anim.frames || '';
+  const videoSrc = (anim.gif || '').replace(/\.gif$/i, '.mp4');
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
 
@@ -57,7 +56,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     : '';
 
   return `
-  <div class="ejercicio-validado" data-id="${esc(item.id)}" data-total="${total}" data-framems="${frameMs}" data-frames="${esc(framesBase)}">
+  <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}">
     <div class="pills">
       <span class="pill tipo">${esc(vr.tipo_principal)}</span>
       ${pillsTrabaja}
@@ -74,7 +73,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="explicacion">${esc(vr.explicacion_breve)}</div>
 
     <div class="player">
-      <div class="stage"><img class="frame-img" src="${esc(framesBase)}000.jpg" alt="Animación del ejercicio"></div>
+      <div class="stage"><video class="frame-video" src="${esc(videoSrc)}" playsinline muted loop preload="auto"></video></div>
       <div class="controls">
         <button type="button" class="btn-prev" title="Paso anterior">⏮</button>
         <button type="button" class="btn-play primary" title="Reproducir / Pausar">▶</button>
@@ -100,7 +99,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
 
     <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
 
-    <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><img class="lb-img" src="${esc(framesBase)}000.jpg" alt="Animación ampliada"><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
+    <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
   </div>`;
 }
 
@@ -116,98 +115,51 @@ export function initValidatedExerciseViewer(root) {
   if (!root || root.dataset._viewerInit) return;
   root.dataset._viewerInit = '1';
 
-  const total = Number(root.dataset.total) || 0;
-  const frameMs = Number(root.dataset.framems) || 100;
-  const framesBase = root.dataset.frames || '';
-  const exerciseId = root.dataset.id || '';
-  // Duraciones reales de cada frame (respetan las pausas entre variantes/series).
-  const durations = FRAME_DURATIONS[exerciseId] || [];
-
-  const img = root.querySelector('.frame-img');
+  const video = root.querySelector('.frame-video');
+  const stage = root.querySelector('.stage');
   const btnPlay = root.querySelector('.btn-play');
   const lb = root.querySelector('.lightbox');
-  const lbImg = root.querySelector('.lb-img');
   const lbPlay = root.querySelector('.lb-play');
 
-  let idx = 0, playing = false, speed = 2;
-  let frames = [];        // frames precargados en memoria (objetos Image)
-  let loaded = 0;         // cuántos frames se han cargado ya
-  let ready = false;      // true cuando todos están precargados
-  let rafId = null;       // id de requestAnimationFrame
-  let lastTime = 0;       // timestamp del último frame mostrado
-
-  function frameSrc(i) {
-    return framesBase + String(i).padStart(3, '0') + '.jpg';
-  }
-
-  // Duración real del frame actual (ms), con la velocidad aplicada.
-  function currentFrameMs() {
-    const base = durations[idx] || frameMs;
-    return base / speed;
-  }
-
-  // Precarga todos los frames en memoria para que la reproducción sea fluida.
-  function preload() {
-    frames = new Array(total);
-    for (let i = 0; i < total; i++) {
-      const im = new Image();
-      im.onload = () => {
-        loaded++;
-        if (loaded >= total) { ready = true; }
-      };
-      im.onerror = () => { loaded++; if (loaded >= total) ready = true; };
-      im.src = frameSrc(i);
-      frames[i] = im;
-    }
-  }
-
-  function show(i) {
-    idx = Math.max(0, Math.min(total - 1, i));
-    // Usa el frame precargado si está listo; si no, cae a la URL directa.
-    const cached = frames[idx];
-    const src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
-    img.src = src;
-    if (lb.classList.contains('open')) lbImg.src = src;
-  }
-
-  // Reproducción con requestAnimationFrame: respeta la duración real de cada frame.
-  function tick(now) {
-    if (!playing) return;
-    if (now - lastTime >= currentFrameMs()) {
-      lastTime = now;
-      idx = idx >= total - 1 ? 0 : idx + 1;
-      show(idx);
-    }
-    rafId = requestAnimationFrame(tick);
-  }
-  function play() {
-    playing = true; btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
-    window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
-    lastTime = performance.now();
-    cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(tick);
-  }
-  function pause() {
-    if (playing) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
-    playing = false; btnPlay.textContent = '▶'; lbPlay.textContent = '▶';
-    cancelAnimationFrame(rafId);
-  }
-  function toggle() { playing ? pause() : play(); }
+  let speed = 2; // playbackRate inicial (1× = 2× la velocidad real del GIF)
 
   function setSpeed(s) {
     speed = s;
+    if (video) video.playbackRate = s;
     root.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
-    if (playing) play();
+  }
+
+  function play() {
+    if (!video) return;
+    video.play();
+    btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
+    window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+  }
+  function pause() {
+    if (!video) return;
+    if (!video.paused) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
+    video.pause();
+    btnPlay.textContent = '▶'; lbPlay.textContent = '▶';
+  }
+  function toggle() { (video && video.paused) ? play() : pause(); }
+
+  // Paso a paso: avanza/retrocede ~1 frame (los GIFs van a ~8 fps).
+  const STEP = 0.125;
+  function step(delta) {
+    if (!video) return;
+    pause();
+    const d = video.duration || 0;
+    video.currentTime = Math.max(0, Math.min(d, video.currentTime + delta));
   }
 
   btnPlay.addEventListener('click', toggle);
   lbPlay.addEventListener('click', toggle);
-  root.querySelector('.btn-prev').addEventListener('click', () => { pause(); show(idx - 1); });
-  root.querySelector('.btn-next').addEventListener('click', () => { pause(); show(idx + 1); });
-  root.querySelector('.btn-restart').addEventListener('click', () => { pause(); show(0); });
-  root.querySelector('.lb-prev').addEventListener('click', () => { pause(); show(idx - 1); });
-  root.querySelector('.lb-next').addEventListener('click', () => { pause(); show(idx + 1); });
-  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); show(0); });
+  root.querySelector('.btn-prev').addEventListener('click', () => step(-STEP));
+  root.querySelector('.btn-next').addEventListener('click', () => step(STEP));
+  root.querySelector('.btn-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
+  root.querySelector('.lb-prev').addEventListener('click', () => step(-STEP));
+  root.querySelector('.lb-next').addEventListener('click', () => step(STEP));
+  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
   root.querySelectorAll('.speed button').forEach((b) => {
     b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s'))));
   });
@@ -220,16 +172,20 @@ export function initValidatedExerciseViewer(root) {
     btnDetalle.textContent = detalle.classList.contains('open') ? 'Ocultar detalles' : 'Ver detalles';
   });
 
-  // Visor a pantalla completa (zoom + pan + pellizco)
+  // Pantalla completa: mueve el vídeo al lightbox (un solo elemento, un solo estado).
   const btnFull = root.querySelector('.btn-full');
   btnFull.addEventListener('click', () => {
-    lbImg.src = img.src;
+    if (!video) return;
+    const wasPlaying = !video.paused;
+    const t = video.currentTime;
+    lb.appendChild(video);
+    video.currentTime = t;
+    if (wasPlaying) video.play();
     lb.classList.add('open');
     resetLightbox(lb);
   });
 
-  show(0);
-  preload();
+  setSpeed(speed);
 }
 
 // Visor genérico (se crea una vez por ficha en el HTML; aquí se inicializa el comportamiento).
@@ -240,11 +196,12 @@ function resetLightbox(box) {
   applyLightbox(box);
 }
 function applyLightbox(box) {
-  const lbImg = box.querySelector('.lb-img');
+  const el = box.querySelector('.frame-video');
+  if (!el) return;
   const z = Number(box.dataset.zoom || 1);
   const tx = Number(box.dataset.tx || 0);
   const ty = Number(box.dataset.ty || 0);
-  lbImg.style.transform = `translate(${tx}px,${ty}px) scale(${z})`;
+  el.style.transform = `translate(${tx}px,${ty}px) scale(${z})`;
 }
 
 // Se llama desde app.js tras insertar el HTML, para conectar el visor de cada ficha.
@@ -252,20 +209,35 @@ export function attachLightbox(root) {
   const box = root.querySelector('.lightbox');
   if (!box || box.dataset._lbInit) return;
   box.dataset._lbInit = '1';
-  const lbImg = box.querySelector('.lb-img');
+  const stage = root.querySelector('.stage');
+  const video = root.querySelector('.frame-video');
   const MINZ = 0.5, MAXZ = 8;
 
-  box.addEventListener('click', (e) => { if (e.target === box) { box.classList.remove('open'); resetLightbox(box); } });
+  function close() {
+    const wasPlaying = video && !video.paused;
+    const t = video ? video.currentTime : 0;
+    box.classList.remove('open');
+    if (video && stage && video.parentElement === box) {
+      stage.appendChild(video);
+      video.currentTime = t;
+      if (wasPlaying) video.play();
+    }
+    resetLightbox(box);
+  }
+
+  box.addEventListener('click', (e) => { if (e.target === box) close(); });
 
   const lbClose = box.querySelector('.lb-close');
-  if (lbClose) lbClose.addEventListener('click', () => { box.classList.remove('open'); resetLightbox(box); });
+  if (lbClose) lbClose.addEventListener('click', close);
 
   box.addEventListener('wheel', (e) => {
     e.preventDefault();
+    const el = box.querySelector('.frame-video');
+    if (!el) return;
     const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
     let z = Number(box.dataset.zoom || 1);
     const nz = Math.max(MINZ, Math.min(MAXZ, z * factor));
-    const rect = lbImg.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
     const k = nz / z;
     let tx = Number(box.dataset.tx || 0), ty = Number(box.dataset.ty || 0);
@@ -276,7 +248,7 @@ export function attachLightbox(root) {
 
   let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
   box.addEventListener('mousedown', (e) => {
-    if (e.target === box || e.target.closest('.lb-controls')) return;
+    if (e.target === box || e.target.closest('.lb-controls') || e.target.closest('.lb-close')) return;
     dragging = true; box.classList.add('dragging');
     sx = e.clientX; sy = e.clientY; ox = Number(box.dataset.tx || 0); oy = Number(box.dataset.ty || 0);
     e.preventDefault();
@@ -308,7 +280,7 @@ export function attachLightbox(root) {
       const a = e.touches[0], b = e.touches[1];
       const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
       const nz = Math.max(MINZ, Math.min(MAXZ, pinch.zoom * (d / pinch.dist)));
-      const rect = lbImg.getBoundingClientRect();
+      const rect = box.querySelector('.frame-video').getBoundingClientRect();
       const k = nz / Number(box.dataset.zoom || 1);
       const cx = pinch.cx - rect.left, cy = pinch.cy - rect.top;
       let tx = Number(box.dataset.tx || 0), ty = Number(box.dataset.ty || 0);
