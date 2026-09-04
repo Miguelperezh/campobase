@@ -7,7 +7,7 @@ import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, m
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
-import { TACTICAS_INTERACTIVAS, findTacticaInteractiva, tacticasDeFormacion } from './tacticas-interactivas.js';
+import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { planSquadSeed } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
@@ -1318,32 +1318,23 @@ function showSessionDetail(sessionId) {
 function renderTactics() {
   const tactics = sortTactics(state.tactics);
   $('#tactics-list').innerHTML = tactics.length ? tactics.map((tactic) => {
-    const interactivas = tacticasDeFormacion(tactic.formation);
-    const btnInteractiva = interactivas.length
-      ? `<button type="button" class="open-tactica-interactiva secondary" data-id="${interactivas[0].id}">Interactiva</button>`
-      : '';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button>${btnInteractiva}<button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button><button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
   }).join('') : empty('Todavía no hay tácticas guardadas. Pulsa «+ Táctica» para crear la primera.');
   renderTacticasInteractivas();
 }
 
-// Renderiza las tácticas interactivas del manual (GIFs animados), agrupadas por formación.
+// Rellena el desplegable selector de tácticas interactivas del manual.
 function renderTacticasInteractivas() {
-  const root = $('#tacticas-interactivas');
-  if (!root) return;
-  if (!TACTICAS_INTERACTIVAS.length) { root.innerHTML = ''; return; }
-  const grupos = {};
-  for (const t of TACTICAS_INTERACTIVAS) {
-    (grupos[t.formacion] = grupos[t.formacion] || []).push(t);
+  const select = $('#tactica-interactiva-select');
+  if (!select) return;
+  if (!TACTICAS_INTERACTIVAS.length) {
+    $('#tacticas-interactivas').classList.add('hidden');
+    return;
   }
-  const secciones = Object.entries(grupos).map(([formacion, lista]) => {
-    const cards = lista.map((t) => {
-      const vr = t.vista_rapida || {};
-      return `<article class="panel tactica-interactiva-card"><div class="section-head"><div><span class="pill accent">${escapeHtml(vr.sistema || formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div></article>`;
-    }).join('');
-    return `<div class="tactica-grupo"><h3 class="tactica-grupo-titulo">Formación ${escapeHtml(formacion)}</h3><div class="tactica-grid">${cards}</div></div>`;
-  }).join('');
-  root.innerHTML = `<div class="section-head tactica-seccion-head"><div><p class="eyebrow">Animaciones del manual</p><h3>Tácticas interactivas</h3></div></div>${secciones}`;
+  $('#tacticas-interactivas').classList.remove('hidden');
+  select.innerHTML = TACTICAS_INTERACTIVAS.map((t) =>
+    `<option value="${escapeHtml(t.id)}">${escapeHtml(t.formacion)} · ${escapeHtml(t.nombre)}</option>`
+  ).join('');
 }
 
 // Abre una táctica interactiva a pantalla completa (overlay).
@@ -1911,7 +1902,7 @@ function wireEvents() {
       $$('.tactic-tool').forEach((btn) => btn.classList.toggle('active', btn.dataset.tacticTool === tacticTool));
     }
     if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
-    if (target.matches('.open-tactica-interactiva')) showTacticaInteractiva(target.dataset.id);
+    if (target.matches('#open-tactica-interactiva')) showTacticaInteractiva($('#tactica-interactiva-select').value);
     if (target.matches('#tactica-interactiva-close')) closeTacticaInteractiva();
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
