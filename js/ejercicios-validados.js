@@ -2514,13 +2514,32 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
+// Mapea el tipo_principal (etiqueta descriptiva del manual) a la categoría canónica
+// del filtro de CampoBase, para que el filtro por categoría los encuentre.
+const CATEGORIA_CANONICA = Object.freeze({
+  'Tecnificación individual': 'Técnica',
+  'Tecnificación': 'Técnica',
+  'Finalización': 'Técnica',
+  'Técnico-táctico': 'Táctica',
+  'Táctica': 'Táctica',
+  'Táctica colectiva': 'Táctica',
+  'Transición': 'Táctica',
+  'Posesión': 'Táctica',
+  'Coordinación/motricidad': 'Coordinación',
+  'Preparación física con balón': 'Preparación física',
+  'Calentamiento / activación': 'Calentamiento',
+  'Juego reducido': 'Partido condicionado / Small-sided games',
+  'Porteros': 'Porteros',
+});
+
 export function toCampoBaseExercise(item) {
   const vr = item.vista_rapida || {};
+  const tipo = vr.tipo_principal || 'Técnica';
   return {
     id: item.id,
     recordType: 'exercise',
     name: item.nombre,
-    category: vr.tipo_principal || 'Técnica',
+    category: CATEGORIA_CANONICA[tipo] || tipo,
     players: `${vr.jugadores?.total ?? ''} · ${vr.jugadores?.organizacion ?? ''}`,
     material: vr.material || '',
     duration: parseDuration(vr.tiempo_estimado_15),

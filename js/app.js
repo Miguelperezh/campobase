@@ -1324,6 +1324,26 @@ function renderTactics() {
       : '';
     return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button>${btnInteractiva}<button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
   }).join('') : empty('Todavía no hay tácticas guardadas. Pulsa «+ Táctica» para crear la primera.');
+  renderTacticasInteractivas();
+}
+
+// Renderiza las tácticas interactivas del manual (GIFs animados), agrupadas por formación.
+function renderTacticasInteractivas() {
+  const root = $('#tacticas-interactivas');
+  if (!root) return;
+  if (!TACTICAS_INTERACTIVAS.length) { root.innerHTML = ''; return; }
+  const grupos = {};
+  for (const t of TACTICAS_INTERACTIVAS) {
+    (grupos[t.formacion] = grupos[t.formacion] || []).push(t);
+  }
+  const secciones = Object.entries(grupos).map(([formacion, lista]) => {
+    const cards = lista.map((t) => {
+      const vr = t.vista_rapida || {};
+      return `<article class="panel tactica-interactiva-card"><div class="section-head"><div><span class="pill accent">${escapeHtml(vr.sistema || formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div></article>`;
+    }).join('');
+    return `<div class="tactica-grupo"><h3 class="tactica-grupo-titulo">Formación ${escapeHtml(formacion)}</h3><div class="tactica-grid">${cards}</div></div>`;
+  }).join('');
+  root.innerHTML = `<div class="section-head tactica-seccion-head"><div><p class="eyebrow">Animaciones del manual</p><h3>Tácticas interactivas</h3></div></div>${secciones}`;
 }
 
 // Abre una táctica interactiva a pantalla completa (overlay).
