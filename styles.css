@@ -25,3 +25,6 @@
 
 .ejercicio-validado .stage video.frame-video,.tactica-interactiva .stage video.frame-video{display:block;width:100%;height:auto;max-height:60vh;object-fit:contain;background:#000}
 .ejercicio-validado .lightbox .frame-video,.tactica-interactiva .lightbox .frame-video{max-width:100%;max-height:calc(100% - 90px);object-fit:contain;border-radius:6px;transform-origin:center center;user-select:none;-webkit-user-drag:none}
+
+.ejercicio-validado .real-video-full{min-height:32px;padding:.3rem .6rem;border:1px solid var(--line);border-radius:8px;background:#173f35;color:#fff;font-weight:700;cursor:pointer;font-size:.8rem}
+.ejercicio-validado .lightbox.real-video-lightbox video{max-width:100%;max-height:calc(100% - 90px);object-fit:contain;border-radius:6px;transform-origin:center center;user-select:none;-webkit-user-drag:none}

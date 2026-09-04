@@ -14,6 +14,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   const det = item.detalle || {};
   const anim = item.animacion || {};
   const videoSrc = (anim.gif || '').replace(/\.gif$/i, '.mp4');
+  const realVideo = item.video || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
 
@@ -90,6 +91,18 @@ export function renderValidatedExerciseHTML(item, options = {}) {
 
     <div class="leyenda"><strong>Leyenda:</strong> ${esc(vr.leyenda)}</div>
 
+    ${realVideo ? `
+    <div class="videos real-video">
+      <h3>Vídeo real</h3>
+      <div class="video-item">
+        <video class="real-video-el" controls preload="metadata" playsinline src="${esc(realVideo)}"></video>
+        <div class="video-meta">
+          <span class="video-name">Demostración en vídeo</span>
+          <button type="button" class="real-video-full" title="Ampliar">⛶ Ampliar</button>
+        </div>
+      </div>
+    </div>` : ''}
+
     ${videosHTML}
 
     <div class="acciones">
@@ -100,6 +113,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
 
     <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
+    ${realVideo ? `<div class="lightbox real-video-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1.5×</button><button type="button" data-s="2">2×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>` : ''}
   </div>`;
 }
 
@@ -184,6 +198,45 @@ export function initValidatedExerciseViewer(root) {
     lb.classList.add('open');
     resetLightbox(lb);
   });
+
+  // Vídeo real (demostración): visor a pantalla completa con play/pausa + velocidad + cerrar.
+  const realVideoEl = root.querySelector('.real-video-el');
+  const realVideoLb = root.querySelector('.real-video-lightbox');
+  const realVideoFull = root.querySelector('.real-video-full');
+  if (realVideoEl && realVideoLb && realVideoFull) {
+    const rvPlay = realVideoLb.querySelector('.lb-play');
+    function rvPlayFn() { realVideoEl.play(); rvPlay.textContent = '⏸'; }
+    function rvPauseFn() { realVideoEl.pause(); rvPlay.textContent = '▶'; }
+    function rvToggle() { realVideoEl.paused ? rvPlayFn() : rvPauseFn(); }
+    function rvSetSpeed(s) {
+      realVideoEl.playbackRate = s;
+      realVideoLb.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
+    }
+    rvPlay.addEventListener('click', rvToggle);
+    realVideoLb.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => rvSetSpeed(parseFloat(b.getAttribute('data-s')))));
+
+    const rvStage = realVideoEl.parentElement;
+    realVideoFull.addEventListener('click', () => {
+      const wasPlaying = !realVideoEl.paused;
+      const t = realVideoEl.currentTime;
+      realVideoLb.appendChild(realVideoEl);
+      realVideoEl.currentTime = t;
+      if (wasPlaying) realVideoEl.play();
+      realVideoLb.classList.add('open');
+    });
+    function rvClose() {
+      const wasPlaying = !realVideoEl.paused;
+      const t = realVideoEl.currentTime;
+      realVideoLb.classList.remove('open');
+      if (realVideoEl.parentElement === realVideoLb) {
+        rvStage.appendChild(realVideoEl);
+        realVideoEl.currentTime = t;
+        if (wasPlaying) realVideoEl.play();
+      }
+    }
+    realVideoLb.querySelector('.lb-close').addEventListener('click', rvClose);
+    realVideoLb.addEventListener('click', (e) => { if (e.target === realVideoLb) rvClose(); });
+  }
 
   setSpeed(speed);
 }

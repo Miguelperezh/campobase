@@ -3022,6 +3022,236 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 156
   }
 }
+,
+{
+  "id": "CAMPOBASE-VIDEO-REACCION-COLORES-F7-F11",
+  "nombre": "Reacción por colores con aceleraciones laterales",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Velocidad de reacción",
+      "Aceleración",
+      "Cambio de dirección",
+      "Agilidad",
+      "Frenada",
+      "Percepción visual",
+      "Coordinación",
+      "Desplazamiento lateral"
+    ],
+    "tiempo_estimado_15": "5-6 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 grupos de 5 trabajando simultáneamente con el mismo estímulo del entrenador."
+    },
+    "material": "Cada jugador con referencia central y dos referencias laterales de color.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "3 series de 30-35 s."
+      }
+    ],
+    "explicacion_breve": "Cada jugador parte sobre su referencia blanca central. Aparece o se da un estímulo de color. Naranja: acelerar hacia la referencia naranja situada a la derecha. Verde: acelerar hacia la referencia verde situada a la izquierda. Blanco: regresar o mantenerse en la referencia blanca central. Los estímulos cambian de forma no predecible para obligar a reaccionar y cambiar de dirección.",
+    "leyenda": ""
+  },
+  "detalle": {
+    "objetivos": [
+      "Reaccionar rápidamente ante un estímulo visual.",
+      "Mejorar el primer paso y la aceleración corta.",
+      "Controlar la frenada y el cambio de dirección.",
+      "Mantener atención visual sin anticiparse a la señal."
+    ],
+    "claves_entrenador": [],
+    "montaje": [
+      "Cada jugador con referencia central y dos referencias laterales de color."
+    ],
+    "desarrollo": [
+      "Cada jugador parte sobre su referencia blanca central.",
+      "Aparece o se da un estímulo de color.",
+      "Naranja: acelerar hacia la referencia naranja situada a la derecha.",
+      "Verde: acelerar hacia la referencia verde situada a la izquierda.",
+      "Blanco: regresar o mantenerse en la referencia blanca central.",
+      "Los estímulos cambian de forma no predecible para obligar a reaccionar y cambiar de dirección."
+    ],
+    "que_buscamos": [
+      "Reaccionar a un balón dividido.",
+      "Corregir trayectoria defensiva.",
+      "Saltar a una presión.",
+      "Replegar o reajustar posición tras pérdida.",
+      "Cambiar rápidamente de dirección ante un nuevo estímulo de juego."
+    ],
+    "que_observar": [
+      "No anticiparse al estímulo.",
+      "Primer paso rápido y en la dirección correcta.",
+      "Cabeza levantada y atención al estímulo.",
+      "Frenada controlada.",
+      "Buena orientación de rodilla y pie al cambiar de dirección.",
+      "Separación suficiente entre jugadores para evitar choques.",
+      "Mantener la calidad de ejecución hasta el final del bloque."
+    ],
+    "correcciones": [
+      "Espera la señal.",
+      "Primer paso rápido.",
+      "Frena y cambia.",
+      "No adivines.",
+      "Cabeza arriba.",
+      "Reacciona, no anticipes."
+    ],
+    "reglas": [
+      "La duración observada del vídeo no se toma como tiempo recomendado de entrenamiento.",
+      "Las medidas y tiempos de F7/F11 son adaptación CampoBase, no datos visibles ni declarados en el vídeo.",
+      "Si se añade balón, se considera una progresión nueva y debe etiquetarse aparte.",
+      "La secuencia de colores del GIF es representativa para explicar la mecánica; no se presenta como la secuencia exacta del vídeo.",
+      "El GIF no añade balón, circuitos ni acciones técnicas que no aparecen en el vídeo."
+    ],
+    "si_sale_mal": [
+      "Reducir la frecuencia de los estímulos.",
+      "Acortar la distancia a 2-3 m.",
+      "Aumentar la separación entre jugadores.",
+      "Reducir el bloque a 20-25 s si baja claramente la velocidad."
+    ],
+    "si_sale_bien": [
+      "Cambiar estímulo visual por verbal.",
+      "Combinar colores, números o gestos.",
+      "Reducir ligeramente el tiempo de reacción disponible.",
+      "Añadir balón como progresión separada, sin presentarlo como parte observada del vídeo."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 grupos de 5 trabajando simultáneamente con el mismo estímulo del entrenador. · ",
+      "Fútbol 11: 2-4 líneas paralelas de 5-6 jugadores, todos reaccionando al mismo estímulo o por grupos alternos. · "
+    ],
+    "fuente": {
+      "documento": "Vídeo real: !agi_7586719013842111766.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Varios jugadores trabajan simultáneamente alineados sobre una fila de referencias blancas centrales.",
+        "A la izquierda de cada jugador hay una referencia verde y a la derecha una referencia naranja.",
+        "El vídeo muestra estímulos visuales verde, naranja y blanco.",
+        "Verde provoca desplazamiento hacia la referencia verde; naranja hacia la referencia naranja; blanco devuelve o mantiene al jugador en la referencia central blanca.",
+        "Los jugadores realizan aceleraciones cortas, frenadas y cambios de dirección de forma simultánea.",
+        "No se utiliza balón en la tarea observada.",
+        "El vídeo no aporta medidas exactas ni tiempos oficiales de trabajo."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-COLORES-F7-F11/CampoBase_Reaccion_Colores_F7_F11_CORREGIDO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-COLORES-F7-F11/frames/f",
+    "total": 57,
+    "frameMs": 189
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACCION-COLORES-F7-F11/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-REACCION-COLOR-SPRINT-2-DIRECCIONES",
+  "nombre": "Reacción a consigna de color con sprint a dos direcciones",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Velocidad de reacción",
+      "Estímulo auditivo",
+      "Aceleración",
+      "Cambio de dirección",
+      "Agilidad",
+      "Atención",
+      "Toma de decisión"
+    ],
+    "tiempo_estimado_15": "8-10 min incluyendo explicación, prueba y rotaciones.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "4 grupos: 4 + 4 + 4 + 3. Trabaja un grupo por oleada."
+    },
+    "material": "Referencias de colores",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "2 series de 4-6 s desde «preparados» + color + sprint completo. con descanso de 1 min 30 s - 2 min. entre series."
+      }
+    ],
+    "explicacion_breve": "Los jugadores se colocan en su línea de salida. El entrenador dice en voz alta un color previamente asociado a una dirección. Los jugadores no pueden salir antes de escuchar la palabra completa. Al oír el color, arrancan a máxima intención hacia la dirección correspondiente. Cruzan la referencia final sin frenar antes. Salen del recorrido y entra la siguiente oleada.",
+    "leyenda": ""
+  },
+  "detalle": {
+    "objetivos": [
+      "Reaccionar rápidamente a una consigna verbal.",
+      "Mejorar el primer apoyo y la aceleración corta.",
+      "Cambiar la intención de movimiento según la palabra indicada.",
+      "Evitar anticiparse y mantener atención en el entrenador."
+    ],
+    "claves_entrenador": [],
+    "montaje": [],
+    "desarrollo": [
+      "Los jugadores se colocan en su línea de salida.",
+      "El entrenador dice en voz alta un color previamente asociado a una dirección.",
+      "Los jugadores no pueden salir antes de escuchar la palabra completa.",
+      "Al oír el color, arrancan a máxima intención hacia la dirección correspondiente.",
+      "Cruzan la referencia final sin frenar antes.",
+      "Salen del recorrido y entra la siguiente oleada."
+    ],
+    "que_buscamos": [
+      "Reaccionar a una orden o estímulo inesperado.",
+      "Primeros metros hacia un balón dividido.",
+      "Inicio de presión.",
+      "Repliegue tras pérdida.",
+      "Corrección rápida de posición."
+    ],
+    "que_observar": [
+      "Que reaccionen a la voz del entrenador y no al movimiento del compañero.",
+      "Salidas anticipadas.",
+      "Primeros dos apoyos explosivos.",
+      "Dirección correcta después de escuchar el color.",
+      "Que crucen la referencia final a velocidad.",
+      "Separación suficiente entre carriles.",
+      "Que la fatiga no reduzca la velocidad ni la atención."
+    ],
+    "correcciones": [],
+    "reglas": [
+      "La consigna verbal de color es el estímulo principal.",
+      "Las medidas y tiempos son adaptación CampoBase, no datos declarados en el vídeo.",
+      "El GIF representa la lógica observada y no asigna como hecho una correspondencia color-dirección que el vídeo no permite confirmar con total seguridad."
+    ],
+    "si_sale_mal": [
+      "Usar solo dos colores claramente diferenciados.",
+      "Reducir distancia.",
+      "Aumentar el tiempo entre «preparados» y el color.",
+      "Separar más los carriles.",
+      "Reducir repeticiones si aparecen errores por fatiga."
+    ],
+    "si_sale_bien": [
+      "Cambiar aleatoriamente los colores.",
+      "Añadir una tercera consigna con una acción distinta.",
+      "Cambiar la posición de salida.",
+      "Añadir competición por parejas sin modificar la consigna verbal."
+    ],
+    "variantes": [
+      "Fútbol 7: 4 grupos: 4 + 4 + 4 + 3. Trabaja un grupo por oleada. · 8-10 min incluyendo explicación, prueba y rotaciones.",
+      "Fútbol 11: Oleadas de 4. Con plantilla grande, 4-6 grupos según número de jugadores. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_77219400674642103558.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Aproximadamente 4 jugadores trabajan simultáneamente por oleada.",
+        "Los jugadores parten alineados sobre referencias planas.",
+        "El entrenador da una consigna de color en voz alta.",
+        "Los jugadores reaccionan a la palabra-color y arrancan simultáneamente hacia la dirección asociada.",
+        "Se observan aceleraciones cortas hacia dos direcciones opuestas.",
+        "Hay referencias de varios colores en los extremos.",
+        "No se utiliza balón."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-COLOR-SPRINT-2-DIRECCIONES/CampoBase_Reaccion_Color_Sprint_Dos_Direcciones_CORREGIDO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-COLOR-SPRINT-2-DIRECCIONES/frames/f",
+    "total": 59,
+    "frameMs": 165
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACCION-COLOR-SPRINT-2-DIRECCIONES/video.mp4"
+}
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
