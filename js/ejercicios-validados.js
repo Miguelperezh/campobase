@@ -3252,6 +3252,142 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   },
   "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACCION-COLOR-SPRINT-2-DIRECCIONES/video.mp4"
 }
+,
+{
+  "id": "CAMPOBASE-VIDEO-KNEE-DRIVE-SKATER-JUMP-PROGRESION",
+  "nombre": "Knee drive + saltos laterales tipo skater en progresión",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Coordinación",
+      "Cambio de dirección",
+      "Aceleración",
+      "Equilibrio",
+      "Estabilidad",
+      "Potencia lateral",
+      "Control corporal"
+    ],
+    "tiempo_estimado_15": "6-8 min incluyendo demostración.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 carriles iguales de 5 jugadores. Trabaja 1 jugador por carril y los otros 4 esperan/recuperan."
+    },
+    "material": "Conos/cúpulas verdes en la zona central. · Conos/cúpulas blancas como referencias laterales.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "2 series de 75-90 s de rotación continua por carril. por carril, 2-3 recorridos. por jugador. Descanso 60-75 s. entre series."
+      }
+    ],
+    "explicacion_breve": "El jugador entra en el montaje con una acción de knee drive: eleva la rodilla y prepara el primer apoyo. Desde el primer apoyo realiza un salto lateral hacia un lado, aterrizando sobre una pierna. Estabiliza de forma muy breve sin quedarse parado. Impulsa inmediatamente hacia el lado contrario. Repite derecha-izquierda-derecha-izquierda mientras avanza hacia delante. Sale del montaje manteniendo el control corporal.",
+    "leyenda": "Knee drive de entrada + saltos laterales tipo skater alternando apoyos, con progresión hacia delante."
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar coordinación entre impulso, recepción y nuevo impulso.",
+      "Trabajar estabilidad unilateral en las recepciones.",
+      "Mejorar fuerza/potencia lateral de baja duración.",
+      "Controlar el tronco y la cadera al cambiar de apoyo.",
+      "Encadenar movimientos laterales mientras se progresa hacia delante."
+    ],
+    "claves_entrenador": [
+      "«Primero calidad, no altura».",
+      "«Rodilla arriba al entrar».",
+      "«Cada salto cae sobre una pierna y sales hacia el otro lado».",
+      "«Avanza hacia delante, no te quedes saltando en el mismo sitio».",
+      "Hacer una demostración lenta antes de pedir velocidad.",
+      "«Rodilla arriba».",
+      "«Cae estable».",
+      "«Rodilla alineada con el pie».",
+      "«Cadera controlada».",
+      "«Impulsa al otro lado».",
+      "«No juntes los pies».",
+      "«Avanza».",
+      "«Calidad antes que distancia»."
+    ],
+    "montaje": [
+      "Carril corto de progresión.",
+      "Referencias verdes centrales distribuidas a lo largo del recorrido.",
+      "Referencias blancas exteriores a ambos lados.",
+      "Un jugador realiza la tarea por vez en el vídeo."
+    ],
+    "desarrollo": [
+      "El jugador entra en el montaje con una acción de knee drive: eleva la rodilla y prepara el primer apoyo.",
+      "Desde el primer apoyo realiza un salto lateral hacia un lado, aterrizando sobre una pierna.",
+      "Estabiliza de forma muy breve sin quedarse parado.",
+      "Impulsa inmediatamente hacia el lado contrario.",
+      "Repite derecha-izquierda-derecha-izquierda mientras avanza hacia delante.",
+      "Sale del montaje manteniendo el control corporal."
+    ],
+    "que_buscamos": [
+      "Mejorar el control corporal en cambios laterales rápidos.",
+      "Preparar apoyos para correcciones defensivas y desplazamientos laterales.",
+      "Mejorar estabilidad tras una frenada o apoyo unilateral.",
+      "Favorecer una mejor mecánica de impulso lateral."
+    ],
+    "que_observar": [
+      "Que la rodilla no colapse hacia dentro al aterrizar.",
+      "Que el jugador no caiga con el tronco descontrolado.",
+      "Que exista una recepción clara sobre una pierna antes del siguiente impulso.",
+      "Que los saltos sean laterales pero también progresen hacia delante.",
+      "Que no se junten los pies entre saltos.",
+      "Que la distancia de salto sea adecuada a la edad.",
+      "Que la fatiga no deteriore la calidad de las recepciones."
+    ],
+    "correcciones": [
+      "Saltar demasiado alto en lugar de desplazarse lateralmente.",
+      "Quedarse casi parado entre recepciones.",
+      "Caer con la rodilla hacia dentro.",
+      "Usar los dos pies para estabilizar cada recepción.",
+      "Perder la progresión hacia delante.",
+      "Buscar velocidad antes de dominar la técnica."
+    ],
+    "reglas": [
+      "El GIF reproduce la secuencia visible: knee drive de entrada + saltos laterales alternos con progresión.",
+      "No se añade señal verbal ni visual porque no aparece en el vídeo.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase.",
+      "Para Alevín se reduce la amplitud respecto a un adulto y se prioriza estabilidad."
+    ],
+    "si_sale_mal": [
+      "Reducir distancia lateral entre conos.",
+      "Eliminar la progresión hacia delante y practicar solo un salto lateral y recepción.",
+      "Hacer el recorrido andando con apoyo lateral antes de saltar.",
+      "Reducir el número de saltos del recorrido."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la amplitud lateral.",
+      "Añadir un último sprint corto al salir.",
+      "Cambiar la pierna con la que se inicia.",
+      "Añadir una señal final de salida derecha/izquierda después del último salto, como progresión nueva."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 carriles iguales de 5 jugadores. Trabaja 1 jugador por carril y los otros 4 esperan/recuperan. · 6-8 min incluyendo demostración.",
+      "Fútbol 11: 3-4 carriles de 4-6 jugadores, según plantilla y espacio. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7575643273721662742.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Un jugador realiza el ejercicio de forma individual y sin balón.",
+        "El montaje utiliza conos verdes en la zona central y conos blancos delimitando los laterales.",
+        "El jugador entra con una acción de rodilla alta/knee drive.",
+        "Después encadena saltos laterales tipo skater alternando apoyos de un lado a otro.",
+        "Los saltos laterales progresan hacia delante a través del montaje.",
+        "Cada recepción se realiza sobre un apoyo antes de impulsar hacia el lado contrario.",
+        "El recorrido termina saliendo por el extremo opuesto del montaje."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-KNEE-DRIVE-SKATER-JUMP-PROGRESION/CampoBase_Knee_Drive_Skater_Jump_Progresion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-KNEE-DRIVE-SKATER-JUMP-PROGRESION/frames/f",
+    "total": 39,
+    "frameMs": 169
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-KNEE-DRIVE-SKATER-JUMP-PROGRESION/video.mp4"
+}
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
