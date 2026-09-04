@@ -36,7 +36,7 @@ const ex = (data) => Object.freeze({ recordType: 'exercise', favorite: false, ex
 export const REAL_EXERCISES = Object.freeze([
   // ===== LUNES — Técnica básica, conducción, 1x1, finalización =====
   ex({
-    id: 'lun-c1a', code: 'C1A', name: 'Conducción libre con balón', category: 'Técnica', duration: 4,
+    id: 'lun-c1a', code: 'C1A', name: 'Conducción libre con balón', category: 'Tecnificación', duration: 4,
     players: 'Todos. Cada jugador con 1 balón.', material: '4 conos + 1 balón por jugador.',
     space: '20 × 20 m aprox. Los conos solo delimitan.', intensity: 'Baja al inicio → media al final.',
     objective: 'Activar progresivamente, empezar a moverse con balón y observar el nivel de conducción.',
@@ -49,7 +49,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:10,y:10},{x:90,y:10},{x:10,y:90},{x:90,y:90}], players: [{x:30,y:30,n:'A'},{x:60,y:40,n:'B'},{x:40,y:65,n:'C'},{x:70,y:70,n:'D'}], ball: {x:30,y:30}, arrows: [{x1:30,y1:30,x2:60,y2:40,kind:'dribble'},{x1:60,y1:40,x2:40,y2:65,kind:'dribble'},{x1:40,y1:65,x2:70,y2:70,kind:'dribble'}] },
   }),
   ex({
-    id: 'lun-c1b', code: 'C1B', name: 'Puertas de conducción', category: 'Técnica', duration: 3,
+    id: 'lun-c1b', code: 'C1B', name: 'Puertas de conducción', category: 'Tecnificación', duration: 3,
     players: 'Todos. Cada jugador con balón.', material: '12 conos formando 6 puertas + balones.',
     space: '20 × 20 m. Cada puerta ~1,5 m.', intensity: 'Media.',
     objective: 'Conducir, levantar la vista, localizar puerta libre y cambiar de dirección.',
@@ -62,7 +62,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:20},{x:26,y:20},{x:50,y:15},{x:56,y:15},{x:80,y:20},{x:86,y:20},{x:20,y:80},{x:26,y:80},{x:50,y:85},{x:56,y:85},{x:80,y:80},{x:86,y:80}], players: [{x:40,y:50,n:'A'}], ball: {x:40,y:50}, arrows: [{x1:40,y1:50,x2:50,y2:15,kind:'dribble'},{x1:50,y1:15,x2:80,y2:20,kind:'dribble'}] },
   }),
   ex({
-    id: 'lun-c1c', code: 'C1C', name: 'Aceleraciones cortas', category: 'Preparación física', duration: 3,
+    id: 'lun-c1c', code: 'C1C', name: 'Aceleraciones cortas', category: 'Preparación física integrada', duration: 3,
     players: 'Grupos de 3-4.', material: '2 conos por grupo.',
     space: '7 m entre salida y final.', intensity: '80-90 %. No sprint máximo.',
     objective: 'Activar reacción y aceleración corta sin fatigar.',
@@ -75,7 +75,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:15,y:50},{x:85,y:50}], players: [{x:15,y:50,n:'A'}], ball: {x:15,y:50}, arrows: [{x1:15,y1:50,x2:85,y2:50,kind:'move'}] },
   }),
   ex({
-    id: 'lun-e2a', code: 'E2A', name: 'Pase y sigo en cuadrado', category: 'Técnica', duration: 6,
+    id: 'lun-e2a', code: 'E2A', name: 'Pase y sigo en cuadrado', category: 'Tecnificación', duration: 6,
     players: '8-16. Si hay muchos, 2 cuadrados. 2-4 jugadores por cono.', material: '4 conos + 1 balón por cuadrado.',
     space: 'Cuadrado ~8 × 8 m.', intensity: 'Media.',
     objective: 'Pase, control y movimiento después del pase.',
@@ -88,12 +88,12 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:25,y:25},{x:75,y:25},{x:75,y:75},{x:25,y:75}], players: [{x:25,y:25,n:'A'},{x:75,y:25,n:'B'},{x:75,y:75,n:'C'},{x:25,y:75,n:'D'}], ball: {x:25,y:25}, arrows: [{x1:25,y1:25,x2:75,y2:25,kind:'pass'},{x1:75,y1:25,x2:75,y2:75,kind:'pass'},{x1:75,y1:75,x2:25,y2:75,kind:'pass'},{x1:25,y1:75,x2:25,y2:25,kind:'pass'}] },
   }),
   ex({
-    id: 'lun-e2b', code: 'E2B', name: 'Pase, devolución y tercer jugador', category: 'Técnica', duration: 6,
+    id: 'lun-e2b', code: 'E2B', name: 'Pase, devolución y tercer jugador', category: 'Tecnificación', duration: 6,
     players: 'Grupos de 3.', material: '3 conos + 1 balón por grupo.',
     space: 'Triángulo de 6-8 m por lado.', intensity: 'Media.',
     objective: 'Pase, apoyo, devolución y continuidad con tercer compañero.',
     steps: ['A pasa a B.', 'B devuelve a A.', 'A pasa a C.', 'A corre al cono de B.', 'B corre al cono de C.', 'C conduce hasta el cono A.', 'C queda en A con el balón y comienza la siguiente repetición.'],
-    works: ['Pase', 'Devolución', 'Apoyo', 'Juego de cara', 'Coordinación'],
+    works: ['Pase', 'Devolución', 'Apoyo', 'Juego de cara', 'Coordinación/motricidad'],
     lookFor: 'Que empiecen a usar un apoyo para continuar la jugada.',
     observe: ['B no se ofrece', 'Devolución fuerte', 'A no preparado', 'Rotación confusa'],
     corrections: ['«Apóyate bien»', '«Devuelve fácil»', '«Prepárate antes de recibir»', '«Pasa y cambia de sitio»'],
@@ -101,7 +101,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:80},{x:80,y:80},{x:50,y:20}], players: [{x:20,y:80,n:'A'},{x:80,y:80,n:'B'},{x:50,y:20,n:'C'}], ball: {x:20,y:80}, arrows: [{x1:20,y1:80,x2:80,y2:80,kind:'pass'},{x1:80,y1:80,x2:20,y2:80,kind:'pass'},{x1:20,y1:80,x2:50,y2:20,kind:'pass'},{x1:50,y1:20,x2:20,y2:80,kind:'dribble'}] },
   }),
   ex({
-    id: 'lun-e3a', code: 'E3A', name: 'Conducción con cambios de dirección', category: 'Técnica', duration: 6,
+    id: 'lun-e3a', code: 'E3A', name: 'Conducción con cambios de dirección', category: 'Tecnificación', duration: 6,
     players: 'Grupos de 4-6. Si hay muchos, 2 recorridos.', material: '1 cono salida + 3 de cambio + 2 de puerta final + balón por jugador.',
     space: '12-15 m de largo.', intensity: 'Media; aumenta tras último cono.',
     objective: 'Conducción cercana, giros y aceleración con balón.',
@@ -127,7 +127,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:15,y:20},{x:15,y:80},{x:40,y:20},{x:40,y:80},{x:88,y:42},{x:88,y:58}], players: [{x:25,y:50,n:'A'}], defenders: [{x:55,y:50,n:'B'}], ball: {x:25,y:50}, arrows: [{x1:25,y1:50,x2:55,y2:50,kind:'dribble'},{x1:55,y1:50,x2:88,y2:50,kind:'dribble'}] },
   }),
   ex({
-    id: 'lun-e4a', code: 'E4A', name: 'Pase, control y disparo', category: 'Técnica', duration: 6,
+    id: 'lun-e4a', code: 'E4A', name: 'Pase, control y disparo', category: 'Tecnificación', duration: 6,
     players: 'Grupos de 4-6.', material: '4 conos + 2-3 balones.',
     space: '12-15 m; portería de conos ~3 m.', intensity: 'Media.',
     objective: 'Recibir, orientar y finalizar con precisión.',
@@ -153,7 +153,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:88,y:40},{x:88,y:60}], players: [{x:25,y:40,n:'A'},{x:25,y:60,n:'B'}], defenders: [{x:60,y:50,n:'C'}], ball: {x:25,y:40}, arrows: [{x1:25,y1:40,x2:25,y2:60,kind:'pass'},{x1:25,y1:40,x2:88,y2:50,kind:'dribble'}] },
   }),
   ex({
-    id: 'lun-p1', code: 'P1', name: 'Partidillo de observación', category: 'Partido condicionado / Small-sided games', duration: 14,
+    id: 'lun-p1', code: 'P1', name: 'Partidillo de observación', category: 'Juego reducido', duration: 14,
     players: 'Preferente 7x7. Rotaciones si sobran.', material: '2 porterías + petos + balones.',
     space: 'Medio campo F7 aprox.', intensity: 'Media-alta natural.',
     objective: 'Ver si aparece lo trabajado y obtener lectura del grupo.',
@@ -168,7 +168,7 @@ export const REAL_EXERCISES = Object.freeze([
 
   // ===== MIÉRCOLES — Pase y apoyo, presión, defensa individual y posesión =====
   ex({
-    id: 'mie-c2a', code: 'C2A', name: 'Pase por parejas en movimiento', category: 'Técnica', duration: 4,
+    id: 'mie-c2a', code: 'C2A', name: 'Pase por parejas en movimiento', category: 'Tecnificación', duration: 4,
     players: 'Todos por parejas. Grupo de 3 si sobra uno.', material: '1 balón por pareja + 4 conos límite.',
     space: '20 × 20 m aprox.', intensity: 'Baja → media.',
     objective: 'Activar con pase/control mientras siguen moviéndose.',
@@ -181,7 +181,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:10,y:10},{x:90,y:10},{x:10,y:90},{x:90,y:90}], players: [{x:30,y:40,n:'A'},{x:60,y:40,n:'B'},{x:30,y:70,n:'C'},{x:60,y:70,n:'D'}], ball: {x:30,y:40}, arrows: [{x1:30,y1:40,x2:60,y2:40,kind:'pass'},{x1:30,y1:70,x2:60,y2:70,kind:'pass'}] },
   }),
   ex({
-    id: 'mie-c2b', code: 'C2B', name: 'Pase, devolución y reacción a puerta', category: 'Técnica', duration: 3,
+    id: 'mie-c2b', code: 'C2B', name: 'Pase, devolución y reacción a puerta', category: 'Tecnificación', duration: 3,
     players: 'Grupos de 3. A y B participan; C espera y rota.', material: '2 conos formando puerta + 1 balón.',
     space: 'A a 5-6 m de B; puerta delante de B.', intensity: 'Media.',
     objective: 'Pasar, devolver, desmarcar sin balón y volver a recibir tras cruzar puerta.',
@@ -194,7 +194,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:70,y:40},{x:70,y:60}], players: [{x:20,y:50,n:'A'},{x:50,y:50,n:'B'}], ball: {x:20,y:50}, arrows: [{x1:20,y1:50,x2:50,y2:50,kind:'pass'},{x1:50,y1:50,x2:20,y2:50,kind:'pass'},{x1:50,y1:50,x2:70,y2:50,kind:'move'},{x1:20,y1:50,x2:70,y2:50,kind:'pass'}] },
   }),
   ex({
-    id: 'mie-c2c', code: 'C2C', name: 'Reacción + aceleración corta', category: 'Preparación física', duration: 3,
+    id: 'mie-c2c', code: 'C2C', name: 'Reacción + aceleración corta', category: 'Preparación física integrada', duration: 3,
     players: 'Grupos de 3-4.', material: '1 cono salida + 2 conos finales.',
     space: '6 m desde salida a cada final.', intensity: '80-90 %, 2-3 s por acción.',
     objective: 'Activar reacción y primeros pasos sin fatigar.',
@@ -285,7 +285,7 @@ export const REAL_EXERCISES = Object.freeze([
     diagram: { cones: [{x:10,y:40},{x:10,y:60},{x:90,y:40},{x:90,y:60}], players: [{x:30,y:35,n:'A'},{x:30,y:50,n:'B'},{x:30,y:65,n:'C'}], defenders: [{x:70,y:35,n:'D'},{x:70,y:50,n:'E'},{x:70,y:65,n:'F'}], ball: {x:30,y:50}, arrows: [{x1:30,y1:50,x2:70,y2:50,kind:'pass'}] },
   }),
   ex({
-    id: 'mie-p2', code: 'P2', name: 'Partidillo · apoyo y reacción tras pérdida', category: 'Partido condicionado / Small-sided games', duration: 14,
+    id: 'mie-p2', code: 'P2', name: 'Partidillo · apoyo y reacción tras pérdida', category: 'Juego reducido', duration: 14,
     players: '7x7 si es posible.', material: '2 porterías + petos + balones.',
     space: 'Medio campo F7.', intensity: 'Media-alta natural.',
     objective: 'Comprobar apoyo y reacción defensiva sin demasiadas reglas.',
@@ -302,7 +302,7 @@ export const REAL_EXERCISES = Object.freeze([
 // ===== EJERCICIOS COORDINATIVOS Y TÉCNICOS (Slideshare "Ejercicios de fútbol base" — Kevin Gómez) =====
 export const SLIDESHARE_EXERCISES = Object.freeze([
   ex({
-    id: 'coord-slide-01', code: 'C1', name: 'Coordinación por aros + conducción ida y vuelta', category: 'Coordinación', duration: 3,
+    id: 'coord-slide-01', code: 'C1', name: 'Coordinación por aros + conducción ida y vuelta', category: 'Coordinación/motricidad', duration: 3,
     players: '4-5 por estación.', material: 'Aros y balón.',
     space: '14-16 m.', intensity: 'Media.',
     objective: 'Trabajo de coordinación por aros en carrera alternando los pies, hasta llegar al balón para conducir.',
@@ -316,7 +316,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:15,y:50},{x:85,y:50}], players: [{x:15,y:50,n:'A'}], ball: {x:85,y:50}, arrows: [{x1:15,y1:50,x2:85,y2:50,kind:'move'},{x1:85,y1:50,x2:15,y2:50,kind:'dribble'}] },
   }),
   ex({
-    id: 'coord-slide-02', code: 'C2', name: 'Auto-pase + skipping en escalera', category: 'Coordinación', duration: 4,
+    id: 'coord-slide-02', code: 'C2', name: 'Auto-pase + skipping en escalera', category: 'Coordinación/motricidad', duration: 4,
     players: '4-5 por estación.', material: 'Escalera y balón.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Auto-pase por un costado de la escalera, skipping a 1 contacto y conducción.',
@@ -330,7 +330,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:15,y:50},{x:85,y:50}], players: [{x:15,y:50,n:'A'}], ball: {x:50,y:50}, arrows: [{x1:15,y1:50,x2:50,y2:50,kind:'move'},{x1:50,y1:50,x2:85,y2:50,kind:'dribble'}] },
   }),
   ex({
-    id: 'coord-slide-03', code: 'C3', name: 'Conducción + salto de vallas', category: 'Coordinación', duration: 4,
+    id: 'coord-slide-03', code: 'C3', name: 'Conducción + salto de vallas', category: 'Coordinación/motricidad', duration: 4,
     players: '4-5 por estación.', material: 'Vallas y conos.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Conducción hasta la valla, auto-pase por debajo, salto y giro de 180°.',
@@ -344,7 +344,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:50},{x:50,y:50},{x:80,y:50}], players: [{x:10,y:50,n:'A'}], ball: {x:10,y:50}, arrows: [{x1:10,y1:50,x2:20,y2:50,kind:'dribble'},{x1:20,y1:50,x2:50,y2:50,kind:'dribble'},{x1:50,y1:50,x2:80,y2:50,kind:'dribble'}] },
   }),
   ex({
-    id: 'coord-slide-04', code: 'C4', name: 'Coordinación adelante/atrás + pase', category: 'Coordinación', duration: 3,
+    id: 'coord-slide-04', code: 'C4', name: 'Coordinación adelante/atrás + pase', category: 'Coordinación/motricidad', duration: 3,
     players: 'Por parejas.', material: 'Picas y balón.',
     space: '4-6 m.', intensity: 'Media.',
     objective: 'Desplazamiento adelante y atrás en picas mientras el compañero pasa el balón.',
@@ -358,7 +358,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:30,y:30},{x:30,y:50},{x:30,y:70}], players: [{x:30,y:50,n:'A'},{x:70,y:50,n:'B'}], ball: {x:70,y:50}, arrows: [{x1:70,y1:50,x2:30,y2:50,kind:'pass'},{x1:30,y1:50,x2:70,y2:50,kind:'pass'}] },
   }),
   ex({
-    id: 'coord-slide-05', code: 'C5', name: 'Zig-zag entre conos + escalera', category: 'Coordinación', duration: 4,
+    id: 'coord-slide-05', code: 'C5', name: 'Zig-zag entre conos + escalera', category: 'Coordinación/motricidad', duration: 4,
     players: '4-5 por estación.', material: 'Conos y escalera.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Conducción en zig-zag, giro 180°, pase tenso y coordinación en escalera.',
@@ -372,7 +372,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:30},{x:35,y:70},{x:50,y:30},{x:65,y:70},{x:80,y:30}], players: [{x:10,y:50,n:'A'}], ball: {x:10,y:50}, arrows: [{x1:10,y1:50,x2:20,y2:30,kind:'dribble'},{x1:20,y1:30,x2:35,y2:70,kind:'dribble'},{x1:35,y1:70,x2:50,y2:30,kind:'dribble'},{x1:50,y1:30,x2:65,y2:70,kind:'dribble'},{x1:65,y1:70,x2:80,y2:30,kind:'dribble'}] },
   }),
   ex({
-    id: 'coord-slide-06', code: 'C6', name: 'Conducción + giro 180° + slalom', category: 'Coordinación', duration: 4,
+    id: 'coord-slide-06', code: 'C6', name: 'Conducción + giro 180° + slalom', category: 'Coordinación/motricidad', duration: 4,
     players: '3-4 por estación.', material: 'Aros y picas.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Conducción, giro 180°, pase y coordinación en aros o slalom en picas.',
@@ -386,7 +386,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:30},{x:35,y:70},{x:50,y:30},{x:65,y:70},{x:80,y:30}], players: [{x:10,y:50,n:'A'}], ball: {x:10,y:50}, arrows: [{x1:10,y1:50,x2:20,y2:30,kind:'dribble'},{x1:20,y1:30,x2:35,y2:70,kind:'dribble'},{x1:35,y1:70,x2:50,y2:30,kind:'dribble'}] },
   }),
   ex({
-    id: 'tech-slide-07', code: 'T7', name: 'Control + pase con desplazamiento', category: 'Técnica', duration: 6,
+    id: 'tech-slide-07', code: 'T7', name: 'Control + pase con desplazamiento', category: 'Tecnificación', duration: 6,
     players: '7 participantes.', material: 'Conos y balón.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Secuencia de controles y pases con desmarque de apoyo y devolución.',
@@ -400,7 +400,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:30},{x:50,y:30},{x:80,y:30},{x:20,y:70},{x:50,y:70},{x:80,y:70}], players: [{x:20,y:30,n:'1'},{x:50,y:30,n:'2'},{x:80,y:30,n:'3'},{x:20,y:70,n:'4'},{x:50,y:70,n:'5'},{x:80,y:70,n:'6'}], ball: {x:20,y:30}, arrows: [{x1:20,y1:30,x2:50,y2:30,kind:'pass'},{x1:50,y1:30,x2:80,y2:30,kind:'pass'},{x1:80,y1:30,x2:80,y2:70,kind:'pass'}] },
   }),
   ex({
-    id: 'tech-slide-08', code: 'T8', name: 'Secuencia de controles y pases', category: 'Técnica', duration: 6,
+    id: 'tech-slide-08', code: 'T8', name: 'Secuencia de controles y pases', category: 'Tecnificación', duration: 6,
     players: '7 participantes.', material: 'Conos y balón.',
     space: '12-14 m.', intensity: 'Media.',
     objective: 'Secuencia de controles y pases con desplazamiento en dirección del balón.',
@@ -414,7 +414,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { cones: [{x:20,y:30},{x:50,y:30},{x:80,y:30},{x:20,y:70},{x:50,y:70},{x:80,y:70}], players: [{x:20,y:30,n:'1'},{x:50,y:30,n:'2'},{x:80,y:30,n:'3'},{x:20,y:70,n:'4'},{x:50,y:70,n:'5'},{x:80,y:70,n:'6'}], ball: {x:20,y:30}, arrows: [{x1:20,y1:30,x2:50,y2:30,kind:'pass'},{x1:50,y1:30,x2:80,y2:30,kind:'pass'},{x1:80,y1:30,x2:80,y2:70,kind:'pass'}] },
   }),
   ex({
-    id: 'tech-slide-09', code: 'T9', name: 'Paredes continuas bilaterales', category: 'Técnica', duration: 4,
+    id: 'tech-slide-09', code: 'T9', name: 'Paredes continuas bilaterales', category: 'Tecnificación', duration: 4,
     players: 'Por parejas.', material: 'Balón.',
     space: '30x30 m.', intensity: 'Media.',
     objective: 'Paredes continuas ida y regreso de forma bilateral con controles y pases.',
@@ -428,7 +428,7 @@ export const SLIDESHARE_EXERCISES = Object.freeze([
     diagram: { players: [{x:30,y:50,n:'A'},{x:70,y:50,n:'B'}], ball: {x:30,y:50}, arrows: [{x1:30,y1:50,x2:70,y2:50,kind:'pass'},{x1:70,y1:50,x2:30,y2:50,kind:'pass'}] },
   }),
   ex({
-    id: 'tech-slide-10', code: 'T10', name: 'Desmarque + finalización', category: 'Técnica', duration: 4,
+    id: 'tech-slide-10', code: 'T10', name: 'Desmarque + finalización', category: 'Tecnificación', duration: 4,
     players: 'Por parejas + 1 portero.', material: 'Balón y portería.',
     space: '30x30 m.', intensity: 'Media.',
     objective: 'Pase, desdoblamiento por la espalda y finalización a portería.',

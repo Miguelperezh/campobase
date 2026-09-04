@@ -1,6 +1,7 @@
 export const EXERCISE_CATEGORIES = Object.freeze([
-  'Técnica', 'Táctica', 'Coordinación', 'Preparación física', 'Calentamiento',
-  'Partido condicionado / Small-sided games', 'Porteros',
+  'Calentamiento/activación', 'Tecnificación', 'Técnico-táctico', 'Táctica',
+  'Posesión', 'Juego reducido', 'Finalización', 'Transición',
+  'Coordinación/motricidad', 'Preparación física integrada', 'Porteros',
 ]);
 
 export const EXERCISE_DIFFICULTIES = Object.freeze(['Baja', 'Media', 'Alta']);
@@ -17,9 +18,9 @@ export function inferExerciseDiagram(values = {}) {
   else if (/2 contra 1|2v1|3 contra 2|superioridad/.test(text)) type = 'superiority';
   else if (/tiro|remate|finaliza/.test(text)) type = 'finishing';
   else if (/circuito|coordin|escalera|slalom|valla|zig-zag/.test(text)) type = 'circuit';
-  else if (category === 'Partido condicionado / Small-sided games' || /partido|small-sided/.test(text)) type = 'small-sided';
+  else if (category === 'Juego reducido' || /partido|small-sided/.test(text)) type = 'small-sided';
   else if (/posesión|conservar/.test(text)) type = 'possession';
-  else if (category === 'Calentamiento' || /calentamiento|movilidad|activación/.test(text)) type = 'warmup';
+  else if (category === 'Calentamiento/activación' || /calentamiento|movilidad|activación/.test(text)) type = 'warmup';
   return Object.freeze({
     type,
     players: playerTotal(values.players),
@@ -45,7 +46,7 @@ const coordination = [
   ['coord-08', 'Secuencia de controles y pases', '7 participantes', 'Conos y balón', 6, 'Encadenar controles orientados y pases siguiendo el circuito marcado.', 'Media', '20x15 m'],
   ['coord-09', 'Paredes continuas bilaterales', 'Parejas', 'Balón', 4, 'Paredes continuas alternando ambos perfiles y pierna de contacto.', 'Media', 'Carril de 12x6 m'],
   ['coord-10', 'Desmarque + finalización', 'Parejas + portero', 'Balón y portería', 4, 'Desmarque de ruptura tras pase, devolución y finalización ante portero.', 'Media', 'Media cancha'],
-].map((item) => exercise(...item.slice(0, 2), 'Coordinación', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Coordinación/motricidad', ...item.slice(2)));
 
 const technical = [
   ['tech-01', 'Libera las líneas de pase', '5', '3 siluetas, 6 palos y balones', 24, 'Área 15x15 m. Coloca 3 siluetas (defensores) y 6 palos formando puertas. Los 5 jugadores circulan el balón moviéndose para abrir líneas de pase libres entre las siluetas. 2 series de 10 min con 2 min de recuperación. Trabaja pase, control orientado, desmarque y toca-y-vete.', 'Media', '15x15 m', 'Añade un defensor real que presione; limita a 2 toques.'],
@@ -58,7 +59,7 @@ const technical = [
   ['tech-08', 'Circuito de perfeccionamiento técnico', '6-18', 'Balones, conos, picas y porterías', 15, 'Estaciones rotativas de pase, control, conducción, regate y finalización. Cada estación entrena un gesto técnico distinto y los jugadores rotan. Trabaja varios gestos técnicos en una sola tarea.', 'Media', 'Media cancha', 'Añade tiempo límite por estación.'],
   ['tech-09', 'Circuito técnico-motor: juego de la bandera', '8-18', 'Balones, conos y petos', 12, 'Circuito motor con reacción a señal: los jugadores conducen, reaccionan a un estímulo y conquistan la bandera con balón. Trabaja reactividad neuromuscular y conducción.', 'Media', '25x20 m', 'Cambia el estímulo (color, número, sonido).'],
   ['tech-10', 'Circuito motriz psicocinético con 1 contra 1', '6-16', 'Balones, conos y petos', 15, 'Estación motriz con estímulos cognitivos: el jugador decide el recorrido según la señal y termina en un duelo 1 contra 1. Trabaja esquemas motrices básicos y toma de decisión.', 'Alta', '30x20 m', 'Varía el estímulo y el recorrido.'],
-].map((item) => exercise(...item.slice(0, 2), 'Técnica', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Tecnificación', ...item.slice(2)));
 
 const tactical = [
   ['tact-01', 'Juego condicionado: cuadrícula de posesión — Real Madrid CF', '10-18', 'Balones, conos y petos', 15, 'Posesión por cuadrículas: el equipo debe ocupar y liberar espacios formando triángulos de posesión. Trabaja la circulación y la búsqueda constante del pase libre.', 'Alta', '35x30 m', 'Limita toques; obliga a cambiar de cuadrícula cada X pases.'],
@@ -74,9 +75,9 @@ const tactical = [
   ['tact-11', 'Small-sided game: El pentágono', '6-12', 'Balones, conos y petos', 15, 'Juego de apoyos y desmarques en espacio pentagonal para mejorar la técnica a alta intensidad. Trabaja reacción y apoyos.', 'Alta', 'Pentágono de 20 m', 'Limita toques; añade porterías en los lados.'],
   ['tact-12', 'Ataque contra defensa en tres zonas', '10-18', 'Balones, conos, petos y porterías', 20, 'El ataque progresa por tres zonas ante una defensa organizada, buscando superioridad por dentro y por fuera. Trabaja atraer y progresar.', 'Alta', 'Media cancha', 'Obliga a superar cada zona con pase.'],
   ['tact-13', 'Recibir y defender el balón', '2', '4 conos, 6 palos (2 de cada color), 1 peto y balones', 18, 'Área 20x20 m. Situaciones de 1 contra 1: un jugador recibe de espaldas y protege el balón ante oposición activa. 3 series de 5 min alternando 3 parejas (6 jugadores), con 1 min de recuperación. Trabaja control, protección, dribling y orientación.', 'Media', '20x20 m', 'Añade un segundo defensor; reduce el espacio.'],
-].map((item) => exercise(...item.slice(0, 2), item[1].startsWith('Small-sided') || item[1].startsWith('Partido condicionado') ? 'Partido condicionado / Small-sided games' : 'Táctica', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), item[1].startsWith('Small-sided') || item[1].startsWith('Partido condicionado') ? 'Juego reducido' : 'Táctica', ...item.slice(2)));
 
-const physical = [exercise('physical-01', 'Circuito físico: El cuadrado', 'Preparación física', '8-20', 'Conos y petos', 15, 'Circuito en cuatro lados con velocidad, agilidad, resistencia y recuperación activa. Cada lado entrena una cualidad distinta y los jugadores rotan.', 'Media', 'Cuadrado de 20x20 m', 'Aumenta la intensidad o el número de vueltas.')];
+const physical = [exercise('physical-01', 'Circuito físico: El cuadrado', 'Preparación física integrada', '8-20', 'Conos y petos', 15, 'Circuito en cuatro lados con velocidad, agilidad, resistencia y recuperación activa. Cada lado entrena una cualidad distinta y los jugadores rotan.', 'Media', 'Cuadrado de 20x20 m', 'Aumenta la intensidad o el número de vueltas.')];
 
 const technicalV2 = [
   ['tech-11', 'Regate en puertas de colores', '6-16', 'Balones y conos', 12, 'Conducir y superar la puerta indicada con un cambio de ritmo.', 'Baja', '20x20 m'],
@@ -89,7 +90,7 @@ const technicalV2 = [
   ['tech-18', 'Slalom con finta y aceleración', '6-16', 'Balones, conos y picas', 12, 'Encadenar fintas en slalom y acelerar al superar la última pica.', 'Baja', 'Carril de 18x5 m'],
   ['tech-19', 'Pase largo y control aéreo', 'Parejas', 'Balones y conos', 14, 'Alternar envíos largos y controles orientados con muslo, pecho o pie.', 'Alta', 'Carril de 30x10 m'],
   ['tech-20', 'Finalización a dos toques', '6-15', 'Balones, conos y portería', 15, 'Controlar el pase frontal y finalizar antes del segundo toque.', 'Alta', 'Frontal y área'],
-].map((item) => exercise(...item.slice(0, 2), 'Técnica', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Tecnificación', ...item.slice(2)));
 
 const coordinationV2 = [
   ['coord-11', 'Escalera lateral y pase de precisión', '4-10', 'Escalera, balones y conos', 10, 'Completar apoyos laterales y pasar a una puerta pequeña.', 'Baja', 'Carril de 15x5 m'],
@@ -98,7 +99,7 @@ const coordinationV2 = [
   ['coord-14', 'Vallas bajas y salida explosiva', '4-12', 'Vallas y conos', 10, 'Superar vallas con apoyos cortos y acelerar cinco metros.', 'Media', 'Carril de 15x4 m'],
   ['coord-15', 'Espejo coordinativo por parejas', 'Parejas', 'Conos', 10, 'Un jugador lidera desplazamientos y el compañero los reproduce.', 'Baja', 'Cuadrados de 8x8 m'],
   ['coord-16', 'Circuito óculo-pédico con dos balones', '6-12', 'Balones, aros y conos', 12, 'Coordinar pase simultáneo, apoyos en aros y cambio de estación.', 'Alta', '18x18 m'],
-].map((item) => exercise(...item.slice(0, 2), 'Coordinación', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Coordinación/motricidad', ...item.slice(2)));
 
 const tacticalV2 = [
   ['tact-14', 'Basculación defensiva en bloque medio', '8-16', 'Balones, conos y petos', 16, 'Desplazar el bloque según la circulación rival cerrando líneas interiores.', 'Alta', '40x35 m'],
@@ -112,14 +113,14 @@ const physicalV2 = [
   ['physical-03', 'Cambios de dirección 5-10-5', '6-16', 'Conos', 10, 'Acelerar, frenar y cambiar de dirección en recorrido 5-10-5.', 'Media', 'Carril de 20x5 m'],
   ['physical-04', 'Resistencia intermitente con pase', '8-20', 'Balones y conos', 16, 'Alternar carrera intensa y recuperación mientras circula el balón.', 'Alta', '30x25 m'],
   ['physical-05', 'Fuerza por parejas y aceleración', 'Parejas', 'Conos y bandas elásticas', 12, 'Breve resistencia por parejas seguida de aceleración controlada.', 'Media', 'Carril de 15x5 m'],
-].map((item) => exercise(...item.slice(0, 2), 'Preparación física', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Preparación física integrada', ...item.slice(2)));
 
 const warmupsV2 = [
   ['warmup-03', 'Rondo progresivo de activación', '6-12', 'Balones, conos y petos', 12, 'Empezar sin oposición y añadir defensores y límite de toques.', 'Media', 'Cuadrado de 15x15 m'],
   ['warmup-04', 'Movilidad dinámica con balón', 'Todo el equipo', 'Balones y conos', 10, 'Movilidad articular en desplazamiento combinada con conducción suave.', 'Baja', '20x15 m'],
   ['warmup-05', 'Pases por parejas en movimiento', 'Parejas', 'Balones y conos', 10, 'Progresar por el espacio con pases cortos y movilidad dinámica.', 'Baja', '25x20 m'],
   ['warmup-06', 'Juego de reacción y robo de petos', '8-20', 'Petos y conos', 10, 'Activación lúdica con cambios de dirección para capturar petos.', 'Baja', '20x20 m'],
-].map((item) => exercise(...item.slice(0, 2), 'Calentamiento', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Calentamiento/activación', ...item.slice(2)));
 
 const smallSidedV2 = [
   ['ssg-01', '3 contra 3 con cuatro miniporterías', '6-12', 'Balones, petos, conos y miniporterías', 15, 'Atacar cualquiera de dos miniporterías y reaccionar tras pérdida.', 'Media', '25x20 m'],
@@ -128,7 +129,7 @@ const smallSidedV2 = [
   ['ssg-04', '2 contra 2 + comodín ofensivo', '5-10', 'Balones, petos y miniporterías', 14, 'El comodín juega con quien tiene balón para crear un 3 contra 2.', 'Media', '22x18 m'],
   ['ssg-05', 'Partido de transiciones 4 contra 4', '8-16', 'Balones, petos y cuatro miniporterías', 16, 'Al recuperar se ataca inmediatamente la pareja de porterías opuesta.', 'Alta', '30x25 m'],
   ['ssg-06', '6 contra 6 por carriles', '12-18', 'Balones, petos, conos y porterías', 18, 'Ocupar al menos tres carriles antes de poder finalizar.', 'Alta', '45x35 m'],
-].map((item) => exercise(...item.slice(0, 2), 'Partido condicionado / Small-sided games', ...item.slice(2)));
+].map((item) => exercise(...item.slice(0, 2), 'Juego reducido', ...item.slice(2)));
 
 const goalkeepersV2 = [
   ['keeper-01', 'Blocaje frontal y caída lateral', '2-6 porteros', 'Balones, conos y portería', 12, 'Alternar blocaje frontal con caída lateral segura a ambos perfiles.', 'Media', 'Área pequeña'],
@@ -144,8 +145,8 @@ const goalkeepersV2 = [
 ].map((item) => exercise(...item.slice(0, 2), 'Porteros', ...item.slice(2)));
 
 export const WARMUP_TEMPLATES = Object.freeze([
-  exercise('warmup-training-10', 'Calentamiento de entreno (10 min)', 'Calentamiento', 'Todo el equipo', 'Balones y conos', 10, 'Juego libre y movilidad con balón (5 min) + activación técnica de pases o rondo (5 min).', 'Baja', '20x20 m', 'Cambiar el rondo por pases por parejas o conducción libre.'),
-  exercise('warmup-match-15', 'Calentamiento de partido (15 min)', 'Calentamiento', 'Convocados', 'Balones, conos y petos', 15, 'Movilidad articular y carrera suave (5 min) + activación con balón (5 min) + rondo o posesión reducida (5 min).', 'Media', '25x20 m', 'Ajustar intensidad y espacio según la hora, el césped y el rival.'),
+  exercise('warmup-training-10', 'Calentamiento de entreno (10 min)', 'Calentamiento/activación', 'Todo el equipo', 'Balones y conos', 10, 'Juego libre y movilidad con balón (5 min) + activación técnica de pases o rondo (5 min).', 'Baja', '20x20 m', 'Cambiar el rondo por pases por parejas o conducción libre.'),
+  exercise('warmup-match-15', 'Calentamiento de partido (15 min)', 'Calentamiento/activación', 'Convocados', 'Balones, conos y petos', 15, 'Movilidad articular y carrera suave (5 min) + activación con balón (5 min) + rondo o posesión reducida (5 min).', 'Media', '25x20 m', 'Ajustar intensidad y espacio según la hora, el césped y el rival.'),
 ]);
 
 export const PHASE2_V2_EXERCISES = Object.freeze([
@@ -153,11 +154,11 @@ export const PHASE2_V2_EXERCISES = Object.freeze([
 ]);
 
 export const PHASE2_V3_EXERCISES = Object.freeze([
-  exercise('physical-06', 'Velocidad de reacción con salida', 'Preparación física', '6-16', 'Conos y silbato', 10, 'Salidas explosivas desde distintas posiciones (sentado, tumbado, de espaldas) a la señal. Trabaja velocidad de reacción y aceleración.', 'Media', 'Carril de 15x5 m', 'Varía la posición de salida y la señal.'),
-  exercise('physical-07', 'Circuito de agilidad con conos', 'Preparación física', '6-18', 'Conos y picas', 12, 'Recorrido de agilidad con cambios de dirección, frenadas y aceleraciones entre conos. Trabaja agilidad y coordinación de carrera.', 'Media', '20x15 m', 'Compite por tiempo; añade balón.'),
-  exercise('physical-08', 'Resistencia aeróbica con balón', 'Preparación física', '8-20', 'Balones y conos', 18, 'Carrera continua a ritmo medio combinada con conducción y pases. Trabaja resistencia aeróbica manteniendo el contacto con el balón.', 'Media', 'Campo 40x30 m', 'Ajusta la intensidad según la edad.'),
-  exercise('physical-09', 'Fuerza funcional por parejas', 'Preparación física', 'Parejas', 'Conos y bandas elásticas', 12, 'Ejercicios de fuerza por parejas (empujes, tracciones, sentadillas asistidas) seguidos de aceleración corta. Trabaja fuerza y potencia.', 'Media', 'Carril de 15x5 m', 'Adapta la resistencia a la edad.'),
-  exercise('physical-10', 'Intervalos de alta intensidad (HIIT)', 'Preparación física', '6-18', 'Conos y silbato', 14, 'Series cortas de máxima intensidad (20-30 s) con recuperación activa. Trabaja potencia aeróbica y anaeróbica.', 'Alta', 'Campo 30x25 m', 'Ajusta duración y recuperación al nivel.'),
+  exercise('physical-06', 'Velocidad de reacción con salida', 'Preparación física integrada', '6-16', 'Conos y silbato', 10, 'Salidas explosivas desde distintas posiciones (sentado, tumbado, de espaldas) a la señal. Trabaja velocidad de reacción y aceleración.', 'Media', 'Carril de 15x5 m', 'Varía la posición de salida y la señal.'),
+  exercise('physical-07', 'Circuito de agilidad con conos', 'Preparación física integrada', '6-18', 'Conos y picas', 12, 'Recorrido de agilidad con cambios de dirección, frenadas y aceleraciones entre conos. Trabaja agilidad y coordinación de carrera.', 'Media', '20x15 m', 'Compite por tiempo; añade balón.'),
+  exercise('physical-08', 'Resistencia aeróbica con balón', 'Preparación física integrada', '8-20', 'Balones y conos', 18, 'Carrera continua a ritmo medio combinada con conducción y pases. Trabaja resistencia aeróbica manteniendo el contacto con el balón.', 'Media', 'Campo 40x30 m', 'Ajusta la intensidad según la edad.'),
+  exercise('physical-09', 'Fuerza funcional por parejas', 'Preparación física integrada', 'Parejas', 'Conos y bandas elásticas', 12, 'Ejercicios de fuerza por parejas (empujes, tracciones, sentadillas asistidas) seguidos de aceleración corta. Trabaja fuerza y potencia.', 'Media', 'Carril de 15x5 m', 'Adapta la resistencia a la edad.'),
+  exercise('physical-10', 'Intervalos de alta intensidad (HIIT)', 'Preparación física integrada', '6-18', 'Conos y silbato', 14, 'Series cortas de máxima intensidad (20-30 s) con recuperación activa. Trabaja potencia aeróbica y anaeróbica.', 'Alta', 'Campo 30x25 m', 'Ajusta duración y recuperación al nivel.'),
 ]);
 
 export const INITIAL_EXERCISES = Object.freeze([...coordination, ...technical, ...tactical, ...physical, ...WARMUP_TEMPLATES, ...PHASE2_V2_EXERCISES]);

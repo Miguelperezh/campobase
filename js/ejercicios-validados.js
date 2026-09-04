@@ -11,13 +11,8 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Tecnificación individual",
-    "que_se_trabaja": [
-      "Conducción",
-      "Control",
-      "Cambio de dirección",
-      "Coordinación"
-    ],
+    "tipo_principal": "Tecnificación",
+    "que_se_trabaja": ["Conducción", "Cambios de dirección", "Regate", "Control"],
     "tiempo_estimado_15": "14-16 min",
     "jugadores": {
       "total": 15,
@@ -131,13 +126,8 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "propuesta",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Calentamiento / activación",
-    "que_se_trabaja": [
-      "Activación neuromuscular",
-      "Coordinación de pies y brazos",
-      "Preparación articular",
-      "Desplazamientos"
-    ],
+    "tipo_principal": "Calentamiento/activación",
+    "que_se_trabaja": ["Coordinación", "Movilidad", "Escalera de coordinación", "Activación"],
     "tiempo_estimado_15": "12 min",
     "jugadores": {
       "total": 15,
@@ -251,13 +241,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Transición",
-    "que_se_trabaja": [
-      "Transición ofensiva",
-      "Superioridad 4v3",
-      "Toma de decisión",
-      "Repliegue defensivo",
-      "Finalización rápida"
-    ],
+    "que_se_trabaja": ["Contraataque", "Superioridad 4x3", "Desmarque", "Finalización"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -362,14 +346,8 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "propuesta",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Táctica colectiva",
-    "que_se_trabaja": [
-      "Progresión por zonas",
-      "Cambio de orientación",
-      "Búsqueda del hombre libre",
-      "Líneas de pase",
-      "Movilidad sin balón"
-    ],
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": ["Ocupación de espacios", "Progresión", "Apoyos", "Amplitud", "Juego por zonas"],
     "tiempo_estimado_15": "25 min",
     "jugadores": {
       "total": 15,
@@ -488,13 +466,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Porteros",
-    "que_se_trabaja": [
-      "Blocaje",
-      "Despeje de puños",
-      "Saque de mano",
-      "Saque de volea",
-      "Juego con los pies"
-    ],
+    "que_se_trabaja": ["Blocaje", "Despeje", "Saque", "Distribución"],
     "tiempo_estimado_15": "120 min con 1 portería si los 15 deben completar íntegramente los 30 min en grupos de 2-4",
     "jugadores": {
       "total": 15,
@@ -610,12 +582,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Juego reducido",
-    "que_se_trabaja": [
-      "Cambio de orientación",
-      "Visión periférica",
-      "Toma de decisión",
-      "Cobertura defensiva"
-    ],
+    "que_se_trabaja": ["3x3", "Cambio de orientación", "Cobertura", "Finalización"],
     "tiempo_estimado_15": "15 min",
     "jugadores": {
       "total": 15,
@@ -729,13 +696,8 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "propuesta",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física con balón",
-    "que_se_trabaja": [
-      "Resistencia específica intermitente",
-      "Velocidad con balón",
-      "Conducción bajo fatiga",
-      "Frenado y cambio de sentido"
-    ],
+    "tipo_principal": "Preparación física integrada",
+    "que_se_trabaja": ["Resistencia intermitente", "Conducción", "Cambios de ritmo"],
     "tiempo_estimado_15": "20 min según la duración global indicada por la fuente",
     "jugadores": {
       "total": 15,
@@ -852,13 +814,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Posesión",
-    "que_se_trabaja": [
-      "Posesión bajo presión",
-      "Apoyos",
-      "Comodín",
-      "Cambio de orientación",
-      "Líneas de pase"
-    ],
+    "que_se_trabaja": ["Conservación", "Comodín", "Apoyos", "Cambio de orientación"],
     "tiempo_estimado_15": "25 min",
     "jugadores": {
       "total": 15,
@@ -973,13 +929,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Tecnificación",
-    "que_se_trabaja": [
-      "Pase largo",
-      "Control orientado",
-      "Cambio de orientación",
-      "Pase corto",
-      "Rotación por puestos"
-    ],
+    "que_se_trabaja": ["Pase largo", "Control orientado", "Cambio de orientación", "Perfil corporal"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -1090,12 +1040,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Juego reducido",
-    "que_se_trabaja": [
-      "Juego colectivo",
-      "Transición rápida",
-      "Pase",
-      "Adaptación a cambio de rol"
-    ],
+    "que_se_trabaja": ["3x3", "Transición", "Finalización", "Competición"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -1193,13 +1138,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Posesión",
-    "que_se_trabaja": [
-      "Tercer hombre",
-      "Pivote",
-      "Pase entre líneas",
-      "Orientación corporal",
-      "Presión defensiva"
-    ],
+    "que_se_trabaja": ["Rondo", "Apoyo interior", "Tercer hombre", "Presión"],
     "tiempo_estimado_15": "15 min",
     "jugadores": {
       "total": 15,
@@ -1299,13 +1238,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Táctica",
-    "que_se_trabaja": [
-      "Salida de balón",
-      "Construcción desde portero y centrales",
-      "Superar primera línea de presión",
-      "Mediocampista entre líneas",
-      "Decisión corto o largo"
-    ],
+    "que_se_trabaja": ["Salida de balón", "Construcción", "Portero", "Superar presión", "Juego entre líneas"],
     "tiempo_estimado_15": "25 min",
     "jugadores": {
       "total": 15,
@@ -1410,12 +1343,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Técnico-táctico",
-    "que_se_trabaja": [
-      "Marca",
-      "Cobertura",
-      "Comunicación",
-      "Salida tras recuperación"
-    ],
+    "que_se_trabaja": ["Defensa 2x2", "Cobertura", "Temporización", "Comunicación", "Transición defensa-ataque"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -1523,12 +1451,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Finalización",
-    "que_se_trabaja": [
-      "1v1",
-      "Cambio de ritmo",
-      "Elección de pasillo",
-      "Remate"
-    ],
+    "que_se_trabaja": ["1x1", "Regate", "Cambio de ritmo", "Tiro"],
     "tiempo_estimado_15": "20 min de ficha; con 15 jugadores se mantiene una sola acción 1v1 y colas, por lo que el número de acciones por jugador puede quedar por debajo de las 12 indicadas por la fuente.",
     "jugadores": {
       "total": 15,
@@ -1635,12 +1558,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Transición",
-    "que_se_trabaja": [
-      "Presión tras pérdida",
-      "Densidad",
-      "Cierre de líneas",
-      "Repliegue"
-    ],
+    "que_se_trabaja": ["Presión tras pérdida", "Recuperación", "Repliegue", "Cierre de líneas"],
     "tiempo_estimado_15": "22 min",
     "jugadores": {
       "total": 15,
@@ -1748,11 +1666,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Coordinación/motricidad",
-    "que_se_trabaja": [
-      "Reacción",
-      "Aceleración corta",
-      "Cambio de dirección"
-    ],
+    "que_se_trabaja": ["Velocidad de reacción", "Aceleración", "Cambio de dirección", "Estímulo visual"],
     "tiempo_estimado_15": "12 min; para 15 jugadores se recomienda montar 3 estaciones idénticas de 5 como adaptación operativa, aunque el GIF representa una sola estación fuente-faithful.",
     "jugadores": {
       "total": 15,
@@ -1859,12 +1773,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Finalización",
-    "que_se_trabaja": [
-      "Centro raso",
-      "Centro aéreo",
-      "Llegada escalonada",
-      "Remate"
-    ],
+    "que_se_trabaja": ["Centro", "Remate", "Llegada al área", "Timing"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -1969,12 +1878,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Posesión",
-    "que_se_trabaja": [
-      "Pase entre líneas",
-      "Hombre libre",
-      "Orientación corporal",
-      "Movilidad"
-    ],
+    "que_se_trabaja": ["Rondo posicional", "Pase entre líneas", "Amplitud", "Apoyo", "Orientación corporal"],
     "tiempo_estimado_15": "18 min",
     "jugadores": {
       "total": 15,
@@ -2078,12 +1982,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Juego reducido",
-    "que_se_trabaja": [
-      "Decisión",
-      "Apoyos",
-      "Cobertura",
-      "Juego rápido"
-    ],
+    "que_se_trabaja": ["4x4", "Porteros", "Apoyos", "Cobertura", "Finalización"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -2186,12 +2085,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Técnico-táctico",
-    "que_se_trabaja": [
-      "Presión",
-      "Cobertura",
-      "Cerrar el centro",
-      "Salida tras recuperación"
-    ],
+    "que_se_trabaja": ["Presión en banda", "Cobertura", "Orientación defensiva", "Cierre interior", "Transición defensa-ataque"],
     "tiempo_estimado_15": "20 min",
     "jugadores": {
       "total": 15,
@@ -2297,13 +2191,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Tecnificación",
-    "que_se_trabaja": [
-      "Pase",
-      "Control",
-      "Control orientado",
-      "Conducción",
-      "Pared"
-    ],
+    "que_se_trabaja": ["Pase", "Control", "Control orientado", "Conducción", "Pared", "Pierna no dominante"],
     "tiempo_estimado_15": "15 min",
     "jugadores": {
       "total": 15,
@@ -2407,12 +2295,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Transición",
-    "que_se_trabaja": [
-      "Robo",
-      "Primer pase vertical",
-      "Transición 3v2",
-      "Finalización rápida"
-    ],
+    "que_se_trabaja": ["Recuperación", "Primer pase vertical", "Superioridad 3x2", "Finalización"],
     "tiempo_estimado_15": "18 min",
     "jugadores": {
       "total": 15,
@@ -2514,32 +2397,14 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
-// Mapea el tipo_principal (etiqueta descriptiva del manual) a la categoría canónica
-// del filtro de CampoBase, para que el filtro por categoría los encuentre.
-const CATEGORIA_CANONICA = Object.freeze({
-  'Tecnificación individual': 'Técnica',
-  'Tecnificación': 'Técnica',
-  'Finalización': 'Técnica',
-  'Técnico-táctico': 'Táctica',
-  'Táctica': 'Táctica',
-  'Táctica colectiva': 'Táctica',
-  'Transición': 'Táctica',
-  'Posesión': 'Táctica',
-  'Coordinación/motricidad': 'Coordinación',
-  'Preparación física con balón': 'Preparación física',
-  'Calentamiento / activación': 'Calentamiento',
-  'Juego reducido': 'Partido condicionado / Small-sided games',
-  'Porteros': 'Porteros',
-});
-
+// El tipo_principal ya es la categoría profesional (taxonomía normalizada), así que se usa tal cual.
 export function toCampoBaseExercise(item) {
   const vr = item.vista_rapida || {};
-  const tipo = vr.tipo_principal || 'Técnica';
   return {
     id: item.id,
     recordType: 'exercise',
     name: item.nombre,
-    category: CATEGORIA_CANONICA[tipo] || tipo,
+    category: vr.tipo_principal || 'Tecnificación',
     players: `${vr.jugadores?.total ?? ''} · ${vr.jugadores?.organizacion ?? ''}`,
     material: vr.material || '',
     duration: parseDuration(vr.tiempo_estimado_15),
