@@ -2394,6 +2394,634 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 126
   }
 }
+,
+{
+  "id": "CAMPOBASE-FS084-RELEVOS-CONDUCCION-REGATE",
+  "nombre": "Relevos de velocidad de conducción y regate",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Calentamiento/activación",
+    "que_se_trabaja": [
+      "Conducción",
+      "Regate",
+      "Control",
+      "Coordinación",
+      "Velocidad de reacción"
+    ],
+    "tiempo_estimado_15": "2 repeticiones de 5 min según la ficha; con 15 jugadores se mantienen 4 filas en reparto 4+4+4+3.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "4 filas, 2 equipos que compiten; adaptación 4+4+4+3 manteniendo la estructura de cuatro filas."
+    },
+    "material": "16 delimitadores + balones",
+    "series": [
+      {
+        "nombre": "Planta + interior",
+        "instruccion": "Recorrido completo: salida diagonal, giro, regreso y acción técnica con planta para desplazar en diagonal + interior de la pierna contraria."
+      },
+      {
+        "nombre": "Croqueta",
+        "instruccion": "Mismo recorrido completo; en la zona amarilla realizar interior de una pierna + interior de la otra."
+      },
+      {
+        "nombre": "Interior + exterior",
+        "instruccion": "Mismo recorrido completo; en la zona amarilla realizar interior de izquierda + exterior de la misma pierna."
+      }
+    ],
+    "explicacion_breve": "Cada pestaña enseña el recorrido completo de un relevo. Solo cambia la acción técnica ejecutada al volver por la zona de conos amarillos.",
+    "leyenda": "Azul y rojo: equipos · Negro: conducción · Amarillo: zona técnica"
+  },
+  "detalle": {
+    "objetivos": [
+      "Activar con balón.",
+      "Mejorar conducción y regate.",
+      "Usar diferentes superficies de contacto."
+    ],
+    "claves_entrenador": [
+      "Balón controlado.",
+      "Cabeza arriba.",
+      "Cambiar la acción técnica en la zona central."
+    ],
+    "montaje": [
+      "4 filas.",
+      "Dos equipos.",
+      "Conos de giro en fondo.",
+      "Pares de conos amarillos en zona central."
+    ],
+    "desarrollo": [
+      "Salida diagonal conduciendo.",
+      "Rodear cono.",
+      "Ejecutar acción técnica entre conos amarillos.",
+      "Completar relevo."
+    ],
+    "que_buscamos": [
+      "Velocidad con control.",
+      "Calidad gestual.",
+      "Competición sin perder precisión."
+    ],
+    "que_observar": [
+      "Distancia del balón al pie.",
+      "Control en el giro.",
+      "Ejecución de la acción técnica."
+    ],
+    "correcciones": [
+      "Balón cerca.",
+      "Mira antes de girar.",
+      "Controla antes de acelerar."
+    ],
+    "reglas": [
+      "Gana el equipo que termina antes."
+    ],
+    "si_sale_mal": [
+      "Reducir distancia y velocidad."
+    ],
+    "si_sale_bien": [
+      "Cambiar superficie o acción técnica en zona amarilla."
+    ],
+    "variantes": [
+      "Planta + interior de pierna contraria.",
+      "Croqueta interior-interior.",
+      "Interior + exterior con la misma pierna."
+    ],
+    "fuente": {
+      "documento": "ejemplo_técnicas_conducción_regate.pdf",
+      "ejercicio_original": "Relevos de velocidad de conducción y regate",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente especifica 12 jugadores; se adapta a 15 conservando cuatro filas.",
+        "El regreso final a la fila se explicita como cierre operativo del relevo; la fuente no detalla literalmente el punto final del recorrido.",
+        "GIF mejorado: cada pestaña reproduce la acción completa desde la salida hasta el relevo, evitando separar el ejercicio en fragmentos difíciles de interpretar."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-FS084-RELEVOS-CONDUCCION-REGATE/CampoBase_FS084_Relevos_Conduccion_Regate_MEJORADO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-FS084-RELEVOS-CONDUCCION-REGATE/frames/f",
+    "total": 193,
+    "frameMs": 127
+  }
+},
+{
+  "id": "CAMPOBASE-FS084-OLEADA-TRANSICIONES-2X2",
+  "nombre": "Oleada de transiciones con conducción y regate",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Transición",
+    "que_se_trabaja": [
+      "2x2",
+      "1x1",
+      "Conducción",
+      "Regate",
+      "Finalización",
+      "Presión",
+      "Cambio de rol",
+      "Transición ataque-defensa"
+    ],
+    "tiempo_estimado_15": "La ficha marca 2 repeticiones de 6 min y una serie de 9 min antes de cambiar equipos; para 15 jugadores se mantiene un montaje único con rotaciones.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "4 jugadores en 2x2 + 2 rivales esperando en laterales + 9 relevos."
+    },
+    "material": "6 conos + 4 porterías de entrenamiento",
+    "series": [
+      {
+        "nombre": "1 · Ataque 2x2",
+        "instruccion": "Jugar el 2x2 central y finalizar en menos de 7 s y máximo 3 pases."
+      },
+      {
+        "nombre": "2 · Cambio de rol",
+        "instruccion": "Nada más terminar, los dos atacantes van a los balones laterales y pasan a ser defensores."
+      },
+      {
+        "nombre": "3 · 1x1 laterales",
+        "instruccion": "Cada nuevo defensor pasa al rival que espera en su banda y lo defiende en 1x1; si roba, puede finalizar en la portería contraria."
+      }
+    ],
+    "explicacion_breve": "El GIF enseña la cadena completa: 2x2 → finalización → atacantes cambian de rol → dos 1x1 laterales.",
+    "leyenda": "Azul: atacantes iniciales que pasan a defender · Rojo: defensores/rivales laterales"
+  },
+  "detalle": {
+    "objetivos": [
+      "Transición ataque-defensa inmediata.",
+      "Defender 1x1 tras esfuerzo ofensivo.",
+      "Finalizar rápido."
+    ],
+    "claves_entrenador": [
+      "Cambio mental inmediato.",
+      "Primeros pasos defensivos rápidos.",
+      "Evitar que el rival gane metros tras recibir."
+    ],
+    "montaje": [
+      "Zona central para 2x2.",
+      "Dos zonas laterales con balones y rivales esperando.",
+      "Cuatro porterías de entrenamiento."
+    ],
+    "desarrollo": [
+      "2x2 central.",
+      "Finalización <7 s y máx. 3 pases.",
+      "Atacantes van a laterales y pasan a defender.",
+      "Pasan balón al rival y defienden 1x1.",
+      "Si recuperan, pueden finalizar en portería contraria."
+    ],
+    "que_buscamos": [
+      "Cambio de rol sin pausa.",
+      "Defender orientando.",
+      "Conducción/regate bajo transición."
+    ],
+    "que_observar": [
+      "Tiempo de reacción.",
+      "Perfil defensivo.",
+      "Calidad del primer pase lateral."
+    ],
+    "correcciones": [
+      "Cambia el chip.",
+      "Frena primero.",
+      "No te lances.",
+      "Pasa y defiende."
+    ],
+    "reglas": [
+      "<7 s y máx. 3 pases en 2x2."
+    ],
+    "si_sale_mal": [
+      "Ampliar tiempo o distancia lateral."
+    ],
+    "si_sale_bien": [
+      "Reducir espacio o tiempo de finalización."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "ejemplo_técnicas_conducción_regate.pdf",
+      "ejercicio_original": "Oleada de transiciones con conducción y regate",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente indica 18 jugadores; el GIF se adapta a 15 con reservas sin alterar la secuencia principal.",
+        "La distribución exacta de las cuatro porterías se representa funcionalmente para separar el 2x2 central de los 1x1 laterales.",
+        "GIF mejorado: se mantiene el mismo montaje durante toda la animación y se ve de forma continua quién cambia de atacante a defensor."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-FS084-OLEADA-TRANSICIONES-2X2/CampoBase_FS084_Oleada_Transiciones_2x2_MEJORADO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-FS084-OLEADA-TRANSICIONES-2X2/frames/f",
+    "total": 120,
+    "frameMs": 207
+  }
+},
+{
+  "id": "CAMPOBASE-2X1-DECISION-DEFENSOR-FINALIZACION",
+  "nombre": "2x1 + portero: decisión del defensor y finalización",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Técnico-táctico",
+    "que_se_trabaja": [
+      "2x1",
+      "Toma de decisión",
+      "Pase en profundidad",
+      "Desmarque",
+      "1x1",
+      "Finalización",
+      "Temporización defensiva"
+    ],
+    "tiempo_estimado_15": "Fuente: 3x3 repeticiones con rotación y 1 min de micropausa; con 15 se mantiene un 2x1+portero activo y 11 relevos rotando posiciones.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 atacantes + 1 defensor + 1 portero activos; 11 relevos con rotación."
+    },
+    "material": "Balones + conos/pivotes + 1 portería",
+    "series": [
+      {
+        "nombre": "Inicio",
+        "instruccion": "El defensor inicia pasando a A1."
+      },
+      {
+        "nombre": "D va al poseedor",
+        "instruccion": "A2 ataca profundidad, A1 pasa al espacio y A2 finaliza."
+      },
+      {
+        "nombre": "D va al atacante sin balón",
+        "instruccion": "A1 reconoce el espacio libre, conduce en jugada individual y finaliza."
+      }
+    ],
+    "explicacion_breve": "Cada decisión del defensor se representa como una jugada completa hasta la finalización, para que se vea la lectura del 2x1 sin tener que reconstruir fases.",
+    "leyenda": "Rojo: atacantes · Azul: defensor · Verde: portero · Negro: pase/tiro"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar decisión en superioridad 2x1.",
+      "Finalizar tras lectura defensiva.",
+      "Trabajar la conducta del defensor en inferioridad."
+    ],
+    "claves_entrenador": [
+      "Mirar al defensor antes de decidir.",
+      "Separación útil entre atacantes.",
+      "Atacar el espacio libre."
+    ],
+    "montaje": [
+      "Defensor a unos 10 m entre los dos atacantes.",
+      "Atacantes a unos 25 m de línea de fondo.",
+      "Portero en portería."
+    ],
+    "desarrollo": [
+      "Defensor pasa a un atacante.",
+      "Defensor decide ir al poseedor o al atacante sin balón.",
+      "Poseedor responde con pase en profundidad o jugada individual.",
+      "Finalización."
+    ],
+    "que_buscamos": [
+      "Lectura del defensor.",
+      "Timing del desmarque.",
+      "Atacar portería rápido."
+    ],
+    "que_observar": [
+      "Distancia entre atacantes.",
+      "Momento del pase.",
+      "Orientación del defensor."
+    ],
+    "correcciones": [
+      "Mira al defensor.",
+      "Ábrete.",
+      "Pasa al espacio, no al pie si ya arrancó."
+    ],
+    "reglas": [
+      "Rotación de posiciones cada bloque de repeticiones."
+    ],
+    "si_sale_mal": [
+      "Aumentar distancia inicial del defensor."
+    ],
+    "si_sale_bien": [
+      "Reducir espacio o acelerar inicio."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "80-sesiones-de-entrenamiento-de-futbolpdf_compress.pdf",
+      "ejercicio_original": "Situación táctica simplificada 1 · 2x1 + 1 portero",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Se representan las dos decisiones del defensor que la fuente describe explícitamente.",
+        "Los 11 relevos son adaptación para 15 sin duplicar montajes.",
+        "GIF mejorado: las dos decisiones defensivas se muestran como ramas completas e independientes hasta el tiro."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-2X1-DECISION-DEFENSOR-FINALIZACION/CampoBase_2x1_Decision_Defensor_Finalizacion_MEJORADO.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-2X1-DECISION-DEFENSOR-FINALIZACION/frames/f",
+    "total": 137,
+    "frameMs": 180
+  }
+},
+{
+  "id": "CAMPOBASE-4X4-CONTRAATAQUE-TRANSICIONES",
+  "nombre": "Partido 4x4: contraataque y transiciones",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Transición",
+    "que_se_trabaja": [
+      "4x4",
+      "Contraataque",
+      "Repliegue",
+      "Cambio de rol",
+      "Finalización",
+      "Transición ataque-defensa",
+      "Transición defensa-ataque"
+    ],
+    "tiempo_estimado_15": "Fuente: 2 series x 3 repeticiones x 4 min. Para 15 se mantienen 8 activos + 4 jugadores preparados para entrar + 3 reservas rotativas.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 equipos de 4 juegan; un grupo de 4 queda preparado en el fondo que corresponde a la siguiente entrada; 3 reservas rotan entre grupos."
+    },
+    "material": "Fuente: 4 delimitadores y porterías de competición. La descripción indica dos porterías aunque la ficha de material menciona una; se representa con dos, porque es lo que exige la lógica del ejercicio.",
+    "series": [
+      {
+        "nombre": "Gol arriba → contra",
+        "instruccion": "Tras gol en la portería superior, entra el equipo que esperaba allí y contraataca inmediatamente; el equipo que marcó debe replegar."
+      },
+      {
+        "nombre": "Gol abajo → contra",
+        "instruccion": "Misma lógica en sentido contrario."
+      }
+    ],
+    "explicacion_breve": "El gol no cierra la acción: activa la siguiente transición. Entra un equipo fresco desde esa portería y obliga al equipo que acaba de marcar a replegar.",
+    "leyenda": "Cian: equipo que entra inmediatamente tras el gol · Discontinuas: entrada/repliegue"
+  },
+  "detalle": {
+    "objetivos": [
+      "Transición inmediata tras gol.",
+      "Repliegue defensivo.",
+      "Contraataque de equipo fresco."
+    ],
+    "claves_entrenador": [
+      "Tras marcar, cambiar el chip y correr hacia portería propia.",
+      "Equipo que espera entra sin pausa.",
+      "Primer pase del contraataque hacia delante si es posible."
+    ],
+    "montaje": [
+      "Campo reducido con dos porterías.",
+      "2 equipos 4v4 dentro.",
+      "Equipos de espera asociados a los fondos en la fuente."
+    ],
+    "desarrollo": [
+      "4v4.",
+      "Cuando un equipo marca, el grupo que espera en esa portería entra para contraatacar.",
+      "El equipo que marcó repliega.",
+      "El equipo que recibió el gol queda esperando en los laterales de esa portería para una acción posterior."
+    ],
+    "que_buscamos": [
+      "Reacción tras éxito ofensivo.",
+      "Ataque rápido del equipo entrante.",
+      "Orden del repliegue."
+    ],
+    "que_observar": [
+      "Velocidad de entrada.",
+      "Quién protege el centro al replegar.",
+      "Primer pase del nuevo ataque."
+    ],
+    "correcciones": [
+      "Has marcado: atrás ya.",
+      "Entra rápido.",
+      "Protege dentro primero."
+    ],
+    "reglas": [
+      "Tras gol se activa inmediatamente el equipo que espera en esa portería."
+    ],
+    "si_sale_mal": [
+      "Pausar solo para recolocar grupos; después reiniciar sin demora."
+    ],
+    "si_sale_bien": [
+      "Reducir tiempo entre gol y entrada."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "ejemplo_técnicas_conducción_regate.pdf",
+      "ejercicio_original": "Partidos 4c4 contraataque y transiciones",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente propone 4 equipos de 4 (16 jugadores). Para 15 se usa rotación de 3 reservas sin alterar el 4v4 ni la entrada de un equipo de 4.",
+        "El GIF muestra las dos direcciones posibles de la misma conducta completa."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-4X4-CONTRAATAQUE-TRANSICIONES/CampoBase_4x4_Contraataque_Transiciones.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-4X4-CONTRAATAQUE-TRANSICIONES/frames/f",
+    "total": 139,
+    "frameMs": 144
+  }
+},
+{
+  "id": "CAMPOBASE-JUEGO-POSICION-3X3-3-COMODINES",
+  "nombre": "Juego de posición 3x3 + 3 comodines",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Posesión",
+    "que_se_trabaja": [
+      "3x3",
+      "Comodín",
+      "Conservación",
+      "Apoyo",
+      "Presión",
+      "Cambio de rol",
+      "Pase corto",
+      "Juego entre líneas"
+    ],
+    "tiempo_estimado_15": "Fuente: 2 x 8 min, cambiando comodines. Con 15 hay 9 activos y 6 relevos rotativos.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 poseedores + 3 defensores + 3 comodines activos; 6 relevos."
+    },
+    "material": "Conos/pivotes, petos y balones; espacio 20x16 m.",
+    "series": [
+      {
+        "nombre": "Posesión completa",
+        "instruccion": "Tres atacantes exteriores combinan con 2 comodines interiores y 1 comodín exterior superior contra 3 defensores."
+      },
+      {
+        "nombre": "Robo + cambio de rol",
+        "instruccion": "Tras recuperación, los defensores ocupan los lados exteriores y los antiguos atacantes pasan a defender."
+      }
+    ],
+    "explicacion_breve": "Lo importante no es solo conservar: cuando hay robo, los roles y posiciones cambian inmediatamente.",
+    "leyenda": "Cian: comodines · Segunda pestaña: se ve el cambio completo de roles tras el robo."
+  },
+  "detalle": {
+    "objetivos": [
+      "Mantener posesión mediante combinaciones rápidas a ras de suelo.",
+      "Cambiar de rol inmediatamente tras recuperación/pérdida."
+    ],
+    "claves_entrenador": [
+      "Comodines siempre disponibles.",
+      "Mover al rival antes de buscar pase interior.",
+      "Tras robo, ocupar rápidamente las posiciones exteriores."
+    ],
+    "montaje": [
+      "20x16 m.",
+      "3 atacantes en lados exteriores.",
+      "2 comodines dentro + 1 comodín exterior superior.",
+      "3 defensores dentro."
+    ],
+    "desarrollo": [
+      "Equipo atacante conserva con comodines.",
+      "Defensores intentan recuperar.",
+      "Tras robo, defensores pasan al exterior y antiguos atacantes buscan recuperación.",
+      "12 pases seguidos: repite el equipo defensivo.",
+      "Si sale fuera, reinicia comodín exterior."
+    ],
+    "que_buscamos": [
+      "Velocidad de circulación.",
+      "Apoyos interiores.",
+      "Cambio de mentalidad tras pérdida."
+    ],
+    "que_observar": [
+      "Orientación corporal.",
+      "Uso de comodines.",
+      "Rapidez en ocupar nuevas posiciones tras robo."
+    ],
+    "correcciones": [
+      "Juega de cara.",
+      "Muévete después de pasar.",
+      "Robo: abre rápido."
+    ],
+    "reglas": [
+      "12 pases seguidos penalizan al equipo defensor.",
+      "Fuera: saca comodín exterior."
+    ],
+    "si_sale_mal": [
+      "Ampliar espacio o permitir más toques."
+    ],
+    "si_sale_bien": [
+      "Reducir espacio o limitar toques."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "80-sesiones-de-entrenamiento-de-futbolpdf_compress.pdf",
+      "ejercicio_original": "Juego de posición 1 · 3x3 + 3 comodines",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El GIF mantiene la estructura exacta de 9 activos y añade 6 relevos para adaptar a 15.",
+        "La circulación de balón es representativa; el cambio de roles sí reproduce la regla de la fuente."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-JUEGO-POSICION-3X3-3-COMODINES/CampoBase_Juego_Posicion_3x3_3Comodines.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-JUEGO-POSICION-3X3-3-COMODINES/frames/f",
+    "total": 144,
+    "frameMs": 124
+  }
+},
+{
+  "id": "CAMPOBASE-3X3-2P-4C-PASE-ATRAS",
+  "nombre": "3x3 + 2 porteros + 4 comodines: finalización tras pase atrás",
+  "estado": "propuesta",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Juego reducido",
+    "que_se_trabaja": [
+      "3x3",
+      "Porteros",
+      "Comodín",
+      "Pase atrás",
+      "Línea de fondo",
+      "Finalización",
+      "Desmarque",
+      "Cambio de posesión"
+    ],
+    "tiempo_estimado_15": "Fuente: 3 series x 5 min cambiando equipo comodín. Con 15 hay 12 activos + 3 relevos.",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3x3 + 2 porteros + 4 comodines (2 en cada línea de fondo) = 12 activos; 3 relevos."
+    },
+    "material": "2 porterías, balones, petos y conos; espacio 30x25 m.",
+    "series": [
+      {
+        "nombre": "Ataque izquierdo completo",
+        "instruccion": "Progresar, conectar con comodín de fondo izquierdo, recibir pase atrás y finalizar."
+      },
+      {
+        "nombre": "Ataque derecho completo",
+        "instruccion": "Misma conducta utilizando el comodín de fondo derecho."
+      },
+      {
+        "nombre": "Tras gol",
+        "instruccion": "Cambia la posesión y el rival inicia su ataque hacia la portería contraria."
+      }
+    ],
+    "explicacion_breve": "No vale finalizar de cualquier manera: la jugada debe llegar a un comodín de línea de fondo y volver mediante pase atrás antes del tiro.",
+    "leyenda": "Cian: 4 comodines de fondo · Cada pestaña de ataque enseña la secuencia completa hasta el remate."
+  },
+  "detalle": {
+    "objetivos": [
+      "Progresar hasta línea de fondo.",
+      "Generar finalización mediante pase atrás.",
+      "Ocupar zona de remate después de superar la última línea."
+    ],
+    "claves_entrenador": [
+      "Atacante interior no debe invadir demasiado pronto la zona del comodín.",
+      "Pase atrás a zona de llegada, no hacia la portería.",
+      "Atacar el balón de cara."
+    ],
+    "montaje": [
+      "30x25 m.",
+      "3x3 dentro.",
+      "2 porteros.",
+      "2 comodines en cada línea de fondo."
+    ],
+    "desarrollo": [
+      "Equipo atacante progresa.",
+      "Conecta con un comodín de la línea de fondo rival.",
+      "Comodín juega pase atrás.",
+      "Atacante finaliza.",
+      "Tras gol cambia la posesión.",
+      "Tras fuera, saca portero correspondiente."
+    ],
+    "que_buscamos": [
+      "Llegar a fondo antes de finalizar.",
+      "Timing de llegada.",
+      "Pase atrás limpio."
+    ],
+    "que_observar": [
+      "Quién ocupa zona de remate.",
+      "Distancia entre poseedor y comodín.",
+      "Reacción tras cambio de posesión."
+    ],
+    "correcciones": [
+      "Primero fondo.",
+      "Llega de cara.",
+      "Pase atrás, no al portero."
+    ],
+    "reglas": [
+      "El tiro válido llega después de pase atrás desde línea de fondo.",
+      "Tras gol cambia la posesión."
+    ],
+    "si_sale_mal": [
+      "Permitir comodín sin oposición y ampliar espacio."
+    ],
+    "si_sale_bien": [
+      "Limitar toques interiores."
+    ],
+    "variantes": [],
+    "fuente": {
+      "documento": "80-sesiones-de-entrenamiento-de-futbolpdf_compress.pdf",
+      "ejercicio_original": "Espacio reducido 2 · 3x3 + 2 porteros + 4 comodines de fondo",
+      "adaptacion_operativa": true,
+      "notas": [
+        "La fuente encaja directamente con 12 activos; se añaden 3 relevos para representar 15.",
+        "Ataques por izquierda y derecha son dos ejemplos simétricos de la misma regla, no variantes añadidas."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-3X3-2P-4C-PASE-ATRAS/CampoBase_3x3_2Porteros_4Comodines_Pase_Atras.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-3X3-2P-4C-PASE-ATRAS/frames/f",
+    "total": 167,
+    "frameMs": 156
+  }
+}
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
