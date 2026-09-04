@@ -72,6 +72,7 @@ export function renderTacticaInteractivaHTML(tactica) {
     <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
 
     <div class="lightbox">
+      <button type="button" class="lb-close" title="Cerrar">✕</button>
       <img class="lb-img" src="${esc(framesBase)}000.jpg" alt="Animación ampliada">
       <div class="lb-controls">
         <button type="button" class="lb-prev" title="Paso anterior">⏮</button>
@@ -217,6 +218,9 @@ export function attachTacticaLightbox(root) {
   const MINZ = 0.5, MAXZ = 8;
 
   box.addEventListener('click', (e) => { if (e.target === box) { box.classList.remove('open'); resetLightbox(box); } });
+
+  const lbClose = box.querySelector('.lb-close');
+  if (lbClose) lbClose.addEventListener('click', () => { box.classList.remove('open'); resetLightbox(box); });
 
   box.addEventListener('wheel', (e) => {
     e.preventDefault();
