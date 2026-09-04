@@ -96,7 +96,7 @@ export function renderValidatedExerciseHTML(item) {
 
     <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
 
-    <div class="lightbox"><img src="${esc(framesBase)}000.jpg" alt="Animación ampliada"><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
+    <div class="lightbox"><img class="lb-img" src="${esc(framesBase)}000.jpg" alt="Animación ampliada"><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
   </div>`;
 }
 
@@ -121,6 +121,9 @@ export function initValidatedExerciseViewer(root) {
 
   const img = root.querySelector('.frame-img');
   const btnPlay = root.querySelector('.btn-play');
+  const lb = root.querySelector('.lightbox');
+  const lbImg = root.querySelector('.lb-img');
+  const lbPlay = root.querySelector('.lb-play');
 
   let idx = 0, playing = false, speed = 2;
   let frames = [];        // frames precargados en memoria (objetos Image)
@@ -158,9 +161,9 @@ export function initValidatedExerciseViewer(root) {
     idx = Math.max(0, Math.min(total - 1, i));
     // Usa el frame precargado si está listo; si no, cae a la URL directa.
     const cached = frames[idx];
-    img.src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
-    const lb = root.querySelector('.lightbox');
-    if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
+    const src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
+    img.src = src;
+    if (lb.classList.contains('open')) lbImg.src = src;
   }
 
   // Reproducción con requestAnimationFrame: respeta la duración real de cada frame.
@@ -174,7 +177,7 @@ export function initValidatedExerciseViewer(root) {
     rafId = requestAnimationFrame(tick);
   }
   function play() {
-    playing = true; btnPlay.textContent = '⏸';
+    playing = true; btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
     window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
     lastTime = performance.now();
     cancelAnimationFrame(rafId);
@@ -182,20 +185,27 @@ export function initValidatedExerciseViewer(root) {
   }
   function pause() {
     if (playing) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
-    playing = false; btnPlay.textContent = '▶';
+    playing = false; btnPlay.textContent = '▶'; lbPlay.textContent = '▶';
     cancelAnimationFrame(rafId);
   }
+  function toggle() { playing ? pause() : play(); }
 
-  btnPlay.addEventListener('click', () => playing ? pause() : play());
+  function setSpeed(s) {
+    speed = s;
+    root.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
+    if (playing) play();
+  }
+
+  btnPlay.addEventListener('click', toggle);
+  lbPlay.addEventListener('click', toggle);
   root.querySelector('.btn-prev').addEventListener('click', () => { pause(); show(idx - 1); });
   root.querySelector('.btn-next').addEventListener('click', () => { pause(); show(idx + 1); });
   root.querySelector('.btn-restart').addEventListener('click', () => { pause(); show(0); });
+  root.querySelector('.lb-prev').addEventListener('click', () => { pause(); show(idx - 1); });
+  root.querySelector('.lb-next').addEventListener('click', () => { pause(); show(idx + 1); });
+  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); show(0); });
   root.querySelectorAll('.speed button').forEach((b) => {
-    b.addEventListener('click', () => {
-      root.querySelectorAll('.speed button').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on'); speed = parseFloat(b.getAttribute('data-s'));
-      if (playing) play();
-    });
+    b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s'))));
   });
 
   // Detalle
@@ -209,8 +219,7 @@ export function initValidatedExerciseViewer(root) {
   // Visor a pantalla completa (zoom + pan + pellizco)
   const btnFull = root.querySelector('.btn-full');
   btnFull.addEventListener('click', () => {
-    const lb = root.querySelector('.lightbox');
-    lb.querySelector('img').src = img.src;
+    lbImg.src = img.src;
     lb.classList.add('open');
     resetLightbox(lb);
   });
@@ -221,14 +230,13 @@ export function initValidatedExerciseViewer(root) {
 
 // Visor genérico (se crea una vez por ficha en el HTML; aquí se inicializa el comportamiento).
 function resetLightbox(box) {
-  const lbImg = box.querySelector('img');
   box.dataset.zoom = '1';
   box.dataset.tx = '0';
   box.dataset.ty = '0';
   applyLightbox(box);
 }
 function applyLightbox(box) {
-  const lbImg = box.querySelector('img');
+  const lbImg = box.querySelector('.lb-img');
   const z = Number(box.dataset.zoom || 1);
   const tx = Number(box.dataset.tx || 0);
   const ty = Number(box.dataset.ty || 0);
@@ -240,7 +248,7 @@ export function attachLightbox(root) {
   const box = root.querySelector('.lightbox');
   if (!box || box.dataset._lbInit) return;
   box.dataset._lbInit = '1';
-  const lbImg = box.querySelector('img');
+  const lbImg = box.querySelector('.lb-img');
   const MINZ = 0.5, MAXZ = 8;
 
   box.addEventListener('click', (e) => { if (e.target === box) { box.classList.remove('open'); resetLightbox(box); } });
@@ -261,7 +269,7 @@ export function attachLightbox(root) {
 
   let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
   box.addEventListener('mousedown', (e) => {
-    if (e.target === box) return;
+    if (e.target === box || e.target.closest('.lb-controls')) return;
     dragging = true; box.classList.add('dragging');
     sx = e.clientX; sy = e.clientY; ox = Number(box.dataset.tx || 0); oy = Number(box.dataset.ty || 0);
     e.preventDefault();

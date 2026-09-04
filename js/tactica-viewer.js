@@ -1,7 +1,7 @@
 // Visor de táctica interactiva: reproduce el GIF animado de una táctica del
 // manual de Migue (Unión Viera Alevín D) con play/pausa, paso a paso, velocidad
-// y pantalla completa. No modifica la pizarra táctica actual: se abre como una
-// capa "interactiva" sobre la táctica guardada.
+// y pantalla completa (con sus propios controles). No modifica la pizarra táctica
+// actual: se abre como una capa "interactiva" sobre la táctica guardada.
 
 import { TACTICA_FRAME_DURATIONS } from './tactica-frame-durations.js';
 
@@ -17,12 +17,6 @@ export function renderTacticaInteractivaHTML(tactica) {
   const framesBase = anim.frames || '';
 
   const pillsTrabaja = (vr.que_se_trabaja || []).map((t) => `<span class="pill trabaja">${esc(t)}</span>`).join('');
-
-  // Series/fases como pestañas (cada fase es una variante del GIF).
-  const series = vr.series || [];
-  const tabs = series.map((s, i) =>
-    `<button type="button" class="tactica-tab ${i === 0 ? 'on' : ''}" data-tab="${i}">${esc(s.nombre)}</button>`
-  ).join('');
 
   // Bloques de detalle (claves dinámicas del JSON de táctica).
   const detalleBloques = Object.entries(det)
@@ -57,8 +51,6 @@ export function renderTacticaInteractivaHTML(tactica) {
     </div>
     <h2 class="nombre">${esc(tactica.nombre)}</h2>
 
-    <div class="tactica-tabs">${tabs}</div>
-
     <div class="player">
       <div class="stage"><img class="frame-img" src="${esc(framesBase)}000.jpg" alt="Animación de la táctica"></div>
       <div class="controls">
@@ -79,7 +71,21 @@ export function renderTacticaInteractivaHTML(tactica) {
 
     <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
 
-    <div class="lightbox"><img src="${esc(framesBase)}000.jpg" alt="Animación ampliada"><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
+    <div class="lightbox">
+      <img class="lb-img" src="${esc(framesBase)}000.jpg" alt="Animación ampliada">
+      <div class="lb-controls">
+        <button type="button" class="lb-prev" title="Paso anterior">⏮</button>
+        <button type="button" class="lb-play" title="Reproducir / Pausar">▶</button>
+        <button type="button" class="lb-next" title="Paso siguiente">⏭</button>
+        <button type="button" class="lb-restart" title="Reiniciar">↺</button>
+        <div class="speed">
+          <button type="button" data-s="2" class="on">1×</button>
+          <button type="button" data-s="4">2×</button>
+          <button type="button" data-s="8">4×</button>
+        </div>
+      </div>
+      <span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span>
+    </div>
   </div>`;
 }
 
@@ -96,10 +102,12 @@ export function initTacticaViewer(root) {
 
   const img = root.querySelector('.frame-img');
   const btnPlay = root.querySelector('.btn-play');
+  const lb = root.querySelector('.lightbox');
+  const lbImg = root.querySelector('.lb-img');
+  const lbPlay = root.querySelector('.lb-play');
 
   let idx = 0, playing = false, speed = 2;
   let frames = [];
-  let loaded = 0;
   let rafId = null;
   let lastTime = 0;
 
@@ -116,8 +124,8 @@ export function initTacticaViewer(root) {
     frames = new Array(total);
     for (let i = 0; i < total; i++) {
       const im = new Image();
-      im.onload = () => { loaded++; };
-      im.onerror = () => { loaded++; };
+      im.onload = () => {};
+      im.onerror = () => {};
       im.src = frameSrc(i);
       frames[i] = im;
     }
@@ -126,9 +134,9 @@ export function initTacticaViewer(root) {
   function show(i) {
     idx = Math.max(0, Math.min(total - 1, i));
     const cached = frames[idx];
-    img.src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
-    const lb = root.querySelector('.lightbox');
-    if (lb && lb.classList.contains('open')) lb.querySelector('img').src = img.src;
+    const src = (cached && cached.complete && cached.naturalWidth > 0) ? cached.src : frameSrc(idx);
+    img.src = src;
+    if (lb.classList.contains('open')) lbImg.src = src;
   }
 
   function tick(now) {
@@ -141,7 +149,8 @@ export function initTacticaViewer(root) {
     rafId = requestAnimationFrame(tick);
   }
   function play() {
-    playing = true; btnPlay.textContent = '⏸';
+    playing = true;
+    btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
     window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
     lastTime = performance.now();
     cancelAnimationFrame(rafId);
@@ -149,37 +158,34 @@ export function initTacticaViewer(root) {
   }
   function pause() {
     if (playing) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
-    playing = false; btnPlay.textContent = '▶';
+    playing = false;
+    btnPlay.textContent = '▶'; lbPlay.textContent = '▶';
     cancelAnimationFrame(rafId);
   }
+  function toggle() { playing ? pause() : play(); }
 
-  btnPlay.addEventListener('click', () => playing ? pause() : play());
+  function setSpeed(s) {
+    speed = s;
+    root.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
+    if (playing) play();
+  }
+
+  btnPlay.addEventListener('click', toggle);
+  lbPlay.addEventListener('click', toggle);
   root.querySelector('.btn-prev').addEventListener('click', () => { pause(); show(idx - 1); });
   root.querySelector('.btn-next').addEventListener('click', () => { pause(); show(idx + 1); });
   root.querySelector('.btn-restart').addEventListener('click', () => { pause(); show(0); });
+  root.querySelector('.lb-prev').addEventListener('click', () => { pause(); show(idx - 1); });
+  root.querySelector('.lb-next').addEventListener('click', () => { pause(); show(idx + 1); });
+  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); show(0); });
   root.querySelectorAll('.speed button').forEach((b) => {
-    b.addEventListener('click', () => {
-      root.querySelectorAll('.speed button').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on'); speed = parseFloat(b.getAttribute('data-s'));
-      if (playing) play();
-    });
-  });
-
-  // Pestañas de fases/variantes: al pulsar, se muestra la fase correspondiente.
-  root.querySelectorAll('.tactica-tab').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      root.querySelectorAll('.tactica-tab').forEach((x) => x.classList.remove('on'));
-      tab.classList.add('on');
-      // La fase se indica visualmente; el GIF es continuo, así que solo
-      // marcamos la pestaña activa (el usuario puede pausar/avanzar a mano).
-    });
+    b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s'))));
   });
 
   // Pantalla completa
   const btnFull = root.querySelector('.btn-full');
   btnFull.addEventListener('click', () => {
-    const lb = root.querySelector('.lightbox');
-    lb.querySelector('img').src = img.src;
+    lbImg.src = img.src;
     lb.classList.add('open');
     resetLightbox(lb);
   });
@@ -189,14 +195,13 @@ export function initTacticaViewer(root) {
 }
 
 function resetLightbox(box) {
-  const lbImg = box.querySelector('img');
   box.dataset.zoom = '1';
   box.dataset.tx = '0';
   box.dataset.ty = '0';
   applyLightbox(box);
 }
 function applyLightbox(box) {
-  const lbImg = box.querySelector('img');
+  const lbImg = box.querySelector('.lb-img');
   const z = Number(box.dataset.zoom || 1);
   const tx = Number(box.dataset.tx || 0);
   const ty = Number(box.dataset.ty || 0);
@@ -208,7 +213,7 @@ export function attachTacticaLightbox(root) {
   const box = root.querySelector('.lightbox');
   if (!box || box.dataset._lbInit) return;
   box.dataset._lbInit = '1';
-  const lbImg = box.querySelector('img');
+  const lbImg = box.querySelector('.lb-img');
   const MINZ = 0.5, MAXZ = 8;
 
   box.addEventListener('click', (e) => { if (e.target === box) { box.classList.remove('open'); resetLightbox(box); } });
