@@ -73,6 +73,7 @@
       <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
       <div id="tactic-builder" class="panel hidden"></div>
       <div id="tactics-list" class="stack"></div>
+      <div id="tacticas-interactivas" class="stack"></div>
     </section>
 
     <section id="ajustes" class="view" aria-labelledby="title-settings">
@@ -110,6 +111,8 @@
   <dialog id="session-detail-dialog"><div class="dialog-head"><h2 id="session-detail-title">Sesión</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="session-detail-body"></div><div class="button-row"><button type="button" class="secondary" data-close>Cerrar</button></div></dialog>
 
   <dialog id="tactic-detail-dialog"><div class="dialog-head"><h2 id="tactic-detail-title">Táctica</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="tactic-detail-body"></div><div class="button-row"><button type="button" class="secondary" data-close>Cerrar</button></div></dialog>
+
+  <dialog id="tactica-interactiva-dialog" class="tactica-interactiva-dialog"><div class="dialog-head"><h2 id="tactica-interactiva-title">Táctica interactiva</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="tactica-interactiva-body"></div></dialog>
 
   <dialog id="auth-dialog" class="auth-dialog"><form id="auth-form"><h2 id="auth-title">Acceso a CampoBase</h2><p id="auth-help">Introduce tu PIN.</p><div id="initial-pin-fields" class="hidden"><label>Crear PIN de Migue (acceso total)<input name="newOwnerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label><label>Crear PIN del delegado (acceso al partido)<input name="newDelegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password"></label></div><label id="login-pin-field">PIN de Migue, delegado o demo<input name="pin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="current-password"></label><button class="primary" type="submit">Entrar</button><p id="auth-error" class="error" role="alert"></p></form></dialog>
 

@@ -1,7 +1,7 @@
 const CACHE = 'campobase-v2.16.6';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
-  './js/app.js', './js/db.js', './js/domain.js', './js/demo-session.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/ejercicios-validados.js', './js/ejercicio-viewer.js', './js/frame-durations.js', './js/tactics.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js',
+  './js/app.js', './js/db.js', './js/domain.js', './js/demo-session.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/ejercicios-validados.js', './js/ejercicio-viewer.js', './js/frame-durations.js', './js/tactics.js', './js/tacticas-interactivas.js', './js/tactica-viewer.js', './js/tactica-frame-durations.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js',
   './vendor/supabase.js',
   './icons/icon-192.svg', './icons/icon-512.svg', './icons/escudo.png',
 ];
