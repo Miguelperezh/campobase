@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.18.0 — 2026-09-05
+
+- Pizarra táctica en vivo con jugadores reales (nombre + dorsal) para Migue y el delegado: asignar jugadores a posiciones, mover fichas/balón, dibujar flechas, ampliar a pantalla completa y ver el GIF/MP4 de la táctica.
+- Sincronización bidireccional entre la pizarra y «En campo/Banquillo»: cambiar en un lado se refleja en el otro, también durante el partido (registra el cambio y su minuto).
+- Todos los jugadores arrancan en el banquillo; Migue va completando la alineación inicial desde la pizarra o los desplegables.
+- Regla del portero: 1 portero juega el partido completo; si hay 2, un tiempo cada uno. Migue y el delegado pueden cambiarlo a mano en caso de causa mayor (p. ej. lesión).
+- Controles «Registrar cambio manual», «Automático (1–3)» y «Proponer reparto» disponibles para Migue también antes de empezar el partido.
+- Desplegable de asignación al pinchar un jugador, en pizarra normal y ampliada, para Migue y delegado.
+- 119 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.18.0`.
+
 ## 2.16.6 — 2026-09-03
 
 - Nueva biblioteca de ejercicios validados con 12 ejercicios (GIF animado + ficha con vista rápida y detalle).

@@ -296,42 +296,45 @@ const arrowStyle = (kind) => {
     pass:   { cls: 'tac-arrow pac',  stroke: '#2b6cb0', dash: 'none',    weight: 1.4 },
     move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',    weight: 1.2 },
     dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',    weight: 2.2 },
-    shot:   { cls: 'tac-arrow tiq',  stroke: '#c8102e', dash: 'none',    weight: 2.6 },
+    shot:   { cls: 'tac-arrow tiq',  stroke: '#e8590c', dash: 'none',    weight: 2.6 },
     sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',  weight: 2.0 },
   };
   return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
 };
 
-// Barras de color para la leyenda (mini rectángulos del color de cada flecha).
-const legendSwatch = (color, dash) => {
-  const style = `display:inline-block;width:12px;height:3px;background:${color};vertical-align:middle;margin-right:4px`;
-  return `<span style="${style}"></span>`;
-};
-
 const actionLabel = (kind) => {
   const defs = {
-    pass:   { color: '#2b6cb0', label: 'Pase' },
-    move:   { color: '#6b6b6b', label: 'Movimiento sin balón', dash: '6 4' },
-    dribble:{ color: '#7c3aed', label: 'Conducción' },
-    shot:   { color: '#c8102e', label: 'Disparo' },
-    sprint: { color: '#f6cf4c', label: 'Sprint' },
+    pass: 'Pase', move: 'Movimiento sin balón', dribble: 'Conducción', shot: 'Disparo', sprint: 'Sprint',
   };
-  const d = defs[kind] ?? { color: '#2b6cb0', label: 'Pase' };
-  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${legendSwatch(d.color, d.dash || 'none')}${d.label}</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${renderTacticToolIcon(kind)}${defs[kind] ?? 'Pase'}</span>`;
 };
 
 // Herramientas de la pizarra interactiva.
 export const TACTIC_TOOLS = Object.freeze([
-  { id: 'select', label: 'Mover', icon: '✋' },
-  { id: 'pass', label: 'Pase', icon: '➜' },
-  { id: 'move', label: 'Movimiento', icon: '↝' },
-  { id: 'dribble', label: 'Conducción', icon: '⚡' },
-  { id: 'shot', label: 'Disparo', icon: '🎯' },
-  { id: 'sprint', label: 'Sprint', icon: '💨' },
-  { id: 'ball', label: 'Balón', icon: '⚽' },
+  { id: 'select', label: 'Mover' },
+  { id: 'pass', label: 'Pase' },
+  { id: 'move', label: 'Movimiento' },
+  { id: 'dribble', label: 'Conducción' },
+  { id: 'shot', label: 'Disparo' },
+  { id: 'sprint', label: 'Sprint' },
+  { id: 'ball', label: 'Balón' },
+  { id: 'erase', label: 'Borrar línea' },
+  { id: 'clear', label: 'Borrar todo' },
 ]);
 
+export function renderTacticToolIcon(kind) {
+  const common = 'class="tactic-tool-icon" viewBox="0 0 32 18" aria-hidden="true" focusable="false"';
+  if (kind === 'select') return `<svg ${common}><path d="M7 9h18M16 2v14M7 9l4-4M7 9l4 4M25 9l-4-4M25 9l-4 4M16 2l-4 4M16 2l4 4M16 16l-4-4M16 16l4-4" fill="none" stroke="#1a1a1a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if (kind === 'ball') return `<svg ${common}><circle cx="16" cy="9" r="5" fill="#fff" stroke="#111" stroke-width="1.2"/><path d="M16 5.5l2 1.5-.8 2.4h-2.4L14 7zM11.4 8l2.6-1M18 7l2.6 1M14.8 9.4l-1.5 3M17.2 9.4l1.5 3" fill="none" stroke="#111" stroke-width=".7"/></svg>`;
+  if (kind === 'erase') return `<svg ${common}><path d="M4 9h24M9 9l1-4h12l1 4M8 9l1 8h14l1-8M12 9v6M20 9v6" fill="none" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if (kind === 'clear') return `<svg ${common}><path d="M6 9h20M10 9l1-4h10l1 4M9 9l1 8h12l1-8" fill="none" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 6h6" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  const s = arrowStyle(kind);
+  const markerId = `tool-arrow-${kind}-${++toolIconSeq}`;
+  return `<svg ${common}><defs><marker id="${markerId}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker></defs><path d="M3 9 L27 9" class="${s.cls}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="round" marker-end="url(#${markerId})"/></svg>`;
+}
+
 const TOOL_KINDS = new Set(['pass', 'move', 'dribble', 'shot', 'sprint']);
+let toolIconSeq = 0;
 
 // Crea una flecha táctica; devuelve null si el trazo es demasiado corto.
 export function createTacticMove(from, to, kind) {
@@ -339,6 +342,14 @@ export function createTacticMove(from, to, kind) {
   if (Math.hypot(to.x - from.x, to.y - from.y) <= 2) return null;
   return { from: { ...from }, to: { ...to }, kind };
 }
+
+export function renderTacticArrow(from, to, kind, markerId = 'tac-arrow-shared', idx = '') {
+  const s = arrowStyle(kind);
+  const idxAttr = idx !== '' ? ` data-idx="${idx}"` : '';
+  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
+}
+
+export function renderTacticArrowDefs(markerId = 'tac-arrow-shared') { return marker(markerId); }
 
 // Mueve una pieza (jugador, rival o balón) sin mutar la táctica original y
 // limitando las coordenadas al campo (4..96).
@@ -367,9 +378,9 @@ export function renderTacticBoard(tactic = {}, options = {}) {
   parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
   parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
   if (editable) parts.push('<rect class="tac-capture" x="4" y="4" width="92" height="92" data-piece="capture"/>');
-  for (const move of (t.moves || [])) {
-    const s = arrowStyle(move.kind);
-    parts.push(`<path class="${s.cls}" d="M${move.from.x} ${move.from.y} L${move.to.x} ${move.to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(move.kind)}"/>`);
+  for (let i = 0; i < (t.moves || []).length; i++) {
+    const move = t.moves[i];
+    parts.push(renderTacticArrow(move.from, move.to, move.kind, markerId, i));
   }
   for (let i = 0; i < (t.team || []).length; i++) {
     const p = t.team[i];
@@ -392,7 +403,7 @@ export function renderTacticBoard(tactic = {}, options = {}) {
 // el marker herede el color del trazo de la flecha padre (no negro fijo).
 // Tamaño reducido (2×2) para que la punta no sea enorme.
 const marker = (id) => {
-  const colors = ['#2b6cb0', '#6b6b6b', '#7c3aed', '#c8102e', '#f6cf4c'];
+  const colors = ['#2b6cb0', '#6b6b6b', '#7c3aed', '#e8590c', '#f6cf4c'];
   let defs = '<defs>';
   for (const color of colors) {
     const mid = `${id}-${color.replace('#', '')}`;

@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.17.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.18.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.17.0');
-  assert.equal(lock.version, '2.17.0');
-  assert.equal(lock.packages[''].version, '2.17.0');
-  assert.match(sw, /campobase-v2\.17\.0/);
+  assert.equal(pkg.version, '2.18.0');
+  assert.equal(lock.version, '2.18.0');
+  assert.equal(lock.packages[''].version, '2.18.0');
+  assert.match(sw, /campobase-v2\.18\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -30,6 +30,37 @@ test('la aplicación no usa confirmaciones nativas', async () => {
   const app = await projectFile('js/app.js');
   assert.doesNotMatch(app, /\bconfirm\s*\(/);
   assert.match(app, /confirmation-dialog/);
+});
+
+test('la barra táctica usa las siete muestras SVG y permite leer todos los nombres sin truncarlos', async () => {
+  const [app, css, preview] = await Promise.all([
+    projectFile('js/app.js'), projectFile('styles.css'), projectFile('_preview_tactica_vivo/index.html'),
+  ]);
+  assert.match(app, /renderTacticToolIcon\(tool\.id\)/);
+  assert.match(app, /target\.closest\('\.tactic-tool\[data-tactic-tool\]'\)/);
+  assert.match(css, /\.tactic-tools\{[^}]*display:grid[^}]*overflow:visible/);
+  assert.match(css, /\.tactic-tool\{[^}]*min-width:0[^}]*white-space:normal/);
+  assert.match(preview, /class="tool-icon"/);
+  assert.doesNotMatch(preview, /✋|➜|↝|⚡|🎯|💨|⚽/);
+  assert.match(preview, /TACTIC_TOOLS\.map\(\(\{ id, label \}\)/);
+  assert.match(preview, /<span>\$\{label\}<\/span>/);
+});
+
+test('las seis correcciones de tácticas y partido en vivo quedan conectadas en la UI real', async () => {
+  const [html, app, css, tactics] = await Promise.all([
+    projectFile('index.html'), projectFile('js/app.js'), projectFile('styles.css'), projectFile('js/tactics.js'),
+  ]);
+  assert.match(app, /id="owner-auto-sub"/);
+  assert.match(app, /buildLiveState\(state\.players, availableIds, '1-3-2-1', 'F7', state\.timer\.firstKeeper\)/);
+  assert.match(app, /class="lightbox live-tactics-lightbox live-tactics" id="tactic-board-lightbox"/);
+  assert.match(app, /id="tactic-board-tools-full"/);
+  assert.match(app, /class="live-tactics-legend compact"/);
+  assert.match(html, /id="tactica-filters"[\s\S]*id="tacticas-interactivas"/);
+  assert.match(app, /TACTICAS_INTERACTIVAS\.filter/);
+  assert.match(app, /renderTacticBoard\(defaultTactic\('F7', t\.formacion\)\)/);
+  assert.match(tactics, /Borrar línea/);
+  assert.match(tactics, /Borrar todo/);
+  assert.match(css, /\.live-tactics-legend\.compact/);
 });
 
 test('permite añadir y editar jugadores aunque todavía no tengan posición', async () => {
@@ -125,7 +156,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.17\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.18\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {

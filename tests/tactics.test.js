@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from '../js/tactics.js';
+import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticArrow, renderTacticBoard, renderTacticToolIcon, sortTactics } from '../js/tactics.js';
 
 test('la pizarra táctica genera formaciones F7 y F11 con jugadores y rival', () => {
   const f7 = defaultTactic('F7');
@@ -62,6 +62,34 @@ test('crea flechas de todas las herramientas y descarta trazos demasiado cortos'
   }
   assert.equal(createTacticMove({ x: 10, y: 10 }, { x: 10.5, y: 10.5 }, 'pass'), null);
   assert.throws(() => createTacticMove({ x: 1, y: 1 }, { x: 2, y: 2 }, 'curve'), /herramienta/i);
+});
+
+test('las siete herramientas muestran muestras SVG con el mismo trazado y color que la pizarra', () => {
+  const expected = {
+    pass: ['#2b6cb0', '1.4', 'none'], move: ['#6b6b6b', '1.2', '6 4'],
+    dribble: ['#7c3aed', '2.2', '4 2'], shot: ['#e8590c', '2.6', 'none'],
+    sprint: ['#f6cf4c', '2', '3 1.5'],
+  };
+  assert.deepEqual(TACTIC_TOOLS.map(({ label }) => label), ['Mover', 'Pase', 'Movimiento', 'Conducción', 'Disparo', 'Sprint', 'Balón', 'Borrar línea', 'Borrar todo']);
+  for (const tool of TACTIC_TOOLS) {
+    const icon = renderTacticToolIcon(tool.id);
+    assert.match(icon, /^<svg[^>]+class="tactic-tool-icon"/);
+    assert.doesNotMatch(icon, /✋|➜|↝|⚡|🎯|💨|⚽/);
+    if (expected[tool.id]) {
+      const [stroke, width, dash] = expected[tool.id];
+      assert.match(icon, new RegExp(`stroke="${stroke}"`));
+      assert.match(icon, new RegExp(`stroke-width="${width}"`));
+      assert.match(icon, new RegExp(`stroke-dasharray="${dash}"`));
+      assert.match(icon, /<path[^>]+marker-end=/);
+      const arrow = renderTacticArrow({ x: 3, y: 9 }, { x: 27, y: 9 }, tool.id, `test-${tool.id}`);
+      for (const attr of [`stroke="${stroke}"`, `stroke-width="${width}"`, `stroke-dasharray="${dash}"`]) {
+        assert.ok(icon.includes(attr) && arrow.includes(attr), `${tool.label}: muestra y flecha comparten ${attr}`);
+      }
+      assert.match(arrow, /marker-end=/);
+    }
+  }
+  assert.match(renderTacticToolIcon('select'), /<path[^>]+stroke="#1a1a1a"/);
+  assert.match(renderTacticToolIcon('ball'), /<circle[^>]+fill="#fff"[^>]+stroke="#111"/);
 });
 
 test('construye una táctica validando nombre, formato y formación', () => {

@@ -7,7 +7,8 @@ import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, m
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
-import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, sortTactics } from './tactics.js';
+import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
+import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, asignarJugador, cargarFormacion, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { planSquadSeed } from './squad-seed.js';
@@ -40,6 +41,8 @@ let sessionDraftMeta = null;
 let pendingExerciseId = '';
 let tacticTool = 'select';
 let tacticDraft = null;
+let liveTactic = null; // estado de la pizarra táctica en vivo (Fase A)
+let liveTacticsDocBound = false; // evita acumular el listener global de cierre de popup
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -187,6 +190,12 @@ function isUserInteracting() {
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
   // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
   if ((window.__viewersPlaying || 0) > 0) return true;
+  // Si la pizarra táctica en vivo está ampliada (lightbox abierto), no re-renderizar
+  // (se cerraría sola y perdería el estado de la pizarra ampliada).
+  if (document.querySelector('.live-tactics-lightbox.open')) return true;
+  // Si el desplegable de asignación de la pizarra está abierto, no re-renderizar
+  // (se cerraría solo y el usuario perdería la selección).
+  if (document.querySelector('.live-tactics-popup.open')) return true;
   return false;
 }
 
@@ -515,13 +524,405 @@ function renderLive() {
   if (!match || !callup) { state.timer = null; return renderLive(); }
   const seconds = timerSeconds(); const config = FORMATS[callup.format];
   state.timer.phase ??= 'ready';
+  // Durante la preparación, la pizarra es la fuente de la alineación.
+  ensureLiveTactic();
+  if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField;
-  root.innerHTML = `<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
-  <div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>
-  <div class="button-row"><button id="make-sub" class="primary" ${!state.timer.runningSince ? 'disabled' : ''}>Registrar cambio manual (1–7 jugadores)</button><button id="propose-reparto" class="secondary" ${!state.timer.runningSince ? 'disabled' : ''}>Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>${liveDetailsMarkup('owner', callup.availableIds, match)}`;
+  root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
+  <div id="live-tactics"></div>
+  ${fieldBenchMarkup(fieldIds, callup, config)}
+  <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
+  renderLiveTactics();
   startTicks();
+}
+
+// ===== Pizarra táctica en vivo (Fase A) =====
+// Guía de planteamiento para Migue y el delegado: asigna jugadores REALES a las
+// posiciones, mueve fichas/balón/flechas y ve el GIF/MP4 de la táctica. NO toca
+// el motor de cambios automáticos (renderLive/renderDelegate/applySubstitution).
+
+function liveTacticPlayers() { return state.players; }
+function liveTacticAvailableIds() {
+  const match = state.matches.find(({ id }) => id === state.timer?.matchId);
+  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  return callup?.availableIds ?? [];
+}
+
+// Sincroniza la pizarra con el motor de cambios sin duplicados, manteniendo el
+// portero correspondiente en la posición Portero.
+function syncLiveTacticFromTimer() {
+  if (!state.timer || !liveTactic) return;
+  liveTactic.drag = null; // un cambio de alineación da por terminado cualquier arrastre en curso
+  const keeper = state.timer.phase === 'second_half' ? state.timer.secondKeeper : state.timer.firstKeeper;
+  const field = (state.timer.onField || []).filter((id) => id !== keeper && !liveKeeperIds().includes(id));
+  let i = 0;
+  liveTactic.team = liveTactic.team.map((p) => ({ ...p, playerId: p.pos === 'Portero' ? keeper : (field[i++] || '') }));
+}
+
+// Sincroniza el motor (state.timer.onField) con la pizarra. En preparación la
+// pizarra manda sin eventos; en partido en marcha registra un evento de cambio
+// para que los minutos se calculen bien.
+function syncTimerFromLiveTactic() {
+  if (!state.timer || !liveTactic) return;
+  const newField = liveTactic.team.map((p) => p.playerId).filter(Boolean);
+  const oldField = state.timer.onField || [];
+  const same = newField.length === oldField.length && newField.every((id, i) => id === oldField[i]);
+  if (same) return;
+  if (state.timer.phase === 'ready') {
+    state.timer.onField = newField;
+    return;
+  }
+  const outIds = oldField.filter((id) => !newField.includes(id));
+  const inIds = newField.filter((id) => !oldField.includes(id));
+  if (outIds.length || inIds.length) {
+    state.timer.events.push({ second: timerSeconds(), outIds, inIds });
+    state.timer.onField = newField;
+  }
+}
+
+// Garantiza que la pizarra en vivo exista (la construye si aún no está), para
+// poder sincronizar "En campo/Banquillo" con ella desde el primer render.
+function ensureLiveTactic() {
+  if (liveTactic) return liveTactic;
+  if (!state.timer) return null;
+  const availableIds = liveTacticAvailableIds();
+  if (!availableIds.length) return null;
+  liveTactic = buildLiveState(state.players, availableIds, '1-3-2-1', 'F7', state.timer.firstKeeper);
+  return liveTactic;
+}
+
+// Markup de "En campo" y "Banquillo" (vista owner).
+function fieldBenchMarkup(fieldIds, callup, config) {
+  return `<div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>`;
+}
+
+// Re-renderiza solo "En campo" y "Banquillo" sin reconstruir la pizarra.
+function renderFieldBench() {
+  const match = state.matches.find((item) => item.id === state.timer?.matchId);
+  const callup = state.callups.find((item) => item.id === match?.callupId);
+  if (!match || !callup) return;
+  const grid = $('#live-match .live-grid');
+  if (grid) grid.outerHTML = fieldBenchMarkup(state.timer.onField, callup, FORMATS[callup.format]);
+}
+
+// Alcance de la pizarra: 'owner' (vista de Migue) o 'delegate' (vista delegado).
+// Ambas comparten la misma lógica y las MISMAS clases CSS (para que el estilo
+// aplique a las dos); solo cambian los IDs del DOM (para distinguirlas) y el estado.
+function liveScope(which) {
+  const d = which === 'delegate';
+  const p = d ? 'delegate-tactics' : 'live-tactics';
+  return {
+    which,
+    p,
+    state: () => liveTactic,
+    setState: (s) => { liveTactic = s; },
+    root: () => $(`#${p}`),
+    board: () => $(`#${p}-board`),
+    boardFull: () => $(`#${p}-board-full`),
+    tools: () => $(`#${p}-tools`),
+    toolsFull: () => $(`#${p}-tools-full`),
+    slots: () => $(`#${p}-slots`),
+    popup: () => $(`#${p}-popup`),
+    popupSelect: () => $(`#${p}-popup-select`),
+    popupTitle: () => $(`#${p}-popup-title`),
+    lightbox: () => $(`#${p}-lightbox`),
+    fullBtn: () => $(`#${p}-full`),
+    gifBtn: () => $(`#${p}-gif`),
+    formacion: () => $(`#${p}-formacion`),
+  };
+}
+
+function renderLiveTactics() { renderTacticsBoard('owner'); }
+function renderDelegateTactics() { renderTacticsBoard('delegate'); }
+
+function renderTacticsBoard(which) {
+  const sc = liveScope(which);
+  const root = sc.root();
+  if (!root) return;
+  if (!state.timer) { root.innerHTML = ''; sc.setState(null); return; }
+  const availableIds = liveTacticAvailableIds();
+  if (!availableIds.length) { root.innerHTML = ''; sc.setState(null); return; }
+  const t = sc.state();
+  // No reconstruir a mitad de un arrastre (el re-render de 10 s no debe romperlo).
+  if (t?.drag) return;
+  if (!t) {
+    sc.setState(ensureLiveTactic());
+  }
+  const cur = sc.state();
+  const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === cur.formacion ? 'selected' : ''}>${f}</option>`).join('');
+  root.innerHTML = `
+    <article class="panel live-tactics">
+      <div class="section-head"><div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div><button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button></div>
+      <div class="formacion-row"><label for="${sc.p}-formacion">Táctica:</label><select id="${sc.p}-formacion">${formacionOptions}</select></div>
+      <div class="board-wrap"><svg id="${sc.p}-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica en vivo"></svg></div>
+      <div class="tactic-tools live-tactics-tools" id="${sc.p}-tools" role="toolbar" aria-label="Herramientas de la pizarra en vivo"></div>
+      <div class="live-tactics-slots" id="${sc.p}-slots"></div>
+      <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. Migue y el delegado pueden cambiar al portero a mano en caso de causa mayor.</div>
+      <div class="button-row"><button type="button" class="primary live-tactics-gif" id="${sc.p}-gif">▶ Ver táctica (GIF/MP4)</button></div>
+      <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>arrastrar = mover</span><span>toque = elegir jugador</span></div>
+    </article>
+    <div class="popup live-tactics-popup" id="${sc.p}-popup"><h4 class="live-tactics-popup-title" id="${sc.p}-popup-title">Posición</h4><select class="live-tactics-popup-select" id="${sc.p}-popup-select"></select></div>
+    <div class="lightbox live-tactics-lightbox live-tactics" id="${sc.p}-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-board" style="display:none;flex-direction:column;align-items:center;gap:.5rem;width:100%"><svg id="${sc.p}-board-full" viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica ampliada" style="background:#0c3b2e;border-radius:8px;touch-action:none"></svg><div class="tactic-tools live-tactics-tools-full" id="${sc.p}-tools-full" role="toolbar" aria-label="Herramientas de la pizarra ampliada"></div></div><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
+  renderTacticsBoardSvg(sc);
+  renderTacticsSlots(sc);
+  renderTacticsTools(sc);
+  bindTacticsBoard(sc, sc.board());
+  bindTacticsBoard(sc, sc.boardFull());
+  wireTacticsBoard(sc);
+}
+
+function renderTacticsTools(sc) {
+  const t = sc.state();
+  if (!t) return;
+  const markup = TACTIC_TOOLS.map(({ id, label }) => `<button type="button" class="tactic-tool ${id === t.tool ? 'active' : ''}" data-live-tool="${id}" title="${label}">${renderTacticToolIcon(id)}<span class="tactic-tool-label">${label}</span></button>`).join('');
+  const normal = sc.tools();
+  const full = sc.toolsFull();
+  if (normal) normal.innerHTML = markup;
+  if (full) full.innerHTML = markup;
+}
+
+function renderTacticsBoardSvg(sc, target) {
+  const t = sc.state();
+  const svg = target || sc.board();
+  if (!svg || !t) return;
+  const markerId = `arrow-${svg.id}`;
+  const parts = [renderTacticArrowDefs(markerId)];
+  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
+  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
+  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
+  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
+  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
+  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
+  t.moves.forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
+  t.team.forEach((p, i) => {
+    const pl = playerById(state.players, p.playerId);
+    const dorsal = pl ? pl.number : p.n;
+    const label = pl ? nombreCorto(pl.name) : '';
+    const labelW = label ? label.length * 1.6 + 1.6 : 0;
+    const rectX = p.x - labelW / 2;
+    const rectY = p.y + 2.1;
+    const rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+  });
+  t.opponent.forEach((p, i) => {
+    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`);
+  });
+  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${t.ball.x}" cy="${t.ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
+  svg.innerHTML = parts.join('');
+}
+
+function renderTacticsSlots(sc) {
+  const container = sc.slots();
+  const t = sc.state();
+  if (!container || !t) return;
+  const availableIds = liveTacticAvailableIds();
+  const suplentesList = suplentes(state.players, availableIds, t.team);
+  const filas = t.team.map((p, i) => {
+    const pl = playerById(state.players, p.playerId);
+    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
+    const opts = ['<option value="">— Sin asignar —</option>'];
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+    if (ss.length) {
+      opts.push('<option disabled>— Suplentes —</option>');
+      for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+    }
+    return `<div class="slot"><span class="pos">${escapeHtml(p.pos)}</span><select data-idx="${i}">${opts.join('')}</select><span class="dorsal">${pl ? escapeHtml(pl.number) : '—'}</span></div>`;
+  }).join('');
+  const suplentesHTML = suplentesList.length
+    ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
+    : '';
+  container.innerHTML = filas + suplentesHTML;
+  container.querySelectorAll('select').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const slot = sc.state().team[Number(sel.dataset.idx)];
+      if (!canAssignPlayerToSlot(state.players, sc.which, slot.pos, sel.value)) return renderTacticsSlots(sc);
+      sc.setState({ ...sc.state(), team: asignarJugador(sc.state().team, Number(sel.dataset.idx), sel.value) });
+      renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+      if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+    });
+  });
+}
+
+function tacticsBoardPoint(svg, e) {
+  const rect = svg.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 100;
+  const y = ((e.clientY - rect.top) / rect.height) * 100;
+  return { x: Math.max(4, Math.min(96, x)), y: Math.max(4, Math.min(96, y)) };
+}
+
+function openTacticsPopup(sc, idx, clientX, clientY) {
+  const popup = sc.popup();
+  const select = sc.popupSelect();
+  const title = sc.popupTitle();
+  const t = sc.state();
+  if (!popup || !select || !title || !t) return;
+  const p = t.team[idx];
+  const availableIds = liveTacticAvailableIds();
+  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
+  const opts = ['<option value="">— Sin asignar —</option>'];
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+  if (ss.length) {
+    opts.push('<option disabled>— Suplentes —</option>');
+    for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+  }
+  title.textContent = p.pos;
+  select.innerHTML = opts.join('');
+  select.value = p.playerId;
+  popup.dataset.idx = idx;
+  popup.classList.add('open');
+  const w = 240, h = 120;
+  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+}
+
+function bindTacticsBoard(sc, svg) {
+  if (!svg || svg.dataset._liveBound) return;
+  svg.dataset._liveBound = '1';
+  svg.addEventListener('pointerdown', (e) => {
+    const t = sc.state();
+    if (!t) return;
+    const target = e.target.closest('[data-piece]');
+    const pt = tacticsBoardPoint(svg, e);
+    if (t.tool === 'select') {
+      if (target && target.dataset.piece === 'team') {
+        const idx = Number(target.dataset.idx);
+        t.drag = { type: 'team', idx, moved: false };
+      } else if (target && target.dataset.piece === 'opponent') {
+        t.drag = { type: 'opponent', idx: Number(target.dataset.idx) };
+      } else if (target && target.dataset.piece === 'ball') {
+        t.drag = { type: 'ball' };
+      }
+    } else if (t.tool === 'ball') {
+      t.ball = pt; renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+    } else if (t.tool === 'erase') {
+      // Borrar una flecha concreta pinchándola.
+      if (target && target.dataset.piece === 'arrow' && target.dataset.idx !== undefined) {
+        const idx = Number(target.dataset.idx);
+        t.moves = t.moves.filter((_, i) => i !== idx);
+        renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+      }
+    } else if (t.tool === 'clear') {
+      // Borrar todas las flechas de golpe.
+      t.moves = [];
+      renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+    } else {
+      t.drag = { type: 'arrow', from: pt, kind: t.tool };
+    }
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', (e) => {
+    const t = sc.state();
+    if (!t || !t.drag) return;
+    const pt = tacticsBoardPoint(svg, e);
+    if (t.drag.type === 'team') { t.team[t.drag.idx].x = pt.x; t.team[t.drag.idx].y = pt.y; t.drag.moved = true; renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull()); }
+    else if (t.drag.type === 'opponent') { t.opponent[t.drag.idx].x = pt.x; t.opponent[t.drag.idx].y = pt.y; renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull()); }
+    else if (t.drag.type === 'ball') { t.ball = pt; renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull()); }
+    else if (t.drag.type === 'arrow') { t.drag.to = pt; }
+  });
+  svg.addEventListener('pointerup', (e) => {
+    const t = sc.state();
+    if (!t) return;
+    if (t.drag && t.drag.type === 'team' && !t.drag.moved) {
+      openTacticsPopup(sc, t.drag.idx, e.clientX, e.clientY);
+    }
+    if (t.drag && t.drag.type === 'arrow' && t.drag.to) {
+      if (Math.hypot(t.drag.to.x - t.drag.from.x, t.drag.to.y - t.drag.from.y) > 2) {
+        t.moves.push({ from: t.drag.from, to: t.drag.to, kind: t.drag.kind });
+      }
+      renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+    }
+    t.drag = null;
+  });
+}
+
+function wireTacticsBoard(sc) {
+  const formacion = sc.formacion();
+  if (formacion) formacion.addEventListener('change', (e) => {
+    const t = sc.state();
+    if (!t) return;
+    const team = cargarFormacion(t.team, state.players, liveTacticAvailableIds(), e.target.value, 'F7');
+    sc.setState({ ...t, team, formacion: e.target.value, moves: [] });
+    renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+  });
+  const tools = sc.tools();
+  const toolsFull = sc.toolsFull();
+  const setTool = (id) => {
+    const t = sc.state();
+    if (!t) return;
+    t.tool = id;
+    [tools, toolsFull].forEach((bar) => bar && bar.querySelectorAll('[data-live-tool]').forEach((b) => b.classList.toggle('active', b.dataset.liveTool === id)));
+  };
+  if (tools) tools.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
+  if (toolsFull) toolsFull.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
+
+  const popup = sc.popup();
+  const popupSelect = sc.popupSelect();
+  if (popupSelect) popupSelect.addEventListener('change', () => {
+    const t = sc.state();
+    if (!t) return;
+    const idx = Number(popup.dataset.idx);
+    popup.classList.remove('open');
+    if (!canAssignPlayerToSlot(state.players, sc.which, t.team[idx].pos, popupSelect.value)) return;
+    sc.setState({ ...t, team: asignarJugador(t.team, idx, popupSelect.value) });
+    renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
+    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+  });
+  if (!liveTacticsDocBound) {
+    liveTacticsDocBound = true;
+    document.addEventListener('pointerdown', (e) => {
+      const currentPopup = document.querySelector('.live-tactics-popup.open, .delegate-tactics-popup.open');
+      if (currentPopup && !currentPopup.contains(e.target) && !e.target.closest('[data-piece="team"]')) currentPopup.classList.remove('open');
+    });
+  }
+
+  // Lightbox compartido: pizarra ampliada (interactiva) o vídeo GIF/MP4.
+  const lightbox = sc.lightbox();
+  const lbBoard = lightbox?.querySelector('.lb-board');
+  const lbControls = lightbox?.querySelector('.lb-controls');
+  const fullBtn = sc.fullBtn();
+  const gifBtn = sc.gifBtn();
+  const closeLb = () => {
+    lightbox.classList.remove('open');
+    lightbox.querySelectorAll('video').forEach((v) => v.pause());
+    if (lbBoard) lbBoard.style.display = 'none';
+  };
+  if (fullBtn) fullBtn.addEventListener('click', () => {
+    if (lbControls) lbControls.style.display = 'none';
+    lightbox.querySelectorAll('video').forEach((n) => n.remove());
+    if (lbBoard) lbBoard.style.display = 'flex';
+    renderTacticsBoardSvg(sc, sc.boardFull());
+    lightbox.classList.add('open');
+  });
+  if (gifBtn) gifBtn.addEventListener('click', () => {
+    const t = sc.state();
+    if (!t) return;
+    lightbox.querySelectorAll('video').forEach((n) => n.remove());
+    if (lbBoard) lbBoard.style.display = 'none';
+    if (lbControls) lbControls.style.display = 'flex';
+    const video = document.createElement('video');
+    video.src = TACTICA_MP4[t.formacion] || TACTICA_MP4['1-3-2-1'];
+    video.playsInline = true; video.muted = true; video.loop = true;
+    lightbox.appendChild(video);
+    lightbox.classList.add('open');
+    video.play();
+  });
+  lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
+  const lbPlay = lightbox.querySelector('.lb-play');
+  if (lbPlay) lbPlay.addEventListener('click', () => {
+    const video = lightbox.querySelector('video');
+    if (!video) return;
+    if (video.paused) { video.play(); lbPlay.textContent = '⏸'; } else { video.pause(); lbPlay.textContent = '▶'; }
+  });
+  lightbox.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => {
+    const video = lightbox.querySelector('video');
+    if (video) video.playbackRate = parseFloat(b.dataset.s);
+    lightbox.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', x === b));
+  }));
 }
 
 function livePlayerSeconds(id) {
@@ -585,8 +986,11 @@ function renderDelegate() {
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
     : 'No hay jugadores disponibles en el banquillo.';
   const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
+  const delegateFieldIds = fieldIds;
+  const delegateBenchIds = benchIds;
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div><div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${fieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${benchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>${liveDetailsMarkup('delegate', callup.availableIds, match)}`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  renderDelegateTactics();
 }
 
 function enterDelegateMode() {
@@ -605,6 +1009,7 @@ function closeDelegateMode() {
 async function cancelLiveMatch() {
   if (!state.timer || !await askConfirmation({ title: 'Salir del partido en vivo', message: 'Se descartarán el reloj y los cambios registrados, pero no la convocatoria.', acceptLabel: 'Salir y descartar', danger: true })) return;
   state.timer = null;
+  liveTactic = null;
   state.urgentAlertKey = '';
   clearInterval(state.tick);
   await put('settings', { id: 'live', timer: null });
@@ -620,6 +1025,7 @@ async function registerDelegateSubstitution(outIds, inIds) {
   const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup.availableIds, 7);
   state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'delegate' });
   state.timer.onField = nextOnField;
+  syncLiveTacticFromTimer();
   state.urgentAlertKey = '';
   state.repartoAlertKey = '';
   await persistTimer();
@@ -670,7 +1076,8 @@ async function prepareLive() {
   const secondKeeper = $('#second-keeper').value;
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
-  const initialOnField = [firstKeeper, ...callup.availableIds.filter((id) => id !== firstKeeper)].filter(Boolean).slice(0, config.players);
+  const initialOnField = [firstKeeper];
+  liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
   state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
   await persistTimer(); renderLive();
 }
@@ -755,6 +1162,14 @@ function maybeShowUrgentSubstitution(played, elapsedSeconds) {
 }
 async function advanceLivePhase() {
   if (state.timer.phase === 'ready') {
+    const callup = liveCallup();
+    const config = FORMATS[callup.format];
+    const lineup = (liveTactic?.team || []).map((p) => p.playerId).filter(Boolean);
+    if (lineup.length !== config.players || new Set(lineup).size !== config.players || !lineup.includes(state.timer.firstKeeper)) {
+      return toast(`Completa la alineación de ${config.players} jugadores con el portero antes de comenzar.`);
+    }
+    state.timer.initialOnField = [...lineup];
+    state.timer.onField = [...lineup];
     state.timer.phase = 'first_half';
     state.timer.runningSince = Date.now();
     await persistTimer();
@@ -784,6 +1199,7 @@ async function advanceLivePhase() {
     state.timer.phase = 'second_half';
     state.timer.runningSince = Date.now();
     state.timer.autoPaused = false;
+    syncLiveTacticFromTimer();
     await persistTimer();
     renderLive(); renderDelegate();
     return toast('Segundo tiempo en marcha.');
@@ -800,6 +1216,7 @@ async function makeSubstitution() {
     const second = timerSeconds();
     state.timer.events.push({ second, outIds, inIds });
     state.timer.onField = nextOnField;
+    syncLiveTacticFromTimer();
     await persistTimer(); renderLive(); toast('Cambio registrado.');
   } catch (error) { toast(error.message); }
 }
@@ -838,7 +1255,7 @@ async function finishMatch() {
       ));
     }
     await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
-    state.timer = null; clearInterval(state.tick); await refresh();
+    state.timer = null; clearInterval(state.tick); liveTactic = null; await refresh();
     closeDelegateMode(); showView('partido');
     toast('Partido finalizado. Puedes puntuar a los jugadores desde el detalle del partido cuando quieras.');
   } finally {
@@ -1422,9 +1839,10 @@ function tacticBuilder(editId = '', formation = '') {
   root.classList.remove('hidden');
   const t = existing ? { ...existing } : { ...defaultTactic(state.format || 'F7', formation || '1-3-2-1'), name: '', rival: '', situation: '', notes: '' };
   tacticTool = 'select';
-  const toolsHTML = `<div class="tactic-tools" role="toolbar" aria-label="Herramientas de la pizarra">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}"><span aria-hidden="true">${tool.icon}</span>${tool.label}</button>`).join('')}</div>`;
-  root.innerHTML = `<form id="tactic-form"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form>`;
+  const toolsHTML = `<div class="tactic-tools" role="toolbar" aria-label="Herramientas de la pizarra">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}">${renderTacticToolIcon(tool.id)}<span class="tactic-tool-label">${tool.label}</span></button>`).join('')}</div>`;
+  root.innerHTML = `<form id="tactic-form" class="live-tactics"><input name="id" type="hidden" value="${escapeHtml(t.id || '')}"><div class="form-row"><label>Nombre<input name="name" required maxlength="120" value="${escapeHtml(t.name || '')}" placeholder="Ej. Salida de balón vs Las Palmas"></label><label>Formato<select name="format" required>${TACTIC_FORMATS.map((f) => `<option value="${f}" ${f === t.format ? 'selected' : ''}>Fútbol ${f === 'F7' ? '7' : '11'}</option>`).join('')}</select></label></div><div class="form-row"><label>Formación<select name="formation" required>${FORMATION_NAMES.map((f) => `<option value="${f}" ${f === t.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label><label>Situación<input name="situation" maxlength="100" value="${escapeHtml(t.situation || '')}" placeholder="Ej. Saque de esquina"></label></div><div class="form-row"><label>Rival<input name="rival" maxlength="100" value="${escapeHtml(t.rival || '')}" placeholder="Ej. Las Palmas"></label></div>${toolsHTML}<div class="section-head"><button type="button" class="secondary tactic-board-full">⛶ Ampliar</button></div>${renderTacticBoard(t)}<label>Notas<textarea name="notes" maxlength="1000">${escapeHtml(t.notes || '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar táctica</button><button class="cancel-tactic secondary" type="button">Cancelar</button></div></form><div class="lightbox live-tactics-lightbox live-tactics" id="tactic-board-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-board" style="display:flex;flex-direction:column;align-items:center;gap:.5rem;width:100%"><svg id="tactic-board-full" viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica ampliada" style="background:#0c3b2e;border-radius:8px;touch-action:none"></svg><div class="tactic-tools live-tactics-tools-full" id="tactic-board-tools-full" role="toolbar" aria-label="Herramientas de la pizarra ampliada">${TACTIC_TOOLS.map((tool) => `<button type="button" class="tactic-tool ${tool.id === tacticTool ? 'active' : ''}" data-tactic-tool="${tool.id}" title="${tool.label}">${renderTacticToolIcon(tool.id)}<span class="tactic-tool-label">${tool.label}</span></button>`).join('')}</div></div></div>`;
   initTacticDraft();
+  wireTacticBoardFull();
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1523,6 +1941,80 @@ function initTacticDraft() {
     moves: [],
     notes: values.notes,
   };
+}
+
+// Conecta el botón "⛶ Ampliar" del builder de Tácticas: abre la pizarra en un
+// lightbox a pantalla completa, interactiva (mover fichas, dibujar flechas),
+// reutilizando la misma lógica de la pizarra normal.
+function wireTacticBoardFull() {
+  const lightbox = $('#tactic-board-lightbox');
+  const fullBtn = $('.tactic-board-full');
+  const boardFull = $('#tactic-board-full');
+  if (!lightbox || !fullBtn || !boardFull) return;
+
+  const renderFull = () => {
+    const t = tacticDraft || syncTacticDraft();
+    boardFull.innerHTML = renderTacticBoard(t).match(/<svg[^>]*>([\s\S]*?)<\/svg>/)?.[1] || '';
+  };
+
+  fullBtn.addEventListener('click', () => {
+    renderFull();
+    lightbox.classList.add('open');
+  });
+
+  const closeLb = () => lightbox.classList.remove('open');
+  lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
+
+  // Interactividad en la pizarra ampliada (mover fichas, dibujar flechas, balón).
+  boardFull.addEventListener('pointerdown', (e) => {
+    const piece = e.target.closest('[data-piece]')?.dataset.piece;
+    const point = tacticPoint(e, boardFull);
+    if (tacticTool === 'select' && (piece === 'team' || piece === 'opponent')) {
+      const idx = Number(e.target.closest('[data-idx]').dataset.idx);
+      const side = piece;
+      const move = (ev) => {
+        const p = tacticPoint(ev, boardFull);
+        tacticDraft = moveTacticPiece(tacticDraft, side, idx, p);
+        renderFull(); rerenderTacticBoard();
+      };
+      const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    } else if (tacticTool === 'ball') {
+      tacticDraft = moveTacticPiece(tacticDraft, 'ball', 0, point);
+      renderFull(); rerenderTacticBoard();
+    } else if (tacticTool === 'erase') {
+      const arrow = e.target.closest('[data-piece="arrow"]');
+      if (arrow?.dataset.idx !== undefined) {
+        tacticDraft = { ...tacticDraft, moves: (tacticDraft.moves || []).filter((_, i) => i !== Number(arrow.dataset.idx)) };
+        renderFull(); rerenderTacticBoard();
+      }
+    } else if (tacticTool === 'clear') {
+      tacticDraft = { ...tacticDraft, moves: [] };
+      renderFull(); rerenderTacticBoard();
+    } else if (['pass', 'move', 'dribble', 'shot', 'sprint'].includes(tacticTool)) {
+      const start = point;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', start.x); line.setAttribute('y1', start.y); line.setAttribute('x2', start.x); line.setAttribute('y2', start.y);
+      line.setAttribute('class', 'tac-arrow');
+      boardFull.appendChild(line);
+      const move = (ev) => { const p = tacticPoint(ev, boardFull); line.setAttribute('x2', p.x); line.setAttribute('y2', p.y); };
+      const up = () => {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        const to = { x: Number(line.getAttribute('x2')), y: Number(line.getAttribute('y2')) };
+        line.remove();
+        const created = createTacticMove(start, to, tacticTool);
+        if (created) {
+          tacticDraft = { ...tacticDraft, moves: [...(tacticDraft.moves || []), created] };
+          renderFull(); rerenderTacticBoard();
+        }
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    }
+  });
 }
 
 async function ensurePhase2Seeded() {
@@ -1797,6 +2289,7 @@ async function pollLiveState() {
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   state.timer = live.timer;
+  syncLiveTacticFromTimer();
   await refresh();
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
@@ -1855,6 +2348,16 @@ function wireEvents() {
       tacticDraft = moveTacticPiece(tacticDraft, 'ball', 0, point);
       const ball = svg.querySelector('[data-piece="ball"]');
       if (ball) { ball.querySelector('circle').setAttribute('cx', tacticDraft.ball.x); ball.querySelector('circle').setAttribute('cy', tacticDraft.ball.y); }
+    } else if (tacticTool === 'erase') {
+      const arrow = event.target.closest('[data-piece="arrow"]');
+      if (arrow && arrow.dataset.idx !== undefined) {
+        const idx = Number(arrow.dataset.idx);
+        tacticDraft = { ...tacticDraft, moves: (tacticDraft.moves || []).filter((_, i) => i !== idx) };
+        rerenderTacticBoard();
+      }
+    } else if (tacticTool === 'clear') {
+      tacticDraft = { ...tacticDraft, moves: [] };
+      rerenderTacticBoard();
     } else if (['pass', 'move', 'dribble', 'shot', 'sprint'].includes(tacticTool)) {
       const start = point;
       const cls = { pass: 'tac-pass', move: 'tac-move', dribble: 'tac-dribble', shot: 'tac-shot', sprint: 'tac-sprint' }[tacticTool] || 'tac-pass';
@@ -1959,9 +2462,10 @@ function wireEvents() {
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
     if (target.matches('.cancel-tactic')) $('#tactic-builder').classList.add('hidden');
-    if (target.matches('.tactic-tool')) {
-      tacticTool = target.dataset.tacticTool;
-      $$('.tactic-tool').forEach((btn) => btn.classList.toggle('active', btn.dataset.tacticTool === tacticTool));
+    const tacticToolButton = target.closest('.tactic-tool[data-tactic-tool]');
+    if (tacticToolButton) {
+      tacticTool = tacticToolButton.dataset.tacticTool;
+      $$('.tactic-tool[data-tactic-tool]').forEach((btn) => btn.classList.toggle('active', btn.dataset.tacticTool === tacticTool));
     }
     if (target.matches('.view-tactic')) showTacticDetail(target.dataset.id);
     if (target.matches('.open-tactica-interactiva')) showTacticaInteractiva(target.dataset.id);
@@ -2017,7 +2521,7 @@ function wireEvents() {
       $('#urgent-dialog')?.close();
       try { await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds); } catch (error) { handleError(error); }
     }
-    if (target.id === 'delegate-auto-sub') {
+    if (target.id === 'owner-auto-sub' || target.id === 'delegate-auto-sub') {
       const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = state.callups.find(({ id }) => id === match?.callupId);
       const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
       const count = Math.min(3, bench.length, state.timer.onField.length);
