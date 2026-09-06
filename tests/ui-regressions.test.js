@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.21.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.22.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.21.0');
-  assert.equal(lock.version, '2.21.0');
-  assert.equal(lock.packages[''].version, '2.21.0');
-  assert.match(sw, /campobase-v2\.21\.0/);
+  assert.equal(pkg.version, '2.22.0');
+  assert.equal(lock.version, '2.22.0');
+  assert.equal(lock.packages[''].version, '2.22.0');
+  assert.match(sw, /campobase-v2\.22\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -202,7 +202,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.21\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.22\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {

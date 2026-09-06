@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.22.0 — 2026-09-06
+
+- Nueva pestaña «Preparación de partido» (solo Migue), entre Convocatoria y Partido en vivo. Permite preparar la alineación de varios partidos días antes: partido, porteros de cada tiempo, pizarra táctica y convocados (solo lectura, vienen de Convocatoria).
+- Al guardar queda «✓ Guardado» y se puede reeditar. Los partidos finalizados desaparecen de la lista.
+- Botón «Mostrar al Delegado» / «Ocultar al Delegado» por partido.
+- La pestaña «Tácticas» se mueve entre Ejercicios y Calendario.
+- Convocatoria y Partido en vivo no se tocan.
+- 130 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.22.0`.
+
 ## 2.21.0 — 2026-09-06
 
 - El delegado solo ve el partido en vivo 20 minutos antes de la hora programada (la que Migue pone en el calendario), o cuando Migue lo desbloquea antes con el botón «Enseñar al delegado», o cuando el partido ya ha empezado.

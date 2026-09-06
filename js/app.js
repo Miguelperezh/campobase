@@ -32,7 +32,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'Sancionado', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', other: 'Otro motivo', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
 let toastTimer;
@@ -43,6 +43,8 @@ let tacticTool = 'select';
 let tacticDraft = null;
 let liveTactic = null; // estado de la pizarra táctica en vivo (Fase A)
 let liveTacticsDocBound = false; // evita acumular el listener global de cierre de popup
+let prepDraft = null; // borrador de la pizarra de preparación de partido
+let prepMatchId = null; // partido que se está preparando
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -212,6 +214,7 @@ async function refresh() {
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
+  state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
   state.format = settings?.format ?? 'F7';
@@ -225,7 +228,7 @@ async function refresh() {
 function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
-  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics();
+  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics(); renderPreparaciones();
   applyGlobalSearch();
 }
 
@@ -1480,6 +1483,255 @@ function editMatch(id) {
   $('#match-dialog').showModal();
 }
 
+// ===== Preparación de partido (pestaña nueva, solo Migue) =====
+// Prepara la alineación de varios partidos días antes. Al guardar queda «Guardado»
+// y se puede reeditar. Cuando el partido se finaliza, desaparece de la lista.
+// Convocatoria y Partido en vivo NO se tocan: aquí solo se LEE la convocatoria.
+
+function preparableMatches() {
+  return state.matches
+    .filter((match) => match.callupId && match.status !== 'finished')
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function prepForMatch(matchId) {
+  return state.preparaciones.find((p) => p.matchId === matchId) ?? null;
+}
+
+function renderPreparaciones() {
+  const root = $('#preparacion-list');
+  if (!root) return;
+  const matches = preparableMatches();
+  if (!matches.length) {
+    root.innerHTML = empty('No hay partidos convocados pendientes. Crea una convocatoria en la pestaña Convocatoria.');
+    return;
+  }
+  root.innerHTML = matches.map((match) => {
+    const prep = prepForMatch(match.id);
+    const estado = prep
+      ? '<span class="pill ok">✓ Guardado</span>'
+      : '<span class="pill">Sin preparar</span>';
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button></div></div></article>`;
+  }).join('');
+}
+
+function prepAvailableIds(matchId) {
+  const match = state.matches.find(({ id }) => id === matchId);
+  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  return callup?.availableIds ?? [];
+}
+
+function prepBuildTeam(formation, keeperId) {
+  return buildLiveState(state.players, prepAvailableIds(prepMatchId), formation, 'F7', keeperId).team;
+}
+
+function prepCargarFormacion(team, formation, keeperId) {
+  return cargarFormacion(team, state.players, prepAvailableIds(prepMatchId), formation, 'F7');
+}
+
+function openPreparacionEditor(matchId) {
+  prepMatchId = matchId;
+  const match = state.matches.find(({ id }) => id === matchId);
+  const prep = prepForMatch(matchId);
+  const availableIds = prepAvailableIds(matchId);
+  const keeperOptions = availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
+  const firstKeeper = prep?.firstKeeper ?? availableIds.find((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero')) ?? availableIds[0] ?? '';
+  const secondKeeper = prep?.secondKeeper ?? firstKeeper;
+  const formacion = prep?.formacion ?? '1-3-2-1';
+  prepDraft = prep?.team?.length
+    ? prep.team.map((p) => ({ ...p }))
+    : prepBuildTeam(formacion, firstKeeper);
+  const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === formacion ? 'selected' : ''}>${f}</option>`).join('');
+  const convocados = availableIds.map((id) => `<span class="suplente">${escapeHtml(playerName(id))}</span>`).join('');
+  $('#preparacion-editor').innerHTML = `
+    <div class="section-head"><div><p class="eyebrow">Preparando</p><h3>${escapeHtml(match.opponent)} · ${escapeHtml(localDate(match.date))}</h3></div><button type="button" id="prep-back" class="secondary">← Volver</button></div>
+    <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
+    <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
+    <div class="panel live-tactics" style="margin-top:1rem">
+      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select></div>
+      <div class="board-wrap"><svg id="prep-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación"></svg></div>
+      <div class="live-tactics-slots" id="prep-slots"></div>
+      <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. El portero del 1er tiempo entra en portería automáticamente.</div>
+      <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>toque = elegir jugador</span></div>
+    </div>
+    <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
+    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button></div>
+    <p class="meta" id="prep-hint">${prep ? 'Preparación guardada. Puedes editarla y volver a guardar.' : 'Completa los 7 titulares (portero incluido) y guarda.'}</p>
+    <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>`;
+  $('#prep-keeper1').value = firstKeeper;
+  $('#prep-keeper2').value = secondKeeper;
+  $('#preparacion-list').classList.add('hidden');
+  $('#preparacion-editor').classList.remove('hidden');
+  renderPrepBoard();
+  renderPrepSlots();
+  wirePrepEditor();
+}
+
+function renderPrepBoard() {
+  const svg = $('#prep-board');
+  if (!svg || !prepDraft) return;
+  const parts = [];
+  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
+  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
+  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
+  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
+  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
+  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
+  prepDraft.forEach((p, i) => {
+    const pl = playerById(state.players, p.playerId);
+    const dorsal = pl ? pl.number : '';
+    const label = pl ? nombreCorto(pl.name) : '';
+    const labelW = label ? label.length * 1.6 + 1.6 : 0;
+    const rectX = p.x - labelW / 2, rectY = p.y + 2.1, rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+  });
+  // Rival (mitad superior).
+  const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
+  OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
+  parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  svg.innerHTML = parts.join('');
+}
+
+function renderPrepSlots() {
+  const container = $('#prep-slots');
+  if (!container || !prepDraft) return;
+  const availableIds = prepAvailableIds(prepMatchId);
+  const suplentesList = suplentes(state.players, availableIds, prepDraft);
+  const filas = prepDraft.map((p, i) => {
+    const pl = playerById(state.players, p.playerId);
+    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+    const opts = ['<option value="">— Sin asignar —</option>'];
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+    if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+    return `<div class="slot"><span class="pos">${escapeHtml(p.pos)}</span><select data-idx="${i}">${opts.join('')}</select><span class="dorsal">${pl ? escapeHtml(pl.number) : '—'}</span></div>`;
+  }).join('');
+  const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
+  container.innerHTML = filas + suplentesHTML;
+  container.querySelectorAll('select').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const idx = Number(sel.dataset.idx);
+      const slot = prepDraft[idx];
+      if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, sel.value)) return renderPrepSlots();
+      prepDraft = asignarJugador(prepDraft, idx, sel.value);
+      renderPrepSlots(); renderPrepBoard();
+    });
+  });
+}
+
+function prepOpenPopup(idx, clientX, clientY) {
+  const popup = $('#prep-popup');
+  const select = $('#prep-popup-select');
+  const title = $('#prep-popup-title');
+  if (!popup || !select || !title || !prepDraft) return;
+  const p = prepDraft[idx];
+  const availableIds = prepAvailableIds(prepMatchId);
+  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+  const opts = ['<option value="">— Sin asignar —</option>'];
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+  if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+  title.textContent = p.pos;
+  select.innerHTML = opts.join('');
+  select.value = p.playerId;
+  popup.dataset.idx = idx;
+  popup.classList.add('open');
+  const w = 240, h = 120;
+  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+}
+
+function wirePrepEditor() {
+  const svg = $('#prep-board');
+  if (svg) {
+    svg.addEventListener('pointerdown', (e) => {
+      const target = e.target.closest('[data-piece]');
+      if (target && target.dataset.piece === 'team') svg.dataset._prepIdx = target.dataset.idx;
+    });
+    svg.addEventListener('pointerup', (e) => {
+      const idx = svg.dataset._prepIdx;
+      svg.dataset._prepIdx = '';
+      if (idx !== undefined && idx !== '') prepOpenPopup(Number(idx), e.clientX, e.clientY);
+    });
+  }
+  const formacion = $('#prep-formacion');
+  if (formacion) formacion.addEventListener('change', () => {
+    prepDraft = prepCargarFormacion(prepDraft, formacion.value, $('#prep-keeper1').value);
+    renderPrepSlots(); renderPrepBoard();
+  });
+  const keeper1 = $('#prep-keeper1');
+  if (keeper1) keeper1.addEventListener('change', () => {
+    prepDraft = prepDraft.map((p) => p.pos === 'Portero' ? { ...p, playerId: keeper1.value } : p);
+    renderPrepSlots(); renderPrepBoard();
+  });
+  const popupSelect = $('#prep-popup-select');
+  if (popupSelect) popupSelect.addEventListener('change', () => {
+    const popup = $('#prep-popup');
+    const idx = Number(popup.dataset.idx);
+    popup.classList.remove('open');
+    const slot = prepDraft[idx];
+    if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, popupSelect.value)) return;
+    prepDraft = asignarJugador(prepDraft, idx, popupSelect.value);
+    renderPrepSlots(); renderPrepBoard();
+  });
+  const back = $('#prep-back');
+  if (back) back.addEventListener('click', () => {
+    $('#preparacion-editor').classList.add('hidden');
+    $('#preparacion-list').classList.remove('hidden');
+    prepDraft = null; prepMatchId = null;
+  });
+  const save = $('#prep-save');
+  if (save) save.addEventListener('click', () => savePreparacion());
+  const delegate = $('#prep-delegate');
+  if (delegate) delegate.addEventListener('click', () => togglePrepDelegate());
+}
+
+async function savePreparacion() {
+  const onField = prepDraft.map((p) => p.playerId).filter(Boolean);
+  const keeper1 = $('#prep-keeper1').value;
+  if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(keeper1)) {
+    return toast('Completa la alineación de 7 jugadores con el portero antes de guardar.');
+  }
+  const existing = prepForMatch(prepMatchId);
+  const record = {
+    ...existing,
+    id: existing?.id ?? uid(),
+    recordType: 'preparacion',
+    matchId: prepMatchId,
+    firstKeeper: keeper1,
+    secondKeeper: $('#prep-keeper2').value,
+    formacion: $('#prep-formacion').value,
+    team: prepDraft.map((p) => ({ ...p })),
+    delegateShown: existing?.delegateShown ?? false,
+    savedAt: Date.now(),
+  };
+  await put('settings', record);
+  await refresh();
+  $('#preparacion-editor').classList.add('hidden');
+  $('#preparacion-list').classList.remove('hidden');
+  prepDraft = null; prepMatchId = null;
+  toast('Preparación guardada.');
+}
+
+async function togglePrepDelegate() {
+  const existing = prepForMatch(prepMatchId);
+  const record = {
+    ...existing,
+    id: existing?.id ?? uid(),
+    recordType: 'preparacion',
+    matchId: prepMatchId,
+    firstKeeper: $('#prep-keeper1').value,
+    secondKeeper: $('#prep-keeper2').value,
+    formacion: $('#prep-formacion').value,
+    team: prepDraft.map((p) => ({ ...p })),
+    delegateShown: !(existing?.delegateShown ?? false),
+    savedAt: Date.now(),
+  };
+  await put('settings', record);
+  await refresh();
+  $('#prep-delegate').textContent = record.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado';
+  toast(record.delegateShown ? 'El delegado ya puede ver el partido.' : 'El delegado ya no ve el partido.');
+}
+
 function showMatchDetail(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
   const teams = matchTeams(match);
@@ -2626,6 +2878,7 @@ function wireEvents() {
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
+    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {
