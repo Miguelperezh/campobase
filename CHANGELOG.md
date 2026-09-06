@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.20.0 — 2026-09-06
+
+- Fase B de la pizarra en vivo: al llegar al descanso se pide SIEMPRE la alineación del 2º tiempo. La pizarra se abre con el once del 1er tiempo y Migue (o el delegado) ajusta quién entra, quién sale y los cambios de posición antes de arrancar el 2º tiempo.
+- Cambiar de táctica en la pizarra ya no borra jugadores: conserva los asignados y los reordena en la nueva formación (misma lógica que el 1er tiempo).
+- «En campo» y «Suplentes» (antes «Banquillo») se ordenan de más a menos minutos jugados, para decidir los cambios con el acumulador a la vista.
+- El portero del 2º tiempo entra en portería automáticamente; Migue y el delegado pueden poner a un jugador de campo de portero en caso de lesión.
+- 130 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.20.0`.
+
 ## 2.19.0 — 2026-09-06
 
 - Pretemporada separada de la liga: los amistosos y torneos se agrupan aparte y sus estadísticas aparecen en casillas propias bajo el título «Pretemporada», justo debajo de las de liga.

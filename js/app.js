@@ -677,9 +677,12 @@ function ensureLiveTactic() {
   return liveTactic;
 }
 
-// Markup de "En campo" y "Banquillo" (vista owner).
+// Markup de "En campo" y "Suplentes" (vista owner), ordenados de más a menos jugados.
 function fieldBenchMarkup(fieldIds, callup, config) {
-  return `<div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldIds.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Banquillo</h3><div class="check-list">${callup.availableIds.filter((id) => !fieldIds.includes(id)).map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>`;
+  const byPlayed = (a, b) => (livePlayerSeconds(b) ?? 0) - (livePlayerSeconds(a) ?? 0);
+  const fieldSorted = [...fieldIds].sort(byPlayed);
+  const benchSorted = callup.availableIds.filter((id) => !fieldIds.includes(id)).sort(byPlayed);
+  return `<div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldSorted.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Suplentes</h3><div class="check-list">${benchSorted.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>`;
 }
 
 // Re-renderiza solo "En campo" y "Banquillo" sin reconstruir la pizarra.
@@ -1068,10 +1071,11 @@ function renderDelegate() {
   const suggestion = suggestDelegateSubstitution(fieldIds, benchIds, played, 1, liveKeeperIds());
   const suggestionText = suggestion.inIds.length
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
-    : 'No hay jugadores disponibles en el banquillo.';
+    : 'No hay jugadores disponibles entre los suplentes.';
   const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
-  const delegateFieldIds = fieldIds;
-  const delegateBenchIds = benchIds;
+  const byPlayed = (a, b) => (played[b] ?? 0) - (played[a] ?? 0);
+  const delegateFieldIds = [...fieldIds].sort(byPlayed);
+  const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
   root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
   renderDelegateTactics();
@@ -1271,6 +1275,8 @@ async function advanceLivePhase() {
   }
   if (state.timer.phase === 'halftime') {
     const { firstKeeper, secondKeeper } = state.timer;
+    // Fase B: aplica la alineación del 2º tiempo ajustada en la pizarra (quién entra/sale).
+    syncTimerFromLiveTactic();
     if (secondKeeper && firstKeeper !== secondKeeper && !state.timer.onField.includes(secondKeeper)) {
       const keeperOut = state.timer.onField.includes(firstKeeper) ? firstKeeper : state.timer.onField.find((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
       if (keeperOut) {
