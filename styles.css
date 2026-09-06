@@ -34,4 +34,4 @@
 /* ===== Preparación de partido ===== */
 .pill.ok{background:#e6f4ea;color:var(--green,#173f35)}
 /* ===== Media de liga en la ficha de plantilla ===== */
-.liga-media{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;height:58px;border-radius:16px;background:#fff4bf;color:#8a6500;font-weight:800;line-height:1}.liga-media .valor{font-size:1.15rem}.liga-media .etiqueta{font-size:.55rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:.15rem}
+.liga-media{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;height:58px;border-radius:16px;background:var(--brand);color:#fff;font-weight:800;line-height:1}.liga-media .valor{font-size:1.15rem}.liga-media .etiqueta{font-size:.55rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:.15rem}
