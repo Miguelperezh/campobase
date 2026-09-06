@@ -294,7 +294,10 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
   const playerMatches = matchesInScope.filter((match) => match.minuteTotals?.[playerId] !== undefined
     || match.ratings?.[playerId] !== undefined
     || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
-  const ratings = playerMatches.map((match) => match.ratings?.[playerId]).filter(Number.isFinite);
+  const ratings = playerMatches
+    .filter((match) => (match.minuteTotals?.[playerId] ?? 0) > 0)
+    .map((match) => match.ratings?.[playerId])
+    .filter(Number.isFinite);
   const attendanceInScope = attendanceRecords.filter((record) => {
     if (scope === 'all') return true;
     if (!record.matchId) return scope === 'league';

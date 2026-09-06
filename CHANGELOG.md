@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.23.0 — 2026-09-06
+
+- En la ficha de plantilla, a la derecha del avatar (mismo tamaño que las iniciales), aparece la media de puntuación de LIGA (no pretemporada).
+- La media de puntuación ahora solo cuenta partidos donde el jugador jugó minutos (minutos > 0). Un jugador lesionado que no jugó no baja su media, ni en la ficha ni en el lateral.
+- 131 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.23.0`.
+
 ## 2.22.0 — 2026-09-06
 
 - Nueva pestaña «Preparación de partido» (solo Migue), entre Convocatoria y Partido en vivo. Permite preparar la alineación de varios partidos días antes: partido, porteros de cada tiempo, pizarra táctica y convocados (solo lectura, vienen de Convocatoria).

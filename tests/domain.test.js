@@ -636,6 +636,23 @@ test('separa las mismas estadísticas del jugador entre liga y pretemporada', ()
   );
 });
 
+test('la media de puntuación solo cuenta partidos donde el jugador jugó minutos', () => {
+  const matches = [
+    { id: 'm1', type: 'league', date: '2026-09-12T13:00', minuteTotals: { a: 1800 }, ratings: { a: 4 } },
+    { id: 'm2', type: 'league', date: '2026-09-19T13:00', minuteTotals: { a: 1800 }, ratings: { a: 5 } },
+    // Lesionado: convocado y puntuado, pero 0 minutos jugados. NO debe bajar la media.
+    { id: 'm3', type: 'league', date: '2026-09-26T13:00', minuteTotals: { a: 0 }, ratings: { a: 1 } },
+  ];
+  const callups = [
+    { matchId: 'm1', matchType: 'league', availableIds: ['a'], exclusions: [] },
+    { matchId: 'm2', matchType: 'league', availableIds: ['a'], exclusions: [] },
+    { matchId: 'm3', matchType: 'league', availableIds: ['a'], exclusions: [] },
+  ];
+  const summary = buildPlayerSummary('a', matches, [], callups, 'league');
+  assert.equal(summary.ratings, 2);
+  assert.equal(summary.averageRating, 4.5);
+});
+
 test('permite fijar todos los totales visibles mediante correcciones sin cambiar el resumen automático', () => {
   const automatic = { goals: 2, yellowCards: 1, redCards: 0, injuries: 1, incidents: 0, callups: 3, rotations: 1, late: 2, absent: 1, minutes: 90, ratings: 2, averageRating: 4 };
   const player = setPlayerStatTotals({ id: 'a' }, 'preseason', automatic, {
