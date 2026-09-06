@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.24.0 — 2026-09-06
+
+- La media de puntuación solo cuenta partidos donde el jugador jugó al menos 5 minutos. Un suplente que jugó 0 o menos de 5 minutos no baja su media.
+- El total «minutos acumulados» de la plantilla ahora suma solo los minutos de LIGA (antes sumaba también pretemporada).
+- Al borrar un partido se borran todas sus estadísticas de plantilla y minutos, como si no se hubiera jugado (ya era así; se confirma).
+- 131 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.24.0`.
+
 ## 2.23.0 — 2026-09-06
 
 - En la ficha de plantilla, a la derecha del avatar (mismo tamaño que las iniciales), aparece la media de puntuación de LIGA (no pretemporada).

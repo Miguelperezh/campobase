@@ -636,17 +636,20 @@ test('separa las mismas estadísticas del jugador entre liga y pretemporada', ()
   );
 });
 
-test('la media de puntuación solo cuenta partidos donde el jugador jugó minutos', () => {
+test('la media de puntuación solo cuenta partidos donde el jugador jugó al menos 5 minutos', () => {
   const matches = [
     { id: 'm1', type: 'league', date: '2026-09-12T13:00', minuteTotals: { a: 1800 }, ratings: { a: 4 } },
     { id: 'm2', type: 'league', date: '2026-09-19T13:00', minuteTotals: { a: 1800 }, ratings: { a: 5 } },
     // Lesionado: convocado y puntuado, pero 0 minutos jugados. NO debe bajar la media.
     { id: 'm3', type: 'league', date: '2026-09-26T13:00', minuteTotals: { a: 0 }, ratings: { a: 1 } },
+    // Suplente que jugó menos de 5 minutos (4 min = 240 s). NO debe bajar la media.
+    { id: 'm4', type: 'league', date: '2026-10-03T13:00', minuteTotals: { a: 240 }, ratings: { a: 1 } },
   ];
   const callups = [
     { matchId: 'm1', matchType: 'league', availableIds: ['a'], exclusions: [] },
     { matchId: 'm2', matchType: 'league', availableIds: ['a'], exclusions: [] },
     { matchId: 'm3', matchType: 'league', availableIds: ['a'], exclusions: [] },
+    { matchId: 'm4', matchType: 'league', availableIds: ['a'], exclusions: [] },
   ];
   const summary = buildPlayerSummary('a', matches, [], callups, 'league');
   assert.equal(summary.ratings, 2);

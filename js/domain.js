@@ -295,7 +295,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
     || match.ratings?.[playerId] !== undefined
     || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
   const ratings = playerMatches
-    .filter((match) => (match.minuteTotals?.[playerId] ?? 0) > 0)
+    .filter((match) => (match.minuteTotals?.[playerId] ?? 0) >= 5 * 60)
     .map((match) => match.ratings?.[playerId])
     .filter(Number.isFinite);
   const attendanceInScope = attendanceRecords.filter((record) => {

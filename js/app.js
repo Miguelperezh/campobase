@@ -246,7 +246,7 @@ function renderPlayers() {
   }));
   const totalMinutes = state.players.reduce((sum, player) => {
     const totals = playerSummaryTotals.get(player.id);
-    return sum + totals.summary.minutes + totals.preseasonSummary.minutes;
+    return sum + totals.summary.minutes;
   }, 0);
   const totalRotations = state.players.reduce((sum, player) => {
     const totals = playerSummaryTotals.get(player.id);
