@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.18.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.19.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.18.0');
-  assert.equal(lock.version, '2.18.0');
-  assert.equal(lock.packages[''].version, '2.18.0');
-  assert.match(sw, /campobase-v2\.18\.0/);
+  assert.equal(pkg.version, '2.19.0');
+  assert.equal(lock.version, '2.19.0');
+  assert.equal(lock.packages[''].version, '2.19.0');
+  assert.match(sw, /campobase-v2\.19\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -33,17 +33,15 @@ test('la aplicación no usa confirmaciones nativas', async () => {
 });
 
 test('la barra táctica usa las siete muestras SVG y permite leer todos los nombres sin truncarlos', async () => {
-  const [app, css, preview] = await Promise.all([
-    projectFile('js/app.js'), projectFile('styles.css'), projectFile('_preview_tactica_vivo/index.html'),
+  const [app, css] = await Promise.all([
+    projectFile('js/app.js'), projectFile('styles.css'),
   ]);
   assert.match(app, /renderTacticToolIcon\(tool\.id\)/);
+  assert.match(app, /TACTIC_TOOLS\.map\(\(\{ id, label \}\) => `<button[^`]+renderTacticToolIcon\(id\)[^`]+tactic-tool-label[^`]+\$\{label\}/);
+  assert.match(app, /title="\$\{label\}"/);
   assert.match(app, /target\.closest\('\.tactic-tool\[data-tactic-tool\]'\)/);
   assert.match(css, /\.tactic-tools\{[^}]*display:grid[^}]*overflow:visible/);
   assert.match(css, /\.tactic-tool\{[^}]*min-width:0[^}]*white-space:normal/);
-  assert.match(preview, /class="tool-icon"/);
-  assert.doesNotMatch(preview, /✋|➜|↝|⚡|🎯|💨|⚽/);
-  assert.match(preview, /TACTIC_TOOLS\.map\(\(\{ id, label \}\)/);
-  assert.match(preview, /<span>\$\{label\}<\/span>/);
 });
 
 test('las seis correcciones de tácticas y partido en vivo quedan conectadas en la UI real', async () => {
@@ -85,6 +83,54 @@ test('las fichas de plantilla muestran dorsal, posición, pierna y rotaciones co
   assert.match(css, /\.player-head/);
   assert.match(css, /\.player-performance/);
   assert.match(css, /overflow-wrap:anywhere/);
+});
+
+test('actividad y estadísticas repite las mismas casillas bajo el título Pretemporada', async () => {
+  const [app, css] = await Promise.all([projectFile('js/app.js'), projectFile('styles.css')]);
+  assert.match(app, /buildPlayerSummary\(player\.id, state\.matches, currentTrainings, currentCallups, 'league'\)/);
+  assert.match(app, /buildPlayerSummary\(player\.id, state\.matches, currentTrainings, currentCallups, 'preseason'\)/);
+  assert.match(app, /<h4 class="player-stats-title">Pretemporada<\/h4>/);
+  assert.equal((app.match(/<div class="player-summary">/g) ?? []).length, 2);
+  assert.doesNotMatch(app, /Minutos de pretemporada/);
+  assert.match(css, /\.player-stats-title/);
+});
+
+test('Migue puede editar todas las casillas de Liga y Pretemporada sin alterar los registros originales', async () => {
+  const [app, html, css] = await Promise.all([projectFile('js/app.js'), projectFile('index.html'), projectFile('styles.css')]);
+  assert.match(app, /class="edit-player-stats secondary" data-player-id="\$\{player\.id\}" data-scope="league"/);
+  assert.match(app, /class="edit-player-stats secondary" data-player-id="\$\{player\.id\}" data-scope="preseason"/);
+  assert.match(app, /function editPlayerStats\(/);
+  assert.match(app, /async function savePlayerStats\(/);
+  assert.match(app, /summary\.minutes \+ preseasonSummary\.minutes/);
+  assert.match(app, /summary\.rotations \+ preseasonSummary\.rotations/);
+  assert.match(app, /const playerSummaryTotals = new Map/);
+  assert.match(html, /id="player-stats-dialog"/);
+  assert.match(css, /\.stats-edit-grid/);
+  for (const field of ['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating']) {
+    assert.match(html, new RegExp(`name="${field}"`));
+  }
+});
+
+test('convocatoria ofrece lesionado, sancionado y otro motivo con explicación obligatoria', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /injured: 'Lesionado'/);
+  assert.match(app, /suspended: 'Sancionado'/);
+  assert.match(app, /other: 'Otro motivo'/);
+  assert.match(app, /name="reasonNote-\$\{player\.id\}"/);
+  assert.match(app, /reason === 'other' && !note/);
+  assert.match(app, /Otro motivo: \$\{note\}/);
+});
+
+test('borrar un partido limpia sus datos derivados, asistencia y convocatoria', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /const currentCallups = state\.callups\.filter/);
+  assert.match(app, /const currentTrainings = state\.trainings\.filter/);
+  assert.match(app, /buildPlayerHistory\(player\.id, currentTrainings, currentCallups, state\.matches\)/);
+  assert.match(app, /async function deleteMatch\(/);
+  assert.match(app, /removeMatchFromPlayerStats/);
+  assert.match(app, /callup\.id === match\.callupId \|\| callup\.matchId === match\.id/);
+  assert.match(app, /match\.callupId/);
+  assert.doesNotMatch(app, /if \(target\.matches\('\.delete-match'\).*for \(const record/);
 });
 
 test('la sesión autenticada se restaura al recargar y el PIN no se abre incondicionalmente', async () => {
@@ -156,7 +202,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.18\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.19\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {

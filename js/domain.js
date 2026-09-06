@@ -134,7 +134,12 @@ export function buildCallupSelection(players, options = {}) {
   if (selected.size > limit) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
 
   const eligible = uniquePlayers.filter(({ id }) => !manuallyExcluded.has(id));
-  const exclusions = manualExclusions.map(({ playerId, reason }) => ({ playerId, reason, automatic: false }));
+  const exclusions = manualExclusions.map(({ playerId, reason, note }) => ({
+    playerId,
+    reason,
+    ...(note ? { note } : {}),
+    automatic: false,
+  }));
   if (matchType !== 'league') {
     if (eligible.length > limit) throw new RangeError(`En amistosos y torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
     return { availableIds: eligible.map(({ id }) => id), exclusions };
@@ -274,13 +279,31 @@ export function buildPlayerHistory(playerId, attendanceRecords, callups, matches
     .sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')) || b.createdAt - a.createdAt);
 }
 
-export function buildPlayerSummary(playerId, matches, attendanceRecords, callups) {
+export function buildPlayerSummary(playerId, matches, attendanceRecords, callups, scope = 'all') {
   if (![matches, attendanceRecords, callups].every(Array.isArray)) throw new TypeError('Los históricos deben ser listas.');
-  const playerMatches = matches.filter((match) => match.minuteTotals?.[playerId] !== undefined
+  if (!['all', 'league', 'preseason'].includes(scope)) throw new TypeError('El ámbito de estadísticas no es válido.');
+  const matchesInScope = matches.filter((match) => scope === 'all'
+    || (scope === 'preseason' ? isPreseasonMatch(match) : !isPreseasonMatch(match)));
+  const callupsInScope = callups.filter((callup) => {
+    const relatedMatch = callup.matchId ? matches.find((match) => match.id === callup.matchId) : null;
+    if (callup.matchId && !relatedMatch) return false;
+    if (scope === 'all') return true;
+    const preseason = relatedMatch ? isPreseasonMatch(relatedMatch) : isPreseasonMatch({ type: callup.matchType });
+    return scope === 'preseason' ? preseason : !preseason;
+  });
+  const playerMatches = matchesInScope.filter((match) => match.minuteTotals?.[playerId] !== undefined
     || match.ratings?.[playerId] !== undefined
     || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
   const ratings = playerMatches.map((match) => match.ratings?.[playerId]).filter(Number.isFinite);
-  const attendance = attendanceRecords.flatMap((record) => record.attendance?.filter((entry) => entry.playerId === playerId) ?? []);
+  const attendanceInScope = attendanceRecords.filter((record) => {
+    if (scope === 'all') return true;
+    if (!record.matchId) return scope === 'league';
+    const relatedMatch = matches.find((match) => match.id === record.matchId);
+    if (!relatedMatch) return false;
+    const preseason = isPreseasonMatch(relatedMatch);
+    return scope === 'preseason' ? preseason : !preseason;
+  });
+  const attendance = attendanceInScope.flatMap((record) => record.attendance?.filter((entry) => entry.playerId === playerId) ?? []);
   const countEvents = (field, predicate = () => true) => playerMatches.reduce((total, match) => total + (match[field] ?? []).filter((item) => item.playerId === playerId && predicate(item)).length, 0);
   return {
     goals: countEvents('goals'),
@@ -288,15 +311,100 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
     redCards: countEvents('cards', (item) => item.type === 'red'),
     injuries: countEvents('injuries'),
     incidents: countEvents('incidents'),
-    callups: callups.filter((callup) => callup.availableIds?.includes(playerId)).length,
-    notCalled: callups.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId)).length,
-    rotations: callups.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId && item.automatic)).length,
+    callups: callupsInScope.filter((callup) => callup.availableIds?.includes(playerId)).length,
+    notCalled: callupsInScope.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId)).length,
+    rotations: callupsInScope.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId && item.automatic)).length,
     present: attendance.filter((entry) => entry.status === 'present').length,
     late: attendance.filter((entry) => entry.status === 'late').length,
     absent: attendance.filter((entry) => entry.status === 'absent').length,
     minutes: Math.round(playerMatches.reduce((total, match) => total + (match.minuteTotals?.[playerId] ?? 0), 0) / 60),
     ratings: ratings.length,
     averageRating: ratings.length ? Number((ratings.reduce((total, rating) => total + rating, 0) / ratings.length).toFixed(1)) : null,
+  };
+}
+
+export function applyPlayerStatAdjustments(summary, adjustments = {}) {
+  const result = { ...summary };
+  const fields = ['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
+  for (const field of fields) {
+    if (!Number.isFinite(adjustments[field])) continue;
+    const value = Number(summary[field] ?? 0) + adjustments[field];
+    result[field] = field === 'averageRating'
+      ? Number(Math.max(0, Math.min(5, value)).toFixed(1))
+      : Math.max(0, Math.round(value));
+  }
+  return result;
+}
+
+export function setPlayerStatTotals(player, scope, automaticSummary, values) {
+  if (!['league', 'preseason'].includes(scope)) throw new TypeError('El ámbito de estadísticas no es válido.');
+  const integerFields = new Set(['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes']);
+  const allowedFields = new Set([...integerFields, 'averageRating']);
+  const adjustments = { ...(player.statAdjustments?.[scope] ?? {}) };
+  for (const [field, rawValue] of Object.entries(values ?? {})) {
+    if (!allowedFields.has(field)) continue;
+    const target = Number(rawValue);
+    if (!Number.isFinite(target) || target < 0 || (integerFields.has(field) && !Number.isInteger(target))) {
+      throw new RangeError(`La estadística ${field} debe ser no negativa${integerFields.has(field) ? ' y entera' : ''}.`);
+    }
+    if (field === 'averageRating' && target > 5) throw new RangeError('La media debe estar entre 0 y 5.');
+    const difference = Number((target - Number(automaticSummary[field] ?? 0)).toFixed(1));
+    if (difference === 0) delete adjustments[field];
+    else adjustments[field] = difference;
+  }
+  const statAdjustments = { ...(player.statAdjustments ?? {}) };
+  if (Object.keys(adjustments).length) statAdjustments[scope] = adjustments;
+  else delete statAdjustments[scope];
+  return { ...player, statAdjustments };
+}
+
+export function derivePlayerMatchStats(playerId, matches) {
+  if (!Array.isArray(matches)) throw new TypeError('Los partidos deben ser una lista.');
+  const seasonMinutes = {};
+  const preseasonMinutes = {};
+  const ratingHistory = [];
+  const minuteReasons = [];
+  let totalMinutes = 0;
+  for (const match of matches) {
+    const playedSeconds = match.minuteTotals?.[playerId];
+    if (Number.isFinite(playedSeconds)) {
+      const minutes = Math.round(playedSeconds / 60);
+      const season = seasonKey(match.date);
+      const bucket = isPreseasonMatch(match) ? preseasonMinutes : seasonMinutes;
+      bucket[season] = (bucket[season] ?? 0) + minutes;
+      totalMinutes += minutes;
+    }
+    const rating = match.ratings?.[playerId];
+    if (Number.isFinite(rating)) ratingHistory.push({ matchId: match.id, date: match.date, opponent: match.opponent ?? '', rating });
+    const reason = match.minuteReasons?.[playerId];
+    if (reason) minuteReasons.push({ matchId: match.id, date: match.date, season: seasonKey(match.date), reason });
+  }
+  return { totalMinutes, seasonMinutes, preseasonMinutes, ratingHistory, minuteReasons };
+}
+
+export function removeMatchFromPlayerStats(player, match, matches = null) {
+  if (Array.isArray(matches)) {
+    return { ...player, ...derivePlayerMatchStats(player.id, matches.filter((item) => item.id !== match.id)) };
+  }
+  const playedSeconds = match.minuteTotals?.[player.id];
+  const seasonMinutes = { ...(player.seasonMinutes ?? {}) };
+  const preseasonMinutes = { ...(player.preseasonMinutes ?? {}) };
+  let totalMinutes = player.totalMinutes ?? 0;
+  if (Number.isFinite(playedSeconds)) {
+    const minutes = Math.round(playedSeconds / 60);
+    const season = seasonKey(match.date);
+    const bucket = isPreseasonMatch(match) ? preseasonMinutes : seasonMinutes;
+    bucket[season] = Math.max(0, (bucket[season] ?? 0) - minutes);
+    if (bucket[season] === 0) delete bucket[season];
+    totalMinutes = Math.max(0, totalMinutes - minutes);
+  }
+  return {
+    ...player,
+    totalMinutes,
+    seasonMinutes,
+    preseasonMinutes,
+    ratingHistory: (player.ratingHistory ?? []).filter((item) => item.matchId !== match.id),
+    minuteReasons: (player.minuteReasons ?? []).filter((item) => item.matchId !== match.id),
   };
 }
 
@@ -397,6 +505,11 @@ export function seasonKey(dateValue) {
   return `${startYear}-${startYear + 1}`;
 }
 
+// Un partido es de pretemporada cuando es amistoso o torneo (no liga).
+export function isPreseasonMatch(match = {}) {
+  return match.type === 'friendly' || match.type === 'tournament';
+}
+
 export function accumulateSeasonMinutes(player, matchDate, playedSeconds, context = {}) {
   if (!Number.isFinite(playedSeconds) || playedSeconds < 0) {
     throw new RangeError('Los segundos jugados no son válidos.');
@@ -407,8 +520,14 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
   }
   const season = seasonKey(matchDate);
   const minutes = Math.round(playedSeconds / 60);
+  const preseason = Boolean(context.preseason);
   const seasonMinutes = { ...(player.seasonMinutes ?? {}) };
-  seasonMinutes[season] = (seasonMinutes[season] ?? 0) + minutes;
+  const preseasonMinutes = { ...(player.preseasonMinutes ?? {}) };
+  if (preseason) {
+    preseasonMinutes[season] = (preseasonMinutes[season] ?? 0) + minutes;
+  } else {
+    seasonMinutes[season] = (seasonMinutes[season] ?? 0) + minutes;
+  }
   const minuteReasons = [...(player.minuteReasons ?? [])];
   if (context.reason) {
     minuteReasons.push({ matchId: context.matchId, date: matchDate, season, reason: context.reason });
@@ -417,6 +536,7 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
     ...player,
     totalMinutes: (player.totalMinutes ?? 0) + minutes,
     seasonMinutes,
+    preseasonMinutes,
     minuteReasons,
   };
 }

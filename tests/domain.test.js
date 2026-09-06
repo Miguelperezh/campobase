@@ -19,6 +19,7 @@ import {
   shouldSuggestUrgentSubstitution,
   seasonKey,
   accumulateSeasonMinutes,
+  isPreseasonMatch,
   shouldAutoPause,
   hashPin,
   verifyPin,
@@ -31,6 +32,10 @@ import {
   adjustLiveScore,
   addPlayerMatchEvent,
   buildPlayerSummary,
+  applyPlayerStatAdjustments,
+  setPlayerStatTotals,
+  removeMatchFromPlayerStats,
+  derivePlayerMatchStats,
   buildPlayerRecord,
 } from '../js/domain.js';
 
@@ -182,6 +187,14 @@ test('completa una convocatoria de liga hasta 14 respetando inclusiones, exclusi
   assert.ok(!result.availableIds.includes('p17'));
   assert.deepEqual(result.exclusions.find(({ playerId }) => playerId === 'p17'), { playerId: 'p17', reason: 'sick', automatic: false });
   assert.equal(result.exclusions.filter(({ automatic }) => automatic).length, 2);
+});
+
+test('conserva la explicación cuando una exclusión manual usa Otro motivo', () => {
+  const result = buildCallupSelection([{ id: 'p1' }, { id: 'p2' }], {
+    matchType: 'friendly',
+    manualExclusions: [{ playerId: 'p2', reason: 'other', note: 'Viaje familiar' }],
+  });
+  assert.deepEqual(result.exclusions, [{ playerId: 'p2', reason: 'other', note: 'Viaje familiar', automatic: false }]);
 });
 
 test('la convocatoria automática ignora fichas duplicadas y completa 14 jugadores únicos', () => {
@@ -453,6 +466,25 @@ test('acumula los minutos en la temporada de la fecha y conserva el motivo de me
   assert.throws(() => accumulateSeasonMinutes(player, '2026-09-12', 60, { reason: 'otro' }), /motivo/i);
 });
 
+test('los minutos de pretemporada (amistoso/torneo) se guardan aparte de la liga', () => {
+  const player = accumulateSeasonMinutes(
+    { id: 'a', totalMinutes: 0, seasonMinutes: {}, preseasonMinutes: {}, minuteReasons: [] },
+    '2026-08-20T18:00',
+    2100,
+    { matchId: 'm2', reason: 'sin_indicar', preseason: true },
+  );
+  assert.equal(player.totalMinutes, 35);
+  assert.equal(player.seasonMinutes['2026-2027'], undefined);
+  assert.equal(player.preseasonMinutes['2026-2027'], 35);
+});
+
+test('isPreseasonMatch reconoce amistoso y torneo como pretemporada', () => {
+  assert.equal(isPreseasonMatch({ type: 'friendly' }), true);
+  assert.equal(isPreseasonMatch({ type: 'tournament' }), true);
+  assert.equal(isPreseasonMatch({ type: 'league' }), false);
+  assert.equal(isPreseasonMatch({}), false);
+});
+
 test('indica la pausa automática exactamente en 38 y 74 minutos', () => {
   assert.equal(shouldAutoPause('first_half', 2279), false);
   assert.equal(shouldAutoPause('first_half', 2280), true);
@@ -574,4 +606,95 @@ test('la ficha resume goles, tarjetas, lesiones, incidencias, asistencia, minuto
   assert.ok(history.some(({ detail }) => /Gol x2/.test(detail)));
   assert.ok(history.some(({ detail }) => /Golpe/.test(detail)));
   assert.ok(history.some(({ detail }) => /Discusión/.test(detail)));
+});
+
+test('separa las mismas estadísticas del jugador entre liga y pretemporada', () => {
+  const matches = [
+    { id: 'liga', type: 'league', minuteTotals: { a: 1800 }, ratings: { a: 4 }, goals: [{ playerId: 'a' }], cards: [{ playerId: 'a', type: 'yellow' }] },
+    { id: 'amistoso', type: 'friendly', minuteTotals: { a: 1200 }, ratings: { a: 5 }, goals: [{ playerId: 'a' }, { playerId: 'a' }], cards: [{ playerId: 'a', type: 'red' }] },
+    { id: 'torneo', type: 'tournament', minuteTotals: { a: 600 }, ratings: { a: 3 }, goals: [], cards: [{ playerId: 'a', type: 'yellow' }] },
+  ];
+  const callups = [
+    { matchId: 'liga', matchType: 'league', availableIds: ['a'], exclusions: [] },
+    { matchId: 'amistoso', matchType: 'friendly', availableIds: ['a'], exclusions: [] },
+    { matchId: 'torneo', matchType: 'tournament', availableIds: [], exclusions: [{ playerId: 'a', automatic: true }] },
+    { matchId: 'partido-ya-borrado', matchType: 'league', availableIds: ['a'], exclusions: [{ playerId: 'a', automatic: true }] },
+  ];
+  const attendance = [
+    { id: 'a-liga', matchId: 'liga', kind: 'match', attendance: [{ playerId: 'a', status: 'late' }] },
+    { id: 'a-amistoso', matchId: 'amistoso', kind: 'match', attendance: [{ playerId: 'a', status: 'absent' }] },
+  ];
+  const league = buildPlayerSummary('a', matches, attendance, callups, 'league');
+  const preseason = buildPlayerSummary('a', matches, attendance, callups, 'preseason');
+  assert.deepEqual(
+    { goals: league.goals, yellowCards: league.yellowCards, redCards: league.redCards, callups: league.callups, rotations: league.rotations, late: league.late, absent: league.absent, minutes: league.minutes, averageRating: league.averageRating },
+    { goals: 1, yellowCards: 1, redCards: 0, callups: 1, rotations: 0, late: 1, absent: 0, minutes: 30, averageRating: 4 },
+  );
+  assert.deepEqual(
+    { goals: preseason.goals, yellowCards: preseason.yellowCards, redCards: preseason.redCards, callups: preseason.callups, rotations: preseason.rotations, late: preseason.late, absent: preseason.absent, minutes: preseason.minutes, averageRating: preseason.averageRating },
+    { goals: 2, yellowCards: 1, redCards: 1, callups: 1, rotations: 1, late: 0, absent: 1, minutes: 30, averageRating: 4 },
+  );
+});
+
+test('permite fijar todos los totales visibles mediante correcciones sin cambiar el resumen automático', () => {
+  const automatic = { goals: 2, yellowCards: 1, redCards: 0, injuries: 1, incidents: 0, callups: 3, rotations: 1, late: 2, absent: 1, minutes: 90, ratings: 2, averageRating: 4 };
+  const player = setPlayerStatTotals({ id: 'a' }, 'preseason', automatic, {
+    goals: '5', yellowCards: '3', redCards: '1', injuries: '2', incidents: '4',
+    callups: '7', rotations: '2', late: '3', absent: '2', minutes: '125', averageRating: '4.5',
+  });
+  assert.deepEqual(automatic, { goals: 2, yellowCards: 1, redCards: 0, injuries: 1, incidents: 0, callups: 3, rotations: 1, late: 2, absent: 1, minutes: 90, ratings: 2, averageRating: 4 });
+  assert.deepEqual(applyPlayerStatAdjustments(automatic, player.statAdjustments.preseason), {
+    ...automatic, goals: 5, yellowCards: 3, redCards: 1, injuries: 2, incidents: 4,
+    callups: 7, rotations: 2, late: 3, absent: 2, minutes: 125, averageRating: 4.5,
+  });
+  assert.equal(player.statAdjustments.league, undefined);
+  assert.throws(() => setPlayerStatTotals(player, 'league', automatic, { goals: '-1' }), /no negativa/);
+  assert.throws(() => setPlayerStatTotals(player, 'league', automatic, { averageRating: '5.1' }), /entre 0 y 5/);
+});
+
+test('al borrar un partido elimina solo sus minutos, puntuación y motivos guardados en el jugador', () => {
+  const player = {
+    id: 'a', totalMinutes: 50, seasonMinutes: { '2026-2027': 40 }, preseasonMinutes: { '2026-2027': 10 },
+    ratingHistory: [{ matchId: 'borrado', rating: 4 }, { matchId: 'conservado', rating: 5 }],
+    minuteReasons: [{ matchId: 'borrado', reason: 'sin_indicar' }, { matchId: 'conservado', reason: 'illness' }],
+  };
+  const result = removeMatchFromPlayerStats(player, {
+    id: 'borrado', type: 'league', date: '2026-09-12T13:00', minuteTotals: { a: 1200 },
+  });
+  assert.equal(result.totalMinutes, 30);
+  assert.deepEqual(result.seasonMinutes, { '2026-2027': 20 });
+  assert.deepEqual(result.preseasonMinutes, { '2026-2027': 10 });
+  assert.deepEqual(result.ratingHistory, [{ matchId: 'conservado', rating: 5 }]);
+  assert.deepEqual(result.minuteReasons, [{ matchId: 'conservado', reason: 'illness' }]);
+  assert.equal(player.totalMinutes, 50, 'no debe mutar la ficha original');
+
+  const onlyMatch = removeMatchFromPlayerStats({
+    id: 'a', totalMinutes: 20, seasonMinutes: { '2026-2027': 20 },
+    ratingHistory: [{ matchId: 'único', rating: 4 }], minuteReasons: [],
+  }, { id: 'único', type: 'league', date: '2026-09-12T13:00', minuteTotals: { a: 1200 } }, []);
+  assert.equal(onlyMatch.totalMinutes, 0);
+  assert.deepEqual(onlyMatch.seasonMinutes, {});
+  assert.deepEqual(onlyMatch.ratingHistory, []);
+
+  const legacyPreseason = removeMatchFromPlayerStats({
+    id: 'a', totalMinutes: 10, seasonMinutes: { '2026-2027': 10 }, preseasonMinutes: {},
+    ratingHistory: [{ matchId: 'amistoso-antiguo', rating: 3 }], minuteReasons: [],
+  }, { id: 'amistoso-antiguo', type: 'friendly', date: '2026-08-20T18:00', minuteTotals: { a: 600 } }, []);
+  assert.equal(legacyPreseason.totalMinutes, 0);
+  assert.deepEqual(legacyPreseason.seasonMinutes, {});
+  assert.deepEqual(legacyPreseason.preseasonMinutes, {});
+});
+
+test('reconstruye minutos y puntuaciones solo desde los partidos que todavía existen', () => {
+  const derived = derivePlayerMatchStats('a', [
+    { id: 'liga', type: 'league', date: '2026-09-12T13:00', opponent: 'Liga', minuteTotals: { a: 1200 }, ratings: { a: 4 }, minuteReasons: { a: 'sin_indicar' } },
+    { id: 'amistoso', type: 'friendly', date: '2026-08-20T18:00', opponent: 'Amistoso', minuteTotals: { a: 600 }, ratings: { a: 5 } },
+  ]);
+  assert.deepEqual(derived.seasonMinutes, { '2026-2027': 20 });
+  assert.deepEqual(derived.preseasonMinutes, { '2026-2027': 10 });
+  assert.equal(derived.totalMinutes, 30);
+  assert.deepEqual(derived.ratingHistory.map(({ matchId, rating }) => ({ matchId, rating })), [
+    { matchId: 'liga', rating: 4 }, { matchId: 'amistoso', rating: 5 },
+  ]);
+  assert.deepEqual(derived.minuteReasons, [{ matchId: 'liga', date: '2026-09-12T13:00', season: '2026-2027', reason: 'sin_indicar' }]);
 });

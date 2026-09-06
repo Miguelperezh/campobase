@@ -1,6 +1,6 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, buildPlayerRecord } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
@@ -29,7 +29,7 @@ const localDate = (value) => {
 const empty = (text) => `<div class="panel empty">${escapeHtml(text)}</div>`;
 const FORMATS = { F7: { players: 7, duration: 70, half: 35 }, F11: { players: 11, duration: 90, half: 45 } };
 const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo' };
-const EXCLUSION_REASONS = { sick: 'Enfermo', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', rotation: 'Rotación equitativa' };
+const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'Sancionado', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', other: 'Otro motivo', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
@@ -230,17 +230,36 @@ function renderAll() {
 }
 
 function renderPlayers() {
-  const totalMinutes = state.players.reduce((sum, player) => sum + (player.totalMinutes ?? 0), 0);
-  $('#squad-stats').innerHTML = `<div class="stat"><strong>${state.players.length}</strong><span>jugadores</span></div><div class="stat"><strong>${totalMinutes}</strong><span>minutos acumulados</span></div><div class="stat"><strong>${state.players.reduce((sum, player) => sum + (player.outsideCount ?? 0), 0)}</strong><span>ausencias por rotación</span></div>`;
+  const currentMatchIds = new Set(state.matches.map((match) => match.id));
+  const currentCallups = state.callups.filter((callup) => !callup.matchId || currentMatchIds.has(callup.matchId));
+  const currentTrainings = state.trainings.filter((record) => !record.matchId || currentMatchIds.has(record.matchId));
+  const playerSummaryTotals = new Map(state.players.map((player) => {
+    const leagueAutomatic = buildPlayerSummary(player.id, state.matches, currentTrainings, currentCallups, 'league');
+    const preseasonAutomatic = buildPlayerSummary(player.id, state.matches, currentTrainings, currentCallups, 'preseason');
+    return [player.id, {
+      summary: applyPlayerStatAdjustments(leagueAutomatic, player.statAdjustments?.league),
+      preseasonSummary: applyPlayerStatAdjustments(preseasonAutomatic, player.statAdjustments?.preseason),
+    }];
+  }));
+  const totalMinutes = state.players.reduce((sum, player) => {
+    const totals = playerSummaryTotals.get(player.id);
+    return sum + totals.summary.minutes + totals.preseasonSummary.minutes;
+  }, 0);
+  const totalRotations = state.players.reduce((sum, player) => {
+    const totals = playerSummaryTotals.get(player.id);
+    return sum + totals.summary.rotations + totals.preseasonSummary.rotations;
+  }, 0);
+  $('#squad-stats').innerHTML = `<div class="stat"><strong>${state.players.length}</strong><span>jugadores</span></div><div class="stat"><strong>${totalMinutes}</strong><span>minutos acumulados</span></div><div class="stat"><strong>${totalRotations}</strong><span>ausencias por rotación</span></div>`;
   const sorted = sortPlayersBySquadNumber(state.players);
   $('#players-list').innerHTML = sorted.length ? sorted.map((player, index) => {
     const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación' };
-    const history = buildPlayerHistory(player.id, state.trainings, state.callups, state.matches);
-    const summary = buildPlayerSummary(player.id, state.matches, state.trainings, state.callups);
-    const seasonRows = Object.entries(player.seasonMinutes ?? {}).sort(([a], [b]) => b.localeCompare(a)).map(([season, minutes]) => `<li><strong>${escapeHtml(season)}</strong> · ${minutes} min</li>`).join('');
-    const minuteReasonRows = (player.minuteReasons ?? []).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(MINUTE_REASONS[item.reason] ?? item.reason)}</li>`).join('');
-    const ratingRows = (player.ratingHistory ?? []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.opponent || 'Partido')} · ${item.rating}/5</li>`).join('');
-    const seasonRatingRows = Object.entries((player.ratingHistory ?? []).reduce((acc, item) => { const s = seasonKey(item.date); (acc[s] ??= []).push(item.rating); return acc; }, {})).sort(([a], [b]) => b.localeCompare(a)).map(([season, ratings]) => `<li><strong>${escapeHtml(season)}</strong> · media ${(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)}/5 (${ratings.length} partidos)</li>`).join('');
+    const history = buildPlayerHistory(player.id, currentTrainings, currentCallups, state.matches);
+    const { summary, preseasonSummary } = playerSummaryTotals.get(player.id);
+    const derivedMatchStats = derivePlayerMatchStats(player.id, state.matches);
+    const seasonRows = Object.entries(derivedMatchStats.seasonMinutes).sort(([a], [b]) => b.localeCompare(a)).map(([season, minutes]) => `<li><strong>${escapeHtml(season)}</strong> · ${minutes} min</li>`).join('');
+    const minuteReasonRows = derivedMatchStats.minuteReasons.map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(MINUTE_REASONS[item.reason] ?? item.reason)}</li>`).join('');
+    const ratingRows = derivedMatchStats.ratingHistory.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.opponent || 'Partido')} · ${item.rating}/5</li>`).join('');
+    const seasonRatingRows = Object.entries(derivedMatchStats.ratingHistory.reduce((acc, item) => { const s = seasonKey(item.date); (acc[s] ??= []).push(item.rating); return acc; }, {})).sort(([a], [b]) => b.localeCompare(a)).map(([season, ratings]) => `<li><strong>${escapeHtml(season)}</strong> · media ${(ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)}/5 (${ratings.length} partidos)</li>`).join('');
     const historyRows = history.map((item) => {
       const typeLabel = item.type === 'callup' ? 'Convocatoria' : item.kind === 'match' ? 'Partido' : 'Entrenamiento';
       const detail = item.type === 'callup' ? (labels[item.detail] ?? item.detail) : item.detail;
@@ -249,7 +268,7 @@ function renderPlayers() {
     const incidentRows = playerIncidentRows(player.id).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.label)}${item.note ? `: ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-player-incident" data-key="${escapeHtml(item.key)}" aria-label="Borrar incidencia">×</button></li>`).join('');
     return `<article class="card player">
     <div class="player-head">${playerCardPhoto(player)}<div class="player-name"><h3>${escapeHtml(player.name)}</h3><p>Ficha de plantilla</p></div><div class="player-actions"><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div></div>
-    <div class="player-body"><div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(player.number || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${player.outsideCount ?? 0} fuera</strong></span></div><details class="player-performance"><summary>Ver actividad y estadísticas</summary><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><p class="meta"><span class="rank">${index + 1}. ${player.totalMinutes ?? 0} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${player.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</details></div>
+    <div class="player-body"><div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(player.number || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div><details class="player-performance"><summary>Ver actividad y estadísticas</summary><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</details></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
 }
@@ -322,10 +341,48 @@ function editPlayer(id) {
   $('#player-dialog').showModal();
 }
 
+const EDITABLE_PLAYER_STATS = ['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
+
+function editPlayerStats(playerId, scope) {
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede editar las estadísticas.');
+  const player = state.players.find((item) => item.id === playerId);
+  if (!player || !['league', 'preseason'].includes(scope)) return;
+  const automatic = buildPlayerSummary(player.id, state.matches, state.trainings, state.callups, scope);
+  const summary = applyPlayerStatAdjustments(automatic, player.statAdjustments?.[scope]);
+  const form = $('#player-stats-form');
+  form.elements.playerId.value = player.id;
+  form.elements.scope.value = scope;
+  for (const field of EDITABLE_PLAYER_STATS) form.elements[field].value = summary[field] ?? 0;
+  const label = scope === 'preseason' ? 'Pretemporada' : 'Liga';
+  $('#player-stats-title').textContent = `Editar ${label} · ${player.name}`;
+  $('#player-stats-help').textContent = `Totales de ${label}. Puedes corregir todas las casillas.`;
+  $('#player-stats-dialog').showModal();
+}
+
+async function savePlayerStats(event) {
+  event.preventDefault();
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede editar las estadísticas.');
+  const form = event.currentTarget;
+  const values = formObject(form);
+  const player = await getOne('players', values.playerId);
+  if (!player || !['league', 'preseason'].includes(values.scope)) throw new TypeError('No se encontró la ficha de estadísticas.');
+  const automatic = buildPlayerSummary(player.id, state.matches, state.trainings, state.callups, values.scope);
+  const totals = Object.fromEntries(EDITABLE_PLAYER_STATS.map((field) => [field, values[field]]));
+  await put('players', setPlayerStatTotals(player, values.scope, automatic, totals));
+  form.closest('dialog').close();
+  await refresh();
+  toast(`Estadísticas de ${values.scope === 'preseason' ? 'Pretemporada' : 'Liga'} guardadas.`);
+}
+
+function exclusionReasonLabel({ reason, note }) {
+  const label = EXCLUSION_REASONS[reason] ?? reason;
+  return reason === 'other' && note ? `Otro motivo: ${note}` : label;
+}
+
 function callupPlayerCard(player, existing) {
   const manualExclusion = existing?.exclusions?.find((item) => item.playerId === player.id && !item.automatic);
   const selected = existing?.selectedIds?.includes(player.id);
-  return `<article class="selection-card" data-player-id="${player.id}">${playerCardPhoto(player)}<div class="selection-card-body"><h4>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h4><p class="meta">${escapeHtml(playerPositions(player))}</p><div class="selection-actions"><label><input type="checkbox" name="selected" value="${player.id}" ${selected ? 'checked' : ''}> Convocar manualmente</label><label><input type="checkbox" name="manualExcluded" value="${player.id}" ${manualExclusion ? 'checked' : ''}> Dejar fuera</label><select name="reason-${player.id}" aria-label="Motivo de exclusión de ${escapeHtml(player.name)}" ${manualExclusion ? '' : 'disabled'}><option value="">Motivo…</option>${Object.entries(EXCLUSION_REASONS).filter(([key]) => key !== 'rotation').map(([key, label]) => `<option value="${key}" ${manualExclusion?.reason === key ? 'selected' : ''}>${label}</option>`).join('')}</select></div></div></article>`;
+  return `<article class="selection-card" data-player-id="${player.id}">${playerCardPhoto(player)}<div class="selection-card-body"><h4>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h4><p class="meta">${escapeHtml(playerPositions(player))}</p><div class="selection-actions"><label><input type="checkbox" name="selected" value="${player.id}" ${selected ? 'checked' : ''}> Convocar manualmente</label><label><input type="checkbox" name="manualExcluded" value="${player.id}" ${manualExclusion ? 'checked' : ''}> Dejar fuera</label><select name="reason-${player.id}" aria-label="Motivo de exclusión de ${escapeHtml(player.name)}" ${manualExclusion ? '' : 'disabled'}><option value="">Motivo…</option>${Object.entries(EXCLUSION_REASONS).filter(([key]) => key !== 'rotation').map(([key, label]) => `<option value="${key}" ${manualExclusion?.reason === key ? 'selected' : ''}>${label}</option>`).join('')}</select><label class="exclusion-other-note ${manualExclusion?.reason === 'other' ? '' : 'hidden'}">Explica el otro motivo<input name="reasonNote-${player.id}" maxlength="200" value="${escapeHtml(manualExclusion?.note ?? '')}" ${manualExclusion?.reason === 'other' ? 'required' : ''} aria-label="Explicación del motivo de exclusión de ${escapeHtml(player.name)}"></label></div></div></article>`;
 }
 
 function callupBuilder(preselectedMatchId = '', editId = '') {
@@ -347,7 +404,15 @@ function currentCallupMatch(form) {
 }
 
 function manualExclusionsFromForm(form) {
-  return checkedValues('manualExcluded', form).map((playerId) => ({ playerId, reason: form.elements[`reason-${playerId}`].value }));
+  return checkedValues('manualExcluded', form).map((playerId) => {
+    const reason = form.elements[`reason-${playerId}`].value;
+    const note = form.elements[`reasonNote-${playerId}`].value.trim();
+    return { playerId, reason, ...(reason === 'other' ? { note } : {}) };
+  });
+}
+
+function invalidManualExclusion({ reason, note }) {
+  return !reason || (reason === 'other' && !note);
 }
 
 function protectedRotationHistories(excludedCallupId = '') {
@@ -381,7 +446,7 @@ function updateTargetPreview() {
   const match = currentCallupMatch(form);
   if (!match) { preview.innerHTML = '<p class="warning panel">Selecciona un partido o créalo a mano.</p>'; return; }
   const manualExclusions = manualExclusionsFromForm(form);
-  if (manualExclusions.some(({ reason }) => !reason)) { preview.innerHTML = '<p class="warning panel">Indica el motivo de cada jugador que dejas fuera.</p>'; return; }
+  if (manualExclusions.some(invalidManualExclusion)) { preview.innerHTML = '<p class="warning panel">Indica el motivo de cada jugador que dejas fuera.</p>'; return; }
   try {
     const selection = callupSelectionFromForm(form);
     if (!selection.availableIds.length) { preview.innerHTML = '<p class="warning panel">No hay jugadores convocados.</p>'; return; }
@@ -389,7 +454,7 @@ function updateTargetPreview() {
     const targets = calculateMinuteTargets(selection.availableIds, FORMATS[state.format].duration, FORMATS[state.format].players, keeperIds);
     const manual = selection.exclusions.filter(({ automatic }) => !automatic);
     const automatic = selection.exclusions.filter(({ automatic: isAutomatic }) => isAutomatic);
-    const exclusionList = (items) => items.length ? `<ul class="plain-list">${items.map(({ playerId, reason }) => `<li><strong>${escapeHtml(playerName(playerId))}</strong> — ${escapeHtml(EXCLUSION_REASONS[reason] ?? reason)}</li>`).join('')}</ul>` : '<p class="meta">Nadie.</p>';
+    const exclusionList = (items) => items.length ? `<ul class="plain-list">${items.map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('')}</ul>` : '<p class="meta">Nadie.</p>';
     const pending = selection.pendingRotationDecisions ?? [];
     preview.innerHTML = `${pending.length ? `<p class="warning panel"><strong>Revisión necesaria:</strong> al guardar te preguntaré por ${pending.map(({ playerId }) => escapeHtml(playerName(playerId))).join(', ')} porque ya se quedaron fuera por enfermedad o decisión del entrenador.</p>` : ''}<div class="preview-summary"><h3>Convocados (${selection.availableIds.length}/14)</h3><p>${selection.availableIds.map(playerName).map(escapeHtml).join(', ')}</p><div class="exclusion-summary"><section><h4>Fuera manualmente (${manual.length})</h4>${exclusionList(manual)}</section><section><h4>Fuera por CampoBase (${automatic.length})</h4>${exclusionList(automatic)}</section></div><p><strong>Total fuera: ${selection.exclusions.length}</strong></p></div><details><summary>Ver minutos objetivo</summary><table class="minute-table"><thead><tr><th>Jugador</th><th>Objetivo</th></tr></thead><tbody>${targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</tbody></table></details>`;
   } catch (error) { preview.innerHTML = `<p class="warning panel">${escapeHtml(error.message)}</p>`; }
@@ -414,7 +479,7 @@ async function saveCallup(event) {
     match = { id: uid(), date: composeDateTime24(composeDate(form.elements.manualDateDay.value, form.elements.manualDateMonth.value, form.elements.manualDateYear.value), form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, venue: form.elements.manualVenue.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const manualExclusions = manualExclusionsFromForm(form);
-  if (manualExclusions.some(({ reason }) => !reason)) return toast('Indica el motivo de cada jugador que dejas fuera.');
+  if (manualExclusions.some(invalidManualExclusion)) return toast('Indica el motivo de cada jugador que dejas fuera.');
   const rotationDecisions = {};
   let selection;
   while (true) {
@@ -461,7 +526,7 @@ function renderCallups() {
   const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? callup.excludedIds.map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
-    const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map(({ playerId, reason }) => `<li><strong>${escapeHtml(playerName(playerId))}</strong> — ${escapeHtml(EXCLUSION_REASONS[reason] ?? reason)}</li>`).join('') || '<li>Nadie</li>';
+    const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
     return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
   }).join('') : empty('Todavía no hay convocatorias.');
 }
@@ -470,6 +535,25 @@ async function deleteCallup(id) {
   const callup = state.callups.find((item) => item.id === id); if (!callup || !await askConfirmation({ title: 'Borrar convocatoria', message: 'Se borrará esta convocatoria y se recalcularán sus contadores de rotación.', acceptLabel: 'Borrar', danger: true })) return;
   const match = state.matches.find((item) => item.callupId === id); if (match) await put('matches', { ...match, callupId: null });
   await remove('callups', id); await synchronizeRotationCounters(); await refresh(); toast('Convocatoria borrada.');
+}
+
+async function deleteMatch(id) {
+  const match = state.matches.find((item) => item.id === id);
+  if (!match || !await askConfirmation({
+    title: 'Borrar partido',
+    message: 'Se borrarán también su asistencia, convocatoria, minutos, puntuaciones y datos asociados de las fichas de jugadores.',
+    acceptLabel: 'Borrar',
+    danger: true,
+  })) return;
+  const updatedPlayers = state.players.map((player) => removeMatchFromPlayerStats(player, match, state.matches));
+  for (const record of state.trainings.filter(({ matchId }) => matchId === match.id)) await remove('trainings', record.id);
+  const relatedCallups = state.callups.filter((callup) => callup.id === match.callupId || callup.matchId === match.id);
+  for (const callup of relatedCallups) await remove('callups', callup.id);
+  await remove('matches', match.id);
+  if (updatedPlayers.length) await putBatch({ players: updatedPlayers });
+  await synchronizeRotationCounters();
+  await refresh();
+  toast('Partido y todos sus datos asociados borrados.');
 }
 
 function timerSeconds(timer = state.timer) {
@@ -1241,7 +1325,7 @@ async function finishMatch() {
     const missingReason = callup.availableIds.find((id) => (totals[id] ?? 0) < maximum && !details.minuteReasons[id]);
     if (missingReason) details.minuteReasons[missingReason] = 'sin_indicar';
     const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
-    const updatedPlayers = players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id] }));
+    const updatedPlayers = players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id], preseason: isPreseasonMatch(match) }));
     const completedMatch = { ...match, status: 'finished', playedSeconds: state.timer.elapsed, minuteTotals: totals, ratings: match.ratings ?? null, substitutionEvents: state.timer.events, goalsFor: details.goalsFor, goalsAgainst: details.goalsAgainst, goals: details.goals, cards: details.cards, injuries: details.injuries, incidents: details.incidents, comments: details.comments, minuteReasons: details.minuteReasons, goalkeeperRotation: { firstKeeper: state.timer.firstKeeper, secondKeeper: state.timer.secondKeeper }, finishedAt: Date.now() };
     const existingAttendance = state.trainings.find((record) => record.kind === 'match' && record.matchId === match.id);
     const trainingRecords = [];
@@ -1277,7 +1361,7 @@ async function saveMatchRatings(event) {
   const values = formObject(event.target.closest('form'));
   const ratingValues = Object.fromEntries(players.map(({ id }) => [id, values[`rating-${id}`]]));
   const rated = buildPlayerRatings(players, ratingValues, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
-  const updatedPlayers = rated.players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id] }));
+  const updatedPlayers = rated.players.map((player) => accumulateSeasonMinutes(player, match.date, totals[player.id] ?? 0, { matchId: match.id, reason: details.minuteReasons[player.id], preseason: isPreseasonMatch(match) }));
   const completedMatch = { ...match, status: 'finished', playedSeconds: state.timer.elapsed, minuteTotals: totals, ratings: rated.ratings, substitutionEvents: state.timer.events, goalsFor: details.goalsFor, goalsAgainst: details.goalsAgainst, goals: details.goals, cards: details.cards, injuries: details.injuries, incidents: details.incidents, comments: details.comments, minuteReasons: details.minuteReasons, goalkeeperRotation: { firstKeeper: state.timer.firstKeeper, secondKeeper: state.timer.secondKeeper }, finishedAt: Date.now() };
   const existingAttendance = state.trainings.find((record) => record.kind === 'match' && record.matchId === match.id);
   const trainingRecords = [];
@@ -2299,7 +2383,7 @@ function wireEvents() {
   $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => { const form = $(`#${button.dataset.dialog} form`); form?.reset(); if (form?.elements.id) form.elements.id.value = ''; $(`#${button.dataset.dialog}`).showModal(); }));
   $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
-  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
+  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#player-stats-form').addEventListener('submit', (event) => savePlayerStats(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
@@ -2432,14 +2516,34 @@ function wireEvents() {
     if (event.target.matches('input[name="manualExcluded"]')) {
       const card = event.target.closest('[data-player-id]');
       const reason = form.elements[`reason-${event.target.value}`];
+      const note = form.elements[`reasonNote-${event.target.value}`];
       reason.disabled = !event.target.checked;
-      if (!event.target.checked) reason.value = '';
+      if (!event.target.checked) {
+        reason.value = '';
+        note.value = '';
+        note.required = false;
+        note.closest('.exclusion-other-note').classList.add('hidden');
+      }
       const selected = card.querySelector('input[name="selected"]');
       if (event.target.checked) selected.checked = false;
     }
+    if (event.target.matches('select[name^="reason-"]')) {
+      const playerId = event.target.name.slice('reason-'.length);
+      const note = form.elements[`reasonNote-${playerId}`];
+      const usesOtherReason = event.target.value === 'other';
+      note.required = usesOtherReason;
+      note.closest('.exclusion-other-note').classList.toggle('hidden', !usesOtherReason);
+      if (!usesOtherReason) note.value = '';
+    }
     if (event.target.matches('input[name="selected"]') && event.target.checked) {
       const excluded = event.target.closest('[data-player-id]').querySelector('input[name="manualExcluded"]');
-      excluded.checked = false; form.elements[`reason-${event.target.value}`].disabled = true; form.elements[`reason-${event.target.value}`].value = '';
+      const note = form.elements[`reasonNote-${event.target.value}`];
+      excluded.checked = false;
+      form.elements[`reason-${event.target.value}`].disabled = true;
+      form.elements[`reason-${event.target.value}`].value = '';
+      note.value = '';
+      note.required = false;
+      note.closest('.exclusion-other-note').classList.add('hidden');
     }
     updateTargetPreview();
   });
@@ -2474,6 +2578,7 @@ function wireEvents() {
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-player')) editPlayer(target.dataset.id);
+    if (target.matches('.edit-player-stats')) editPlayerStats(target.dataset.playerId, target.dataset.scope);
     if (target.matches('.delete-player') && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', target.dataset.id); await refresh(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
@@ -2486,7 +2591,7 @@ function wireEvents() {
     if (target.matches('.remove-player-incident')) await removePlayerIncident(target.dataset.key);
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
-    if (target.matches('.delete-match') && await askConfirmation({ title: 'Borrar partido', message: 'También se borrará su registro de asistencia asociado.', acceptLabel: 'Borrar', danger: true })) { for (const record of state.trainings.filter(({ matchId }) => matchId === target.dataset.id)) await remove('trainings', record.id); await remove('matches', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {

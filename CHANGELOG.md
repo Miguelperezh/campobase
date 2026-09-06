@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.19.0 — 2026-09-06
+
+- Pretemporada separada de la liga: los amistosos y torneos se agrupan aparte y sus estadísticas aparecen en casillas propias bajo el título «Pretemporada», justo debajo de las de liga.
+- Estadísticas editables: Migue puede corregir manualmente todas las casillas de Liga y de Pretemporada (goles, tarjetas, lesiones, incidencias, convocatorias, rotaciones, tarde/ausente, minutos y media). Solo cambia lo que toca; el resto se conserva y no se alteran los partidos, convocatorias ni asistencias originales.
+- Borrado completo de partido: al borrar un partido desaparecen también sus minutos, puntuaciones, media, historial, asistencias, convocatorias y rotaciones asociadas, incluso datos antiguos o de partidos ya borrados.
+- Convocatoria: nuevos motivos manuales «Lesionado» y «Sancionado», y «Otro motivo» con casilla de explicación obligatoria.
+- 130 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.19.0`.
+
 ## 2.18.0 — 2026-09-05
 
 - Pizarra táctica en vivo con jugadores reales (nombre + dorsal) para Migue y el delegado: asignar jugadores a posiciones, mover fichas/balón, dibujar flechas, ampliar a pantalla completa y ver el GIF/MP4 de la táctica.

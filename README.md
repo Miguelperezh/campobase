@@ -1,4 +1,4 @@
-# CampoBase 2.18.0 — pizarra táctica en vivo
+# CampoBase 2.19.0 — pretemporada, estadísticas editables y borrado completo
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 119 pruebas automatizadas en 2.18.0.
+- `npm test`: 130 pruebas automatizadas en 2.19.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 
