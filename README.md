@@ -1,4 +1,4 @@
-# CampoBase 2.24.0 — media de liga (mín. 5 min) y minutos acumulados de liga
+# CampoBase 2.25.0 — 11 ejercicios nuevos con vídeo real
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 130 pruebas automatizadas en 2.24.0.
+- `npm test`: 131 pruebas automatizadas en 2.25.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 

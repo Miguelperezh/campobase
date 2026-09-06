@@ -3387,6 +3387,1509 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 169
   },
   "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-KNEE-DRIVE-SKATER-JUMP-PROGRESION/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES",
+  "nombre": "Knee drive reactivo + salto skater — 3 variaciones",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Coordinación",
+      "Salto lateral",
+      "Equilibrio",
+      "Estabilidad",
+      "Potencia lateral",
+      "Cambio de dirección",
+      "Control corporal",
+      "Apoyo unilateral"
+    ],
+    "tiempo_estimado_15": "7-9 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 carriles de 5 jugadores. Un jugador activo por carril."
+    },
+    "material": "Conos/cúpulas verdes y blancas alternados. Sin balón.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "Base · Saltos laterales tipo skater con fase aérea y recepción unilateral antes del nuevo impulso."
+      },
+      {
+        "nombre": "Variación 1",
+        "instruccion": "Variación 1 · Knee drive más marcado antes del apoyo y del nuevo impulso lateral."
+      },
+      {
+        "nombre": "Variación 2",
+        "instruccion": "Variación 2 · Patrón desde el extremo contrario con apoyos de preparación más cortos antes del cambio lateral."
+      }
+    ],
+    "explicacion_breve": "El jugador trabaja de forma individual y sin balón sobre un montaje de conos verdes y blancos alternados. BASE: saltos laterales tipo skater con fase aérea y recepción unilateral antes del nuevo impulso. VARIACIÓN 1: knee drive más marcado antes del apoyo y del nuevo impulso lateral. VARIACIÓN 2: patrón desde el extremo contrario con apoyos de preparación más cortos antes del cambio lateral. En los tres bloques se combinan control unilateral, desplazamiento lateral y progresión hacia delante.",
+    "leyenda": "Conos verdes y blancos alternados · Salto lateral tipo skater · Recepción unilateral · Progresión hacia delante"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar el control corporal en desplazamientos laterales.",
+      "Mejorar la estabilidad unilateral tras el aterrizaje.",
+      "Desarrollar impulso lateral y cambio de dirección.",
+      "Coordinar knee drive, recepción y nuevo impulso.",
+      "Mantener progresión hacia delante sin perder calidad de apoyo."
+    ],
+    "claves_entrenador": [
+      "«Primero os enseño la forma; después aumentamos velocidad».",
+      "«No busquéis saltar lo máximo: buscad caer bien».",
+      "«Rodilla alineada con el pie».",
+      "«Tronco estable y cadera controlada».",
+      "«Salta lateral».",
+      "«Cae sobre una pierna».",
+      "«Absorbe y vuelve a impulsar».",
+      "«No juntes los pies entre saltos».",
+      "«Rodilla arriba».",
+      "«Apoya y empuja lateral».",
+      "«No te quedes parado en la recepción».",
+      "«Cambia de lado con control».",
+      "«Apoyos cortos».",
+      "«Prepara el cuerpo antes del cambio».",
+      "«Empuja al lado contrario».",
+      "«Mantén la progresión hacia delante».",
+      "«Calidad antes que velocidad».",
+      "«Salto corto y recepción estable».",
+      "Parar si la rodilla entra hacia dentro o el niño pierde equilibrio repetidamente."
+    ],
+    "montaje": [
+      "Montaje de conos verdes y blancos alternados formando un carril de progresión.",
+      "Un jugador trabaja de forma individual y sin balón.",
+      "Referencias verdes y blancas distribuidas a lo largo del recorrido."
+    ],
+    "desarrollo": [
+      "El jugador entra en el montaje y realiza saltos laterales tipo skater (BASE).",
+      "Cada salto tiene fase aérea y recepción unilateral antes del nuevo impulso.",
+      "VARIACIÓN 1: knee drive más marcado antes del apoyo y del nuevo impulso lateral.",
+      "VARIACIÓN 2: patrón desde el extremo contrario con apoyos de preparación más cortos.",
+      "En los tres bloques se combinan control unilateral, desplazamiento lateral y progresión hacia delante."
+    ],
+    "que_buscamos": [
+      "Correcciones defensivas laterales.",
+      "Ajustes de marca.",
+      "Basculaciones cortas.",
+      "Control corporal tras un apoyo unilateral.",
+      "Re-aceleración después de un cambio de dirección."
+    ],
+    "que_observar": [
+      "Aterrizajes estables.",
+      "Rodilla alineada con pie y cadera.",
+      "Tronco sin balanceos excesivos.",
+      "Que la recepción sea unilateral cuando corresponde.",
+      "Que no se transforme en una carrera en zigzag sin control.",
+      "Que la distancia lateral no sea excesiva para la edad.",
+      "Que cada variación mantenga su patrón y no se mezcle con las demás."
+    ],
+    "correcciones": [
+      "Caer con la rodilla hacia dentro.",
+      "Recepción inestable o con los dos pies.",
+      "Tronco descontrolado al aterrizar.",
+      "Convertir el ejercicio en una carrera en zigzag sin control.",
+      "Mezclar la mecánica de las variaciones."
+    ],
+    "reglas": [
+      "El GIF reproduce la secuencia visible: BASE, VARIACIÓN 1 y VARIACIÓN 2 con mecánicas distintas.",
+      "No se añade señal externa del entrenador porque no aparece en el vídeo.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase.",
+      "Para Alevín se reduce la amplitud y el volumen de salto."
+    ],
+    "si_sale_mal": [
+      "Reducir separación lateral.",
+      "Hacer solo la BASE a velocidad media.",
+      "Practicar una recepción unilateral aislada antes de continuar.",
+      "Reducir el número de cambios."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la velocidad.",
+      "Añadir un sprint corto al terminar.",
+      "Hacer los tres bloques seguidos manteniendo la técnica.",
+      "Alternar pierna inicial."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 carriles de 5 jugadores. Un jugador activo por carril. · 7-9 min.",
+      "Fútbol 11: 3-4 carriles de 4-6 jugadores, según plantilla y espacio. · 9-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7576299461874421014.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El jugador trabaja individualmente y sin balón.",
+        "El montaje utiliza grupos de conos verdes y blancos alternados.",
+        "El bloque inicial muestra desplazamientos con fase aérea clara y recepciones laterales tipo skater.",
+        "VARIATION 1 mantiene la progresión lateral pero cambia el ritmo de apoyo/impulso.",
+        "VARIATION 2 se ejecuta desde el extremo contrario y vuelve a modificar el patrón de apoyos y salida.",
+        "El vídeo no muestra una señal externa del entrenador.",
+        "El vídeo no aporta distancias exactas, número de series ni pausas oficiales."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES/CampoBase_Reactive_Knee_Drive_Skater_3_Variaciones_V3.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES/frames/f",
+    "total": 207,
+    "frameMs": 147
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2",
+  "nombre": "Doble devolución alrededor de pica con retorno lateral por conos",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación",
+    "que_se_trabaja": [
+      "Pase de primeras",
+      "Control de pecho",
+      "Volea",
+      "Desplazamiento lateral",
+      "Cambio de dirección",
+      "Coordinación",
+      "Perfil corporal",
+      "Apoyos",
+      "Orientación corporal"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 calles de 5 jugadores. Por calle: 1 servidor, 1 activo y 3 esperan; rotar servidor."
+    },
+    "material": "Fila de conos planos + una pica alta por calle. Balones junto al servidor.",
+    "series": [
+      {
+        "nombre": "Serie raso",
+        "instruccion": "Serie raso · El servidor juega raso y el jugador devuelve de primeras con el pie en cada lado de la pica."
+      },
+      {
+        "nombre": "Serie aérea",
+        "instruccion": "Serie aérea · El servidor envía alto; el jugador controla con el pecho y, antes de que el balón bote, devuelve de volea. Se realiza en los dos lados de la pica."
+      }
+    ],
+    "explicacion_breve": "El jugador se desplaza lateralmente en paralelo a una línea de conos planos (que solo delimitan el recorrido, sin acción técnica sobre cada cono). Al llegar a la pica se orienta al servidor y ejecuta la acción técnica: en la serie rasa devuelve de primeras con el pie; en la aérea controla con el pecho y devuelve de volea antes del bote. Después rodea la pica por la cara opuesta al servidor (girando el cuerpo, sin backpedal), repite la acción en el otro lado y regresa con desplazamiento lateral siguiendo de nuevo la línea de conos.",
+    "leyenda": "Conos planos: solo delimitan el recorrido lateral · Pica alta: punto de giro · Servidor enfrente · Raso: devolución de primeras · Aéreo: pecho + volea sin bote"
+  },
+  "detalle": {
+    "objetivos": [
+      "Integrar coordinación lateral y ejecución técnica sin pausa excesiva.",
+      "Mantener orientación hacia el servidor después de cambios de dirección.",
+      "Mejorar devolución rasa de primeras.",
+      "Mejorar control de pecho y devolución aérea sin bote.",
+      "Reorientar el cuerpo después de rodear un obstáculo.",
+      "Mantener calidad técnica después de trabajo rápido de pies."
+    ],
+    "claves_entrenador": [
+      "«Desplázate lateral junto a la línea de conos».",
+      "«Los conos solo te marcan el recorrido; no tienes que saltarlos ni entrar entre ellos».",
+      "«Mira el balón y al servidor».",
+      "«Al llegar a la pica, abre el cuerpo al servidor».",
+      "«Raso: devuelve de primeras».",
+      "«Después de jugar, rodea la pica; no te quedes parado».",
+      "«Rodea, gira y vuelve a aparecer de frente».",
+      "«No vuelvas corriendo de espaldas».",
+      "«Pecho: amortigua y deja el balón delante».",
+      "«Después del pecho, volea antes del bote».",
+      "«Al terminar, vuelve lateral siguiendo la línea de conos»."
+    ],
+    "montaje": [
+      "Una fila de varios conos planos por calle.",
+      "Una pica alta al final de la zona de desplazamiento.",
+      "Un servidor enfrente con balones.",
+      "Varias calles funcionan en paralelo.",
+      "F7: 4-5 conos planos separados 0.8-1.2 m; pica 1.5-2 m después del último cono; servidor a 4-6 m.",
+      "F11: 4-6 conos planos separados 1-1.3 m; pica 1.5-2.5 m después; servidor a 5-7 m."
+    ],
+    "desarrollo": [
+      "El jugador parte en un extremo de la línea de conos.",
+      "Se desplaza lateralmente paralelo a esa línea; los conos actúan como referencia del recorrido.",
+      "Al llegar a la zona de la pica se abre para ver al servidor.",
+      "Serie raso: el servidor pasa raso al Lado A y el jugador devuelve de primeras.",
+      "Nada más devolver, inicia una curva alrededor de la pica por la cara opuesta al servidor.",
+      "Sale por el Lado B, vuelve a orientarse al servidor y repite la devolución de primeras.",
+      "Serie aérea: el servidor lanza alto; el jugador amortigua con el pecho y devuelve de volea antes del bote.",
+      "Rodea la pica y repite pecho + volea en el otro lado.",
+      "Finaliza regresando con desplazamiento lateral junto a la línea de conos."
+    ],
+    "que_buscamos": [
+      "Recibir y jugar rápido después de un ajuste lateral.",
+      "Reorientarse hacia el balón tras perder momentáneamente la referencia visual.",
+      "Jugar de primeras en espacios cortos.",
+      "Controlar un balón alto con el pecho y dar continuidad inmediata.",
+      "Mejorar apoyos y perfil corporal antes de intervenir."
+    ],
+    "que_observar": [
+      "Que el desplazamiento junto a los conos sea lateral y no carrera frontal.",
+      "Que no se invente una tarea sobre los conos: no saltarlos, no bordearlos uno por uno.",
+      "Que el jugador no mire al suelo constantemente.",
+      "Que llegue a la acción técnica equilibrado.",
+      "Que el rodeo de la pica sea continuo y próximo a la pica.",
+      "Que durante el rodeo gire el cuerpo en lugar de hacer backpedal largo.",
+      "Que al salir de la pica vuelva a quedar orientado al servidor.",
+      "En raso: precisión en la devolución de primeras.",
+      "En alto: pecho suave, balón delante y volea antes del bote.",
+      "Que después de la segunda devolución complete el retorno lateral."
+    ],
+    "correcciones": [
+      "Convertir la zona de conos en una escalera de coordinación que no aparece en el vídeo.",
+      "Saltar los conos o entrar y salir entre ellos sin que forme parte del ejercicio.",
+      "Correr frontalmente en vez de desplazarse lateralmente.",
+      "Mirar solo al suelo.",
+      "Pararse después de devolver.",
+      "Dar una vuelta demasiado grande alrededor de la pica.",
+      "Hacer toda la vuelta de espaldas en vez de girar alrededor.",
+      "Salir del rodeo sin volver a mirar al servidor.",
+      "En el aéreo, dejar botar el balón después del pecho.",
+      "Golpear la volea antes de haber amortiguado correctamente con el pecho."
+    ],
+    "reglas": [
+      "El GIF reproduce la secuencia visible: conos ida + acción Lado A + rodeo pica + acción Lado B + conos vuelta.",
+      "La línea de conos solo delimita el recorrido lateral; no es una tarea de coordinación específica.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase.",
+      "Para Alevín no se añade más volumen si pierde precisión, equilibrio o control de pecho."
+    ],
+    "si_sale_mal": [
+      "Separar el ejercicio: primero solo conos + rodeo de pica sin balón.",
+      "Después añadir únicamente raso.",
+      "En la serie aérea permitir pecho + bote + pase antes de exigir pecho + volea sin bote.",
+      "Reducir separación de conos y velocidad.",
+      "Acercar el servidor."
+    ],
+    "si_sale_bien": [
+      "Alternar raso y alto sin avisar, solo cuando la técnica sea estable.",
+      "Exigir pierna concreta en cada lado.",
+      "Aumentar ligeramente el ritmo de los apoyos.",
+      "Reducir el tiempo entre salida de pica y servicio."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 calles de 5 jugadores. Por calle: 1 servidor, 1 activo y 3 esperan; rotar servidor. · 8-10 min.",
+      "Fútbol 11: 3-4 calles de 5-6 jugadores. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7576300381098085655.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El montaje combina una fila de conos planos y una pica alta por calle de trabajo.",
+        "Hay un servidor frente al jugador activo con balones.",
+        "La línea de conos planos funciona como referencia/delimitación del desplazamiento lateral.",
+        "En esa zona no se observa que salte los conos, los bordee uno por uno ni haga un patrón de pies entre ellos.",
+        "Al llegar a la zona de pica, el jugador se orienta hacia el servidor para intervenir con balón.",
+        "Se observa una devolución de balón raso con el pie, ejecutada de primeras.",
+        "Después de la intervención el jugador rodea la pica para aparecer por el lado contrario.",
+        "En la forma aérea el servidor envía el balón alto: el jugador controla con el pecho y devuelve de volea sin que bote.",
+        "El audio del vídeo tiene música de fondo y no permite extraer instrucciones fiables del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2/CampoBase_Doble_Devolucion_Pica_Retorno_Conos_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2/frames/f",
+    "total": 199,
+    "frameMs": 120
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT",
+  "nombre": "Rodillas altas laterales + zigzag de cambios de dirección y sprint",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Agilidad",
+      "Rodillas altas laterales",
+      "Cambio de dirección",
+      "Aceleración",
+      "Velocidad",
+      "Coordinación",
+      "Desplazamiento lateral"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 módulos de 5 jugadores. Cada módulo con 2 calles espejo: trabajan 2 a la vez y 3 esperan."
+    },
+    "material": "Por calle: 4 discos/setas + 3 conos altos. Sin balón.",
+    "series": [
+      {
+        "nombre": "Recorrido completo",
+        "instruccion": "Recorrido completo · Rodillas altas laterales sobre 4 discos → diagonal al cono 1 → cambio de dirección sin tocar → diagonal al cono 2 → cambio → diagonal al cono 3 → sprint recto final de 5 m."
+      }
+    ],
+    "explicacion_breve": "Dos jugadores realizan simultáneamente el mismo ejercicio en calles espejo y sin balón. Cada uno parte junto a una fila de 4 discos/setas y hace rodillas altas con desplazamiento lateral hacia el interior. Al terminar los discos sale en diagonal hacia el primer cono naranja, cambia de dirección sin tocarlo, continúa en zigzag por un segundo y un tercer cono, y tras el tercero acelera en línea recta durante 5 m. Vuelve andando por fuera para no cruzarse con quien ejecuta.",
+    "leyenda": "Discos/setas: rodillas altas laterales · Conos: cambios de dirección (sin tocar) · Tramo final: sprint recto de 5 m"
+  },
+  "detalle": {
+    "objetivos": [
+      "Coordinar rodillas altas con desplazamiento lateral.",
+      "Mejorar la capacidad de frenar y reorientar el cuerpo en cambios de dirección.",
+      "Encadenar coordinación, cambio de dirección y aceleración sin pausas innecesarias.",
+      "Mejorar la calidad del primer paso después de cada cambio de dirección."
+    ],
+    "claves_entrenador": [
+      "«Rodillas arriba y cuerpo estable en los discos».",
+      "«Al salir, ataca el primer cono».",
+      "«No toques el cono: llega, apoya y cambia».",
+      "«Baja el centro de gravedad antes de cambiar de dirección».",
+      "«Después del último cono, acelera de verdad los 5 metros».",
+      "«Lateral, no frontal».",
+      "«Frena antes del cono».",
+      "«Apoya fuera y sal».",
+      "«Primer paso rápido».",
+      "«Último cono y sprint».",
+      "«No cruces los pies en los discos».",
+      "«No llegues erguido al giro».",
+      "«No rodees el cono: cambia y sal».",
+      "«No frenes después del último cono»."
+    ],
+    "montaje": [
+      "Montar dos calles espejo si se quiere reproducir exactamente el vídeo.",
+      "En cada calle colocar 4 discos/setas en línea transversal para iniciar el desplazamiento lateral.",
+      "Desde el final de los discos, colocar el primer cono a 2 m en diagonal (dato visible en el gráfico).",
+      "Colocar un segundo y un tercer cono formando el zigzag de cambios de dirección.",
+      "Desde el tercer cono dejar 5 m rectos para la aceleración final (dato visible en el gráfico).",
+      "Las distancias entre conos intermedios no aparecen confirmadas en el vídeo."
+    ],
+    "desarrollo": [
+      "El jugador parte junto al extremo exterior de los cuatro discos/setas.",
+      "Recorre lateralmente la línea de discos con rodillas altas, sin convertir el inicio en carrera frontal.",
+      "Al salir del último disco, acelera en diagonal hacia el primer cono.",
+      "Llega al primer cono y cambia de dirección sin tocarlo con la mano.",
+      "Corre en diagonal hacia el segundo cono y vuelve a cambiar de dirección.",
+      "Corre en diagonal hacia el tercer cono y realiza el último cambio de dirección.",
+      "Desde el tercer cono acelera recto durante el tramo final de 5 m.",
+      "Sale del recorrido y vuelve andando por fuera para no cruzarse con quien está ejecutando."
+    ],
+    "que_buscamos": [
+      "Ajustes laterales antes de acelerar.",
+      "Cambios de orientación corporal para responder a un rival o a un balón dividido.",
+      "Reaceleración después de una frenada o cambio de trayectoria.",
+      "Desplazamientos defensivos y transiciones cortas que exigen volver a acelerar."
+    ],
+    "que_observar": [
+      "Que el desplazamiento inicial sea realmente lateral.",
+      "Que las rodillas suban sin perder control del tronco.",
+      "Que el jugador no toque el primer cono con la mano.",
+      "Que desacelere antes del cono y no después de sobrepasarlo.",
+      "Que el apoyo permita salir en la nueva dirección con el primer paso rápido.",
+      "Que no haga curvas amplias alrededor de los conos.",
+      "Que la aceleración final sea recta y progresiva.",
+      "Que ambos jugadores de las calles espejo no invadan la calle central ni se crucen."
+    ],
+    "correcciones": [
+      "Cruzar los pies o girar el cuerpo demasiado pronto durante las rodillas altas laterales.",
+      "Llegar al cono demasiado erguido y necesitar varios pasos para cambiar de dirección.",
+      "Rodear el cono en curva en lugar de frenar, apoyar y salir.",
+      "Tocar el primer cono por interpretar literalmente el texto «Touch» del gráfico.",
+      "Perder velocidad entre el último cambio de dirección y el sprint final."
+    ],
+    "reglas": [
+      "El GIF reproduce una sola ejecución mostrada en dos calles espejo; no hay variantes reales.",
+      "El primer cono NO se toca con la mano (aclaración de Migue); el texto «Touch» del gráfico no es una orden de tocar.",
+      "Las distancias entre conos intermedios no están confirmadas en el vídeo.",
+      "Los tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Separar el ejercicio en dos: primero rodillas altas laterales y después zigzag.",
+      "Reducir distancia entre conos y trabajar el cambio de dirección a velocidad media.",
+      "Hacer una pausa breve de control en cada cono antes de volver a unir el recorrido.",
+      "Bajar a 2 repeticiones por serie si la ejecución se deteriora."
+    ],
+    "si_sale_bien": [
+      "Aumentar progresivamente la velocidad sin cambiar el recorrido.",
+      "Mantener el mismo montaje y pedir salida más explosiva de cada cono.",
+      "Añadir una señal visual de salida solo como progresión CampoBase.",
+      "Cronometrar únicamente si no provoca pérdida de calidad técnica."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 módulos de 5 jugadores. Cada módulo con 2 calles espejo; trabajan 2 y esperan 3. · 6-8 min.",
+      "Fútbol 11: 4 módulos de 4-6 jugadores. Dos calles espejo por módulo. · 7-10 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7577678918702943510.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Dos jugadores realizan simultáneamente el mismo ejercicio en calles espejo y sin balón.",
+        "Cada jugador comienza junto a una fila de cuatro discos/setas y realiza rodillas altas con desplazamiento lateral.",
+        "Al terminar los discos, cada jugador sale en diagonal hacia el primer cono naranja de su calle.",
+        "En el primer cono cambia de dirección sin tocarlo físicamente.",
+        "Continúa en zigzag hacia un segundo cono y después hacia un tercer cono.",
+        "Tras el tercer cono acelera en línea recta hacia delante.",
+        "El gráfico inicial del vídeo muestra 2 m entre la salida de los discos y el primer cono, y 5 m de tramo final.",
+        "No se observan variantes distintas: es una sola ejecución mostrada en espejo.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT/CampoBase_Rodillas_Altas_Laterales_Zigzag_Cambios_Direccion_Sprint_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT/frames/f",
+    "total": 89,
+    "frameMs": 79
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO",
+  "nombre": "Desplazamiento lateral progresivo en pasillo con cambios de apoyo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Agilidad",
+      "Desplazamiento lateral",
+      "Velocidad de pies",
+      "Cambios de apoyo",
+      "Coordinación",
+      "Aceleración"
+    ],
+    "tiempo_estimado_15": "7-9 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 pasillos de 5 jugadores. Trabaja 1 jugador por pasillo y los demás esperan fuera de la trayectoria."
+    },
+    "material": "Conos/discos verdes formando dos hileras paralelas. Sin balón.",
+    "series": [
+      {
+        "nombre": "Recorrido completo",
+        "instruccion": "Recorrido completo · Salida en un lateral → cruce lateral al lado opuesto → cambio de apoyo → cruce lateral al otro lado con progresión hacia delante → alternancias sucesivas hasta el final → salida frontal."
+      }
+    ],
+    "explicacion_breve": "Un jugador realiza el ejercicio sin balón dentro de un pasillo delimitado por dos hileras paralelas de conos/discos verdes. Comienza junto a un lateral, orientado hacia delante, y se desplaza lateralmente de una hilera a la otra mientras progresa hacia el fondo. En cada llegada lateral realiza un cambio de apoyo/dirección y vuelve a cruzar el pasillo hacia el lado contrario, alternando derecha e izquierda. Los conos funcionan como referencia espacial, sin contacto deliberado. Al completar el pasillo sale hacia delante.",
+    "leyenda": "Conos/discos verdes: referencias del pasillo · Desplazamiento lateral alternando lados · Progresión hacia delante · Salida frontal"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la rapidez de pies en desplazamientos laterales.",
+      "Coordinar frenada, apoyo y reimpulso hacia el lado contrario.",
+      "Mantener control postural durante cambios laterales repetidos.",
+      "Encadenar desplazamiento lateral y progresión hacia delante sin perder fluidez."
+    ],
+    "claves_entrenador": [
+      "«Cuerpo mirando al frente».",
+      "«Pies rápidos y pasos cortos».",
+      "«Llega al lateral, apoya y vuelve a salir».",
+      "«Avanza con cada cambio, no te quedes en el mismo sitio».",
+      "«Los conos son referencia: no hace falta tocarlos».",
+      "«Lateral».",
+      "«Baja para cambiar».",
+      "«Apoya y sal».",
+      "«Sigue avanzando».",
+      "«Último cambio y sal de frente».",
+      "«No te gires».",
+      "«No juntes los pies».",
+      "«No hagas pasos enormes».",
+      "«Cabeza arriba»."
+    ],
+    "montaje": [
+      "Formar un pasillo con dos hileras paralelas de conos/discos.",
+      "Mantener suficientes referencias longitudinales para alternar lado derecho e izquierdo mientras se progresa.",
+      "Dejar espacio libre después del final del pasillo para la salida frontal.",
+      "El vídeo no confirma medidas exactas; las distancias F7/F11 son adaptación CampoBase."
+    ],
+    "desarrollo": [
+      "El jugador parte junto a uno de los laterales del pasillo, orientado hacia el fondo.",
+      "Inicia un desplazamiento lateral rápido hacia la hilera contraria.",
+      "Al llegar al lateral opuesto, apoya, frena lo necesario y cambia la dirección sin girarse para correr de espaldas.",
+      "Cruza lateralmente hacia el otro lado mientras gana terreno hacia delante.",
+      "Repite el patrón de lado a lado, alternando los cambios de apoyo y avanzando por el pasillo.",
+      "Mantiene el tronco principalmente orientado al frente y usa los conos como referencias.",
+      "Al terminar el pasillo, sale hacia delante y abandona la zona de trabajo."
+    ],
+    "que_buscamos": [
+      "Ajustes defensivos laterales manteniendo el cuerpo orientado al juego.",
+      "Correcciones de posición ante cambios de dirección del rival.",
+      "Pequeños desplazamientos de cobertura y basculación.",
+      "Reaceleración después de un apoyo lateral."
+    ],
+    "que_observar": [
+      "Que el cuerpo permanezca principalmente orientado hacia delante.",
+      "Que el desplazamiento sea lateral y no se convierta en carrera diagonal convencional.",
+      "Que el jugador no junte los pies en el cambio.",
+      "Que los apoyos sean cortos y controlados, con centro de gravedad estable.",
+      "Que progrese hacia delante con cada alternancia.",
+      "Que no toque ni pise los conos.",
+      "Que la salida final no provoque un giro descontrolado."
+    ],
+    "correcciones": [
+      "Girar completamente el cuerpo hacia el lado de desplazamiento.",
+      "Cruzar los pies de forma excesiva y perder estabilidad.",
+      "Dar pasos demasiado largos y lentos.",
+      "Quedarse desplazándose de lado a lado sin avanzar por el pasillo.",
+      "Llegar demasiado erguido al lateral y necesitar varios apoyos para volver.",
+      "Pisar o desplazar los conos."
+    ],
+    "reglas": [
+      "El GIF reproduce una única ejecución; no hay variantes reales.",
+      "Los conos son referencias espaciales, no se tocan ni se pisan.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase.",
+      "El texto superpuesto del vídeo («LATERAL MOVEMENT», «DRILL FOR FASTER FEET») no se reproduce en la ficha."
+    ],
+    "si_sale_mal": [
+      "Acortar el pasillo y reducir el número de cambios.",
+      "Reducir la anchura para facilitar el desplazamiento.",
+      "Trabajar primero dos cambios de lado y parar.",
+      "Bajar la velocidad hasta controlar la postura y los apoyos."
+    ],
+    "si_sale_bien": [
+      "Aumentar gradualmente la velocidad manteniendo el mismo patrón.",
+      "Aumentar ligeramente la anchura del pasillo como progresión CampoBase.",
+      "Añadir una señal visual de salida frontal al final como progresión CampoBase.",
+      "Cronometrar solo si no altera la calidad técnica."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 pasillos de 5 jugadores. Trabaja 1 jugador por pasillo. · 7-9 min.",
+      "Fútbol 11: 4 pasillos de 4-6 jugadores. Un ejecutante por pasillo, con entradas alternas. · 8-11 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7578606570053930262.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Un jugador realiza el ejercicio sin balón dentro de un pasillo delimitado por dos hileras paralelas de conos/discos verdes.",
+        "Comienza junto al lateral derecho del pasillo, orientado principalmente hacia delante.",
+        "Se desplaza lateralmente de una hilera a la otra mientras progresa hacia el fondo.",
+        "En cada llegada lateral realiza un cambio de apoyo/dirección y vuelve a cruzar el pasillo.",
+        "No se observa un contacto deliberado con los conos; funcionan como referencia espacial.",
+        "Al completar el pasillo, el jugador sale hacia delante.",
+        "El texto superpuesto del vídeo indica «LATERAL MOVEMENT» y «DRILL FOR FASTER FEET».",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO/CampoBase_Desplazamiento_Lateral_Progresivo_Pasillo_Cambios_Apoyo_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO/frames/f",
+    "total": 105,
+    "frameMs": 60
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3",
+  "nombre": "Reacción con giro inicial, señales laterales, toque de cono y balón final",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Reacción",
+      "Agilidad",
+      "Desplazamiento lateral",
+      "Orientación corporal",
+      "Velocidad de pies",
+      "Cambio de nivel",
+      "Estímulo visual"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "Dos filas equilibradas (7 y 8 jugadores) a ambos lados del material central."
+    },
+    "material": "Conos/discos naranjas y balones en una línea central entre las dos filas.",
+    "series": [
+      {
+        "nombre": "Secuencia de señales",
+        "instruccion": "Secuencia de señales · De espaldas → «giramos» una vez → de frente al centro → señales izquierda/derecha/tocar cono encadenadas sin retorno automático → coger balón → fin."
+      }
+    ],
+    "explicacion_breve": "Los jugadores parten en dos filas horizontales a ambos lados de una línea central de conos y balones, de espaldas al material. Con la indicación «giramos» se giran UNA sola vez hacia el material y permanecen de frente al centro durante toda la repetición. El entrenador va dando señales de izquierda, derecha y tocar cono: en izquierda/derecha se desplazan lateralmente y se quedan donde termina la señal (sin retorno automático); en tocar cono bajan, tocan la referencia naranja con la mano y se reincorporan. La señal final es coger el balón con la mano, que termina la repetición.",
+    "leyenda": "Conos/discos naranjas y balones en línea central · Giro inicial único · Señales izquierda/derecha/tocar cono · Coger balón = fin"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la velocidad de reacción ante señales.",
+      "Trabajar desplazamientos laterales encadenados sin anticipación.",
+      "Mejorar orientación corporal tras un giro inicial.",
+      "Coordinar desplazamiento lateral, cambio de nivel y acción manual.",
+      "Mantener atención hasta la señal final."
+    ],
+    "claves_entrenador": [
+      "«De espaldas al material».",
+      "«Esperad la señal».",
+      "«Giramos».",
+      "«Izquierda».",
+      "«Derecha».",
+      "«Tocar cono».",
+      "«Coger balón».",
+      "«No vuelvas al centro si no te lo pido».",
+      "«Quédate donde termina la señal».",
+      "«Después del cono sigues de frente».",
+      "«Balón cogido: termina»."
+    ],
+    "montaje": [
+      "Dos filas horizontales, una a cada lado de la línea central de material.",
+      "Jugadores de espaldas al material al inicio.",
+      "Conos/discos y balones en medio.",
+      "Espacio lateral suficiente para desplazarse a izquierda y derecha."
+    ],
+    "desarrollo": [
+      "Los jugadores se colocan en dos filas horizontales a ambos lados de la línea central, de espaldas a conos y balones.",
+      "Con la indicación «giramos», se giran UNA SOLA VEZ hacia el material central.",
+      "Desde ese momento permanecen orientados hacia el centro durante toda la repetición.",
+      "El entrenador va dando señales de izquierda, derecha y tocar cono.",
+      "En «izquierda» cada jugador se desplaza hacia su propia izquierda y queda preparado allí para la siguiente señal.",
+      "En «derecha» cada jugador se desplaza hacia su propia derecha y queda preparado allí.",
+      "No hay un retorno automático al punto anterior: la siguiente orden determina el siguiente movimiento.",
+      "En «tocar cono», el jugador baja y toca la referencia naranja con la mano; se reincorpora y continúa orientado hacia el centro.",
+      "La señal final es «coger balón»: el jugador baja y coge el balón con la mano.",
+      "Al coger el balón termina la repetición."
+    ],
+    "que_buscamos": [
+      "Reaccionar a cambios de dirección sucesivos.",
+      "Ajustar la posición lateral sin volver siempre a un punto neutro.",
+      "Cambiar rápidamente de orientación y mantenerla.",
+      "Procesar estímulos consecutivos antes de ejecutar."
+    ],
+    "que_observar": [
+      "Que el giro solo ocurra al principio.",
+      "Que después del giro mantengan la orientación hacia el material.",
+      "Que izquierda/derecha se ejecuten respecto al propio jugador.",
+      "Que no introduzcan ida y vuelta por iniciativa propia.",
+      "Que tocar cono sea una bajada/toque y continuación.",
+      "Que coger balón sea la acción final."
+    ],
+    "correcciones": [
+      "Volver a girarse en mitad de la repetición.",
+      "Regresar automáticamente al punto de salida después de izquierda/derecha.",
+      "Volver de espaldas después de tocar cono.",
+      "Confundir tocar balón con cogerlo.",
+      "Seguir después de haber cogido el balón."
+    ],
+    "reglas": [
+      "El giro («giramos») ocurre SOLO al principio de cada repetición.",
+      "Después del giro no vuelven a girarse durante esa repetición.",
+      "Izquierda/derecha no implican ida y vuelta automática.",
+      "Tocar cono no implica volver de espaldas ni retorno.",
+      "Coger balón es la señal final y termina la repetición.",
+      "Los tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir el número de señales laterales.",
+      "Separar primero giro inicial y desplazamientos laterales.",
+      "Añadir el cono cuando ya mantienen la posición entre señales.",
+      "Dejar el balón únicamente como señal final."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad de las señales.",
+      "Hacer más imprevisible el orden izquierda/derecha/cono.",
+      "Mantener siempre la lógica de una sola vuelta inicial y balón final."
+    ],
+    "variantes": [
+      "Fútbol 7: dos filas equilibradas (7 y 8 jugadores) a ambos lados del material central. · 6-8 min.",
+      "Fútbol 11: dos filas equilibradas de 8-11 jugadores a ambos lados del material central. · 7-10 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7578901009016065303.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El vídeo muestra varias repeticiones del mismo ejercicio con reinicio entre ellas.",
+        "En cada repetición los jugadores parten en dos filas horizontales a ambos lados de una línea central de conos y balones.",
+        "Al inicio de cada repetición los jugadores están de espaldas al material central.",
+        "Después del inicio se giran una vez hacia el material y permanecen de frente al centro.",
+        "Las señales visuales incluyen izquierda, derecha, referencia naranja y balón.",
+        "En la señal naranja los jugadores bajan hacia la referencia y continúan la secuencia.",
+        "En la señal de balón los jugadores cogen el balón y la repetición termina.",
+        "El audio del vídeo tiene música de fondo y no permite extraer instrucciones fiables."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3/CampoBase_Reaccion_Giro_Inicial_Senales_Laterales_Cono_Balon_V3.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3/frames/f",
+    "total": 142,
+    "frameMs": 73
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-ZIGZAG-CENTRAL-LATERAL-ALTERNADO",
+  "nombre": "Zigzag fijo entre conos centrales y laterales alternados",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Agilidad",
+      "Cambios de dirección",
+      "Zigzag",
+      "Desplazamiento",
+      "Progresión hacia delante",
+      "Sin señales"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2-3 carriles iguales para que trabajen 5-7 jugadores por carril según espacio."
+    },
+    "material": "Conos/discos blancos en el eje central y conos/discos naranjas a ambos lados, alternados. Sin balón.",
+    "series": [
+      {
+        "nombre": "Recorrido fijo",
+        "instruccion": "Recorrido fijo · Blanco central → naranja lateral → siguiente blanco central → naranja del lado contrario → siguiente blanco central, y así sucesivamente hasta salir."
+      }
+    ],
+    "explicacion_breve": "El jugador avanza encadenando cambios de dirección en un recorrido fijo, sin señales del entrenador. Hay una línea central de conos/discos blancos y, a ambos lados, conos/discos naranjas colocados de forma alternada. El patrón es: blanco central → naranja lateral → siguiente blanco central → naranja del lado contrario → siguiente blanco central, y así sucesivamente hasta salir.",
+    "leyenda": "Conos blancos: eje central · Conos naranjas: laterales alternados · Recorrido fijo en zigzag · Sin señales"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar cambios de dirección encadenados.",
+      "Mejorar la coordinación de apoyos en recorrido zigzagueante.",
+      "Trabajar agilidad y control corporal mientras se progresa hacia delante."
+    ],
+    "claves_entrenador": [
+      "«Sigue el recorrido marcado».",
+      "«Central, lateral, central».",
+      "«Alterna un lado y el otro».",
+      "«Avanza sin pararte».",
+      "«Cambia».",
+      "«Sigue».",
+      "«Al otro lado».",
+      "«Ahora central».",
+      "«Continúa hasta salir».",
+      "«No te cruces de más».",
+      "«Apoyos cortos».",
+      "«Controla el cuerpo».",
+      "«Mantén el ritmo»."
+    ],
+    "montaje": [
+      "Una línea central de conos/discos blancos.",
+      "Conos/discos naranjas laterales alternados a izquierda y derecha del eje central.",
+      "Espacio suficiente para progresar hacia delante enlazando cada referencia.",
+      "Las distancias exactas no se dan por confirmadas; las medidas F7/F11 son adaptación CampoBase."
+    ],
+    "desarrollo": [
+      "El jugador empieza en la primera referencia blanca central.",
+      "Se desplaza hacia la referencia naranja lateral del primer lado.",
+      "Desde ahí enlaza con la siguiente referencia blanca central.",
+      "Continúa hacia la referencia naranja del lado contrario.",
+      "Vuelve a enlazar con el siguiente cono blanco central.",
+      "Repite la alternancia central–lateral–central mientras progresa hacia delante.",
+      "Al completar la última referencia, sale del recorrido."
+    ],
+    "que_buscamos": [
+      "Cambiar de dirección varias veces manteniendo el control del cuerpo.",
+      "Mejorar apoyos y reajustes mientras se avanza.",
+      "Trabajar la capacidad de enlazar referencias espaciales con rapidez."
+    ],
+    "que_observar": [
+      "Que el jugador siga el orden correcto de referencias.",
+      "Que alterne realmente un lado y el otro.",
+      "Que mantenga la progresión hacia delante.",
+      "Que no convierta el ejercicio en una carrera recta ignorando el zigzag.",
+      "Que los apoyos sean controlados en cada cambio de dirección."
+    ],
+    "correcciones": [
+      "Saltarse una referencia central.",
+      "Ir dos veces seguidas al mismo lado.",
+      "Perder la progresión hacia delante.",
+      "Tomar trayectorias demasiado abiertas o descontroladas."
+    ],
+    "reglas": [
+      "No hay señales del entrenador durante la ejecución; el recorrido es fijo.",
+      "El patrón es blanco central → naranja lateral → siguiente blanco central → naranja del lado contrario.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir el número de cambios.",
+      "Usar menos referencias al principio.",
+      "Bajar la velocidad de ejecución."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la velocidad manteniendo el mismo patrón.",
+      "Añadir más referencias al recorrido como adaptación CampoBase.",
+      "Cronometrar solo si no altera la calidad del zigzag."
+    ],
+    "variantes": [
+      "Fútbol 7: 2-3 carriles iguales para que trabajen 5-7 jugadores por carril. · 7-10 min.",
+      "Fútbol 11: 3-4 carriles del mismo recorrido. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7589293268974783766.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El vídeo muestra varias repeticiones del mismo ejercicio.",
+        "Hay una línea central de conos/discos blancos.",
+        "A ambos lados aparecen conos/discos naranjas colocados de forma alternada.",
+        "El jugador avanza encadenando cambios de dirección en un recorrido fijo.",
+        "No se observan señales del entrenador que cambien la trayectoria durante la ejecución.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-ZIGZAG-CENTRAL-LATERAL-ALTERNADO/CampoBase_Zigzag_Central_Lateral_Alternado_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-ZIGZAG-CENTRAL-LATERAL-ALTERNADO/frames/f",
+    "total": 120,
+    "frameMs": 60
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-ZIGZAG-CENTRAL-LATERAL-ALTERNADO/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-PASES-HASTA-SENAL-VALLAS-SPRINT-FINAL",
+  "nombre": "Pases continuos hasta señal, salto de mini vallas y sprint final",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Pase corto",
+      "Saltos",
+      "Mini vallas",
+      "Sprint",
+      "Rotación continua",
+      "Aceleración"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2-3 carriles iguales, con cola por carril y un apoyo fijo o rotativo."
+    },
+    "material": "Balón en la zona de inicio, conos rojos de salida, mini vallas blancas y cono final amarillo.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Pases continuos en la salida → señal del entrenador → sale el pasador sin balón → mini vallas → sprint al cono final → vuelta al final de la cola."
+      }
+    ],
+    "explicacion_breve": "En la zona inicial, el apoyo y el jugador activo se pasan el balón de forma continua hasta la señal del entrenador. Cuando llega la señal, sale el jugador que estaba pasando, continúa sin balón y salta por encima de las mini vallas, una tras otra. Al superar la última valla acelera y hace sprint hasta el cono final. Al terminar, se coloca al final de la cola.",
+    "leyenda": "Balón: pases continuos en la salida · Mini vallas: salto · Cono final: sprint · Vuelta al final de la cola"
+  },
+  "detalle": {
+    "objetivos": [
+      "Encadenar una activación técnica de pase con una tarea coordinativa y una aceleración final.",
+      "Mejorar la transición rápida entre acción con balón y acción sin balón.",
+      "Trabajar coordinación de apoyos, saltos y sprint."
+    ],
+    "claves_entrenador": [
+      "«Pases continuos».",
+      "«A la señal sale el pasador».",
+      "«Después vallas y sprint al cono».",
+      "«Sigue pasando».",
+      "«¡Ya!».",
+      "«Sin balón».",
+      "«Salta arriba».",
+      "«Sprint final».",
+      "«No te pares después del pase».",
+      "«Salta por encima».",
+      "«Acelera hasta el cono».",
+      "«Al terminar, vuelve a la cola»."
+    ],
+    "montaje": [
+      "Varios carriles paralelos.",
+      "Cola de jugadores en la salida.",
+      "Un apoyo o compañero en la zona de pase.",
+      "Mini vallas alineadas en progresión.",
+      "Cono final al fondo del carril.",
+      "Las distancias exactas se adaptan en F7/F11."
+    ],
+    "desarrollo": [
+      "En la salida, el apoyo y el jugador activo se pasan el balón de forma continua.",
+      "Mantienen esos pases hasta la señal del entrenador.",
+      "Cuando llega la señal, sale el jugador que estaba pasando.",
+      "Sale sin balón hacia la zona de mini vallas.",
+      "Salta por encima de las mini vallas, una tras otra, avanzando hacia delante.",
+      "Al superar la última valla, acelera y hace sprint hasta el cono final.",
+      "Cuando termina, se coloca al final de la cola."
+    ],
+    "que_buscamos": [
+      "Pasar rápido de una acción técnica a una acción física intensa.",
+      "Mejorar apoyos y frecuencia de pies antes de acelerar.",
+      "Activar piernas, atención y ritmo competitivo."
+    ],
+    "que_observar": [
+      "Que la fase inicial sean pases continuos y no un solo pase.",
+      "Que la salida la haga el jugador que estaba pasando.",
+      "Que después continúe sin balón.",
+      "Que salte por encima de las mini vallas.",
+      "Que mantenga el sprint hasta el cono final.",
+      "Que el jugador que termina se coloque al final de la cola."
+    ],
+    "correcciones": [
+      "Cortar los pases antes de la señal.",
+      "Salir el jugador equivocado.",
+      "Llevarse el balón a las vallas.",
+      "Rodear las vallas en vez de saltarlas.",
+      "No volver al final de la cola."
+    ],
+    "reglas": [
+      "Se pasan el balón hasta la señal del entrenador.",
+      "Sale el jugador que está pasando.",
+      "Después salta las mini vallas sin balón.",
+      "Luego hace sprint al cono final.",
+      "El que termina se coloca al final de la cola.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir el número de vallas.",
+      "Hacer más clara la rotación entre apoyo, activo y cola.",
+      "Separar más las zonas."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la velocidad de pase.",
+      "Añadir una valla más como adaptación.",
+      "Exigir más intensidad en el sprint final."
+    ],
+    "variantes": [
+      "Fútbol 7: 2-3 carriles iguales, con cola por carril y un apoyo fijo o rotativo. · 7-10 min.",
+      "Fútbol 11: 3-4 carriles con apoyo fijo o rotativo. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7590031982361365782.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Hay varios carriles paralelos con la misma estructura.",
+        "En la zona inicial los jugadores se pasan el balón hasta la señal del entrenador.",
+        "Cuando llega la señal, sale el jugador que estaba pasando.",
+        "Ese jugador continúa sin balón y salta por encima de las mini vallas.",
+        "Después hace sprint hasta el cono final.",
+        "Al terminar, ese jugador se coloca al final de la cola.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-PASES-HASTA-SENAL-VALLAS-SPRINT-FINAL/CampoBase_Pase_Corto_Salto_Vallas_Sprint_Final_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-PASES-HASTA-SENAL-VALLAS-SPRINT-FINAL/frames/f",
+    "total": 146,
+    "frameMs": 62
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-PASES-HASTA-SENAL-VALLAS-SPRINT-FINAL/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-CRUZ-DERECHA-IDA-IZQUIERDA-VUELTA-PINCHADA",
+  "nombre": "Conducción con cruz: ida por derecha, vuelta por izquierda y pinchada en la intersección",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Tecnificación",
+    "que_se_trabaja": [
+      "Conducción",
+      "Cambio de dirección",
+      "Pinchada",
+      "Control orientado",
+      "Coordinación"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2-3 carriles iguales para repartir la cola y mantener ritmo."
+    },
+    "material": "Balones, cruces marcadas en el suelo y picas amarillas.",
+    "series": [
+      {
+        "nombre": "Recorrido completo",
+        "instruccion": "Recorrido completo · Salida con balón → derecha de la cruz → pinchada en la intersección → pica → giro → izquierda de la cruz → pinchada en la intersección → salida."
+      }
+    ],
+    "explicacion_breve": "Cada jugador sale conduciendo con balón desde la parte inferior del carril. En la ida pasa por la derecha de la cruz y, al pasar por la intersección, hace una pinchada del balón. Continúa hasta la pica amarilla, gira y vuelve. En la vuelta pasa por la izquierda de la cruz y vuelve a hacer una pinchada en la intersección. Todo el recorrido se hace con balón.",
+    "leyenda": "Cruz marcada en el suelo: referencia central · Pica amarilla: punto de giro · Ida por la derecha · Vuelta por la izquierda · Pinchada en la intersección"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la conducción orientada con cambios de trayectoria definidos.",
+      "Automatizar la pinchada del balón en un punto concreto.",
+      "Coordinar ida y vuelta con referencias distintas en cada fase.",
+      "Mejorar control, orientación corporal y precisión en el contacto."
+    ],
+    "claves_entrenador": [
+      "«Sales con balón».",
+      "«Ida por la derecha».",
+      "«Pinchada en la cruz».",
+      "«Giras en la pica y vuelves por la izquierda».",
+      "«Derecha en la ida».",
+      "«Pincha».",
+      "«Gira».",
+      "«Izquierda en la vuelta».",
+      "«Pincha otra vez».",
+      "«No inviertas los lados».",
+      "«Pinchada en el centro de la cruz».",
+      "«Conduce pegado al recorrido».",
+      "«Gira rápido en la pica»."
+    ],
+    "montaje": [
+      "Dos carriles paralelos y simétricos.",
+      "Una cruz en cada carril como referencia central.",
+      "Una pica amarilla por delante de cada cruz.",
+      "Zona de salida con balón en la parte inferior del carril."
+    ],
+    "desarrollo": [
+      "El jugador sale conduciendo con balón desde la parte inferior del carril.",
+      "Se acerca a la cruz y, en la ida, pasa por la derecha de la cruz.",
+      "Al pasar por la intersección de la cruz, hace una pinchada del balón.",
+      "Continúa conduciendo hacia delante hasta la pica amarilla.",
+      "Gira en la pica para iniciar la vuelta.",
+      "En la vuelta, pasa por la izquierda de la cruz.",
+      "Al volver a pasar por la intersección de la cruz, realiza otra pinchada del balón.",
+      "Sale del recorrido y se prepara para repetir."
+    ],
+    "que_buscamos": [
+      "Ayuda a proteger y recolocar el balón al cambiar de dirección.",
+      "Mejora el control en giros y retornos.",
+      "Favorece la precisión en gestos técnicos repetidos con ambas orientaciones."
+    ],
+    "que_observar": [
+      "Que la ida vaya por la derecha de la cruz.",
+      "Que la vuelta vaya por la izquierda.",
+      "Que haya pinchada del balón en ambas intersecciones.",
+      "Que el giro en la pica sea claro y controlado.",
+      "Que el balón vaya siempre dominado."
+    ],
+    "correcciones": [
+      "Hacer ida y vuelta por el mismo lado.",
+      "Olvidar la pinchada en una de las intersecciones.",
+      "Pasar demasiado lejos de la cruz.",
+      "Girar abierto en la pica y perder tiempo.",
+      "Conducir el balón sin control en la vuelta."
+    ],
+    "reglas": [
+      "Ida siempre por la derecha de la cruz.",
+      "Vuelta siempre por la izquierda.",
+      "Pinchada del balón en ambas intersecciones.",
+      "El recorrido se hace con balón.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir velocidad de conducción.",
+      "Separar más la explicación de ida y vuelta.",
+      "Trabajar primero solo ida + pinchada y luego añadir la vuelta."
+    ],
+    "si_sale_bien": [
+      "Aumentar ritmo de ejecución.",
+      "Pedir más precisión en la pinchada.",
+      "Trabajar con ambos perfiles de conducción como adaptación."
+    ],
+    "variantes": [
+      "Fútbol 7: 2-3 carriles iguales para repartir la cola y mantener ritmo. · 7-10 min.",
+      "Fútbol 11: 3-4 carriles si el espacio lo permite. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7591894816011635971.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Hay dos carriles simétricos trabajándose en paralelo.",
+        "Cada jugador sale con balón desde la zona inferior del carril.",
+        "En cada carril hay una cruz marcada en el suelo y una pica amarilla por delante.",
+        "En la ida el jugador pasa por la derecha de la cruz.",
+        "En la intersección de la cruz realiza una pinchada del balón.",
+        "Continúa hacia la pica, gira y vuelve.",
+        "En la vuelta pasa por la izquierda de la cruz y vuelve a pinchar en la intersección.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-CRUZ-DERECHA-IDA-IZQUIERDA-VUELTA-PINCHADA/CampoBase_Cruz_Derecha_Ida_Izquierda_Vuelta_Pinchada_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-CRUZ-DERECHA-IDA-IZQUIERDA-VUELTA-PINCHADA/frames/f",
+    "total": 150,
+    "frameMs": 60
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-CRUZ-DERECHA-IDA-IZQUIERDA-VUELTA-PINCHADA/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA",
+  "nombre": "Conduce, deja balón, gira cono, vuelve y pasa al siguiente de la cola",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Conducción",
+      "Sin balón",
+      "Giro de cono",
+      "Pase corto",
+      "Rotación",
+      "Relevo"
+    ],
+    "tiempo_estimado_15": "8-11 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 carriles de 5 jugadores."
+    },
+    "material": "Balones, conos intermedios y conos de giro.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Salida con balón → cono intermedio → dejar balón → giro alrededor del cono de delante → vuelta al balón → pase desde el cono al siguiente → final de la cola."
+      }
+    ],
+    "explicacion_breve": "Cada jugador sale conduciendo con balón hasta un cono intermedio, donde deja el balón. Continúa sin balón hasta el cono de delante y gira alrededor de él. Vuelve al cono donde dejó el balón y, desde ese mismo cono, pasa el balón al siguiente jugador que espera en la cola. Después se coloca al final de la cola.",
+    "leyenda": "Cono intermedio: dejar balón · Cono de delante: giro · Pase desde el cono al siguiente · Final de cola"
+  },
+  "detalle": {
+    "objetivos": [
+      "Coordinar conducción, desmarque sin balón y pase de relevo.",
+      "Mejorar la transición de una acción con balón a una acción sin balón.",
+      "Trabajar orientación y vuelta rápida al punto de pase."
+    ],
+    "claves_entrenador": [
+      "«Conduce hasta el cono».",
+      "«Deja el balón».",
+      "«Gira el cono de delante y vuelve».",
+      "«Pasa al siguiente desde el cono y vas al final».",
+      "«Conduce».",
+      "«Déjalo».",
+      "«Gira».",
+      "«Vuelve».",
+      "«Pasa».",
+      "«Al final».",
+      "«Conos rectos por carriles».",
+      "«Deja el balón en el cono».",
+      "«Rodea bien el cono de giro».",
+      "«Pasa desde el cono»."
+    ],
+    "montaje": [
+      "Varios carriles paralelos.",
+      "Conos rectos y paralelos entre sí por carriles.",
+      "Una cola de jugadores por carril.",
+      "Un cono intermedio donde se deja el balón.",
+      "Un segundo cono al fondo para girar alrededor."
+    ],
+    "desarrollo": [
+      "El jugador sale conduciendo con balón desde la cola.",
+      "Llega al cono intermedio de su carril.",
+      "Deja el balón junto a ese cono.",
+      "Continúa sin balón hacia el cono de delante.",
+      "Gira alrededor de ese cono.",
+      "Vuelve al cono donde dejó el balón.",
+      "Desde ese cono pasa el balón al siguiente jugador que espera en la cola.",
+      "Después se coloca al final de la cola."
+    ],
+    "que_buscamos": [
+      "Mejora la capacidad de soltar el balón y volver a activarse sin él.",
+      "Ayuda a enlazar acciones técnicas y desplazamientos rápidos.",
+      "Refuerza la precisión del pase corto al compañero siguiente."
+    ],
+    "que_observar": [
+      "Que los conos estén rectos y paralelos entre sí.",
+      "Que el balón se deje en el cono intermedio.",
+      "Que el giro sea alrededor del cono de delante.",
+      "Que la vuelta sea al balón dejado.",
+      "Que el pase salga desde el cono al siguiente de la cola.",
+      "Que el jugador que termina vaya al final de la cola."
+    ],
+    "correcciones": [
+      "Llevarse el balón al cono de giro.",
+      "No rodear claramente el cono de delante.",
+      "Conducir el balón hacia el compañero en vez de pasar desde el cono.",
+      "Olvidar ir al final de la cola."
+    ],
+    "reglas": [
+      "Conos rectos y paralelos.",
+      "Llega con balón al cono y lo deja allí.",
+      "Gira alrededor del cono de delante.",
+      "Vuelve al balón dejado.",
+      "Pasa el balón desde el cono al siguiente de la cola.",
+      "El jugador que termina se coloca al final de la cola.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Acortar la distancia al cono de giro.",
+      "Rehacer la rotación sin velocidad.",
+      "Trabajar primero sin pase y luego añadir el relevo."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad de ejecución.",
+      "Exigir más precisión en el pase al siguiente.",
+      "Trabajar varios carriles a más ritmo."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 carriles de 5 jugadores. · 8-11 min.",
+      "Fútbol 11: 4 carriles de 4-6 jugadores. · 9-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7593006658511555862.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Los conos están colocados en líneas rectas y paralelas entre sí por carriles.",
+        "Cada jugador sale con balón hasta un cono intermedio.",
+        "En ese cono deja el balón.",
+        "Después va sin balón al cono de delante y gira alrededor de ese cono.",
+        "Vuelve al cono donde había dejado el balón.",
+        "Desde ese mismo cono pasa el balón al siguiente jugador que espera en la cola.",
+        "El jugador que termina se coloca al final de la cola.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/CampoBase_Deja_Balon_Gira_Cono_Pasa_Siguiente_Cola_V3.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/frames/f",
+    "total": 150,
+    "frameMs": 60
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-REACCION-PAR-IMPAR-BLANCO-AMARILLO",
+  "nombre": "Reacción central por par/impar y color blanco/amarillo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Reacción",
+      "Par/impar",
+      "Colores",
+      "Sin balón",
+      "Toma de decisión",
+      "Velocidad de respuesta"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 14,
+      "organizacion": "2 carriles espejo o 2 estaciones iguales."
+    },
+    "material": "Pica roja central, referencias blancas (delante) y amarillas (detrás). Sin balón.",
+    "series": [
+      {
+        "nombre": "Secuencia de señales",
+        "instruccion": "Secuencia de señales · Espera activa junto a la pica → señal del entrenador → salida a blanco o amarillo según par/impar o color → vuelta → entra la siguiente pareja."
+      }
+    ],
+    "explicacion_breve": "Trabajan dos jugadores a la vez, uno a cada lado de la pica roja central, sin balón. Esperan en posición activa con pies cortos, sin tocar la pica. Hay referencias blancas hacia delante y amarillas hacia detrás. Si el entrenador dice un número impar, los dos salen hacia amarillo; si dice un número par, salen hacia blanco; si nombra un color, salen directamente a ese color. Después vuelve la pareja y entra la siguiente.",
+    "leyenda": "Pica roja central · Blanco: delante · Amarillo: detrás · Impar → amarillo · Par → blanco · Color nombrado → ese color"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la velocidad de reacción ante estímulos verbales.",
+      "Relacionar información cognitiva simple con una respuesta motriz rápida.",
+      "Trabajar orientación espacial y aceleración corta sin balón."
+    ],
+    "claves_entrenador": [
+      "«Activos junto a la pica».",
+      "«No toquéis la pica».",
+      "«Si digo impar vais a amarillo».",
+      "«Si digo par vais a blanco».",
+      "«Si digo color vais a ese color».",
+      "«Impar».",
+      "«Par».",
+      "«Blanco».",
+      "«Amarillo».",
+      "«Vuelve».",
+      "«Pies cortos».",
+      "«Reacciona ya».",
+      "«No toques la pica».",
+      "«Blanco delante».",
+      "«Amarillo detrás»."
+    ],
+    "montaje": [
+      "Pica roja en el centro con el entrenador en la zona media.",
+      "Dos jugadores colocados, uno a cada lado de la pica.",
+      "Referencias blancas delante para cada lado.",
+      "Referencias amarillas detrás para cada lado.",
+      "Colas a ambos lados para que entre la siguiente pareja."
+    ],
+    "desarrollo": [
+      "Se coloca una pareja, un jugador a cada lado de la pica roja central.",
+      "Esperan en posición activa con pies cortos, sin tocar la pica.",
+      "El entrenador da una señal: número par, número impar o un color.",
+      "Si dice número impar, los dos salen a la referencia amarilla de su lado.",
+      "Si dice número par, los dos salen a la referencia blanca de su lado.",
+      "Si dice blanco o amarillo, los dos salen directamente a ese color.",
+      "Vuelven a la zona central y entra la siguiente pareja."
+    ],
+    "que_buscamos": [
+      "Mejora la respuesta rápida ante estímulos externos.",
+      "Ayuda a cambiar de dirección y activar la salida en poco espacio.",
+      "Trabaja la relación entre percepción, decisión y acción."
+    ],
+    "que_observar": [
+      "Que esperen en posición activa y no parados del todo.",
+      "Que no toquen la pica central.",
+      "Que entiendan bien la regla par/impar.",
+      "Que la salida a blanco sea hacia delante y a amarillo hacia detrás.",
+      "Que reaccionen los dos a la vez."
+    ],
+    "correcciones": [
+      "Confundir par con impar.",
+      "Salir al color contrario.",
+      "Tocar o apoyarse en la pica.",
+      "Esperar demasiado estáticos.",
+      "Reaccionar tarde a la señal."
+    ],
+    "reglas": [
+      "Es sin balón.",
+      "Trabajan dos jugadores a la vez a cada lado de la pica.",
+      "Número impar = amarillo.",
+      "Número par = blanco.",
+      "Si se nombra un color, van directo a ese color.",
+      "Esperan en posición activa sin tocar la pica.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Trabajar primero solo con colores.",
+      "Añadir después la regla de par/impar.",
+      "Acortar la distancia a las referencias."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad de señal.",
+      "Combinar más secuencias seguidas.",
+      "Añadir más exigencia en el retorno y entrada de la siguiente pareja."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 carriles espejo o 2 estaciones iguales. · 7-10 min.",
+      "Fútbol 11: 2-4 estaciones iguales con parejas sucesivas. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7598622386061135126.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Trabajan dos jugadores a la vez, uno a cada lado de la pica roja central.",
+        "El ejercicio es sin balón.",
+        "Hay referencias blancas hacia delante y amarillas hacia detrás.",
+        "Los jugadores esperan en posición activa con pies cortos, sin tocar la pica.",
+        "Si el entrenador dice un número impar, los dos salen hacia amarillo.",
+        "Si el entrenador dice un número par, los dos salen hacia blanco.",
+        "Si el entrenador nombra un color, salen directamente a ese color.",
+        "Después vuelve la pareja y entra la siguiente.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-PAR-IMPAR-BLANCO-AMARILLO/CampoBase_Reaccion_Par_Impar_Blanco_Amarillo_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-REACCION-PAR-IMPAR-BLANCO-AMARILLO/frames/f",
+    "total": 128,
+    "frameMs": 88
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-REACCION-PAR-IMPAR-BLANCO-AMARILLO/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M",
+  "nombre": "6 saltos laterales, knee drive y sprint de 13,7 m",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Saltos laterales",
+      "Knee drive",
+      "Sprint",
+      "Aceleración",
+      "Potencia",
+      "Sin balón"
+    ],
+    "tiempo_estimado_15": "8-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2-3 carriles para reducir esperas."
+    },
+    "material": "Referencia verde de inicio y cono final a 13,7 m. Sin balón.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · 6 saltos laterales → 7.º apoyo de impulso → knee drive → sprint recto de 13,7 m. 6 repeticiones totales: 3 saliendo desde cada lado."
+      }
+    ],
+    "explicacion_breve": "El jugador comienza junto a una referencia verde y realiza 6 saltos laterales cortos con los dos pies, alternando de un lado al otro. El 7.º apoyo ya no es otro salto igual: se utiliza para impulsar el cuerpo lateralmente, enlazando con un knee drive explosivo. Desde ese gesto acelera inmediatamente y hace sprint recto hasta el cono situado a 13,7 m. Se repite 6 veces en total: 3 saliendo desde cada lado.",
+    "leyenda": "Referencia verde: inicio · 6 saltos laterales · 7.º apoyo: impulso · Knee drive · Sprint recto de 13,7 m"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar reactividad lateral.",
+      "Transformar un apoyo lateral en aceleración.",
+      "Trabajar potencia de salida y coordinación del knee drive.",
+      "Mejorar la transición entre gesto coordinativo y sprint."
+    ],
+    "claves_entrenador": [
+      "«Seis saltos laterales».",
+      "«En el séptimo, impulsa».",
+      "«Rodilla arriba y sal».",
+      "«Sprint hasta el cono».",
+      "«Uno, dos, tres, cuatro, cinco, seis».",
+      "«Impulsa».",
+      "«Rodilla».",
+      "«Sprint».",
+      "«Saltos cortos».",
+      "«No te quedes clavado en el séptimo apoyo».",
+      "«Rodilla arriba».",
+      "«Acelera desde el primer paso»."
+    ],
+    "montaje": [
+      "Referencia verde en la zona de inicio.",
+      "Cono final situado a 13,7 m.",
+      "Espacio lateral suficiente para realizar los saltos y el impulso."
+    ],
+    "desarrollo": [
+      "El jugador se coloca junto a la referencia verde.",
+      "Realiza 6 saltos laterales cortos con ambos pies, alternando de un lado al otro.",
+      "El 7.º apoyo ya no es otro salto igual: se utiliza para impulsar el cuerpo lateralmente.",
+      "Ese impulso se acompaña de un knee drive explosivo.",
+      "Desde ese gesto enlaza inmediatamente con la aceleración.",
+      "Hace sprint recto hasta el cono situado a 13,7 m.",
+      "Se repite 6 veces en total: 3 saliendo desde cada lado."
+    ],
+    "que_buscamos": [
+      "Mejora la capacidad de reaccionar lateralmente y salir acelerando.",
+      "Ayuda a convertir un apoyo corto en una carrera explosiva.",
+      "Refuerza la mecánica inicial de aceleración."
+    ],
+    "que_observar": [
+      "Que los 6 primeros apoyos sean realmente saltos laterales cortos.",
+      "Que el 7.º apoyo sirva de transición hacia la salida.",
+      "Que el knee drive sea explosivo.",
+      "Que no haya pausa entre knee drive y sprint.",
+      "Que se alternen correctamente las 3 salidas por cada lado."
+    ],
+    "correcciones": [
+      "Hacer más de 6 saltos antes de salir.",
+      "Convertir el 7.º apoyo en otro salto sin intención de salida.",
+      "Knee drive bajo o poco explosivo.",
+      "Pausa antes de acelerar.",
+      "Sprint progresivo demasiado lento al inicio."
+    ],
+    "reglas": [
+      "6 saltos laterales.",
+      "7.º apoyo como impulso.",
+      "Knee drive lateral.",
+      "Sprint hasta 13,7 m.",
+      "6 repeticiones totales: 3 por cada lado.",
+      "Ejercicio sin balón.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir inicialmente a 4 saltos + salida.",
+      "Trabajar knee drive aislado.",
+      "Acortar temporalmente la distancia de sprint."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad de los 6 saltos sin perder control.",
+      "Exigir más explosividad en el primer paso.",
+      "Mantener las 6 repeticiones con calidad homogénea."
+    ],
+    "variantes": [
+      "Fútbol 7: 2-3 carriles para reducir esperas. · 8-12 min.",
+      "Fútbol 11: 3-4 carriles. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7598956017803595030.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El ejercicio es sin balón.",
+        "El jugador comienza junto a una referencia verde.",
+        "Realiza 6 saltos laterales cortos con los dos pies.",
+        "El 7.º apoyo se utiliza como impulso lateral.",
+        "Ese impulso enlaza con un knee drive lateral.",
+        "Después acelera en sprint recto hasta el cono final.",
+        "La distancia al cono final es 13,7 m.",
+        "Se realizan 6 repeticiones totales: 3 saliendo desde cada lado.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M/CampoBase_6_Saltos_Laterales_Knee_Drive_Sprint_13_7m_V4.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M/frames/f",
+    "total": 150,
+    "frameMs": 60
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M/video.mp4"
 }
 ]);
 

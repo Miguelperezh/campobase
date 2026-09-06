@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.25.0 — 2026-09-06
+
+- 11 ejercicios nuevos con vídeo real integrados en la biblioteca (formato `CAMPOBASE-VIDEO-*`): knee drive reactivo + salto skater (3 variaciones), doble devolución alrededor de pica, rodillas altas laterales + zigzag, desplazamiento lateral progresivo en pasillo, reacción con giro inicial y señales, zigzag central/lateral alternado, pases continuos + mini vallas + sprint, conducción con cruz y pinchada, conduce/deja balón/gira cono, reacción par/impar blanco/amarillo, y 6 saltos laterales + knee drive + sprint de 13,7 m.
+- Cada ejercicio con GIF convertido a MP4 ligero (animación) y vídeo real en Supabase Storage (`ejercicio-videos`).
+- 131 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.25.0`.
+
 ## 2.24.0 — 2026-09-06
 
 - La media de puntuación solo cuenta partidos donde el jugador jugó al menos 5 minutos. Un suplente que jugó 0 o menos de 5 minutos no baja su media.
