@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.21.0 — 2026-09-06
+
+- El delegado solo ve el partido en vivo 20 minutos antes de la hora programada (la que Migue pone en el calendario), o cuando Migue lo desbloquea antes con el botón «Enseñar al delegado», o cuando el partido ya ha empezado.
+- Migue puede preparar el partido días antes (ya era posible); ahora el delegado no lo ve hasta que corresponde.
+- 130 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.21.0`.
+
 ## 2.20.0 — 2026-09-06
 
 - Fase B de la pizarra en vivo: al llegar al descanso se pide SIEMPRE la alineación del 2º tiempo. La pizarra se abre con el once del 1er tiempo y Migue (o el delegado) ajusta quién entra, quién sale y los cambios de posición antes de arrancar el 2º tiempo.

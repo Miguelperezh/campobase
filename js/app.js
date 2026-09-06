@@ -614,7 +614,8 @@ function renderLive() {
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField;
-  root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
+  const unlockBtn = (state.timer.phase === 'ready' && roleCanUseOwnerFeatures(state.role) && !state.timer.delegateUnlocked) ? '<button id="unlock-delegate" class="secondary">Enseñar al delegado</button>' : '';
+  root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
@@ -1063,6 +1064,12 @@ function renderDelegate() {
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
   const callup = state.callups.find(({ id }) => id === match?.callupId);
   if (!match || !callup) return;
+  // El delegado solo ve el partido 20 min antes de la hora programada, o cuando
+  // Migue lo desbloquea antes, o cuando ya ha empezado. Migue (owner) siempre lo ve.
+  if (state.role === 'delegate' && !delegateCanSeeLive()) {
+    root.innerHTML = `${empty('El partido en vivo estará disponible 20 minutos antes del inicio.')}<button id="logout" class="secondary">Cerrar sesión</button>`;
+    return;
+  }
   const config = FORMATS[callup.format];
   const seconds = timerSeconds();
   const played = livePlayedSeconds();
@@ -1086,6 +1093,27 @@ function enterDelegateMode() {
   document.body.classList.add('delegate-mode');
   showView('delegado');
   renderDelegate();
+}
+
+// El delegado ve el partido en vivo 20 min antes de la hora programada, o cuando
+// Migue lo desbloquea antes (delegateUnlocked), o cuando ya ha empezado.
+function delegateCanSeeLive() {
+  if (!state.timer) return false;
+  if (state.timer.phase !== 'ready') return true; // ya empezado
+  if (state.timer.delegateUnlocked) return true;   // Migue lo desbloqueó antes
+  const match = state.matches.find(({ id }) => id === state.timer.matchId);
+  if (!match?.date) return false;
+  const kickoff = new Date(match.date).getTime();
+  if (!Number.isFinite(kickoff)) return false;
+  return Date.now() >= kickoff - 20 * 60 * 1000;
+}
+
+async function unlockDelegate() {
+  if (!state.timer) return;
+  state.timer.delegateUnlocked = true;
+  await persistTimer();
+  renderLive();
+  toast('El delegado ya puede ver el partido en vivo.');
 }
 
 function closeDelegateMode() {
@@ -2619,6 +2647,7 @@ function wireEvents() {
     if (target.id === 'make-sub') await makeSubstitution();
     if (target.id === 'exit-live') await cancelLiveMatch();
     if (target.id === 'open-delegate') enterDelegateMode();
+    if (target.id === 'unlock-delegate') await unlockDelegate();
     if (target.id === 'close-delegate') closeDelegateMode();
     if (target.id === 'delegate-manual-sub') {
       const outIds = checkedValues('delegate-out'); const inIds = checkedValues('delegate-in');
