@@ -13,6 +13,7 @@
 import { TACTICA_1231_FRAMES } from './tactica-1231-frames.js';
 import { TACTICA_1213_FRAMES } from './tactica-1213-frames.js';
 import { TACTICA_1321_FRAMES } from './tactica-1321-frames.js';
+import { TACTICA_1222_FRAMES } from './tactica-1222-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -418,6 +419,188 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 196
       },
       "fuente": { "documento": "Táctica 1-2-1-3 · Bloque 3 (Salida de balón)", "seccion": "Salida de balón" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1222-GUIA-COMPLETA",
+  "nombre": "Sistema 1-2-2-2",
+  "formacion": "1-2-2-2",
+  "organizacion": "1 portero · 2 defensas · 2 medios · 2 delanteros",
+  "principio": "El sistema se juega en dos de los tres carriles y deja uno libre a propósito: el bloque se mueve como una piña y la amplitud se ocupa, no se vive pegado a banda.",
+  "framesManifest": TACTICA_1222_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 30, "y": 76, "n": "4", "pos": "Defensa izq." },
+    { "x": 70, "y": 76, "n": "5", "pos": "Defensa der." },
+    { "x": 40, "y": 58, "n": "6", "pos": "Medio izq." },
+    { "x": 60, "y": 58, "n": "8", "pos": "Medio der." },
+    { "x": 35, "y": 40, "n": "9", "pos": "Delantero izq." },
+    { "x": 65, "y": 40, "n": "10", "pos": "Delantero der." }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-funciones",
+      "orden": 1,
+      "nombre_corto": "Funciones",
+      "titulo": "Posicionamiento y movimientos reales",
+      "objetivo": "Entender la estructura base 1-2-2-2 y cómo el bloque se mueve compacto ocupando dos carriles y dejando uno libre.",
+      "idea_clave": "Juntos como una piña, dos carriles activos y uno libre.",
+      "decisiones": [
+        "Estructura inicial 1-2-2-2, equipo compacto.",
+        "Balón a banda: un central sale a banda y actúa como central-lateral.",
+        "Un centrocampista se convierte en carrilero.",
+        "Un delantero cae al mismo lado; el resto acompaña.",
+        "Por el centro, los dos centrales cierran y los medios pueden salir a bandas.",
+        "Tras pérdida, la cercanía permite achicar y recuperar alrededor del balón."
+      ],
+      "que_vigilar": [
+        "Compactación del bloque al moverse.",
+        "Dos carriles activos y uno libre de forma intencionada.",
+        "Acompañamiento del bloque cuando uno va a banda."
+      ],
+      "consignas": ["Juntos como una piña", "Dos carriles, uno libre", "Si uno va, el bloque acompaña"],
+      "errores": [
+        "Efecto embudo por no asociarse ni ocupar la banda con intención.",
+        "Moverse sin que el bloque acompañe.",
+        "Defender los tres carriles a la vez."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1222-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 195
+      },
+      "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 1 (Posicionamiento y movimientos reales)", "seccion": "Posicionamiento y movimientos reales" }
+    },
+    {
+      "id": "bloque-2-ataque",
+      "orden": 2,
+      "nombre_corto": "Ataque",
+      "titulo": "Ataque posicional, asociación y tras pérdida",
+      "objetivo": "Enseñar cómo el sistema genera apoyos cercanos, ocupación puntual de banda y reacción inmediata tras pérdida.",
+      "idea_clave": "Viajar juntos; la amplitud la da un interior, no el sistema por sí solo.",
+      "decisiones": [
+        "El equipo viaja junto con el balón.",
+        "La amplitud la da uno de los interiores (8).",
+        "Cuando el balón llega a un carril, se juntan varios jugadores en esa zona.",
+        "El 10 recibe con opciones; 8 se acerca y 5 y 9 quedan cerca.",
+        "Tras pérdida, varios saltan a robar y 5 y 9 cubren espacios.",
+        "Rotación ofensiva: 9 abre como extremo y 10 pasa a delantero."
+      ],
+      "que_vigilar": [
+        "Apoyos cercanos al poseedor (10 no está solo).",
+        "Coberturas de 5 y 9 tras pérdida.",
+        "Presencia en remate al rotar 9 y 10."
+      ],
+      "consignas": ["Viajamos juntos", "10 no está solo", "Si perdemos, robamos cerca", "9 abre, 10 fija"],
+      "errores": [
+        "Aislar al 10 cuando recibe.",
+        "Dar amplitud sin que acompañe el bloque.",
+        "Tras pérdida, correr hacia atrás en vez de robar cerca.",
+        "Rotar 9 y 10 sin mantener presencia en remate."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1222-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 168
+      },
+      "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 2 (Ataque posicional, asociación y tras pérdida)", "seccion": "Ataque posicional, asociación y tras pérdida" }
+    },
+    {
+      "id": "bloque-3-defensa",
+      "orden": 3,
+      "nombre_corto": "Defensa",
+      "titulo": "Defensa en dos carriles y presión en banda",
+      "objetivo": "Defender como una trampa por carriles: cerrar el centro, orientar al rival a banda y robar allí.",
+      "idea_clave": "Centro cerrado, dos carriles defendidos y uno libre.",
+      "decisiones": [
+        "Cerrar el carril central y orientar el juego a banda.",
+        "Bascular todo el bloque al lado del balón.",
+        "Defender dos carriles y dejar libre el carril lejano.",
+        "Achicar espacio alrededor del poseedor.",
+        "Presionar en banda para intentar robar.",
+        "En cambio aéreo, bascular durante el vuelo y repetir al otro lado."
+      ],
+      "que_vigilar": [
+        "Basculación colectiva al lado del balón.",
+        "Carril central siempre cerrado.",
+        "Moverse durante el cambio aéreo."
+      ],
+      "consignas": ["Centro cerrado", "Dos carriles, uno libre", "Bascular juntos", "Robar en banda"],
+      "errores": [
+        "Salto individual sin apoyo del bloque.",
+        "Bascular tarde y abrir el carril central.",
+        "Defender los tres carriles a la vez.",
+        "Quedarse mirando el cambio de orientación."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1222-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 189
+      },
+      "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 3 (Defensa en dos carriles y presión en banda)", "seccion": "Defensa en dos carriles y presión en banda" }
+    },
+    {
+      "id": "bloque-4-variante-2-4",
+      "orden": 4,
+      "nombre_corto": "Variante 2-4",
+      "titulo": "Variante defensiva 2-4",
+      "objetivo": "Mostrar la variante 2-4 en la que los dos interiores pasan a carrileros para defender con más anchura y salir mejor jugando.",
+      "idea_clave": "Robar con jugadores de buen pie para salir jugando.",
+      "decisiones": [
+        "Se activa con balón rival por dentro o rival potente.",
+        "Los dos interiores se abren y trabajan como carrileros.",
+        "La línea defensiva ensanchada orienta el juego hacia banda.",
+        "El recuperador es un jugador con buen pie.",
+        "Tras recuperar, primer pase seguro y triángulos."
+      ],
+      "que_vigilar": [
+        "No abrirse demasiado ni vaciar el centro.",
+        "Primer pase seguro tras el robo.",
+        "Apoyos cercanos para triangular."
+      ],
+      "consignas": ["Interiores, fuera", "Estructura 2-4", "Robo y cabeza", "Triángulo"],
+      "errores": [
+        "Abrir mucho y dejar sin base a los dos de atrás.",
+        "Vaciar el centro al sacar los interiores.",
+        "Rifar el primer pase tras recuperar.",
+        "Separar tanto los apoyos que no se pueda triangular."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1222-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 193
+      },
+      "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 4 (Variante defensiva 2-4)", "seccion": "Variante defensiva 2-4" }
+    },
+    {
+      "id": "bloque-5-contraataque",
+      "orden": 5,
+      "nombre_corto": "Contraataque",
+      "titulo": "Línea de 4 y contraataque",
+      "objetivo": "Mostrar el bloque más bajo con línea de cuatro y dos referencias arriba para salir a la contra.",
+      "idea_clave": "Proteger con 4 y guardar 2 referencias arriba.",
+      "decisiones": [
+        "Se usa cuando el rival ataca más.",
+        "6 y 8 se cierran y forman línea de 4 con los dos de atrás.",
+        "Las bandas se cierran un poco.",
+        "9 y 10 quedan arriba como referencias.",
+        "Se invita al rival a avanzar para que deje espacio.",
+        "Tras robar, primer pase hacia arriba y contraataque."
+      ],
+      "que_vigilar": [
+        "Línea de 4 sin huecos.",
+        "9 y 10 arriba (no bajar del todo).",
+        "Aprovechar el espacio tras el robo."
+      ],
+      "consignas": ["Línea de 4", "9 y 10, arriba", "Que vengan", "Robo y corre"],
+      "errores": [
+        "Bajar también a 9 y 10 y quedarse sin salida.",
+        "Dejar huecos entre los cuatro defensores.",
+        "Cerrar tanto que no se pueda correr tras recuperar.",
+        "Invitar al rival sin controlar distancias ni el momento del robo."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1222-GUIA-COMPLETA/bloque-5/frames/f",
+        "total": 192
+      },
+      "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 5 (Línea de 4 y contraataque)", "seccion": "Línea de 4 y contraataque" }
     }
   ]
 }
