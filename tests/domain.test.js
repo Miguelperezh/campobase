@@ -502,6 +502,20 @@ test('protege los dos accesos con PIN validado y hash salado', async () => {
   await assert.rejects(() => hashPin('abcd', 'sal-local'), /numérico/i);
 });
 
+test('el hash del PIN funciona sin crypto.subtle (respaldo puro para el panel del chat)', async () => {
+  const native = await hashPin('2468', 'sal-local');
+  const realSubtle = globalThis.crypto.subtle;
+  Object.defineProperty(globalThis.crypto, 'subtle', { value: undefined, configurable: true });
+  try {
+    const pure = await hashPin('2468', 'sal-local');
+    assert.equal(pure, native, 'el SHA-256 puro debe coincidir con WebCrypto');
+    assert.equal(await verifyPin('2468', 'sal-local', native), true);
+    assert.equal(await verifyPin('2469', 'sal-local', native), false);
+  } finally {
+    Object.defineProperty(globalThis.crypto, 'subtle', { value: realSubtle, configurable: true });
+  }
+});
+
 test('Migue puntúa del 1 al 5 y la nota queda en el historial de cada jugador', () => {
   const result = buildPlayerRatings(
     [{ id: 'a', ratingHistory: [] }, { id: 'b' }],

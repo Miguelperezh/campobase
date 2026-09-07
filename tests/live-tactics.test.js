@@ -96,7 +96,7 @@ test('suplentes devuelve los convocados que no están en el campo', () => {
 });
 
 test('las formaciones en vivo tienen su MP4 asociado', () => {
-  assert.deepEqual(LIVE_FORMATIONS, ['1-3-2-1', '1-2-3-1', '1-2-2-2']);
+  assert.deepEqual(LIVE_FORMATIONS, ['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-2-1-3']);
   for (const f of LIVE_FORMATIONS) {
     assert.match(TACTICA_MP4[f], /assets\/tacticas\/.*\.mp4$/);
   }

@@ -54,4 +54,12 @@ test('la guía muestra dentro del desplegable la pizarra editable real y la sinc
   assert.match(css, /\[data-tg-board-lightbox\] \.lb-board\{[^}]*padding-bottom:calc\(4\.5rem \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(css, /\[data-tg-board-lightbox\] \[data-tg-board-full\]\{width:auto;max-height:100%;flex:0 0 auto\}/);
   assert.match(css, /\[data-tg-board-lightbox\] \.lb-board \.tactic-tools\{[^}]*width:min\(40vw,360px\)[^}]*max-width:min\(40vw,360px\)[^}]*flex:0 0 min\(40vw,360px\)[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*max-height:calc\(100dvh - 6rem\)/);
+  // La pizarra de la guía captura el gesto táctil para dibujar flechas en móvil.
+  assert.match(css, /\.tg-board-section \.tactic-board svg[^{]*\{[^}]*touch-action:none/);
+  assert.match(css, /\[data-tg-board-lightbox\] \[data-tg-board-full\] \.tactic-board svg[^{]*\{[^}]*touch-action:none/);
+  // Fullscreen CSS propio como respaldo a requestFullscreen (iOS Safari).
+  assert.match(css, /\.tg-player-shell\.tg-fullscreen\{[^}]*position:fixed[^}]*inset:0/);
+  assert.match(css, /\.tg-player-shell\.tg-fullscreen \.tg-close-full\{display:block\}/);
+  assert.match(viewer, /playerShell\.classList\.add\('tg-fullscreen'\)/);
+  assert.match(viewer, /playerShell\.classList\.remove\('tg-fullscreen'\)/);
 });

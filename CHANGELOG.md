@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.29.0 — 2026-09-07
+
+- Nueva táctica del manual «Sistema 1-2-1-3» (formación nueva, no variante): 3 bloques (Funciones, Defensa, Salida) con animación por frames y pizarra editable con dorsales del paquete (1, 4, 5, 6, 8, 9, 10).
+- Añadida la formación 1-2-1-3 a «Partido en vivo» (pizarra con jugadores reales + MP4), sin tocar las formaciones existentes.
+- Velocidad base 1× de las animaciones tácticas al triple de rápido (factor ⅓) en 1-2-3-1 y 1-2-1-3.
+- Corrección móvil: la pizarra de la guía captura el gesto táctil para dibujar flechas (`touch-action:none`).
+- Corrección móvil: el GIF/MP4 de la guía se amplía en iOS Safari con fullscreen CSS propio (respaldo a `requestFullscreen`).
+- El PIN funciona también en el panel de previsualización del chat (SHA-256 puro como respaldo a `crypto.subtle`).
+- 144 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.29.0`.
+
 ## 2.28.0 — 2026-09-07
 
 - Corrección del ejercicio `CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION`: se reinterpreta como circuito de conos con centro lateral y remate (pared inicial, salida por banda, circuito de conos, centro y remate ante portero), en lugar de 1v1. Se conserva el registro, el vídeo real y la URL de Supabase.
