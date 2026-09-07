@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.25.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.26.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.25.0');
-  assert.equal(lock.version, '2.25.0');
-  assert.equal(lock.packages[''].version, '2.25.0');
-  assert.match(sw, /campobase-v2\.25\.0/);
+  assert.equal(pkg.version, '2.26.0');
+  assert.equal(lock.version, '2.26.0');
+  assert.equal(lock.packages[''].version, '2.26.0');
+  assert.match(sw, /campobase-v2\.26\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -54,8 +54,9 @@ test('las seis correcciones de tácticas y partido en vivo quedan conectadas en 
   assert.match(app, /id="tactic-board-tools-full"/);
   assert.match(app, /class="live-tactics-legend compact"/);
   assert.match(html, /id="tactica-filters"[\s\S]*id="tacticas-interactivas"/);
-  assert.match(app, /TACTICAS_INTERACTIVAS\.filter/);
-  assert.match(app, /renderTacticBoard\(defaultTactic\('F7', t\.formacion\)\)/);
+  assert.match(app, /TACTICAS_INTERACTIVAS\.map\(\(t\) => `<option value="\$\{escapeHtml\(t\.id\)\}"\>/);
+  assert.match(app, /renderTacticaGuiaHTML\(tactica\)/);
+  assert.match(app, /initTacticaGuia\(root\.querySelector\('\.tactica-guia'\), tactica\)/);
   assert.match(tactics, /Borrar línea/);
   assert.match(tactics, /Borrar todo/);
   assert.match(css, /\.live-tactics-legend\.compact/);
@@ -202,7 +203,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.25\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.26\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {

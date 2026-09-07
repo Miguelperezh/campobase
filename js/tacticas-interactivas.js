@@ -1,374 +1,165 @@
-// Tácticas interactivas del manual de Migue (Unión Viera Alevín D).
-// Cada táctica se asocia a una formación existente (formacion) y añade un GIF
-// animado con sus fases/variantes. La pizarra táctica actual NO se modifica.
-// Estructura: { id, nombre, formacion, vista_rapida, detalle, animacion }
+// Tácticas del manual de Migue (Unión Viera Alevín D).
+// Cada táctica es una ficha completa con bloques. La pizarra táctica personal
+// de Migue es independiente del GIF: se abre plegada y no reproduce los
+// movimientos de la animación.
+// Estructura: { id, nombre, formacion, organizacion, principio, bloques[] }
+// Cada bloque: { id, orden, nombre_corto, titulo, objetivo, idea_clave,
+//   decisiones[], que_vigilar[], consignas[], errores[], animacion, fuente }
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
-  "id": "CAMPOBASE-TACTICA-01-1-3-2-1",
-  "nombre": "Sistema base 1-3-2-1",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "1-3-2-1",
-    "que_se_trabaja": [
-      "Estructura base",
-      "Amplitud",
-      "Profundidad",
-      "Incorporación del 4",
-      "Reacción tras pérdida"
-    ],
-    "jugadores": {
-      "total": 7,
-      "organizacion": "1 portero · 3 defensas (3-4-2) · 2 medios (11-7) · 1 delantero (9)"
-    },
-    "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Tres por detrás del balón, dos medios y un delantero."
-      },
-      {
-        "nombre": "Con balón",
-        "instruccion": "2 y 3 dan amplitud; 7 y 11 ofrecen líneas; 9 mantiene profundidad."
-      },
-      {
-        "nombre": "4 sube",
-        "instruccion": "4 se incorpora al mediocampo cuando 2 y 3 mantienen equilibrio."
-      },
-      {
-        "nombre": "Pérdida",
-        "instruccion": "4 recupera la zona central entre 3 y 2."
-      }
-    ],
-    "leyenda": "Rojo Unión Viera · Azul rival · Verde portero · Negro pase · Rojo discontinuo movimiento"
-  },
-  "detalle": {
-    "que_busco": [
-      "Seguridad sin bloque estático.",
-      "Posiciones como referencias iniciales."
-    ],
-    "con_balon": [
-      "2 y 3 amplitud.",
-      "7 y 11 líneas por fuera y por dentro.",
-      "9 profundidad.",
-      "4 puede incorporarse con equilibrio detrás."
-    ],
-    "al_perder": [
-      "4 vuelve entre 3 y 2."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "Sistema base 1-3-2-1",
-      "adaptacion_operativa": true,
-      "notas": [
-        "Pases representativos, no secuencia obligatoria."
-      ]
-    }
-  },
-  "formacion": "1-3-2-1",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-01-1-3-2-1/CampoBase_Tactica_01_Sistema_Base_1-3-2-1.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-01-1-3-2-1/frames/f",
-    "total": 40,
-    "frameMs": 390
-  }
-},
-{
-  "id": "CAMPOBASE-TACTICA-02-EL-4",
-  "nombre": "El 4 · pieza central del sistema",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "Rol del 4 en 1-3-2-1",
-    "que_se_trabaja": [
-      "Protección central",
-      "Cobertura",
-      "Incorporación",
-      "Repliegue"
-    ],
-    "series": [
-      {
-        "nombre": "Defensa",
-        "instruccion": "4 entre 3 y 2; protege primero el centro."
-      },
-      {
-        "nombre": "Banda",
-        "instruccion": "Si lateral sale, 4 corrige por dentro y cubre."
-      },
-      {
-        "nombre": "Ataque",
-        "instruccion": "4 se incorpora; 2 y 3 mantienen equilibrio."
-      },
-      {
-        "nombre": "Pérdida",
-        "instruccion": "4 vuelve entre 3 y 2."
-      }
-    ],
-    "leyenda": "Amarillo: zona principal del 4"
-  },
-  "detalle": {
-    "en_defensa": [
-      "Entre 3 y 2.",
-      "Protege centro.",
-      "Cubre por dentro.",
-      "No persigue por todo el campo."
-    ],
-    "en_ataque": [
-      "Puede incorporarse al mediocampo.",
-      "2 y 3 equilibran detrás."
-    ],
-    "al_perder": [
-      "Recupera la zona central."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "El 4 · pieza central",
-      "adaptacion_operativa": false
-    }
-  },
-  "formacion": "1-3-2-1",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-02-EL-4/CampoBase_Tactica_02_El_4_Pieza_Central.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-02-EL-4/frames/f",
-    "total": 29,
-    "frameMs": 538
-  }
-},
-{
-  "id": "CAMPOBASE-TACTICA-03-1-2-3-1",
-  "nombre": "Variante 1 · 1-2-3-1",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "1-2-3-1",
-    "que_se_trabaja": [
-      "Presencia estable en medio",
-      "Apoyos",
-      "Amplitud 7/11",
-      "Protección central del 4"
-    ],
-    "series": [
-      {
-        "nombre": "Posición",
-        "instruccion": "2 defensas, 11-4-7 en mediocampo y 9 arriba."
-      },
-      {
-        "nombre": "Salida",
-        "instruccion": "4 actúa como mediocentro claro y da apoyo para circular."
-      },
-      {
-        "nombre": "Ataque",
-        "instruccion": "7 y 11 dan amplitud; 4 no abandona la referencia central."
-      },
-      {
-        "nombre": "Pérdida",
-        "instruccion": "4 protege el centro; 2 y 3 no quedan demasiado separados."
-      }
-    ],
-    "leyenda": "Amarillo: referencia central del 4"
-  },
-  "detalle": {
-    "cuando_usarla": [
-      "Cuando necesito más presencia estable en mediocampo y puedo asumir jugar con dos defensas."
-    ],
-    "que_gano": [
-      "Tres referencias en mediocampo.",
-      "Más apoyos.",
-      "7 y 11 pueden dar amplitud sin dejar solo al 4."
-    ],
-    "que_vigilar": [
-      "2 y 3 no demasiado separados.",
-      "4 no demasiado arriba.",
-      "Tras pérdida 4 protege el centro."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "Variante 1 · 1-2-3-1",
-      "adaptacion_operativa": true
-    }
-  },
+  "id": "CAMPOBASE-TACTICA-1231-GUIA-COMPLETA",
+  "nombre": "Sistema 1-2-3-1",
   "formacion": "1-2-3-1",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-03-1-2-3-1/CampoBase_Tactica_03_Variante_1-2-3-1.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-03-1-2-3-1/frames/f",
-    "total": 35,
-    "frameMs": 446
-  }
-},
-{
-  "id": "CAMPOBASE-TACTICA-04-1-2-2-2",
-  "nombre": "Variante 2 · 1-2-2-2",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "1-2-2-2",
-    "que_se_trabaja": [
-      "Más presencia arriba",
-      "Pareja ofensiva",
-      "Equilibrio de los medios"
-    ],
-    "series": [
-      {
-        "nombre": "Posición",
-        "instruccion": "3-2 atrás, 4-7 en medio, 11-9 arriba."
+  "organizacion": "1 portero · 2 defensas · 3 medios · 1 delantero",
+  "principio": "Provocar una decisión rival y reconocer qué compañero o espacio queda libre.",
+  "bloques": [
+    {
+      "id": "bloque-1-funciones",
+      "orden": 1,
+      "nombre_corto": "Funciones",
+      "titulo": "Posiciones, variantes y funciones",
+      "objetivo": "Comprender cómo se transforma el 1-2-3-1 sin convertir las posiciones en lugares rígidos.",
+      "idea_clave": "Si uno abandona su zona, otro ocupa o protege el espacio que deja.",
+      "decisiones": [
+        "Elegir exteriores como interiores o carrileros según el partido.",
+        "Si un defensa sale a banda, el otro protege el centro.",
+        "Si el 9 abandona el carril central, el 4 puede atacarlo."
+      ],
+      "que_vigilar": [
+        "Equilibrio entre 3 y 2.",
+        "Apoyos cercanos al 4.",
+        "Amplitud real de 11 y 7."
+      ],
+      "consignas": ["Uno sale, otro cubre", "Cuatro, apoyo", "Nueve fija"],
+      "errores": [
+        "Posiciones estáticas.",
+        "Dejar solo al 4.",
+        "Moverse sin cubrir el espacio liberado."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1231-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 189
       },
-      {
-        "nombre": "4 avanza",
-        "instruccion": "Si 4 avanza, 7 mantiene equilibrio."
+      "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 1 (Funciones)", "seccion": "Funciones" }
+    },
+    {
+      "id": "bloque-2-salida",
+      "orden": 2,
+      "nombre_corto": "Salida",
+      "titulo": "Salida de balón",
+      "objetivo": "Superar la primera presión mediante superioridad, fijación y elección del jugador libre.",
+      "idea_clave": "Poseedor → rival que salta → compañero que queda libre.",
+      "decisiones": [
+        "Portero, 3 y 2 generan el 3 contra 1.",
+        "El defensa libre conduce hasta fijar.",
+        "Si cierran fuera, usar al 9 de cara; si no conviene jugar corto, directo hacia banda."
+      ],
+      "que_vigilar": [
+        "Distancias de la primera línea.",
+        "Pase después de fijar.",
+        "Segunda jugada protegida."
+      ],
+      "consignas": ["Defensa libre", "Conduce y fija", "Nueve, de cara", "Atrae y cambia"],
+      "errores": [
+        "Pasar demasiado pronto.",
+        "Cerrar los dos exteriores.",
+        "Jugar directo al centro sin equilibrio."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1231-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 196
       },
-      {
-        "nombre": "7 avanza",
-        "instruccion": "Si 7 avanza, 4 mantiene equilibrio."
+      "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 2 (Salida de balón)", "seccion": "Salida de balón" }
+    },
+    {
+      "id": "bloque-3-ataque",
+      "orden": 3,
+      "nombre_corto": "Ataque",
+      "titulo": "Ataque organizado",
+      "objetivo": "Crear ventajas cuando el balón ya está controlado en la zona media o alta.",
+      "idea_clave": "Circular o conducir, provocar el salto y atacar inmediatamente el espacio liberado.",
+      "decisiones": [
+        "El defensa libre progresa.",
+        "Si sale un central rival, el 9 rompe a su espalda.",
+        "Si el 9 viene, 4, 7 u 11 atacan el carril que libera."
+      ],
+      "que_vigilar": [
+        "Momento de la ruptura.",
+        "Amplitud del lado contrario.",
+        "Paciencia si el rival bascula bien."
+      ],
+      "consignas": ["Si sale, espalda", "Si cierran, fuera", "Nueve viene; otro rompe"],
+      "errores": [
+        "Romper antes del salto.",
+        "Acercarse todos al balón.",
+        "Forzar cuando el rival está bien colocado."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1231-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 196
       },
-      {
-        "nombre": "Equilibrio",
-        "instruccion": "Los dos medios no suben claramente a la vez."
-      }
-    ],
-    "leyenda": "Amarillo: zona del medio que conserva equilibrio"
-  },
-  "detalle": {
-    "cuando_usarla": [
-      "Más presencia arriba.",
-      "9 aislado.",
-      "Rival muy atrás."
-    ],
-    "regla_equilibrio": [
-      "Si un medio avanza, el otro mantiene equilibrio.",
-      "Si ambos suben, el equipo queda abierto por dentro."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "Variante 2 · 1-2-2-2",
-      "adaptacion_operativa": true
+      "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 3 (Ataque organizado)", "seccion": "Ataque organizado" }
+    },
+    {
+      "id": "bloque-4-defensa",
+      "orden": 4,
+      "nombre_corto": "Defensa",
+      "titulo": "Defensa organizada",
+      "objetivo": "Orientar, bascular, cubrir y reorganizarse desde bloque alto hasta bloque bajo.",
+      "idea_clave": "Balón rival → jugador que sale → compañero que cubre → equipo que bascula.",
+      "decisiones": [
+        "El 9 orienta la salida hacia banda.",
+        "El exterior cercano presiona y el bloque achica.",
+        "En bloque bajo, 11–3–2–7 forman la línea de cuatro y el 4 protege delante."
+      ],
+      "que_vigilar": [
+        "Intensidad y dirección del 9.",
+        "Cobertura interior.",
+        "Retorno de los exteriores."
+      ],
+      "consignas": ["Orienta a banda", "Todos basculamos", "Centro cerrado", "Si no robamos, replegamos"],
+      "errores": [
+        "Presionar uno solo.",
+        "Saltar dos al mismo rival.",
+        "Mantener una presión cuando el bloque está roto."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1231-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 4 (Defensa)", "seccion": "Defensa organizada" }
+    },
+    {
+      "id": "bloque-5-transicion",
+      "orden": 5,
+      "nombre_corto": "Transición",
+      "titulo": "Transición defensa–ataque",
+      "objetivo": "Atacar el desorden rival desde el instante anterior a la recuperación.",
+      "idea_clave": "La contra empieza antes del robo, pero la primera acción después de recuperar debe asegurar el balón.",
+      "decisiones": [
+        "Antes del robo, 7 reconoce la banda libre y 9 prepara la diagonal.",
+        "Quien recupera busca primero un pase seguro y cercano al 4.",
+        "El 4 activa al jugador exterior; el 9 ofrece apoyo y después ataca profundidad."
+      ],
+      "que_vigilar": [
+        "Preparación antes del robo.",
+        "Primer pase seguro.",
+        "Acelerar solo cuando aparece la ventaja."
+      ],
+      "consignas": ["Preparados antes", "Primero seguro", "Ahora acelera", "Apoyo y ruptura"],
+      "errores": [
+        "Salir todos antes de recuperar.",
+        "Intentar el pase lejano desde el robo.",
+        "Acelerar sin haber asegurado la posesión."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1231-GUIA-COMPLETA/bloque-5/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 5 (Transición)", "seccion": "Transición defensa–ataque" }
     }
-  },
-  "formacion": "1-2-2-2",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-04-1-2-2-2/CampoBase_Tactica_04_Variante_1-2-2-2.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-04-1-2-2-2/frames/f",
-    "total": 24,
-    "frameMs": 650
-  }
-},
-{
-  "id": "CAMPOBASE-TACTICA-05-DEFENSA-BANDA",
-  "nombre": "Defender ataque rival por banda",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "Ajuste defensivo en 1-3-2-1",
-    "que_se_trabaja": [
-      "Salida del defensor del lado",
-      "Cobertura del 4",
-      "Cierre del defensor contrario",
-      "Ayuda del medio de banda"
-    ],
-    "series": [
-      {
-        "nombre": "Inicio",
-        "instruccion": "Rival progresa por banda."
-      },
-      {
-        "nombre": "Defensor sale",
-        "instruccion": "El defensor del lado sale al rival."
-      },
-      {
-        "nombre": "4 cubre",
-        "instruccion": "El 4 corrige por dentro y cubre el espacio."
-      },
-      {
-        "nombre": "Cierre",
-        "instruccion": "El defensor del lado contrario se cierra y el medio de banda ayuda."
-      }
-    ],
-    "leyenda": "Ejemplo por izquierda; misma lógica reflejada en derecha."
-  },
-  "detalle": {
-    "principios": [
-      "Defensor del lado sale.",
-      "4 cubre por dentro.",
-      "Defensor contrario se cierra.",
-      "Medio de banda ayuda.",
-      "No saltan dos o tres al mismo rival."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "Ataque rival por banda",
-      "adaptacion_operativa": true,
-      "notas": [
-        "Ejemplo visual por banda izquierda; comportamiento simétrico por derecha."
-      ]
-    }
-  },
-  "formacion": "1-3-2-1",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-05-DEFENSA-BANDA/CampoBase_Tactica_05_Defender_Ataque_Rival_Banda.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-05-DEFENSA-BANDA/frames/f",
-    "total": 24,
-    "frameMs": 633
-  }
-},
-{
-  "id": "CAMPOBASE-TACTICA-06-DEFENSA-CENTRO",
-  "nombre": "Defender ataque rival por el centro",
-  "estado": "propuesta",
-  "enumerar_ejercicios": false,
-  "vista_rapida": {
-    "tipo_principal": "Táctica",
-    "sistema": "Ajuste defensivo en 1-3-2-1",
-    "que_se_trabaja": [
-      "Protección central",
-      "Escalonamiento 2-3",
-      "Ayuda interior 7-11"
-    ],
-    "series": [
-      {
-        "nombre": "Inicio",
-        "instruccion": "Rival progresa por el centro."
-      },
-      {
-        "nombre": "4 protege",
-        "instruccion": "4 protege primero la zona central."
-      },
-      {
-        "nombre": "2-3 escalonan",
-        "instruccion": "2 y 3 no saltan los dos al mismo tiempo."
-      },
-      {
-        "nombre": "7-11 cierran",
-        "instruccion": "7 y 11 se cierran unos metros para ayudar."
-      }
-    ],
-    "leyenda": "Amarillo: zona prioritaria que protege el 4"
-  },
-  "detalle": {
-    "principios": [
-      "4 protege primero el centro.",
-      "2 y 3 no saltan los dos a la vez.",
-      "7 y 11 se cierran unos metros."
-    ],
-    "fuente": {
-      "documento": "Dia_de_Partido_y_Tacticas_Union_Viera_Alevin_D_COMPACTO_V3(1).pdf",
-      "seccion": "Ataque rival por el centro",
-      "adaptacion_operativa": true,
-      "notas": [
-        "Se muestra 3 saliendo y 2 guardando como ejemplo; puede reflejarse según la jugada."
-      ]
-    }
-  },
-  "formacion": "1-3-2-1",
-  "animacion": {
-    "gif": "assets/tacticas/CAMPOBASE-TACTICA-06-DEFENSA-CENTRO/CampoBase_Tactica_06_Defender_Ataque_Rival_Centro.gif",
-    "frames": "assets/tacticas/CAMPOBASE-TACTICA-06-DEFENSA-CENTRO/frames/f",
-    "total": 24,
-    "frameMs": 633
-  }
+  ]
 }
 ]);
 

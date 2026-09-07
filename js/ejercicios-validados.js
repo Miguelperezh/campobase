@@ -4890,6 +4890,1506 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 60
   },
   "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE",
+  "nombre": "Conducción + dejar balón + 3 conos + vuelta lateral + pase",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Conducción",
+      "Sin balón",
+      "Rodillas altas",
+      "Desplazamiento lateral",
+      "Pase",
+      "2 carriles"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 carriles de 7-9 jugadores."
+    },
+    "material": "2 conos altos, 6 conos bajos (3 por carril) y balones.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Conducción → dejar balón → continuar sin balón → vuelta lateral saltando 3 conos con rodillas altas → balón → pase al siguiente → final de la cola."
+      }
+    ],
+    "explicacion_breve": "Trabajan dos jugadores a la vez, uno por carril. Cada uno sale con balón desde su cola, conduce hasta el cono alto y deja el balón en esa zona. Continúa sin balón hasta el extremo del tramo de 3 conos bajos (rectos y paralelos, no en zigzag) y vuelve saltándolos lateralmente con rodillas altas. Llega de nuevo al balón y pasa desde la zona del cono alto al siguiente jugador de la cola. El jugador que termina se coloca al final de la cola.",
+    "leyenda": "Cono alto: dejar balón · 3 conos bajos rectos: vuelta lateral con rodillas altas · Pase al siguiente · Final de cola"
+  },
+  "detalle": {
+    "objetivos": [
+      "Encadenar conducción, desmarque sin balón y pase de relevo.",
+      "Mejorar la transición entre acción con balón y acción sin balón.",
+      "Trabajar desplazamiento lateral con rodillas altas.",
+      "Mejorar la precisión del pase al compañero siguiente."
+    ],
+    "claves_entrenador": [
+      "«Conduce hasta el cono y deja el balón».",
+      "«Sigue sin balón hasta el final».",
+      "«Vuelve lateral por los tres conos con rodillas altas».",
+      "«Llega al balón, pasa al siguiente y ponte al final».",
+      "«Deja balón».",
+      "«Sigue».",
+      "«Lateral».",
+      "«Rodillas arriba».",
+      "«Vuelve al balón».",
+      "«Pasa».",
+      "«Conos rectos, no zigzag».",
+      "«No te lleves el balón a los conos».",
+      "«Pase desde el cono».",
+      "«Después, final de la cola»."
+    ],
+    "montaje": [
+      "Dos carriles paralelos.",
+      "Una cola por carril.",
+      "Un cono alto por carril en la zona donde se deja el balón.",
+      "Tres conos bajos por carril colocados en línea recta y paralelos entre sí, delante del cono alto.",
+      "El recorrido no se monta en zigzag ni con los conos en perpendicular."
+    ],
+    "desarrollo": [
+      "Sale un jugador de cada cola con balón.",
+      "Conduce hasta el cono alto.",
+      "Deja el balón junto al cono alto.",
+      "Continúa sin balón hasta el final del tramo de 3 conos.",
+      "Vuelve por los 3 conos mediante saltos laterales con rodillas altas.",
+      "Llega de nuevo a la zona del balón.",
+      "Pasa el balón al siguiente jugador de la cola.",
+      "El siguiente inicia la repetición.",
+      "El jugador que termina se coloca al final de la cola."
+    ],
+    "que_buscamos": [
+      "Mejora la capacidad de soltar el balón y volver a activarse sin él.",
+      "Ayuda a enlazar acciones técnicas y desplazamientos rápidos.",
+      "Refuerza la precisión del pase corto al compañero siguiente."
+    ],
+    "que_observar": [
+      "Que los 3 conos estén rectos y paralelos.",
+      "Que el balón se deje junto al cono alto.",
+      "Que el tramo de conos se haga sin balón.",
+      "Que la vuelta sea lateral y con elevación clara de rodillas.",
+      "Que el pase final salga desde la zona del balón.",
+      "Que el jugador no conduzca el balón hasta el compañero."
+    ],
+    "correcciones": [
+      "Montar los conos en zigzag o perpendicular.",
+      "Llevarse el balón al tramo de conos.",
+      "Hacer la vuelta sin elevar las rodillas.",
+      "Conducir el balón hasta el compañero en vez de pasar desde el cono.",
+      "No ir al final de la cola."
+    ],
+    "reglas": [
+      "3 conos rectos y paralelos.",
+      "Vuelta lateral con rodillas altas.",
+      "El tramo de conos se hace sin balón.",
+      "Pase desde la zona del cono alto al siguiente.",
+      "El jugador termina al final de la cola.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir la distancia de conducción.",
+      "Separar la fase con balón de la fase sin balón.",
+      "Trabajar primero la vuelta lateral sin pase y luego añadir el relevo."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad de ejecución.",
+      "Exigir más precisión en el pase al siguiente.",
+      "Trabajar los dos carriles a más ritmo."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 carriles de 7-9 jugadores. · 7-10 min.",
+      "Fútbol 11: 2-3 carriles de 6-8 jugadores. · 8-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7599677432911645974.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Trabajan dos jugadores a la vez, uno por carril.",
+        "Cada jugador sale con balón desde su cola.",
+        "Conduce hasta el cono alto y deja el balón en esa zona.",
+        "Continúa sin balón hasta el extremo del tramo de conos.",
+        "Los 3 conos bajos están rectos y paralelos, no en zigzag.",
+        "La vuelta se hace saltando lateralmente los 3 conos con rodillas altas.",
+        "Después llega de nuevo al balón y pasa al siguiente jugador de la cola.",
+        "El jugador que termina se coloca al final de la cola.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE/CampoBase_Conduccion_Dejar_Balon_3_Conos_Vuelta_Lateral_Pase_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE/frames/f",
+    "total": 207,
+    "frameMs": 100
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES",
+  "nombre": "Pies rápidos + sprint explosivo — 3 variaciones",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Coordinación/motricidad",
+    "que_se_trabaja": [
+      "Pies rápidos",
+      "Aceleración",
+      "Sprint",
+      "Agilidad",
+      "Cambio de dirección",
+      "Velocidad de reacción",
+      "Sin balón"
+    ],
+    "tiempo_estimado_15": "7-9 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "3 carriles de 5 jugadores. Un jugador activo por carril."
+    },
+    "material": "5 conos/cúpulas verdes cercanos en patrón escalonado + 1 cono verde adelantado para el sprint. Sin balón.",
+    "series": [
+      {
+        "nombre": "Base",
+        "instruccion": "Base · Pies rápidos con apoyos cortos atravesando el patrón → salida del último apoyo sin detenerse → sprint explosivo hasta la referencia adelantada."
+      },
+      {
+        "nombre": "Variación 1",
+        "instruccion": "Variación 1 · Adelante-atrás dentro del patrón → termina orientado hacia la salida → sprint inmediato."
+      },
+      {
+        "nombre": "Variación 2",
+        "instruccion": "Variación 2 · Desplazamientos laterales rápidos dentro del patrón → cambio a sprint frontal sin pausa."
+      }
+    ],
+    "explicacion_breve": "El jugador trabaja individualmente y sin balón sobre un patrón de cinco conos verdes cercanos, con un cono verde más adelantado como referencia de sprint. En los tres bloques hay trabajo rápido de pies dentro de la zona de conos y transferencia inmediata a sprint. BASE: pies rápidos atravesando el patrón. VARIACIÓN 1: adelante-atrás antes de enlazar con el sprint. VARIACIÓN 2: desplazamientos laterales rápidos antes de enlazar con sprint frontal.",
+    "leyenda": "5 conos verdes: patrón de pies rápidos · Cono adelantado: sprint · Base / Variación 1 (adelante-atrás) / Variación 2 (lateral)"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la rapidez de pies en espacio corto.",
+      "Cambiar de patrón de apoyo sin perder control.",
+      "Transferir un trabajo coordinativo corto a una salida explosiva.",
+      "Reducir la pausa entre el último apoyo y el sprint."
+    ],
+    "claves_entrenador": [
+      "«Pies activos desde el primer apoyo».",
+      "«Primero calidad; después velocidad».",
+      "«Al salir del patrón, no te frenes».",
+      "«Apoyos cortos».",
+      "«Rápido de pies».",
+      "«Último apoyo y sal».",
+      "«Sprint explosivo».",
+      "«Adelante, atrás».",
+      "«No cruces los pies».",
+      "«Termina orientado y acelera».",
+      "«Desplaza lateral».",
+      "«Cadera baja».",
+      "«Pies cortos».",
+      "«Gira la intención y sprint».",
+      "«No mires al suelo todo el tiempo».",
+      "«No alargues los pasos».",
+      "«Sin pausa antes del sprint».",
+      "«Primer paso fuerte»."
+    ],
+    "montaje": [
+      "Colocar cinco conos verdes cercanos formando el patrón escalonado visible.",
+      "Colocar una referencia verde adelantada en la dirección del sprint.",
+      "Dejar espacio libre desde la salida del patrón hasta el cono final."
+    ],
+    "desarrollo": [
+      "El jugador entra en la zona de conos.",
+      "Realiza pies rápidos con apoyos cortos atravesando el patrón (BASE).",
+      "VARIACIÓN 1: alterna desplazamientos hacia delante y hacia atrás, finaliza orientado hacia la salida.",
+      "VARIACIÓN 2: realiza desplazamientos laterales rápidos manteniendo el cuerpo bajo.",
+      "Sale del último apoyo sin detenerse.",
+      "Acelera en sprint explosivo hasta la referencia adelantada."
+    ],
+    "que_buscamos": [
+      "Reacelerar después de un ajuste corto.",
+      "Mejorar los primeros pasos tras un cambio de dirección.",
+      "Responder con rapidez a correcciones defensivas y movimientos de apoyo.",
+      "Pasar de apoyos cortos a carrera de máxima intención."
+    ],
+    "que_observar": [
+      "Que no pise los conos.",
+      "Que los apoyos sean rápidos y controlados.",
+      "Que la VARIACIÓN 1 conserve la lógica adelante-atrás.",
+      "Que la VARIACIÓN 2 sea lateral y no se convierta en carrera frontal.",
+      "Que la salida a sprint sea inmediata.",
+      "Que no pierda postura por buscar velocidad demasiado pronto."
+    ],
+    "correcciones": [
+      "Pasos demasiado largos.",
+      "Pisar o desplazar los conos.",
+      "Frenarse al terminar el patrón.",
+      "Cruzar los pies en el desplazamiento lateral.",
+      "Perder la orientación en el patrón adelante-atrás.",
+      "Salir al sprint sin un primer paso agresivo."
+    ],
+    "reglas": [
+      "Sin balón.",
+      "Cinco conos cercanos más una referencia final.",
+      "Hay BASE + VARIACIÓN 1 + VARIACIÓN 2.",
+      "VARIACIÓN 1: adelante-atrás antes del sprint.",
+      "VARIACIÓN 2: lateral antes del sprint frontal.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Trabajar solo la BASE.",
+      "Reducir el número de conos de cinco a tres temporalmente.",
+      "Acortar el sprint.",
+      "Hacer el patrón caminando rápido antes de volver a velocidad."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la velocidad de pies.",
+      "Mantener la misma colocación y exigir salida más explosiva.",
+      "Alternar lado de entrada en la VARIACIÓN 2.",
+      "Encadenar las tres formas con descansos completos."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 carriles de 5 jugadores. Un jugador activo por carril. · 7-9 min.",
+      "Fútbol 11: 3-4 carriles de 4-6 jugadores. · 9-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: agi_7601164361222163734.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El ejercicio se realiza individualmente y sin balón.",
+        "El montaje utiliza cinco conos verdes cercanos en patrón escalonado y un cono verde más adelantado.",
+        "En los tres bloques hay trabajo rápido de pies y transferencia inmediata a sprint.",
+        "VARIATION 1 está rotulada en el vídeo como FORWARD-BACK PEDAL INTO SPRINT.",
+        "VARIATION 2 está rotulada en el vídeo como LATERAL SHUFFLES INTO SPRINT.",
+        "No se observa una señal externa del entrenador antes de la salida.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES/CampoBase_Pies_Rapidos_Sprint_3_Variaciones_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES/frames/f",
+    "total": 207,
+    "frameMs": 70
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-FINALIZACION-PRIMERAS-SERVICIO-CENTRAL-CAMBIO-FILA",
+  "nombre": "Finalización de primeras con servicio central y cambio de fila",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Remate de primeras",
+      "Pase raso",
+      "Desmarque de llegada",
+      "Ambos perfiles",
+      "Cambio de fila",
+      "Portero",
+      "Servicio del entrenador"
+    ],
+    "tiempo_estimado_15": "7-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 portero + 14 jugadores de campo en 2 filas de 7. El entrenador sirve desde el centro."
+    },
+    "material": "Balones, 1 portería y 1 portero.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Fila lateral → carrera de llegada → remate de primeras → salida de la zona de tiro → incorporación a la fila opuesta."
+      }
+    ],
+    "explicacion_breve": "El entrenador se sitúa en una zona central con varios balones y un portero defiende la portería. Los jugadores esperan en dos filas, una a cada lado del entrenador. Sale el primer jugador de un lado, entra en carrera hacia la zona de finalización, y el entrenador sirve un balón raso hacia su carril de llegada. El jugador ajusta la carrera y finaliza de primeras a portería. Después de finalizar, cambia a la fila opuesta. Izquierda y derecha son el mismo ejercicio, no variantes independientes.",
+    "leyenda": "Entrenador: sirve balón raso desde el centro · Portero en portería · Remate de primeras · Cambio a la fila opuesta"
+  },
+  "detalle": {
+    "objetivos": [
+      "Llegar al balón con el paso ajustado para rematar sin control previo.",
+      "Coordinar la carrera con el momento del servicio.",
+      "Finalizar desde ambos lados sin detener la acción.",
+      "Mejorar precisión y velocidad de ejecución."
+    ],
+    "claves_entrenador": [
+      "«Entra en carrera, no esperes parado».",
+      "«Ataca el balón y remata de primeras».",
+      "«Después del remate, cambia de fila».",
+      "«Ajusta el último paso».",
+      "«Ataca el balón».",
+      "«De primeras».",
+      "«Mira portería».",
+      "«Cambia de fila».",
+      "«No llegues demasiado pronto».",
+      "«No esperes al balón».",
+      "«Pie de apoyo al lado del balón».",
+      "«Golpea limpio, no solo fuerte»."
+    ],
+    "montaje": [
+      "Portería con portero.",
+      "Entrenador en zona central con balones.",
+      "Dos filas laterales, una a cada lado del entrenador.",
+      "Zona libre entre las filas y la portería para la carrera de llegada y el remate."
+    ],
+    "desarrollo": [
+      "Los jugadores esperan en dos filas, una a cada lado del entrenador.",
+      "Sale el primer jugador de uno de los lados y entra en carrera hacia la zona de finalización.",
+      "El entrenador sirve un balón raso desde la zona central hacia su carril de llegada.",
+      "El jugador ajusta la carrera y finaliza de primeras a portería.",
+      "Después de finalizar, el jugador se desplaza a la fila opuesta.",
+      "Se repite la misma lógica desde el otro lado."
+    ],
+    "que_buscamos": [
+      "Finalizar centros rasos o pases atrás sin necesidad de controlar.",
+      "Atacar balones que llegan desde un compañero situado por dentro.",
+      "Mejorar la llegada desde un costado hacia zona de remate.",
+      "Resolver rápido antes de que la defensa pueda ajustar."
+    ],
+    "que_observar": [
+      "Que el jugador llegue en movimiento y no espere parado el pase.",
+      "Que el servicio del entrenador tenga dirección y velocidad útiles para rematar.",
+      "Que el jugador ajuste los últimos pasos antes del golpeo.",
+      "Que la finalización sea de primeras.",
+      "Que el cambio de fila se haga por fuera de la zona activa y sin cruzarse con el siguiente jugador.",
+      "Que se trabajen ambos lados."
+    ],
+    "correcciones": [
+      "Salir demasiado pronto y tener que frenar.",
+      "Salir tarde y no llegar limpio al balón.",
+      "Esperar al balón en vez de atacarlo.",
+      "Dar un control previo cuando el objetivo es rematar de primeras.",
+      "Golpear desequilibrado por no ajustar los últimos pasos.",
+      "Olvidar el cambio de fila después del remate."
+    ],
+    "reglas": [
+      "Entrenador en zona central con balones.",
+      "Portero en portería.",
+      "Servicio raso del entrenador hacia el carril de llegada.",
+      "Finalización de primeras.",
+      "Dos filas laterales.",
+      "Después de finalizar, el jugador cambia a la fila opuesta.",
+      "Izquierda y derecha son el mismo ejercicio, no variantes distintas.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir la distancia de carrera.",
+      "Bajar ligeramente la velocidad del servicio.",
+      "Permitir una repetición técnica a menor velocidad antes de volver al remate de primeras."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la velocidad del servicio manteniendo precisión.",
+      "Variar la zona de llegada del pase raso sin cambiar la lógica del ejercicio.",
+      "Exigir orientación del remate a zonas concretas de la portería."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 portero + 14 jugadores de campo en 2 filas de 7. El entrenador sirve desde el centro. · 7-10 min.",
+      "Fútbol 11: 1-2 porteros y el resto repartido en 2 filas. El entrenador sirve desde zona central. · 9-13 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7160310012487666949.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El entrenador se sitúa en una zona central con varios balones.",
+        "Hay un portero defendiendo la portería.",
+        "El entrenador sirve un balón raso hacia el carril de llegada.",
+        "Un jugador entra en carrera desde un lateral y finaliza a portería.",
+        "Las finalizaciones visibles se realizan de primeras.",
+        "La acción se observa entrando desde ambos lados.",
+        "Los jugadores están organizados en dos filas, una a cada lado del entrenador.",
+        "Después de finalizar, cada jugador cambia a la fila opuesta.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-FINALIZACION-PRIMERAS-SERVICIO-CENTRAL-CAMBIO-FILA/CampoBase_Finalizacion_Primeras_Servicio_Central_Cambio_Fila_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-FINALIZACION-PRIMERAS-SERVICIO-CENTRAL-CAMBIO-FILA/frames/f",
+    "total": 81,
+    "frameMs": 100
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-FINALIZACION-PRIMERAS-SERVICIO-CENTRAL-CAMBIO-FILA/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION",
+  "nombre": "Duelos 3v2 con finalización — robo = fin y rotación por roles",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Superioridad ofensiva",
+      "3v2",
+      "Toma de decisión",
+      "Finalización",
+      "Defensa en inferioridad",
+      "Portero"
+    ],
+    "tiempo_estimado_15": "10-14 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 portero + 8 atacantes + 6 defensores. Activos: 3 atacantes + 2 defensores + portero; el resto espera en sus colas."
+    },
+    "material": "1 portería grande, balones y petos de dos colores.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Inicio 3v2 → progresión ofensiva → finalización o robo → fin de repetición → atacantes a su cola y defensores a su cola."
+      }
+    ],
+    "explicacion_breve": "El ejercicio enfrenta 3 atacantes contra 2 defensores con portería grande y portero. Los atacantes progresan hacia portería buscando finalizar la superioridad; los defensores protegen portería e intentan cortar o robar. Cuando los defensores roban, la repetición termina inmediatamente (no hay transición ofensiva). Tras terminar, los atacantes vuelven a la cola de atacantes y los defensores a la cola de defensores.",
+    "leyenda": "3 atacantes vs 2 defensores · Portería grande con portero · Robo = fin de repetición · Rotación por roles (atacantes y defensores en colas separadas)"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprovechar una superioridad 3v2 para llegar a finalización.",
+      "Elegir con rapidez entre conducción, pase y tiro según la respuesta defensiva.",
+      "Coordinar amplitud y apoyos entre los tres atacantes.",
+      "Entrenar a los dos defensores para temporizar, cerrar líneas y proteger portería."
+    ],
+    "claves_entrenador": [
+      "«Tres contra dos: abrid el campo y atacad con decisión».",
+      "«Defensores: uno aprieta y el otro cubre».",
+      "«Si hay robo, se acaba».",
+      "«Amplitud».",
+      "«Fija y suelta».",
+      "«Ataca el espacio».",
+      "«Temporiza».",
+      "«Cubre».",
+      "«Tira si aparece».",
+      "«No os juntéis los tres».",
+      "«No conduzcas si el pase libera a un compañero».",
+      "«Defensor cercano presiona; segundo defensor cubre».",
+      "«Robo: fin y cada uno a su cola»."
+    ],
+    "montaje": [
+      "Portería grande con portero.",
+      "2 defensores por delante de portería.",
+      "3 atacantes preparados para iniciar el ataque.",
+      "Cola de atacantes separada de la cola de defensores para la rotación por roles."
+    ],
+    "desarrollo": [
+      "Entran 3 atacantes contra 2 defensores.",
+      "Los atacantes progresan hacia portería intentando crear un jugador libre.",
+      "Los defensores temporizan, basculan y cierran líneas de pase/tiro.",
+      "La acción continúa hasta finalización, balón fuera o robo defensivo.",
+      "Si los defensores roban, la repetición termina en ese instante.",
+      "Los 3 atacantes vuelven a la cola de atacantes.",
+      "Los 2 defensores vuelven a la cola de defensores.",
+      "Entra el siguiente grupo."
+    ],
+    "que_buscamos": [
+      "Resolver transiciones o ataques con ventaja numérica.",
+      "Atacar espacios libres cuando un defensor salta al poseedor.",
+      "Mejorar la decisión del último pase o el momento de tiro.",
+      "Defender inferioridades sin precipitar la entrada."
+    ],
+    "que_observar": [
+      "Amplitud real de los tres atacantes.",
+      "Velocidad de circulación y decisión.",
+      "Momento del último pase.",
+      "No atacar siempre por el centro.",
+      "Perfil corporal de los defensores.",
+      "Distancia de cobertura entre los dos defensores.",
+      "Que el robo termine la repetición sin contraataque posterior.",
+      "Rotación correcta por roles."
+    ],
+    "correcciones": [
+      "Atacantes demasiado juntos.",
+      "Conducción excesiva con compañero libre.",
+      "Pase demasiado pronto sin fijar defensor.",
+      "Defensores saltando los dos al balón.",
+      "Defensor de cobertura demasiado lejos.",
+      "Seguir jugando tras un robo en vez de cortar la repetición."
+    ],
+    "reglas": [
+      "3 atacantes contra 2 defensores.",
+      "Si los defensores roban, termina la repetición.",
+      "Defensores vuelven a cola de defensores.",
+      "Atacantes vuelven a cola de atacantes.",
+      "No existe transición ofensiva tras el robo.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir el espacio de salida y acercar atacantes a zona de decisión.",
+      "Permitir 3v1 durante unas repeticiones para entender la ocupación de espacios.",
+      "Congelar una jugada y recolocar amplitud/apoyos antes de reiniciar.",
+      "Dar ventaja de salida al ataque si los defensores dominan demasiado."
+    ],
+    "si_sale_bien": [
+      "Aumentar ligeramente la distancia de inicio.",
+      "Limitar tiempo máximo de ataque como progresión.",
+      "Exigir finalización tras un número reducido de pases solo como progresión CampoBase.",
+      "Cambiar el jugador que inicia con balón entre repeticiones."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 portero + 8 atacantes + 6 defensores. Activos: 3 atacantes + 2 defensores + portero. · 10-14 min.",
+      "Fútbol 11: 1 estación con 1 portero y dos colas por rol; con dos porterías/porteros se pueden montar 2 estaciones. · 12-16 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7274017964146380038.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El ejercicio enfrenta 3 atacantes contra 2 defensores con portería grande y portero.",
+        "Los atacantes progresan hacia portería buscando finalizar la superioridad.",
+        "Los defensores protegen portería e intentan cortar o robar la jugada.",
+        "Se observan repeticiones sucesivas con nuevos grupos.",
+        "Cuando los defensores roban, la repetición termina inmediatamente.",
+        "Tras terminar, los defensores vuelven a la cola de defensores y los atacantes a la cola de atacantes.",
+        "No hay transición ofensiva de los defensores tras el robo.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION/CampoBase_Duelos_3vs2_Finalizacion_Robo_Rotacion_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION/frames/f",
+    "total": 207,
+    "frameMs": 70
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-IDA-CONOS-VUELTA-PICAS-FINALIZACION",
+  "nombre": "Ida por conos, vuelta por picas y finalización",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Pase",
+      "Juego de primeras",
+      "Coordinación",
+      "Conos",
+      "Zigzag",
+      "Picas",
+      "Velocidad",
+      "Finalización",
+      "Portero"
+    ],
+    "tiempo_estimado_15": "8-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 portero, 1 entrenador como apoyo y resto en fila; con grupo grande, 2 estaciones equivalentes."
+    },
+    "material": "Balones, conos, 4 picas, 1 cono amarillo, 1 portería y 1 portero.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Salida → ida por conos con intercambios de pase → cambio de sentido → vuelta en zigzag por 4 picas → pase al espacio → aceleración → finalización → sprint al cono amarillo → giro → regreso."
+      }
+    ],
+    "explicacion_breve": "El jugador inicia con un pase al entrenador y avanza por el carril de conos, combinando con él y devolviendo de primeras. Al llegar al final de la ida cambia de sentido y regresa haciendo zigzag entre las 4 picas. Al completar las picas, el entrenador juega el balón al espacio; el jugador acelera para atacarlo, finaliza a portería y, después del remate, continúa en sprint hasta el cono amarillo, donde gira y regresa.",
+    "leyenda": "Carril de conos: ida con pases · 4 picas: vuelta en zigzag · Pase al espacio: aceleración · Finalización a portería · Cono amarillo: sprint final"
+  },
+  "detalle": {
+    "objetivos": [
+      "Encadenar pase, desplazamiento y devolución sin detener la acción.",
+      "Mantener precisión durante el recorrido de ida.",
+      "Realizar una vuelta coordinada en zigzag entre las picas.",
+      "Cambiar de ritmo al recibir el pase al espacio.",
+      "Finalizar después de una secuencia técnica y coordinativa."
+    ],
+    "claves_entrenador": [
+      "«Pasa y avanza por los conos».",
+      "«Devuelve de primeras».",
+      "«Vuelve por las picas haciendo zigzag».",
+      "«Al pase al espacio, acelera».",
+      "«Después de rematar, sigue hasta el cono amarillo y vuelve».",
+      "«Pasa y muévete».",
+      "«De primeras».",
+      "«Por los conos».",
+      "«Ahora vuelve por las picas».",
+      "«Zigzag completo».",
+      "«Acelera».",
+      "«Ataca el balón».",
+      "«Finaliza».",
+      "«Sigue al cono».",
+      "«Gira y vuelve».",
+      "«No te pares después de pasar».",
+      "«Perfílate antes de recibir».",
+      "«No te saltes ninguna pica».",
+      "«Primer paso fuerte al salir».",
+      "«No pares después del remate»."
+    ],
+    "montaje": [
+      "Zona de salida del jugador.",
+      "Carril de ida marcado con conos.",
+      "Entrenador colocado como apoyo lateral del recorrido.",
+      "Carril de vuelta formado por 4 picas.",
+      "Espacio libre para el pase de aceleración.",
+      "Portería con portero.",
+      "Cono amarillo para el sprint posterior a la finalización."
+    ],
+    "desarrollo": [
+      "El jugador inicia la acción con un pase al entrenador.",
+      "Avanza por el carril de conos.",
+      "Durante la ida combina con el entrenador y devuelve de primeras.",
+      "Completa un segundo intercambio de pase durante el recorrido de conos.",
+      "Al llegar al final de la ida, cambia de sentido.",
+      "Regresa realizando zigzag entre las 4 picas.",
+      "Al completar las picas, el entrenador juega el balón al espacio.",
+      "El jugador acelera para atacar el pase.",
+      "Finaliza a portería.",
+      "Después del remate continúa en sprint hasta el cono amarillo.",
+      "En el cono amarillo gira y regresa."
+    ],
+    "que_buscamos": [
+      "Mejorar apoyos y pases rápidos en movimiento.",
+      "Trabajar el juego de primeras.",
+      "Acelerar después de combinar.",
+      "Atacar un balón al espacio.",
+      "Finalizar tras una acción previa de alta coordinación."
+    ],
+    "que_observar": [
+      "Que la ida se haga por los conos.",
+      "Que los pases se realicen sin detener el desplazamiento.",
+      "Que la vuelta se haga por las 4 picas.",
+      "Que el zigzag pase entre todas las picas.",
+      "Que el jugador acelere al pase al espacio.",
+      "Que complete la finalización.",
+      "Que continúe hasta el cono amarillo y regrese."
+    ],
+    "correcciones": [
+      "Confundir el recorrido de ida y vuelta.",
+      "Pararse después del pase.",
+      "Añadir un control innecesario en las devoluciones.",
+      "Saltarse una pica.",
+      "Hacer el zigzag demasiado abierto.",
+      "Esperar el balón al espacio.",
+      "Pararse después de finalizar."
+    ],
+    "reglas": [
+      "Ida por conos con intercambios de pase de primeras.",
+      "Vuelta en zigzag por las 4 picas.",
+      "Pase al espacio para activar la aceleración.",
+      "Finalización a portería.",
+      "Sprint al cono amarillo y regreso.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Aumentar la separación entre obstáculos.",
+      "Reducir la velocidad de los pases.",
+      "Acortar el pase al espacio."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad de los intercambios.",
+      "Exigir mayor precisión en la finalización.",
+      "Aumentar moderadamente la velocidad del pase al espacio."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 portero, 1 entrenador como apoyo y resto en fila; con grupo grande, 2 estaciones equivalentes. · 8-12 min.",
+      "Fútbol 11: 2 estaciones paralelas recomendadas. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7307032701830204677.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El jugador inicia con un pase al entrenador y avanza por el carril de conos.",
+        "Durante la ida combina con el entrenador y devuelve de primeras.",
+        "Al llegar al final de la ida cambia de sentido y regresa en zigzag entre las 4 picas.",
+        "Al completar las picas, el entrenador juega el balón al espacio.",
+        "El jugador acelera, finaliza a portería y continúa en sprint hasta el cono amarillo.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-IDA-CONOS-VUELTA-PICAS-FINALIZACION/CampoBase_Ida_Conos_Vuelta_Picas_Finalizacion_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-IDA-CONOS-VUELTA-PICAS-FINALIZACION/frames/f",
+    "total": 147,
+    "frameMs": 105
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-IDA-CONOS-VUELTA-PICAS-FINALIZACION/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL",
+  "nombre": "3 finalizaciones consecutivas — centro, zona exterior y centro lateral",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Finalización",
+      "Tiro",
+      "Pase raso",
+      "Centro lateral",
+      "Remate de primeras",
+      "Desmarque",
+      "Ataque a portería"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 estación de finalización con 1 portero, 1 finalizador y 2 servidores; el resto rota por cola."
+    },
+    "material": "3 muñecos, 1 portería, 1 portero, balones y servidores.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Pase raso + finalización central → cambio de zona → pase raso + finalización exterior → ataque del área → centro lateral + remate de primeras → fin."
+      }
+    ],
+    "explicacion_breve": "El mismo jugador realiza tres finalizaciones consecutivas en una sola repetición. La primera acción termina con una finalización por la zona central de portería; la segunda se realiza desde una zona exterior; la tercera llega tras un centro lateral y se remata de primeras. Entre finalizaciones el jugador continúa desplazándose para enlazar la siguiente acción.",
+    "leyenda": "3 muñecos: referencias de zona · Finalización central → exterior → centro lateral de primeras · Portero en portería"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar tres contextos diferentes de finalización en una misma secuencia.",
+      "Aumentar la velocidad de preparación del remate.",
+      "Atacar el área después de una primera y segunda finalización.",
+      "Mejorar la precisión del golpeo bajo fatiga corta específica."
+    ],
+    "claves_entrenador": [
+      "«Tres finalizaciones seguidas; no paramos entre una y otra».",
+      "«Prepara el cuerpo antes de cada golpeo».",
+      "«Después de tirar, cambia rápido de zona».",
+      "«Finaliza centro».",
+      "«Abre a zona exterior».",
+      "«Ataca el área».",
+      "«De primeras al centro».",
+      "«No te quedes mirando el tiro».",
+      "«Primer control preparado para finalizar».",
+      "«Llega perfilado».",
+      "«Ataca el centro, no esperes el balón»."
+    ],
+    "montaje": [
+      "Tres muñecos distribuidos frente al área y en los sectores laterales.",
+      "Portería con portero.",
+      "Servidores con balones fuera de la zona de remate."
+    ],
+    "desarrollo": [
+      "El jugador inicia la repetición preparado frente al primer sector.",
+      "Recibe un pase raso, rodea la primera referencia y finaliza por la zona central.",
+      "Sin detener la secuencia, cambia de zona hacia el sector exterior.",
+      "Recibe un segundo pase raso y finaliza desde la zona exterior.",
+      "Continúa su carrera hacia el área.",
+      "Ataca el centro lateral.",
+      "Remata de primeras.",
+      "Tras la tercera finalización termina la repetición."
+    ],
+    "que_buscamos": [
+      "Finalizar desde posiciones centrales tras recepción.",
+      "Resolver ocasiones desde zonas exteriores.",
+      "Atacar centros laterales dentro del área.",
+      "Reaccionar rápido tras una primera acción de remate y volver a estar disponible."
+    ],
+    "que_observar": [
+      "Que la primera finalización sea por zona central.",
+      "Que el jugador cambie inmediatamente a la segunda zona.",
+      "Que la segunda acción sea una finalización desde zona exterior.",
+      "Que en la tercera acción ataque el área y remate de primeras.",
+      "Que no pierda intensidad entre remates.",
+      "Que el portero esté preparado para tres acciones seguidas."
+    ],
+    "correcciones": [
+      "Pararse después del primer tiro.",
+      "Llegar mal orientado al segundo balón.",
+      "Esperar el centro en vez de atacar su trayectoria.",
+      "Dar un control extra en la tercera acción cuando se busca remate de primeras.",
+      "Priorizar potencia y perder precisión."
+    ],
+    "reglas": [
+      "Tres finalizaciones consecutivas en una sola repetición.",
+      "Primera: zona central. Segunda: zona exterior. Tercera: centro lateral de primeras.",
+      "En la tercera finalización no se fija derecha o izquierda del servidor.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Bajar la velocidad y separar las tres acciones.",
+      "Hacer una repetición de cada finalización por separado.",
+      "Acercar los servicios.",
+      "Repetir solo la tercera acción hasta automatizar el ataque al centro."
+    ],
+    "si_sale_bien": [
+      "Aumentar el ritmo entre finalizaciones.",
+      "Variar ligeramente la altura o velocidad del centro lateral.",
+      "Pedir zonas objetivo dentro de portería.",
+      "Alternar superficie de golpeo en las dos primeras finalizaciones."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 estación con 1 portero, 1 finalizador y 2 servidores; el resto rota por cola. · 8-10 min.",
+      "Fútbol 11: 2 estaciones si hay 2 porterías; 1 portero, 1 finalizador y 2 servidores por estación. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7391956673264487712.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "El mismo jugador realiza tres finalizaciones consecutivas en una sola repetición.",
+        "El montaje utiliza tres muñecos, una portería con portero y servidores con balones.",
+        "La primera acción termina con una finalización por la zona central de portería.",
+        "La segunda finalización se realiza desde una zona exterior.",
+        "La tercera finalización llega tras un centro lateral y se remata de primeras.",
+        "Entre finalizaciones el jugador continúa desplazándose para enlazar la siguiente acción.",
+        "En la tercera finalización no se fija derecha o izquierda del servidor.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL/CampoBase_3_Finalizaciones_Centro_Exterior_Centro_Lateral_V1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL/frames/f",
+    "total": 207,
+    "frameMs": 67
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DEFINICION-CABEZA-COMPETICION-PORTERO-FIJO",
+  "nombre": "Competición de definición de cabeza con portero fijo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Remate de cabeza",
+      "Competición",
+      "Pase aéreo con las manos",
+      "Portero fijo",
+      "Puntuación por equipos"
+    ],
+    "tiempo_estimado_15": "8-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1 portero fijo + 2 filas de 7, una a cada lado de la portería."
+    },
+    "material": "Balones, 1 portería, 1 portero fijo y petos para diferenciar equipos.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Servidor lanza con las manos → rematador sale de la fila → ataca el balón → remate de cabeza → gol = 1 punto → ataca el equipo contrario."
+      }
+    ],
+    "explicacion_breve": "Los jugadores se colocan en dos filas verticales perfectas, una roja y una azul, cada una a un lado de la portería. Desde la parte delantera de cada fila se manda el balón con las manos hacia la zona de remate de cabeza. El primer rematador sale de la fila, ataca el balón y remata de cabeza; cada gol vale 1 punto. El portero permanece fijo defendiendo los remates de ambos equipos, que alternan intento a intento.",
+    "leyenda": "Dos filas (roja y azul) a cada lado de la portería · Servicio con las manos · Remate de cabeza · Gol = 1 punto · Portero fijo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Atacar el balón en el momento correcto.",
+      "Coordinar entrada, salto y cabeceo.",
+      "Dirigir el remate.",
+      "Mejorar la definición aérea en competición."
+    ],
+    "claves_entrenador": [
+      "«Una fila a cada lado de la portería».",
+      "«Servidor delante de la fila».",
+      "«Servicio con las manos a la zona frontal».",
+      "«Ataca el balón».",
+      "«Cada gol vale un punto».",
+      "«Sirve».",
+      "«Ataca».",
+      "«Salta».",
+      "«Frente».",
+      "«Dirige».",
+      "«Siguiente equipo»."
+    ],
+    "montaje": [
+      "Dos filas verticales perfectamente alineadas, una a cada lado de la portería.",
+      "Fila roja a un lado y fila azul al otro.",
+      "El servidor se sitúa delante de la fila.",
+      "La zona de remate queda delante de la portería.",
+      "El portero permanece fijo.",
+      "Se lleva marcador por equipos."
+    ],
+    "desarrollo": [
+      "Los equipos esperan en dos filas verticales, una a cada lado de la portería.",
+      "El servidor del equipo que tiene el turno lanza el balón con las manos.",
+      "El primer rematador sale de la fila y entra hacia la zona frontal.",
+      "Ataca el balón y remata de cabeza.",
+      "Si marca, su equipo suma 1 punto.",
+      "El portero permanece fijo.",
+      "Ataca el equipo contrario."
+    ],
+    "que_buscamos": [
+      "Finalizar centros y balones aéreos dentro del área.",
+      "Mejorar el tiempo de entrada a zona de remate.",
+      "Aprender a dirigir el cabeceo con oposición del portero."
+    ],
+    "que_observar": [
+      "Que las filas estén rectas y perfectamente alineadas.",
+      "Que haya una fila a cada lado de la portería.",
+      "Que el servidor esté delante de su fila.",
+      "Que el balón llegue a una zona rematable.",
+      "Que el jugador ataque el balón en movimiento.",
+      "Que el portero permanezca fijo."
+    ],
+    "correcciones": [
+      "Filas desalineadas.",
+      "Servicio que no llega a zona rematable.",
+      "Rematador que espera el balón en vez de atacarlo.",
+      "Portero que sale de su posición fija."
+    ],
+    "reglas": [
+      "Dos filas verticales perfectas, una roja y una azul, a cada lado de la portería.",
+      "Servicio con las manos hacia la zona de remate.",
+      "Cada gol vale 1 punto.",
+      "Portero fijo.",
+      "Los equipos alternan intento a intento.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Acercar el servicio a la zona de remate.",
+      "Reducir la distancia de entrada.",
+      "Practicar el cabeceo sin oposición antes de volver a la competición."
+    ],
+    "si_sale_bien": [
+      "Aumentar la dificultad del servicio (altura o dirección).",
+      "Exigir remate dirigido a zonas concretas de la portería.",
+      "Aumentar el número de rondas manteniendo la calidad."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 portero fijo + 2 filas de 7, una a cada lado de la portería. · 8-12 min.",
+      "Fútbol 11: 1-2 porteros fijos y dos filas, una a cada lado de la portería. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7434876587218193696.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Los jugadores se colocan en dos filas verticales perfectas, una roja y una azul.",
+        "Cada fila se sitúa a un lado de la portería.",
+        "Desde la parte delantera de cada fila se manda el balón con las manos hacia la zona de remate de cabeza.",
+        "Cada gol vale 1 punto.",
+        "La versión CampoBase usa portero fijo.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-CABEZA-COMPETICION-PORTERO-FIJO/CampoBase_Definicion_Cabeza_Competicion_Portero_Fijo_V4.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-CABEZA-COMPETICION-PORTERO-FIJO/frames/f",
+    "total": 59,
+    "frameMs": 139
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DEFINICION-CABEZA-COMPETICION-PORTERO-FIJO/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2",
+  "nombre": "Finalización doble — 2 balones + transición defensiva + 1v1 + cambio de carril",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Finalización",
+      "Conducción",
+      "2 balones",
+      "1v1",
+      "Transición ataque-defensa",
+      "Portero",
+      "Cambio de rol",
+      "Cambio de carril"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "2 colas de 7-8 jugadores; salen 2 por repetición."
+    },
+    "material": "1 portería con portero, balones, conos azules y amarillos, y discos naranjas.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · 2 salidas con 2 balones → azul diagonal y amarillo transversal → J1 finaliza → J1 defiende → J2 ataca 1v1 con su balón → segunda finalización → cambio de carril."
+      }
+    ],
+    "explicacion_breve": "Salen dos jugadores a la vez, cada uno con balón. J1 recorre la línea de 3 conos azules en diagonal y finaliza primero; J2 recorre simultáneamente la línea de 4 conos amarillos en transversal y conserva su balón. Tras finalizar, J1 cambia inmediatamente a defensor. J2 continúa con su balón y se genera un 1v1 antes de la segunda finalización. Al terminar, ambos cambian de carril: J1 va a la cola amarilla y J2 a la cola azul.",
+    "leyenda": "Azul: diagonal de 3 conos · Amarillo: línea transversal de 4 conos · J1 finaliza y defiende · J2 ataca 1v1 · Cambio de carril al final"
+  },
+  "detalle": {
+    "objetivos": [
+      "Encadenar conducción, finalización y transición defensiva inmediata.",
+      "Trabajar el 1v1 con balón conservado desde el inicio.",
+      "Mejorar el cambio de rol ataque-defensa.",
+      "Trabajar la finalización en dos contextos distintos."
+    ],
+    "claves_entrenador": [
+      "«Salís los dos a la vez».",
+      "«Azul finaliza y cambia ya a defender».",
+      "«Amarillo conserva su balón y ataca el 1v1».",
+      "«Después, a la cola contraria»."
+    ],
+    "montaje": [
+      "1 portería con portero.",
+      "Salida azul: disco naranja inferior + 3 conos azules en diagonal hacia la zona de finalización.",
+      "Salida amarilla: disco naranja en banda derecha + 4 conos amarillos en línea transversal hacia dentro.",
+      "Disco blanco central como referencia espacial.",
+      "Una cola en cada punto de salida."
+    ],
+    "desarrollo": [
+      "J1 y J2 salen simultáneamente, cada uno con su balón.",
+      "J1 conduce desde el disco naranja inferior por la diagonal de 3 conos azules.",
+      "J2 conduce desde el disco naranja de banda por la línea transversal de 4 conos amarillos.",
+      "J1 termina antes su recorrido y realiza la primera finalización.",
+      "Nada más tirar, J1 cambia de rol y corre a defender.",
+      "J2 conserva su propio balón, sale de los amarillos y ataca a J1 en un 1v1.",
+      "J2 busca superar al defensor y realizar la segunda finalización.",
+      "Termina la repetición.",
+      "J1 va a la cola amarilla y J2 a la cola azul."
+    ],
+    "que_buscamos": [
+      "Transición rápida de ataque a defensa.",
+      "Mantener el balón propio durante la primera finalización del compañero.",
+      "Resolver un 1v1 con intención de finalizar.",
+      "Cambiar de rol y de carril con naturalidad."
+    ],
+    "que_observar": [
+      "Salida simultánea de los dos jugadores.",
+      "Dos balones al inicio; J2 conserva el suyo hasta el 1v1.",
+      "3 conos azules en diagonal, no como carril paralelo.",
+      "4 conos amarillos en línea transversal desde la banda, no en zigzag.",
+      "Primera finalización rápida de J1.",
+      "Cambio mental inmediato de J1 a defensor.",
+      "J2 ataca el 1v1 con intención de finalizar.",
+      "Cambio de carril al terminar."
+    ],
+    "correcciones": [
+      "Salidas desincronizadas.",
+      "Convertir la diagonal azul en un carril paralelo.",
+      "Convertir la línea amarilla en zigzag.",
+      "J1 que se queda mirando el tiro en vez de defender.",
+      "J2 que pierde el balón antes del 1v1.",
+      "Olvidar el cambio de carril al terminar."
+    ],
+    "reglas": [
+      "2 balones al inicio, uno por jugador.",
+      "Azul: diagonal de 3 conos. Amarillo: línea transversal de 4 conos.",
+      "Los dos recorridos no son carriles paralelos.",
+      "J1 finaliza primero y pasa a defender.",
+      "J2 conserva su balón y ataca el 1v1.",
+      "Al terminar, ambos cambian de carril (cola contraria).",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Acortar recorridos sin cambiar la geometría.",
+      "Separar más las salidas.",
+      "Hacer primero la transición a defensor sin 1v1 completo.",
+      "Reducir velocidad y exigir control del segundo balón."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad de conducción.",
+      "Limitar toques de J2 en el 1v1.",
+      "Pedir finalización con pierna menos dominante en una vuelta.",
+      "Reducir el tiempo de reacción defensiva de J1."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 colas de 7-8 jugadores; salen 2 por repetición. · 8-10 min.",
+      "Fútbol 11: 2 colas de 8-11 jugadores o duplicar el montaje. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7457876736861113633.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Salen dos jugadores a la vez, cada uno con balón.",
+        "J1 recorre la línea de 3 conos azules y finaliza primero.",
+        "J2 recorre simultáneamente la línea de 4 conos amarillos y conserva su balón.",
+        "Tras finalizar, J1 cambia inmediatamente a defensor.",
+        "J2 continúa con su balón y se genera un 1v1 antes de la segunda finalización.",
+        "Hay portero en ambas finalizaciones.",
+        "La colocación azul es una diagonal y la amarilla una línea transversal; no son carriles paralelos.",
+        "Al terminar, ambos cambian de carril y van a la cola contraria.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2/CampoBase_Finalizacion_Doble_2_Balones_Transicion_1v1_Cambio_Carril_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2/frames/f",
+    "total": 206,
+    "frameMs": 70
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DEFINICION-4-PICAS-DISPARO-ROTACION",
+  "nombre": "Definición con 4 picas, secuencia de pase y disparo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Pase",
+      "Disparo",
+      "Rotación",
+      "4 picas",
+      "Portero"
+    ],
+    "tiempo_estimado_15": "8-12 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "4 jugadores activos + portero; resto espera repartido en las picas."
+    },
+    "material": "4 picas, balones, 1 portería y 1 portero.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · Pica 1 → pica 2 → pica 3 → pica 4 → disparo. Solo se mueve el balón; al terminar el disparo rotan todos simultáneamente."
+      }
+    ],
+    "explicacion_breve": "El balón parte de la pica 1 y sigue la secuencia pica 1 → pica 2 → pica 3 → pica 4, desde donde se dispara a portería. Durante toda la secuencia solo se mueve el balón: los jugadores permanecen fijos en su pica. Una vez finaliza el disparo, rotan todos los jugadores simultáneamente a la siguiente pica (1→2, 2→3, 3→4, 4→1) y comienza una nueva repetición.",
+    "leyenda": "4 picas: secuencia de pase · Solo se mueve el balón · Disparo desde la pica 4 · Rotación simultánea al terminar"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mantener una circulación limpia entre las 4 picas.",
+      "Preparar la última recepción para finalizar.",
+      "Finalizar a portería tras la secuencia.",
+      "Realizar una rotación conjunta y ordenada al terminar."
+    ],
+    "claves_entrenador": [
+      "«Solo se mueve el balón durante la secuencia».",
+      "«No rotamos hasta terminar el disparo».",
+      "«Después del disparo, rotan todos».",
+      "«Pase».",
+      "«Siguiente».",
+      "«Último pase».",
+      "«Dispara».",
+      "«Ahora todos rotan».",
+      "«Mantén tu posición».",
+      "«No te muevas antes del final».",
+      "«Control orientado».",
+      "«Rotación todos a la vez»."
+    ],
+    "montaje": [
+      "4 picas colocadas formando el recorrido.",
+      "Un jugador fijo en cada pica durante la acción.",
+      "Portería frente a la última pica.",
+      "El balón inicia en la primera pica."
+    ],
+    "desarrollo": [
+      "El balón parte de la pica 1.",
+      "Se pasa a la pica 2.",
+      "De la pica 2 se pasa a la pica 3.",
+      "De la pica 3 se pasa a la pica 4.",
+      "Desde la pica 4 se finaliza con disparo.",
+      "Durante toda esta secuencia los jugadores permanecen fijos.",
+      "Una vez finaliza el disparo, rotan todos los jugadores simultáneamente a la siguiente pica.",
+      "Tras completar la rotación comienza una nueva repetición."
+    ],
+    "que_buscamos": [
+      "Mejorar continuidad de pase previa a la finalización.",
+      "Preparar el último receptor para definir con pocos toques.",
+      "Trabajar precisión y ritmo antes del disparo."
+    ],
+    "que_observar": [
+      "Que durante la circulación solo se mueva el balón.",
+      "Que ningún jugador rote antes del disparo.",
+      "Que el orden de pases sea correcto.",
+      "Que la finalización salga desde la última pica.",
+      "Que la rotación final sea simultánea y ordenada."
+    ],
+    "correcciones": [
+      "Moverse antes de finalizar la secuencia.",
+      "Rotar individualmente tras cada pase.",
+      "Romper el orden de pases.",
+      "Llegar mal orientado al disparo.",
+      "Rotar de forma desordenada al final."
+    ],
+    "reglas": [
+      "4 picas.",
+      "El balón sigue la secuencia pica 1 → pica 2 → pica 3 → pica 4.",
+      "Desde la última pica se dispara a portería.",
+      "Durante los pases y el disparo los jugadores permanecen fijos.",
+      "Al terminar la acción completa, rotan todos simultáneamente a la siguiente pica.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir distancias.",
+      "Permitir un control extra.",
+      "Realizar la rotación caminando al principio."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad del balón.",
+      "Limitar toques.",
+      "Exigir disparo con pierna no dominante."
+    ],
+    "variantes": [
+      "Fútbol 7: 4 jugadores activos + portero; resto espera repartido en las picas. · 8-12 min.",
+      "Fútbol 11: una o dos ruedas de 4 picas. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7474262238640065799.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Son 4 picas.",
+        "El balón sigue la secuencia de una pica a la siguiente y desde la última se dispara.",
+        "Durante la secuencia solo se mueve el balón.",
+        "Los jugadores permanecen fijos mientras circula el balón.",
+        "Al terminar la acción completa rotan todos los jugadores simultáneamente.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-4-PICAS-DISPARO-ROTACION/CampoBase_Definicion_4_Picas_Disparo_Rotacion_V3.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-4-PICAS-DISPARO-ROTACION/frames/f",
+    "total": 105,
+    "frameMs": 146
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DEFINICION-4-PICAS-DISPARO-ROTACION/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-DEFINICION-PASE-ENTRE-LINEAS-FILTRADO",
+  "nombre": "Definición con pase entre líneas y pase filtrado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Pase",
+      "Entre líneas",
+      "Pase filtrado",
+      "Desmarque",
+      "Rotación",
+      "Portero"
+    ],
+    "tiempo_estimado_15": "8-12 min",
+    "jugadores": {
+      "total": 9,
+      "organizacion": "3 activos + 1 portero; resto en estaciones."
+    },
+    "material": "3 maniquíes, 1 portería, balones y 1 portero.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · A→B (izquierda) → B→C (derecha) → B se desmarca → C filtra a B → B finaliza. Rotación: C→izquierda, B→cola, A→derecha."
+      }
+    ],
+    "explicacion_breve": "A pasa desde la cola a B, junto al maniquí izquierdo. B recibe y pasa a C, junto al maniquí derecho, y sale del puesto izquierdo hacia la zona izquierda de finalización. C recibe y mete un pase filtrado entre líneas hacia B, que recibe y finaliza a portería. El maniquí central representa un defensor. Al terminar, rotan: C pasa a la izquierda, B a la cola y A a la derecha.",
+    "leyenda": "3 maniquíes (izquierdo, central, derecho) · A→B→C→B→disparo · Pase filtrado entre líneas · Rotación C→izquierda, B→cola, A→derecha"
+  },
+  "detalle": {
+    "objetivos": [
+      "Jugar entre líneas.",
+      "Sincronizar pase filtrado y desmarque.",
+      "Finalizar tras recepción filtrada."
+    ],
+    "claves_entrenador": [
+      "«Primer pase limpio».",
+      "«Juega rápido».",
+      "«Ataca la zona izquierda de finalización».",
+      "«Filtra ahora».",
+      "«Finaliza»."
+    ],
+    "montaje": [
+      "Maniquí izquierdo en el lateral izquierdo de la frontal.",
+      "Maniquí central en el centro y algo más adelantado hacia portería (representa un defensor).",
+      "Maniquí derecho en el lateral derecho.",
+      "Cola inicial retrasada y aproximadamente centrada."
+    ],
+    "desarrollo": [
+      "A pasa desde la cola a B, junto al maniquí izquierdo.",
+      "B recibe y pasa a C, junto al maniquí derecho.",
+      "B sale del puesto izquierdo hacia la zona izquierda de finalización.",
+      "C recibe.",
+      "C mete un pase filtrado entre líneas hacia B.",
+      "B recibe y finaliza a portería.",
+      "El portero defiende.",
+      "Rotación: C→izquierda, B→cola, A→derecha."
+    ],
+    "que_buscamos": [
+      "Pase limpio y rápido.",
+      "Perfil corporal orientado.",
+      "Tercer hombre.",
+      "Pase filtrado con timing.",
+      "Temporización del desmarque.",
+      "Definición."
+    ],
+    "que_observar": [
+      "Geometría de los 3 maniquíes.",
+      "Solo 3 jugadores activos.",
+      "Timing del desmarque de B hacia portería.",
+      "Calidad del pase filtrado.",
+      "Orientación final."
+    ],
+    "correcciones": [
+      "Primer pase impreciso.",
+      "Segundo pase lento.",
+      "Desmarque anticipado o tardío.",
+      "Pase filtrado sin intención.",
+      "Mala orientación en la finalización."
+    ],
+    "reglas": [
+      "3 maniquíes: izquierdo, central y derecho.",
+      "El central representa un defensor.",
+      "3 jugadores activos + portero.",
+      "Recorrido del balón: A → B → C → B → disparo.",
+      "Rotación: C→izquierda, B→cola, A→derecha.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Reducir distancias.",
+      "Permitir un control extra.",
+      "Ralentizar el desmarque."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad del balón.",
+      "Limitar toques.",
+      "Exigir finalización con pierna no dominante."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 activos + 1 portero; resto en estaciones. · 8-12 min.",
+      "Fútbol 11: 1-2 estaciones paralelas. · 10-14 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7507607569884646674.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "3 maniquíes: izquierdo, central y derecho.",
+        "El central representa un defensor.",
+        "3 jugadores activos + portero.",
+        "Recorrido del balón: A → B → C → B → disparo.",
+        "B se desmarca hacia la zona izquierda de finalización.",
+        "C filtra a B entre líneas.",
+        "Rotación: C→izquierda, B→cola, A→derecha.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-PASE-ENTRE-LINEAS-FILTRADO/CampoBase_Definicion_Pase_Entre_Lineas_Filtrado_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-DEFINICION-PASE-ENTRE-LINEAS-FILTRADO/frames/f",
+    "total": 113,
+    "frameMs": 144
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-DEFINICION-PASE-ENTRE-LINEAS-FILTRADO/video.mp4"
+},
+{
+  "id": "CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION",
+  "nombre": "Pase + balón al espacio + carrera por 2 conos + 1v1 + finalización",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Finalización",
+    "que_se_trabaja": [
+      "Finalización",
+      "Pase",
+      "Balón al espacio",
+      "1v1",
+      "Transición ataque-defensa",
+      "Desmarque",
+      "Cambio de rol",
+      "Portero"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 12,
+      "organizacion": "Parejas alternando roles con 1 portero; el resto espera en cola."
+    },
+    "material": "1 portería, 1 portero, 2 conos altos exteriores, 3 marcas bajas en la zona inicial y 1 balón.",
+    "series": [
+      {
+        "nombre": "Secuencia completa",
+        "instruccion": "Secuencia completa · J1 pasa a J2 → J2 juega al espacio → cada uno rodea un cono exterior distinto → J2 recupera y ataca 1v1 → J1 defiende → finalización. Intercambian papeles."
+      }
+    ],
+    "explicacion_breve": "J1 inicia con balón y pasa a J2, saliendo inmediatamente sin balón hacia su cono exterior. J2 recibe y juega el balón al espacio, y cada jugador rodea un cono alto exterior distinto. El balón queda libre mientras ambos completan la carrera. J2 regresa, recupera el balón y pasa a ser atacante; J1 vuelve y pasa a defensor. Se juega un 1v1 hacia portería y J2 finaliza ante el portero. Tras la repetición intercambian papeles.",
+    "leyenda": "1 balón · J1 pasa y corre al cono superior · J2 juega al espacio y corre al cono inferior · J2 recupera y ataca 1v1 · J1 defiende · Finalización"
+  },
+  "detalle": {
+    "objetivos": [
+      "Coordinar pase, desmarque y ataque al espacio.",
+      "Acelerar la transición hacia un 1v1 real.",
+      "Mejorar la finalización tras carrera y oposición."
+    ],
+    "claves_entrenador": [
+      "«Pasa y sal rápido».",
+      "«Balón al espacio y cada uno a su cono».",
+      "«Rodea y vuelve».",
+      "«Recupera y ataca».",
+      "«Defiende cerrando dentro».",
+      "«Finaliza»."
+    ],
+    "montaje": [
+      "1 portería con portero.",
+      "2 conos altos exteriores separados (uno superior y otro inferior).",
+      "3 marcas bajas en la zona inicial de pase.",
+      "J1 inicia con balón en la zona baja; J2 se ofrece por delante.",
+      "El balón al espacio queda entre los conos y la portería."
+    ],
+    "desarrollo": [
+      "J1 pasa a J2.",
+      "J1 sale inmediatamente sin balón hacia su cono exterior.",
+      "J2 recibe y juega el balón al espacio.",
+      "J1 rodea el cono exterior superior.",
+      "J2 rodea el cono exterior inferior.",
+      "El balón queda libre mientras ambos completan la carrera.",
+      "J2 regresa, recupera el balón y pasa a ser atacante.",
+      "J1 vuelve y pasa a ser defensor.",
+      "Se juega un 1v1 hacia portería.",
+      "J2 finaliza ante el portero.",
+      "Tras la repetición intercambian papeles."
+    ],
+    "que_buscamos": [
+      "Pase y timing de salida.",
+      "Balón al espacio.",
+      "Carrera sin balón.",
+      "Cambio de rol ataque-defensa.",
+      "1v1.",
+      "Finalización con oposición."
+    ],
+    "que_observar": [
+      "Un único balón en juego.",
+      "Cada jugador rodea un cono distinto.",
+      "J2 recupera el balón para atacar.",
+      "J1 vuelve como defensor.",
+      "El 1v1 termina con finalización."
+    ],
+    "correcciones": [
+      "Pararse después del pase inicial.",
+      "Jugar el balón al espacio demasiado corto o largo.",
+      "Ir al cono incorrecto.",
+      "Tardar en activar el 1v1.",
+      "Finalizar sin fijar al portero."
+    ],
+    "reglas": [
+      "Un único balón durante toda la repetición.",
+      "Cada jugador rodea obligatoriamente un cono alto distinto.",
+      "J2 recupera el balón y ataca el 1v1.",
+      "J1 vuelve como defensor.",
+      "La secuencia termina con finalización a portería.",
+      "Tras la repetición intercambian papeles.",
+      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+    ],
+    "si_sale_mal": [
+      "Acortar distancia a los conos.",
+      "Acercar el balón al espacio.",
+      "Separar temporalmente pase+carreras del 1v1."
+    ],
+    "si_sale_bien": [
+      "Aumentar ritmo.",
+      "Limitar toques del atacante.",
+      "Reducir la ventaja del atacante."
+    ],
+    "variantes": [
+      "Fútbol 7: parejas alternando roles con 1 portero. · 8-10 min.",
+      "Fútbol 11: 2 estaciones si hay 2 porterías; con una, alternar grupos. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Vídeo real: fin_7476067467341679927.mp4",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Participan 2 jugadores de campo y 1 portero por repetición.",
+        "Hay 1 balón en juego.",
+        "J1 inicia con pase a J2 y sale sin balón.",
+        "J2 recibe y juega el balón al espacio.",
+        "Cada jugador rodea un cono alto exterior distinto.",
+        "J2 vuelve al balón, lo recupera y ataca.",
+        "J1 vuelve como defensor.",
+        "La acción termina en 1v1 y finalización a portería.",
+        "El audio del vídeo no contiene instrucciones útiles del entrenador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/CampoBase_Pase_Balon_Espacio_2_Conos_1v1_Finalizacion_V2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/frames/f",
+    "total": 207,
+    "frameMs": 104
+  },
+  "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/video.mp4"
 }
 ]);
 

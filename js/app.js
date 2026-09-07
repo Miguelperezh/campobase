@@ -11,6 +11,7 @@ import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildT
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, asignarJugador, cargarFormacion, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
+import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { planSquadSeed } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 
@@ -2150,39 +2151,36 @@ function renderTactics() {
   const tactics = sortTactics(state.tactics);
   $('#tactics-list').innerHTML = tactics.length ? tactics.map((tactic) => {
     return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button><button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
-  }).join('') : empty('Todavía no hay tácticas guardadas. Pulsa «+ Táctica» para crear la primera.');
+  }).join('') : '';
   renderTacticasInteractivas();
 }
 
-// Renderiza las tácticas del manual como tarjetas (igual que los ejercicios):
-// cada una con su pizarra táctica grande + botón "Ver interactiva" (GIF).
-// Arriba hay un selector desplegable para filtrar por formación.
+// Renderiza el manual táctico como un selector desplegable que muestra una
+// única ficha completa (guía por bloques) al elegir una táctica.
 function renderTacticasInteractivas() {
   const root = $('#tacticas-interactivas');
   const select = $('#tactica-filters')?.elements.formacion;
   if (!root) return;
 
-  // Rellenar el selector de formaciones (sin duplicados).
+  // Rellenar el selector de tácticas (por nombre).
   if (select) {
-    const formaciones = [...new Set(TACTICAS_INTERACTIVAS.map((t) => t.formacion))];
     const actual = select.value;
-    select.innerHTML = '<option value="">Todas</option>' + formaciones.map((f) => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+    select.innerHTML = '<option value="">Elige una táctica…</option>' + TACTICAS_INTERACTIVAS.map((t) => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.nombre)}</option>`).join('');
     if (actual) select.value = actual;
   }
 
-  const filtro = select?.value || '';
-  const lista = TACTICAS_INTERACTIVAS.filter((t) => !filtro || t.formacion === filtro);
-
-  root.innerHTML = lista.map((t) => {
-    const vr = t.vista_rapida || {};
-    // Pizarra táctica grande de la formación correspondiente (editable en el builder).
-    const board = renderTacticBoard(defaultTactic('F7', t.formacion));
-    return `<article class="panel tactica-manual-card">
-      <div class="section-head"><div><span class="pill accent">${escapeHtml(t.formacion)}</span><h3>${escapeHtml(t.nombre)}</h3></div><div class="button-row"><button type="button" class="edit-tactica-manual secondary" data-formacion="${escapeHtml(t.formacion)}">Editar</button><button type="button" class="open-tactica-interactiva primary" data-id="${escapeHtml(t.id)}">Ver interactiva</button></div></div>
-      ${board}
-      <div class="tactica-manual-desc">${escapeHtml(vr.explicacion_breve || '')}</div>
-    </article>`;
-  }).join('') || empty('No hay tácticas del manual para esta formación.');
+  const id = select?.value || '';
+  if (!id) {
+    root.innerHTML = empty('Elige una táctica del manual para ver su guía completa.');
+    return;
+  }
+  const tactica = findTacticaInteractiva(id);
+  if (!tactica) {
+    root.innerHTML = empty('La táctica seleccionada ya no está disponible.');
+    return;
+  }
+  root.innerHTML = renderTacticaGuiaHTML(tactica);
+  initTacticaGuia(root.querySelector('.tactica-guia'), tactica);
 }
 
 // Abre una táctica interactiva a pantalla completa (overlay).

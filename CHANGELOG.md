@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.26.0 — 2026-09-07
+
+- 11 ejercicios nuevos con vídeo real integrados en la biblioteca (formato `CAMPOBASE-VIDEO-*`): conducción + dejar balón + 3 conos + vuelta lateral + pase, pies rápidos + sprint explosivo (3 variaciones), finalización de primeras con servicio central y cambio de fila, duelos 3v2 con finalización (robo = fin y rotación por roles), ida por conos + vuelta por picas + finalización, 3 finalizaciones consecutivas (centro, zona exterior y centro lateral), competición de definición de cabeza con portero fijo, finalización doble (2 balones + transición + 1v1 + cambio de carril), definición con 4 picas (secuencia de pase y disparo), definición con pase entre líneas y pase filtrado, y pase + balón al espacio + carrera por 2 conos + 1v1 + finalización.
+- Cada ejercicio con GIF convertido a MP4 ligero (animación) y vídeo real en Supabase Storage (`ejercicio-videos`).
+- Tácticas interactivas: sustituidas las 6 tácticas antiguas del manual por un desplegable «Selecciona una táctica» con ficha maestra única. Primera táctica: «Sistema 1-2-3-1» (5 bloques con explicaciones de entrenador, lupa para ampliar y pizarra grande plegada por defecto).
+- 138 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.26.0`.
+
 ## 2.25.0 — 2026-09-06
 
 - 11 ejercicios nuevos con vídeo real integrados en la biblioteca (formato `CAMPOBASE-VIDEO-*`): knee drive reactivo + salto skater (3 variaciones), doble devolución alrededor de pica, rodillas altas laterales + zigzag, desplazamiento lateral progresivo en pasillo, reacción con giro inicial y señales, zigzag central/lateral alternado, pases continuos + mini vallas + sprint, conducción con cruz y pinchada, conduce/deja balón/gira cono, reacción par/impar blanco/amarillo, y 6 saltos laterales + knee drive + sprint de 13,7 m.
