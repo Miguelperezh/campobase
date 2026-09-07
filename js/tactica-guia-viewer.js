@@ -6,7 +6,6 @@
 
 import { defaultTactic, renderTacticBoard } from './tactics.js';
 import { initTacticBoard } from './tactic-board-controller.js';
-import { TACTICA_1231_FRAMES } from './tactica-1231-frames.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
@@ -15,7 +14,11 @@ const boardStates = new Map();
 
 function boardStateFor(tactica) {
   if (!boardStates.has(tactica.id)) {
-    boardStates.set(tactica.id, { ...defaultTactic('F7', tactica.formacion), id: `guia-${tactica.id}`, name: 'Mi pizarra de explicación', moves: [] });
+    const base = defaultTactic('F7', tactica.formacion);
+    const team = Array.isArray(tactica.team) && tactica.team.length
+      ? tactica.team.map((p) => ({ ...p }))
+      : base.team;
+    boardStates.set(tactica.id, { ...base, team, id: `guia-${tactica.id}`, name: 'Mi pizarra de explicación', moves: [] });
   }
   return boardStates.get(tactica.id);
 }
@@ -95,7 +98,7 @@ export function initTacticaGuia(root, tactica) {
   const $ = (sel) => root.querySelector(sel);
   const $$ = (sel) => root.querySelectorAll(sel);
 
-  const frameData = () => TACTICA_1231_FRAMES[String(current + 1)];
+  const frameData = () => (tactica.framesManifest || {})[String(current + 1)];
   const framePath = () => { const d = frameData(); return `${d.base}${String(frameIndex).padStart(3, '0')}.webp`; };
 
   function renderFrame() {
@@ -163,8 +166,17 @@ export function initTacticaGuia(root, tactica) {
   $('[data-tg-speed]').addEventListener('click', (e) => { const b = e.target.closest('button[data-s]'); if (b) setSpeed(Number(b.dataset.s)); });
 
   const playerShell = $('[data-tg-player-shell]');
-  const openFull = () => playerShell.requestFullscreen?.();
-  const closePlayerFull = () => { if (document.fullscreenElement) document.exitFullscreen(); };
+  // iOS Safari no soporta requestFullscreen() sobre elementos que no sean vídeo,
+  // así que usamos un fullscreen CSS propio como respaldo universal.
+  const supportsFs = typeof playerShell.requestFullscreen === 'function';
+  const openFull = () => {
+    if (supportsFs) { playerShell.requestFullscreen?.(); return; }
+    playerShell.classList.add('tg-fullscreen');
+  };
+  const closePlayerFull = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    playerShell.classList.remove('tg-fullscreen');
+  };
   $('[data-tg-full]').addEventListener('click', openFull);
   $('[data-tg-stage]').addEventListener('click', openFull);
   $('[data-tg-player-close]').addEventListener('click', closePlayerFull);

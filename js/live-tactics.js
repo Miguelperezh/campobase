@@ -11,13 +11,14 @@
 import { defaultTactic, FORMATION_NAMES } from './tactics.js';
 
 // Formaciones F7 disponibles en la pizarra en vivo (las que tienen MP4 asociado).
-export const LIVE_FORMATIONS = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2']);
+export const LIVE_FORMATIONS = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-2-1-3']);
 
 // MP4 de cada formación (el GIF/MP4 debe seguir la táctica seleccionada).
 export const TACTICA_MP4 = Object.freeze({
   '1-3-2-1': 'assets/tacticas/CAMPOBASE-TACTICA-01-1-3-2-1/CampoBase_Tactica_01_Sistema_Base_1-3-2-1.mp4',
   '1-2-3-1': 'assets/tacticas/CAMPOBASE-TACTICA-03-1-2-3-1/CampoBase_Tactica_03_Variante_1-2-3-1.mp4',
   '1-2-2-2': 'assets/tacticas/CAMPOBASE-TACTICA-04-1-2-2-2/CampoBase_Tactica_04_Variante_1-2-2-2.mp4',
+  '1-2-1-3': 'assets/tacticas/CAMPOBASE-TACTICA-1213/CampoBase_Tactica_1-2-1-3.mp4',
 });
 
 // Nombre corto: primer token + inicial del último token (p. ej. "Aarón P.").
@@ -78,6 +79,15 @@ const LIVE_FORMATION_TEAMS = Object.freeze({
     { n: '7', pos: 'Medio', x: 60, y: 60 },
     { n: '11', pos: 'Delantero izq.', x: 35, y: 42 },
     { n: '9', pos: 'Delantero der.', x: 65, y: 42 },
+  ],
+  '1-2-1-3': [
+    { n: '1', pos: 'Portero', x: 50, y: 90 },
+    { n: '3', pos: 'Defensa izq.', x: 30, y: 76 },
+    { n: '2', pos: 'Defensa der.', x: 70, y: 76 },
+    { n: '4', pos: 'Mediocentro', x: 50, y: 60 },
+    { n: '7', pos: 'Delantero izq.', x: 25, y: 42 },
+    { n: '9', pos: 'Delantero centro', x: 50, y: 38 },
+    { n: '11', pos: 'Delantero der.', x: 75, y: 42 },
   ],
 });
 

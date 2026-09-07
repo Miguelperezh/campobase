@@ -2,9 +2,16 @@
 // Cada táctica es una ficha completa con bloques. La pizarra táctica personal
 // de Migue es independiente del GIF: se abre plegada y no reproduce los
 // movimientos de la animación.
-// Estructura: { id, nombre, formacion, organizacion, principio, bloques[] }
+// Estructura: { id, nombre, formacion, organizacion, principio, framesManifest,
+//   team?, bloques[] }
 // Cada bloque: { id, orden, nombre_corto, titulo, objetivo, idea_clave,
 //   decisiones[], que_vigilar[], consignas[], errores[], animacion, fuente }
+// `framesManifest` apunta al manifiesto de duraciones de esa táctica (módulo
+// tactica-XXXX-frames.js). `team` (opcional) permite una numeración de dorsales
+// distinta de la canónica de tactics.js para que la pizarra coincida con el GIF.
+
+import { TACTICA_1231_FRAMES } from './tactica-1231-frames.js';
+import { TACTICA_1213_FRAMES } from './tactica-1213-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -13,6 +20,7 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
   "formacion": "1-2-3-1",
   "organizacion": "1 portero · 2 defensas · 3 medios · 1 delantero",
   "principio": "Provocar una decisión rival y reconocer qué compañero o espacio queda libre.",
+  "framesManifest": TACTICA_1231_FRAMES,
   "bloques": [
     {
       "id": "bloque-1-funciones",
@@ -158,6 +166,114 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 196
       },
       "fuente": { "documento": "Táctica 1-2-3-1 · Bloque 5 (Transición)", "seccion": "Transición defensa–ataque" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1213-GUIA-COMPLETA",
+  "nombre": "Sistema 1-2-1-3",
+  "formacion": "1-2-1-3",
+  "organizacion": "1 portero · 2 defensas · 1 medio · 3 delanteros",
+  "principio": "El sistema se interpreta por funciones, no por posiciones rígidas: cada movimiento exige una compensación colectiva.",
+  "framesManifest": TACTICA_1213_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 30, "y": 76, "n": "4", "pos": "Defensa izq." },
+    { "x": 70, "y": 76, "n": "5", "pos": "Defensa der." },
+    { "x": 50, "y": 58, "n": "6", "pos": "Mediocentro" },
+    { "x": 25, "y": 34, "n": "8", "pos": "Delantero izq." },
+    { "x": 50, "y": 30, "n": "9", "pos": "Delantero centro" },
+    { "x": 75, "y": 34, "n": "10", "pos": "Delantero der." }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-funciones",
+      "orden": 1,
+      "nombre_corto": "Funciones",
+      "titulo": "Posicionamiento, variantes y funciones",
+      "objetivo": "Comprender la estructura base 1-2-1-3 y las dobles funciones según balón, compañero y espacio.",
+      "idea_clave": "Si un jugador abre, otro protege u ocupa el espacio interior.",
+      "decisiones": [
+        "8 y 10 se abren como carrileros o se meten por dentro como mediapuntas.",
+        "Si 8/10 están por dentro, 4 y 5 dan amplitud.",
+        "Si un central se proyecta, los demás compensan.",
+        "6 baja y equilibra cuando un defensor sale o aparece una pérdida."
+      ],
+      "que_vigilar": [
+        "Equilibrio cuando 8/10 se abren o se meten por dentro.",
+        "Amplitud desde 4/5 cuando 8/10 están por dentro.",
+        "Lectura del 6 para sostener o bajar."
+      ],
+      "consignas": ["Uno abre, otro cubre", "Seis sostiene", "Cuatro y cinco dan amplitud"],
+      "errores": [
+        "Enseñar el sistema como posiciones inmóviles.",
+        "Abrir sin proteger el espacio interior.",
+        "Salir 4/5 sin que 6 lea cuándo sostener o bajar."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1213-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-2-1-3 · Bloque 1 (Posicionamiento y funciones)", "seccion": "Posicionamiento, variantes y funciones" }
+    },
+    {
+      "id": "bloque-2-defensa",
+      "orden": 2,
+      "nombre_corto": "Defensa",
+      "titulo": "Comportamiento defensivo",
+      "objetivo": "Proteger el carril central, bascular juntos y defender el área con superioridad.",
+      "idea_clave": "Centro antes que banda; balón fuera, bloque junto.",
+      "decisiones": [
+        "Orientar al rival hacia banda y tapar el carril central.",
+        "Temporizar el 1 contra 1 y esperar ayudas.",
+        "En bloque bajo, cerrar el área con línea de 5."
+      ],
+      "que_vigilar": [
+        "Basculación colectiva al lado del balón.",
+        "Ayudas y defensa del centro.",
+        "8 y 10 también defienden."
+      ],
+      "consignas": ["Centro antes que banda", "Balón fuera, bloque junto", "Temporiza antes de entrar"],
+      "errores": [
+        "Perseguir al rival y dejar el centro abierto.",
+        "Entrar al 1 contra 1 sin esperar ayudas.",
+        "No replegar a línea de 5 cuando el rival hunde."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1213-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-2-1-3 · Bloque 2 (Comportamiento defensivo)", "seccion": "Comportamiento defensivo" }
+    },
+    {
+      "id": "bloque-3-salida",
+      "orden": 3,
+      "nombre_corto": "Salida",
+      "titulo": "Salida de balón",
+      "objetivo": "Salir en corto y en largo usando la amplitud de 8 y 10 para estirar al rival.",
+      "idea_clave": "Abrir, fijar y encontrar al libre.",
+      "decisiones": [
+        "Fijar al rival por fuera y usar la amplitud de 8 y 10.",
+        "4 recibe y conduce; si saltan a 4, aparece 6.",
+        "Si saltan a 6, cambio al lado libre con 5.",
+        "Alternativa de juego largo con 9, 8 y 10 preparados para la caída."
+      ],
+      "que_vigilar": [
+        "8 y 10 realmente abiertos y altos.",
+        "6 visible como apoyo central.",
+        "El poseedor fija antes de soltar."
+      ],
+      "consignas": ["Abre, fija y encuentra al libre", "Cuatro conduce", "Seis, apoyo central"],
+      "errores": [
+        "Pasar sin fijar al rival.",
+        "No usar la amplitud de 8 y 10.",
+        "Jugar largo sin preparar la caída y la segunda jugada."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1213-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-2-1-3 · Bloque 3 (Salida de balón)", "seccion": "Salida de balón" }
     }
   ]
 }
