@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.27.0 — 2026-09-07
+
+- Corrección de la pizarra de la táctica «Sistema 1-2-3-1»: la pizarra editable real aparece dentro del desplegable y se sincroniza con su vista ampliada (mover jugadores/rivales/balón, dibujar pases/movimientos/conducciones/disparos/sprints, borrar línea, borrar todo, leyenda).
+- El botón rojo «Cerrar pizarra» queda fijo abajo, visible y sin tapar el campo, con el mismo tratamiento que «Cerrar animación» del GIF/MP4.
+- Herramientas y leyenda completas sin recorte en vertical y horizontal.
+- 139 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.27.0`.
+
 ## 2.26.0 — 2026-09-07
 
 - 11 ejercicios nuevos con vídeo real integrados en la biblioteca (formato `CAMPOBASE-VIDEO-*`): conducción + dejar balón + 3 conos + vuelta lateral + pase, pies rápidos + sprint explosivo (3 variaciones), finalización de primeras con servicio central y cambio de fila, duelos 3v2 con finalización (robo = fin y rotación por roles), ida por conos + vuelta por picas + finalización, 3 finalizaciones consecutivas (centro, zona exterior y centro lateral), competición de definición de cabeza con portero fijo, finalización doble (2 balones + transición + 1v1 + cambio de carril), definición con 4 picas (secuencia de pase y disparo), definición con pase entre líneas y pase filtrado, y pase + balón al espacio + carrera por 2 conos + 1v1 + finalización.

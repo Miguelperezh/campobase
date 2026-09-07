@@ -32,3 +32,26 @@ test('el controlador sincroniza pizarra normal y ampliada a través del mismo es
   assert.match(controller, /for \(const root of roots\) root\.addEventListener\('pointerdown', begin\)/);
   assert.match(controller, /for \(const bar of \[tools, toolsFull\]\.filter\(Boolean\)\)/);
 });
+
+test('la guía muestra dentro del desplegable la pizarra editable real y la sincroniza al ampliar', async () => {
+  const [viewer, css] = await Promise.all([
+    projectFile('js/tactica-guia-viewer.js'),
+    projectFile('styles.css'),
+  ]);
+  assert.match(viewer, /data-tg-board-tools role="toolbar" aria-label="Herramientas de la pizarra"/);
+  assert.match(viewer, /<div data-tg-board><\/div>/);
+  assert.match(viewer, /data-tg-board-open>⛶ Ampliar pizarra<\/button>/);
+  assert.doesNotMatch(viewer, /<button[^>]+data-tg-board-full/);
+  assert.match(viewer, /const board = \$\('\[data-tg-board\]'\)/);
+  assert.match(viewer, /const tools = \$\('\[data-tg-board-tools\]'\)/);
+  assert.match(viewer, /initTacticBoard\(\{ board, boardFull, tools, toolsFull,/);
+  assert.match(viewer, /board\.innerHTML = renderTacticBoard\(boardState\)/);
+  assert.match(viewer, /class="live-tactics-lightbox live-tactics" data-tg-board-lightbox/);
+  assert.match(viewer, /class="tg-close-full" data-tg-board-close>Cerrar pizarra<\/button>/);
+  assert.match(viewer, /class="tg-close-full" data-tg-player-close>Cerrar animación<\/button>/);
+  assert.match(css, /\.tg-close-full\{[^}]*position:fixed[^}]*bottom:max\(16px,env\(safe-area-inset-bottom\)\)[^}]*background:var\(--brand\)[^}]*color:#fff/);
+  assert.match(css, /\[data-tg-board-lightbox\]\.open \.tg-close-full\{display:block\}/);
+  assert.match(css, /\[data-tg-board-lightbox\] \.lb-board\{[^}]*padding-bottom:calc\(4\.5rem \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(css, /\[data-tg-board-lightbox\] \[data-tg-board-full\]\{width:auto;max-height:100%;flex:0 0 auto\}/);
+  assert.match(css, /\[data-tg-board-lightbox\] \.lb-board \.tactic-tools\{[^}]*width:min\(40vw,360px\)[^}]*max-width:min\(40vw,360px\)[^}]*flex:0 0 min\(40vw,360px\)[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*max-height:calc\(100dvh - 6rem\)/);
+});
