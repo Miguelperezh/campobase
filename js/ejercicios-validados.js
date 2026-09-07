@@ -6258,136 +6258,127 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
 },
 {
   "id": "CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION",
-  "nombre": "Pase + balón al espacio + carrera por 2 conos + 1v1 + finalización",
+  "nombre": "Pared inicial + circuito de conos + centro lateral y remate",
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
     "tipo_principal": "Finalización",
     "que_se_trabaja": [
-      "Finalización",
       "Pase",
-      "Balón al espacio",
-      "1v1",
-      "Transición ataque-defensa",
+      "Pared",
+      "Circuito de conos",
       "Desmarque",
-      "Cambio de rol",
+      "Centro lateral",
+      "Remate",
+      "Coordinación",
       "Portero"
     ],
-    "tiempo_estimado_15": "8-10 min",
+    "tiempo_estimado_15": "10-12 min",
     "jugadores": {
       "total": 12,
-      "organizacion": "Parejas alternando roles con 1 portero; el resto espera en cola."
+      "organizacion": "Parejas alternando los roles de centrador y rematador, con 1 portero; el resto espera en cola."
     },
-    "material": "1 portería, 1 portero, 2 conos altos exteriores, 3 marcas bajas en la zona inicial y 1 balón.",
+    "material": "1 portería, 1 portero, un circuito de conos bajos y altos y 1 balón.",
     "series": [
       {
         "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · J1 pasa a J2 → J2 juega al espacio → cada uno rodea un cono exterior distinto → J2 recupera y ataca 1v1 → J1 defiende → finalización. Intercambian papeles."
+        "instruccion": "A pasa a B y sale por banda → B devuelve y entra al circuito de conos → A progresa con balón y centra → B ataca el área y remata."
       }
     ],
-    "explicacion_breve": "J1 inicia con balón y pasa a J2, saliendo inmediatamente sin balón hacia su cono exterior. J2 recibe y juega el balón al espacio, y cada jugador rodea un cono alto exterior distinto. El balón queda libre mientras ambos completan la carrera. J2 regresa, recupera el balón y pasa a ser atacante; J1 vuelve y pasa a defensor. Se juega un 1v1 hacia portería y J2 finaliza ante el portero. Tras la repetición intercambian papeles.",
-    "leyenda": "1 balón · J1 pasa y corre al cono superior · J2 juega al espacio y corre al cono inferior · J2 recupera y ataca 1v1 · J1 defiende · Finalización"
+    "explicacion_breve": "Trabajan dos jugadores de campo y un portero. A inicia con balón, pasa a B y sale por la banda. B devuelve el balón y completa el circuito de conos para atacar el área. A progresa por fuera y realiza un centro lateral; B llega desde el circuito y remata a portería. Las dos acciones del vídeo son repeticiones del mismo ejercicio.",
+    "leyenda": "A: pasador y centrador · B: apoyo, circuito de conos y rematador · P: portero · Naranja: conos · Blanco: pase/devolución · Amarillo: centro lateral"
   },
   "detalle": {
     "objetivos": [
-      "Coordinar pase, desmarque y ataque al espacio.",
-      "Acelerar la transición hacia un 1v1 real.",
-      "Mejorar la finalización tras carrera y oposición."
+      "Coordinar pared, desdoblamiento por banda y llegada al área.",
+      "Mejorar la ejecución del centro lateral tras progresión.",
+      "Trabajar el remate después de un circuito de coordinación."
     ],
     "claves_entrenador": [
-      "«Pasa y sal rápido».",
-      "«Balón al espacio y cada uno a su cono».",
-      "«Rodea y vuelve».",
-      "«Recupera y ataca».",
-      "«Defiende cerrando dentro».",
-      "«Finaliza»."
+      "«Pasa y sal por banda».",
+      "«Devuelve y entra al circuito».",
+      "«Levanta la cabeza antes de centrar».",
+      "«Ataca el área con decisión».",
+      "«Ajusta la carrera y remata»."
     ],
     "montaje": [
-      "1 portería con portero.",
-      "2 conos altos exteriores separados (uno superior y otro inferior).",
-      "3 marcas bajas en la zona inicial de pase.",
-      "J1 inicia con balón en la zona baja; J2 se ofrece por delante.",
-      "El balón al espacio queda entre los conos y la portería."
+      "Colocar una portería con portero.",
+      "Preparar una zona inicial de pase y devolución.",
+      "Montar un circuito visible con conos bajos y altos para el rematador.",
+      "Dejar un carril exterior libre para la progresión y el centro.",
+      "Situar una cola de jugadores en la zona de inicio."
     ],
     "desarrollo": [
-      "J1 pasa a J2.",
-      "J1 sale inmediatamente sin balón hacia su cono exterior.",
-      "J2 recibe y juega el balón al espacio.",
-      "J1 rodea el cono exterior superior.",
-      "J2 rodea el cono exterior inferior.",
-      "El balón queda libre mientras ambos completan la carrera.",
-      "J2 regresa, recupera el balón y pasa a ser atacante.",
-      "J1 vuelve y pasa a ser defensor.",
-      "Se juega un 1v1 hacia portería.",
-      "J2 finaliza ante el portero.",
-      "Tras la repetición intercambian papeles."
+      "A inicia con balón y pasa a B.",
+      "A sale inmediatamente hacia el carril exterior.",
+      "B devuelve el balón a A.",
+      "B entra en el circuito de conos y completa el recorrido.",
+      "A progresa con balón por la banda.",
+      "B sale del circuito y ataca la zona de remate.",
+      "A realiza un centro lateral desde el carril exterior.",
+      "B ajusta su carrera y remata ante el portero.",
+      "La siguiente pareja inicia una nueva repetición."
     ],
     "que_buscamos": [
-      "Pase y timing de salida.",
-      "Balón al espacio.",
-      "Carrera sin balón.",
-      "Cambio de rol ataque-defensa.",
-      "1v1.",
-      "Finalización con oposición."
+      "Precisión en el pase y la devolución.",
+      "Sincronización entre la progresión exterior y el circuito.",
+      "Centro lateral dirigido a la carrera del compañero.",
+      "Llegada al área y remate con buen perfil corporal."
     ],
     "que_observar": [
-      "Un único balón en juego.",
-      "Cada jugador rodea un cono distinto.",
-      "J2 recupera el balón para atacar.",
-      "J1 vuelve como defensor.",
-      "El 1v1 termina con finalización."
+      "A sale por fuera después del pase inicial.",
+      "B completa el circuito de conos antes de entrar al área.",
+      "El centro se produce desde el carril lateral.",
+      "B llega al centro y finaliza ante el portero.",
+      "No hay oposición entre los dos jugadores de campo."
     ],
     "correcciones": [
-      "Pararse después del pase inicial.",
-      "Jugar el balón al espacio demasiado corto o largo.",
-      "Ir al cono incorrecto.",
-      "Tardar en activar el 1v1.",
-      "Finalizar sin fijar al portero."
+      "Esperar parado después del pase.",
+      "Devolver el balón fuera de la carrera del centrador.",
+      "Recortar o saltarse el circuito de conos.",
+      "Centrar sin mirar la llegada del compañero.",
+      "Entrar demasiado pronto o demasiado tarde al remate."
     ],
     "reglas": [
-      "Un único balón durante toda la repetición.",
-      "Cada jugador rodea obligatoriamente un cono alto distinto.",
-      "J2 recupera el balón y ataca el 1v1.",
-      "J1 vuelve como defensor.",
-      "La secuencia termina con finalización a portería.",
-      "Tras la repetición intercambian papeles.",
-      "Las distancias, tiempos, series y organización F7/F11 son adaptación CampoBase."
+      "Participan dos jugadores de campo y un portero por repetición.",
+      "A realiza el pase inicial, recibe la devolución, progresa por banda y centra.",
+      "B devuelve, completa el circuito de conos y remata el centro.",
+      "La acción termina con el remate a portería.",
+      "Las dos secuencias del vídeo son repeticiones del mismo ejercicio.",
+      "La rotación entre puestos, las distancias, los tiempos y la organización F7/F11 son adaptación CampoBase."
     ],
     "si_sale_mal": [
-      "Acortar distancia a los conos.",
-      "Acercar el balón al espacio.",
-      "Separar temporalmente pase+carreras del 1v1."
+      "Acortar la distancia del circuito y del centro.",
+      "Ensayar por separado la pared y la salida por banda.",
+      "Realizar primero el circuito sin balón y terminar con un centro raso."
     ],
     "si_sale_bien": [
-      "Aumentar ritmo.",
-      "Limitar toques del atacante.",
-      "Reducir la ventaja del atacante."
+      "Aumentar el ritmo de la pared y de la llegada.",
+      "Alternar centros rasos y a media altura.",
+      "Exigir remate de primeras con ambas piernas."
     ],
     "variantes": [
-      "Fútbol 7: parejas alternando roles con 1 portero. · 8-10 min.",
-      "Fútbol 11: 2 estaciones si hay 2 porterías; con una, alternar grupos. · 10-12 min."
+      "Fútbol 7: una pareja activa + 1 portero; alternar centrador y rematador. · 10-12 min.",
+      "Fútbol 11: montar el circuito por ambos lados y alternar centros. · 12-15 min."
     ],
     "fuente": {
       "documento": "Vídeo real: fin_7476067467341679927.mp4",
       "adaptacion_operativa": true,
       "notas": [
-        "Participan 2 jugadores de campo y 1 portero por repetición.",
-        "Hay 1 balón en juego.",
-        "J1 inicia con pase a J2 y sale sin balón.",
-        "J2 recibe y juega el balón al espacio.",
-        "Cada jugador rodea un cono alto exterior distinto.",
-        "J2 vuelve al balón, lo recupera y ataca.",
-        "J1 vuelve como defensor.",
-        "La acción termina en 1v1 y finalización a portería.",
+        "Migue confirma que es un circuito de conos con varios jugadores en cadena.",
+        "No es un 1v1.",
+        "Un jugador progresa por banda y centra; el otro completa el circuito y remata.",
+        "Las dos secuencias del vídeo son repeticiones del mismo ejercicio.",
+        "La rotación y la organización de las colas no se ven completas; se describen como adaptación operativa.",
         "El audio del vídeo no contiene instrucciones útiles del entrenador."
       ]
     }
   },
   "animacion": {
-    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/CampoBase_Pase_Balon_Espacio_2_Conos_1v1_Finalizacion_V2.gif",
+    "gif": "assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/CampoBase_Circuito_Conos_Centro_Remate_V3.gif",
     "frames": "assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/frames/f",
-    "total": 207,
-    "frameMs": 104
+    "total": 150,
+    "frameMs": 100
   },
   "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/video.mp4"
 }

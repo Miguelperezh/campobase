@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.28.0 — 2026-09-07
+
+- Corrección del ejercicio `CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION`: se reinterpreta como circuito de conos con centro lateral y remate (pared inicial, salida por banda, circuito de conos, centro y remate ante portero), en lugar de 1v1. Se conserva el registro, el vídeo real y la URL de Supabase.
+- Nueva animación GIF/MP4 (`CampoBase_Circuito_Conos_Centro_Remate_V3`) para el ejercicio corregido.
+- 140 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.28.0`.
+
 ## 2.27.0 — 2026-09-07
 
 - Corrección de la pizarra de la táctica «Sistema 1-2-3-1»: la pizarra editable real aparece dentro del desplegable y se sincroniza con su vista ampliada (mover jugadores/rivales/balón, dibujar pases/movimientos/conducciones/disparos/sprints, borrar línea, borrar todo, leyenda).
