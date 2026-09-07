@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.31.0 — 2026-09-07
+
+- Nueva táctica del manual «Sistema 1-2-2-2» (formación nueva, no variante): 5 bloques (Funciones, Ataque, Defensa, Variante 2-4, Contraataque) con animación por frames y pizarra editable con dorsales del paquete (1, 4, 5, 6, 8, 9, 10).
+- La 1-2-2-2 ya existía en «Partido en vivo»; se añade solo al manual de guías, sin tocar lo existente.
+- Velocidad base 1× = la del GIF tal cual (los GIF ya vienen rápidos: 110/100/90/80 ms por bloque).
+- 150 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.31.0`.
+
 ## 2.30.0 — 2026-09-07
 
 - Nueva táctica del manual «Sistema 1-3-2-1» (sistema base): 4 bloques (Funciones, Salida, Ataque, Defensa) con animación por frames y pizarra editable con numeración clásica (1, 2, 3, 4, 5, 6, 7).
