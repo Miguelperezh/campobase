@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.30.0 — 2026-09-07
+
+- Nueva táctica del manual «Sistema 1-3-2-1» (sistema base): 4 bloques (Funciones, Salida, Ataque, Defensa) con animación por frames y pizarra editable con numeración clásica (1, 2, 3, 4, 5, 6, 7).
+- La 1-3-2-1 ya existía en «Partido en vivo»; se añade solo al manual de guías, sin tocar lo existente.
+- 147 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.30.0`.
+
 ## 2.29.0 — 2026-09-07
 
 - Nueva táctica del manual «Sistema 1-2-1-3» (formación nueva, no variante): 3 bloques (Funciones, Defensa, Salida) con animación por frames y pizarra editable con dorsales del paquete (1, 4, 5, 6, 8, 9, 10).

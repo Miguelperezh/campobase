@@ -12,8 +12,152 @@
 
 import { TACTICA_1231_FRAMES } from './tactica-1231-frames.js';
 import { TACTICA_1213_FRAMES } from './tactica-1213-frames.js';
+import { TACTICA_1321_FRAMES } from './tactica-1321-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
+{
+  "id": "CAMPOBASE-TACTICA-1321-GUIA-COMPLETA",
+  "nombre": "Sistema 1-3-2-1",
+  "formacion": "1-3-2-1",
+  "organizacion": "1 portero · 3 defensas · 2 medios · 1 delantero",
+  "principio": "El sistema exige compensaciones constantes: si todos van, alguien debe cubrir.",
+  "framesManifest": TACTICA_1321_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 25, "y": 72, "n": "2", "pos": "Carrilero izq." },
+    { "x": 75, "y": 72, "n": "3", "pos": "Carrilero der." },
+    { "x": 50, "y": 76, "n": "4", "pos": "Central" },
+    { "x": 30, "y": 48, "n": "5", "pos": "Medio izq." },
+    { "x": 70, "y": 48, "n": "6", "pos": "Medio der." },
+    { "x": 50, "y": 30, "n": "7", "pos": "Delantero" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-funciones",
+      "orden": 1,
+      "nombre_corto": "Funciones",
+      "titulo": "Posicionamiento y funciones",
+      "objetivo": "Entender la estructura base del 1-3-2-1 y qué función cumple cada jugador para no romper el sistema.",
+      "idea_clave": "Si todos van, alguien debe compensar.",
+      "decisiones": [
+        "2 y 3 son carrileros: dan amplitud, suben y bajan.",
+        "4 es el único central y necesita ayudas constantes.",
+        "5 y 6 son box-to-box: atacan y defienden.",
+        "Si un carrilero sube, un mediocentro cubre su espalda.",
+        "7 puede fijar, bajar a recibir o caer a banda para hacer jugar."
+      ],
+      "que_vigilar": [
+        "Amplitud real de 2 y 3.",
+        "Ayudas constantes al 4.",
+        "Recorrido completo de 5 y 6."
+      ],
+      "consignas": ["Dos y tres, amplitud", "Cuatro protegido", "Cinco y seis, box-to-box"],
+      "errores": [
+        "Carrileros que no bajan.",
+        "Dejar solo al 4.",
+        "Todos arriba sin compensar."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1321-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-3-2-1 · Bloque 1 (Posicionamiento y funciones)", "seccion": "Posicionamiento y funciones" }
+    },
+    {
+      "id": "bloque-2-salida",
+      "orden": 2,
+      "nombre_corto": "Salida",
+      "titulo": "Salida de balón",
+      "objetivo": "Enseñar distintas salidas de balón: por dentro, con el portero o en largo.",
+      "idea_clave": "Superioridad para salir, portero jugador y largo con intención.",
+      "decisiones": [
+        "Primera salida: 4 contra 1 con 2 y 3 bajando.",
+        "Si presionan, jugar largo a 5 o 6 en banda.",
+        "Si 7 domina el juego aéreo, puede recibir largo y descargar.",
+        "Otra opción mete al portero con el 4 para crear superioridad.",
+        "Si el receptor está marcado, el pase va al espacio, no al pie."
+      ],
+      "que_vigilar": [
+        "Superioridad numérica en la salida.",
+        "Amplitud de 2 y 3 para cambiar de orientación.",
+        "Segunda jugada tras el balón largo."
+      ],
+      "consignas": ["Salimos con superioridad", "Portero, jugador", "Largo con intención"],
+      "errores": [
+        "Salir sin superioridad.",
+        "Jugar largo sin preparar la segunda jugada.",
+        "Pasar al pie cuando el receptor está marcado."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1321-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 194
+      },
+      "fuente": { "documento": "Táctica 1-3-2-1 · Bloque 2 (Salida de balón)", "seccion": "Salida de balón" }
+    },
+    {
+      "id": "bloque-3-ataque",
+      "orden": 3,
+      "nombre_corto": "Ataque",
+      "titulo": "Ataque y progresión",
+      "objetivo": "Progresar en campo rival sin convertirse en un embudo, con amplitud, movilidad y equilibrio.",
+      "idea_clave": "Atacar con amplitud, movilidad y equilibrio preventivo.",
+      "decisiones": [
+        "2 y 3 siguen dando amplitud para abrir huecos interiores.",
+        "7 puede bajar como mediapunta para hacer jugar.",
+        "Si 7 baja, el carrilero contrario ataca el área como delantero.",
+        "El carrilero del lado del balón llega alto a zona de centro.",
+        "Un mediocentro llega a remate; el otro protege la transición."
+      ],
+      "que_vigilar": [
+        "Amplitud para no hacer un embudo.",
+        "Llegada del carrilero contrario al área.",
+        "Equilibrio preventivo del medio que se queda."
+      ],
+      "consignas": ["Amplitud siempre", "Siete hace jugar", "Uno llega, otro equilibra"],
+      "errores": [
+        "Convertirse en un embudo.",
+        "Subir los dos medios a la vez.",
+        "Perder la amplitud al atacar."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1321-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 191
+      },
+      "fuente": { "documento": "Táctica 1-3-2-1 · Bloque 3 (Ataque y progresión)", "seccion": "Ataque y progresión" }
+    },
+    {
+      "id": "bloque-4-defensa",
+      "orden": 4,
+      "nombre_corto": "Defensa",
+      "titulo": "Defensa por carriles y basculaciones",
+      "objetivo": "Defender juntos cuando el rival mueve el balón por carriles, protegiendo el centro y al único central.",
+      "idea_clave": "Defender juntos y no dejar solo al 4.",
+      "decisiones": [
+        "La prioridad es proteger el carril central.",
+        "Si el balón va a banda, todo el bloque bascula.",
+        "El carrilero del lado del balón salta a presionar.",
+        "Si ese carrilero salta, un mediocentro cubre por dentro.",
+        "El lado débil se cierra hacia dentro para proteger el área."
+      ],
+      "que_vigilar": [
+        "Basculación colectiva al lado del balón.",
+        "Cobertura interior tras el salto del carrilero.",
+        "Ayuda al 4 en el pasillo interior."
+      ],
+      "consignas": ["Centro protegido", "Todos basculamos", "Cuatro nunca solo"],
+      "errores": [
+        "Dejar el centro abierto.",
+        "Saltar sin cobertura interior.",
+        "No bascular como bloque."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1321-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 193
+      },
+      "fuente": { "documento": "Táctica 1-3-2-1 · Bloque 4 (Defensa por carriles y basculaciones)", "seccion": "Defensa por carriles y basculaciones" }
+    }
+  ]
+},
 {
   "id": "CAMPOBASE-TACTICA-1231-GUIA-COMPLETA",
   "nombre": "Sistema 1-2-3-1",
