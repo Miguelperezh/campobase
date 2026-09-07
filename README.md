@@ -1,4 +1,4 @@
-# CampoBase 2.26.0 — 11 ejercicios nuevos con vídeo real y tácticas interactivas
+# CampoBase 2.27.0 — corrección de la pizarra táctica 1-2-3-1
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 138 pruebas automatizadas en 2.26.0.
+- `npm test`: 139 pruebas automatizadas en 2.27.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 

@@ -44,7 +44,10 @@ export function renderTacticaGuiaHTML(tactica) {
       </div>
       <details class="tg-board-section">
         <summary>Mi pizarra de explicación</summary>
-        <div class="tg-board-head"><p>Independiente del GIF: úsala para explicar lo que quieras.</p><button type="button" class="secondary" data-tg-board-full>⛶ Ampliar pizarra</button></div>
+        <div class="tg-board-head"><p>Independiente del GIF: úsala para explicar lo que quieras.</p><button type="button" class="secondary" data-tg-board-open>⛶ Ampliar pizarra</button></div>
+        <div class="tactic-tools" data-tg-board-tools role="toolbar" aria-label="Herramientas de la pizarra"></div>
+        <div data-tg-board></div>
+        <p class="tg-board-help">Mueve jugadores y rivales. Dibuja pases, movimientos, conducciones, disparos o sprints. También puedes colocar el balón, borrar una línea o limpiar la pizarra.</p>
       </details>
       <div class="tg-player-shell" data-tg-player-shell>
         <div class="tg-stage" data-tg-stage><img data-tg-frame alt="Animación táctica del bloque seleccionado"></div>
@@ -67,7 +70,7 @@ export function renderTacticaGuiaHTML(tactica) {
         <div class="tg-errors" data-tg-errors><h4>Errores frecuentes</h4><ul data-tg-error-list></ul></div>
       </div>
     </div>
-    <div class="live-tactics-lightbox" data-tg-board-lightbox>
+    <div class="live-tactics-lightbox live-tactics" data-tg-board-lightbox>
       <button type="button" class="lb-close" data-tg-board-close-x title="Cerrar">✕</button>
       <div class="lb-board">
         <div class="tactic-tools" data-tg-board-tools-full role="toolbar" aria-label="Herramientas de la pizarra ampliada"></div>
@@ -135,16 +138,19 @@ export function initTacticaGuia(root, tactica) {
 
   // Pizarra editable (independiente del bloque).
   const boardState = boardStateFor(tactica);
+  const board = $('[data-tg-board]');
   const boardFull = $('[data-tg-board-full]');
+  const tools = $('[data-tg-board-tools]');
   const toolsFull = $('[data-tg-board-tools-full]');
   const renderBoard = () => {
+    board.innerHTML = renderTacticBoard(boardState);
     boardFull.innerHTML = renderTacticBoard(boardState);
   };
-  initTacticBoard({ board: null, boardFull, tools: null, toolsFull, getState: () => boardState, setState: (s) => { Object.assign(boardState, s); }, render: renderBoard });
+  initTacticBoard({ board, boardFull, tools, toolsFull, getState: () => boardState, setState: (s) => { Object.assign(boardState, s); }, render: renderBoard });
 
   const lightbox = $('[data-tg-board-lightbox]');
   const closeBoard = () => lightbox.classList.remove('open');
-  $('[data-tg-board-full]').addEventListener('click', () => { renderBoard(); lightbox.classList.add('open'); });
+  $('[data-tg-board-open]').addEventListener('click', () => { renderBoard(); lightbox.classList.add('open'); });
   $('[data-tg-board-close-x]').addEventListener('click', closeBoard);
   $('[data-tg-board-close]').addEventListener('click', closeBoard);
   lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeBoard(); });
