@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.37.0 — 2026-09-08
+
+- Pack150 Sección 3: ejercicios 056-060 (Pase/Técnica/Posesión).
+- 5 ejercicios nuevos: control de balón alto con muslo, control con pecho + descarga, recepción y giro con adversario a la espalda, pase corto contra pared, pase corto en tríos (triángulos).
+
+
 ## 2.36.0 — 2026-09-08
 
 - Pack150 Sección 3 (Pase/Técnica/Posesión): ejercicios 051-055 integrados y publicados (dominios individuales pie dominante, dominios alternando pies, dominios con muslo y cabeza, dominios progresivos en circuito y control orientado con interior).

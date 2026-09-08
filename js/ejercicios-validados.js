@@ -12884,6 +12884,521 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-056-CONTROL-BALON-ALTO-MUSLO",
+  "nombre": "Control de balón alto con muslo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Control",
+      "Muslo",
+      "Recepción aérea"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón en parábola alta hacia el receptor."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Receptor eleva rodilla, absorbe con la parte superior del muslo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El balón debe caer a los pies del receptor, controlado."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 recepciones. Cambio de roles."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira el balón en parábola alta y el receptor eleva la rodilla para absorber con la parte superior del muslo, dejando que el balón caiga controlado a sus pies.",
+    "leyenda": "Naranja: lanzador (L) · Azul: receptor (R) · Flecha azul: trayectoria del balón (parábola) · Flecha roja: elevar rodilla/muslo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la recepción de balón alto con muslo, la superficie técnica más difícil."
+    ],
+    "claves_entrenador": [
+      "El muslo va SUBIENDO cuando el balón desciende. Absorber, no rebotar. Piensa: el muslo es un colchón."
+    ],
+    "montaje": [
+      "Lanzador tira balón en parábola alta hacia el receptor."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón en parábola alta hacia el receptor.",
+      "Receptor eleva rodilla, absorbe con la parte superior del muslo.",
+      "El balón debe caer a los pies del receptor, controlado.",
+      "10 recepciones. Cambio de roles."
+    ],
+    "que_buscamos": [
+      "Control",
+      "Muslo",
+      "Recepción aérea"
+    ],
+    "que_observar": [
+      "Elevación de la rodilla.",
+      "Absorción (no rebote).",
+      "Balón controlado a los pies."
+    ],
+    "correcciones": [
+      "Absorber, no rebotar.",
+      "El muslo sube cuando el balón desciende."
+    ],
+    "reglas": [
+      "Parábola alta del lanzador.",
+      "Absorber con la parte superior del muslo.",
+      "10 recepciones por jugador."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Recibir con muslo → primer toque orientado al lado → pase al compañero."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 056",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 8 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-056-CONTROL-BALON-ALTO-MUSLO/CampoBase_Control_Balon_Alto_Muslo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-056-CONTROL-BALON-ALTO-MUSLO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-057-CONTROL-PECHO-DESCARGA",
+  "nombre": "Control con pecho + descarga",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Control",
+      "Pecho",
+      "Descarga"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón fuerte y alto al pecho del receptor."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Receptor absorbe con el pecho (hombros hacia atrás, torso echado)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Balón cae, receptor lo controla con el pie y pasa de vuelta."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 recepciones cada uno."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira el balón fuerte y alto al pecho del receptor, que absorbe con el pecho (hombros atrás, torso echado) y descarga al pie para devolver el pase.",
+    "leyenda": "Naranja: lanzador (L) · Azul: receptor (R) · Flecha azul: trayectoria del balón · Flecha azul sólida: descarga al pie"
+  },
+  "detalle": {
+    "objetivos": [
+      "Recibir balón alto con pecho y descargar al pie para próximo pase."
+    ],
+    "claves_entrenador": [
+      "El pecho se INCLINA hacia atrás en el momento del contacto. Nunca de pie erguido — rebota lejos."
+    ],
+    "montaje": [
+      "Lanzador tira balón fuerte y alto al pecho del receptor."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón fuerte y alto al pecho del receptor.",
+      "Receptor absorbe con el pecho (hombros hacia atrás, torso echado).",
+      "Balón cae, receptor lo controla con el pie y pasa de vuelta.",
+      "10 recepciones cada uno."
+    ],
+    "que_buscamos": [
+      "Control",
+      "Pecho",
+      "Descarga"
+    ],
+    "que_observar": [
+      "Inclinación del torso.",
+      "Absorción con el pecho.",
+      "Descarga al pie."
+    ],
+    "correcciones": [
+      "Inclinar el pecho hacia atrás.",
+      "No recibir de pie erguido."
+    ],
+    "reglas": [
+      "Balón fuerte y alto al pecho.",
+      "Absorber con el pecho (torso echado).",
+      "10 recepciones cada uno."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Balón muy fuerte + defensor pasivo cerca (aumentar presión de decisión)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 057",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media-alta.",
+        "Espacio: 10 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-057-CONTROL-PECHO-DESCARGA/CampoBase_Control_Pecho_Descarga.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-057-CONTROL-PECHO-DESCARGA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-058-RECEPCION-GIRO-ADVERSARIO-ESPALDA",
+  "nombre": "Recepción y giro con adversario a la espalda",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Recepción",
+      "Giro",
+      "Protección"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (pasador, receptor, defensor)"
+    },
+    "material": "1 balón + 2 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Colocar receptor a 10m del pasador, con defensor pasivo a 1m detrás."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Pasador entrega balón raso al receptor."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Receptor debe recibir, girar en el mismo movimiento y encarar a la portería imaginaria."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 giros por receptor. Rotar."
+      }
+    ],
+    "explicacion_breve": "Con el receptor a 10 m del pasador y un defensor pasivo a 1 m detrás, el receptor recibe, gira en el mismo movimiento y encara a la portería imaginaria.",
+    "leyenda": "Naranja: pasador (P) · Azul: receptor (R) · Púrpura: defensor pasivo (D) · Flecha azul: pase · Flecha roja: giro del receptor"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a girar con balón cuando hay un defensor detrás."
+    ],
+    "claves_entrenador": [
+      "Antes de recibir, MIRAR por encima del hombro para saber por qué lado girar. Nunca sin mirar."
+    ],
+    "montaje": [
+      "Colocar receptor a 10m del pasador, con defensor pasivo a 1m detrás."
+    ],
+    "desarrollo": [
+      "Colocar receptor a 10m del pasador, con defensor pasivo a 1m detrás.",
+      "Pasador entrega balón raso al receptor.",
+      "Receptor debe recibir, girar en el mismo movimiento y encarar a la portería imaginaria.",
+      "10 giros por receptor. Rotar."
+    ],
+    "que_buscamos": [
+      "Recepción",
+      "Giro",
+      "Protección"
+    ],
+    "que_observar": [
+      "Mirada por encima del hombro.",
+      "Giro en el mismo movimiento.",
+      "Encarar la portería."
+    ],
+    "correcciones": [
+      "Mirar antes de recibir.",
+      "Girar en el mismo movimiento."
+    ],
+    "reglas": [
+      "Defensor pasivo a 1 m detrás.",
+      "Recibir y girar en el mismo movimiento.",
+      "10 giros por receptor."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Defensor activo — trata de recuperar el balón antes del giro completo."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (pasador, receptor, defensor). · 12-15 min.",
+      "Fútbol 11: 3 (pasador, receptor, defensor). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 058",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 12 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-058-RECEPCION-GIRO-ADVERSARIO-ESPALDA/CampoBase_Recepcion_Giro_Adversario_Espalda.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-058-RECEPCION-GIRO-ADVERSARIO-ESPALDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-059-PASE-CORTO-CONTRA-PARED",
+  "nombre": "Pase corto contra pared",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase corto",
+      "Control",
+      "Precisión"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 1,
+      "organizacion": "1 (o varios en paralelo)"
+    },
+    "material": "1 balón + pared",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador a 3-4m de una pared con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Pases suaves contra la pared con interior del pie."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Controlar el rebote con la SUPERFICIE INTERIOR y volver a pasar."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 30 pases alternando pies."
+      }
+    ],
+    "explicacion_breve": "El jugador, a 3-4 m de una pared, hace pases suaves con el interior del pie y controla el rebote con la superficie interior para volver a pasar, alternando pies.",
+    "leyenda": "Azul: jugador (J) · Pared: superficie de rebote · Flecha azul: pase y rebote"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar la técnica pura del pase corto con precisión y rebote controlado."
+    ],
+    "claves_entrenador": [
+      "El pase y el control son UN SOLO gesto. Interior contra interior. Sin pasos intermedios."
+    ],
+    "montaje": [
+      "Jugador a 3-4m de una pared con balón."
+    ],
+    "desarrollo": [
+      "Jugador a 3-4m de una pared con balón.",
+      "Pases suaves contra la pared con interior del pie.",
+      "Controlar el rebote con la SUPERFICIE INTERIOR y volver a pasar.",
+      "3 series de 30 pases alternando pies."
+    ],
+    "que_buscamos": [
+      "Pase corto",
+      "Control",
+      "Precisión"
+    ],
+    "que_observar": [
+      "Precisión del pase.",
+      "Control del rebote.",
+      "Alternancia de pies."
+    ],
+    "correcciones": [
+      "Pase y control como un solo gesto.",
+      "Interior contra interior."
+    ],
+    "reglas": [
+      "Pases suaves con el interior.",
+      "Controlar el rebote con el interior.",
+      "3 series de 30 pases."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la fuerza del pase progresivamente — mismo control."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 (o varios en paralelo). · 8-10 min.",
+      "Fútbol 11: 1 (o varios en paralelo). · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 059",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: baja-media.",
+        "Espacio: 3 x 3 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-059-PASE-CORTO-CONTRA-PARED/CampoBase_Pase_Corto_Contra_Pared.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-059-PASE-CORTO-CONTRA-PARED/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-060-PASE-CORTO-TRIOS-TRIANGULOS",
+  "nombre": "Pase corto en tríos (triángulos)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase corto",
+      "Orientación",
+      "Posesión"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 por trío"
+    },
+    "material": "1 balón por trío + 3 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "3 jugadores formando un triángulo equilátero de 8m de lado (marcado con conos)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Balón circula: A pasa a B, B pasa a C, C pasa a A."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cada jugador debe orientar el cuerpo ANTES de recibir para dar el próximo pase."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "45 segundos continuos. Descanso 30s. 5-6 series."
+      }
+    ],
+    "explicacion_breve": "Tres jugadores en triángulo equilátero de 8 m hacen circular el balón (A→B→C→A), orientando el cuerpo antes de recibir para dar el próximo pase.",
+    "leyenda": "Azul: A · Naranja: B · Verde: C · Flecha azul: pase · Flecha curva: control orientado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el pase corto en tres direcciones y la orientación del cuerpo."
+    ],
+    "claves_entrenador": [
+      "Perfil abierto SIEMPRE — nunca dar pase de espaldas al próximo compañero."
+    ],
+    "montaje": [
+      "3 jugadores formando un triángulo equilátero de 8m de lado (marcado con conos)."
+    ],
+    "desarrollo": [
+      "3 jugadores formando un triángulo equilátero de 8m de lado (marcado con conos).",
+      "Balón circula: A pasa a B, B pasa a C, C pasa a A.",
+      "Cada jugador debe orientar el cuerpo ANTES de recibir para dar el próximo pase.",
+      "45 segundos continuos. Descanso 30s. 5-6 series."
+    ],
+    "que_buscamos": [
+      "Pase corto",
+      "Orientación",
+      "Posesión"
+    ],
+    "que_observar": [
+      "Orientación del cuerpo.",
+      "Precisión del pase.",
+      "Perfil abierto."
+    ],
+    "correcciones": [
+      "Orientar el cuerpo antes de recibir.",
+      "Nunca de espaldas al próximo pase."
+    ],
+    "reglas": [
+      "Triángulo equilátero de 8 m.",
+      "Circulación A→B→C→A.",
+      "45 s continuos, 5-6 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cambiar dirección del pase (empezar sentido horario, cambiar a antihorario)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 por trío. · 10-12 min.",
+      "Fútbol 11: 3 por trío. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 060",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 8 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-060-PASE-CORTO-TRIOS-TRIANGULOS/CampoBase_Pase_Corto_Trios_Triangulos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-060-PASE-CORTO-TRIOS-TRIANGULOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
