@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.38.0 — 2026-09-08
+
+- Pack150: ejercicios 061-080 integrados y publicados; 061-075 completan la Sección 3 (Pase/Técnica/Posesión) y 076-080 inician la Sección 4 (Resistencia y Preparación Física).
+- Diagramas corregidos para reproducir fielmente líneas de delimitación, zonas neutras sombreadas y objetivos externos; terminología corregida a «dar e ir».
+
 ## 2.37.0 — 2026-09-08
 
 - Pack150 Sección 3: ejercicios 056-060 (Pase/Técnica/Posesión).

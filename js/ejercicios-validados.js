@@ -13399,6 +13399,2066 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-061-PASE-CORTO-MOVIL-CUADRADO",
+  "nombre": "Pase corto móvil en cuadrado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase corto",
+      "Movilidad",
+      "Pase y sigue"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "4 por cuadrado"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 jugadores, uno en cada esquina de un cuadrado de 10m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "A pasa a B, y CORRE al lugar de B (regla: pasa y sigue al lugar del que recibe)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "B pasa a C y corre a lugar de C. Y así sucesivamente."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "60 segundos continuos. Descanso 30s. 4-5 series."
+      }
+    ],
+    "explicacion_breve": "Cuatro jugadores en las esquinas de un cuadrado de 10 m se pasan el balón y, tras cada pase, corren al lugar del que recibe, en un ciclo continuo.",
+    "leyenda": "A, B, C, D: jugadores en las esquinas · Flecha azul: pase · Flecha roja: carrera al lugar del que recibe"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar pase con desplazamiento — moverse tras el pase."
+    ],
+    "claves_entrenador": [
+      "El pase sale ANTES de que empieces a correr. Nunca esperar a haber llegado."
+    ],
+    "montaje": [
+      "4 jugadores, uno en cada esquina de un cuadrado de 10m."
+    ],
+    "desarrollo": [
+      "4 jugadores, uno en cada esquina de un cuadrado de 10m.",
+      "A pasa a B, y CORRE al lugar de B (regla: pasa y sigue al lugar del que recibe).",
+      "B pasa a C y corre a lugar de C. Y así sucesivamente.",
+      "60 segundos continuos. Descanso 30s. 4-5 series."
+    ],
+    "que_buscamos": [
+      "Pase corto",
+      "Movilidad",
+      "Pase y sigue"
+    ],
+    "que_observar": [
+      "Pase antes de correr.",
+      "Movilidad tras el pase.",
+      "Ritmo continuo."
+    ],
+    "correcciones": [
+      "Pasar antes de correr.",
+      "No esperar a llegar para pasar."
+    ],
+    "reglas": [
+      "Pasar y correr al lugar del que recibe.",
+      "60 s continuos.",
+      "4-5 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Invertir la regla: 'pase y corre al OPUESTO' (más complejo cognitivamente)."
+    ],
+    "variantes": [
+      "Fútbol 7: 4 por cuadrado. · 10-12 min.",
+      "Fútbol 11: 4 por cuadrado. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 061",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 10 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-061-PASE-CORTO-MOVIL-CUADRADO/CampoBase_Pase_Corto_Movil_Cuadrado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-061-PASE-CORTO-MOVIL-CUADRADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-062-PASE-CORTO-ALTERNANDO-PIES-PRESION",
+  "nombre": "Pase corto alternando pies con presión",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase",
+      "Pie no dominante",
+      "Presión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (2 pasadores + 1 recuperador pasivo)"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 jugadores separados por 10m, un recuperador entre ellos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Se pasan la pelota alternando pie derecho y pie izquierdo estrictamente."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El recuperador presiona SOLO al que va a recibir, tratando de tocar la pelota."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "60s por serie. Rotar recuperador. 6 series."
+      }
+    ],
+    "explicacion_breve": "Dos pasadores separados 10 m se pasan la pelota alternando estrictamente pie derecho e izquierdo, mientras un recuperador pasivo presiona al que va a recibir.",
+    "leyenda": "A, B: pasadores · D: recuperador pasivo · Flecha azul: pase · Flecha roja: presión al receptor"
+  },
+  "detalle": {
+    "objetivos": [
+      "Ampliar el pase al pie no dominante bajo presión moderada."
+    ],
+    "claves_entrenador": [
+      "El pie no dominante mejora solo con REPETICIÓN. Sin repetición, no hay progreso posible."
+    ],
+    "montaje": [
+      "2 jugadores separados por 10m, un recuperador entre ellos."
+    ],
+    "desarrollo": [
+      "2 jugadores separados por 10m, un recuperador entre ellos.",
+      "Se pasan la pelota alternando pie derecho y pie izquierdo estrictamente.",
+      "El recuperador presiona SOLO al que va a recibir, tratando de tocar la pelota.",
+      "60s por serie. Rotar recuperador. 6 series."
+    ],
+    "que_buscamos": [
+      "Pase",
+      "Pie no dominante",
+      "Presión"
+    ],
+    "que_observar": [
+      "Alternancia de pies.",
+      "Pase bajo presión.",
+      "Precisión del pie no dominante."
+    ],
+    "correcciones": [
+      "Repetir con el pie no dominante.",
+      "Presionar solo al receptor."
+    ],
+    "reglas": [
+      "Alternar pie derecho e izquierdo.",
+      "Presión solo al receptor.",
+      "60 s por serie, 6 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Convertir al recuperador en activo — si roba, cambia de rol."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (2 pasadores + 1 recuperador pasivo). · 12-15 min.",
+      "Fútbol 11: 3 (2 pasadores + 1 recuperador pasivo). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 062",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 12 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-062-PASE-CORTO-ALTERNANDO-PIES-PRESION/CampoBase_Pase_Corto_Alternando_Pies_Presion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-062-PASE-CORTO-ALTERNANDO-PIES-PRESION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-063-PASE-MEDIO-15M-CONTRA-PARED",
+  "nombre": "Pase medio 15m contra pared",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase medio",
+      "Empeine",
+      "Precisión"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 1,
+      "organizacion": "1 (o varios)"
+    },
+    "material": "1 balón + pared",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador a 15m de la pared con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Pase con EMPEINE, buscando que el balón llegue rasante a la pared."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Controlar el rebote (que llega rápido) con superficie firme."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 20 pases alternando pies. 1 min descanso."
+      }
+    ],
+    "explicacion_breve": "El jugador, a 15 m de una pared, hace pases con el empeine buscando que el balón llegue rasante, y controla el rebote rápido con superficie firme.",
+    "leyenda": "J: jugador · Pared: superficie de rebote · Flecha azul: pase y rebote"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la técnica del pase medio (empeine) con precisión."
+    ],
+    "claves_entrenador": [
+      "Pie de apoyo BIEN al lado del balón. Empeine tenso, tobillo firme, seguir con el pie post-golpe."
+    ],
+    "montaje": [
+      "Jugador a 15m de la pared con balón."
+    ],
+    "desarrollo": [
+      "Jugador a 15m de la pared con balón.",
+      "Pase con EMPEINE, buscando que el balón llegue rasante a la pared.",
+      "Controlar el rebote (que llega rápido) con superficie firme.",
+      "3 series de 20 pases alternando pies. 1 min descanso."
+    ],
+    "que_buscamos": [
+      "Pase medio",
+      "Empeine",
+      "Precisión"
+    ],
+    "que_observar": [
+      "Empeine tenso.",
+      "Balón rasante.",
+      "Control del rebote."
+    ],
+    "correcciones": [
+      "Pie de apoyo al lado del balón.",
+      "Empeine tenso y tobillo firme."
+    ],
+    "reglas": [
+      "Pase con empeine rasante.",
+      "Controlar el rebote con superficie firme.",
+      "3 series de 20 pases."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Marcar zona objetivo en la pared (cuadrado) y contar aciertos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1 (o varios). · 10-12 min.",
+      "Fútbol 11: 1 (o varios). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 063",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 18 x 3 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-063-PASE-MEDIO-15M-CONTRA-PARED/CampoBase_Pase_Medio_15m_Contra_Pared.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-063-PASE-MEDIO-15M-CONTRA-PARED/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-064-PASE-LARGO-25M-EMPEINE",
+  "nombre": "Pase largo 25m con empeine",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase largo",
+      "Empeine",
+      "Cambio de orientación"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 jugadores separados por 25m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Pases largos con empeine, buscando que llegue medio-alto y controlable."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El receptor controla al primer toque, con superficie a elección."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "12 pases por jugador. Descanso 1 min. 4 series."
+      }
+    ],
+    "explicacion_breve": "Dos jugadores separados 25 m se pasan el balón largo con el empeine, buscando que llegue medio-alto y controlable, y el receptor controla al primer toque.",
+    "leyenda": "A, B: jugadores · Flecha azul: trayectoria del balón (medio-alto)"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar el pase largo preciso — cambio de orientación del juego."
+    ],
+    "claves_entrenador": [
+      "El pie de apoyo debe estar LEJOS del balón (35-40cm). Sin espacio, no hay empeine limpio."
+    ],
+    "montaje": [
+      "2 jugadores separados por 25m."
+    ],
+    "desarrollo": [
+      "2 jugadores separados por 25m.",
+      "Pases largos con empeine, buscando que llegue medio-alto y controlable.",
+      "El receptor controla al primer toque, con superficie a elección.",
+      "12 pases por jugador. Descanso 1 min. 4 series."
+    ],
+    "que_buscamos": [
+      "Pase largo",
+      "Empeine",
+      "Cambio de orientación"
+    ],
+    "que_observar": [
+      "Pie de apoyo lejos del balón.",
+      "Altura del pase.",
+      "Control al primer toque."
+    ],
+    "correcciones": [
+      "Pie de apoyo lejos del balón.",
+      "Empeine limpio."
+    ],
+    "reglas": [
+      "Pase largo con empeine.",
+      "Llegada medio-alta y controlable.",
+      "12 pases por jugador."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Ambos jugadores deben moverse (no estáticos) — pase al espacio, no al pie."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 12-15 min.",
+      "Fútbol 11: 2 por pareja. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 064",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media-alta.",
+        "Espacio: 30 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-064-PASE-LARGO-25M-EMPEINE/CampoBase_Pase_Largo_25m_Empeine.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-064-PASE-LARGO-25M-EMPEINE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-065-CAMBIO-JUEGO-LARGA-DISTANCIA",
+  "nombre": "Cambio de juego larga distancia",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase largo",
+      "Cambio de banda",
+      "Pase aéreo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugadores en bandas opuestas de un rectángulo de 40m x 15m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Uno tira pase largo AÉREO (curva) hacia el otro."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Receptor controla con muslo, pecho o pie — según altura del balón."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 cambios por jugador. Descanso completo. 3 series."
+      }
+    ],
+    "explicacion_breve": "Dos jugadores en bandas opuestas de un rectángulo de 40x15 m se pasan el balón con pase largo aéreo y curvo, y el receptor controla con muslo, pecho o pie según la altura.",
+    "leyenda": "A, B: jugadores en bandas opuestas · Flecha azul: pase aéreo curvo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el cambio de banda con pase largo aéreo de 30-40m."
+    ],
+    "claves_entrenador": [
+      "Para que el balón vaya alto, pie de apoyo un poco ATRÁS del balón + golpe en la parte baja."
+    ],
+    "montaje": [
+      "Jugadores en bandas opuestas de un rectángulo de 40m x 15m."
+    ],
+    "desarrollo": [
+      "Jugadores en bandas opuestas de un rectángulo de 40m x 15m.",
+      "Uno tira pase largo AÉREO (curva) hacia el otro.",
+      "Receptor controla con muslo, pecho o pie — según altura del balón.",
+      "10 cambios por jugador. Descanso completo. 3 series."
+    ],
+    "que_buscamos": [
+      "Pase largo",
+      "Cambio de banda",
+      "Pase aéreo"
+    ],
+    "que_observar": [
+      "Curva del pase.",
+      "Altura del balón.",
+      "Control con la superficie adecuada."
+    ],
+    "correcciones": [
+      "Pie de apoyo atrás del balón.",
+      "Golpe en la parte baja."
+    ],
+    "reglas": [
+      "Pase largo aéreo y curvo.",
+      "Control según altura del balón.",
+      "10 cambios por jugador."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Receptor debe pasarla al pie derecho o izquierdo según indicación del lanzador."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 12-15 min.",
+      "Fútbol 11: 2 por pareja. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 065",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 40 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-065-CAMBIO-JUEGO-LARGA-DISTANCIA/CampoBase_Cambio_Juego_Larga_Distancia.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-065-CAMBIO-JUEGO-LARGA-DISTANCIA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-066-RONDO-4V1-CLASICO",
+  "nombre": "Rondo 4v1 clásico",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Rondo",
+      "Pase corto"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 5,
+      "organizacion": "5 (4 posesores + 1 recuperador)"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 jugadores en las esquinas de un cuadrado de 6m, uno en el centro (recuperador)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Los 4 se pasan el balón entre sí, tratando de no perderlo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El del centro trata de tocarlo o interceptar el pase."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "El que pierde pasa al centro. Trabajo continuo 8-10 min."
+      }
+    ],
+    "explicacion_breve": "Cuatro posesores en las esquinas de un cuadrado de 6 m se pasan el balón tratando de no perderlo, mientras un recuperador central intenta tocarlo o interceptar el pase.",
+    "leyenda": "A, B, C, D: posesores · R: recuperador central · Flecha azul: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Introducir el concepto de posesión con superioridad simple."
+    ],
+    "claves_entrenador": [
+      "Perfil abierto SIEMPRE — cuerpo apuntando a MÁS de un compañero."
+    ],
+    "montaje": [
+      "4 jugadores en las esquinas de un cuadrado de 6m, uno en el centro (recuperador)."
+    ],
+    "desarrollo": [
+      "4 jugadores en las esquinas de un cuadrado de 6m, uno en el centro (recuperador).",
+      "Los 4 se pasan el balón entre sí, tratando de no perderlo.",
+      "El del centro trata de tocarlo o interceptar el pase.",
+      "El que pierde pasa al centro. Trabajo continuo 8-10 min."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Rondo",
+      "Pase corto"
+    ],
+    "que_observar": [
+      "Perfil abierto.",
+      "Precisión del pase.",
+      "Movilidad del recuperador."
+    ],
+    "correcciones": [
+      "Perfil abierto siempre.",
+      "Cuerpo apuntando a más de un compañero."
+    ],
+    "reglas": [
+      "4 posesores + 1 recuperador.",
+      "No perder el balón.",
+      "El que pierde pasa al centro."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir regla de máximo 2 toques por posesión (obliga velocidad de decisión)."
+    ],
+    "variantes": [
+      "Fútbol 7: 5 (4 posesores + 1 recuperador). · 10-12 min.",
+      "Fútbol 11: 5 (4 posesores + 1 recuperador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 066",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 6 x 6 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-066-RONDO-4V1-CLASICO/CampoBase_Rondo_4v1_Clasico.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-066-RONDO-4V1-CLASICO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-067-RONDO-4V2-CON-SALIDAS",
+  "nombre": "Rondo 4v2 con salidas",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Rondo",
+      "Salida"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6"
+    },
+    "material": "1 balón + 4 conos + 2 objetivos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 posesores + 2 recuperadores dentro de un cuadrado de 8m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Los posesores buscan pasar la pelota entre sí y, cuando pueden, SACARLA fuera del cuadrado a un objetivo (compañero externo)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Los 2 recuperadores presionan intentando robar o forzar pase malo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Se cuentan las 'salidas' logradas. Trabajo 10-12 min con rotación."
+      }
+    ],
+    "explicacion_breve": "Cuatro posesores y dos recuperadores dentro de un cuadrado de 8 m; los posesores circulan y, cuando pueden, sacan el balón a un objetivo externo.",
+    "leyenda": "A, B, C, D: posesores · R1, R2: recuperadores · O: objetivo externo · Flecha azul: pase · Flecha roja: salida al objetivo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Rondo con 2 recuperadores + regla de salida hacia zonas objetivo."
+    ],
+    "claves_entrenador": [
+      "El objetivo NO es solo mantener — es CIRCULAR con propósito hacia la salida."
+    ],
+    "montaje": [
+      "4 posesores + 2 recuperadores dentro de un cuadrado de 8m."
+    ],
+    "desarrollo": [
+      "4 posesores + 2 recuperadores dentro de un cuadrado de 8m.",
+      "Los posesores buscan pasar la pelota entre sí y, cuando pueden, SACARLA fuera del cuadrado a un objetivo (compañero externo).",
+      "Los 2 recuperadores presionan intentando robar o forzar pase malo.",
+      "Se cuentan las 'salidas' logradas. Trabajo 10-12 min con rotación."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Rondo",
+      "Salida"
+    ],
+    "que_observar": [
+      "Circulación con propósito.",
+      "Salida al objetivo.",
+      "Presión de los recuperadores."
+    ],
+    "correcciones": [
+      "Circular con propósito.",
+      "Buscar la salida, no solo mantener."
+    ],
+    "reglas": [
+      "4 posesores + 2 recuperadores.",
+      "Salir a un objetivo externo.",
+      "Contar las salidas logradas."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir el cuadrado a 6x6m para intensificar la presión."
+    ],
+    "variantes": [
+      "Fútbol 7: 6. · 12-15 min.",
+      "Fútbol 11: 6. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 067",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 8 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-067-RONDO-4V2-CON-SALIDAS/CampoBase_Rondo_4v2_Con_Salidas.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-067-RONDO-4V2-CON-SALIDAS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-068-RONDO-5V2-PRESION-ACTIVA",
+  "nombre": "Rondo 5v2 con presión activa",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Rondo",
+      "Presión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 7,
+      "organizacion": "7"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "5 posesores en un cuadrado de 10m + 2 recuperadores dentro."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Circulación libre — los 5 se pasan la pelota."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Los 2 recuperadores presionan agresivamente sin parar."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Contar los pases consecutivos como record. Cambiar recuperadores cada 60s."
+      }
+    ],
+    "explicacion_breve": "Cinco posesores en un cuadrado de 10 m circulan el balón mientras dos recuperadores presionan agresivamente sin parar, contando los pases consecutivos.",
+    "leyenda": "A-E: posesores · R1, R2: recuperadores · Flecha azul: pase · Flecha roja: presión"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la circulación de pelota bajo presión constante."
+    ],
+    "claves_entrenador": [
+      "Un pase malo se paga inmediatamente. Precisión > velocidad. Pausa antes que error."
+    ],
+    "montaje": [
+      "5 posesores en un cuadrado de 10m + 2 recuperadores dentro."
+    ],
+    "desarrollo": [
+      "5 posesores en un cuadrado de 10m + 2 recuperadores dentro.",
+      "Circulación libre — los 5 se pasan la pelota.",
+      "Los 2 recuperadores presionan agresivamente sin parar.",
+      "Contar los pases consecutivos como record. Cambiar recuperadores cada 60s."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Rondo",
+      "Presión"
+    ],
+    "que_observar": [
+      "Precisión del pase.",
+      "Circulación libre.",
+      "Presión constante."
+    ],
+    "correcciones": [
+      "Precisión antes que velocidad.",
+      "Pausa antes que error."
+    ],
+    "reglas": [
+      "5 posesores + 2 recuperadores.",
+      "Presión agresiva constante.",
+      "Contar pases consecutivos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir a 6x6m o agregar máximo de 2 toques."
+    ],
+    "variantes": [
+      "Fútbol 7: 7. · 12-15 min.",
+      "Fútbol 11: 7. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 068",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-068-RONDO-5V2-PRESION-ACTIVA/CampoBase_Rondo_5v2_Presion_Activa.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-068-RONDO-5V2-PRESION-ACTIVA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-069-RONDO-6V3-CON-LINEAS",
+  "nombre": "Rondo 6v3 con líneas",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Posicional",
+      "Pase entre líneas"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 9,
+      "organizacion": "9"
+    },
+    "material": "1 balón + 6 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "6 posesores distribuidos en 2 líneas paralelas (3 y 3), separadas por 5m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "3 recuperadores adentro tratan de robar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Regla: el balón debe cambiar de línea al menos cada 4 pases."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo continuo 12-15 min. Rotar recuperadores cada 90s."
+      }
+    ],
+    "explicacion_breve": "Seis posesores en dos líneas paralelas de tres, con tres recuperadores dentro, deben cambiar de línea al menos cada cuatro pases.",
+    "leyenda": "A, B, C: línea inferior · D, E, F: línea superior · R1-R3: recuperadores · Flecha azul: pase entre líneas"
+  },
+  "detalle": {
+    "objetivos": [
+      "Introducir el juego posicional con líneas y roles diferenciados."
+    ],
+    "claves_entrenador": [
+      "Cambiar de línea = pase entre líneas defensivas. Este es el pase MÁS VALIOSO del fútbol moderno."
+    ],
+    "montaje": [
+      "6 posesores distribuidos en 2 líneas paralelas (3 y 3), separadas por 5m."
+    ],
+    "desarrollo": [
+      "6 posesores distribuidos en 2 líneas paralelas (3 y 3), separadas por 5m.",
+      "3 recuperadores adentro tratan de robar.",
+      "Regla: el balón debe cambiar de línea al menos cada 4 pases.",
+      "Trabajo continuo 12-15 min. Rotar recuperadores cada 90s."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Posicional",
+      "Pase entre líneas"
+    ],
+    "que_observar": [
+      "Cambio de línea.",
+      "Pase entre líneas.",
+      "Ocupación de espacios."
+    ],
+    "correcciones": [
+      "Cambiar de línea con regularidad.",
+      "Buscar el pase entre líneas."
+    ],
+    "reglas": [
+      "2 líneas de 3 posesores.",
+      "Cambiar de línea cada 4 pases.",
+      "Rotar recuperadores cada 90 s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar comodín móvil entre líneas para trabajar el pase interior."
+    ],
+    "variantes": [
+      "Fútbol 7: 9. · 15-20 min.",
+      "Fútbol 11: 9. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 069",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 15 x 12 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-069-RONDO-6V3-CON-LINEAS/CampoBase_Rondo_6v3_Con_Lineas.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-069-RONDO-6V3-CON-LINEAS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-070-RONDO-TRIDIMENSIONAL-COMODINES",
+  "nombre": "Rondo tridimensional con comodines",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Comodines",
+      "Apoyo externo"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "8 (3v3 + 2 comodines)"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 equipos de 3 dentro del cuadrado + 2 comodines externos (uno a cada lado)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El equipo con balón puede usar los comodines para apoyarse (siempre a favor de quien tiene la pelota)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Objetivo: mantener 6 pases consecutivos = 1 punto."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo continuo 15 min. Se cuentan puntos por equipo."
+      }
+    ],
+    "explicacion_breve": "Dos equipos de tres dentro del cuadrado, con dos comodines externos que apoyan siempre al equipo con balón; el objetivo es mantener seis pases consecutivos.",
+    "leyenda": "A, B, C: equipo 1 · D, E, F: equipo 2 · C1, C2: comodines externos · Flecha azul: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Sumar comodines móviles como referencia externa para la salida."
+    ],
+    "claves_entrenador": [
+      "Los comodines son 'zonas seguras' — usarlos cuando hay presión, no cuando el juego fluye."
+    ],
+    "montaje": [
+      "2 equipos de 3 dentro del cuadrado + 2 comodines externos (uno a cada lado)."
+    ],
+    "desarrollo": [
+      "2 equipos de 3 dentro del cuadrado + 2 comodines externos (uno a cada lado).",
+      "El equipo con balón puede usar los comodines para apoyarse (siempre a favor de quien tiene la pelota).",
+      "Objetivo: mantener 6 pases consecutivos = 1 punto.",
+      "Trabajo continuo 15 min. Se cuentan puntos por equipo."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Comodines",
+      "Apoyo externo"
+    ],
+    "que_observar": [
+      "Uso de los comodines.",
+      "Apoyo externo.",
+      "Mantener la posesión."
+    ],
+    "correcciones": [
+      "Usar comodines bajo presión.",
+      "No abusar cuando el juego fluye."
+    ],
+    "reglas": [
+      "3v3 + 2 comodines externos.",
+      "Comodines a favor del que tiene el balón.",
+      "6 pases consecutivos = 1 punto."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir a 1 comodín, o hacer los comodines móviles alrededor del perímetro."
+    ],
+    "variantes": [
+      "Fútbol 7: 8 (3v3 + 2 comodines). · 15-20 min.",
+      "Fútbol 11: 8 (3v3 + 2 comodines). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 070",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 12 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-070-RONDO-TRIDIMENSIONAL-COMODINES/CampoBase_Rondo_Tridimensional_Comodines.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-070-RONDO-TRIDIMENSIONAL-COMODINES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-071-JUEGO-POSICIONAL-5V5-3-CUADRADO",
+  "nombre": "Juego posicional 5v5+3 en cuadrado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Posicional",
+      "Comodines"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 13,
+      "organizacion": "13"
+    },
+    "material": "1 balón + conos + 4 zonas objetivo",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Cuadrado de 25x20m con 4 zonas neutras en las esquinas."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "2 equipos de 5 juegan en el interior + 3 comodines (2 externos, 1 interno)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cuando un equipo posee, los comodines juegan con ellos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Objetivo: 6 pases consecutivos + parar el balón en una zona neutra = punto."
+      }
+    ],
+    "explicacion_breve": "Dos equipos de cinco juegan en un cuadrado de 25x20 m con tres comodines y cuatro zonas neutras; el objetivo es seis pases consecutivos y parar el balón en una zona neutra.",
+    "leyenda": "A1-A5: equipo 1 · B1-B5: equipo 2 · C: comodines · Flecha azul: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar posesión con salida a objetivos + presión bilateral."
+    ],
+    "claves_entrenador": [
+      "El comodín interno es LA CLAVE — recibe entre líneas y desorganiza al rival. Usarlo mucho."
+    ],
+    "montaje": [
+      "Cuadrado de 25x20m con 4 zonas neutras en las esquinas."
+    ],
+    "desarrollo": [
+      "Cuadrado de 25x20m con 4 zonas neutras en las esquinas.",
+      "2 equipos de 5 juegan en el interior + 3 comodines (2 externos, 1 interno).",
+      "Cuando un equipo posee, los comodines juegan con ellos.",
+      "Objetivo: 6 pases consecutivos + parar el balón en una zona neutra = punto."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Posicional",
+      "Comodines"
+    ],
+    "que_observar": [
+      "Uso del comodín interno.",
+      "Salida a zonas neutras.",
+      "Presión bilateral."
+    ],
+    "correcciones": [
+      "Usar mucho el comodín interno.",
+      "Buscar la zona neutra."
+    ],
+    "reglas": [
+      "5v5 + 3 comodines.",
+      "6 pases consecutivos.",
+      "Parar el balón en zona neutra = punto."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Después del punto, dejar que el equipo intente finalizar en una portería pequeña (transición)."
+    ],
+    "variantes": [
+      "Fútbol 7: 13. · 20-25 min.",
+      "Fútbol 11: 13. · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 071",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-071-JUEGO-POSICIONAL-5V5-3-CUADRADO/CampoBase_Juego_Posicional_5v5_3_Cuadrado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-071-JUEGO-POSICIONAL-5V5-3-CUADRADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-072-SALIDA-LIMPIA-DESDE-DEFENSA-4V2",
+  "nombre": "Salida limpia desde defensa (4v2 en zona baja)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Salida de balón",
+      "Posesión",
+      "Circulación"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6 + portero"
+    },
+    "material": "1 balón + 4 conos + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 defensores + portero en zona baja, contra 2 delanteros presionando."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero inicia el juego con pase raso."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Los 4 defensores deben CIRCULAR el balón y salir jugando a una zona alta."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Si los delanteros roban, disparan a la portería. Trabajo 15 min con rotación."
+      }
+    ],
+    "explicacion_breve": "Cuatro defensores y el portero, en zona baja, circulan el balón para salir jugando a una zona alta contra dos delanteros que presionan.",
+    "leyenda": "K: portero · D1-D4: defensores · A1, A2: delanteros · Flecha azul: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a salir jugando desde el fondo bajo presión de dos delanteros."
+    ],
+    "claves_entrenador": [
+      "El pase clave sale del portero, NO de los centrales. El portero inicia todo si está bien perfilado."
+    ],
+    "montaje": [
+      "4 defensores + portero en zona baja, contra 2 delanteros presionando."
+    ],
+    "desarrollo": [
+      "4 defensores + portero en zona baja, contra 2 delanteros presionando.",
+      "Portero inicia el juego con pase raso.",
+      "Los 4 defensores deben CIRCULAR el balón y salir jugando a una zona alta.",
+      "Si los delanteros roban, disparan a la portería. Trabajo 15 min con rotación."
+    ],
+    "que_buscamos": [
+      "Salida de balón",
+      "Posesión",
+      "Circulación"
+    ],
+    "que_observar": [
+      "Pase del portero.",
+      "Circulación de los defensores.",
+      "Salida a zona alta."
+    ],
+    "correcciones": [
+      "El portero inicia la salida.",
+      "Circular antes de salir."
+    ],
+    "reglas": [
+      "4 defensores + portero.",
+      "Salir jugando a zona alta.",
+      "Si roban, disparan a portería."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar a 3 delanteros presionando (4v3) para dificultar la salida."
+    ],
+    "variantes": [
+      "Fútbol 7: 6 + portero. · 15-20 min.",
+      "Fútbol 11: 6 + portero. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 072",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-072-SALIDA-LIMPIA-DESDE-DEFENSA-4V2/CampoBase_Salida_Limpia_Desde_Defensa_4v2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-072-SALIDA-LIMPIA-DESDE-DEFENSA-4V2/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-073-PASE-ENTRE-LINEAS-ROMPER-PASE",
+  "nombre": "Pase entre líneas — romper con pase",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pase filtrado",
+      "Pase entre líneas",
+      "Ruptura"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "8 (4v2 + 2 receptores)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 posesores en zona 1, 2 defensores entre líneas, 2 receptores en zona 2."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Los 4 buscan pasar la pelota entre los defensores para llegar a los 2 receptores."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cada pase entre líneas exitoso = 1 punto."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo 15 min con rotación."
+      }
+    ],
+    "explicacion_breve": "Cuatro posesores en zona 1 buscan pasar el balón entre dos defensores para llegar a dos receptores en zona 2; cada pase entre líneas exitoso vale un punto.",
+    "leyenda": "A-D: posesores (zona 1) · D1, D2: defensores · R1, R2: receptores (zona 2) · Flecha azul: pase filtrado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar el pase filtrado que rompe líneas defensivas."
+    ],
+    "claves_entrenador": [
+      "El pase entre líneas requiere PERFIL abierto del pasador + movimiento del receptor. Ambos deben suceder."
+    ],
+    "montaje": [
+      "4 posesores en zona 1, 2 defensores entre líneas, 2 receptores en zona 2."
+    ],
+    "desarrollo": [
+      "4 posesores en zona 1, 2 defensores entre líneas, 2 receptores en zona 2.",
+      "Los 4 buscan pasar la pelota entre los defensores para llegar a los 2 receptores.",
+      "Cada pase entre líneas exitoso = 1 punto.",
+      "Trabajo 15 min con rotación."
+    ],
+    "que_buscamos": [
+      "Pase filtrado",
+      "Pase entre líneas",
+      "Ruptura"
+    ],
+    "que_observar": [
+      "Perfil abierto del pasador.",
+      "Movimiento del receptor.",
+      "Pase filtrado."
+    ],
+    "correcciones": [
+      "Perfil abierto + movimiento del receptor.",
+      "Buscar la ventana entre defensores."
+    ],
+    "reglas": [
+      "4 posesores + 2 defensores + 2 receptores.",
+      "Pase entre líneas = 1 punto.",
+      "Rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir la ventana entre defensores (más juntos) para aumentar dificultad."
+    ],
+    "variantes": [
+      "Fútbol 7: 8 (4v2 + 2 receptores). · 15-20 min.",
+      "Fútbol 11: 8 (4v2 + 2 receptores). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 073",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-073-PASE-ENTRE-LINEAS-ROMPER-PASE/CampoBase_Pase_Entre_Lineas_Romper_Pase.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-073-PASE-ENTRE-LINEAS-ROMPER-PASE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-074-CIRCULACION-TRIANGULOS-OFENSIVOS",
+  "nombre": "Circulación en triángulos ofensivos",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Posesión",
+      "Triángulos",
+      "Tercer hombre"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 7,
+      "organizacion": "7 (3-4-3 conceptual)"
+    },
+    "material": "1 balón + conos + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "3 jugadores en base, 4 en medio, 3 arriba — formando triángulos entre líneas."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El balón circula desde atrás buscando siempre el tercer hombre libre."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al llegar al tercio final, buscan crear ocasión de gol."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo 20 min con rotación cada 5 min."
+      }
+    ],
+    "explicacion_breve": "Tres jugadores en base, cuatro en medio y tres arriba forman triángulos entre líneas; el balón circula desde atrás buscando siempre el tercer hombre libre hasta crear ocasión de gol.",
+    "leyenda": "B1-B3: base · M1-M4: medio · F1-F3: ataque · Flecha azul: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la circulación fluida en triángulos móviles con progresión hacia la portería."
+    ],
+    "claves_entrenador": [
+      "Concepto clave: 'buscar al tercer hombre'. Nunca pasar y quedarse — moverse para reaparecer."
+    ],
+    "montaje": [
+      "3 jugadores en base, 4 en medio, 3 arriba — formando triángulos entre líneas."
+    ],
+    "desarrollo": [
+      "3 jugadores en base, 4 en medio, 3 arriba — formando triángulos entre líneas.",
+      "El balón circula desde atrás buscando siempre el tercer hombre libre.",
+      "Al llegar al tercio final, buscan crear ocasión de gol.",
+      "Trabajo 20 min con rotación cada 5 min."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Triángulos",
+      "Tercer hombre"
+    ],
+    "que_observar": [
+      "Búsqueda del tercer hombre.",
+      "Circulación fluida.",
+      "Progresión al tercio final."
+    ],
+    "correcciones": [
+      "Buscar al tercer hombre.",
+      "Moverse para reaparecer."
+    ],
+    "reglas": [
+      "3-4-3 conceptual.",
+      "Buscar el tercer hombre.",
+      "Progresar a portería."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir 3 defensores para que hagan una línea de presión intermedia."
+    ],
+    "variantes": [
+      "Fútbol 7: 7 (3-4-3 conceptual). · 15-20 min.",
+      "Fútbol 11: 7 (3-4-3 conceptual). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 074",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 40 x 25 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-074-CIRCULACION-TRIANGULOS-OFENSIVOS/CampoBase_Circulacion_Triangulos_Ofensivos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-074-CIRCULACION-TRIANGULOS-OFENSIVOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-075-PASE-Y-VA-DAR-E-IR-2-JUGADORES",
+  "nombre": "Pase y va (dar e ir) — 2 jugadores",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Pared",
+      "Pase y va",
+      "Desmarque"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (o pareja + defensor)"
+    },
+    "material": "1 balón + 2 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "A tiene el balón, B está a 5m adelantado."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "A pasa a B, A hace movimiento diagonal hacia adelante para 'ganar la espalda'."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "B devuelve pase de primera al espacio que dejó A al moverse."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "A recibe y progresa. Repetir 10 veces por jugador."
+      }
+    ],
+    "explicacion_breve": "A pasa a B y hace un movimiento diagonal para ganar la espalda; B devuelve de primera al espacio que dejó A, que recibe y progresa.",
+    "leyenda": "A: inicia la pared · B: devuelve de primera · Flecha azul: pase · Flecha roja: carrera diagonal de A"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar el gesto técnico-táctico más fundamental del fútbol: pared."
+    ],
+    "claves_entrenador": [
+      "El pase de A sale MIENTRAS empieza a correr — no primero pasar y después correr. Es UN gesto."
+    ],
+    "montaje": [
+      "A tiene el balón, B está a 5m adelantado."
+    ],
+    "desarrollo": [
+      "A tiene el balón, B está a 5m adelantado.",
+      "A pasa a B, A hace movimiento diagonal hacia adelante para 'ganar la espalda'.",
+      "B devuelve pase de primera al espacio que dejó A al moverse.",
+      "A recibe y progresa. Repetir 10 veces por jugador."
+    ],
+    "que_buscamos": [
+      "Pared",
+      "Pase y va",
+      "Desmarque"
+    ],
+    "que_observar": [
+      "Pase mientras corre.",
+      "Movimiento diagonal.",
+      "Devolución de primera."
+    ],
+    "correcciones": [
+      "Pasar mientras se corre.",
+      "Devolver de primera al espacio."
+    ],
+    "reglas": [
+      "Pase y movimiento diagonal.",
+      "Devolución de primera al espacio.",
+      "10 repeticiones por jugador."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor pasivo entre A y B, luego activo."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (o pareja + defensor). · 12-15 min.",
+      "Fútbol 11: 2 (o pareja + defensor). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 075",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-075-PASE-Y-VA-DAR-E-IR-2-JUGADORES/CampoBase_Pase_Y_Va_Dar_E_Ir_2_Jugadores.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-075-PASE-Y-VA-DAR-E-IR-2-JUGADORES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-076-TROTE-CONTINUO-AEROBICO-BASE",
+  "nombre": "Trote continuo aeróbico base",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Resistencia",
+      "Aeróbico",
+      "Base"
+    ],
+    "tiempo_estimado_15": "15-25 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15"
+    },
+    "material": "cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugadores trotan a ritmo continuo, constante, cómodo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Deben poder mantener una conversación mientras trotan."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Duración progresiva: iniciar en 15 min, subir a 25 min con las semanas."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Al terminar, 5 min de caminata + estiramiento suave."
+      }
+    ],
+    "explicacion_breve": "Los jugadores trotan a ritmo continuo, constante y cómodo, pudiendo mantener una conversación, con duración progresiva de 15 a 25 minutos.",
+    "leyenda": "J: jugador · Flecha roja: trote continuo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Construir base aeróbica y capacidad cardiovascular general."
+    ],
+    "claves_entrenador": [
+      "Nunca correr rápido en este ejercicio — la base aeróbica se construye en ritmo BAJO sostenido."
+    ],
+    "montaje": [
+      "Jugadores trotan a ritmo continuo, constante, cómodo."
+    ],
+    "desarrollo": [
+      "Jugadores trotan a ritmo continuo, constante, cómodo.",
+      "Deben poder mantener una conversación mientras trotan.",
+      "Duración progresiva: iniciar en 15 min, subir a 25 min con las semanas.",
+      "Al terminar, 5 min de caminata + estiramiento suave."
+    ],
+    "que_buscamos": [
+      "Resistencia",
+      "Aeróbico",
+      "Base"
+    ],
+    "que_observar": [
+      "Ritmo bajo sostenido.",
+      "Capacidad de conversación.",
+      "Duración progresiva."
+    ],
+    "correcciones": [
+      "No correr rápido.",
+      "Mantener ritmo bajo."
+    ],
+    "reglas": [
+      "Ritmo continuo y cómodo.",
+      "Poder conversar mientras se trota.",
+      "Duración progresiva."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar duración 2 min por semana, hasta llegar a 30-35 min continuos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15. · 15-25 min.",
+      "Fútbol 11: 1-15. · 15-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 076",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: baja-media.",
+        "Espacio: pista o campo abierto."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-076-TROTE-CONTINUO-AEROBICO-BASE/CampoBase_Trote_Continuo_Aerobico_Base.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-076-TROTE-CONTINUO-AEROBICO-BASE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-077-CARRERA-CONTINUA-CAMBIOS-RITMO",
+  "nombre": "Carrera continua con cambios de ritmo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Resistencia",
+      "Cambios de ritmo",
+      "Cardiovascular"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15"
+    },
+    "material": "cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Trote continuo de base durante 3 min."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Acelerar a ritmo alto (70-80% del máximo) durante 1 min."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Volver a trote suave 2 min de recuperación."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Repetir 4-5 veces según nivel. Cierre con 5 min caminata."
+      }
+    ],
+    "explicacion_breve": "Trote continuo de base, aceleración a ritmo alto y vuelta a trote suave de recuperación, repitiendo el ciclo varias veces.",
+    "leyenda": "J: jugador · Flecha roja: carrera · Flecha azul: trote de recuperación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Adaptar el sistema cardiovascular a variaciones típicas del partido."
+    ],
+    "claves_entrenador": [
+      "El cambio de ritmo es más importante que la velocidad absoluta. Simula acciones reales del partido."
+    ],
+    "montaje": [
+      "Trote continuo de base durante 3 min."
+    ],
+    "desarrollo": [
+      "Trote continuo de base durante 3 min.",
+      "Acelerar a ritmo alto (70-80% del máximo) durante 1 min.",
+      "Volver a trote suave 2 min de recuperación.",
+      "Repetir 4-5 veces según nivel. Cierre con 5 min caminata."
+    ],
+    "que_buscamos": [
+      "Resistencia",
+      "Cambios de ritmo",
+      "Cardiovascular"
+    ],
+    "que_observar": [
+      "Cambio de ritmo.",
+      "Recuperación.",
+      "Ritmo alto al 70-80%."
+    ],
+    "correcciones": [
+      "Priorizar el cambio de ritmo.",
+      "No buscar velocidad absoluta."
+    ],
+    "reglas": [
+      "Trote base 3 min.",
+      "Aceleración 1 min.",
+      "Recuperación 2 min."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir tiempo de recuperación (2 min → 1:30 → 1 min) manteniendo intensidad."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15. · 15-20 min.",
+      "Fútbol 11: 1-15. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 077",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: pista o campo abierto."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-077-CARRERA-CONTINUA-CAMBIOS-RITMO/CampoBase_Carrera_Continua_Cambios_Ritmo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-077-CARRERA-CONTINUA-CAMBIOS-RITMO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-078-HIIT-JUGADO-30S-ALTO-30S-RECUPERACION",
+  "nombre": "HIIT jugado: 30s alto / 30s recuperación",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Resistencia",
+      "HIIT",
+      "Anaeróbico"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15"
+    },
+    "material": "cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Fase de trabajo: 30 segundos a INTENSIDAD MÁXIMA (sprint corto, cambios de dirección)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Fase de recuperación: 30 segundos de trote muy suave o caminata."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Serie de 8 bloques (16 min totales)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Descanso completo 5 min entre series."
+      }
+    ],
+    "explicacion_breve": "Alternar 30 segundos a intensidad máxima con 30 segundos de recuperación, en series de ocho bloques.",
+    "leyenda": "J: jugador · Flecha roja: sprint máximo · Flecha azul: recuperación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la potencia anaeróbica y capacidad de recuperación entre esfuerzos."
+    ],
+    "claves_entrenador": [
+      "En los 30s de trabajo, ir al 100%. Sin dosificar. Solo así el efecto HIIT aparece."
+    ],
+    "montaje": [
+      "Fase de trabajo: 30 segundos a INTENSIDAD MÁXIMA (sprint corto, cambios de dirección)."
+    ],
+    "desarrollo": [
+      "Fase de trabajo: 30 segundos a INTENSIDAD MÁXIMA (sprint corto, cambios de dirección).",
+      "Fase de recuperación: 30 segundos de trote muy suave o caminata.",
+      "Serie de 8 bloques (16 min totales).",
+      "Descanso completo 5 min entre series."
+    ],
+    "que_buscamos": [
+      "Resistencia",
+      "HIIT",
+      "Anaeróbico"
+    ],
+    "que_observar": [
+      "Intensidad máxima.",
+      "Recuperación.",
+      "Número de bloques."
+    ],
+    "correcciones": [
+      "Ir al 100% en el trabajo.",
+      "No dosificar."
+    ],
+    "reglas": [
+      "30 s a intensidad máxima.",
+      "30 s de recuperación.",
+      "8 bloques por serie."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar a 10 bloques por serie, o reducir recuperación a 20 segundos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15. · 15-20 min.",
+      "Fútbol 11: 1-15. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 078",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: campo o zona 20x20m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-078-HIIT-JUGADO-30S-ALTO-30S-RECUPERACION/CampoBase_HIIT_Jugado_30s_Alto_30s_Recuperacion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-078-HIIT-JUGADO-30S-ALTO-30S-RECUPERACION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-079-SPRINTS-REPETIDOS-RECUPERACION-COMPLETA",
+  "nombre": "Sprints repetidos con recuperación completa",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Velocidad",
+      "Sprint",
+      "Potencia"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10"
+    },
+    "material": "conos + cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Marcar distancia de 20 metros con 2 conos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Sprint máximo de 20m — meta batir el mejor tiempo personal."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Caminar de vuelta al inicio (1-2 min de recuperación COMPLETA)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8-10 sprints por sesión."
+      }
+    ],
+    "explicacion_breve": "Sprint máximo de 20 metros con recuperación completa caminando de vuelta, repitiendo 8-10 veces por sesión.",
+    "leyenda": "J: jugador · Cono: salida y meta · Flecha roja: sprint máximo · Flecha gris: caminar de vuelta"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar velocidad máxima y potencia sin acumular fatiga."
+    ],
+    "claves_entrenador": [
+      "La recuperación DEBE ser completa. Si no, el trabajo se convierte en resistencia, no en velocidad."
+    ],
+    "montaje": [
+      "Marcar distancia de 20 metros con 2 conos."
+    ],
+    "desarrollo": [
+      "Marcar distancia de 20 metros con 2 conos.",
+      "Sprint máximo de 20m — meta batir el mejor tiempo personal.",
+      "Caminar de vuelta al inicio (1-2 min de recuperación COMPLETA).",
+      "8-10 sprints por sesión."
+    ],
+    "que_buscamos": [
+      "Velocidad",
+      "Sprint",
+      "Potencia"
+    ],
+    "que_observar": [
+      "Velocidad máxima.",
+      "Recuperación completa.",
+      "Tiempo personal."
+    ],
+    "correcciones": [
+      "Recuperación completa.",
+      "No acumular fatiga."
+    ],
+    "reglas": [
+      "Sprint máximo de 20 m.",
+      "Recuperación completa.",
+      "8-10 sprints por sesión."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar distancia a 30m, o añadir arrancada desde distintas posiciones (parado, sentado, boca abajo)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10. · 15-20 min.",
+      "Fútbol 11: 1-10. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 079",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20-30 m lineales."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-079-SPRINTS-REPETIDOS-RECUPERACION-COMPLETA/CampoBase_Sprints_Repetidos_Recuperacion_Completa.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-079-SPRINTS-REPETIDOS-RECUPERACION-COMPLETA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-080-SPRINTS-RECUPERACION-INCOMPLETA-RSA",
+  "nombre": "Sprints con recuperación incompleta (RSA)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Velocidad",
+      "RSA",
+      "Resistencia a la velocidad"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10"
+    },
+    "material": "conos + cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Sprint máximo de 20m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Recuperación ACTIVA (trote suave) durante 20 segundos."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Nuevo sprint máximo. Repetir 6-8 sprints por serie."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3-4 series con 3-4 min de descanso entre series."
+      }
+    ],
+    "explicacion_breve": "Sprint máximo de 20 metros con recuperación activa de 20 segundos, repitiendo 6-8 sprints por serie en 3-4 series.",
+    "leyenda": "J: jugador · Cono: salida y meta · Flecha roja: sprint máximo · Flecha azul: trote de recuperación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar la capacidad de repetir sprints — el gesto más real del fútbol."
+    ],
+    "claves_entrenador": [
+      "RSA = Repeated Sprint Ability. Es lo que distingue a un jugador que aguanta 90 min al 100%."
+    ],
+    "montaje": [
+      "Sprint máximo de 20m."
+    ],
+    "desarrollo": [
+      "Sprint máximo de 20m.",
+      "Recuperación ACTIVA (trote suave) durante 20 segundos.",
+      "Nuevo sprint máximo. Repetir 6-8 sprints por serie.",
+      "3-4 series con 3-4 min de descanso entre series."
+    ],
+    "que_buscamos": [
+      "Velocidad",
+      "RSA",
+      "Resistencia a la velocidad"
+    ],
+    "que_observar": [
+      "Capacidad de repetir sprints.",
+      "Recuperación activa.",
+      "Mantenimiento de la velocidad."
+    ],
+    "correcciones": [
+      "Recuperación activa.",
+      "Mantener la intensidad en cada sprint."
+    ],
+    "reglas": [
+      "Sprint máximo de 20 m.",
+      "Recuperación activa 20 s.",
+      "6-8 sprints por serie."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir recuperación a 15s, o aumentar a 10-12 sprints por serie."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10. · 15-20 min.",
+      "Fútbol 11: 1-10. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 080",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: muy alta.",
+        "Espacio: 20 m lineales."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-080-SPRINTS-RECUPERACION-INCOMPLETA-RSA/CampoBase_Sprints_Recuperacion_Incompleta_RSA.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-080-SPRINTS-RECUPERACION-INCOMPLETA-RSA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).

@@ -1,4 +1,4 @@
-# CampoBase 2.37.0 — Pack150 Sección 3 (051-060)
+# CampoBase 2.38.0 — Pack150 Secciones 3 y 4 (051-080)
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -11,7 +11,7 @@ Estado: estable. PWA estática en español con Supabase como fuente compartida e
 5. Asistencia: registrar o editar cualquier fecha; indicar la llegada con selectores propios de 24 horas si llega tarde. Al guardar permanece en Asistencia y el listado se ordena por fecha.
 6. Acceso: el primer uso configura una sola vez dos PIN distintos. Después, cada sesión pide el PIN una vez. El rol se conserva mientras siga abierta la pestaña, incluso si el navegador recarga la PWA; “Cerrar sesión” o una pestaña nueva vuelven a pedirlo. El de Migue da acceso total; el del delegado solo permite tiempos, cambios e incidencias del partido. Migue puede crear desde Ajustes un PIN demo que abre una sesión temporal aislada, sin datos reales ni acceso a Ajustes. Un valor erróneo muestra “PIN incorrecto”.
 7. Ajustes: guardar el nombre del equipo, elegir Fútbol 7 o Fútbol 11, consultar la sincronización y exportar copias JSON. Cada partido indica local o visitante.
-8. Ejercicios: filtrar 80 ejemplos, abrir “Ver demostración” para consultar el diagrama SVG, marcar favoritos y crear, editar o borrar ejercicios. El número de jugadores se destaca en la tarjeta. En la misma pestaña se crean sesiones con calentamiento, 2-3 ejercicios principales y juego final; cada opción indica jugadores y duración.
+8. Ejercicios: filtrar 133 ejercicios, abrir “Ver demostración” para consultar la animación, marcar favoritos y crear, editar o borrar ejercicios. El número de jugadores se destaca en la tarjeta. En la misma pestaña se crean sesiones con calentamiento, 2-3 ejercicios principales y juego final; cada opción indica jugadores y duración.
 9. Tácticas: crear pizarras F7 a partir de ocho formaciones, dibujar acciones y guardar. La guía de la formación se consulta después desde «Ver» en la táctica guardada; no aparece durante la edición.
 
 ## Modalidades
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 159 pruebas automatizadas en 2.37.0.
+- `npm test`: 159 pruebas automatizadas en 2.38.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 
