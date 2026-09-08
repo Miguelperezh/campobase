@@ -2569,7 +2569,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "propuesta",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Calentamiento/activación",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Conducción",
       "Regate",
@@ -4973,7 +4973,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Coordinación/motricidad",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Conducción",
       "Sin balón",
@@ -5449,7 +5449,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Coordinación/motricidad",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Conducción",
       "Sin balón",
