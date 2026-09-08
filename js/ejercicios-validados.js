@@ -10205,6 +10205,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+
 {
   "id": "CAMPOBASE-PACK150-030-DEFINICION-TRAS-CONDUCCION-RAPIDA",
   "nombre": "Definición tras conducción rápida",
@@ -12364,6 +12365,521 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "animacion": {
     "gif": "assets/ejercicios/CAMPOBASE-PACK150-050-CIRCUITO-COMPLETO-FINALIZACION/CampoBase_Circuito_Completo_Finalizacion.gif",
     "frames": "assets/ejercicios/CAMPOBASE-PACK150-050-CIRCUITO-COMPLETO-FINALIZACION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-051-DOMINIOS-INDIVIDUALES-PIE-DOMINANTE",
+  "nombre": "Dominios individuales — pie dominante",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Dominio",
+      "Control",
+      "Pie dominante"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 (individual)"
+    },
+    "material": "1 balón por jugador",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Cada jugador con su balón, distribuidos por el espacio."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Realizar dominios con el empeine del pie dominante, sin dejar caer."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Contar los dominios seguidos y buscar batir el récord personal."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 60 segundos con 30s de descanso."
+      }
+    ],
+    "explicacion_breve": "Cada jugador, con su balón, realiza dominios con el empeine del pie dominante sin dejar caer, contando los seguidos para batir su récord personal.",
+    "leyenda": "Azul: jugador (J) · Balón: dominio (sube y baja)"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar el control fino del balón y la sensibilidad con el pie dominante."
+    ],
+    "claves_entrenador": [
+      "El toque debe ser SUAVE, no fuerte. Balón cerca del pie, no lejos."
+    ],
+    "montaje": [
+      "Cada jugador con su balón, distribuidos por el espacio."
+    ],
+    "desarrollo": [
+      "Cada jugador con su balón, distribuidos por el espacio.",
+      "Realizar dominios con el empeine del pie dominante, sin dejar caer.",
+      "Contar los dominios seguidos y buscar batir el récord personal.",
+      "3 series de 60 segundos con 30s de descanso."
+    ],
+    "que_buscamos": [
+      "Dominio",
+      "Control",
+      "Pie dominante"
+    ],
+    "que_observar": [
+      "Suavidad del toque.",
+      "Balón cerca del pie.",
+      "Récord personal."
+    ],
+    "correcciones": [
+      "Toque suave, no fuerte.",
+      "Balón cerca del pie."
+    ],
+    "reglas": [
+      "Dominios con el empeine del pie dominante.",
+      "Sin dejar caer el balón.",
+      "3 series de 60s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Ejecutar dominios mientras se camina lentamente por el espacio."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 (individual). · 6-8 min.",
+      "Fútbol 11: 1-15 (individual). · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 051",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: baja.",
+        "Espacio: 2 x 2 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-051-DOMINIOS-INDIVIDUALES-PIE-DOMINANTE/CampoBase_Dominios_Individuales_Pie_Dominante.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-051-DOMINIOS-INDIVIDUALES-PIE-DOMINANTE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-052-DOMINIOS-ALTERNANDO-PIES",
+  "nombre": "Dominios alternando pies",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Dominio",
+      "Ambidextría",
+      "Coordinación"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15"
+    },
+    "material": "1 balón por jugador",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Cada jugador con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Alternar dominios: 1 con pie derecho, 1 con pie izquierdo, sin parar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Buscar mantener el ritmo constante sin perder el balón."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 60s. Registrar el récord de dominios alternados seguidos."
+      }
+    ],
+    "explicacion_breve": "Cada jugador alterna dominios (uno con pie derecho, uno con pie izquierdo) sin parar, buscando mantener el ritmo constante sin perder el balón.",
+    "leyenda": "Azul: jugador (J) · Balón: dominio alternando pies"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar ambidextría y coordinación con ambos pies en el dominio."
+    ],
+    "claves_entrenador": [
+      "Ritmo antes que velocidad. Al inicio, aceptar que el pie 'malo' va a fallar más."
+    ],
+    "montaje": [
+      "Cada jugador con balón."
+    ],
+    "desarrollo": [
+      "Cada jugador con balón.",
+      "Alternar dominios: 1 con pie derecho, 1 con pie izquierdo, sin parar.",
+      "Buscar mantener el ritmo constante sin perder el balón.",
+      "3 series de 60s. Registrar el récord de dominios alternados seguidos."
+    ],
+    "que_buscamos": [
+      "Dominio",
+      "Ambidextría",
+      "Coordinación"
+    ],
+    "que_observar": [
+      "Alternancia de pies.",
+      "Ritmo constante.",
+      "Récord de dominios alternados."
+    ],
+    "correcciones": [
+      "Ritmo antes que velocidad.",
+      "Aceptar el fallo del pie no dominante."
+    ],
+    "reglas": [
+      "Alternar pie derecho e izquierdo.",
+      "Mantener el ritmo constante.",
+      "3 series de 60s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Introducir la regla: cada 5 dominios debe ir muslo (izq o der) intercalado."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15. · 6-8 min.",
+      "Fútbol 11: 1-15. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 052",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: baja-media.",
+        "Espacio: 2 x 2 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-052-DOMINIOS-ALTERNANDO-PIES/CampoBase_Dominios_Alternando_Pies.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-052-DOMINIOS-ALTERNANDO-PIES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-053-DOMINIOS-MUSLO-CABEZA",
+  "nombre": "Dominios con muslo y cabeza",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Dominio",
+      "Muslo",
+      "Cabeza"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15"
+    },
+    "material": "1 balón por jugador",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Cada jugador con balón, empieza con dominios en pie."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cada 3 dominios, subir el balón a MUSLO y hacer 2 dominios ahí."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Luego elevar a CABEZA y dar 2 cabeceos suaves."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Bajar de nuevo a pie y repetir el ciclo. 4-5 minutos continuos."
+      }
+    ],
+    "explicacion_breve": "Cada jugador empieza con dominios en pie y, cada 3 dominios, sube el balón a muslo (2 dominios) y luego a cabeza (2 cabeceos suaves), bajando de nuevo a pie para repetir el ciclo.",
+    "leyenda": "Azul: jugador (J) · Balón: sube pie → muslo → cabeza"
+  },
+  "detalle": {
+    "objetivos": [
+      "Ampliar el repertorio técnico del control con superficies distintas del cuerpo."
+    ],
+    "claves_entrenador": [
+      "Al pasar de una superficie a otra, el toque debe ser MÁS SUAVE que el anterior."
+    ],
+    "montaje": [
+      "Cada jugador con balón, empieza con dominios en pie."
+    ],
+    "desarrollo": [
+      "Cada jugador con balón, empieza con dominios en pie.",
+      "Cada 3 dominios, subir el balón a MUSLO y hacer 2 dominios ahí.",
+      "Luego elevar a CABEZA y dar 2 cabeceos suaves.",
+      "Bajar de nuevo a pie y repetir el ciclo. 4-5 minutos continuos."
+    ],
+    "que_buscamos": [
+      "Dominio",
+      "Muslo",
+      "Cabeza"
+    ],
+    "que_observar": [
+      "Cambio de superficie.",
+      "Suavidad del toque.",
+      "Ciclo completo."
+    ],
+    "correcciones": [
+      "Toque más suave al cambiar de superficie.",
+      "Mantener el ciclo sin parar."
+    ],
+    "reglas": [
+      "Ciclo pie → muslo → cabeza.",
+      "Toque más suave al cambiar de superficie.",
+      "4-5 min continuos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Establecer secuencia fija: 3 pie + 2 muslo + 2 cabeza + 2 muslo + 3 pie, sin parar."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15. · 8-10 min.",
+      "Fútbol 11: 1-15. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 053",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: baja.",
+        "Espacio: 2 x 2 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-053-DOMINIOS-MUSLO-CABEZA/CampoBase_Dominios_Muslo_Cabeza.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-053-DOMINIOS-MUSLO-CABEZA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-054-DOMINIOS-PROGRESIVOS-CIRCUITO",
+  "nombre": "Dominios progresivos en circuito",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Dominio",
+      "Movimiento",
+      "Estabilidad"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8"
+    },
+    "material": "1 balón por jugador",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador arranca haciendo dominios en el sitio."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Sin dejar caer el balón, avanza 5 pasos con dominios en movimiento."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al llegar, hace 5 dominios alternando pies rápidos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Devuelve el balón al pie de apoyo y para. Repite 4-5 veces."
+      }
+    ],
+    "explicacion_breve": "El jugador arranca con dominios en el sitio, avanza 5 pasos con dominios en movimiento, hace 5 dominios alternando pies rápidos y para devolviendo el balón al pie de apoyo.",
+    "leyenda": "Azul: jugador (J) · Cono: referencia del circuito · Flecha roja: avance"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar dominios con movimiento y patrones específicos."
+    ],
+    "claves_entrenador": [
+      "El objetivo NO es la cantidad — es la estabilidad del balón durante todo el circuito."
+    ],
+    "montaje": [
+      "Jugador arranca haciendo dominios en el sitio."
+    ],
+    "desarrollo": [
+      "Jugador arranca haciendo dominios en el sitio.",
+      "Sin dejar caer el balón, avanza 5 pasos con dominios en movimiento.",
+      "Al llegar, hace 5 dominios alternando pies rápidos.",
+      "Devuelve el balón al pie de apoyo y para. Repite 4-5 veces."
+    ],
+    "que_buscamos": [
+      "Dominio",
+      "Movimiento",
+      "Estabilidad"
+    ],
+    "que_observar": [
+      "Estabilidad del balón.",
+      "Dominios en movimiento.",
+      "Parada controlada."
+    ],
+    "correcciones": [
+      "Priorizar la estabilidad.",
+      "No buscar la cantidad."
+    ],
+    "reglas": [
+      "Dominios en el sitio.",
+      "Avanzar 5 pasos sin dejar caer.",
+      "5 dominios rápidos y parar."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar giros de 180° o 360° cada 5 dominios sin perder el balón."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8. · 10-12 min.",
+      "Fútbol 11: 1-8. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 054",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 5 x 5 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-054-DOMINIOS-PROGRESIVOS-CIRCUITO/CampoBase_Dominios_Progresivos_Circuito.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-054-DOMINIOS-PROGRESIVOS-CIRCUITO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-055-CONTROL-ORIENTADO-INTERIOR",
+  "nombre": "Control orientado con interior",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Pase, técnica y posesión",
+    "que_se_trabaja": [
+      "Control",
+      "Primer toque",
+      "Orientación"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja + 2 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Colocar 2 conos separados 5m. Un jugador de cada lado."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Uno pasa raso al compañero."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El compañero recibe con INTERIOR y con el mismo toque orienta el balón hacia el cono al costado."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Devuelve pase. 10 controles por lado, luego cambiar."
+      }
+    ],
+    "explicacion_breve": "Con 2 conos separados 5 m y un jugador a cada lado, uno pasa raso y el compañero recibe con el interior orientando el balón hacia el cono al costado en el mismo toque.",
+    "leyenda": "Amarillo: pasador (P) · Azul: receptor (R) · Cono: objetivo del control · Flecha azul: pase · Flecha roja: control orientado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar el primer toque de recepción orientado hacia el espacio libre."
+    ],
+    "claves_entrenador": [
+      "El pie recibe el balón LATERALMENTE, no de frente. Se abre y lleva el balón hacia donde vas a ir."
+    ],
+    "montaje": [
+      "Colocar 2 conos separados 5m. Un jugador de cada lado."
+    ],
+    "desarrollo": [
+      "Colocar 2 conos separados 5m. Un jugador de cada lado.",
+      "Uno pasa raso al compañero.",
+      "El compañero recibe con INTERIOR y con el mismo toque orienta el balón hacia el cono al costado.",
+      "Devuelve pase. 10 controles por lado, luego cambiar."
+    ],
+    "que_buscamos": [
+      "Control",
+      "Primer toque",
+      "Orientación"
+    ],
+    "que_observar": [
+      "Recepción lateral.",
+      "Orientación al cono libre.",
+      "Primer toque."
+    ],
+    "correcciones": [
+      "Recibir lateralmente, no de frente.",
+      "Orientar hacia el espacio libre."
+    ],
+    "reglas": [
+      "Pase raso al compañero.",
+      "Control con interior orientado.",
+      "10 controles por lado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor pasivo por detrás para forzar orientar hacia el lado libre."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 3 Pase, Técnica y Posesión, ejercicio 055",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 10 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-055-CONTROL-ORIENTADO-INTERIOR/CampoBase_Control_Orientado_Interior.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-055-CONTROL-ORIENTADO-INTERIOR/frames/f",
     "total": 60,
     "frameMs": 100
   }

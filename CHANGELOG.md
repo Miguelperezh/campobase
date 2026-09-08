@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.36.0 — 2026-09-08
+
+- Pack150 Sección 3 (Pase/Técnica/Posesión): ejercicios 051-055 integrados y publicados (dominios individuales pie dominante, dominios alternando pies, dominios con muslo y cabeza, dominios progresivos en circuito y control orientado con interior).
+
 ## 2.35.0 — 2026-09-08
 
 - Nueva táctica del manual «Sistema 1-3-1-2» (6 bloques: Estructura, Salida, Progresión, Basculaciones, Pressing, Bloque bajo) con animación por frames y pizarra editable.
