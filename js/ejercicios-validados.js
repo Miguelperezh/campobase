@@ -10308,6 +10308,2066 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-031-1V1-PORTERO-CENTRO",
+  "nombre": "1v1 con portero desde el centro",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "1v1",
+      "Decisión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (atacante y portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante inicia a 25 m de la portería con balón conducido lento."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando cruza los 18 m, el portero sale a achicar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante debe decidir: definir raso a un lado, o hacer vaselina por encima."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 repeticiones. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El atacante conduce lento desde 25 m y, cuando cruza los 18 m y el portero sale a achicar, decide entre definir raso a un lado o hacer vaselina por encima.",
+    "leyenda": "Azul: atacante (J) · Verde: portero (K) · Balón: conducción · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la definición cara a cara con el portero — decisión y ejecución."
+    ],
+    "claves_entrenador": [
+      "Mira al portero, no al balón. Si sale abajo, vaselina. Si se queda quieto, raso a un palo."
+    ],
+    "montaje": [
+      "Atacante inicia a 25 m de la portería con balón conducido lento."
+    ],
+    "desarrollo": [
+      "Atacante inicia a 25 m de la portería con balón conducido lento.",
+      "Cuando cruza los 18 m, el portero sale a achicar.",
+      "Atacante debe decidir: definir raso a un lado, o hacer vaselina por encima.",
+      "6 repeticiones. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "1v1",
+      "Decisión"
+    ],
+    "que_observar": [
+      "Lectura del portero.",
+      "Decisión raso o vaselina.",
+      "Ejecución."
+    ],
+    "correcciones": [
+      "Mirar al portero, no al balón.",
+      "Decidir según la salida del portero."
+    ],
+    "reglas": [
+      "Conducir lento desde 25 m.",
+      "Decidir raso o vaselina.",
+      "6 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un defensor persiguiendo desde atrás para agregar presión."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (atacante y portero). · 12-15 min.",
+      "Fútbol 11: 2 (atacante y portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 031",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-031-1V1-PORTERO-CENTRO/CampoBase_1v1_Portero_Centro.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-031-1V1-PORTERO-CENTRO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-032-1V1-PORTERO-BANDA",
+  "nombre": "1v1 con portero por banda",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "1v1",
+      "Ángulo cerrado"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (atacante y portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante conduce por la banda hacia el fondo del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero achica cubriendo el primer palo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante decide: remate al segundo palo, atrás para compañero, o buscar rebote."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 repeticiones por banda (izq y der). Rotar."
+      }
+    ],
+    "explicacion_breve": "El atacante conduce por la banda hacia el fondo del área y, con el portero cubriendo el primer palo, decide entre rematar al segundo palo, pasar atrás o buscar rebote.",
+    "leyenda": "Azul: atacante (J) · Verde: portero (K) · Balón: conducción · Flecha roja: remate al segundo palo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Definir desde ángulo cerrado — decisiones y ejecución precisa."
+    ],
+    "claves_entrenador": [
+      "El segundo palo suele estar abierto — buscar cruzarla con interior del pie fuerte."
+    ],
+    "montaje": [
+      "Atacante conduce por la banda hacia el fondo del área."
+    ],
+    "desarrollo": [
+      "Atacante conduce por la banda hacia el fondo del área.",
+      "Portero achica cubriendo el primer palo.",
+      "Atacante decide: remate al segundo palo, atrás para compañero, o buscar rebote.",
+      "6 repeticiones por banda (izq y der). Rotar."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "1v1",
+      "Ángulo cerrado"
+    ],
+    "que_observar": [
+      "Ángulo cerrado.",
+      "Segundo palo abierto.",
+      "Decisión de remate."
+    ],
+    "correcciones": [
+      "Buscar el segundo palo.",
+      "Cruzarla con el interior del pie fuerte."
+    ],
+    "reglas": [
+      "Conducir por la banda.",
+      "Cubrir el primer palo.",
+      "Buscar el segundo palo."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar un compañero cerca del punto de penalti para pase atrás como opción."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (atacante y portero). · 12-15 min.",
+      "Fútbol 11: 2 (atacante y portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 032",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-032-1V1-PORTERO-BANDA/CampoBase_1v1_Portero_Banda.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-032-1V1-PORTERO-BANDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-033-FINALIZACION-2V1-PORTERO",
+  "nombre": "Finalización 2v1 al portero",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "2v1",
+      "Superioridad"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (2 atacantes + portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 atacantes inician a 25 m de la portería, separados 10 m entre sí."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Uno lleva el balón conduciéndolo hacia el área."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero elige a quién achicar. El atacante con balón decide: definir o pasar al libre."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 repeticiones. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "Dos atacantes inician a 25 m separados 10 m; uno conduce hacia el área y, cuando el portero elige a quién achicar, decide entre definir o pasar al libre.",
+    "leyenda": "Azul: atacantes (A1/A2) · Verde: portero (K) · Flecha azul: pase · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la definición con superioridad numérica en el último tercio."
+    ],
+    "claves_entrenador": [
+      "El atacante con balón mira al portero HASTA el último momento — el portero delata su decisión."
+    ],
+    "montaje": [
+      "2 atacantes inician a 25 m de la portería, separados 10 m entre sí."
+    ],
+    "desarrollo": [
+      "2 atacantes inician a 25 m de la portería, separados 10 m entre sí.",
+      "Uno lleva el balón conduciéndolo hacia el área.",
+      "Portero elige a quién achicar. El atacante con balón decide: definir o pasar al libre.",
+      "6 repeticiones. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "2v1",
+      "Superioridad"
+    ],
+    "que_observar": [
+      "Lectura del portero.",
+      "Pase al libre.",
+      "Definición."
+    ],
+    "correcciones": [
+      "Mirar al portero hasta el final.",
+      "Pasar al libre si achica."
+    ],
+    "reglas": [
+      "2 atacantes separados 10 m.",
+      "Decidir definir o pasar.",
+      "6 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar un defensor pasivo para transformar en 2v1+1 (más realista)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (2 atacantes + portero). · 12-15 min.",
+      "Fútbol 11: 3 (2 atacantes + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 033",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-033-FINALIZACION-2V1-PORTERO/CampoBase_Finalizacion_2v1_Portero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-033-FINALIZACION-2V1-PORTERO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-034-FINALIZACION-3V2-SUPERIORIDAD",
+  "nombre": "Finalización 3v2 con superioridad",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "3v2",
+      "Ataque colectivo"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6 (3 atacantes, 2 defensores, portero)"
+    },
+    "material": "1 portería + balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "3 atacantes contra 2 defensores + portero."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Los atacantes salen desde el medio del campo con balón."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Deben crear situación de gol combinando pases y movimientos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Máximo 4 toques antes de definir. 6-8 repeticiones."
+      }
+    ],
+    "explicacion_breve": "Tres atacantes salen desde el medio del campo contra dos defensores y portero, y deben crear situación de gol combinando pases y movimientos con un máximo de 4 toques.",
+    "leyenda": "Azul: atacantes (A) · Púrpura: defensores (D) · Verde: portero (K) · Flecha azul: pase · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Definir en situación de ataque colectivo con oposición defensiva."
+    ],
+    "claves_entrenador": [
+      "La superioridad se aprovecha con MOVIMIENTO — quedarse quieto la anula. Correr sin balón vale más que con."
+    ],
+    "montaje": [
+      "3 atacantes contra 2 defensores + portero."
+    ],
+    "desarrollo": [
+      "3 atacantes contra 2 defensores + portero.",
+      "Los atacantes salen desde el medio del campo con balón.",
+      "Deben crear situación de gol combinando pases y movimientos.",
+      "Máximo 4 toques antes de definir. 6-8 repeticiones."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "3v2",
+      "Ataque colectivo"
+    ],
+    "que_observar": [
+      "Movimiento sin balón.",
+      "Combinación de pases.",
+      "Superioridad aprovechada."
+    ],
+    "correcciones": [
+      "Moverse sin balón.",
+      "No quedarse quieto."
+    ],
+    "reglas": [
+      "3 atacantes vs 2 defensores.",
+      "Máximo 4 toques.",
+      "Combinar pases y movimientos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Quitar el límite de toques y agregar tiempo (10 segundos para definir)."
+    ],
+    "variantes": [
+      "Fútbol 7: 6 (3 atacantes, 2 defensores, portero). · 15-20 min.",
+      "Fútbol 11: 6 (3 atacantes, 2 defensores, portero). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 034",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 30 x 25 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-034-FINALIZACION-3V2-SUPERIORIDAD/CampoBase_Finalizacion_3v2_Superioridad.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-034-FINALIZACION-3V2-SUPERIORIDAD/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-035-CARA-A-CARA-CHIP-RASO",
+  "nombre": "Cara a cara — vaselina vs raso (decisión)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Vaselina",
+      "Decisión"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (atacante y portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante con balón a 15 m de la portería, portero a 6 m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero elige aleatoriamente: quedarse quieto o salir a achicar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante debe leer y decidir: raso si el portero se queda, vaselina si sale."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 repeticiones por jugador."
+      }
+    ],
+    "explicacion_breve": "Con el atacante a 15 m y el portero a 6 m, el portero elige aleatoriamente quedarse quieto o salir a achicar, y el atacante lee y decide: raso si se queda, vaselina si sale.",
+    "leyenda": "Azul: atacante (J) · Verde: portero (K) · Flecha roja: raso · Flecha roja discontinua: vaselina"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar la decisión rápida entre vaselina por encima o raso al palo."
+    ],
+    "claves_entrenador": [
+      "La vaselina requiere pegarle con la puntera abajo del balón — casi 'pellizcarlo'. Practicar la técnica primero solo."
+    ],
+    "montaje": [
+      "Atacante con balón a 15 m de la portería, portero a 6 m."
+    ],
+    "desarrollo": [
+      "Atacante con balón a 15 m de la portería, portero a 6 m.",
+      "Portero elige aleatoriamente: quedarse quieto o salir a achicar.",
+      "Atacante debe leer y decidir: raso si el portero se queda, vaselina si sale.",
+      "10 repeticiones por jugador."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "Vaselina",
+      "Decisión"
+    ],
+    "que_observar": [
+      "Lectura del portero.",
+      "Decisión raso o vaselina.",
+      "Técnica de la vaselina."
+    ],
+    "correcciones": [
+      "Puntera abajo del balón.",
+      "Decidir según la salida del portero."
+    ],
+    "reglas": [
+      "Leer al portero.",
+      "Raso si se queda, vaselina si sale.",
+      "10 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor persiguiendo para forzar decisión aún más rápida."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (atacante y portero). · 10-12 min.",
+      "Fútbol 11: 2 (atacante y portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 035",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-035-CARA-A-CARA-CHIP-RASO/CampoBase_Cara_a_Cara_Chip_Raso.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-035-CARA-A-CARA-CHIP-RASO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-036-CABECEO-ESTATICO-SALTO",
+  "nombre": "Cabeceo estático + salto",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Cabeceo",
+      "Juego aéreo",
+      "Impulso vertical"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + rematador)"
+    },
+    "material": "5 balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador a 3 m del rematador, con balón en manos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanza el balón alto hacia arriba del rematador."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Rematador salta y cabecea el balón de vuelta al lanzador con la frente."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 cabeceos por jugador. Rotar."
+      }
+    ],
+    "explicacion_breve": "El lanzador envía el balón alto hacia arriba del rematador, que salta y cabecea de vuelta con la frente.",
+    "leyenda": "Amarillo: lanzador (L) · Azul: rematador (R) · Flecha azul: trayectoria · Flecha roja: cabeceo de vuelta"
+  },
+  "detalle": {
+    "objetivos": [
+      "Introducir la técnica del cabeceo con impulso vertical."
+    ],
+    "claves_entrenador": [
+      "Golpear con la FRENTE, ojos abiertos hasta el contacto. Cuello firme, empuje del cuerpo entero."
+    ],
+    "montaje": [
+      "Lanzador a 3 m del rematador, con balón en manos."
+    ],
+    "desarrollo": [
+      "Lanzador a 3 m del rematador, con balón en manos.",
+      "Lanza el balón alto hacia arriba del rematador.",
+      "Rematador salta y cabecea el balón de vuelta al lanzador con la frente.",
+      "10 cabeceos por jugador. Rotar."
+    ],
+    "que_buscamos": [
+      "Cabeceo",
+      "Juego aéreo",
+      "Impulso vertical"
+    ],
+    "que_observar": [
+      "Golpeo con la frente.",
+      "Ojos abiertos.",
+      "Impulso vertical."
+    ],
+    "correcciones": [
+      "Golpear con la frente.",
+      "Cuello firme."
+    ],
+    "reglas": [
+      "Balón alto hacia el rematador.",
+      "Cabecear con la frente.",
+      "10 cabeceos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Marcar zonas de la portería y buscar dirigir el cabeceo hacia esquinas."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + rematador). · 8-10 min.",
+      "Fútbol 11: 2 (lanzador + rematador). · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 036",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 5 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-036-CABECEO-ESTATICO-SALTO/CampoBase_Cabeceo_Estatico_Salto.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-036-CABECEO-ESTATICO-SALTO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-037-CABECEO-TRAS-CENTRO-BANDA",
+  "nombre": "Cabeceo tras centro por banda",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Cabeceo",
+      "Centro",
+      "Juego aéreo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3+ (centrador, rematador, portero)"
+    },
+    "material": "6 balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Centrador ubicado en la banda con balones."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rematador arranca desde el punto de penalti hacia el segundo palo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Centrador tira balón alto al segundo palo. Rematador cabecea."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 cabeceos por jugador. Alternar bandas."
+      }
+    ],
+    "explicacion_breve": "El centrador envía un balón alto al segundo palo y el rematador, que arranca desde el punto de penalti, cabecea a portería.",
+    "leyenda": "Amarillo: centrador (C) · Azul: rematador (R) · Flecha azul: centro · Flecha roja: cabeceo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Definir de cabeza tras balón centrado desde banda."
+    ],
+    "claves_entrenador": [
+      "El movimiento clave: primero SALIR del área, luego ENTRAR con velocidad al balón. No esperarlo quieto."
+    ],
+    "montaje": [
+      "Centrador ubicado en la banda con balones."
+    ],
+    "desarrollo": [
+      "Centrador ubicado en la banda con balones.",
+      "Rematador arranca desde el punto de penalti hacia el segundo palo.",
+      "Centrador tira balón alto al segundo palo. Rematador cabecea.",
+      "8 cabeceos por jugador. Alternar bandas."
+    ],
+    "que_buscamos": [
+      "Cabeceo",
+      "Centro",
+      "Juego aéreo"
+    ],
+    "que_observar": [
+      "Movimiento de salida y entrada.",
+      "Ataque al balón.",
+      "Cabeceo al segundo palo."
+    ],
+    "correcciones": [
+      "Salir del área y entrar con velocidad.",
+      "No esperar quieto."
+    ],
+    "reglas": [
+      "Centro al segundo palo.",
+      "Arrancar desde el punto de penalti.",
+      "8 cabeceos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor marcando al rematador — trabajar cabeceo con presión."
+    ],
+    "variantes": [
+      "Fútbol 7: 3+ (centrador, rematador, portero). · 12-15 min.",
+      "Fútbol 11: 3+ (centrador, rematador, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 037",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-037-CABECEO-TRAS-CENTRO-BANDA/CampoBase_Cabeceo_Tras_Centro_Banda.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-037-CABECEO-TRAS-CENTRO-BANDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-038-CABECEO-DEFENSIVO-OFENSIVO",
+  "nombre": "Cabeceo defensivo → ofensivo (cambio de rol)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Cabeceo",
+      "Juego aéreo",
+      "Cambio de rol"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (lanzador, defensor/rematador, receptor)"
+    },
+    "material": "5 balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón alto al centro del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador ejecuta cabeceo DEFENSIVO (largo, arriba y lejos)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Luego, sale rápido a atacar el próximo balón alto y cabecea a portería."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Alternar: 3 defensivos, 3 ofensivos. 4 series."
+      }
+    ],
+    "explicacion_breve": "El jugador ejecuta un cabeceo defensivo (largo, arriba y lejos) y luego sale rápido a atacar el próximo balón alto para cabecear a portería.",
+    "leyenda": "Amarillo: lanzador (L) · Azul: jugador (J) · Flecha roja: despeje / cabeceo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el juego aéreo en ambas fases — despejar y luego atacar."
+    ],
+    "claves_entrenador": [
+      "Cabeceo defensivo: pega en la MITAD BAJA del balón para elevar. Ofensivo: MITAD ALTA para bajarlo."
+    ],
+    "montaje": [
+      "Lanzador tira balón alto al centro del área."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón alto al centro del área.",
+      "Jugador ejecuta cabeceo DEFENSIVO (largo, arriba y lejos).",
+      "Luego, sale rápido a atacar el próximo balón alto y cabecea a portería.",
+      "Alternar: 3 defensivos, 3 ofensivos. 4 series."
+    ],
+    "que_buscamos": [
+      "Cabeceo",
+      "Juego aéreo",
+      "Cambio de rol"
+    ],
+    "que_observar": [
+      "Despeje alto y lejos.",
+      "Cambio de rol.",
+      "Cabeceo ofensivo."
+    ],
+    "correcciones": [
+      "Defensivo: mitad baja. Ofensivo: mitad alta.",
+      "Salir rápido tras despejar."
+    ],
+    "reglas": [
+      "Cabeceo defensivo largo y alto.",
+      "Salir rápido a atacar.",
+      "Alternar defensivo/ofensivo."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Realizar la secuencia bajo fatiga (tras 30 s de correr en el sitio antes de cada cabeceo)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (lanzador, defensor/rematador, receptor). · 10-12 min.",
+      "Fútbol 11: 3 (lanzador, defensor/rematador, receptor). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 038",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-038-CABECEO-DEFENSIVO-OFENSIVO/CampoBase_Cabeceo_Defensivo_Ofensivo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-038-CABECEO-DEFENSIVO-OFENSIVO/frames/f",
+    "total": 72,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-039-REMATE-LARGA-DISTANCIA-ESTATICO",
+  "nombre": "Remate de larga distancia estático",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Remate",
+      "Empeine",
+      "Larga distancia"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Balón parado a 22-25 metros de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador toma 3-4 pasos de carrera y remata con el empeine."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Foco en trayectoria (rasa o alta pero controlada) y precisión."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 remates. Descanso 1 min. 3 series."
+      }
+    ],
+    "explicacion_breve": "Con el balón parado a 22-25 metros, el jugador toma 3-4 pasos de carrera y remata con el empeine, con foco en trayectoria y precisión.",
+    "leyenda": "Azul: jugador (J) · Balón: parado · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la técnica pura del disparo lejano con empeine."
+    ],
+    "claves_entrenador": [
+      "El pie de apoyo bien al costado del balón. Peso del cuerpo va HACIA el balón, no hacia atrás."
+    ],
+    "montaje": [
+      "Balón parado a 22-25 metros de la portería."
+    ],
+    "desarrollo": [
+      "Balón parado a 22-25 metros de la portería.",
+      "Jugador toma 3-4 pasos de carrera y remata con el empeine.",
+      "Foco en trayectoria (rasa o alta pero controlada) y precisión.",
+      "8 remates. Descanso 1 min. 3 series."
+    ],
+    "que_buscamos": [
+      "Remate",
+      "Empeine",
+      "Larga distancia"
+    ],
+    "que_observar": [
+      "Pie de apoyo al costado.",
+      "Peso hacia el balón.",
+      "Trayectoria controlada."
+    ],
+    "correcciones": [
+      "Pie de apoyo al costado del balón.",
+      "Peso hacia el balón."
+    ],
+    "reglas": [
+      "Balón parado a 22-25 m.",
+      "Rematar con el empeine.",
+      "8 remates por serie."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Marcar cuadrantes de la portería (4 zonas) y contar aciertos por zona."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8. · 10-12 min.",
+      "Fútbol 11: 1-8. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 039",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 30 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-039-REMATE-LARGA-DISTANCIA-ESTATICO/CampoBase_Remate_Larga_Distancia_Estatico.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-039-REMATE-LARGA-DISTANCIA-ESTATICO/frames/f",
+    "total": 48,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-040-REMATE-LARGA-DISTANCIA-CONDUCCION",
+  "nombre": "Remate de larga distancia con conducción",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Conducción",
+      "Remate",
+      "Larga distancia"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador arranca conduciendo desde 35 m de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Al llegar a los 25 m, remata sin frenar la conducción."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El remate DEBE ir dentro de los 3 palos aunque no gol."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 remates por serie. 3 series con descanso completo."
+      }
+    ],
+    "explicacion_breve": "El jugador arranca conduciendo desde 35 m y, al llegar a los 25 m, remata sin frenar la conducción, con el remate dentro de los 3 palos.",
+    "leyenda": "Azul: jugador (J) · Balón: conducción · Flecha roja: conducción / remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar conducción + remate de media/larga distancia."
+    ],
+    "claves_entrenador": [
+      "Al 4.º toque, sacar el balón un poco del cuerpo para dar espacio al pie remate. No pegar 'encima' del balón."
+    ],
+    "montaje": [
+      "Jugador arranca conduciendo desde 35 m de la portería."
+    ],
+    "desarrollo": [
+      "Jugador arranca conduciendo desde 35 m de la portería.",
+      "Al llegar a los 25 m, remata sin frenar la conducción.",
+      "El remate DEBE ir dentro de los 3 palos aunque no gol.",
+      "6 remates por serie. 3 series con descanso completo."
+    ],
+    "que_buscamos": [
+      "Conducción",
+      "Remate",
+      "Larga distancia"
+    ],
+    "que_observar": [
+      "Conducción a velocidad.",
+      "Remate sin frenar.",
+      "Precisión."
+    ],
+    "correcciones": [
+      "Sacar el balón del cuerpo.",
+      "No pegar encima del balón."
+    ],
+    "reglas": [
+      "Conducir desde 35 m.",
+      "Rematar sin frenar.",
+      "Dentro de los 3 palos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor pasivo apareciendo a los 20 m para forzar remate más rápido."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8. · 10-12 min.",
+      "Fútbol 11: 1-8. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 040",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 35 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-040-REMATE-LARGA-DISTANCIA-CONDUCCION/CampoBase_Remate_Larga_Distancia_Conduccion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-040-REMATE-LARGA-DISTANCIA-CONDUCCION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-041-REMATE-PRIMERA-BORDE-AREA",
+  "nombre": "Remate de primera desde borde de área",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Primer toque",
+      "Remate",
+      "Definición"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (pasador + rematador)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Pasador ubicado dentro del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rematador espera en el borde del área (a 18 m)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Pasador envía balón raso al rematador."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rematador define de primera intención SIN controlar."
+      }
+    ],
+    "explicacion_breve": "El pasador, dentro del área, envía un balón raso al rematador que espera en el borde del área, y este define de primera intención sin controlar.",
+    "leyenda": "Amarillo: pasador (P) · Azul: rematador (R) · Flecha azul: pase raso · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Definir de primera tras rebote o pase corto desde el borde del área."
+    ],
+    "claves_entrenador": [
+      "Timing: el pie golpea el balón cuando cruza tu línea. No esperar a que llegue debajo tuyo."
+    ],
+    "montaje": [
+      "Pasador ubicado dentro del área."
+    ],
+    "desarrollo": [
+      "Pasador ubicado dentro del área.",
+      "Rematador espera en el borde del área (a 18 m).",
+      "Pasador envía balón raso al rematador.",
+      "Rematador define de primera intención SIN controlar."
+    ],
+    "que_buscamos": [
+      "Primer toque",
+      "Remate",
+      "Definición"
+    ],
+    "que_observar": [
+      "Timing del remate.",
+      "Remate de primera.",
+      "Sin control previo."
+    ],
+    "correcciones": [
+      "Golpear cuando cruza tu línea.",
+      "No esperar a que llegue debajo."
+    ],
+    "reglas": [
+      "Pase raso desde el área.",
+      "Remate de primera.",
+      "Sin controlar."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Pases desde diferentes ángulos (frontal, diagonal, lateral) para variar decisiones."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (pasador + rematador). · 10-12 min.",
+      "Fútbol 11: 2 (pasador + rematador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 041",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-041-REMATE-PRIMERA-BORDE-AREA/CampoBase_Remate_Primera_Borde_Area.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-041-REMATE-PRIMERA-BORDE-AREA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-042-DEFINICION-DEFENSOR-PASIVO",
+  "nombre": "Definición con defensor pasivo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Decisión",
+      "Ángulo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor pasivo, portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante recibe balón a 20 m de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Defensor 'pasivo' — sigue de cerca sin robar activamente."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante debe encontrar el momento y ángulo para definir."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 repeticiones. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El atacante recibe a 20 m y, con un defensor pasivo que sigue de cerca sin robar, debe encontrar el momento y ángulo para definir.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor pasivo (D) · Verde: portero (K) · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Introducir presión defensiva sin oposición real, para trabajar decisión."
+    ],
+    "claves_entrenador": [
+      "El defensor pasivo obliga a pensar EN DÓNDE definir, no solo A DÓNDE. Buscar zonas libres de la portería."
+    ],
+    "montaje": [
+      "Atacante recibe balón a 20 m de la portería."
+    ],
+    "desarrollo": [
+      "Atacante recibe balón a 20 m de la portería.",
+      "Defensor 'pasivo' — sigue de cerca sin robar activamente.",
+      "Atacante debe encontrar el momento y ángulo para definir.",
+      "8 repeticiones. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "Decisión",
+      "Ángulo"
+    ],
+    "que_observar": [
+      "Búsqueda del ángulo.",
+      "Momento de definir.",
+      "Zonas libres."
+    ],
+    "correcciones": [
+      "Buscar zonas libres.",
+      "Pensar en dónde definir."
+    ],
+    "reglas": [
+      "Defensor pasivo sin robar.",
+      "Encontrar el ángulo.",
+      "8 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar gradualmente la actividad del defensor (semi-activo, luego activo total)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor pasivo, portero). · 12-15 min.",
+      "Fútbol 11: 3 (atacante, defensor pasivo, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 042",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-042-DEFINICION-DEFENSOR-PASIVO/CampoBase_Definicion_Defensor_Pasivo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-042-DEFINICION-DEFENSOR-PASIVO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-043-DEFINICION-DEFENSOR-ACTIVO",
+  "nombre": "Definición con defensor activo (1v1 completo)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "1v1",
+      "Presión real"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor, portero)"
+    },
+    "material": "balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante inicia a 25 m con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Defensor arranca desde 3 m detrás — persigue activo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante debe superar al defensor y definir antes de que lo recupere."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 repeticiones. Alternar roles."
+      }
+    ],
+    "explicacion_breve": "El atacante inicia a 25 m con balón y un defensor que arranca 3 m detrás persigue activo; el atacante debe superarlo y definir antes de que lo recupere.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor activo (D) · Verde: portero (K) · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Definir bajo presión real de un defensor que quita."
+    ],
+    "claves_entrenador": [
+      "Contra defensor activo, el primer toque debe ser hacia adelante — si es al costado, pierde ventaja."
+    ],
+    "montaje": [
+      "Atacante inicia a 25 m con balón."
+    ],
+    "desarrollo": [
+      "Atacante inicia a 25 m con balón.",
+      "Defensor arranca desde 3 m detrás — persigue activo.",
+      "Atacante debe superar al defensor y definir antes de que lo recupere.",
+      "8 repeticiones. Alternar roles."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "1v1",
+      "Presión real"
+    ],
+    "que_observar": [
+      "Primer toque hacia adelante.",
+      "Superar al defensor.",
+      "Definir rápido."
+    ],
+    "correcciones": [
+      "Primer toque hacia adelante.",
+      "No tocar al costado."
+    ],
+    "reglas": [
+      "Defensor persigue activo.",
+      "Superar y definir.",
+      "8 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar límite de tiempo (5 segundos) desde inicio hasta remate obligatorio."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor, portero). · 15-20 min.",
+      "Fútbol 11: 3 (atacante, defensor, portero). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 043",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-043-DEFINICION-DEFENSOR-ACTIVO/CampoBase_Definicion_Defensor_Activo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-043-DEFINICION-DEFENSOR-ACTIVO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-044-RONDO-TERMINANDO-GOL",
+  "nombre": "Rondo terminando en gol",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Posesión",
+      "Transición",
+      "Definición"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6+ (4v2 o 5v2 + portero)"
+    },
+    "material": "balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rondo 4v2 (o 5v2) a 25 m de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando los atacantes completan 6 pases consecutivos, se abre el juego."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Los 4 atacantes atacan la portería con transición inmediata."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Defensores del rondo defienden. 10-12 rondas."
+      }
+    ],
+    "explicacion_breve": "En un rondo 4v2 a 25 m, al completar 6 pases consecutivos se abre el juego y los 4 atacantes atacan la portería con transición inmediata.",
+    "leyenda": "Azul: atacantes (A) · Púrpura: defensores (D) · Flecha azul: pase · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar posesión con transición inmediata a la definición."
+    ],
+    "claves_entrenador": [
+      "La transición del rondo al gol debe ser INSTANTÁNEA — no reorganizar, atacar YA con lo que hay."
+    ],
+    "montaje": [
+      "Rondo 4v2 (o 5v2) a 25 m de la portería."
+    ],
+    "desarrollo": [
+      "Rondo 4v2 (o 5v2) a 25 m de la portería.",
+      "Cuando los atacantes completan 6 pases consecutivos, se abre el juego.",
+      "Los 4 atacantes atacan la portería con transición inmediata.",
+      "Defensores del rondo defienden. 10-12 rondas."
+    ],
+    "que_buscamos": [
+      "Posesión",
+      "Transición",
+      "Definición"
+    ],
+    "que_observar": [
+      "Posesión del rondo.",
+      "Transición instantánea.",
+      "Definición."
+    ],
+    "correcciones": [
+      "Atacar ya, sin reorganizar.",
+      "Transición instantánea."
+    ],
+    "reglas": [
+      "Rondo 4v2.",
+      "6 pases consecutivos.",
+      "Transición inmediata."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir a 3v2 y a 3 pases mínimos para intensificar."
+    ],
+    "variantes": [
+      "Fútbol 7: 6+ (4v2 o 5v2 + portero). · 15-20 min.",
+      "Fútbol 11: 6+ (4v2 o 5v2 + portero). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 044",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-044-RONDO-TERMINANDO-GOL/CampoBase_Rondo_Terminando_Gol.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-044-RONDO-TERMINANDO-GOL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-045-FINALIZACION-REBOTE-PORTERO",
+  "nombre": "Finalización tras rebote de portero",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Rebote",
+      "Anticipación"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (rematador 1, cazador, portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rematador 1 dispara a portería desde 20 m (portero debe atajar)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Segundo jugador (cazador) espera en el área, atento al rebote."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si hay rebote (por atajada o palo), el cazador remata de primera."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 series. Rotar los roles."
+      }
+    ],
+    "explicacion_breve": "El rematador 1 dispara desde 20 m y, si hay rebote (atajada o palo), el cazador que espera en el área remata de primera.",
+    "leyenda": "Azul: rematador 1 (R1) y cazador (CZ) · Verde: portero (K) · Flecha roja: disparo / remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la definición del segundo balón (rebote) y la anticipación."
+    ],
+    "claves_entrenador": [
+      "El cazador NUNCA descansa. Anticipar el rebote antes que el portero lo controle."
+    ],
+    "montaje": [
+      "Rematador 1 dispara a portería desde 20 m (portero debe atajar)."
+    ],
+    "desarrollo": [
+      "Rematador 1 dispara a portería desde 20 m (portero debe atajar).",
+      "Segundo jugador (cazador) espera en el área, atento al rebote.",
+      "Si hay rebote (por atajada o palo), el cazador remata de primera.",
+      "6 series. Rotar los roles."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "Rebote",
+      "Anticipación"
+    ],
+    "que_observar": [
+      "Anticipación del rebote.",
+      "Remate de primera.",
+      "Atención del cazador."
+    ],
+    "correcciones": [
+      "Anticipar el rebote.",
+      "No descansar."
+    ],
+    "reglas": [
+      "Disparo desde 20 m.",
+      "Cazador atento al rebote.",
+      "Remate de primera."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un defensor marcando al cazador para dificultar la anticipación."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (rematador 1, cazador, portero). · 12-15 min.",
+      "Fútbol 11: 3 (rematador 1, cazador, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 045",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-045-FINALIZACION-REBOTE-PORTERO/CampoBase_Finalizacion_Rebote_Portero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-045-FINALIZACION-REBOTE-PORTERO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-046-SECUENCIAS-ROTATIVAS-DEFINICION",
+  "nombre": "Secuencias rotativas de definición",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Remate",
+      "Ángulos",
+      "Definición"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "3-6"
+    },
+    "material": "12 balones + 1 portería + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Secuencia 1: remate frontal a 18 m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Secuencia 2: remate diagonal desde 20 m izquierda."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Secuencia 3: remate diagonal desde 20 m derecha."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Jugador hace 3 remates en cada secuencia, rota tras completar todas."
+      }
+    ],
+    "explicacion_breve": "Tres secuencias de remate (frontal a 18 m, diagonal izquierda y diagonal derecha a 20 m); el jugador hace 3 remates en cada una y rota al completar todas.",
+    "leyenda": "Azul: secuencias (E1/E2/E3) · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar remate desde 3 ángulos distintos en una sola sesión."
+    ],
+    "claves_entrenador": [
+      "El ángulo cambia dónde apuntar — desde diagonal, siempre buscar el palo LEJANO al portero."
+    ],
+    "montaje": [
+      "Secuencia 1: remate frontal a 18 m."
+    ],
+    "desarrollo": [
+      "Secuencia 1: remate frontal a 18 m.",
+      "Secuencia 2: remate diagonal desde 20 m izquierda.",
+      "Secuencia 3: remate diagonal desde 20 m derecha.",
+      "Jugador hace 3 remates en cada secuencia, rota tras completar todas."
+    ],
+    "que_buscamos": [
+      "Remate",
+      "Ángulos",
+      "Definición"
+    ],
+    "que_observar": [
+      "Ángulo de cada secuencia.",
+      "Palo lejano desde diagonal.",
+      "Rotación."
+    ],
+    "correcciones": [
+      "Buscar el palo lejano desde diagonal.",
+      "Ajustar el ángulo."
+    ],
+    "reglas": [
+      "3 secuencias de remate.",
+      "3 remates por secuencia.",
+      "Rotar al completar."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar defensor en cada secuencia, o pases previos de un compañero."
+    ],
+    "variantes": [
+      "Fútbol 7: 3-6. · 15-20 min.",
+      "Fútbol 11: 3-6. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 046",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 25 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-046-SECUENCIAS-ROTATIVAS-DEFINICION/CampoBase_Secuencias_Rotativas_Definicion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-046-SECUENCIAS-ROTATIVAS-DEFINICION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-047-VASELINA-CHIP-PORTERO-ADELANTADO",
+  "nombre": "Vaselina al portero adelantado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Vaselina",
+      "Definición",
+      "Cara a cara"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (atacante y portero)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante conduce despacio hacia la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero está posicionado adelantado (a 5 m de la portería)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Atacante ejecuta vaselina por encima del portero."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 repeticiones. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El atacante conduce despacio y, con el portero adelantado a 5 m, ejecuta una vaselina por encima de él.",
+    "leyenda": "Azul: atacante (J) · Verde: portero adelantado (K) · Flecha roja: vaselina"
+  },
+  "detalle": {
+    "objetivos": [
+      "Especializar la técnica de la vaselina en cara a cara con portero saliendo."
+    ],
+    "claves_entrenador": [
+      "La vaselina se hace con la puntera BAJO el balón, sin acompañar el remate. Golpe corto y seco."
+    ],
+    "montaje": [
+      "Atacante conduce despacio hacia la portería."
+    ],
+    "desarrollo": [
+      "Atacante conduce despacio hacia la portería.",
+      "Portero está posicionado adelantado (a 5 m de la portería).",
+      "Atacante ejecuta vaselina por encima del portero.",
+      "8 repeticiones. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Vaselina",
+      "Definición",
+      "Cara a cara"
+    ],
+    "que_observar": [
+      "Técnica de la vaselina.",
+      "Puntera bajo el balón.",
+      "Golpe corto y seco."
+    ],
+    "correcciones": [
+      "Puntera bajo el balón.",
+      "Sin acompañar el remate."
+    ],
+    "reglas": [
+      "Portero adelantado.",
+      "Vaselina por encima.",
+      "8 repeticiones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Variar la altura de posición del portero (más adelantado o menos) para adaptar la vaselina."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (atacante y portero). · 10-12 min.",
+      "Fútbol 11: 2 (atacante y portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 047",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-047-VASELINA-CHIP-PORTERO-ADELANTADO/CampoBase_Vaselina_Chip_Portero_Adelantado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-047-VASELINA-CHIP-PORTERO-ADELANTADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-048-VOLEA-SOBRE-PASE-ALTO",
+  "nombre": "Volea sobre pase alto",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Volea",
+      "Juego aéreo",
+      "Definición"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador y rematador)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador a 15 m del rematador, con balón en manos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanza balón alto en parábola hacia el pie del rematador."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Rematador ejecuta VOLEA (golpear en el aire, sin control)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 remates. Rotar."
+      }
+    ],
+    "explicacion_breve": "El lanzador envía un balón alto en parábola hacia el pie del rematador, que ejecuta una volea en el aire sin control.",
+    "leyenda": "Amarillo: lanzador (L) · Azul: rematador (R) · Flecha azul: pase aéreo · Flecha roja: volea"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la ejecución de la volea completa (balón sin tocar suelo)."
+    ],
+    "claves_entrenador": [
+      "El cuerpo se inclina levemente hacia atrás. Pie de apoyo BIEN plantado, rodilla del remate flexionada."
+    ],
+    "montaje": [
+      "Lanzador a 15 m del rematador, con balón en manos."
+    ],
+    "desarrollo": [
+      "Lanzador a 15 m del rematador, con balón en manos.",
+      "Lanza balón alto en parábola hacia el pie del rematador.",
+      "Rematador ejecuta VOLEA (golpear en el aire, sin control).",
+      "8 remates. Rotar."
+    ],
+    "que_buscamos": [
+      "Volea",
+      "Juego aéreo",
+      "Definición"
+    ],
+    "que_observar": [
+      "Inclinación del cuerpo.",
+      "Pie de apoyo plantado.",
+      "Contacto en el aire."
+    ],
+    "correcciones": [
+      "Inclinar levemente hacia atrás.",
+      "Pie de apoyo plantado."
+    ],
+    "reglas": [
+      "Pase alto en parábola.",
+      "Volea en el aire.",
+      "8 remates."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad y altura del pase; alternar entre volea de derecha e izquierda."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador y rematador). · 12-15 min.",
+      "Fútbol 11: 2 (lanzador y rematador). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 048",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-048-VOLEA-SOBRE-PASE-ALTO/CampoBase_Volea_Sobre_Pase_Alto.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-048-VOLEA-SOBRE-PASE-ALTO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-049-MEDIA-VOLEA-SUPERFICIE-EXTERIOR",
+  "nombre": "Media volea con superficie exterior",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Media volea",
+      "Superficie exterior",
+      "Definición"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + rematador)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón bombeado que caiga cerca del rematador."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rematador ejecuta MEDIA VOLEA (balón pica una vez y se remata)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Alternar entre superficie interior y exterior del pie."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6 remates por superficie. Rotar."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira un balón bombeado que pica una vez cerca del rematador, que ejecuta una media volea alternando interior y exterior del pie.",
+    "leyenda": "Amarillo: lanzador (L) · Azul: rematador (R) · Flecha azul: pase bombeado · Flecha roja: media volea"
+  },
+  "detalle": {
+    "objetivos": [
+      "Ampliar repertorio de finalización con superficie técnica avanzada."
+    ],
+    "claves_entrenador": [
+      "La media volea requiere leer el bote. Golpear cuando el balón está SUBIENDO, no cayendo."
+    ],
+    "montaje": [
+      "Lanzador tira balón bombeado que caiga cerca del rematador."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón bombeado que caiga cerca del rematador.",
+      "Rematador ejecuta MEDIA VOLEA (balón pica una vez y se remata).",
+      "Alternar entre superficie interior y exterior del pie.",
+      "6 remates por superficie. Rotar."
+    ],
+    "que_buscamos": [
+      "Media volea",
+      "Superficie exterior",
+      "Definición"
+    ],
+    "que_observar": [
+      "Lectura del bote.",
+      "Golpear subiendo.",
+      "Superficie interior/exterior."
+    ],
+    "correcciones": [
+      "Golpear cuando sube.",
+      "Leer el bote."
+    ],
+    "reglas": [
+      "Balón bombeado que pica una vez.",
+      "Media volea.",
+      "Alternar interior/exterior."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Ejecutar bajo presión de defensor pasivo apareciendo cerca del remate."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + rematador). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + rematador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 049",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-049-MEDIA-VOLEA-SUPERFICIE-EXTERIOR/CampoBase_Media_Volea_Superficie_Exterior.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-049-MEDIA-VOLEA-SUPERFICIE-EXTERIOR/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-050-CIRCUITO-COMPLETO-FINALIZACION",
+  "nombre": "Circuito completo de finalización (4 secuencias)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Definición",
+      "Circuito",
+      "Finalización"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "4+ (un jugador recorre las 4 secuencias; el entrenador o un compañero da los pases)"
+    },
+    "material": "balones + 1 portería + 5 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Secuencia 1: remate estático a 18 m con pie dominante (balón parado, sin pase)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Secuencia 2: definición primer toque tras pase del entrenador."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Secuencia 3: 1v1 con portero desde 20 m (el jugador conduce el balón)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Secuencia 4: cabeceo tras centro por banda del entrenador."
+      }
+    ],
+    "explicacion_breve": "Circuito de 4 secuencias que recorre el MISMO jugador: remate estático a 18 m, definición primer toque tras pase, 1v1 con portero desde 20 m y cabeceo tras centro por banda. Los pases los da el entrenador (o un compañero) desde la zona de servicio.",
+    "leyenda": "Azul: secuencias (E1-E4) · Flecha roja: remate · Flecha azul: centro"
+  },
+  "detalle": {
+    "objetivos": [
+      "Integrar todo el trabajo de finalización en un circuito realista."
+    ],
+    "claves_entrenador": [
+      "En circuito, la calidad importa MÁS que la cantidad. Mejor 1 remate perfecto que 5 apurados."
+    ],
+    "montaje": [
+      "Secuencia 1: remate estático a 18 m con pie dominante (balón parado, sin pase)."
+    ],
+    "desarrollo": [
+      "Secuencia 1: remate estático a 18 m con pie dominante (balón parado, sin pase).",
+      "Secuencia 2: definición primer toque tras pase del entrenador.",
+      "Secuencia 3: 1v1 con portero desde 20 m (el jugador conduce el balón).",
+      "Secuencia 4: cabeceo tras centro por banda del entrenador."
+    ],
+    "que_buscamos": [
+      "Definición",
+      "Circuito",
+      "Finalización"
+    ],
+    "que_observar": [
+      "Calidad del remate.",
+      "Encadenar secuencias.",
+      "Técnica de cada secuencia."
+    ],
+    "correcciones": [
+      "Priorizar la calidad.",
+      "No apurar los remates."
+    ],
+    "reglas": [
+      "El mismo jugador recorre las 4 secuencias.",
+      "Los pases los da el entrenador o un compañero.",
+      "Calidad sobre cantidad."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cronometrar circuito completo y buscar mejorar tiempo con calidad mantenida."
+    ],
+    "variantes": [
+      "Fútbol 7: 4+ (un jugador recorre las 4 secuencias; el entrenador o un compañero da los pases). · 20-25 min.",
+      "Fútbol 11: 4+ (un jugador recorre las 4 secuencias; el entrenador o un compañero da los pases). · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 050",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 40 x 25 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-050-CIRCUITO-COMPLETO-FINALIZACION/CampoBase_Circuito_Completo_Finalizacion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-050-CIRCUITO-COMPLETO-FINALIZACION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).

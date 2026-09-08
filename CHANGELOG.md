@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.34.0 — 2026-09-08
+
+- Pack150 Sección 2 (Definición/Finalización): ejercicios 031-050 integrados y publicados (1v1 con portero centro/banda, 2v1, 3v2, cara a cara vaselina/raso, cabeceos estático/centro/defensivo-ofensivo, remates de larga distancia, defensor pasivo/activo, rondo, rebote, secuencias rotativas, vaselina, volea, media volea y circuito completo de finalización).
+
 ## 2.33.0 — 2026-09-08
 
 - Nueva táctica del manual «Sistema 1-3-3» (5 bloques: Estructura, Salida, Ataque 8-9, Ataque 4-5, Ajuste 4-2-2) con animación por frames y pizarra editable.
