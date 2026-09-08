@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.32.3 — 2026-09-08
+
+- Pack150 Sección 2 (Definición/Finalización): ejercicios 026-030 integrados y publicados (definición estática pie dominante/no dominante, primer toque pase raso/aéreo, definición tras conducción rápida).
+
 ## 2.32.2 — 2026-09-08
 
 - Botón «Cerrar vídeo» en el visor a pantalla completa del vídeo real (demostración), igual que «Cerrar animación».

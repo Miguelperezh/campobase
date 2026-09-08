@@ -9792,6 +9792,522 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-026-DEFINICION-ESTATICA-PIE-DOMINANTE",
+  "nombre": "Definición estática — pie dominante",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Remate raso",
+      "Interior del pie",
+      "Precisión"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8 (fila)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Colocar el balón parado a 10-12 metros de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador toma 2-3 pasos de carrera y remata a portería."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Focalizar en interior del pie, tobillo firme y apuntar a esquina."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 remates. Recoger balones y siguiente turno."
+      }
+    ],
+    "explicacion_breve": "Con el balón parado a 10-12 metros, el jugador toma 2-3 pasos de carrera y remata a portería con el interior del pie dominante, apuntando a la esquina.",
+    "leyenda": "Azul: jugador · Balón: parado · Portería: remate a esquina · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la técnica pura del remate raso con el interior del pie dominante."
+    ],
+    "claves_entrenador": [
+      "El pie de apoyo debe apuntar a donde quieres que vaya el balón. Cabeza sobre el balón al golpear."
+    ],
+    "montaje": [
+      "Colocar el balón parado a 10-12 metros de la portería."
+    ],
+    "desarrollo": [
+      "Colocar el balón parado a 10-12 metros de la portería.",
+      "Jugador toma 2-3 pasos de carrera y remata a portería.",
+      "Focalizar en interior del pie, tobillo firme y apuntar a esquina.",
+      "10 remates. Recoger balones y siguiente turno."
+    ],
+    "que_buscamos": [
+      "Remate raso",
+      "Interior del pie",
+      "Precisión"
+    ],
+    "que_observar": [
+      "Pie de apoyo orientado al objetivo.",
+      "Cabeza sobre el balón.",
+      "Tobillo firme."
+    ],
+    "correcciones": [
+      "Orientar el pie de apoyo al objetivo.",
+      "Cabeza sobre el balón al golpear."
+    ],
+    "reglas": [
+      "Balón parado a 10-12 m.",
+      "Interior del pie dominante.",
+      "Tobillo firme.",
+      "Apuntar a esquina."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Marcar zonas objetivo en la portería (esquinas) y contar aciertos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8 (fila). · 8-10 min.",
+      "Fútbol 11: 1-8 (fila). · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 026",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-026-DEFINICION-ESTATICA-PIE-DOMINANTE/CampoBase_Definicion_Estatica_Pie_Dominante.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-026-DEFINICION-ESTATICA-PIE-DOMINANTE/frames/f",
+    "total": 48,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-027-DEFINICION-ESTATICA-PIE-NO-DOMINANTE",
+  "nombre": "Definición estática — pie no dominante",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Remate",
+      "Pie no dominante",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Balón parado a 10 metros de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador remata ÚNICAMENTE con el pie no dominante."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Foco en técnica, NO en fuerza. La fuerza llega con la repetición."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 remates con pie no dominante. Descanso 30 s. Repetir 3 series."
+      }
+    ],
+    "explicacion_breve": "Con el balón parado a 10 metros, el jugador remata únicamente con el pie no dominante, priorizando la técnica sobre la fuerza.",
+    "leyenda": "Azul: jugador · Balón: parado · Portería: remate · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar el uso del pie no dominante para ampliar el repertorio ofensivo."
+    ],
+    "claves_entrenador": [
+      "Al inicio va a salir feo. Acéptalo. La pierna 'mala' se hace buena con repetición, no con fuerza."
+    ],
+    "montaje": [
+      "Balón parado a 10 metros de la portería."
+    ],
+    "desarrollo": [
+      "Balón parado a 10 metros de la portería.",
+      "Jugador remata ÚNICAMENTE con el pie no dominante.",
+      "Foco en técnica, NO en fuerza. La fuerza llega con la repetición.",
+      "10 remates con pie no dominante. Descanso 30 s. Repetir 3 series."
+    ],
+    "que_buscamos": [
+      "Remate",
+      "Pie no dominante",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Uso del pie no dominante.",
+      "Técnica antes que fuerza.",
+      "Repetición."
+    ],
+    "correcciones": [
+      "Priorizar la técnica.",
+      "No buscar fuerza al inicio."
+    ],
+    "reglas": [
+      "Rematar solo con el pie no dominante.",
+      "Foco en técnica.",
+      "10 remates por serie."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Alternar remates: 5 con pie dominante, 5 con no dominante, ver diferencia técnica."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8. · 8-10 min.",
+      "Fútbol 11: 1-8. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 027",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-027-DEFINICION-ESTATICA-PIE-NO-DOMINANTE/CampoBase_Definicion_Estatica_Pie_No_Dominante.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-027-DEFINICION-ESTATICA-PIE-NO-DOMINANTE/frames/f",
+    "total": 48,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-028-DEFINICION-PRIMER-TOQUE-PASE-RASO",
+  "nombre": "Definición primer toque tras pase raso",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Primer toque",
+      "Remate",
+      "Timing de carrera"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2+ (pasador y rematador)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Pasador ubicado en el borde del área con balones."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rematador entra en carrera desde 15 m atrás."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Pasador entrega pase raso al espacio, rematador define de PRIMERA."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 remates por jugador. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El pasador entrega un pase raso al espacio y el rematador, que entra en carrera desde 15 m atrás, define de primera intención.",
+    "leyenda": "Amarillo: pasador (P) · Azul: rematador (R) · Balón: pase raso · Flecha azul: pase · Flecha roja: carrera/remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar el remate de primera intención sin control previo."
+    ],
+    "claves_entrenador": [
+      "El pie llega al balón — el balón no espera al pie. Timing de la carrera es todo."
+    ],
+    "montaje": [
+      "Pasador ubicado en el borde del área con balones."
+    ],
+    "desarrollo": [
+      "Pasador ubicado en el borde del área con balones.",
+      "Rematador entra en carrera desde 15 m atrás.",
+      "Pasador entrega pase raso al espacio, rematador define de PRIMERA.",
+      "8 remates por jugador. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Primer toque",
+      "Remate",
+      "Timing de carrera"
+    ],
+    "que_observar": [
+      "Timing de la carrera.",
+      "Remate de primera.",
+      "Pase al espacio."
+    ],
+    "correcciones": [
+      "Ajustar el timing de la carrera.",
+      "No controlar antes de rematar."
+    ],
+    "reglas": [
+      "Pase raso al espacio.",
+      "Remate de primera.",
+      "8 remates por jugador."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Variar la velocidad y ángulo del pase entrante para simular situaciones reales."
+    ],
+    "variantes": [
+      "Fútbol 7: 2+ (pasador y rematador). · 10-12 min.",
+      "Fútbol 11: 2+ (pasador y rematador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 028",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 20 x 12 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-028-DEFINICION-PRIMER-TOQUE-PASE-RASO/CampoBase_Definicion_Primer_Toque_Pase_Raso.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-028-DEFINICION-PRIMER-TOQUE-PASE-RASO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-029-DEFINICION-PRIMER-TOQUE-PASE-AEREO",
+  "nombre": "Definición primer toque tras pase aéreo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Volea",
+      "Media volea",
+      "Juego aéreo"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2+ (lanzador y rematador)"
+    },
+    "material": "6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador a 15 m del rematador, con balón en mano."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanza balón alto en curva hacia el rematador."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Rematador ataca el balón en el aire y define de volea o media volea."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 remates por jugador. Descanso 1 minuto entre series."
+      }
+    ],
+    "explicacion_breve": "El lanzador envía un balón alto en curva y el rematador lo ataca en el aire para definir de volea o media volea.",
+    "leyenda": "Amarillo: lanzador (L) · Azul: rematador (R) · Balón: pase aéreo · Flecha azul: trayectoria aérea · Flecha roja: remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar volea y media volea sobre balón alto entrante."
+    ],
+    "claves_entrenador": [
+      "El cuerpo se inclina hacia atrás para pegarle por arriba. Ojos en el balón hasta el impacto."
+    ],
+    "montaje": [
+      "Lanzador a 15 m del rematador, con balón en mano."
+    ],
+    "desarrollo": [
+      "Lanzador a 15 m del rematador, con balón en mano.",
+      "Lanza balón alto en curva hacia el rematador.",
+      "Rematador ataca el balón en el aire y define de volea o media volea.",
+      "8 remates por jugador. Descanso 1 minuto entre series."
+    ],
+    "que_buscamos": [
+      "Volea",
+      "Media volea",
+      "Juego aéreo"
+    ],
+    "que_observar": [
+      "Inclinación del cuerpo.",
+      "Ojos en el balón.",
+      "Contacto en el aire."
+    ],
+    "correcciones": [
+      "Inclinar el cuerpo hacia atrás.",
+      "Mantener los ojos en el balón."
+    ],
+    "reglas": [
+      "Balón alto en curva.",
+      "Atacar el balón en el aire.",
+      "Volea o media volea."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Variar altura y velocidad del balón lanzado; alternar entre volea y media volea."
+    ],
+    "variantes": [
+      "Fútbol 7: 2+ (lanzador y rematador). · 10-12 min.",
+      "Fútbol 11: 2+ (lanzador y rematador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 029",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-029-DEFINICION-PRIMER-TOQUE-PASE-AEREO/CampoBase_Definicion_Primer_Toque_Pase_Aereo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-029-DEFINICION-PRIMER-TOQUE-PASE-AEREO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-030-DEFINICION-TRAS-CONDUCCION-RAPIDA",
+  "nombre": "Definición tras conducción rápida",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Definición y finalización",
+    "que_se_trabaja": [
+      "Conducción",
+      "Toma de decisión",
+      "Finalización"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8"
+    },
+    "material": "5 conos + 6 balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Colocar 4 conos formando slalom desde 25 m del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador conduce el balón haciendo slalom rápido entre los conos."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al salir del último cono, dispara a portería de primera intención."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 repeticiones con recuperación completa entre cada una."
+      }
+    ],
+    "explicacion_breve": "El jugador conduce el balón haciendo slalom rápido entre 4 conos y, al salir del último, dispara a portería de primera intención.",
+    "leyenda": "Azul: jugador · Cono naranja: slalom · Balón: conducción · Flecha roja: conducción/remate"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar conducción a velocidad + toma de decisión + finalización."
+    ],
+    "claves_entrenador": [
+      "NO frenar antes del remate. La finalización viene con la velocidad de la conducción."
+    ],
+    "montaje": [
+      "Colocar 4 conos formando slalom desde 25 m del área."
+    ],
+    "desarrollo": [
+      "Colocar 4 conos formando slalom desde 25 m del área.",
+      "Jugador conduce el balón haciendo slalom rápido entre los conos.",
+      "Al salir del último cono, dispara a portería de primera intención.",
+      "8 repeticiones con recuperación completa entre cada una."
+    ],
+    "que_buscamos": [
+      "Conducción",
+      "Toma de decisión",
+      "Finalización"
+    ],
+    "que_observar": [
+      "Velocidad de conducción.",
+      "Salida del último cono.",
+      "Remate sin frenar."
+    ],
+    "correcciones": [
+      "No frenar antes del remate.",
+      "Mantener la velocidad de conducción."
+    ],
+    "reglas": [
+      "Slalom entre 4 conos.",
+      "Disparo de primera intención.",
+      "No frenar antes del remate."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar un defensor pasivo al final del slalom para forzar decisión rápida."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8. · 12-15 min.",
+      "Fútbol 11: 1-8. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 2 Definición y Finalización, ejercicio 030",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-030-DEFINICION-TRAS-CONDUCCION-RAPIDA/CampoBase_Definicion_Tras_Conduccion_Rapida.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-030-DEFINICION-TRAS-CONDUCCION-RAPIDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
