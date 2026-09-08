@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.42.0 — 2026-09-08
+
+- Preparación de partido: al guardar, la alineación completa de siete jugadores, formación y porteros crea o actualiza automáticamente el partido en vivo en fase «Preparado».
+- Partido en vivo: cualquier convocado puede actuar como portero; al elegir un jugador de campo se intercambia su posición sin duplicarlo, y el portero del segundo tiempo puede jugar de campo durante el primero.
+- Delegado: recibe la misma alineación preparada y el permiso «Mostrar al delegado» mediante el estado compartido del partido en vivo.
+- Sincronización: una sesión antigua en fase `ready` se reconstruye desde la preparación guardada y las mutaciones locales pendientes sobreviven a la descarga de Supabase.
+- Preparación: el estado se repinta tras guardar y muestra «✓ Preparado» en lugar de quedarse visualmente en «Sin preparar».
+- 170 pruebas automatizadas en verde; sin cambios en cronómetro, sustituciones, minutos, eventos, puntuaciones ni finalización del partido.
+
 ## 2.41.0 — 2026-09-08
 
 - Pack150: 24 ejercicios nuevos publicados — 081-095 y 097-105 (Sección 4 Resistencia/Física y Sección 5 Defensa/Duelos 1v1). El 096 (Circuito integrado) se omite por decisión de Migue.

@@ -179,6 +179,55 @@ export function buildLiveState(players, availableIds, formation = '1-3-2-1', for
   };
 }
 
+export function applyLineupToLiveTeam(team, onFieldIds, keeperId) {
+  const fieldIds = onFieldIds.filter((id) => id !== keeperId);
+  let fieldIndex = 0;
+  return team.map((position) => ({
+    ...position,
+    playerId: position.pos === 'Portero' ? keeperId : (fieldIds[fieldIndex++] ?? ''),
+  }));
+}
+
+export function buildReadyTimerFromPreparation({
+  matchId,
+  team,
+  availableIds,
+  firstKeeper,
+  secondKeeper,
+  delegateShown = false,
+}) {
+  const onField = team.map(({ playerId }) => playerId).filter((id) => availableIds.includes(id));
+  if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(firstKeeper)) {
+    throw new TypeError('La preparación necesita 7 jugadores únicos con el portero del primer tiempo.');
+  }
+  if (!availableIds.includes(secondKeeper)) {
+    throw new TypeError('El portero del segundo tiempo debe estar convocado.');
+  }
+  return {
+    matchId,
+    elapsed: 0,
+    runningSince: null,
+    phase: 'ready',
+    initialOnField: [...onField],
+    onField: [...onField],
+    events: [],
+    firstKeeper,
+    secondKeeper,
+    autoPaused: false,
+    delegateUnlocked: Boolean(delegateShown),
+    details: {
+      goalsFor: 0,
+      goalsAgainst: 0,
+      goals: [],
+      cards: [],
+      injuries: [],
+      incidents: [],
+      comments: '',
+      minuteReasons: {},
+    },
+  };
+}
+
 export function canAssignPlayerToSlot(players, role, position, playerId) {
   if (!playerId) return true;
   const keeper = isKeeper(playerById(players, playerId));

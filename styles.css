@@ -52,3 +52,6 @@
 .lightbox.open.real-video-lightbox .lb-controls{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 /* La pizarra de la guía debe capturar el gesto táctil para dibujar flechas (igual que la pizarra en vivo). */
 .tg-board-section .tactic-board svg,[data-tg-board-lightbox] [data-tg-board-full] .tactic-board svg{touch-action:none}
+/* Convocados en Preparación de partido: chips separados (antes salían pegados). */
+.suplente-list{display:flex;flex-wrap:wrap;gap:.4rem}
+.suplente{display:inline-flex;padding:.3rem .6rem;border-radius:8px;background:#eef4f0;border:1px solid #cfe0d6;font-size:.82rem;font-weight:700;color:var(--green)}

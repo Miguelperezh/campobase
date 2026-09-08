@@ -4,6 +4,7 @@ import {
   CLOUD_TABLES,
   buildMutation,
   mergeCloudRecord,
+  reconcileCloudSnapshot,
   sanitizeRecordForCloud,
 } from '../js/sync-core.js';
 
@@ -61,4 +62,22 @@ test('crea mutaciones reproducibles para altas y borrados offline', () => {
     payload: null, queuedAt: 456,
   });
   assert.throws(() => buildMutation('desconocido', 'upsert', { id: 'x' }, 1), /almacén/i);
+});
+
+test('un snapshot antiguo no pisa altas ni resucita borrados que siguen pendientes', () => {
+  const localPreparation = {
+    id: 'prep-1', recordType: 'preparacion', matchId: 'm1', team: [{ playerId: 'p1' }], savedAt: 200,
+  };
+  const staleCloudPreparation = {
+    id: 'prep-1', recordType: 'preparacion', matchId: 'm1', team: [{ playerId: 'portero' }], savedAt: 100,
+  };
+  const pendingUpsert = buildMutation('settings', 'upsert', localPreparation, 200);
+  const pendingDelete = buildMutation('settings', 'delete', 'prep-borrada', 201);
+
+  assert.deepEqual(reconcileCloudSnapshot(
+    'settings',
+    [localPreparation],
+    [staleCloudPreparation, { id: 'prep-borrada', recordType: 'preparacion' }],
+    [pendingUpsert, pendingDelete],
+  ), [localPreparation]);
 });

@@ -5,16 +5,16 @@ import { runInNewContext } from 'node:vm';
 
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('la versión 2.41.0 está sincronizada en paquete, lock y caché PWA', async () => {
+test('la versión 2.42.0 está sincronizada en paquete, lock y caché PWA', async () => {
   const [pkgText, lockText, sw] = await Promise.all([
     projectFile('package.json'), projectFile('package-lock.json'), projectFile('sw.js'),
   ]);
   const pkg = JSON.parse(pkgText);
   const lock = JSON.parse(lockText);
-  assert.equal(pkg.version, '2.41.0');
-  assert.equal(lock.version, '2.41.0');
-  assert.equal(lock.packages[''].version, '2.41.0');
-  assert.match(sw, /campobase-v2\.41\.0/);
+  assert.equal(pkg.version, '2.42.0');
+  assert.equal(lock.version, '2.42.0');
+  assert.equal(lock.packages[''].version, '2.42.0');
+  assert.match(sw, /campobase-v2\.42\.0/);
 });
 
 test('todos los campos con hora usan selectores propios de 24 horas', async () => {
@@ -49,7 +49,8 @@ test('las seis correcciones de tácticas y partido en vivo quedan conectadas en 
     projectFile('index.html'), projectFile('js/app.js'), projectFile('styles.css'), projectFile('js/tactics.js'),
   ]);
   assert.match(app, /id="owner-auto-sub"/);
-  assert.match(app, /buildLiveState\(state\.players, availableIds, '1-3-2-1', 'F7', state\.timer\.firstKeeper\)/);
+  assert.match(app, /prep\?\.formacion \?\? '1-3-2-1'/);
+  assert.match(app, /syncLiveTacticFromTimer\(\);/);
   assert.match(app, /class="lightbox live-tactics-lightbox live-tactics" id="tactic-board-lightbox"/);
   assert.match(app, /id="tactic-board-tools-full"/);
   assert.match(app, /class="live-tactics-legend compact"/);
@@ -134,12 +135,34 @@ test('borrar un partido limpia sus datos derivados, asistencia y convocatoria', 
   assert.doesNotMatch(app, /if \(target\.matches\('\.delete-match'\).*for \(const record/);
 });
 
+test('la preparación guardada alimenta automáticamente el partido en vivo y el delegado', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /await put\('settings', record\);\s*await refresh\(\);\s*await applyPreparacionToLive\(record\);/);
+  assert.match(app, /delegateShown:\s*prep\.delegateShown/);
+  assert.match(app, /prepDraft = asignarJugador\(prepDraft, keeperIndex, keeper1\.value\)/);
+  assert.doesNotMatch(app, /const keepers = called\.filter/);
+});
+
+test('al guardar una preparación repinta su estado como Preparado', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /<span class="pill ok">✓ Preparado<\/span>/);
+  assert.match(app, /await applyPreparacionToLive\(record\);[\s\S]*renderPreparaciones\(\);[\s\S]*toast\('Preparación guardada\.'\)/);
+  assert.doesNotMatch(app, /<span class="pill ok">✓ Guardado<\/span>/);
+});
+
 test('la sesión autenticada se restaura al recargar y el PIN no se abre incondicionalmente', async () => {
   const app = await projectFile('js/app.js');
   assert.match(app, /sessionStorage/);
   assert.match(app, /restoreSessionRole/);
   assert.match(app, /state\.settings\.ownerPinHash/);
   assert.doesNotMatch(app, /renderDelegate\(\);\s*showAuth\(\)/);
+});
+
+test('localhost desregistra el service worker viejo y recarga una sola vez para soltar su caché', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /await Promise\.all\(registrations\.map\(\(registration\) => registration\.unregister\(\)\)\)/);
+  assert.match(app, /navigator\.serviceWorker\.controller/);
+  assert.match(app, /location\.reload\(\)/);
 });
 
 test('la iteración 9 expone equipo, localía, marcador de estadio y oculta comentarios al delegado', async () => {
@@ -149,7 +172,8 @@ test('la iteración 9 expone equipo, localía, marcador de estadio y oculta come
   assert.match(app, /calledPlayerOptions/);
   assert.match(app, /data-score-team=/);
   assert.match(app, /roleCanUseOwnerFeatures\(state\.role\).*Comentarios/s);
-  assert.match(app, /normalizePositions\(state\.players\.find\(\(player\) => player\.id === id\)\)\.includes\('Portero'\)/, 'los selectores de portero filtran por posición Portero');
+  assert.match(app, /const keepers = \[\.\.\.called\]\.sort/, 'los selectores de portero incluyen a todos los convocados');
+  assert.doesNotMatch(app, /const keepers = called\.filter/, 'no restringe la portería a quienes tengan posición Portero');
   assert.match(app, /getAttribute\('id'\)/, 'conserva el arreglo del listener de convocatorias');
 });
 
@@ -203,7 +227,7 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(app, /session-exercise-picker/, 'el builder muestra la lista de ejercicios');
   assert.match(app, /\+ Añadir/, 'cada ejercicio tiene botón para añadirlo');
   assert.match(app, /session-builder.*classList\.contains\('hidden'\)/, 'el botón añade directo cuando el builder está abierto');
-  assert.match(sw, /campobase-v2\.41\.0/, 'caché actualizada');
+  assert.match(sw, /campobase-v2\.42\.0/, 'caché actualizada');
 });
 
 test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {

@@ -28,6 +28,30 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
   return merged;
 }
 
+export function reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations = []) {
+  assertStore(store);
+  const localById = new Map(localRecords.map((record) => [record.id, record]));
+  const reconciled = new Map(cloudRecords.map((record) => [
+    record.id,
+    mergeCloudRecord(store, localById.get(record.id), record),
+  ]));
+  const pendingForStore = pendingMutations.filter((mutation) => mutation.store === store);
+
+  for (const mutation of pendingForStore) {
+    if (mutation.operation === 'delete') reconciled.delete(mutation.recordId);
+    else reconciled.set(mutation.recordId, structuredClone(mutation.payload));
+  }
+
+  const mainDeletePending = pendingForStore.some((mutation) => (
+    mutation.operation === 'delete' && mutation.recordId === 'main'
+  ));
+  const localMain = localById.get('main');
+  if (store === 'settings' && localMain && !reconciled.has('main') && !mainDeletePending) {
+    reconciled.set('main', structuredClone(localMain));
+  }
+  return [...reconciled.values()];
+}
+
 export function buildMutation(store, operation, recordOrId, queuedAt = Date.now()) {
   assertStore(store);
   if (!['upsert', 'delete'].includes(operation)) throw new TypeError('La operación de sincronización no es válida.');

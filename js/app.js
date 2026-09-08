@@ -8,7 +8,7 @@ import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
-import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, asignarJugador, cargarFormacion, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
+import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
@@ -645,9 +645,11 @@ function syncLiveTacticFromTimer() {
   if (!state.timer || !liveTactic) return;
   liveTactic.drag = null; // un cambio de alineación da por terminado cualquier arrastre en curso
   const keeper = state.timer.phase === 'second_half' ? state.timer.secondKeeper : state.timer.firstKeeper;
-  const field = (state.timer.onField || []).filter((id) => id !== keeper && !liveKeeperIds().includes(id));
-  let i = 0;
-  liveTactic.team = liveTactic.team.map((p) => ({ ...p, playerId: p.pos === 'Portero' ? keeper : (field[i++] || '') }));
+  liveTactic.team = applyLineupToLiveTeam(
+    liveTactic.team,
+    state.timer.onField || [],
+    keeper,
+  );
 }
 
 // Sincroniza el motor (state.timer.onField) con la pizarra. En preparación la
@@ -678,7 +680,17 @@ function ensureLiveTactic() {
   if (!state.timer) return null;
   const availableIds = liveTacticAvailableIds();
   if (!availableIds.length) return null;
-  liveTactic = buildLiveState(state.players, availableIds, '1-3-2-1', 'F7', state.timer.firstKeeper);
+  const prep = prepForMatch(state.timer.matchId);
+  liveTactic = buildLiveState(
+    state.players,
+    availableIds,
+    prep?.formacion ?? '1-3-2-1',
+    'F7',
+    state.timer.firstKeeper,
+  );
+  // El timer restaurado es la fuente inicial. Sin esta hidratación, la pizarra
+  // recién creada contiene solo al portero y reduce onField de 7 a 1 al renderizar.
+  syncLiveTacticFromTimer();
   return liveTactic;
 }
 
@@ -1169,7 +1181,11 @@ function updateKeeperOptions(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
   const callup = state.callups.find((item) => item.id === match?.callupId);
   const called = calledPlayerOptions(state.players, callup?.availableIds ?? []);
-  const keepers = called.filter(({ id }) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  const keepers = [...called].sort((a, b) => {
+    const aIsKeeper = normalizePositions(state.players.find((player) => player.id === a.id)).includes('Portero');
+    const bIsKeeper = normalizePositions(state.players.find((player) => player.id === b.id)).includes('Portero');
+    return Number(bIsKeeper) - Number(aIsKeeper);
+  });
   const options = keepers.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
   const first = $('#first-keeper');
   const second = $('#second-keeper');
@@ -1178,13 +1194,56 @@ function updateKeeperOptions(matchId) {
     select.disabled = !keepers.length;
     select.innerHTML = keepers.length ? `<option value="">Selecciona…</option>${options}` : '<option value="">Sin porteros convocados</option>';
   }
-  if (keepers.length === 1) {
-    first.value = keepers[0].id;
-    second.value = keepers[0].id;
-  } else if (keepers.length >= 2) {
-    first.value = keepers[0].id;
-    second.value = keepers[1].id;
+  const naturalKeepers = keepers.filter(({ id }) => (
+    normalizePositions(state.players.find((player) => player.id === id)).includes('Portero')
+  ));
+  const defaults = naturalKeepers.length ? naturalKeepers : keepers;
+  if (defaults.length === 1) {
+    first.value = defaults[0].id;
+    second.value = defaults[0].id;
+  } else if (defaults.length >= 2) {
+    first.value = defaults[0].id;
+    second.value = defaults[1].id;
   }
+}
+
+// Convierte la preparación guardada en el único estado 'ready' compartido por
+// Preparación, Partido en vivo y Delegado. Nunca pisa un partido ya comenzado.
+async function applyPreparacionToLive(prep) {
+  if (!prep?.team?.length) return false;
+  if (state.timer && state.timer.phase !== 'ready') return false;
+  const match = state.matches.find(({ id }) => id === prep.matchId);
+  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  if (!callup) return false;
+  const team = prep.team.map((position) => ({
+    ...position,
+    playerId: callup.availableIds.includes(position.playerId) ? position.playerId : '',
+  }));
+  state.timer = buildReadyTimerFromPreparation({
+    matchId: prep.matchId,
+    team,
+    availableIds: callup.availableIds,
+    firstKeeper: prep.firstKeeper,
+    secondKeeper: prep.secondKeeper,
+    delegateShown: prep.delegateShown,
+  });
+  liveTactic = buildLiveState(
+    state.players,
+    callup.availableIds,
+    prep.formacion ?? '1-3-2-1',
+    'F7',
+    prep.firstKeeper,
+  );
+  liveTactic.team = team;
+  await persistTimer();
+  renderLive();
+  renderDelegate();
+  return true;
+}
+
+async function reapplyPreparacionToTimer() {
+  if (!state.timer || state.timer.phase !== 'ready') return;
+  await applyPreparacionToLive(prepForMatch(state.timer.matchId));
 }
 
 async function prepareLive() {
@@ -1193,20 +1252,17 @@ async function prepareLive() {
   const config = FORMATS[callup.format];
   if (callup.availableIds.length < config.players) return toast(`Faltan jugadores: ${callup.format} necesita ${config.players} en campo.`);
   const prep = prepForMatch(match.id);
-  const firstKeeper = prep?.firstKeeper ?? $('#first-keeper').value;
-  const secondKeeper = prep?.secondKeeper ?? $('#second-keeper').value;
+  if (prep?.team?.length) {
+    await applyPreparacionToLive(prep);
+    return;
+  }
+  const firstKeeper = $('#first-keeper').value;
+  const secondKeeper = $('#second-keeper').value;
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
-  let initialOnField = [firstKeeper];
-  if (prep?.team?.length) {
-    // La preparación guardada manda: alineación, formación y porteros.
-    const team = prep.team.map((p) => ({ ...p, playerId: callup.availableIds.includes(p.playerId) ? p.playerId : '' }));
-    initialOnField = team.map((p) => p.playerId).filter(Boolean);
-    liveTactic = buildLiveState(state.players, callup.availableIds, prep.formacion ?? '1-3-2-1', 'F7', firstKeeper);
-    liveTactic.team = team;
-  }
-  state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
+  const initialOnField = [firstKeeper];
+  state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, delegateUnlocked: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
   await persistTimer(); renderLive();
 }
 
@@ -1493,7 +1549,7 @@ function editMatch(id) {
 }
 
 // ===== Preparación de partido (pestaña nueva, solo Migue) =====
-// Prepara la alineación de varios partidos días antes. Al guardar queda «Guardado»
+// Prepara la alineación de varios partidos días antes. Al guardar queda «Preparado»
 // y se puede reeditar. Cuando el partido se finaliza, desaparece de la lista.
 // Convocatoria y Partido en vivo NO se tocan: aquí solo se LEE la convocatoria.
 
@@ -1518,9 +1574,9 @@ function renderPreparaciones() {
   root.innerHTML = matches.map((match) => {
     const prep = prepForMatch(match.id);
     const estado = prep
-      ? '<span class="pill ok">✓ Guardado</span>'
+      ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button></div></div></article>`;
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
   }).join('');
 }
 
@@ -1629,6 +1685,7 @@ function renderPrepSlots() {
       const slot = prepDraft[idx];
       if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, sel.value)) return renderPrepSlots();
       prepDraft = asignarJugador(prepDraft, idx, sel.value);
+      if (slot.pos === 'Portero') $('#prep-keeper1').value = sel.value;
       renderPrepSlots(); renderPrepBoard();
     });
   });
@@ -1675,7 +1732,8 @@ function wirePrepEditor() {
   });
   const keeper1 = $('#prep-keeper1');
   if (keeper1) keeper1.addEventListener('change', () => {
-    prepDraft = prepDraft.map((p) => p.pos === 'Portero' ? { ...p, playerId: keeper1.value } : p);
+    const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
+    prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1.value);
     renderPrepSlots(); renderPrepBoard();
   });
   const popupSelect = $('#prep-popup-select');
@@ -1686,6 +1744,7 @@ function wirePrepEditor() {
     const slot = prepDraft[idx];
     if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, popupSelect.value)) return;
     prepDraft = asignarJugador(prepDraft, idx, popupSelect.value);
+    if (slot.pos === 'Portero') $('#prep-keeper1').value = popupSelect.value;
     renderPrepSlots(); renderPrepBoard();
   });
   const back = $('#prep-back');
@@ -1754,14 +1813,20 @@ async function savePreparacion() {
   };
   await put('settings', record);
   await refresh();
+  await applyPreparacionToLive(record);
   $('#preparacion-editor').classList.add('hidden');
   $('#preparacion-list').classList.remove('hidden');
   prepDraft = null; prepMatchId = null;
+  renderPreparaciones();
   toast('Preparación guardada.');
 }
 
 async function deletePreparacion() {
-  const existing = prepForMatch(prepMatchId);
+  await deletePreparacionById(prepMatchId);
+}
+
+async function deletePreparacionById(matchId) {
+  const existing = prepForMatch(matchId);
   if (!existing) return;
   if (!await askConfirmation({ title: 'Borrar preparación', message: 'Se borrará la preparación de este partido. La convocatoria y el partido no se tocan.', acceptLabel: 'Borrar', danger: true })) return;
   await remove('settings', existing.id);
@@ -1788,6 +1853,10 @@ async function togglePrepDelegate() {
   };
   await put('settings', record);
   await refresh();
+  const preparedIds = record.team.map(({ playerId }) => playerId).filter(Boolean);
+  if (preparedIds.length === 7 && new Set(preparedIds).size === 7 && preparedIds.includes(record.firstKeeper)) {
+    await applyPreparacionToLive(record);
+  }
   $('#prep-delegate').textContent = record.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado';
   toast(record.delegateShown ? 'El delegado ya puede ver el partido.' : 'El delegado ya no ve el partido.');
 }
@@ -2562,6 +2631,11 @@ function applyRole(role) {
     document.body.classList.remove('delegate-mode');
     showView('plantilla');
   }
+  // Re-renderiza el partido en vivo con el rol ya aplicado: el botón "Vista
+  // Delegado" (y "Enseñar al delegado") dependen de roleCanUseOwnerFeatures,
+  // y si se renderizó antes de restaurar el rol (state.role = null) no aparecen.
+  renderLive();
+  renderDelegate();
 }
 
 async function startDemoSession(session) {
@@ -2936,6 +3010,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {
@@ -3048,7 +3123,26 @@ async function init() {
   configureCloudStore(createCampoBaseCloudStore());
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(handleError);
+  // En desarrollo local (localhost) NO usamos el service worker: cachea el código
+  // y hace que los cambios no se vean. Desregistramos el que ya esté activo y, en
+  // producción (GitHub Pages), sí se registra para el modo offline.
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if ('serviceWorker' in navigator) {
+    if (isLocal) {
+      const reloadKey = 'campobase.localServiceWorkerReloaded';
+      const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+      const wasControlled = Boolean(navigator.serviceWorker.controller);
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+      if (wasControlled && sessionStorage.getItem(reloadKey) !== '1') {
+        sessionStorage.setItem(reloadKey, '1');
+        location.reload();
+        return;
+      }
+      if (!wasControlled) sessionStorage.removeItem(reloadKey);
+    } else {
+      navigator.serviceWorker.register('./sw.js').catch(handleError);
+    }
+  }
   await synchronizeCloud();
   await ensureSquadSeeded();
   await ensurePhase2Seeded();
@@ -3057,7 +3151,7 @@ async function init() {
   await ensureRealExercisesSeeded();
   await ensureSlideshareSeeded();
   await ensureLegacyExercisesNotPresent();
-  await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; renderLive(); renderDelegate();
+  await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; await reapplyPreparacionToTimer(); renderLive(); renderDelegate();
   if (!await restoreSessionRole()) showAuth();
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);

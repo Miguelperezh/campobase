@@ -1,4 +1,4 @@
-import { buildMutation, mergeCloudRecord } from './sync-core.js';
+import { buildMutation, mergeCloudRecord, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 
 const REAL_DB_NAME = 'campobase';
@@ -183,19 +183,17 @@ export async function flushSyncQueue() {
 
 async function replaceLocalStore(store, cloudRecords) {
   const db = await openDatabase();
-  const localRecords = await localGetAll(store);
-  const localById = new Map(localRecords.map((record) => [record.id, record]));
-  const transaction = db.transaction(store, 'readwrite');
+  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+  const completed = transactionDone(transaction);
   const objectStore = transaction.objectStore(store);
+  const [localRecords, pendingMutations] = await Promise.all([
+    requestResult(objectStore.getAll()),
+    requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
+  ]);
+  const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
   objectStore.clear();
-  for (const record of cloudRecords) {
-    objectStore.put(mergeCloudRecord(store, localById.get(record.id), record));
-  }
-  if (store === 'settings') {
-    const localMain = localById.get('main');
-    if (localMain && !cloudRecords.some(({ id }) => id === 'main')) objectStore.put(localMain);
-  }
-  await transactionDone(transaction);
+  for (const record of reconciledRecords) objectStore.put(record);
+  await completed;
 }
 
 async function queueInitialRecords(store, records) {

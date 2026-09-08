@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  nombreCorto, isKeeper, playerById, buildLiveState, asignarJugador, cargarFormacion,
-  opcionesPosicion, suplentes, canAssignPlayerToSlot, LIVE_FORMATIONS, TACTICA_MP4,
+  nombreCorto, isKeeper, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion,
+  applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot, LIVE_FORMATIONS, TACTICA_MP4,
 } from '../js/live-tactics.js';
 
 const players = [
@@ -45,6 +45,44 @@ test('buildLiveState coloca solo el portero elegido y deja al resto como suplent
   // Rival en mitad superior (y < 50), equipo en mitad inferior (y >= 40, enfrentado).
   assert.ok(state.opponent.every((p) => p.y < 50));
   assert.ok(state.team.every((p) => p.y >= 40));
+});
+
+test('al restaurar un timer hidrata la pizarra con los siete jugadores y no solo con el portero', () => {
+  const team = buildLiveState(players, availableIds, '1-3-2-1', 'F7', 'j1').team;
+  const onField = ['j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'j7'];
+  const restored = applyLineupToLiveTeam(team, onField, 'j1');
+  assert.deepEqual(restored.map(({ playerId }) => playerId), onField);
+});
+
+test('el portero del segundo tiempo puede jugar de campo durante el primero', () => {
+  const team = buildLiveState(players, availableIds, '1-3-2-1', 'F7', 'j1').team;
+  const onField = ['j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'j7'];
+  const restored = applyLineupToLiveTeam(team, onField, 'j1', ['j1', 'j7']);
+  assert.equal(restored.filter(({ playerId }) => playerId).length, 7);
+});
+
+test('guardar preparación crea automáticamente el timer ready compartido con owner y delegado', () => {
+  const team = buildLiveState(players, availableIds, '1-3-2-1', 'F7', 'j1').team
+    .map((position, index) => ({ ...position, playerId: `j${index + 1}` }));
+  const timer = buildReadyTimerFromPreparation({
+    matchId: 'm1', team, availableIds, firstKeeper: 'j1', secondKeeper: 'j8', delegateShown: true,
+  });
+  assert.deepEqual(timer.onField, ['j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'j7']);
+  assert.deepEqual(timer.initialOnField, timer.onField);
+  assert.equal(timer.phase, 'ready');
+  assert.equal(timer.delegateUnlocked, true);
+  assert.equal(timer.firstKeeper, 'j1');
+  assert.equal(timer.secondKeeper, 'j8');
+});
+
+test('elegir de portero a un jugador de campo lo intercambia y no lo duplica', () => {
+  const team = buildLiveState(players, availableIds, '1-3-2-1', 'F7', 'j1').team
+    .map((position, index) => ({ ...position, playerId: `j${index + 1}` }));
+  const keeperIndex = team.findIndex(({ pos }) => pos === 'Portero');
+  const swapped = asignarJugador(team, keeperIndex, 'j4');
+  assert.equal(swapped[keeperIndex].playerId, 'j4');
+  assert.equal(swapped[3].playerId, 'j1');
+  assert.equal(new Set(swapped.map(({ playerId }) => playerId)).size, 7);
 });
 
 test('asignarJugador intercambia posiciones y nunca deja un jugador en dos sitios', () => {
