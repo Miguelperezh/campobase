@@ -14950,7 +14950,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Resistencia",
       "Aeróbico",
@@ -15053,7 +15053,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Resistencia",
       "Cambios de ritmo",
@@ -15156,7 +15156,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Resistencia",
       "HIIT",
@@ -15259,7 +15259,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Velocidad",
       "Sprint",
@@ -15362,7 +15362,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Velocidad",
       "RSA",
@@ -15465,7 +15465,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Fuerza general",
       "Peso corporal",
@@ -15568,7 +15568,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Fuerza",
       "Potencia",
@@ -15671,7 +15671,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Fuerza unilateral",
       "Core",
@@ -15774,7 +15774,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Core",
       "Estabilidad",
@@ -15877,7 +15877,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Glúteos",
       "Isquiotibiales",
@@ -15980,7 +15980,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Core",
       "Abdomen",
@@ -16083,7 +16083,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Core",
       "Cardio",
@@ -16186,7 +16186,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Potencia",
       "Resistencia",
@@ -16289,7 +16289,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Fuerza",
       "Resistencia",
@@ -16392,7 +16392,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Isquiotibiales",
       "Prevención",
@@ -16495,7 +16495,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Potencia",
       "Pliometría",
@@ -16598,7 +16598,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Pliometría",
       "Reactividad",
@@ -16701,7 +16701,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Velocidad",
       "Explosividad",
@@ -16804,7 +16804,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Reacción",
       "Velocidad",
@@ -16907,7 +16907,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Fuerza",
       "Agilidad",
@@ -17010,7 +17010,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Resistencia",
       "Ritmo",
@@ -17113,7 +17113,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Glúteos",
       "Estabilizadores",
@@ -17216,7 +17216,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Core",
       "Rotación",
@@ -17319,7 +17319,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Preparación física integrada",
+    "tipo_principal": "Preparación física",
     "que_se_trabaja": [
       "Evaluación",
       "Velocidad",
