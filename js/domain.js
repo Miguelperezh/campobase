@@ -544,6 +544,13 @@ export function accumulateSeasonMinutes(player, matchDate, playedSeconds, contex
   };
 }
 
+function latestPlayerRatingHistory(history, entry) {
+  const candidates = [...(Array.isArray(history) ? history : []).filter((item) => item?.matchId !== entry.matchId), entry]
+    .filter((item) => item?.matchId && item?.date && Number.isFinite(item.rating))
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.matchId).localeCompare(String(b.matchId)));
+  return candidates.length ? [candidates.at(-1)] : [];
+}
+
 export function buildPlayerRatings(players, values, metadata = {}) {
   if (!roleCanUseOwnerFeatures(metadata.role)) throw new TypeError('Solo Migue puede puntuar a los jugadores.');
   if (!Array.isArray(players) || !players.length) throw new TypeError('Debe haber jugadores para puntuar.');
@@ -560,13 +567,8 @@ export function buildPlayerRatings(players, values, metadata = {}) {
       throw new RangeError('Cada puntuación debe ser un número entero entre 1 y 5.');
     }
     ratings[player.id] = rating;
-    return {
-      ...player,
-      ratingHistory: [
-        ...(player.ratingHistory ?? []),
-        { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating },
-      ],
-    };
+    const entry = { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating };
+    return { ...player, ratingHistory: latestPlayerRatingHistory(player.ratingHistory, entry) };
   });
 
   return { ratings, players: updatedPlayers };
@@ -588,12 +590,8 @@ export function replacePlayerRatings(players, values, metadata = {}) {
       throw new RangeError('Cada puntuación debe ser un número entero entre 1 y 5.');
     }
     ratings[player.id] = rating;
-    const history = [...(player.ratingHistory ?? [])];
-    const existingIndex = history.findIndex((item) => item.matchId === metadata.matchId);
     const entry = { matchId: metadata.matchId, date: metadata.date, opponent: metadata.opponent ?? '', rating };
-    if (existingIndex >= 0) history[existingIndex] = entry;
-    else history.push(entry);
-    return { ...player, ratingHistory: history };
+    return { ...player, ratingHistory: latestPlayerRatingHistory(player.ratingHistory, entry) };
   });
 
   return { ratings, players: updatedPlayers };

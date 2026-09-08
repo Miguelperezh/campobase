@@ -1192,12 +1192,20 @@ async function prepareLive() {
   if (!callup) return toast('Selecciona un partido.');
   const config = FORMATS[callup.format];
   if (callup.availableIds.length < config.players) return toast(`Faltan jugadores: ${callup.format} necesita ${config.players} en campo.`);
-  const firstKeeper = $('#first-keeper').value;
-  const secondKeeper = $('#second-keeper').value;
+  const prep = prepForMatch(match.id);
+  const firstKeeper = prep?.firstKeeper ?? $('#first-keeper').value;
+  const secondKeeper = prep?.secondKeeper ?? $('#second-keeper').value;
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
-  const initialOnField = [firstKeeper];
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
+  let initialOnField = [firstKeeper];
+  if (prep?.team?.length) {
+    // La preparación guardada manda: alineación, formación y porteros.
+    const team = prep.team.map((p) => ({ ...p, playerId: callup.availableIds.includes(p.playerId) ? p.playerId : '' }));
+    initialOnField = team.map((p) => p.playerId).filter(Boolean);
+    liveTactic = buildLiveState(state.players, callup.availableIds, prep.formacion ?? '1-3-2-1', 'F7', firstKeeper);
+    liveTactic.team = team;
+  }
   state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
   await persistTimer(); renderLive();
 }
@@ -1543,22 +1551,28 @@ function openPreparacionEditor(matchId) {
     ? prep.team.map((p) => ({ ...p }))
     : prepBuildTeam(formacion, firstKeeper);
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === formacion ? 'selected' : ''}>${f}</option>`).join('');
-  const convocados = availableIds.map((id) => `<span class="suplente">${escapeHtml(playerName(id))}</span>`).join('');
+  const convocados = availableIds
+    .map((id) => state.players.find((p) => p.id === id))
+    .filter(Boolean)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'es', { sensitivity: 'base' }))
+    .map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`)
+    .join('');
   $('#preparacion-editor').innerHTML = `
     <div class="section-head"><div><p class="eyebrow">Preparando</p><h3>${escapeHtml(match.opponent)} · ${escapeHtml(localDate(match.date))}</h3></div><button type="button" id="prep-back" class="secondary">← Volver</button></div>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
-      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select></div>
+      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button></div>
       <div class="board-wrap"><svg id="prep-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación"></svg></div>
       <div class="live-tactics-slots" id="prep-slots"></div>
       <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. El portero del 1er tiempo entra en portería automáticamente.</div>
       <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>toque = elegir jugador</span></div>
     </div>
     <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
-    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button></div>
+    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
     <p class="meta" id="prep-hint">${prep ? 'Preparación guardada. Puedes editarla y volver a guardar.' : 'Completa los 7 titulares (portero incluido) y guarda.'}</p>
-    <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>`;
+    <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
+    <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
   $('#preparacion-list').classList.add('hidden');
@@ -1684,6 +1698,39 @@ function wirePrepEditor() {
   if (save) save.addEventListener('click', () => savePreparacion());
   const delegate = $('#prep-delegate');
   if (delegate) delegate.addEventListener('click', () => togglePrepDelegate());
+  const del = $('#prep-delete');
+  if (del) del.addEventListener('click', () => deletePreparacion());
+  const gifBtn = $('#prep-gif');
+  const lightbox = $('#prep-lightbox');
+  if (gifBtn && lightbox) {
+    const closeLb = () => {
+      lightbox.classList.remove('open');
+      lightbox.querySelectorAll('video').forEach((v) => v.pause());
+    };
+    gifBtn.addEventListener('click', () => {
+      const formacion = $('#prep-formacion').value;
+      lightbox.querySelectorAll('video').forEach((n) => n.remove());
+      const video = document.createElement('video');
+      video.src = TACTICA_MP4[formacion] || TACTICA_MP4['1-3-2-1'];
+      video.playsInline = true; video.muted = true; video.loop = true;
+      lightbox.appendChild(video);
+      lightbox.classList.add('open');
+      video.play();
+    });
+    lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
+    const lbPlay = lightbox.querySelector('.lb-play');
+    if (lbPlay) lbPlay.addEventListener('click', () => {
+      const video = lightbox.querySelector('video');
+      if (!video) return;
+      if (video.paused) { video.play(); lbPlay.textContent = '⏸'; } else { video.pause(); lbPlay.textContent = '▶'; }
+    });
+    lightbox.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => {
+      const video = lightbox.querySelector('video');
+      if (video) video.playbackRate = parseFloat(b.dataset.s);
+      lightbox.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', x === b));
+    }));
+  }
 }
 
 async function savePreparacion() {
@@ -1711,6 +1758,18 @@ async function savePreparacion() {
   $('#preparacion-list').classList.remove('hidden');
   prepDraft = null; prepMatchId = null;
   toast('Preparación guardada.');
+}
+
+async function deletePreparacion() {
+  const existing = prepForMatch(prepMatchId);
+  if (!existing) return;
+  if (!await askConfirmation({ title: 'Borrar preparación', message: 'Se borrará la preparación de este partido. La convocatoria y el partido no se tocan.', acceptLabel: 'Borrar', danger: true })) return;
+  await remove('settings', existing.id);
+  await refresh();
+  $('#preparacion-editor').classList.add('hidden');
+  $('#preparacion-list').classList.remove('hidden');
+  prepDraft = null; prepMatchId = null;
+  toast('Preparación borrada.');
 }
 
 async function togglePrepDelegate() {

@@ -1,4 +1,4 @@
-# CampoBase 2.38.0 — Pack150 Secciones 3 y 4 (051-080)
+# CampoBase 2.39.0 — puntuación más reciente por jugador
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -22,7 +22,7 @@ Estado: estable. PWA estática en español con Supabase como fuente compartida e
 
 ## Datos y permisos
 
-Supabase conserva los documentos compartidos e IndexedDB funciona como caché y cola offline. La asistencia de partido se crea automáticamente al finalizar y puede corregirse desde Asistencia. Las puntuaciones quedan tanto en `matches.ratings` como en `players.ratingHistory`. Las fotos se guardan como base64 en el `payload` del jugador, con un máximo de 2 MB de archivo original; no hace falta crear un bucket de Storage ni ejecutar SQL adicional. Los hashes y la sal de los PIN se guardan en `configuracion` para compartir el mismo acceso entre dispositivos; nunca se guarda el PIN en claro. Los ejercicios y sesiones también se guardan como documentos tipados en `configuracion`, porque la Fase 2 mantiene el esquema de cinco tablas existente.
+Supabase conserva los documentos compartidos e IndexedDB funciona como caché y cola offline. La asistencia de partido se crea automáticamente al finalizar y puede corregirse desde Asistencia. Cada partido conserva sus puntuaciones en `matches.ratings`; en `players.ratingHistory` se guarda únicamente la puntuación del partido más reciente. Las fotos se guardan como base64 en el `payload` del jugador, con un máximo de 2 MB de archivo original; no hace falta crear un bucket de Storage ni ejecutar SQL adicional. Los hashes y la sal de los PIN se guardan en `configuracion` para compartir el mismo acceso entre dispositivos; nunca se guarda el PIN en claro. Los ejercicios y sesiones también se guardan como documentos tipados en `configuracion`, porque la Fase 2 mantiene el esquema de cinco tablas existente.
 
 La app usa `@supabase/supabase-js` 2.57.4 (licencia MIT). La distribución UMD está vendorizada en `vendor/supabase.js`; no depende de un CDN para arrancar offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 159 pruebas automatizadas en 2.38.0.
+- `npm test`: 161 pruebas automatizadas en 2.39.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 

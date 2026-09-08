@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.39.0 — 2026-09-08
+
+- Supabase: cada jugador conserva únicamente la puntuación de su partido más reciente; las puntuaciones históricas siguen guardadas en cada partido para estadísticas y medias.
+- Limpiadas 12 referencias a un partido eliminado; verificación final: 13 jugadores con una puntuación válida, 2 sin puntuación y 0 historiales huérfanos o duplicados.
+- Añadidas pruebas de regresión para puntuar un partido nuevo y para corregir uno anterior sin reemplazar la última puntuación.
+- Preparación de partido: la alineación, formación y porteros guardados ahora se pasan al partido en vivo al iniciarlo.
+- Preparación de partido: convocados ordenados alfabéticamente y mostrados como chips separados.
+- Preparación de partido: añadido el botón «Ver táctica (GIF/MP4)» con reproductor y selector de velocidad.
+- Preparación de partido: añadido el botón «Borrar preparación» para eliminar una preparación guardada (la convocatoria y el partido no se tocan).
+
 ## 2.38.0 — 2026-09-08
 
 - Pack150: ejercicios 061-080 integrados y publicados; 061-075 completan la Sección 3 (Pase/Técnica/Posesión) y 076-080 inician la Sección 4 (Resistencia y Preparación Física).

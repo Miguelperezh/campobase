@@ -563,6 +563,35 @@ test('reemplaza la nota de un partido ya puntuado sin duplicar el historial', ()
   assert.equal(result.players[0].ratingHistory[0].rating, 5);
 });
 
+test('solo conserva en el jugador la puntuación del partido más reciente', () => {
+  const players = [{
+    id: 'a',
+    ratingHistory: [{ matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Rival 1', rating: 3 }],
+  }];
+  const rated = buildPlayerRatings(players, { a: '5' }, {
+    role: 'owner', matchId: 'm2', date: '2026-09-19T13:00', opponent: 'Rival 2',
+  });
+
+  assert.deepEqual(rated.players[0].ratingHistory, [
+    { matchId: 'm2', date: '2026-09-19T13:00', opponent: 'Rival 2', rating: 5 },
+  ]);
+});
+
+test('corregir un partido anterior no reemplaza la última puntuación del jugador', () => {
+  const players = [{
+    id: 'a',
+    ratingHistory: [{ matchId: 'm2', date: '2026-09-19T13:00', opponent: 'Rival 2', rating: 5 }],
+  }];
+  const rated = replacePlayerRatings(players, { a: '4' }, {
+    role: 'owner', matchId: 'm1', date: '2026-09-12T13:00', opponent: 'Rival 1',
+  });
+
+  assert.deepEqual(rated.ratings, { a: 4 });
+  assert.deepEqual(rated.players[0].ratingHistory, [
+    { matchId: 'm2', date: '2026-09-19T13:00', opponent: 'Rival 2', rating: 5 },
+  ]);
+});
+
 test('reemplazar la nota exige ser Migue y una nota válida', () => {
   const players = [{ id: 'a', ratingHistory: [{ matchId: 'm1', date: '2026-09-12T13:00', opponent: 'X', rating: 3 }] }];
   const metadata = { matchId: 'm1', date: '2026-09-12T13:00', opponent: 'X' };
