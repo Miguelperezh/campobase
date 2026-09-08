@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.32.1 — 2026-09-08
+
+- Botón «Cerrar animación» en los GIF/MP4 de TODOS los ejercicios (antiguos y nuevos), igual que en las tácticas: botón rojo fijo abajo centrado que cierra el visor a pantalla completa.
+
 ## 2.32.0 — 2026-09-08
 
 - Nueva táctica del manual «Variante 4 · 1-1-3-2» (5 bloques) con animación por frames y pizarra editable.
