@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.33.0 — 2026-09-08
+
+- Nueva táctica del manual «Sistema 1-3-3» (5 bloques: Estructura, Salida, Ataque 8-9, Ataque 4-5, Ajuste 4-2-2) con animación por frames y pizarra editable.
+- Añadida a «Partido en vivo» (formación 1-3-3 con MP4 y numeración canónica 2,3,4,7,9,11).
+
 ## 2.32.3 — 2026-09-08
 
 - Pack150 Sección 2 (Definición/Finalización): ejercicios 026-030 integrados y publicados (definición estática pie dominante/no dominante, primer toque pase raso/aéreo, definición tras conducción rápida).

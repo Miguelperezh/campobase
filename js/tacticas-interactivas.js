@@ -15,6 +15,7 @@ import { TACTICA_1213_FRAMES } from './tactica-1213-frames.js';
 import { TACTICA_1321_FRAMES } from './tactica-1321-frames.js';
 import { TACTICA_1222_FRAMES } from './tactica-1222-frames.js';
 import { TACTICA_1132_FRAMES } from './tactica-1132-frames.js';
+import { TACTICA_133_FRAMES } from './tactica-133-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -792,6 +793,198 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 196
       },
       "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 4 (Presión tras pérdida y transición)", "seccion": "Presión tras pérdida y transición" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-133-GUIA-COMPLETA",
+  "nombre": "Sistema 1-3-3",
+  "formacion": "1-3-3",
+  "organizacion": "1 portero · 3 defensas · 3 atacantes",
+  "principio": "Dos líneas de tres, sencillas y equilibradas: la amplitud la da una línea u otra según la variante, y el 10 es siempre la referencia central.",
+  "framesManifest": TACTICA_133_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 24, "y": 72, "n": "4", "pos": "Lateral izq." },
+    { "x": 76, "y": 72, "n": "5", "pos": "Lateral der." },
+    { "x": 50, "y": 76, "n": "6", "pos": "Defensa central" },
+    { "x": 78, "y": 36, "n": "8", "pos": "Extremo der." },
+    { "x": 22, "y": 36, "n": "9", "pos": "Extremo izq." },
+    { "x": 50, "y": 30, "n": "10", "pos": "Delantero centro" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura base y variantes de amplitud",
+      "objetivo": "Entender la estructura 1-3-3 y sus dos variantes de amplitud: quién abre y quién juega por dentro en cada una.",
+      "idea_clave": "Dos líneas de tres; la amplitud la da una línea u otra, nunca las dos a la vez.",
+      "decisiones": [
+        "Estructura base: tres defensas atrás y tres atacantes delante.",
+        "Variante A: 4 y 5 dan amplitud; 8 y 9 juegan por dentro.",
+        "Variante B: 8 y 9 dan amplitud; 4 y 5 juegan más por dentro.",
+        "6 equilibra la base en ambas variantes.",
+        "10 mantiene la referencia central.",
+        "No se mezclan las variantes: se elige una y se mantiene."
+      ],
+      "que_vigilar": [
+        "Que la estructura 1-3-3 se vea clara desde el inicio.",
+        "Que solo una línea dé amplitud en cada variante.",
+        "Que 6 equilibre y 10 fije por dentro."
+      ],
+      "consignas": ["Dos líneas de tres", "Una línea abre, la otra por dentro", "6 equilibra", "10 fija"],
+      "errores": [
+        "Mezclar las dos variantes a la vez.",
+        "Efecto embudo por meter a todos por dentro.",
+        "Perder la amplitud y no abrir el campo."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-133-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 166
+      },
+      "fuente": { "documento": "Táctica 1-3-3 · Bloque 1 (Estructura y variantes de amplitud)", "seccion": "Estructura y variantes de amplitud" }
+    },
+    {
+      "id": "bloque-2-salida",
+      "orden": 2,
+      "nombre_corto": "Salida",
+      "titulo": "Salida de balón, superioridad y opciones",
+      "objetivo": "Enseñar la salida con superioridad 4v3 usando al portero y las cuatro soluciones reales: corto a 9, largo a 9, largo a 8 y largo a 10.",
+      "idea_clave": "Portero + tres de base superan la primera presión; luego se lee corto o largo.",
+      "decisiones": [
+        "Portero + 4 + 6 + 5 forman la base de cuatro.",
+        "Ante tres rivales, el portero permite superioridad 4v3.",
+        "4/9 y 5/8 se escalonan a distinta altura.",
+        "Si 9 viene al pie, 4 juega corto.",
+        "Si 9 rompe al espacio, 4 juega largo.",
+        "Largo a 8: si está libre, controla y gira; si no, descarga con 5.",
+        "Largo a 10: 9 y 8 cierran para la segunda jugada."
+      ],
+      "que_vigilar": [
+        "Que el portero participe en la salida.",
+        "Que 4/9 y 5/8 no estén a la misma altura.",
+        "Que 8 no fuerce el giro si está marcado.",
+        "Que nadie deje solo al 10 en el pase largo."
+      ],
+      "consignas": ["Portero participa", "Escalona alturas", "Lee corto o largo", "Gira si puedes, si no descarga", "Balón a 10: todos a la caída"],
+      "errores": [
+        "Sacar al portero de la circulación.",
+        "Poner 4/9 o 5/8 a la misma altura.",
+        "Obligar a 8 a girar si está marcado.",
+        "Jugar largo a 10 sin acercar a 8 y 9."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-133-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 192
+      },
+      "fuente": { "documento": "Táctica 1-3-3 · Bloque 2 (Salida de balón, superioridad y opciones)", "seccion": "Salida de balón" }
+    },
+    {
+      "id": "bloque-3-ataque-8-9",
+      "orden": 3,
+      "nombre_corto": "Ataque 8-9",
+      "titulo": "Ataque con 8 y 9 abiertos y cambio de frente",
+      "objetivo": "Mostrar el ataque cuando 8 y 9 dan amplitud: atraer a un lado, fijar con 10 y cambiar rápido al lado débil.",
+      "idea_clave": "Abrir, fijar y atacar el lado libre.",
+      "decisiones": [
+        "8 y 9 abren el campo por fuera.",
+        "El rival bascula hacia el lado del balón.",
+        "10 fija por dentro y atrae atención interior.",
+        "La pelota cambia rápido al lado opuesto.",
+        "En el lado débil aparece superioridad: 2 contra 1 o 2 contra 2.",
+        "La ventaja se explota por fuera o con combinación."
+      ],
+      "que_vigilar": [
+        "Amplitud real de 8 y 9.",
+        "Que 10 no salga de la zona interior.",
+        "Que el cambio de frente sea rápido, no lento.",
+        "Que la ventaja creada se aproveche."
+      ],
+      "consignas": ["Abre con 8 y 9", "Fija con 10", "Atrae un lado", "Cambio rápido", "Ataca el lado débil"],
+      "errores": [
+        "No dar amplitud real.",
+        "Cambio de frente lento.",
+        "Sacar a 10 de la zona interior.",
+        "Mover la pelota sin fijar antes al rival.",
+        "Crear ventaja y no aprovecharla."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-133-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 168
+      },
+      "fuente": { "documento": "Táctica 1-3-3 · Bloque 3 (Ataque con 8 y 9 abiertos y cambio de frente)", "seccion": "Ataque con amplitud exterior y cambio de frente" }
+    },
+    {
+      "id": "bloque-4-ataque-4-5",
+      "orden": 4,
+      "nombre_corto": "Ataque 4-5",
+      "titulo": "Ataque con 4 y 5 abiertos y 8 y 9 por dentro",
+      "objetivo": "Mostrar la segunda variante ofensiva: la amplitud la dan 4 y 5, y 8 y 9 se meten por dentro junto a 10.",
+      "idea_clave": "Cambiar quién abre y quién ataca por dentro genera la ventaja.",
+      "decisiones": [
+        "4 y 5 abren el campo desde atrás.",
+        "8 y 9 ocupan por dentro y se relacionan con 10.",
+        "Los tres interiores fijan rivales.",
+        "El poseedor en banda atrae la ayuda rival.",
+        "Si el rival ayuda, se abre otro espacio.",
+        "Puede aparecer pared, descarga o 1 contra 1 útil."
+      ],
+      "que_vigilar": [
+        "Que la amplitud la den 4 y 5, no 8 y 9.",
+        "Que no queden vacíos los carriles interiores.",
+        "Que 10 mantenga la referencia central.",
+        "Reconocer cuándo la ayuda rival ya ha saltado."
+      ],
+      "consignas": ["4 y 5 abiertos", "8 y 9 dentro", "10 fija", "Atrae ayuda", "Si salta, usa al de dentro"],
+      "errores": [
+        "Repetir el bloque anterior y volver a abrir a 8 y 9.",
+        "Dejar vacíos los carriles interiores.",
+        "Quitar a 10 de la referencia central.",
+        "No reconocer cuándo la ayuda rival ya ha saltado.",
+        "Perder la ventaja por frenar demasiado la acción."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-133-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 165
+      },
+      "fuente": { "documento": "Táctica 1-3-3 · Bloque 4 (Ataque con 4 y 5 abiertos y 8 y 9 por dentro)", "seccion": "Ataque con amplitud desde atrás e interiores por dentro" }
+    },
+    {
+      "id": "bloque-5-ajuste-ajedrez",
+      "orden": 5,
+      "nombre_corto": "Ajuste 4-2-2",
+      "titulo": "Ajuste ofensivo contra 4-2-2 para liberar a 8",
+      "objetivo": "Enseñar la adaptación ante un rival con línea fuerte tipo 4-2-2: fijar con 6, meter a 5 por dentro y liberar a 8 por fuera.",
+      "idea_clave": "Fijar, mover a 5 y liberar a 8.",
+      "decisiones": [
+        "El rival cambia a un dibujo fuerte tipo 4-2-2.",
+        "6 conduce hasta fijar, sin pasar rápido.",
+        "5 abandona la banda y entra por dentro.",
+        "8 ocupa la banda liberada.",
+        "9 y 10 quedan como dos puntas y siguen fijando.",
+        "El rival intenta cambiar marcas y bascular, pero llega tarde.",
+        "8 queda libre o en ventaja para atacar."
+      ],
+      "que_vigilar": [
+        "Que 6 fije antes de soltar el balón.",
+        "Que 5 entre por dentro con coordinación.",
+        "Que 8 ocupe la banda liberada.",
+        "Que 9 y 10 sigan fijando como dos puntas."
+      ],
+      "consignas": ["6, fija", "5, dentro", "8, fuera", "9 y 10, fijad", "Si ajustan tarde, castiga banda"],
+      "errores": [
+        "Que 6 pase sin fijar.",
+        "Mover a 5 dentro sin activar a 8.",
+        "Perder la referencia de 9 y 10 como dos puntas.",
+        "Dejar que la jugada se pare y el rival recomponga.",
+        "Confundir esta secuencia con la del bloque 4."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-133-GUIA-COMPLETA/bloque-5/frames/f",
+        "total": 165
+      },
+      "fuente": { "documento": "Táctica 1-3-3 · Bloque 5 (Ajuste ofensivo contra 4-2-2 para liberar a 8)", "seccion": "Adaptación ofensiva vs 4-2-2" }
     }
   ]
 }

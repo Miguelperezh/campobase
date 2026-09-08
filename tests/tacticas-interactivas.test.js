@@ -6,10 +6,11 @@ import { TACTICA_1213_FRAMES } from '../js/tactica-1213-frames.js';
 import { TACTICA_1321_FRAMES } from '../js/tactica-1321-frames.js';
 import { TACTICA_1222_FRAMES } from '../js/tactica-1222-frames.js';
 import { TACTICA_1132_FRAMES } from '../js/tactica-1132-frames.js';
+import { TACTICA_133_FRAMES } from '../js/tactica-133-frames.js';
 
-test('el catálogo del manual expone cinco tácticas maestras, incluida la 1-1-3-2', () => {
-  assert.equal(TACTICAS_INTERACTIVAS.length, 5);
-  const [t1321, t1231, t1213, t1222, t1132] = TACTICAS_INTERACTIVAS;
+test('el catálogo del manual expone seis tácticas maestras, incluida la 1-3-3', () => {
+  assert.equal(TACTICAS_INTERACTIVAS.length, 6);
+  const [t1321, t1231, t1213, t1222, t1132, t133] = TACTICAS_INTERACTIVAS;
   assert.equal(t1321.id, 'CAMPOBASE-TACTICA-1321-GUIA-COMPLETA');
   assert.equal(t1321.formacion, '1-3-2-1');
   assert.equal(t1321.nombre, 'Sistema 1-3-2-1');
@@ -30,6 +31,10 @@ test('el catálogo del manual expone cinco tácticas maestras, incluida la 1-1-3
   assert.equal(t1132.formacion, '1-1-3-2');
   assert.equal(t1132.nombre, 'Sistema 1-1-3-2');
   assert.equal(t1132.organizacion, '1 portero · 1 defensa · 3 medios · 2 delanteros');
+  assert.equal(t133.id, 'CAMPOBASE-TACTICA-133-GUIA-COMPLETA');
+  assert.equal(t133.formacion, '1-3-3');
+  assert.equal(t133.nombre, 'Sistema 1-3-3');
+  assert.equal(t133.organizacion, '1 portero · 3 defensas · 3 atacantes');
 });
 
 test('la táctica 1-3-2-1 tiene cuatro bloques ordenados con contenido completo', () => {
@@ -145,6 +150,30 @@ test('la 1-1-3-2 usa la numeración del paquete (1, 5, 11, 8, 7, 9, 10)', () => 
   assert.deepEqual(dorsales, ['1', '5', '11', '8', '7', '9', '10']);
 });
 
+test('la 1-3-3 usa la numeración del paquete (1, 4, 5, 6, 8, 9, 10)', () => {
+  const t = TACTICAS_INTERACTIVAS[5];
+  assert.ok(Array.isArray(t.team) && t.team.length === 7, 'team personalizado de 7 jugadores');
+  const dorsales = t.team.map((p) => p.n);
+  assert.deepEqual(dorsales, ['1', '4', '5', '6', '8', '9', '10']);
+});
+
+test('la táctica 1-3-3 tiene cinco bloques ordenados con contenido completo', () => {
+  const t = TACTICAS_INTERACTIVAS[5];
+  assert.equal(t.bloques.length, 5);
+  const cortos = t.bloques.map((b) => b.nombre_corto);
+  assert.deepEqual(cortos, ['Estructura', 'Salida', 'Ataque 8-9', 'Ataque 4-5', 'Ajuste 4-2-2']);
+  for (const b of t.bloques) {
+    assert.ok(b.id, 'cada bloque tiene id');
+    assert.ok(b.titulo, 'cada bloque tiene título');
+    assert.ok(b.objetivo, 'cada bloque tiene objetivo');
+    assert.ok(b.idea_clave, 'cada bloque tiene idea clave');
+    assert.ok(Array.isArray(b.decisiones) && b.decisiones.length, 'decisiones');
+    assert.ok(Array.isArray(b.que_vigilar) && b.que_vigilar.length, 'qué vigilar');
+    assert.ok(Array.isArray(b.consignas) && b.consignas.length, 'consignas');
+    assert.ok(Array.isArray(b.errores) && b.errores.length, 'errores');
+  }
+});
+
 test('cada bloque referencia frames reales con duraciones verificadas', () => {
   const t1321 = TACTICAS_INTERACTIVAS[0];
   const totales1321 = { Funciones: 196, Salida: 194, Ataque: 191, Defensa: 193 };
@@ -205,6 +234,18 @@ test('cada bloque referencia frames reales con duraciones verificadas', () => {
     assert.equal(TACTICA_1132_FRAMES[key].total, anim.total);
     assert.equal(TACTICA_1132_FRAMES[key].durations.length, anim.total);
   }
+
+  const t133 = TACTICAS_INTERACTIVAS[5];
+  const totales133 = { Estructura: 166, Salida: 192, 'Ataque 8-9': 168, 'Ataque 4-5': 165, 'Ajuste 4-2-2': 165 };
+  for (const b of t133.bloques) {
+    const anim = b.animacion;
+    assert.ok(anim, `animación de ${b.nombre_corto}`);
+    assert.match(anim.frames, /assets\/tacticas\/CAMPOBASE-TACTICA-133-GUIA-COMPLETA\/bloque-\d\/frames\/f$/);
+    assert.equal(anim.total, totales133[b.nombre_corto], `total de frames de ${b.nombre_corto}`);
+    const key = String(t133.bloques.indexOf(b) + 1);
+    assert.equal(TACTICA_133_FRAMES[key].total, anim.total);
+    assert.equal(TACTICA_133_FRAMES[key].durations.length, anim.total);
+  }
 });
 
 test('las duraciones de la 1-3-2-1 son las del GIF (200/160/140 ms según bloque)', () => {
@@ -236,16 +277,26 @@ test('las duraciones de la 1-1-3-2 son las reales de sus cinco GIF', () => {
   assert.deepEqual([...new Set(TACTICA_1132_FRAMES['5'].durations)], [80]);
 });
 
+test('las duraciones de la 1-3-3 son las del GIF (80 ms base, con pausas de 170/250/2380 ms)', () => {
+  assert.ok(TACTICA_133_FRAMES['1'].durations.every((d) => d === 80 || d === 170 || d === 2380));
+  assert.ok(TACTICA_133_FRAMES['2'].durations.every((d) => d === 80 || d === 170 || d === 250));
+  assert.ok(TACTICA_133_FRAMES['3'].durations.every((d) => d === 80 || d === 170 || d === 2380));
+  assert.ok(TACTICA_133_FRAMES['4'].durations.every((d) => d === 80 || d === 170 || d === 2380));
+  assert.ok(TACTICA_133_FRAMES['5'].durations.every((d) => d === 80 || d === 170 || d === 2380));
+});
+
 test('findTacticaInteractiva y tacticasDeFormacion siguen funcionando', () => {
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1321-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1321-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1231-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1231-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1213-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1213-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1222-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1222-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1132-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1132-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-133-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-133-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('no-existe'), undefined);
   assert.equal(tacticasDeFormacion('1-3-2-1').length, 1);
   assert.equal(tacticasDeFormacion('1-2-3-1').length, 1);
   assert.equal(tacticasDeFormacion('1-2-1-3').length, 1);
   assert.equal(tacticasDeFormacion('1-2-2-2').length, 1);
   assert.equal(tacticasDeFormacion('1-1-3-2').length, 1);
+  assert.equal(tacticasDeFormacion('1-3-3').length, 1);
 });
