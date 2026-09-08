@@ -7244,7 +7244,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Coordinación", "Velocidad de pies", "Agilidad", "Desplazamiento"],
     "tiempo_estimado_15": "5-8 min",
     "jugadores": {
@@ -7348,7 +7348,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Cadencia de pies", "Ritmo de contacto", "Coordinación", "Equilibrio"],
     "tiempo_estimado_15": "5-8 min",
     "jugadores": {
@@ -7451,7 +7451,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Coordinación multiplanar", "Agilidad lateral", "Desplazamiento lateral"],
     "tiempo_estimado_15": "6-10 min",
     "jugadores": {
@@ -7554,7 +7554,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Coordinación compleja", "Cambio de pie", "Patrón cruzado"],
     "tiempo_estimado_15": "8-10 min",
     "jugadores": {
@@ -7656,7 +7656,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Coordinación", "Recepción", "Control", "Salida explosiva"],
     "tiempo_estimado_15": "10-12 min",
     "jugadores": {
@@ -7758,7 +7758,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": ["Aceleración corta", "Precisión de trayectoria", "Zigzag"],
     "tiempo_estimado_15": "6-8 min",
     "jugadores": {
@@ -7860,7 +7860,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Postura defensiva",
       "Desplazamiento lateral",
@@ -7964,7 +7964,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Frenado",
       "Giro",
@@ -8069,7 +8069,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Sprint",
       "Desplazamiento lateral",
@@ -8172,7 +8172,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Desaceleración",
       "Reacción",
@@ -8275,7 +8275,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Reacción visual",
       "Control corporal"
@@ -8376,7 +8376,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Tiempo de reacción",
       "Arranque explosivo"
@@ -8477,7 +8477,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Potencia reactiva",
       "Coordinación de aterrizaje"
@@ -8578,7 +8578,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Estabilidad lateral",
       "Transferencia de peso"
@@ -8679,7 +8679,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Potencia de salto",
       "Sprint inmediato"
@@ -8780,7 +8780,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Coordinación cruzada",
       "Estabilidad postural"
@@ -8881,7 +8881,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Activación del muslo",
       "Carrera explosiva"
@@ -8982,7 +8982,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Fase de recobro",
       "Aceleración"
@@ -9083,7 +9083,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Coordinación",
       "Finalización",
@@ -9186,7 +9186,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Reflejos oculares",
       "Coordinación óculo-manual",
@@ -9289,7 +9289,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Reacción visual",
       "Anticipación"
@@ -9390,7 +9390,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Agilidad",
       "Marcaje individual"
@@ -9491,7 +9491,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Coordinación motora",
       "Agilidad"
@@ -9592,7 +9592,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Giros continuos",
       "Desaceleración",
@@ -9695,7 +9695,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Agilidad y coordinación",
+    "tipo_principal": "Coordinación/motricidad",
     "que_se_trabaja": [
       "Coordinación",
       "Pase",
@@ -9798,7 +9798,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Remate raso",
       "Interior del pie",
@@ -9902,7 +9902,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Remate",
       "Pie no dominante",
@@ -10005,7 +10005,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Primer toque",
       "Remate",
@@ -10108,7 +10108,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Volea",
       "Media volea",
@@ -10212,7 +10212,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Conducción",
       "Toma de decisión",
@@ -10315,7 +10315,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "1v1",
@@ -10418,7 +10418,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "1v1",
@@ -10521,7 +10521,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "2v1",
@@ -10624,7 +10624,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "3v2",
@@ -10727,7 +10727,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "Vaselina",
@@ -10830,7 +10830,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Cabeceo",
       "Juego aéreo",
@@ -10933,7 +10933,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Cabeceo",
       "Centro",
@@ -11036,7 +11036,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Cabeceo",
       "Juego aéreo",
@@ -11139,7 +11139,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Remate",
       "Empeine",
@@ -11242,7 +11242,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Conducción",
       "Remate",
@@ -11345,7 +11345,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Primer toque",
       "Remate",
@@ -11448,7 +11448,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "Decisión",
@@ -11551,7 +11551,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "1v1",
@@ -11654,7 +11654,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Posesión",
       "Transición",
@@ -11757,7 +11757,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "Rebote",
@@ -11860,7 +11860,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Remate",
       "Ángulos",
@@ -11963,7 +11963,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Vaselina",
       "Definición",
@@ -12066,7 +12066,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Volea",
       "Juego aéreo",
@@ -12169,7 +12169,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Media volea",
       "Superficie exterior",
@@ -12272,7 +12272,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Definición y finalización",
+    "tipo_principal": "Finalización",
     "que_se_trabaja": [
       "Definición",
       "Circuito",
@@ -12375,7 +12375,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Dominio",
       "Control",
@@ -12478,7 +12478,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Dominio",
       "Ambidextría",
@@ -12581,7 +12581,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Dominio",
       "Muslo",
@@ -12684,7 +12684,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Dominio",
       "Movimiento",
@@ -12787,7 +12787,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Control",
       "Primer toque",
@@ -12890,7 +12890,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Control",
       "Muslo",
@@ -12993,7 +12993,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Control",
       "Pecho",
@@ -13096,7 +13096,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Recepción",
       "Giro",
@@ -13199,7 +13199,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase corto",
       "Control",
@@ -13302,7 +13302,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase corto",
       "Orientación",
@@ -13405,7 +13405,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase corto",
       "Movilidad",
@@ -13508,7 +13508,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase",
       "Pie no dominante",
@@ -13611,7 +13611,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase medio",
       "Empeine",
@@ -13714,7 +13714,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase largo",
       "Empeine",
@@ -13817,7 +13817,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Tecnificación",
     "que_se_trabaja": [
       "Pase largo",
       "Cambio de banda",
@@ -13920,7 +13920,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Rondo",
@@ -14023,7 +14023,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Rondo",
@@ -14126,7 +14126,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Rondo",
@@ -14229,7 +14229,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Posicional",
@@ -14332,7 +14332,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Comodines",
@@ -14435,7 +14435,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Posicional",
@@ -14538,7 +14538,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Salida de balón",
       "Posesión",
@@ -14641,7 +14641,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Pase filtrado",
       "Pase entre líneas",
@@ -14744,7 +14744,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Posesión",
       "Triángulos",
@@ -14847,7 +14847,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Pase, técnica y posesión",
+    "tipo_principal": "Posesión",
     "que_se_trabaja": [
       "Pared",
       "Pase y va",
@@ -14950,7 +14950,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Resistencia",
       "Aeróbico",
@@ -15053,7 +15053,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Resistencia",
       "Cambios de ritmo",
@@ -15156,7 +15156,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Resistencia",
       "HIIT",
@@ -15259,7 +15259,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Velocidad",
       "Sprint",
@@ -15362,7 +15362,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Velocidad",
       "RSA",
@@ -15465,7 +15465,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Fuerza general",
       "Peso corporal",
@@ -15568,7 +15568,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Fuerza",
       "Potencia",
@@ -15671,7 +15671,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Fuerza unilateral",
       "Core",
@@ -15774,7 +15774,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Core",
       "Estabilidad",
@@ -15877,7 +15877,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Glúteos",
       "Isquiotibiales",
@@ -15980,7 +15980,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Core",
       "Abdomen",
@@ -16083,7 +16083,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Core",
       "Cardio",
@@ -16186,7 +16186,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Potencia",
       "Resistencia",
@@ -16289,7 +16289,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Fuerza",
       "Resistencia",
@@ -16392,7 +16392,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Isquiotibiales",
       "Prevención",
@@ -16495,7 +16495,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Potencia",
       "Pliometría",
@@ -16598,7 +16598,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Pliometría",
       "Reactividad",
@@ -16701,7 +16701,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Velocidad",
       "Explosividad",
@@ -16804,7 +16804,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Reacción",
       "Velocidad",
@@ -16907,7 +16907,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Fuerza",
       "Agilidad",
@@ -17010,7 +17010,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Resistencia",
       "Ritmo",
@@ -17113,7 +17113,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Glúteos",
       "Estabilizadores",
@@ -17216,7 +17216,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Core",
       "Rotación",
@@ -17319,7 +17319,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Resistencia y preparación física",
+    "tipo_principal": "Preparación física integrada",
     "que_se_trabaja": [
       "Evaluación",
       "Velocidad",
@@ -17426,7 +17426,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Defensa y duelos 1v1",
+    "tipo_principal": "Táctica",
     "que_se_trabaja": [
       "Defensa",
       "Postura",
@@ -17529,7 +17529,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Defensa y duelos 1v1",
+    "tipo_principal": "Táctica",
     "que_se_trabaja": [
       "Defensa",
       "Marcaje",
@@ -17632,7 +17632,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Defensa y duelos 1v1",
+    "tipo_principal": "Táctica",
     "que_se_trabaja": [
       "Defensa",
       "1v1",
@@ -17735,7 +17735,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Defensa y duelos 1v1",
+    "tipo_principal": "Táctica",
     "que_se_trabaja": [
       "Defensa",
       "1v1",
@@ -17838,7 +17838,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   "estado": "validado",
   "enumerar_ejercicios": false,
   "vista_rapida": {
-    "tipo_principal": "Defensa y duelos 1v1",
+    "tipo_principal": "Táctica",
     "que_se_trabaja": [
       "Defensa",
       "Inferioridad",
