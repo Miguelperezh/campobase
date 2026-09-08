@@ -52,9 +52,8 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     .map(([titulo, valores]) => `<h3>${esc(titulo)}</h3>${list(valores)}`).join('');
 
   const fuente = det.fuente || {};
-  const fuenteTexto = fuente.documento
-    ? `Fuente: ${esc(fuente.documento)}${fuente.adaptacion_operativa ? ' · Adaptación operativa' : ''}`
-    : '';
+  // La línea "Fuente: ..." se ha retirado de la ficha por decisión de Migue.
+  // Se conserva el objeto `fuente` en el JSON (no se borra), pero no se muestra.
 
   return `
   <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}">
@@ -82,9 +81,9 @@ export function renderValidatedExerciseHTML(item, options = {}) {
         <button type="button" class="btn-restart" title="Reiniciar">↺</button>
         <button type="button" class="btn-full" title="Pantalla completa">⛶</button>
         <div class="speed">
-          <button type="button" data-s="2" class="on">1×</button>
-          <button type="button" data-s="4">2×</button>
-          <button type="button" data-s="8">4×</button>
+          <button type="button" data-s="1" class="on">1×</button>
+          <button type="button" data-s="2">2×</button>
+          <button type="button" data-s="4">4×</button>
         </div>
       </div>
     </div>
@@ -110,9 +109,9 @@ export function renderValidatedExerciseHTML(item, options = {}) {
       <button type="button" class="btn-detalle">Ver detalles</button>
     </div>
 
-    <div class="detalle">${detalleBloques}${fuenteTexto ? `<div class="fuente">${fuenteTexto}</div>` : ''}</div>
+    <div class="detalle">${detalleBloques}</div>
 
-    <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
+    <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>
     ${realVideo ? `<div class="lightbox real-video-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1.5×</button><button type="button" data-s="2">2×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>` : ''}
   </div>`;
 }
@@ -135,7 +134,7 @@ export function initValidatedExerciseViewer(root) {
   const lb = root.querySelector('.lightbox');
   const lbPlay = root.querySelector('.lb-play');
 
-  let speed = 2; // playbackRate inicial (1× = 2× la velocidad real del GIF)
+  let speed = 1; // playbackRate inicial (1× = velocidad real del GIF)
 
   function setSpeed(s) {
     speed = s;
