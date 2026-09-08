@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.35.0 — 2026-09-08
+
+- Nueva táctica del manual «Sistema 1-3-1-2» (6 bloques: Estructura, Salida, Progresión, Basculaciones, Pressing, Bloque bajo) con animación por frames y pizarra editable.
+- Añadida a «Partido en vivo» (formación 1-3-1-2 con MP4 y numeración canónica 2,3,4,7,9,11).
+
 ## 2.34.0 — 2026-09-08
 
 - Pack150 Sección 2 (Definición/Finalización): ejercicios 031-050 integrados y publicados (1v1 con portero centro/banda, 2v1, 3v2, cara a cara vaselina/raso, cabeceos estático/centro/defensivo-ofensivo, remates de larga distancia, defensor pasivo/activo, rondo, rebote, secuencias rotativas, vaselina, volea, media volea y circuito completo de finalización).

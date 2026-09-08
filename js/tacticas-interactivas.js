@@ -16,6 +16,7 @@ import { TACTICA_1321_FRAMES } from './tactica-1321-frames.js';
 import { TACTICA_1222_FRAMES } from './tactica-1222-frames.js';
 import { TACTICA_1132_FRAMES } from './tactica-1132-frames.js';
 import { TACTICA_133_FRAMES } from './tactica-133-frames.js';
+import { TACTICA_1312_FRAMES } from './tactica-1312-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -985,6 +986,241 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 165
       },
       "fuente": { "documento": "Táctica 1-3-3 · Bloque 5 (Ajuste ofensivo contra 4-2-2 para liberar a 8)", "seccion": "Adaptación ofensiva vs 4-2-2" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1312-GUIA-COMPLETA",
+  "nombre": "Sistema 1-3-1-2",
+  "formacion": "1-3-1-2",
+  "organizacion": "1 portero · 3 defensas · 1 medio · 2 delanteros",
+  "principio": "El sistema no es rígido: la amplitud la da una línea u otra según la variante, y el 10 es siempre la referencia de equilibrio.",
+  "framesManifest": TACTICA_1312_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 24, "y": 72, "n": "4", "pos": "Defensa izq." },
+    { "x": 50, "y": 76, "n": "5", "pos": "Defensa central" },
+    { "x": 76, "y": 72, "n": "6", "pos": "Defensa der." },
+    { "x": 30, "y": 40, "n": "7", "pos": "Delantero izq." },
+    { "x": 70, "y": 40, "n": "9", "pos": "Delantero der." },
+    { "x": 50, "y": 58, "n": "10", "pos": "Centrocampista" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura base y variantes del sistema",
+      "objetivo": "Mostrar el 1-3-1-2 base y separar las variantes reales: quién da amplitud y qué papel juegan 7, 9, 10 y el posible líbero.",
+      "idea_clave": "El sistema no es rígido: puede abrir desde atrás o desde los delanteros, y la elección depende de perfiles y del rival.",
+      "decisiones": [
+        "Estructura base: 1 portero, 3 defensas, 1 centrocampista y 2 delanteros.",
+        "Variante A: la amplitud la dan los defensas exteriores (4 y 6), que se convierten en laterales/carrileros.",
+        "Con 4 y 6 abiertos, 7 y 9 pueden cerrarse como medias puntas.",
+        "Variante B: la amplitud la dan los delanteros (7 y 9), que se convierten en extremos.",
+        "Variante asimétrica: un lado gana profundidad y el otro equilibrio, según el perfil de los jugadores.",
+        "Variante con líbero: uno de los defensas protege detrás o salta delante de la línea.",
+        "10 actúa siempre como centrocampista de equilibrio."
+      ],
+      "que_vigilar": [
+        "Que la base 1-3-1-2 se vea clara desde el inicio.",
+        "Que solo una línea dé amplitud en cada variante.",
+        "Que 10 no pierda la referencia de centrocampista.",
+        "Que el líbero se mueva con intención, no sin propósito."
+      ],
+      "consignas": ["Entiende la base", "Decide quién da amplitud", "Usa los perfiles", "Da sentido al líbero"],
+      "errores": [
+        "Mezclar varias variantes a la vez sin separar sus funciones.",
+        "Perder la referencia del 10 como centrocampista.",
+        "Convertir la asimetría en caos.",
+        "Mover al líbero sin propósito.",
+        "Dibujar amplitud y juego interior ocupando el mismo espacio."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 167
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 1 (Estructura y variantes)", "seccion": "Estructura base y variantes funcionales" }
+    },
+    {
+      "id": "bloque-2-salida",
+      "orden": 2,
+      "nombre_corto": "Salida",
+      "titulo": "Salida de balón y primera progresión",
+      "objetivo": "Representar las salidas de balón del 1-3-1-2 y separar las tres variantes de inicio: corto por fuera, largo a banda y carga del costado con tres.",
+      "idea_clave": "El portero participa y la salida se adapta a la presión rival: si hay corto se usa, si no se va a banda con compañeros cerca.",
+      "decisiones": [
+        "Variante 1: dos defensas junto al portero y uno más abierto generan superioridad inicial de cuatro.",
+        "El centrocampista se separa y los dos delanteros caen a banda para dar amplitud.",
+        "Se puede jugar corto por fuera y progresar desde ahí.",
+        "Variante 2: los defensas exteriores actúan como laterales; portero y otro defensor sostienen la salida.",
+        "7 y 9 se cierran algo para generar triángulos con 10.",
+        "Si no hay corto, se juega largo a banda para buscar un 2 contra 1 y ganar la caída.",
+        "Variante 3: un defensor se suma al centro del campo y se carga un costado con tres jugadores."
+      ],
+      "que_vigilar": [
+        "Que el portero participe en la salida.",
+        "Que el carril central quede protegido.",
+        "Que no se fuerce el centro.",
+        "Que el balón largo a banda tenga compañeros cerca para la segunda jugada."
+      ],
+      "consignas": ["Lee la presión", "Sal por fuera", "Gana la caída", "Protege el centro", "Carga el lado con 3"],
+      "errores": [
+        "Forzar el centro.",
+        "Confundir amplitud con separación inútil.",
+        "Jugar largo sin preparar la segunda jugada.",
+        "Cerrar tanto a 7 y 9 que no existan triángulos.",
+        "Olvidar que en una variante un defensor se suma al medio para cargar la banda."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 167
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 2 (Salida de balón)", "seccion": "Salida de balón y primera progresión" }
+    },
+    {
+      "id": "bloque-3-progresion",
+      "orden": 3,
+      "nombre_corto": "Progresión",
+      "titulo": "Progresión ofensiva y ventajas",
+      "objetivo": "Representar la progresión ofensiva del 1-3-1-2 y separar las dos vías: amplitud con delanteros y amplitud con defensas.",
+      "idea_clave": "Si abren los delanteros se gana anchura arriba y superioridad por dentro; si abren los defensas se ganan más apoyos interiores cerca del balón.",
+      "decisiones": [
+        "Opción A: la amplitud la dan los delanteros (7 y 9) que caen a banda.",
+        "Con 7 y 9 abiertos aparece superioridad interior con cuatro jugadores para asociarse.",
+        "Desde ahí se saca el balón por banda o se usan diagonales para hacer daño.",
+        "Opción B: la amplitud la dan los defensas (4 y 6) si tienen capacidad para jugar por fuera.",
+        "En esa variante, 7 ayuda, 9 queda como referencia y 10 cae al lado del balón.",
+        "El objetivo es reunir tres jugadores en banda para crear superioridad.",
+        "El lado débil queda listo para cambio de frente, 1 contra 1, diagonal o centro."
+      ],
+      "que_vigilar": [
+        "Que no se mezclen las dos opciones al mismo tiempo.",
+        "Que al abrir mucho no se deje de acompañar por dentro.",
+        "Que la sobrecarga lateral tenga una continuación útil.",
+        "Que no baje también la referencia (9) y se pierda profundidad.",
+        "Que el lado débil quede vivo."
+      ],
+      "consignas": ["Decide la amplitud", "Usa el lado fuerte", "Mantén el lado débil", "7 ayuda", "9 fija"],
+      "errores": [
+        "Mezclar las dos opciones al mismo tiempo.",
+        "Abrir mucho pero no acompañar por dentro.",
+        "Cargar banda sin tercera pieza.",
+        "Hacer bajar también a la referencia y perder profundidad.",
+        "No dejar viva la opción del lado débil."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 169
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 3 (Progresión ofensiva)", "seccion": "Progresión ofensiva y ventajas" }
+    },
+    {
+      "id": "bloque-4-basculaciones",
+      "orden": 4,
+      "nombre_corto": "Basculaciones",
+      "titulo": "Basculaciones y defensa de banda",
+      "objetivo": "Mostrar cómo protege el centro el 1-3-1-2 y separar las dos formas de bascular: banda defendida por el exterior defensivo o por el extremo.",
+      "idea_clave": "El carril central es la prioridad; uno salta a banda, el resto cierra por dentro y 10 conserva el equilibrio.",
+      "decisiones": [
+        "El campo se divide en tres carriles y la prioridad defensiva es proteger el carril central.",
+        "Variante A: el exterior defensivo del lado del balón salta a banda.",
+        "El delantero próximo cierra en ayuda y los otros defensores se recomponen por dentro.",
+        "10 conserva el equilibrio en zona intermedia.",
+        "Si el balón cambia de lado, cambia también qué defensor actúa como lateral.",
+        "Variante B: si 7 y 9 juegan como extremos, el extremo del lado del balón baja a defender.",
+        "La línea de tres queda compacta, 10 no se hunde del todo y el extremo lejano cierra para el cambio de orientación."
+      ],
+      "que_vigilar": [
+        "Que el carril central no se abra para llegar antes a banda.",
+        "Que no salten dos jugadores a la misma marca.",
+        "Que no se persiga el cambio de lado con el mismo jugador.",
+        "Que 10 no se hunda demasiado y pierda el equilibrio."
+      ],
+      "consignas": ["Centro cerrado", "Uno salta", "El resto cierra", "10 equilibra", "Cambia roles"],
+      "errores": [
+        "Mezclar ambas variantes en una misma acción.",
+        "Abrir el carril central para llegar antes a banda.",
+        "Hacer saltar dos jugadores a la misma marca.",
+        "Perseguir el cambio de lado con el mismo jugador.",
+        "Hundir demasiado a 10 y perder equilibrio."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 166
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 4 (Basculaciones)", "seccion": "Defensa de banda y basculaciones" }
+    },
+    {
+      "id": "bloque-5-pressing",
+      "orden": 5,
+      "nombre_corto": "Pressing",
+      "titulo": "Pressing alto y variantes defensivas",
+      "objetivo": "Mostrar la presión alta del 1-3-1-2 y separar la variante base con dos puntas de la transformación 3-2-1, enseñando la relación entre presión y riesgo.",
+      "idea_clave": "Presionar alto no es correr todos: dos puntas igualan la primera salida, 10 tapa al mediocentro y a más hombres arriba, más riesgo detrás.",
+      "decisiones": [
+        "7 y 9 saltan sobre los dos defensas de salida rivales.",
+        "10 controla al mediocentro rival para evitar una salida interior limpia.",
+        "Variante 3-2-1: un solo delantero y más estructura detrás.",
+        "El 7, como delantero movible, ayuda a 10 en la presión interior.",
+        "Se conserva así la estructura de tres defensas atrás.",
+        "Variante más arriesgada: más hombres emparejados arriba y menos red detrás."
+      ],
+      "que_vigilar": [
+        "Que los dos puntas no vayan al mismo balón.",
+        "Que el mediocentro rival no quede libre.",
+        "Que no se rompa la línea de tres.",
+        "Que la presión arriesgada esté coordinada."
+      ],
+      "consignas": ["Orienta la salida", "Tapa por dentro", "Elige el riesgo", "Mantén la estructura"],
+      "errores": [
+        "Dos puntas al mismo balón.",
+        "Mediocentro rival libre.",
+        "Romper la línea de tres.",
+        "Presión arriesgada sin coordinación."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-5/frames/f",
+        "total": 166
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 5 (Pressing alto)", "seccion": "Pressing alto y variantes defensivas" }
+    },
+    {
+      "id": "bloque-6-bloque-bajo",
+      "orden": 6,
+      "nombre_corto": "Bloque bajo",
+      "titulo": "Bloque bajo, línea de 5 y transición",
+      "objetivo": "Completar la fase defensiva en zona 2: separar la opción clásica 1-3-1-2 de la variante de línea de cinco, y mostrar la transición rápida tras el robo.",
+      "idea_clave": "En zona 2 se puede mantener el 1-3-1-2 compacto o meter a 7 y 9 como extremos para formar línea de cinco; tras el robo, 7 y 9 atacan el espacio.",
+      "decisiones": [
+        "Variante clásica: 1-3-1-2 compacta con el carril central muy tapado.",
+        "Variante de línea de cinco: 7 y 9 bajan y forman una línea de cinco con la defensa (7-4-5-6-9).",
+        "10 queda por delante como referencia de equilibrio y continuidad.",
+        "Los extremos cierran los costados sin romper el centro.",
+        "La línea se desplaza junta según el balón (basculación conjunta).",
+        "Tras el robo, se asegura el primer apoyo.",
+        "7 y 9 atacan rápidamente el espacio que deja el rival."
+      ],
+      "que_vigilar": [
+        "Que no se confunda este bloque con el pressing alto.",
+        "Que 7 y 9 no se queden arriba pretendiendo formar línea de 5.",
+        "Que no se rompa la línea por perseguir individualmente.",
+        "Que tras el robo no se regale el primer pase.",
+        "Que la transición no sea lenta cuando el rival está abierto."
+      ],
+      "consignas": ["Centro cerrado", "Línea junta", "7 y 9 a bandas", "Roba y asegura", "Sal rápido"],
+      "errores": [
+        "Confundir este bloque con el pressing alto.",
+        "Dejar a 7 y 9 arriba y pretender formar línea de 5.",
+        "Romper la línea por perseguir individualmente.",
+        "Robar y regalar el primer pase.",
+        "Hacer una transición lenta cuando el rival está abierto."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1312-GUIA-COMPLETA/bloque-6/frames/f",
+        "total": 169
+      },
+      "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 6 (Bloque bajo, línea de 5 y transición)", "seccion": "Defensa en zona 2 y transición ofensiva" }
     }
   ]
 }
