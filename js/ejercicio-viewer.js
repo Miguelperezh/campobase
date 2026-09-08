@@ -112,7 +112,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="detalle">${detalleBloques}</div>
 
     <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span><button type="button" class="tg-close-full" title="Cerrar animación">Cerrar animación</button></div>
-    ${realVideo ? `<div class="lightbox real-video-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1.5×</button><button type="button" data-s="2">2×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span></div>` : ''}
+    ${realVideo ? `<div class="lightbox real-video-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1.5×</button><button type="button" data-s="2">2×</button></div></div><span class="hint">Clic fuera para cerrar · rueda/pellizco para zoom · arrastra para mover</span><button type="button" class="tg-close-full" title="Cerrar vídeo">Cerrar vídeo</button></div>` : ''}
   </div>`;
 }
 
@@ -234,6 +234,8 @@ export function initValidatedExerciseViewer(root) {
       }
     }
     realVideoLb.querySelector('.lb-close').addEventListener('click', rvClose);
+    const rvCloseFull = realVideoLb.querySelector('.tg-close-full');
+    if (rvCloseFull) rvCloseFull.addEventListener('click', rvClose);
     realVideoLb.addEventListener('click', (e) => { if (e.target === realVideoLb) rvClose(); });
   }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.32.2 — 2026-09-08
+
+- Botón «Cerrar vídeo» en el visor a pantalla completa del vídeo real (demostración), igual que «Cerrar animación».
+- Los controles (selector de velocidad incluido) suben por encima del botón de cerrar al ampliar, para no solaparse (mismo criterio que la guía de tácticas).
+
 ## 2.32.1 — 2026-09-08
 
 - Botón «Cerrar animación» en los GIF/MP4 de TODOS los ejercicios (antiguos y nuevos), igual que en las tácticas: botón rojo fijo abajo centrado que cierra el visor a pantalla completa.

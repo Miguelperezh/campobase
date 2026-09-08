@@ -46,5 +46,9 @@
 .tg-player-shell.tg-fullscreen .tg-close-full{display:block}
 /* El botón "Cerrar animación" del lightbox de ejercicios se muestra solo con el visor abierto. */
 .lightbox.open .tg-close-full{display:block}
+/* Los controles (selector de velocidad incluido) suben por encima del botón "Cerrar animación",
+   igual que en la guía de tácticas, para no solaparse. */
+.lightbox.open:not(.real-video-lightbox) .lb-controls{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
+.lightbox.open.real-video-lightbox .lb-controls{bottom:calc(4.5rem + env(safe-area-inset-bottom))}
 /* La pizarra de la guía debe capturar el gesto táctil para dibujar flechas (igual que la pizarra en vivo). */
 .tg-board-section .tactic-board svg,[data-tg-board-lightbox] [data-tg-board-full] .tactic-board svg{touch-action:none}
