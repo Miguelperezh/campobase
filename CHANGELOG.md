@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.32.0 — 2026-09-08
+
+- Nueva táctica del manual «Variante 4 · 1-1-3-2» (5 bloques) con animación por frames y pizarra editable.
+- Pack150: integrados los 25 ejercicios de la Sección 1 (Agilidad y Coordinación), 001-025, con GIF/MP4 y ficha completa.
+- Series paso a paso: los 78 ejercicios (53 publicados + 25 Pack150) muestran ahora cada paso del desarrollo como casilla numerada, en lugar de un único texto seguido.
+- 150 pruebas automatizadas en verde y caché PWA elevada a `campobase-v2.32.0`.
+
 ## 2.31.0 — 2026-09-07
 
 - Nueva táctica del manual «Sistema 1-2-2-2» (formación nueva, no variante): 5 bloques (Funciones, Ataque, Defensa, Variante 2-4, Contraataque) con animación por frames y pizarra editable con dorsales del paquete (1, 4, 5, 6, 8, 9, 10).
