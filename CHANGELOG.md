@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.41.0 — 2026-09-08
+
+- Pack150: 24 ejercicios nuevos publicados — 081-095 y 097-105 (Sección 4 Resistencia/Física y Sección 5 Defensa/Duelos 1v1). El 096 (Circuito integrado) se omite por decisión de Migue.
+- Ejercicios físicos con figuras humanas anatómicas (Everkinetic, CC BY-SA 4.0) en lugar de círculos; los de fútbol se mantienen con círculos como el PDF original.
+- Correcciones: sentadillas/burpees sin barra (peso corporal), 089 sin cinta de correr (remate a portería), 090 Nordic curl con el compañero detrás sujetando los tobillos, 091 salto horizontal con flecha recta, 100 sprint/yo-yo sin cinta.
+
 ## 2.40.0 — 2026-09-08
 
 - Tácticas: cinco guías interactivas nuevas — 1-1-3-1-1, 1-1-4-1, 1-4-1-1, 1-2-2-1-1 y una variante de 1-3-2-1 (línea de 3) — con frames, bloques y animaciones.

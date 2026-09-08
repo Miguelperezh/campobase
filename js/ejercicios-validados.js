@@ -15459,6 +15459,2482 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-081-CIRCUITO-FUERZA-PESO-CORPORAL",
+  "nombre": "Circuito de fuerza con peso corporal",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Fuerza general",
+      "Peso corporal",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, distribuidos en 4 secuencias"
+    },
+    "material": "colchoneta opcional",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Secuencia 1: 15 sentadillas."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Secuencia 2: 10 flexiones (rodillas si no llega)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Secuencia 3: 30s de plancha frontal."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Secuencia 4: 10 puentes de glúteo. Circuito completo × 4 rondas."
+      }
+    ],
+    "explicacion_breve": "Circuito de cuatro secuencias con sentadillas, flexiones, plancha frontal y puentes de glúteo, completado durante cuatro rondas.",
+    "leyenda": "SEN: sentadillas · FLEX: flexiones · PLAN: plancha frontal · PUE: puente de glúteo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar fuerza general del cuerpo sin necesidad de material."
+    ],
+    "claves_entrenador": [
+      "Técnica primero, cantidad después. Una sentadilla bien hecha vale 5 mal hechas."
+    ],
+    "montaje": [
+      "Secuencia 1: 15 sentadillas."
+    ],
+    "desarrollo": [
+      "Secuencia 1: 15 sentadillas.",
+      "Secuencia 2: 10 flexiones (rodillas si no llega).",
+      "Secuencia 3: 30s de plancha frontal.",
+      "Secuencia 4: 10 puentes de glúteo. Circuito completo × 4 rondas."
+    ],
+    "que_buscamos": [
+      "Fuerza general",
+      "Peso corporal",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Técnica de cada movimiento.",
+      "Control postural.",
+      "Continuidad entre secuencias."
+    ],
+    "correcciones": [
+      "Reducir repeticiones si se pierde la técnica.",
+      "Usar apoyo de rodillas en las flexiones si hace falta."
+    ],
+    "reglas": [
+      "Completar las 4 secuencias.",
+      "Realizar 4 rondas.",
+      "Priorizar la técnica sobre la cantidad."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar repeticiones progresivamente (semana 1: 15 → semana 4: 25 sentadillas)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, distribuidos en 4 secuencias. · 15-20 min.",
+      "Fútbol 11: 1-15 jugadores, distribuidos en 4 secuencias. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 081",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: campo o gimnasio pequeño."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-081-CIRCUITO-FUERZA-PESO-CORPORAL/CampoBase_Circuito_Fuerza_Peso_Corporal.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-081-CIRCUITO-FUERZA-PESO-CORPORAL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-082-SENTADILLAS-SALTOS-VERTICALES",
+  "nombre": "Sentadillas con saltos verticales",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Fuerza",
+      "Potencia",
+      "Tren inferior"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, 1 m² por jugador"
+    },
+    "material": "ninguno",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Bajar en sentadilla completa (muslos paralelos al suelo)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "En la subida, EXPLOTAR con salto vertical máximo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Aterrizar suave, absorbiendo con rodillas semiflexionadas."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 8-10 repeticiones. 90s de descanso."
+      }
+    ],
+    "explicacion_breve": "El jugador enlaza una sentadilla completa con un salto vertical máximo y aterriza de forma suave antes de repetir.",
+    "leyenda": "J: jugador · Flecha roja: salto vertical · Línea blanca: superficie de apoyo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar fuerza + potencia del tren inferior en el mismo gesto."
+    ],
+    "claves_entrenador": [
+      "El salto sale del EMPUJE de piernas, no de brazos. Los brazos solo acompañan."
+    ],
+    "montaje": [
+      "Bajar en sentadilla completa (muslos paralelos al suelo)."
+    ],
+    "desarrollo": [
+      "Bajar en sentadilla completa (muslos paralelos al suelo).",
+      "En la subida, EXPLOTAR con salto vertical máximo.",
+      "Aterrizar suave, absorbiendo con rodillas semiflexionadas.",
+      "3 series de 8-10 repeticiones. 90s de descanso."
+    ],
+    "que_buscamos": [
+      "Fuerza",
+      "Potencia",
+      "Tren inferior"
+    ],
+    "que_observar": [
+      "Profundidad de la sentadilla.",
+      "Impulso de piernas.",
+      "Control del aterrizaje."
+    ],
+    "correcciones": [
+      "No impulsar el salto solo con los brazos.",
+      "Absorber el aterrizaje con las rodillas semiflexionadas."
+    ],
+    "reglas": [
+      "Muslos paralelos al suelo.",
+      "Salto vertical máximo.",
+      "Aterrizaje suave con rodillas semiflexionadas."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir chaleco lastrado (5-10% del peso corporal) o pausas isométricas en la bajada."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, 1 m² por jugador. · 10-12 min.",
+      "Fútbol 11: 1-15 jugadores, 1 m² por jugador. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 082",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 1 m² por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-082-SENTADILLAS-SALTOS-VERTICALES/CampoBase_Sentadillas_Saltos_Verticales.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-082-SENTADILLAS-SALTOS-VERTICALES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-083-ESTOCADAS-ALTERNADAS-ROTACION",
+  "nombre": "Estocadas alternadas + rotación",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Fuerza unilateral",
+      "Core",
+      "Estabilidad"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, 3 × 1 m por jugador"
+    },
+    "material": "balón medicinal opcional",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Paso adelantado grande: rodilla trasera casi tocando el suelo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "En la posición baja, rotar el torso hacia el lado de la pierna adelantada."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Volver al centro, empujar y subir; cambiar de pierna."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 10 estocadas por pierna."
+      }
+    ],
+    "explicacion_breve": "Cada repetición combina un paso adelantado amplio, una rotación del torso hacia la pierna adelantada y la vuelta al centro antes de alternar pierna.",
+    "leyenda": "J: jugador · Flecha roja: paso adelantado · Flecha azul: rotación del torso"
+  },
+  "detalle": {
+    "objetivos": [
+      "Fortalecer piernas por separado + estabilidad del core en rotación."
+    ],
+    "claves_entrenador": [
+      "La rodilla adelantada NUNCA debe pasar la punta del pie. Si pasa, dar paso más largo."
+    ],
+    "montaje": [
+      "Paso adelantado grande: rodilla trasera casi tocando el suelo."
+    ],
+    "desarrollo": [
+      "Paso adelantado grande: rodilla trasera casi tocando el suelo.",
+      "En la posición baja, rotar el torso hacia el lado de la pierna adelantada.",
+      "Volver al centro, empujar y subir; cambiar de pierna.",
+      "3 series de 10 estocadas por pierna."
+    ],
+    "que_buscamos": [
+      "Fuerza unilateral",
+      "Core",
+      "Estabilidad"
+    ],
+    "que_observar": [
+      "Longitud del paso.",
+      "Alineación de la rodilla.",
+      "Control de la rotación."
+    ],
+    "correcciones": [
+      "Alargar el paso si la rodilla supera la punta del pie.",
+      "Volver al centro antes de subir."
+    ],
+    "reglas": [
+      "Alternar pierna en cada repetición.",
+      "Rotar hacia la pierna adelantada.",
+      "10 estocadas por pierna."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir balón medicinal ligero (2-3kg) para hacer la rotación con carga."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, 3 × 1 m por jugador. · 10-12 min.",
+      "Fútbol 11: 1-15 jugadores, 3 × 1 m por jugador. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 083",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media.",
+        "Espacio: 3 × 1 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-083-ESTOCADAS-ALTERNADAS-ROTACION/CampoBase_Estocadas_Alternadas_Rotacion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-083-ESTOCADAS-ALTERNADAS-ROTACION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-084-PLANCHA-FRONTAL-LATERAL-CORE-ESTATICO",
+  "nombre": "Plancha frontal y lateral (core estático)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Core",
+      "Estabilidad",
+      "Fuerza estática"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, una colchoneta o zona de suelo por jugador"
+    },
+    "material": "colchoneta opcional",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Plancha frontal apoyado en antebrazos y punta de pies."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuerpo COMPLETAMENTE recto, sin cadera hundida ni levantada."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Mantener 30-60 segundos. 3 series."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Plancha lateral: 30-45 segundos por lado, 2 series."
+      }
+    ],
+    "explicacion_breve": "El jugador mantiene primero la plancha frontal con el cuerpo recto y después realiza plancha lateral por ambos lados.",
+    "leyenda": "F: plancha frontal · L: plancha lateral · Base: colchoneta opcional"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar la fuerza estática del core — base de toda estabilidad."
+    ],
+    "claves_entrenador": [
+      "Contraer glúteos y abdomen ACTIVAMENTE. Sin contracción, la plancha pierde efecto."
+    ],
+    "montaje": [
+      "Plancha frontal apoyado en antebrazos y punta de pies."
+    ],
+    "desarrollo": [
+      "Plancha frontal apoyado en antebrazos y punta de pies.",
+      "Cuerpo COMPLETAMENTE recto, sin cadera hundida ni levantada.",
+      "Mantener 30-60 segundos. 3 series.",
+      "Plancha lateral: 30-45 segundos por lado, 2 series."
+    ],
+    "que_buscamos": [
+      "Core",
+      "Estabilidad",
+      "Fuerza estática"
+    ],
+    "que_observar": [
+      "Alineación corporal.",
+      "Cadera estable.",
+      "Contracción activa de abdomen y glúteos."
+    ],
+    "correcciones": [
+      "Corregir la cadera hundida o levantada.",
+      "Acortar el tiempo si se pierde la posición."
+    ],
+    "reglas": [
+      "Mantener el cuerpo completamente recto.",
+      "Plancha frontal: 3 series.",
+      "Plancha lateral: 2 series por lado."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar tiempo (60s → 90s), o añadir movimiento (elevar pierna alternadamente)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, una colchoneta o zona de suelo por jugador. · 8-10 min.",
+      "Fútbol 11: 1-15 jugadores, una colchoneta o zona de suelo por jugador. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 084",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: colchoneta o suelo."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-084-PLANCHA-FRONTAL-LATERAL-CORE-ESTATICO/CampoBase_Plancha_Frontal_Lateral_Core_Estatico.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-084-PLANCHA-FRONTAL-LATERAL-CORE-ESTATICO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-085-PUENTES-GLUTEOS-PROGRESION",
+  "nombre": "Puentes de glúteos con progresión",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Glúteos",
+      "Isquiotibiales",
+      "Prevención de lesión"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, una colchoneta o zona de suelo por jugador"
+    },
+    "material": "colchoneta opcional",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Acostado boca arriba, rodillas flexionadas y pies apoyados."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Elevar cadera empujando con talones hasta formar línea recta rodilla-hombro."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Mantener 2 segundos arriba y bajar de forma controlada."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 15 repeticiones. Progresión: puente con 1 pierna."
+      }
+    ],
+    "explicacion_breve": "Tumbado boca arriba, el jugador eleva la cadera empujando con los talones, mantiene dos segundos y baja de forma controlada.",
+    "leyenda": "J: jugador · Flecha roja: elevación de cadera · Base: colchoneta opcional"
+  },
+  "detalle": {
+    "objetivos": [
+      "Fortalecer glúteos e isquiotibiales — músculos clave para velocidad y prevención de lesión."
+    ],
+    "claves_entrenador": [
+      "Empujar con TALONES, no con puntas. Sentir contracción en el glúteo, no en la baja espalda."
+    ],
+    "montaje": [
+      "Acostado boca arriba, rodillas flexionadas y pies apoyados."
+    ],
+    "desarrollo": [
+      "Acostado boca arriba, rodillas flexionadas y pies apoyados.",
+      "Elevar cadera empujando con talones hasta formar línea recta rodilla-hombro.",
+      "Mantener 2 segundos arriba y bajar de forma controlada.",
+      "3 series de 15 repeticiones. Progresión: puente con 1 pierna."
+    ],
+    "que_buscamos": [
+      "Glúteos",
+      "Isquiotibiales",
+      "Prevención de lesión"
+    ],
+    "que_observar": [
+      "Línea rodilla-hombro.",
+      "Contracción del glúteo.",
+      "Control del descenso."
+    ],
+    "correcciones": [
+      "Evitar empujar con las puntas.",
+      "Reducir la altura si la carga pasa a la espalda baja."
+    ],
+    "reglas": [
+      "Empujar con los talones.",
+      "Mantener 2 segundos arriba.",
+      "Bajar de forma controlada."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Puente con 1 pierna elevada (aumenta 3× la dificultad); luego con pausas isométricas."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, una colchoneta o zona de suelo por jugador. · 8-10 min.",
+      "Fútbol 11: 1-15 jugadores, una colchoneta o zona de suelo por jugador. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 085",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: colchoneta o suelo."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-085-PUENTES-GLUTEOS-PROGRESION/CampoBase_Puentes_Gluteos_Progresion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-085-PUENTES-GLUTEOS-PROGRESION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-086-ABDOMINALES-DINAMICOS-VARIADOS",
+  "nombre": "Abdominales dinámicos variados",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Core",
+      "Abdomen",
+      "Fuerza"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, una colchoneta por jugador"
+    },
+    "material": "colchoneta",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Crunches clásicos: 15 repeticiones."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Bicicleta (codo a rodilla opuesta): 20 repeticiones."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Elevaciones de piernas rectas: 12 repeticiones."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Plancha con toque de hombro alternado: 20 repeticiones. Circuito × 3 rondas."
+      }
+    ],
+    "explicacion_breve": "Circuito de cuatro ejercicios abdominales (crunches, bicicleta, elevaciones y plancha con toque) completado en tres rondas.",
+    "leyenda": "CR: crunches · BI: bicicleta · EL: elevaciones · PL: plancha con toque"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar todas las secciones del abdomen con variedad de gestos."
+    ],
+    "claves_entrenador": [
+      "El movimiento sale del ABDOMEN, no del cuello. Si duele el cuello, mal ejecutado."
+    ],
+    "montaje": [
+      "Crunches clásicos: 15 repeticiones."
+    ],
+    "desarrollo": [
+      "Crunches clásicos: 15 repeticiones.",
+      "Bicicleta (codo a rodilla opuesta): 20 repeticiones.",
+      "Elevaciones de piernas rectas: 12 repeticiones.",
+      "Plancha con toque de hombro alternado: 20 repeticiones. Circuito × 3 rondas."
+    ],
+    "que_buscamos": [
+      "Core",
+      "Abdomen",
+      "Fuerza"
+    ],
+    "que_observar": [
+      "Técnica de cada gesto.",
+      "Control del cuello.",
+      "Continuidad entre secuencias."
+    ],
+    "correcciones": [
+      "Bajar el ritmo si el cuello se tensa.",
+      "Reducir repeticiones si se pierde la técnica."
+    ],
+    "reglas": [
+      "Completar las 4 secuencias.",
+      "Realizar 3 rondas.",
+      "El movimiento sale del abdomen, no del cuello."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar repeticiones o añadir tiempo bajo tensión (movimiento MÁS lento)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, una colchoneta por jugador. · 10-12 min.",
+      "Fútbol 11: 1-15 jugadores, una colchoneta por jugador. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 086",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: colchoneta."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-086-ABDOMINALES-DINAMICOS-VARIADOS/CampoBase_Abdominales_Dinamicos_Variados.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-086-ABDOMINALES-DINAMICOS-VARIADOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-087-ESCALADA-VERTICAL-MOUNTAIN-CLIMBERS",
+  "nombre": "Escalada vertical (mountain climbers)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Core",
+      "Cardio",
+      "Resistencia"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, 1 m² por jugador"
+    },
+    "material": "ninguno",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Posición de plancha alta (brazos extendidos, cuerpo recto)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Traer rodilla derecha al pecho, volver a la posición inicial."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Alternar rápidamente con la rodilla izquierda."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajar 30-45 segundos. Descanso 30s. 4 series."
+      }
+    ],
+    "explicacion_breve": "En posición de plancha alta, el jugador alterna rápidamente las rodillas hacia el pecho durante series de 30-45 segundos.",
+    "leyenda": "J: jugador · Flecha roja: rodillas al pecho · Base: superficie de apoyo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar core dinámico + resistencia cardiovascular integrada."
+    ],
+    "claves_entrenador": [
+      "Cadera baja siempre — si sube, se convierte en trote. Cuerpo horizontal como una tabla."
+    ],
+    "montaje": [
+      "Posición de plancha alta (brazos extendidos, cuerpo recto)."
+    ],
+    "desarrollo": [
+      "Posición de plancha alta (brazos extendidos, cuerpo recto).",
+      "Traer rodilla derecha al pecho, volver a la posición inicial.",
+      "Alternar rápidamente con la rodilla izquierda.",
+      "Trabajar 30-45 segundos. Descanso 30s. 4 series."
+    ],
+    "que_buscamos": [
+      "Core",
+      "Cardio",
+      "Resistencia"
+    ],
+    "que_observar": [
+      "Altura de la cadera.",
+      "Ritmo de alternancia.",
+      "Alineación del cuerpo."
+    ],
+    "correcciones": [
+      "Bajar la cadera si sube.",
+      "Reducir el ritmo si se pierde la posición."
+    ],
+    "reglas": [
+      "Mantener la cadera baja.",
+      "Cuerpo horizontal.",
+      "4 series de 30-45 segundos."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad, o hacer variante cruzada (rodilla izq → codo der)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, 1 m² por jugador. · 8-10 min.",
+      "Fútbol 11: 1-15 jugadores, 1 m² por jugador. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 087",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 1 m² por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-087-ESCALADA-VERTICAL-MOUNTAIN-CLIMBERS/CampoBase_Escalada_Vertical_Mountain_Climbers.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-087-ESCALADA-VERTICAL-MOUNTAIN-CLIMBERS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-088-BURPEES-CON-PROGRESION",
+  "nombre": "Burpees con progresión",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Potencia",
+      "Resistencia",
+      "Coordinación"
+    ],
+    "tiempo_estimado_15": "10-15 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, 1 m² por jugador"
+    },
+    "material": "ninguno",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "De pie → bajar a cuclillas con manos en el suelo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Extender piernas atrás (plancha). Opcional: 1 flexión."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Traer piernas de vuelta, y saltar arriba con brazos extendidos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "5-10 burpees por serie, 4 series. 60-90s descanso."
+      }
+    ],
+    "explicacion_breve": "Secuencia completa de burpee: de pie a cuclillas, extensión a plancha, vuelta y salto vertical con brazos extendidos.",
+    "leyenda": "1: parado · 2: cuclillas · 3: plancha · 4: salto arriba"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar potencia + resistencia + coordinación del cuerpo entero."
+    ],
+    "claves_entrenador": [
+      "Este ejercicio es DURO. Empezar con 5 rep y subir progresivamente. No sobreentrenarse."
+    ],
+    "montaje": [
+      "De pie → bajar a cuclillas con manos en el suelo."
+    ],
+    "desarrollo": [
+      "De pie → bajar a cuclillas con manos en el suelo.",
+      "Extender piernas atrás (plancha). Opcional: 1 flexión.",
+      "Traer piernas de vuelta, y saltar arriba con brazos extendidos.",
+      "5-10 burpees por serie, 4 series. 60-90s descanso."
+    ],
+    "que_buscamos": [
+      "Potencia",
+      "Resistencia",
+      "Coordinación"
+    ],
+    "que_observar": [
+      "Coordinación de la secuencia.",
+      "Extensión completa en plancha.",
+      "Salto vertical final."
+    ],
+    "correcciones": [
+      "Empezar con 5 repeticiones.",
+      "No sobreentrenarse."
+    ],
+    "reglas": [
+      "Completar la secuencia completa.",
+      "4 series de 5-10 burpees.",
+      "Descanso de 60-90 segundos."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir la flexión completa en la fase de plancha; luego, salto vertical máximo al final."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, 1 m² por jugador. · 10-15 min.",
+      "Fútbol 11: 1-15 jugadores, 1 m² por jugador. · 10-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 088",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: muy alta.",
+        "Espacio: 1 m² por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-088-BURPEES-CON-PROGRESION/CampoBase_Burpees_Con_Progresion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-088-BURPEES-CON-PROGRESION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-089-CIRCUITO-CROSSFIT-ADAPTADO-FUTBOL",
+  "nombre": "Circuito CrossFit adaptado al fútbol",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Fuerza",
+      "Resistencia",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "3-10 jugadores, distribuidos en 4 estaciones"
+    },
+    "material": "balones + colchoneta + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Estación 1: 10 sentadillas con salto."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Estación 2: 10 flexiones + tocar hombro."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Estación 3: 20 mountain climbers."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Estación 4: 8 remates a portería. Circuito × 4 rondas."
+      }
+    ],
+    "explicacion_breve": "Circuito de cuatro estaciones (sentadillas con salto, flexiones con toque, mountain climbers y remates a portería) completado en cuatro rondas sin parar.",
+    "leyenda": "SEN+S: sentadillas + salto · FLEX+T: flexiones + toque · MC: mountain climbers · REMAT: remates a portería"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar fuerza + resistencia + gestos técnicos del fútbol en un circuito integral."
+    ],
+    "claves_entrenador": [
+      "El objetivo es NO parar entre estaciones — solo cambiar de una a otra rápido."
+    ],
+    "montaje": [
+      "Estación 1: 10 sentadillas con salto."
+    ],
+    "desarrollo": [
+      "Estación 1: 10 sentadillas con salto.",
+      "Estación 2: 10 flexiones + tocar hombro.",
+      "Estación 3: 20 mountain climbers.",
+      "Estación 4: 8 remates a portería. Circuito × 4 rondas."
+    ],
+    "que_buscamos": [
+      "Fuerza",
+      "Resistencia",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Continuidad entre estaciones.",
+      "Técnica de cada gesto.",
+      "Ritmo del circuito."
+    ],
+    "correcciones": [
+      "Reducir repeticiones si se pierde la técnica.",
+      "Mantener el ritmo sin parar."
+    ],
+    "reglas": [
+      "Completar las 4 estaciones.",
+      "Realizar 4 rondas.",
+      "No parar entre estaciones."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Cronometrar el circuito completo y buscar reducir tiempo con calidad."
+    ],
+    "variantes": [
+      "Fútbol 7: 3-10 jugadores, distribuidos en 4 estaciones. · 20-25 min.",
+      "Fútbol 11: 3-10 jugadores, distribuidos en 4 estaciones. · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 089",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 15x10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-089-CIRCUITO-CROSSFIT-ADAPTADO-FUTBOL/CampoBase_Circuito_Crossfit_Adaptado_Futbol.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-089-CIRCUITO-CROSSFIT-ADAPTADO-FUTBOL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-090-FUERZA-EXCENTRICA-ISQUIOTIBIALES-NORDIC-CURL",
+  "nombre": "Fuerza excéntrica isquiotibiales (Nordic curl)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Isquiotibiales",
+      "Prevención",
+      "Fuerza excéntrica"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja (uno sostiene)"
+    },
+    "material": "colchoneta + compañero",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador de rodillas sobre colchoneta, compañero sostiene tobillos firme."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Jugador se inclina LENTAMENTE hacia adelante manteniendo cuerpo recto."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Bajar tanto como pueda controlando (sin caer). Volver arriba con impulso de brazos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 6-8 repeticiones. Cada 3 días como máximo (recuperación necesaria)."
+      }
+    ],
+    "explicacion_breve": "De rodillas y con los tobillos sujetos por un compañero, el jugador se inclina lentamente hacia adelante controlando el descenso.",
+    "leyenda": "J: jugador · C: compañero · Flecha roja: inclinación · Línea gris: sujeción de tobillos"
+  },
+  "detalle": {
+    "objetivos": [
+      "Prevenir lesiones de isquiotibiales — la lesión #1 en fútbol."
+    ],
+    "claves_entrenador": [
+      "Ejercicio MUY exigente. Baja lo que puedas controlando. Con el tiempo, bajarás más."
+    ],
+    "montaje": [
+      "Jugador de rodillas sobre colchoneta, compañero sostiene tobillos firme."
+    ],
+    "desarrollo": [
+      "Jugador de rodillas sobre colchoneta, compañero sostiene tobillos firme.",
+      "Jugador se inclina LENTAMENTE hacia adelante manteniendo cuerpo recto.",
+      "Bajar tanto como pueda controlando (sin caer). Volver arriba con impulso de brazos.",
+      "3 series de 6-8 repeticiones. Cada 3 días como máximo (recuperación necesaria)."
+    ],
+    "que_buscamos": [
+      "Isquiotibiales",
+      "Prevención",
+      "Fuerza excéntrica"
+    ],
+    "que_observar": [
+      "Control del descenso.",
+      "Cuerpo recto.",
+      "Sujeción firme de tobillos."
+    ],
+    "correcciones": [
+      "Bajar solo lo que se pueda controlar.",
+      "No forzar el descenso."
+    ],
+    "reglas": [
+      "Bajar controlando, sin caer.",
+      "3 series de 6-8 repeticiones.",
+      "Cada 3 días como máximo."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Objetivo: llegar a poder bajar completamente sin caer y subir sin brazos (nivel élite)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja (uno sostiene). · 8-10 min.",
+      "Fútbol 11: 2 por pareja (uno sostiene). · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 090",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: colchoneta."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-090-FUERZA-EXCENTRICA-ISQUIOTIBIALES-NORDIC-CURL/CampoBase_Fuerza_Excentrica_Isquiotibiales_Nordic_Curl.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-090-FUERZA-EXCENTRICA-ISQUIOTIBIALES-NORDIC-CURL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-091-FUERZA-EXPLOSIVA-SALTO-VERTICAL-HORIZONTAL",
+  "nombre": "Fuerza explosiva con salto vertical + horizontal",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Potencia",
+      "Pliometría",
+      "Tren inferior"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10 jugadores, 5x2 m por jugador"
+    },
+    "material": "conos o marcas",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Serie 1: 5 saltos verticales máximos con recuperación completa."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Serie 2: 5 saltos horizontales (broad jump) máximos."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Serie 3: alternar 1 vertical + 1 horizontal, 6 repeticiones."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Recuperación 2 min entre series. 3 series totales."
+      }
+    ],
+    "explicacion_breve": "Series de saltos verticales y horizontales máximos, alternando ambos planos con recuperación completa entre series.",
+    "leyenda": "J: salto vertical · J2: salto horizontal · Flecha roja: dirección del salto"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la potencia en múltiples direcciones y planos."
+    ],
+    "claves_entrenador": [
+      "En cada salto, dar el máximo. Sin dosificar. La calidad importa más que la cantidad."
+    ],
+    "montaje": [
+      "Serie 1: 5 saltos verticales máximos con recuperación completa."
+    ],
+    "desarrollo": [
+      "Serie 1: 5 saltos verticales máximos con recuperación completa.",
+      "Serie 2: 5 saltos horizontales (broad jump) máximos.",
+      "Serie 3: alternar 1 vertical + 1 horizontal, 6 repeticiones.",
+      "Recuperación 2 min entre series. 3 series totales."
+    ],
+    "que_buscamos": [
+      "Potencia",
+      "Pliometría",
+      "Tren inferior"
+    ],
+    "que_observar": [
+      "Máxima potencia en cada salto.",
+      "Técnica de aterrizaje.",
+      "Recuperación entre series."
+    ],
+    "correcciones": [
+      "No dosificar el esfuerzo.",
+      "Mantener la calidad por encima de la cantidad."
+    ],
+    "reglas": [
+      "Dar el máximo en cada salto.",
+      "Recuperación completa entre series.",
+      "3 series totales."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir saltos laterales (lateral bounds) para trabajar transferencia lateral."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10 jugadores, 5x2 m por jugador. · 10-12 min.",
+      "Fútbol 11: 1-10 jugadores, 5x2 m por jugador. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 091",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 5x2 m por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-091-FUERZA-EXPLOSIVA-SALTO-VERTICAL-HORIZONTAL/CampoBase_Fuerza_Explosiva_Salto_Vertical_Horizontal.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-091-FUERZA-EXPLOSIVA-SALTO-VERTICAL-HORIZONTAL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-092-TRABAJO-PLIOMETRICO-CON-CONOS",
+  "nombre": "Trabajo pliométrico con conos",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Pliometría",
+      "Reactividad",
+      "Potencia"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10 jugadores, 10x3 m"
+    },
+    "material": "6-8 conos bajos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Colocar 6-8 conos bajos en línea, separados por 60 cm."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Saltar con 2 pies juntos sobre cada cono, contacto MÍNIMO con el suelo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al terminar, sprint de 5m."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6-8 pasadas con recuperación completa entre cada una."
+      }
+    ],
+    "explicacion_breve": "Saltos con dos pies juntos sobre una línea de conos bajos, con contacto mínimo con el suelo y sprint final de 5 metros.",
+    "leyenda": "J: jugador · Cono naranja: cono bajo · Arco rojo: salto · Flecha roja: sprint final"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar la reactividad y potencia con estímulo variado."
+    ],
+    "claves_entrenador": [
+      "El objetivo es 'rebotar' del suelo, no aplastarlo. Sonido de aterrizaje = ligero."
+    ],
+    "montaje": [
+      "Colocar 6-8 conos bajos en línea, separados por 60 cm."
+    ],
+    "desarrollo": [
+      "Colocar 6-8 conos bajos en línea, separados por 60 cm.",
+      "Saltar con 2 pies juntos sobre cada cono, contacto MÍNIMO con el suelo.",
+      "Al terminar, sprint de 5m.",
+      "6-8 pasadas con recuperación completa entre cada una."
+    ],
+    "que_buscamos": [
+      "Pliometría",
+      "Reactividad",
+      "Potencia"
+    ],
+    "que_observar": [
+      "Reactividad del salto.",
+      "Contacto mínimo con el suelo.",
+      "Sprint final."
+    ],
+    "correcciones": [
+      "Rebotar del suelo, no aplastarlo.",
+      "Aterrizar ligero."
+    ],
+    "reglas": [
+      "Saltar con 2 pies juntos.",
+      "Contacto mínimo con el suelo.",
+      "6-8 pasadas con recuperación completa."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Alternar 1 pie / 2 pies; luego pliometría cruzada con giro entre saltos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10 jugadores, 10x3 m. · 12-15 min.",
+      "Fútbol 11: 1-10 jugadores, 10x3 m. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 092",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 10x3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-092-TRABAJO-PLIOMETRICO-CON-CONOS/CampoBase_Trabajo_Pliometrico_Con_Conos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-092-TRABAJO-PLIOMETRICO-CON-CONOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-093-ACELERACION-DESDE-PARADO-POSICIONES",
+  "nombre": "Aceleración desde parado en distintas posiciones",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Velocidad",
+      "Explosividad",
+      "Salida"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10 jugadores, 20 m lineales"
+    },
+    "material": "conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Sprint de 15m desde posición A: de pie parado."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Sprint de 15m desde posición B: sentado en el suelo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Sprint de 15m desde posición C: acostado boca abajo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 sprints por posición. Descanso 60s entre cada uno."
+      }
+    ],
+    "explicacion_breve": "Sprints de 15 metros desde tres posiciones de inicio distintas: de pie, sentado y acostado boca abajo.",
+    "leyenda": "A: de pie · B: sentado · C: acostado · Flecha roja: sprint 15m"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la salida explosiva desde múltiples posiciones de inicio."
+    ],
+    "claves_entrenador": [
+      "La primera zancada define todo. Debe ser BAJA y EXPLOSIVA — como pistón."
+    ],
+    "montaje": [
+      "Sprint de 15m desde posición A: de pie parado."
+    ],
+    "desarrollo": [
+      "Sprint de 15m desde posición A: de pie parado.",
+      "Sprint de 15m desde posición B: sentado en el suelo.",
+      "Sprint de 15m desde posición C: acostado boca abajo.",
+      "3 sprints por posición. Descanso 60s entre cada uno."
+    ],
+    "que_buscamos": [
+      "Velocidad",
+      "Explosividad",
+      "Salida"
+    ],
+    "que_observar": [
+      "Primera zancada.",
+      "Explosividad de la salida.",
+      "Técnica de sprint."
+    ],
+    "correcciones": [
+      "Primera zancada baja y explosiva.",
+      "No levantarse antes de arrancar."
+    ],
+    "reglas": [
+      "3 sprints por posición.",
+      "Descanso 60s entre sprints.",
+      "Salida explosiva."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir posición D: acostado boca arriba (más difícil de arrancar rápido)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10 jugadores, 20 m lineales. · 12-15 min.",
+      "Fútbol 11: 1-10 jugadores, 20 m lineales. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 093",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 m lineales."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-093-ACELERACION-DESDE-PARADO-POSICIONES/CampoBase_Aceleracion_Desde_Parado_Posiciones.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-093-ACELERACION-DESDE-PARADO-POSICIONES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-094-ARRANCADA-EXPLOSIVA-CON-ESTIMULO",
+  "nombre": "Arrancada explosiva con estímulo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Reacción",
+      "Velocidad",
+      "Potencia"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2+ (uno da señal)"
+    },
+    "material": "conos + silbato o palma",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador de pie en el punto de partida, atento."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Entrenador da señal AUDITIVA (silbato) en momento aleatorio."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Jugador arranca sprint máximo de 15m."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6-8 arrancadas por sesión con descanso completo."
+      }
+    ],
+    "explicacion_breve": "El jugador arranca un sprint máximo de 15 metros al recibir una señal auditiva del entrenador en un momento aleatorio.",
+    "leyenda": "C: entrenador · J: jugador · Flecha discontinua: señal · Flecha continua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar reacción + potencia de arranque desde parado."
+    ],
+    "claves_entrenador": [
+      "El foco NO es la velocidad — es el tiempo de reacción a la señal."
+    ],
+    "montaje": [
+      "Jugador de pie en el punto de partida, atento."
+    ],
+    "desarrollo": [
+      "Jugador de pie en el punto de partida, atento.",
+      "Entrenador da señal AUDITIVA (silbato) en momento aleatorio.",
+      "Jugador arranca sprint máximo de 15m.",
+      "6-8 arrancadas por sesión con descanso completo."
+    ],
+    "que_buscamos": [
+      "Reacción",
+      "Velocidad",
+      "Potencia"
+    ],
+    "que_observar": [
+      "Tiempo de reacción.",
+      "Explosividad del arranque.",
+      "Atención a la señal."
+    ],
+    "correcciones": [
+      "Centrarse en la reacción, no en la velocidad.",
+      "Mantener la atención."
+    ],
+    "reglas": [
+      "Reaccionar a la señal.",
+      "Sprint máximo de 15m.",
+      "6-8 arrancadas con descanso completo."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Alternar señales auditivas y visuales (mano levantada); cambiar de posición inicial."
+    ],
+    "variantes": [
+      "Fútbol 7: 2+ (uno da señal). · 10-12 min.",
+      "Fútbol 11: 2+ (uno da señal). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 094",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 15 m lineales."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-094-ARRANCADA-EXPLOSIVA-CON-ESTIMULO/CampoBase_Arrancada_Explosiva_Con_Estimulo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-094-ARRANCADA-EXPLOSIVA-CON-ESTIMULO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-095-CAMBIO-DE-DIRECCION-CON-CARGA",
+  "nombre": "Cambio de dirección con carga",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Fuerza",
+      "Agilidad",
+      "Cambio de dirección"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "chaleco lastrado 3-5kg o resistencia de compañero",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Jugador con chaleco lastrado (5% peso corporal) o con compañero sujetándolo por la cintura."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Realizar 4 cambios de dirección de 5m cada uno (zigzag)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Descansar 90 segundos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Repetir 5-6 series."
+      }
+    ],
+    "explicacion_breve": "Con chaleco lastrado o un compañero sujetando, el jugador realiza cambios de dirección en zigzag entre conos.",
+    "leyenda": "J: jugador · C: compañero · Cono naranja: cono · Flecha roja: zigzag"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar fuerza específica de cambio de dirección bajo resistencia."
+    ],
+    "claves_entrenador": [
+      "La resistencia AUMENTA la exigencia — la técnica debe seguir siendo perfecta. Sin técnica, no sirve."
+    ],
+    "montaje": [
+      "Jugador con chaleco lastrado (5% peso corporal) o con compañero sujetándolo por la cintura."
+    ],
+    "desarrollo": [
+      "Jugador con chaleco lastrado (5% peso corporal) o con compañero sujetándolo por la cintura.",
+      "Realizar 4 cambios de dirección de 5m cada uno (zigzag).",
+      "Descansar 90 segundos.",
+      "Repetir 5-6 series."
+    ],
+    "que_buscamos": [
+      "Fuerza",
+      "Agilidad",
+      "Cambio de dirección"
+    ],
+    "que_observar": [
+      "Técnica del cambio de dirección.",
+      "Control bajo carga.",
+      "Ritmo del zigzag."
+    ],
+    "correcciones": [
+      "Mantener la técnica perfecta bajo carga.",
+      "No sacrificar técnica por velocidad."
+    ],
+    "reglas": [
+      "4 cambios de dirección.",
+      "Descanso de 90 segundos.",
+      "5-6 series."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar carga progresivamente (5% → 7% → 10% del peso corporal)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 12-15 min.",
+      "Fútbol 11: 2 por pareja. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 095",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 10x8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-095-CAMBIO-DE-DIRECCION-CON-CARGA/CampoBase_Cambio_De_Direccion_Con_Carga.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-095-CAMBIO-DE-DIRECCION-CON-CARGA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-097-FARTLEK-JUEGO-DE-VELOCIDADES",
+  "nombre": "Fartlek — juego de velocidades",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Resistencia",
+      "Ritmo",
+      "Cambio de intensidad"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, campo o pista"
+    },
+    "material": "cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Correr continuo durante 15-20 minutos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cada 60 segundos, entrenador grita: 'RÁPIDO' (30s), 'MEDIO' (60s), 'LENTO' (60s)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Jugadores cambian intensidad según indicación, sin parar de correr."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Al terminar, 5 min de estiramiento."
+      }
+    ],
+    "explicacion_breve": "Carrera continua de 15-20 minutos en la que el entrenador indica cambios de ritmo (rápido, medio, lento) sin parar de correr.",
+    "leyenda": "Rojo: rápido · Amarillo: medio · Verde: lento · J: jugador"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar todas las intensidades de forma jugada y variada."
+    ],
+    "claves_entrenador": [
+      "El fartlek entrena TODOS los sistemas energéticos en el mismo ejercicio. Muy eficiente."
+    ],
+    "montaje": [
+      "Correr continuo durante 15-20 minutos."
+    ],
+    "desarrollo": [
+      "Correr continuo durante 15-20 minutos.",
+      "Cada 60 segundos, entrenador grita: 'RÁPIDO' (30s), 'MEDIO' (60s), 'LENTO' (60s).",
+      "Jugadores cambian intensidad según indicación, sin parar de correr.",
+      "Al terminar, 5 min de estiramiento."
+    ],
+    "que_buscamos": [
+      "Resistencia",
+      "Ritmo",
+      "Cambio de intensidad"
+    ],
+    "que_observar": [
+      "Cambio de ritmo.",
+      "Continuidad de la carrera.",
+      "Respuesta a las indicaciones."
+    ],
+    "correcciones": [
+      "No parar de correr.",
+      "Ajustar la intensidad a la indicación."
+    ],
+    "reglas": [
+      "Correr continuo sin parar.",
+      "Cambiar intensidad según indicación.",
+      "5 min de estiramiento al final."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir cambios de dirección durante los tramos rápidos, o incluir toque de balón cada 3 min."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, campo o pista. · 15-20 min.",
+      "Fútbol 11: 1-15 jugadores, campo o pista. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 097",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: variable.",
+        "Espacio: campo o pista."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-097-FARTLEK-JUEGO-DE-VELOCIDADES/CampoBase_Fartlek_Juego_De_Velocidades.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-097-FARTLEK-JUEGO-DE-VELOCIDADES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-098-TRABAJO-CON-BANDAS-ELASTICAS",
+  "nombre": "Trabajo con bandas elásticas",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Glúteos",
+      "Estabilizadores",
+      "Fuerza"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15 jugadores, 2 m² por jugador"
+    },
+    "material": "banda elástica corta",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Banda alrededor de los muslos, justo arriba de las rodillas."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Sentadilla con paso lateral: 10 pasos derecha, 10 izquierda."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Puente de glúteos con banda: 15 repeticiones."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Elevación lateral de pierna: 15 por lado. Circuito × 3 rondas."
+      }
+    ],
+    "explicacion_breve": "Con una banda elástica en los muslos, el jugador realiza pasos laterales, puentes de glúteos y elevaciones laterales de pierna en circuito.",
+    "leyenda": "J: jugador · Flecha arriba: puente · Flecha derecha: paso lateral · Base: suelo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Fortalecer glúteos y músculos estabilizadores con resistencia lateral."
+    ],
+    "claves_entrenador": [
+      "El objetivo es NO dejar que la banda se destense en ningún momento del ejercicio."
+    ],
+    "montaje": [
+      "Banda alrededor de los muslos, justo arriba de las rodillas."
+    ],
+    "desarrollo": [
+      "Banda alrededor de los muslos, justo arriba de las rodillas.",
+      "Sentadilla con paso lateral: 10 pasos derecha, 10 izquierda.",
+      "Puente de glúteos con banda: 15 repeticiones.",
+      "Elevación lateral de pierna: 15 por lado. Circuito × 3 rondas."
+    ],
+    "que_buscamos": [
+      "Glúteos",
+      "Estabilizadores",
+      "Fuerza"
+    ],
+    "que_observar": [
+      "Tensión de la banda.",
+      "Técnica de cada movimiento.",
+      "Control lateral."
+    ],
+    "correcciones": [
+      "No dejar que la banda se destense.",
+      "Mantener la resistencia constante."
+    ],
+    "reglas": [
+      "Mantener la banda tensa.",
+      "Completar las 3 secuencias.",
+      "Circuito × 3 rondas."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Usar banda más gruesa (mayor resistencia); añadir salto lateral con banda."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15 jugadores, 2 m² por jugador. · 10-12 min.",
+      "Fútbol 11: 1-15 jugadores, 2 m² por jugador. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 098",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media.",
+        "Espacio: 2 m² por jugador."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-098-TRABAJO-CON-BANDAS-ELASTICAS/CampoBase_Trabajo_Con_Bandas_Elasticas.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-098-TRABAJO-CON-BANDAS-ELASTICAS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-099-CORE-APLICADO-AL-FUTBOL-CON-BALON",
+  "nombre": "Core aplicado al fútbol (con balón)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Core",
+      "Rotación",
+      "Estabilidad"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón por pareja",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Sentados espalda con espalda, pasarse un balón con rotación del torso (30s)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Plancha con tocar balón alternadamente con cada mano (30s)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Sentado en V, pasarse balón por debajo de piernas alternadamente (30s)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Circuito × 4 rondas con 30s descanso."
+      }
+    ],
+    "explicacion_breve": "Por parejas, los jugadores pasan un balón con rotación del torso, tocan el balón en plancha y lo pasan por debajo de las piernas en circuito.",
+    "leyenda": "A: jugador A · B: jugador B · Balón: balón · Flecha azul: pase con rotación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Fortalecer el core con gestos específicos del fútbol."
+    ],
+    "claves_entrenador": [
+      "El core del fútbol es DINÁMICO, no estático. Estos ejercicios lo entrenan tal como se usa en el juego."
+    ],
+    "montaje": [
+      "Sentados espalda con espalda, pasarse un balón con rotación del torso (30s)."
+    ],
+    "desarrollo": [
+      "Sentados espalda con espalda, pasarse un balón con rotación del torso (30s).",
+      "Plancha con tocar balón alternadamente con cada mano (30s).",
+      "Sentado en V, pasarse balón por debajo de piernas alternadamente (30s).",
+      "Circuito × 4 rondas con 30s descanso."
+    ],
+    "que_buscamos": [
+      "Core",
+      "Rotación",
+      "Estabilidad"
+    ],
+    "que_observar": [
+      "Rotación del torso.",
+      "Estabilidad en plancha.",
+      "Control del balón."
+    ],
+    "correcciones": [
+      "Mantener la rotación controlada.",
+      "No despegar las espaldas."
+    ],
+    "reglas": [
+      "Completar las 3 secuencias.",
+      "Circuito × 4 rondas.",
+      "Descanso de 30 segundos."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Usar balón medicinal ligero (2-3kg) en lugar de balón normal."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 099",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: 5x3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-099-CORE-APLICADO-AL-FUTBOL-CON-BALON/CampoBase_Core_Aplicado_Al_Futbol_Con_Balon.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-099-CORE-APLICADO-AL-FUTBOL-CON-BALON/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-100-TEST-FISICO-COMPLETO-EVALUACION-INTEGRAL",
+  "nombre": "Test físico completo — evaluación integral",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Resistencia y preparación física",
+    "que_se_trabaja": [
+      "Evaluación",
+      "Velocidad",
+      "Potencia",
+      "Agilidad",
+      "Resistencia"
+    ],
+    "tiempo_estimado_15": "25-30 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8 jugadores, campo abierto + colchoneta"
+    },
+    "material": "cronómetro + conos + planilla",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Test 1: Sprint 30m (velocidad)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Test 2: Salto vertical (potencia)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Test 3: T-drill (agilidad)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Test 4: Yo-Yo Intermittent Recovery (resistencia)."
+      }
+    ],
+    "explicacion_breve": "Batería de cuatro tests físicos: sprint de 30 metros, salto vertical, T-drill y Yo-Yo Intermittent Recovery.",
+    "leyenda": "S: sprint 30m · J: salto vertical · T: T-drill · Y: Yo-Yo IR"
+  },
+  "detalle": {
+    "objetivos": [
+      "Medir el estado físico del jugador de forma estandarizada."
+    ],
+    "claves_entrenador": [
+      "El test se hace 2-3 veces por año, siempre en las MISMAS condiciones para comparar honestamente."
+    ],
+    "montaje": [
+      "Test 1: Sprint 30m (velocidad)."
+    ],
+    "desarrollo": [
+      "Test 1: Sprint 30m (velocidad).",
+      "Test 2: Salto vertical (potencia).",
+      "Test 3: T-drill (agilidad).",
+      "Test 4: Yo-Yo Intermittent Recovery (resistencia)."
+    ],
+    "que_buscamos": [
+      "Evaluación",
+      "Velocidad",
+      "Potencia",
+      "Agilidad",
+      "Resistencia"
+    ],
+    "que_observar": [
+      "Resultados de cada test.",
+      "Condiciones de medición.",
+      "Evolución trimestral."
+    ],
+    "correcciones": [
+      "Mantener las mismas condiciones.",
+      "Registrar honestamente los resultados."
+    ],
+    "reglas": [
+      "Realizar los 4 tests.",
+      "Mismas condiciones en cada medición.",
+      "Registrar los resultados."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Registrar resultados en la Planilla Semanal del Sistema Anual y comparar cada trimestre."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8 jugadores, campo abierto + colchoneta. · 25-30 min.",
+      "Fútbol 11: 1-8 jugadores, campo abierto + colchoneta. · 25-30 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 100",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: máxima.",
+        "Espacio: campo abierto + colchoneta."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-100-TEST-FISICO-COMPLETO-EVALUACION-INTEGRAL/CampoBase_Test_Fisico_Completo_Evaluacion_Integral.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-100-TEST-FISICO-COMPLETO-EVALUACION-INTEGRAL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-101-POSTURA-DEFENSIVA-BASICA-SOMBREADO",
+  "nombre": "Postura defensiva básica (sombreado sin balón)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Defensa y duelos 1v1",
+    "que_se_trabaja": [
+      "Defensa",
+      "Postura",
+      "Orientación"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "4 conos delimitando zona",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Un atacante se mueve libremente por la zona (sin balón)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor debe seguirlo a 1-2m de distancia, siempre con rodillas flexionadas."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Objetivo: mantener SIEMPRE el cuerpo entre el atacante y una portería imaginaria."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "60 segundos por ronda. Rotar. 4-6 rondas."
+      }
+    ],
+    "explicacion_breve": "El defensor sigue al atacante a 1-2 metros manteniendo siempre el cuerpo entre el atacante y una portería imaginaria.",
+    "leyenda": "A: atacante · D: defensor · Recuadro gris: zona delimitada · Flecha roja: seguimiento"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar la postura, distancia y orientación del defensor sin necesidad de balón."
+    ],
+    "claves_entrenador": [
+      "El defensor mira el CENTRO DE GRAVEDAD del atacante (caderas), NUNCA los pies."
+    ],
+    "montaje": [
+      "Un atacante se mueve libremente por la zona (sin balón)."
+    ],
+    "desarrollo": [
+      "Un atacante se mueve libremente por la zona (sin balón).",
+      "El defensor debe seguirlo a 1-2m de distancia, siempre con rodillas flexionadas.",
+      "Objetivo: mantener SIEMPRE el cuerpo entre el atacante y una portería imaginaria.",
+      "60 segundos por ronda. Rotar. 4-6 rondas."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "Postura",
+      "Orientación"
+    ],
+    "que_observar": [
+      "Distancia de marcaje.",
+      "Orientación del cuerpo.",
+      "Flexión de rodillas."
+    ],
+    "correcciones": [
+      "Mirar las caderas, no los pies.",
+      "Mantener la distancia de 1-2m."
+    ],
+    "reglas": [
+      "Seguir a 1-2m de distancia.",
+      "Cuerpo entre atacante y portería.",
+      "4-6 rondas de 60 segundos."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Agregar balón al atacante — convierte el ejercicio en 1v1 real."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 8-10 min.",
+      "Fútbol 11: 2 por pareja. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 101",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 8 x 6 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-101-POSTURA-DEFENSIVA-BASICA-SOMBREADO/CampoBase_Postura_Defensiva_Basica_Sombreado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-101-POSTURA-DEFENSIVA-BASICA-SOMBREADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-102-MARCAJE-INDIVIDUAL-CUERPO-ENTRE-BALON-JUGADOR",
+  "nombre": "Marcaje individual — cuerpo entre balón y jugador",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Defensa y duelos 1v1",
+    "que_se_trabaja": [
+      "Defensa",
+      "Marcaje",
+      "Interceptación"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (pasador, receptor, defensor)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Pasador a 10m, receptor a 5m del pasador, defensor detrás del receptor."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando pasador va a pasar, defensor debe ubicarse ENTRE el balón y el receptor."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El objetivo del defensor: interceptar o llegar al balón antes del receptor."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 pases. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El defensor se ubica entre el balón y el receptor para interceptar o llegar antes al balón.",
+    "leyenda": "P: pasador · D: defensor · R: receptor · Línea azul: pase · Flecha azul: interceptar"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender la posición correcta al marcar a un rival que va a recibir."
+    ],
+    "claves_entrenador": [
+      "Perfil abierto: hombros ligeramente rotados para ver AMBOS — atacante Y balón."
+    ],
+    "montaje": [
+      "Pasador a 10m, receptor a 5m del pasador, defensor detrás del receptor."
+    ],
+    "desarrollo": [
+      "Pasador a 10m, receptor a 5m del pasador, defensor detrás del receptor.",
+      "Cuando pasador va a pasar, defensor debe ubicarse ENTRE el balón y el receptor.",
+      "El objetivo del defensor: interceptar o llegar al balón antes del receptor.",
+      "10 pases. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "Marcaje",
+      "Interceptación"
+    ],
+    "que_observar": [
+      "Posición del defensor.",
+      "Perfil abierto.",
+      "Lectura del pase."
+    ],
+    "correcciones": [
+      "Perfil abierto para ver ambos.",
+      "Anticiparse al pase."
+    ],
+    "reglas": [
+      "Ubicarse entre balón y receptor.",
+      "Interceptar o llegar antes.",
+      "10 pases y rotar roles."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar velocidad y ángulo del pase del pasador para dificultar la lectura."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (pasador, receptor, defensor). · 10-12 min.",
+      "Fútbol 11: 3 (pasador, receptor, defensor). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 102",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 12 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-102-MARCAJE-INDIVIDUAL-CUERPO-ENTRE-BALON-JUGADOR/CampoBase_Marcaje_Individual_Cuerpo_Entre_Balon_Jugador.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-102-MARCAJE-INDIVIDUAL-CUERPO-ENTRE-BALON-JUGADOR/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-103-1V1-DEFENSIVO-RECUPERAR-BALON-SIN-GOL",
+  "nombre": "1v1 defensivo — recuperar balón sin gol",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Defensa y duelos 1v1",
+    "que_se_trabaja": [
+      "Defensa",
+      "1v1",
+      "Robo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Zona delimitada. Atacante inicia con balón en un extremo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Debe conducir hasta la línea opuesta sin perder la pelota."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Defensor debe robarle o forzarlo fuera de la zona."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "30-45 segundos por duelo. Rotar. Ganador: quien más veces logre el objetivo."
+      }
+    ],
+    "explicacion_breve": "En una zona delimitada, el atacante conduce hasta la línea opuesta mientras el defensor intenta robarle o forzarlo fuera.",
+    "leyenda": "A: atacante · D: defensor · Balón: balón · Recuadro gris: zona · Flecha roja: conducción"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la técnica pura del robo sin la presión del arco."
+    ],
+    "claves_entrenador": [
+      "Nunca 'ir al balón'. Primero acompañar al atacante, esperar el momento — el balón viene solo."
+    ],
+    "montaje": [
+      "Zona delimitada. Atacante inicia con balón en un extremo."
+    ],
+    "desarrollo": [
+      "Zona delimitada. Atacante inicia con balón en un extremo.",
+      "Debe conducir hasta la línea opuesta sin perder la pelota.",
+      "Defensor debe robarle o forzarlo fuera de la zona.",
+      "30-45 segundos por duelo. Rotar. Ganador: quien más veces logre el objetivo."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "1v1",
+      "Robo"
+    ],
+    "que_observar": [
+      "Acompañamiento del atacante.",
+      "Momento del robo.",
+      "Control de la zona."
+    ],
+    "correcciones": [
+      "No ir al balón directamente.",
+      "Acompañar y esperar el momento."
+    ],
+    "reglas": [
+      "Conducir hasta la línea opuesta.",
+      "Robar o forzar fuera de la zona.",
+      "30-45 segundos por duelo."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Añadir tiempo límite (10 segundos para robar). Aumenta la agresividad."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 12-15 min.",
+      "Fútbol 11: 2 por pareja. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 103",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 6 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-103-1V1-DEFENSIVO-RECUPERAR-BALON-SIN-GOL/CampoBase_1v1_Defensivo_Recuperar_Balon_Sin_Gol.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-103-1V1-DEFENSIVO-RECUPERAR-BALON-SIN-GOL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-104-1V1-DEFENSIVO-CON-PORTERIA",
+  "nombre": "1v1 defensivo con portería",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Defensa y duelos 1v1",
+    "que_se_trabaja": [
+      "Defensa",
+      "1v1",
+      "Cierre"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor, portero)"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante inicia con balón a 25m del arco."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Defensor arranca desde el punto de penalti para llegar cerca del atacante."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El defensor debe evitar que el atacante remate o gol."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8-10 duelos. Rotar roles."
+      }
+    ],
+    "explicacion_breve": "El defensor debe evitar que el atacante remate o marque gol, cerrando el ángulo de tiro.",
+    "leyenda": "A: atacante · D: defensor · K: portero · Flecha roja: ataque · Flecha discontinua: cierre"
+  },
+  "detalle": {
+    "objetivos": [
+      "Defender un ataque real de 1v1 con arco propio detrás."
+    ],
+    "claves_entrenador": [
+      "Nunca lanzarse al piso salvo último recurso. Un slide fallido = el atacante gana metros."
+    ],
+    "montaje": [
+      "Atacante inicia con balón a 25m del arco."
+    ],
+    "desarrollo": [
+      "Atacante inicia con balón a 25m del arco.",
+      "Defensor arranca desde el punto de penalti para llegar cerca del atacante.",
+      "El defensor debe evitar que el atacante remate o gol.",
+      "8-10 duelos. Rotar roles."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "1v1",
+      "Cierre"
+    ],
+    "que_observar": [
+      "Cierre del ángulo de tiro.",
+      "Posición del defensor.",
+      "Momento del robo."
+    ],
+    "correcciones": [
+      "No lanzarse al piso salvo último recurso.",
+      "Cerrar el ángulo de tiro."
+    ],
+    "reglas": [
+      "Evitar el remate o gol.",
+      "8-10 duelos.",
+      "Rotar roles."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Iniciar el defensor desde MÁS lejos, dando ventaja al atacante."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor, portero). · 12-15 min.",
+      "Fútbol 11: 3 (atacante, defensor, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 104",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-104-1V1-DEFENSIVO-CON-PORTERIA/CampoBase_1v1_Defensivo_Con_Porteria.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-104-1V1-DEFENSIVO-CON-PORTERIA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-105-1V2-DEFENSOR-SOLITARIO-CONTRA-2-ATACANTES",
+  "nombre": "1v2 defensor solitario contra 2 atacantes",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Defensa y duelos 1v1",
+    "que_se_trabaja": [
+      "Defensa",
+      "Inferioridad",
+      "Retraso"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (2 atacantes + 1 defensor + opcional portero)"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 atacantes salen desde la mitad del campo con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "1 defensor solitario debe evitar el gol."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El objetivo del defensor NO es robar — es RETRASAR y forzar mal pase."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "6-8 rondas. Rotar."
+      }
+    ],
+    "explicacion_breve": "Un defensor solitario debe retrasar el avance de dos atacantes y forzar un mal pase en lugar de intentar robar.",
+    "leyenda": "A1/A2: atacantes · D: defensor · K: portero · Flecha roja: conducción · Flecha azul: pase · Flecha discontinua: desmarque"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a retrasar y forzar decisiones cuando hay inferioridad numérica."
+    ],
+    "claves_entrenador": [
+      "En 1v2 nunca vas al balón. Cubrís la línea de pase, obligás a que jueguen incómodos."
+    ],
+    "montaje": [
+      "2 atacantes salen desde la mitad del campo con balón."
+    ],
+    "desarrollo": [
+      "2 atacantes salen desde la mitad del campo con balón.",
+      "1 defensor solitario debe evitar el gol.",
+      "El objetivo del defensor NO es robar — es RETRASAR y forzar mal pase.",
+      "6-8 rondas. Rotar."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "Inferioridad",
+      "Retraso"
+    ],
+    "que_observar": [
+      "Cobertura de la línea de pase.",
+      "Retraso del avance.",
+      "Toma de decisión del atacante."
+    ],
+    "correcciones": [
+      "No ir al balón.",
+      "Cubrir la línea de pase."
+    ],
+    "reglas": [
+      "Retrasar el avance.",
+      "Forzar mal pase.",
+      "6-8 rondas y rotar."
+    ],
+    "si_sale_mal": [
+      "Reducir repeticiones o tiempo.",
+      "Priorizar una ejecución técnica y controlada."
+    ],
+    "si_sale_bien": [
+      "Aumentar a 1v3 (defensor muy en inferioridad) para trabajo mental extremo."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (2 atacantes + 1 defensor + opcional portero). · 12-15 min.",
+      "Fútbol 11: 3 (2 atacantes + 1 defensor + opcional portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — ejercicio 105",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-105-1V2-DEFENSOR-SOLITARIO-CONTRA-2-ATACANTES/CampoBase_1v2_Defensor_Solitario_Contra_2_Atacantes.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-105-1V2-DEFENSOR-SOLITARIO-CONTRA-2-ATACANTES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).

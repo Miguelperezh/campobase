@@ -1,4 +1,4 @@
-# CampoBase 2.40.0 — cinco tácticas nuevas
+# CampoBase 2.41.0 — Pack150 ejercicios 081-105
 
 Estado: estable. PWA estática en español con Supabase como fuente compartida e IndexedDB como caché offline.
 
@@ -38,7 +38,7 @@ Las altas, cambios y borrados se guardan primero en IndexedDB. Con red se envía
 
 ## Pruebas observadas
 
-- `npm test`: 162 pruebas automatizadas en 2.40.0.
+- `npm test`: 162 pruebas automatizadas en 2.41.0.
 - `npm run check`: comprueba sintaxis de dominio, sincronización, base local, app y service worker.
 - La conexión real con Supabase solo puede verificarse después de ejecutar `supabase/schema.sql`; PrograMARIO no ejecuta SQL ni despliega desde este encargo.
 
