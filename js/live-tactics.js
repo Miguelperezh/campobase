@@ -11,7 +11,7 @@
 import { defaultTactic, FORMATION_NAMES } from './tactics.js';
 
 // Formaciones F7 disponibles en la pizarra en vivo (las que tienen MP4 asociado).
-export const LIVE_FORMATIONS = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-2-1-3', '1-1-3-2', '1-3-3', '1-3-1-2']);
+export const LIVE_FORMATIONS = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-2-1-3', '1-1-3-2', '1-3-3', '1-3-1-2', '1-1-3-1-1', '1-1-4-1', '1-4-1-1', '1-2-2-1-1']);
 
 // MP4 de cada formación (el GIF/MP4 debe seguir la táctica seleccionada).
 export const TACTICA_MP4 = Object.freeze({
@@ -22,6 +22,10 @@ export const TACTICA_MP4 = Object.freeze({
   '1-1-3-2': 'assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/CampoBase_Tactica_1-1-3-2.mp4',
   '1-3-3': 'assets/tacticas/CAMPOBASE-TACTICA-133/CampoBase_Tactica_1-3-3.mp4',
   '1-3-1-2': 'assets/tacticas/CAMPOBASE-TACTICA-1312/CampoBase_Tactica_1-3-1-2.mp4',
+  '1-1-3-1-1': 'assets/tacticas/CAMPOBASE-TACTICA-11311/CampoBase_Tactica_1-1-3-1-1.mp4',
+  '1-1-4-1': 'assets/tacticas/CAMPOBASE-TACTICA-1141/CampoBase_Tactica_1-1-4-1.mp4',
+  '1-4-1-1': 'assets/tacticas/CAMPOBASE-TACTICA-1411/CampoBase_Tactica_1-4-1-1.mp4',
+  '1-2-2-1-1': 'assets/tacticas/CAMPOBASE-TACTICA-12211/CampoBase_Tactica_1-2-2-1-1.mp4',
 });
 
 // Nombre corto: primer token + inicial del último token (p. ej. "Aarón P.").
@@ -118,6 +122,42 @@ const LIVE_FORMATION_TEAMS = Object.freeze({
     { n: '7', pos: 'Mediocentro', x: 50, y: 55 },
     { n: '11', pos: 'Delantero izq.', x: 34, y: 34 },
     { n: '9', pos: 'Delantero der.', x: 66, y: 34 },
+  ],
+  '1-1-3-1-1': [
+    { n: '1', pos: 'Portero', x: 50, y: 90 },
+    { n: '4', pos: 'Defensa', x: 50, y: 76 },
+    { n: '2', pos: 'Medio izq.', x: 30, y: 55 },
+    { n: '3', pos: 'Medio central', x: 50, y: 58 },
+    { n: '7', pos: 'Medio der.', x: 70, y: 55 },
+    { n: '11', pos: 'Mediapunta', x: 50, y: 40 },
+    { n: '9', pos: 'Delantero', x: 50, y: 30 },
+  ],
+  '1-1-4-1': [
+    { n: '1', pos: 'Portero', x: 50, y: 90 },
+    { n: '4', pos: 'Defensa', x: 50, y: 76 },
+    { n: '2', pos: 'Medio izq.', x: 25, y: 55 },
+    { n: '3', pos: 'Medio interior izq.', x: 40, y: 58 },
+    { n: '7', pos: 'Medio interior der.', x: 60, y: 58 },
+    { n: '11', pos: 'Medio der.', x: 75, y: 55 },
+    { n: '9', pos: 'Delantero', x: 50, y: 30 },
+  ],
+  '1-4-1-1': [
+    { n: '1', pos: 'Portero', x: 50, y: 90 },
+    { n: '2', pos: 'Defensa izq.', x: 20, y: 76 },
+    { n: '3', pos: 'Central izq.', x: 40, y: 78 },
+    { n: '4', pos: 'Central der.', x: 60, y: 78 },
+    { n: '5', pos: 'Defensa der.', x: 80, y: 76 },
+    { n: '7', pos: 'Medio', x: 50, y: 55 },
+    { n: '9', pos: 'Delantero', x: 50, y: 30 },
+  ],
+  '1-2-2-1-1': [
+    { n: '1', pos: 'Portero', x: 50, y: 90 },
+    { n: '3', pos: 'Defensa izq.', x: 30, y: 74 },
+    { n: '2', pos: 'Defensa der.', x: 70, y: 74 },
+    { n: '4', pos: 'Medio izq.', x: 40, y: 58 },
+    { n: '7', pos: 'Medio der.', x: 60, y: 58 },
+    { n: '11', pos: 'Mediapunta', x: 50, y: 44 },
+    { n: '9', pos: 'Delantero', x: 50, y: 30 },
   ],
 });
 

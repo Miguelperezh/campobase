@@ -100,6 +100,39 @@ const FORMATION_1213 = Object.freeze([
   { x: 75, y: 34, n: '11', pos: 'Delantero der.' },
 ]);
 
+// 1-1-3-1-1: 1 portero · 1 defensa · 3 medios · 1 mediapunta · 1 delantero
+const FORMATION_11311 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 50, y: 76, n: '4', pos: 'Defensa' },
+  { x: 30, y: 55, n: '2', pos: 'Medio izq.' },
+  { x: 50, y: 58, n: '3', pos: 'Medio central' },
+  { x: 70, y: 55, n: '7', pos: 'Medio der.' },
+  { x: 50, y: 40, n: '11', pos: 'Mediapunta' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero' },
+]);
+
+// 1-1-4-1: 1 portero · 1 defensa · 4 medios · 1 delantero
+const FORMATION_1141 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 50, y: 76, n: '4', pos: 'Defensa' },
+  { x: 25, y: 55, n: '2', pos: 'Medio izq.' },
+  { x: 40, y: 58, n: '3', pos: 'Medio interior izq.' },
+  { x: 60, y: 58, n: '7', pos: 'Medio interior der.' },
+  { x: 75, y: 55, n: '11', pos: 'Medio der.' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero' },
+]);
+
+// 1-2-2-1-1: 1 portero · 2 defensas · 2 medios · 1 mediapunta · 1 delantero
+const FORMATION_12211 = Object.freeze([
+  { x: 50, y: 90, n: '1', pos: 'Portero' },
+  { x: 30, y: 74, n: '3', pos: 'Defensa izq.' },
+  { x: 70, y: 74, n: '2', pos: 'Defensa der.' },
+  { x: 40, y: 58, n: '4', pos: 'Medio izq.' },
+  { x: 60, y: 58, n: '7', pos: 'Medio der.' },
+  { x: 50, y: 44, n: '11', pos: 'Mediapunta' },
+  { x: 50, y: 30, n: '9', pos: 'Delantero' },
+]);
+
 const F7_OPPONENT = Object.freeze([
   { x: 50, y: 10, n: '1' },
   { x: 30, y: 28, n: '2' },
@@ -267,13 +300,61 @@ export const FORMATION_GUIDES = Object.freeze({
     ],
     alPerder: ['El medio retrocede primero; los delanteros orientan la presión y los defensas protegen el centro antes de salir a banda.'],
   },
+  '1-1-3-1-1': {
+    name: 'Variante 8 · 1-1-3-1-1 (centro protegido y mediapunta)',
+    queBusco: 'Busco proteger el carril central con un único defensa y tres medios, y dar a la mediapunta el papel de enlace. Me conviene cuando quiero dominar el centro y tener una referencia que conecte con el delantero.',
+    conBalon: [
+      'El carril central queda bien protegido por el defensa y los tres medios.',
+      'La mediapunta enlaza entre los medios y el delantero.',
+      'Los medios exteriores son flexibles: pueden abrirse a banda o cerrarse por dentro.',
+      'El delantero puede bajar a recibir sin dejar de ser referencia.',
+    ],
+    sinBalon: [
+      'El único defensa necesita ayudas constantes de los medios.',
+      'La mediapunta ayuda a cerrar por dentro.',
+      'Los exteriores retornan para no dejar el centro abierto.',
+    ],
+    alPerder: ['La mediapunta frena el primer pase; los medios cierran dentro y el delantero orienta la salida rival.'],
+  },
+  '1-1-4-1': {
+    name: 'Variante 9 · 1-1-4-1 (dominio con cuatro medios)',
+    queBusco: 'Busco dominar el balón con cuatro centrocampistas y un único defensa rápido que corrige. Me conviene cuando quiero mucha posesión y tengo un defensa contundente y medios con recorrido.',
+    conBalon: [
+      'Los cuatro medios concentran el dominio del juego.',
+      'Los exteriores dan amplitud y deben retornar.',
+      'El delantero fija y puede bajar como falso 9.',
+      'El único defensa corrige y protege la espalda.',
+    ],
+    sinBalon: [
+      'El único defensa no puede quedar aislado.',
+      'Los medios de banda retornan para recomponer la línea.',
+      'Se puede transformar en 3-2-1 o en línea de 4 según la necesidad.',
+    ],
+    alPerder: ['Los medios exteriores bajan a ambos lados del defensa; si hace falta, un interior baja para formar línea de 4.'],
+  },
+  '1-2-2-1-1': {
+    name: 'Variante 10 · 1-2-2-1-1 (carril central cerrado)',
+    queBusco: 'Busco cerrar el carril central con cinco jugadores (dos defensas, dos medios y la mediapunta) y obligar al rival a progresar por fuera. Me conviene contra equipos que atacan por dentro.',
+    conBalon: [
+      'La mediapunta enlaza entre los medios y el delantero.',
+      'Los dos medios y los dos defensas se mueven de forma coordinada.',
+      'El delantero queda como referencia alta.',
+      'Se puede transformar por dentro: un medio baja a la línea de 3 o el 9 cae como falso 9.',
+    ],
+    sinBalon: [
+      'Cinco jugadores protegen el carril central.',
+      'El bloque bascula hacia el lado del balón y achica espacio.',
+      'Se concentran ayudas cerca del balón para robar en banda.',
+    ],
+    alPerder: ['La mediapunta frena el primer pase; el bloque bascula y el delantero ofrece la salida tras el robo.'],
+  },
 });
 
-export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3', '1-4-1-1', '1-2-1-3']);
+export const FORMATION_NAMES = Object.freeze(['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3', '1-4-1-1', '1-2-1-3', '1-1-3-1-1', '1-1-4-1', '1-2-2-1-1']);
 
 export function defaultTactic(format = 'F7', formation = '1-3-2-1') {
   const isF11 = format === 'F11';
-  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222, '1-3-1-2': FORMATION_1312, '1-1-3-2': FORMATION_1132, '1-3-3': FORMATION_133, '1-4-1-1': FORMATION_1411, '1-2-1-3': FORMATION_1213 };
+  const formations = { '1-3-2-1': FORMATION_1321, '1-2-3-1': FORMATION_1231, '1-2-2-2': FORMATION_1222, '1-3-1-2': FORMATION_1312, '1-1-3-2': FORMATION_1132, '1-3-3': FORMATION_133, '1-4-1-1': FORMATION_1411, '1-2-1-3': FORMATION_1213, '1-1-3-1-1': FORMATION_11311, '1-1-4-1': FORMATION_1141, '1-2-2-1-1': FORMATION_12211 };
   const team = isF11
     ? F11_TEAM.map((p) => ({ ...p }))
     : (formations[formation] || FORMATION_1321).map((p) => ({ ...p }));

@@ -13,8 +13,11 @@ test('la pizarra táctica genera formaciones F7 y F11 con jugadores y rival', ()
   assert.ok(f11.team.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y) && p.n));
 });
 
-test('precarga ocho formaciones F7 explicadas con sus posiciones', () => {
-  assert.deepEqual(FORMATION_NAMES, ['1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3', '1-4-1-1', '1-2-1-3']);
+test('precarga once formaciones F7 explicadas con sus posiciones', () => {
+  assert.deepEqual(FORMATION_NAMES, [
+    '1-3-2-1', '1-2-3-1', '1-2-2-2', '1-3-1-2', '1-1-3-2', '1-3-3',
+    '1-4-1-1', '1-2-1-3', '1-1-3-1-1', '1-1-4-1', '1-2-2-1-1',
+  ]);
   for (const formation of FORMATION_NAMES) {
     const t = defaultTactic('F7', formation);
     assert.equal(t.team.length, 7, `${formation} debe tener 7 jugadores`);

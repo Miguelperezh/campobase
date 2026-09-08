@@ -8,9 +8,14 @@ import { TACTICA_1222_FRAMES } from '../js/tactica-1222-frames.js';
 import { TACTICA_1132_FRAMES } from '../js/tactica-1132-frames.js';
 import { TACTICA_133_FRAMES } from '../js/tactica-133-frames.js';
 import { TACTICA_1312_FRAMES } from '../js/tactica-1312-frames.js';
+import { TACTICA_FINAL_FRAMES } from '../js/tactica-final-frames.js';
+import { TACTICA_11311_FRAMES } from '../js/tactica-11311-frames.js';
+import { TACTICA_1141_FRAMES } from '../js/tactica-1141-frames.js';
+import { TACTICA_1411_FRAMES } from '../js/tactica-1411-frames.js';
+import { TACTICA_12211_FRAMES } from '../js/tactica-12211-frames.js';
 
-test('el catálogo del manual expone siete tácticas maestras, incluida la 1-3-1-2', () => {
-  assert.equal(TACTICAS_INTERACTIVAS.length, 7);
+test('el catálogo del manual expone doce tácticas maestras, incluidas las cinco nuevas', () => {
+  assert.equal(TACTICAS_INTERACTIVAS.length, 12);
   const [t1321, t1231, t1213, t1222, t1132, t133, t1312] = TACTICAS_INTERACTIVAS;
   assert.equal(t1321.id, 'CAMPOBASE-TACTICA-1321-GUIA-COMPLETA');
   assert.equal(t1321.formacion, '1-3-2-1');
@@ -343,12 +348,92 @@ test('findTacticaInteractiva y tacticasDeFormacion siguen funcionando', () => {
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1132-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1132-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-133-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-133-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1312-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1312-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-11311-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-11311-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1141-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1141-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-1411-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-1411-GUIA-COMPLETA');
+  assert.equal(findTacticaInteractiva('CAMPOBASE-TACTICA-12211-GUIA-COMPLETA').id, 'CAMPOBASE-TACTICA-12211-GUIA-COMPLETA');
   assert.equal(findTacticaInteractiva('no-existe'), undefined);
-  assert.equal(tacticasDeFormacion('1-3-2-1').length, 1);
+  assert.equal(tacticasDeFormacion('1-3-2-1').length, 2);
   assert.equal(tacticasDeFormacion('1-2-3-1').length, 1);
   assert.equal(tacticasDeFormacion('1-2-1-3').length, 1);
   assert.equal(tacticasDeFormacion('1-2-2-2').length, 1);
   assert.equal(tacticasDeFormacion('1-1-3-2').length, 1);
   assert.equal(tacticasDeFormacion('1-3-3').length, 1);
   assert.equal(tacticasDeFormacion('1-3-1-2').length, 1);
+  assert.equal(tacticasDeFormacion('1-1-3-1-1').length, 1);
+  assert.equal(tacticasDeFormacion('1-1-4-1').length, 1);
+  assert.equal(tacticasDeFormacion('1-4-1-1').length, 1);
+  assert.equal(tacticasDeFormacion('1-2-2-1-1').length, 1);
+});
+
+const NUEVAS_TACTICAS = [
+  {
+    id: 'CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA',
+    formacion: '1-3-2-1',
+    bloques: ['Estructura', 'Bloque bajo'],
+    dorsales: ['1', '4', '5', '6', '7', '10', '11'],
+    manifest: TACTICA_FINAL_FRAMES,
+    totales: [84, 85],
+    duraciones: [[60], [60, 840]],
+    ruta: 'FINAL-LINEA3',
+  },
+  {
+    id: 'CAMPOBASE-TACTICA-11311-GUIA-COMPLETA',
+    formacion: '1-1-3-1-1',
+    bloques: ['Estructura', 'Transformación'],
+    dorsales: ['1', '2', '5', '6', '8', '9', '10'],
+    manifest: TACTICA_11311_FRAMES,
+    totales: [85, 85],
+    duraciones: [[50, 770], [50, 770]],
+    ruta: '11311',
+  },
+  {
+    id: 'CAMPOBASE-TACTICA-1141-GUIA-COMPLETA',
+    formacion: '1-1-4-1',
+    bloques: ['Estructura', 'Defensa'],
+    dorsales: ['1', '2', '4', '5', '6', '8', '9'],
+    manifest: TACTICA_1141_FRAMES,
+    totales: [84, 85],
+    duraciones: [[40, 90, 630], [50, 770]],
+    ruta: '1141',
+  },
+  {
+    id: 'CAMPOBASE-TACTICA-1411-GUIA-COMPLETA',
+    formacion: '1-4-1-1',
+    bloques: ['Estructura', 'Triangulaciones', 'Equilibrio'],
+    dorsales: ['1', '2', '4', '5', '6', '8', '9'],
+    manifest: TACTICA_1411_FRAMES,
+    totales: [81, 85, 85],
+    duraciones: [[40], [40, 630], [40, 630]],
+    ruta: '1411',
+  },
+  {
+    id: 'CAMPOBASE-TACTICA-12211-GUIA-COMPLETA',
+    formacion: '1-2-2-1-1',
+    bloques: ['Estructura', 'Basculación', 'Transformaciones'],
+    dorsales: ['1', '4', '5', '6', '8', '9', '10'],
+    manifest: TACTICA_12211_FRAMES,
+    totales: [163, 165, 159],
+    duraciones: [[80, 160, 240, 2240], [80, 160, 2240], [80, 160, 240, 2240]],
+    ruta: '12211',
+  },
+];
+
+test('las cinco tácticas nuevas conservan formación, bloques, dorsales y medios reales', () => {
+  for (const esperado of NUEVAS_TACTICAS) {
+    const tactica = findTacticaInteractiva(esperado.id);
+    assert.ok(tactica, `${esperado.id} existe`);
+    assert.equal(tactica.formacion, esperado.formacion);
+    assert.deepEqual(tactica.bloques.map((b) => b.nombre_corto), esperado.bloques);
+    assert.deepEqual(tactica.team.map((p) => p.n), esperado.dorsales);
+    tactica.bloques.forEach((bloque, idx) => {
+      assert.equal(bloque.animacion.total, esperado.totales[idx]);
+      assert.match(bloque.animacion.frames, new RegExp(`assets/tacticas/CAMPOBASE-TACTICA-${esperado.ruta}-GUIA-COMPLETA/bloque-${idx + 1}/frames/f$`));
+      const manifiesto = esperado.manifest[String(idx + 1)];
+      assert.equal(manifiesto.total, esperado.totales[idx]);
+      assert.equal(manifiesto.durations.length, esperado.totales[idx]);
+      assert.deepEqual([...new Set(manifiesto.durations)].sort((a, b) => a - b), esperado.duraciones[idx]);
+    });
+  }
 });

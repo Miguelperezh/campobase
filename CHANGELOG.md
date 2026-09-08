@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.40.0 — 2026-09-08
+
+- Tácticas: cinco guías interactivas nuevas — 1-1-3-1-1, 1-1-4-1, 1-4-1-1, 1-2-2-1-1 y una variante de 1-3-2-1 (línea de 3) — con frames, bloques y animaciones.
+- «Partido en vivo»: cuatro formaciones nuevas (1-1-3-1-1, 1-1-4-1, 1-4-1-1, 1-2-2-1-1) con su MP4 asociado.
+- Catálogo de formaciones ampliado a once (F7) y diez en vivo.
+
 ## 2.39.0 — 2026-09-08
 
 - Supabase: cada jugador conserva únicamente la puntuación de su partido más reciente; las puntuaciones históricas siguen guardadas en cada partido para estadísticas y medias.

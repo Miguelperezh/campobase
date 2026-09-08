@@ -17,6 +17,11 @@ import { TACTICA_1222_FRAMES } from './tactica-1222-frames.js';
 import { TACTICA_1132_FRAMES } from './tactica-1132-frames.js';
 import { TACTICA_133_FRAMES } from './tactica-133-frames.js';
 import { TACTICA_1312_FRAMES } from './tactica-1312-frames.js';
+import { TACTICA_FINAL_FRAMES } from './tactica-final-frames.js';
+import { TACTICA_11311_FRAMES } from './tactica-11311-frames.js';
+import { TACTICA_1141_FRAMES } from './tactica-1141-frames.js';
+import { TACTICA_1411_FRAMES } from './tactica-1411-frames.js';
+import { TACTICA_12211_FRAMES } from './tactica-12211-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -1221,6 +1226,488 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 169
       },
       "fuente": { "documento": "Táctica 1-3-1-2 · Bloque 6 (Bloque bajo, línea de 5 y transición)", "seccion": "Defensa en zona 2 y transición ofensiva" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA",
+  "nombre": "Sistema 1-3-2-1 (línea de 3)",
+  "formacion": "1-3-2-1",
+  "organizacion": "1 portero · 3 defensas · 2 carrileros · 1 mediapunta",
+  "principio": "Base de tres con buen pie, dos carrileros/extremos con mucho recorrido y una mediapunta con llegada: ocupar todos los carriles y atacar el espacio que deja el rival.",
+  "framesManifest": TACTICA_FINAL_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 25, "y": 72, "n": "4", "pos": "Central izq." },
+    { "x": 50, "y": 76, "n": "5", "pos": "Central" },
+    { "x": 75, "y": 72, "n": "6", "pos": "Central der." },
+    { "x": 22, "y": 40, "n": "7", "pos": "Carrilero izq." },
+    { "x": 50, "y": 30, "n": "10", "pos": "Mediapunta" },
+    { "x": 78, "y": 40, "n": "11", "pos": "Carrilero der." }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura, línea de 3 y carrileros",
+      "objetivo": "Fijar la base de tres con buen manejo de balón, los dos carrileros/extremos con recorrido y la mediapunta con llegada, ocupando todos los carriles.",
+      "idea_clave": "Línea de 3 con salida limpia, amplitud por bandas y mediapunta con llegada.",
+      "decisiones": [
+        "Tres jugadores sostienen la base con buen pie.",
+        "Los dos carrileros ganan altura y amplitud por su banda.",
+        "La mediapunta llega a zona ofensiva y puede finalizar.",
+        "Se ocupan carriles interiores y exteriores a la vez.",
+        "Los carrileros no son laterales rígidos: tienen todo el recorrido."
+      ],
+      "que_vigilar": [
+        "Que la línea de 3 no se junte demasiado.",
+        "Amplitud real de los dos carrileros.",
+        "Que la mediapunta no se aleje del juego."
+      ],
+      "consignas": ["Tres detrás", "Abre el campo", "Corre por banda", "Mediapunta llega", "Ocupa todos los carriles"],
+      "errores": [
+        "Convertir a los carrileros en laterales rígidos.",
+        "Juntar demasiado la línea de 3.",
+        "Alejar a la mediapunta del juego.",
+        "Ocupar dos jugadores el mismo carril y dejar otro vacío."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 84
+      },
+      "fuente": { "documento": "Sistema final · Bloque 1 (Estructura, línea de 3 y carrileros)", "seccion": "Estructura y funciones" }
+    },
+    {
+      "id": "bloque-2-bloque-bajo",
+      "orden": 2,
+      "nombre_corto": "Bloque bajo",
+      "titulo": "Bloque bajo y transición",
+      "objetivo": "Mostrar el repliegue muy bajo cerca de portería, el robo y el ataque inmediato del espacio con diagonales de carrileros y llegada de la mediapunta.",
+      "idea_clave": "Repliegue, robo y ataque inmediato del espacio.",
+      "decisiones": [
+        "El equipo repliega muy bajo, cerca de su portería.",
+        "Se compactan los espacios y se protege la portería.",
+        "El rival, al atacar arriba, deja espacio a su espalda.",
+        "Tras el robo se mira rápido al espacio libre.",
+        "Los carrileros atacan con diagonal al hueco.",
+        "La mediapunta acompaña y puede finalizar."
+      ],
+      "que_vigilar": [
+        "Que el bloque no se adelante cuando toca replegar.",
+        "Que no se hunda sin dejar salida.",
+        "Que las diagonales ataquen el hueco, no corran rectas por banda."
+      ],
+      "consignas": ["Repliega", "Junta líneas", "Roba y mira delante", "Diagonal al espacio", "Mediapunta llega"],
+      "errores": [
+        "Adelantar el bloque cuando la fuente habla de repliegue.",
+        "Hundirse sin dejar salida.",
+        "Correr recto por banda sin atacar el hueco.",
+        "Juntar a todos en el mismo espacio."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-FINAL-LINEA3-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Sistema final · Bloque 2 (Bloque bajo y transición)", "seccion": "Defensa y transición" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-11311-GUIA-COMPLETA",
+  "nombre": "Sistema 1-1-3-1-1",
+  "formacion": "1-1-3-1-1",
+  "organizacion": "1 portero · 1 defensa · 3 medios · 1 mediapunta · 1 delantero",
+  "principio": "Carril central protegido, mediapunta como enlace y exteriores flexibles: un sistema que protege el centro y puede mutar en movimiento a una forma 1-3-2-1.",
+  "framesManifest": TACTICA_11311_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 70, "y": 48, "n": "2", "pos": "Medio der." },
+    { "x": 50, "y": 76, "n": "5", "pos": "Defensa" },
+    { "x": 50, "y": 55, "n": "6", "pos": "Medio central" },
+    { "x": 30, "y": 48, "n": "8", "pos": "Medio izq." },
+    { "x": 50, "y": 30, "n": "9", "pos": "Delantero" },
+    { "x": 50, "y": 40, "n": "10", "pos": "Mediapunta" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura y mediapunta",
+      "objetivo": "Fijar la estructura 1-1-3-1-1, el papel de la mediapunta como enlace y la flexibilidad de los centrocampistas exteriores.",
+      "idea_clave": "Centro protegido, mediapunta que enlaza y exteriores flexibles.",
+      "decisiones": [
+        "El carril central queda bien protegido.",
+        "La mediapunta enlaza y da visión entre medios y delantero.",
+        "El delantero también puede ayudar y bajar a recibir.",
+        "Los exteriores son flexibles: banda, carrilero, lateral o extremo.",
+        "En movimiento puede aparecer una forma funcional 1-3-2-1."
+      ],
+      "que_vigilar": [
+        "Que no desaparezca la mediapunta.",
+        "Que el centro no quede abierto.",
+        "Que los exteriores no se vuelvan rígidos."
+      ],
+      "consignas": ["Protege el centro", "10 enlaza", "9 ayuda", "Exteriores flexibles", "Entiende la lógica"],
+      "errores": [
+        "Dibujar el sistema como si no existiera la mediapunta.",
+        "Abrir demasiado el centro.",
+        "Tratar a los exteriores como jugadores rígidos.",
+        "Bajar tanto al 9 que deje de ser referencia."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-11311-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Táctica 1-1-3-1-1 · Bloque 1 (Estructura y mediapunta)", "seccion": "Estructura base y funciones" }
+    },
+    {
+      "id": "bloque-2-transformacion",
+      "orden": 2,
+      "nombre_corto": "Transformación",
+      "titulo": "Transformación funcional y apoyos",
+      "objetivo": "Mostrar cómo los exteriores bajan y crean una línea funcional de 3, con dos apoyos interiores, la mediapunta enlazando y el delantero ayudando.",
+      "idea_clave": "Mismo sistema, alturas diferentes: no es un sistema nuevo.",
+      "decisiones": [
+        "Los exteriores bajan de altura.",
+        "Aparece una línea funcional de tres por detrás.",
+        "Dos jugadores quedan por delante para dar salida.",
+        "La mediapunta conecta las líneas.",
+        "El delantero se acerca para ayudar."
+      ],
+      "que_vigilar": [
+        "Que no se confunda con un sistema nuevo.",
+        "Que los exteriores no se hundan demasiado.",
+        "Que los dos apoyos no queden en la misma línea sin ángulos."
+      ],
+      "consignas": ["Tres detrás", "Dos apoyos", "10 enlaza", "9 ayuda", "Mantén salida limpia"],
+      "errores": [
+        "Llamarlo 1-3-2-1 como táctica nueva.",
+        "Hundir demasiado a los exteriores.",
+        "Dejar a los dos apoyos en la misma línea sin ángulos.",
+        "Hacer que el delantero desaparezca de la zona ofensiva."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-11311-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Táctica 1-1-3-1-1 · Bloque 2 (Transformación funcional)", "seccion": "Transformación y apoyos" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1141-GUIA-COMPLETA",
+  "nombre": "Sistema 1-1-4-1",
+  "formacion": "1-1-4-1",
+  "organizacion": "1 portero · 1 defensa · 4 medios · 1 delantero",
+  "principio": "Un solo defensa rápido y contundente, cuatro centrocampistas para dominar el balón y un delantero que fija o baja como falso 9, sin renunciar al equilibrio.",
+  "framesManifest": TACTICA_1141_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 70, "y": 48, "n": "2", "pos": "Medio der." },
+    { "x": 30, "y": 48, "n": "4", "pos": "Medio izq." },
+    { "x": 50, "y": 76, "n": "5", "pos": "Defensa" },
+    { "x": 40, "y": 55, "n": "6", "pos": "Medio interior" },
+    { "x": 60, "y": 55, "n": "8", "pos": "Medio interior" },
+    { "x": 50, "y": 30, "n": "9", "pos": "Delantero" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura y roles",
+      "objetivo": "Mostrar el sistema base 1-1-4-1 y fijar las responsabilidades del único defensa, los medios de banda y el delantero.",
+      "idea_clave": "Dominar el balón con cuatro medios sin perder el equilibrio.",
+      "decisiones": [
+        "El único defensa corrige y protege la espalda.",
+        "Los cuatro centrocampistas concentran el dominio del juego.",
+        "Los exteriores dan amplitud y deben retornar.",
+        "El delantero mantiene una referencia alta.",
+        "El delantero puede bajar como falso 9."
+      ],
+      "que_vigilar": [
+        "Que el único defensa no quede aislado.",
+        "Que los medios de banda retornen.",
+        "Que el falso 9 no baje demasiado."
+      ],
+      "consignas": ["Domina balón", "Amplitud y retorno", "Corrige detrás", "9 fija", "9 puede bajar"],
+      "errores": [
+        "Aislar al único defensa.",
+        "Medios de banda sin retorno.",
+        "Cuatro medios planos y sin movilidad.",
+        "Falso 9 demasiado bajo."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1141-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 84
+      },
+      "fuente": { "documento": "Táctica 1-1-4-1 · Bloque 1 (Estructura y roles)", "seccion": "Estructura base e intención ofensiva" }
+    },
+    {
+      "id": "bloque-2-defensa",
+      "orden": 2,
+      "nombre_corto": "Defensa",
+      "titulo": "Transformación defensiva",
+      "objetivo": "Mostrar cómo el 1-1-4-1 ofensivo se reorganiza al defender: variante 3-2-1 y variante de línea de 4, sin renunciar a la salida con calidad tras el robo.",
+      "idea_clave": "Mismos jugadores, dos transformaciones defensivas.",
+      "decisiones": [
+        "Los dos medios exteriores bajan a ambos lados del único defensa.",
+        "Aparece una línea de 3 con dos medios por delante (3-2-1).",
+        "Si hace falta, un medio interior baja y se forma línea de 4.",
+        "Queda un medio por delante y el 9 mantiene la referencia alta.",
+        "Tras el robo se busca salir jugando con calidad."
+      ],
+      "que_vigilar": [
+        "Que el retorno de los exteriores sea completo.",
+        "Que la línea de 4 no quede desordenada.",
+        "Que no se pierda la salida tras el robo."
+      ],
+      "consignas": ["Bandas bajan", "3 detrás", "Si hace falta un interior baja", "9 arriba", "Roba y juega"],
+      "errores": [
+        "Dejar al único defensa aislado.",
+        "Que un medio de banda no retorne.",
+        "Bajar a todos los centrocampistas y perder salida.",
+        "Robar y rifar el balón."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1141-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Táctica 1-1-4-1 · Bloque 2 (Transformación defensiva)", "seccion": "Organización defensiva" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1411-GUIA-COMPLETA",
+  "nombre": "Sistema 1-4-1-1",
+  "formacion": "1-4-1-1",
+  "organizacion": "1 portero · 4 defensas · 1 medio · 1 delantero",
+  "principio": "Línea de cuatro completa, todos los carriles ocupados y un box-to-box que ayuda en ataque y defensa: un sistema para proteger el resultado y progresar por el medio.",
+  "framesManifest": TACTICA_1411_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 20, "y": 76, "n": "2", "pos": "Lateral der." },
+    { "x": 40, "y": 78, "n": "4", "pos": "Central izq." },
+    { "x": 60, "y": 78, "n": "5", "pos": "Central der." },
+    { "x": 80, "y": 76, "n": "6", "pos": "Lateral izq." },
+    { "x": 50, "y": 55, "n": "8", "pos": "Medio" },
+    { "x": 50, "y": 30, "n": "9", "pos": "Delantero" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura y funciones",
+      "objetivo": "Mostrar la estructura base 1-4-1-1 y definir las funciones de los cuatro defensas, el box-to-box y el delantero.",
+      "idea_clave": "Línea de 4, todos los carriles ocupados y un box-to-box con recorrido.",
+      "decisiones": [
+        "Línea completa de cuatro defensores.",
+        "Todos los carriles quedan ocupados.",
+        "Los laterales pueden avanzar como carrileros.",
+        "Un central puede saltar mientras el otro compensa.",
+        "El medio ayuda en ataque y defensa (box-to-box).",
+        "El delantero fija y ayuda a equilibrar."
+      ],
+      "que_vigilar": [
+        "Que los laterales no suban sin cobertura.",
+        "Que los dos centrales no abandonen el eje.",
+        "Que el medio no sea estático."
+      ],
+      "consignas": ["4 detrás", "Laterales ida y vuelta", "Centrales protegen", "8 box-to-box", "9 fija"],
+      "errores": [
+        "Subir a los dos laterales sin cobertura.",
+        "Que los dos centrales abandonen el eje.",
+        "Usar un medio estático como si fuera box-to-box.",
+        "Hundir al delantero y perder profundidad."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1411-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 81
+      },
+      "fuente": { "documento": "Táctica 1-4-1-1 · Bloque 1 (Estructura y funciones)", "seccion": "Estructura base" }
+    },
+    {
+      "id": "bloque-2-triangulaciones",
+      "orden": 2,
+      "nombre_corto": "Triangulaciones",
+      "titulo": "Triangulaciones por carril",
+      "objetivo": "Mostrar cómo el equipo crea relaciones de tres hombres en uno u otro costado sin perder la base de cuatro defensores.",
+      "idea_clave": "Apoyo corto y ángulo: triángulo 4-5-8 a la izquierda y 6-2-9 a la derecha.",
+      "decisiones": [
+        "En el lado izquierdo, el apoyo lo da el 8 y aparece el triángulo 4-5-8.",
+        "En el lado derecho, el apoyo lo da el 9 y aparece el triángulo 6-2-9.",
+        "El balón cambia de lado con orden, sin romper la estructura.",
+        "El 9 cae a banda para ayudar en el lado derecho.",
+        "Se conserva la base de cuatro defensores."
+      ],
+      "que_vigilar": [
+        "Que el 8 no llegue demasiado lejos y no apoye corto.",
+        "Que el 9 no caiga siempre y vacíe el centro.",
+        "Que no se rompa la línea de 4."
+      ],
+      "consignas": ["Apoyo corto", "Ángulo", "Cambia sin romper", "8 en un lado", "9 en el otro"],
+      "errores": [
+        "Que el 8 llegue demasiado lejos y no apoye corto.",
+        "Que el 9 caiga siempre y vacíe el centro.",
+        "Romper la línea de 4 por mover demasiadas piezas.",
+        "Confundir triangulación con tres jugadores parados sin ángulos."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1411-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Táctica 1-4-1-1 · Bloque 2 (Triangulaciones por carril)", "seccion": "Triangulaciones y superioridades" }
+    },
+    {
+      "id": "bloque-3-equilibrio",
+      "orden": 3,
+      "nombre_corto": "Equilibrio",
+      "titulo": "Equilibrio defensivo y protección de resultado",
+      "objetivo": "Cerrar el uso defensivo del 1-4-1-1: línea de 4 completa, todos los carriles ocupados, box-to-box ayudando y carril central protegido.",
+      "idea_clave": "Línea de 4, 8 ayuda por delante y carril central protegido.",
+      "decisiones": [
+        "El bloque recupera su línea de cuatro.",
+        "El 8 ayuda por delante de la línea.",
+        "El 9 mantiene relación con el bloque.",
+        "Todos los carriles quedan ocupados.",
+        "El carril central queda especialmente protegido.",
+        "8 y 9 ajustan para dar equilibrio."
+      ],
+      "que_vigilar": [
+        "Que no se invente una línea de 5.",
+        "Que el 8 no se hunda demasiado.",
+        "Que no queden pasillos interiores abiertos."
+      ],
+      "consignas": ["Línea de 4", "8 ayuda", "9 acompaña", "Cierra centro", "Ocupa carriles"],
+      "errores": [
+        "Inventar una línea de 5.",
+        "Hundir demasiado al 8.",
+        "Dejar pasillos interiores abiertos.",
+        "Desconectar al 9 del bloque."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1411-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 85
+      },
+      "fuente": { "documento": "Táctica 1-4-1-1 · Bloque 3 (Equilibrio defensivo)", "seccion": "Defensa y protección de resultado" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-12211-GUIA-COMPLETA",
+  "nombre": "Sistema 1-2-2-1-1",
+  "formacion": "1-2-2-1-1",
+  "organizacion": "1 portero · 2 defensas · 2 medios · 1 mediapunta · 1 delantero",
+  "principio": "Cinco jugadores protegen el carril central, la mediapunta enlaza y el delantero queda como referencia alta: obligar al rival a progresar por fuera.",
+  "framesManifest": TACTICA_12211_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 30, "y": 74, "n": "4", "pos": "Defensa izq." },
+    { "x": 70, "y": 74, "n": "5", "pos": "Defensa der." },
+    { "x": 40, "y": 58, "n": "6", "pos": "Medio izq." },
+    { "x": 60, "y": 58, "n": "8", "pos": "Medio der." },
+    { "x": 50, "y": 30, "n": "9", "pos": "Delantero" },
+    { "x": 50, "y": 44, "n": "10", "pos": "Mediapunta" }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-estructura",
+      "orden": 1,
+      "nombre_corto": "Estructura",
+      "titulo": "Estructura y carril central",
+      "objetivo": "Fijar la estructura 1-2-2-1-1 y explicar cómo cinco jugadores protegen el carril central para obligar al rival a progresar por fuera.",
+      "idea_clave": "Cinco protegen el carril central y el 9 queda como referencia alta.",
+      "decisiones": [
+        "2 defensas + 2 centrocampistas + mediapunta protegen el carril central.",
+        "El delantero queda como referencia alta.",
+        "Los dos defensas y los dos centrocampistas necesitan movilidad coordinada.",
+        "El objetivo es obligar al rival a progresar por fuera.",
+        "La mediapunta enlaza entre medios y delantero."
+      ],
+      "que_vigilar": [
+        "Que el carril central quede bien protegido.",
+        "Que la movilidad de defensas y medios sea coordinada.",
+        "Que el 9 no pierda la referencia alta."
+      ],
+      "consignas": ["Cinco protegen el centro", "Movilidad coordinada", "10 enlaza", "9 referencia alta", "Obliga a salir por fuera"],
+      "errores": [
+        "Abrir el carril central.",
+        "Defensas y medios sin movilidad coordinada.",
+        "Perder la referencia alta del 9.",
+        "Dejar de enlazar con la mediapunta."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-12211-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 163
+      },
+      "fuente": { "documento": "Táctica 1-2-2-1-1 · Bloque 1 (Estructura y carril central)", "seccion": "Estructura y carril central" }
+    },
+    {
+      "id": "bloque-2-basculacion",
+      "orden": 2,
+      "nombre_corto": "Basculación",
+      "titulo": "Basculación a banda y robo",
+      "objetivo": "Mostrar cómo el bloque gira hacia el lado del balón, concentra ayudas, achica espacio y roba en el costado fuerte.",
+      "idea_clave": "Girar, achicar y robar en el costado fuerte.",
+      "decisiones": [
+        "Cuando el balón va a banda, el bloque se desplaza hacia ese lado.",
+        "Se concentran hasta cuatro jugadores cerca del balón.",
+        "Se achica el espacio para encerrar al rival.",
+        "La prioridad es cerrar el centro.",
+        "Tras el robo, el 10 enlaza y el 9 ofrece profundidad."
+      ],
+      "que_vigilar": [
+        "Que la basculación no sea tardía.",
+        "Que no se abra el pasillo interior.",
+        "Que lleguen ayudas reales, no solo dos jugadores."
+      ],
+      "consignas": ["Gira", "Achica", "Ayuda", "Roba", "10 cerca", "9 arriba"],
+      "errores": [
+        "Basculación desordenada o tardía.",
+        "Abrir el pasillo interior.",
+        "Llegar solo con dos jugadores y sin ayudas.",
+        "Robar y no tener continuidad."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-12211-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 165
+      },
+      "fuente": { "documento": "Táctica 1-2-2-1-1 · Bloque 2 (Basculación a banda)", "seccion": "Basculación y robo en banda" }
+    },
+    {
+      "id": "bloque-3-transformaciones",
+      "orden": 3,
+      "nombre_corto": "Transformaciones",
+      "titulo": "Transformaciones por dentro y falso 9",
+      "objetivo": "Mostrar los dos ajustes del sistema cuando el balón va al centro: línea de 3 por detrás y variante con falso 9, sin venderlos como tácticas nuevas.",
+      "idea_clave": "Balón al centro: uno baja a la línea de 3 y el 9 puede caer como falso 9.",
+      "decisiones": [
+        "Un centrocampista baja y forma la línea de 3 por detrás.",
+        "El otro medio queda por delante como apoyo interior.",
+        "La mediapunta sigue siendo nexo entre medio y ataque.",
+        "En la segunda variante, el 9 baja y actúa como falso 9.",
+        "La intención es ganar equilibrio central y mejores apoyos interiores."
+      ],
+      "que_vigilar": [
+        "Que no se presente como un sistema nuevo separado.",
+        "Que no se rompan las distancias.",
+        "Que el 9 no se hunda tanto que desaparezca su amenaza."
+      ],
+      "consignas": ["Balón al centro", "Uno baja", "3 detrás", "10 mediapunta", "9 falso 9"],
+      "errores": [
+        "Presentarlo como un sistema nuevo separado.",
+        "Romper las distancias.",
+        "Hundir tanto al 9 que desaparezca su amenaza.",
+        "Inventar numeraciones no respaldadas por la fuente."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-12211-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 159
+      },
+      "fuente": { "documento": "Táctica 1-2-2-1-1 · Bloque 3 (Transformaciones por dentro)", "seccion": "Transformación central y falso 9" }
     }
   ]
 }
