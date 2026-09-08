@@ -14,6 +14,7 @@ import { TACTICA_1231_FRAMES } from './tactica-1231-frames.js';
 import { TACTICA_1213_FRAMES } from './tactica-1213-frames.js';
 import { TACTICA_1321_FRAMES } from './tactica-1321-frames.js';
 import { TACTICA_1222_FRAMES } from './tactica-1222-frames.js';
+import { TACTICA_1132_FRAMES } from './tactica-1132-frames.js';
 
 export const TACTICAS_INTERACTIVAS = Object.freeze([
 {
@@ -601,6 +602,196 @@ export const TACTICAS_INTERACTIVAS = Object.freeze([
         "total": 192
       },
       "fuente": { "documento": "Táctica 1-2-2-2 · Bloque 5 (Línea de 4 y contraataque)", "seccion": "Línea de 4 y contraataque" }
+    }
+  ]
+},
+{
+  "id": "CAMPOBASE-TACTICA-1132-GUIA-COMPLETA",
+  "nombre": "Sistema 1-1-3-2",
+  "formacion": "1-1-3-2",
+  "organizacion": "1 portero · 1 defensa · 3 medios · 2 delanteros",
+  "principio": "El bloque viaja junto y trabaja en dos de los tres carriles: la basculación y la presión tras pérdida nacen de esa cercanía, no de correr hacia atrás.",
+  "framesManifest": TACTICA_1132_FRAMES,
+  "team": [
+    { "x": 50, "y": 90, "n": "1", "pos": "Portero" },
+    { "x": 50, "y": 74, "n": "5", "pos": "Defensa" },
+    { "x": 28, "y": 58, "n": "11", "pos": "Medio izq." },
+    { "x": 50, "y": 60, "n": "8", "pos": "Mediocentro" },
+    { "x": 72, "y": 58, "n": "7", "pos": "Medio der." },
+    { "x": 36, "y": 40, "n": "9", "pos": "Delantero izq." },
+    { "x": 64, "y": 40, "n": "10", "pos": "Delantero der." }
+  ],
+  "bloques": [
+    {
+      "id": "bloque-1-defensa",
+      "orden": 1,
+      "nombre_corto": "Defensa",
+      "titulo": "Defensa y basculación",
+      "objetivo": "Defender en banda basculando el bloque de los tres medios, con el 5 dando equilibrio y el equipo moviéndose mientras viaja el balón.",
+      "idea_clave": "Tres medios juntos, 5 equilibra y el bloque cambia con el balón.",
+      "decisiones": [
+        "El sistema parte de portero, líbero, 3 medios y 2 puntas.",
+        "Balón a izquierda: se reconoce el lado fuerte.",
+        "11, 8 y 7 se desplazan; 5 equilibra por detrás.",
+        "El equipo se mueve mientras viaja el balón en el cambio de orientación.",
+        "Balón a derecha: la presión en banda cambia de lado.",
+        "Misma lógica en espejo hacia el lado derecho."
+      ],
+      "que_vigilar": [
+        "Basculación de los tres medios como bloque.",
+        "Equilibrio del 5 (no se despega de la cobertura).",
+        "Moverse durante el cambio de orientación, no después."
+      ],
+      "consignas": ["Tres medios juntos", "5 equilibra", "Dos carriles", "Cambio de lado = cambia el bloque"],
+      "errores": [
+        "Mezclar variantes defensivas en una misma jugada.",
+        "Perder el equilibrio del 5.",
+        "Basculación tardía.",
+        "Amontonarse sobre el balón."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/bloque-1/frames/f",
+        "total": 140
+      },
+      "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 1 (Defensa y basculación)", "seccion": "Defensa y basculación" }
+    },
+    {
+      "id": "bloque-2a-salida",
+      "orden": 2,
+      "nombre_corto": "Salida 2A",
+      "titulo": "Salida base con 5 a la altura del portero",
+      "objetivo": "Representar la primera salida: superioridad inicial con portero y 5, apoyo del 8 por dentro, amplitud de 7 y 11, y 9 y 10 arriba.",
+      "idea_clave": "Superioridad de dos en la base y progresión por 8 o directa.",
+      "decisiones": [
+        "La salida parte de la estructura inicial del 1-1-3-2.",
+        "El 5 baja a la altura del portero.",
+        "El 8 ofrece línea de pase por el carril central.",
+        "7 y 11 abren el campo para dar amplitud.",
+        "9 y 10 quedan altos como referencias de progresión.",
+        "Portero y 5 activan la salida corta.",
+        "La continuación puede ser por 8 o directa a 9/10."
+      ],
+      "que_vigilar": [
+        "Superioridad numérica en la base.",
+        "Amplitud de 7 y 11.",
+        "9 y 10 arriba (no bajar del todo)."
+      ],
+      "consignas": ["5 baja", "8 apoya", "7 y 11 abiertos", "9 y 10 arriba", "Portero juega"],
+      "errores": [
+        "Hacer bajar a más de un medio al mismo espacio.",
+        "Perder la amplitud de 7 y 11.",
+        "Bajar a 9 y 10 y quedarse sin referencia ofensiva.",
+        "Colocar a 5 en mala altura o sin ángulo con el portero.",
+        "Pensar que solo existe una única continuación tras el primer pase."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/bloque-2/frames/f",
+        "total": 162
+      },
+      "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 2A (Salida base con 5 a la altura del portero)", "seccion": "Salida base con 5 a la altura del portero" }
+    },
+    {
+      "id": "bloque-2b-salida",
+      "orden": 3,
+      "nombre_corto": "Salida 2B",
+      "titulo": "Salida con delanteros abiertos",
+      "objetivo": "Representar la segunda salida: 9 y 10 se abren como extremos y la construcción se apoya en 11, 8 y 7 para generar ventaja por banda.",
+      "idea_clave": "Delanteros abiertos y salida ofensiva que busca hacer daño desde el inicio.",
+      "decisiones": [
+        "La segunda salida parte del 1-1-3-2 con intención distinta.",
+        "9 y 10 se abren muchísimo y actúan como extremos.",
+        "Portero y 5 activan el costado con ayuda de 11.",
+        "La banda puede generar una situación de superioridad.",
+        "El balón puede progresar desde 11 hacia el extremo abierto.",
+        "5 también puede jugar directo a 10 cuando este viene a recibir."
+      ],
+      "que_vigilar": [
+        "Apertura real de 9 y 10.",
+        "Superioridad real en banda.",
+        "No olvidar la opción directa."
+      ],
+      "consignas": ["9 y 10 abiertos", "11 viene", "Activa banda", "Busca 10", "Salida ofensiva"],
+      "errores": [
+        "Dejar a 9 y 10 cerrados como si fueran puntas normales.",
+        "No acercar suficientes apoyos a la banda.",
+        "Perder a 8 y 7 como parte de la construcción.",
+        "Pensar que solo existe la vía 5-11-10 y olvidar el pase directo.",
+        "Convertir esta salida ofensiva en una posesión plana sin amenaza."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/bloque-3/frames/f",
+        "total": 166
+      },
+      "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 2B (Salida con delanteros abiertos)", "seccion": "Salida con delanteros abiertos" }
+    },
+    {
+      "id": "bloque-3-carriles",
+      "orden": 4,
+      "nombre_corto": "Dos carriles",
+      "titulo": "Juego en dos de los tres carriles",
+      "objetivo": "Mostrar que el bloque viaja junto y ocupa dos carriles dejando uno libre, cambiando de lado cuando cambia el balón.",
+      "idea_clave": "Viajar juntos, dos carriles ocupados y uno libre.",
+      "decisiones": [
+        "Se parte del dibujo base y del concepto de los tres carriles.",
+        "Balón a izquierda: el equipo se acerca al lado fuerte.",
+        "Se ocupan carril izquierdo y central; el derecho queda libre.",
+        "El bloque acompaña mientras viaja el balón en el cambio de lado.",
+        "El nuevo lado fuerte pasa al carril derecho.",
+        "Se ocupan carril central y derecho; el izquierdo queda libre.",
+        "Sin viaje conjunto y buena cercanía, el sistema se rompe o se hace embudo."
+      ],
+      "que_vigilar": [
+        "Ocupar dos carriles, no tres a la vez.",
+        "El bloque se mueve con el balón.",
+        "Cercanía sin separación excesiva."
+      ],
+      "consignas": ["Viajad juntos", "Dos carriles", "Uno libre", "Cambia el balón, cambia el bloque"],
+      "errores": [
+        "Usar los tres carriles a la vez constantemente.",
+        "No acompañar el cambio de lado.",
+        "Dejar jugadores demasiado lejos del balón.",
+        "Confundir amplitud útil con separación excesiva.",
+        "Provocar embudo por mala ocupación o mala cercanía."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/bloque-4/frames/f",
+        "total": 168
+      },
+      "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 3 (Juego en dos de los tres carriles)", "seccion": "Juego en dos de los tres carriles" }
+    },
+    {
+      "id": "bloque-4-presion",
+      "orden": 5,
+      "nombre_corto": "Tras pérdida",
+      "titulo": "Presión tras pérdida y transición",
+      "objetivo": "Mostrar que la presión tras pérdida nace porque el equipo ya estaba junto en ataque: pérdida, salto inmediato, robo y transición rápida.",
+      "idea_clave": "Si la perdemos, saltamos; roba y corre.",
+      "decisiones": [
+        "El bloque ya ataca junto, en pocos carriles.",
+        "Un punta cae a banda y 8 pisa zona alta.",
+        "La pérdida llega cerca del lado fuerte.",
+        "Los jugadores cercanos aprietan al momento.",
+        "La acumulación de cercanos facilita la recuperación.",
+        "8 conduce y activa a 10 para castigar al rival."
+      ],
+      "que_vigilar": [
+        "Pérdida con apoyos cerca.",
+        "Salto inmediato, sin replegar primero.",
+        "Aprovechar la recuperación con transición rápida."
+      ],
+      "consignas": ["Juntos", "Si la perdemos, saltamos", "Achica", "Roba y corre"],
+      "errores": [
+        "Atacar demasiado separado y querer presionar una pérdida lejana.",
+        "Enseñar una pérdida aislada que haga imposible la presión.",
+        "Replegar primero y presionar después.",
+        "Recuperar y no castigar la desorganización rival.",
+        "Olvidar que esta presión depende del bloque previo."
+      ],
+      "animacion": {
+        "frames": "assets/tacticas/CAMPOBASE-TACTICA-1132-GUIA-COMPLETA/bloque-5/frames/f",
+        "total": 196
+      },
+      "fuente": { "documento": "Táctica 1-1-3-2 · Bloque 4 (Presión tras pérdida y transición)", "seccion": "Presión tras pérdida y transición" }
     }
   ]
 }
