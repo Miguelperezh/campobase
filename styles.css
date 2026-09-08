@@ -44,5 +44,7 @@
 .tg-player-shell.tg-fullscreen .tg-stage img{width:100%;height:100%;max-height:100vh;object-fit:contain}
 .tg-player-shell.tg-fullscreen .tg-controls{flex:0 0 auto;margin:0;padding:.65rem;background:#fff;border-radius:12px}
 .tg-player-shell.tg-fullscreen .tg-close-full{display:block}
+/* El botón "Cerrar animación" del lightbox de ejercicios se muestra solo con el visor abierto. */
+.lightbox.open .tg-close-full{display:block}
 /* La pizarra de la guía debe capturar el gesto táctil para dibujar flechas (igual que la pizarra en vivo). */
 .tg-board-section .tactic-board svg,[data-tg-board-lightbox] [data-tg-board-full] .tactic-board svg{touch-action:none}
