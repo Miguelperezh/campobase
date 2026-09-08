@@ -20,19 +20,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "8 conos + 5 balones / circuito",
     "series": [
-      {
-        "nombre": "Serie 1 · Interior",
-        "instruccion": "Completar el zigzag utilizando principalmente el interior del pie y alternando ambos pies."
-      },
-      {
-        "nombre": "Serie 2 · Exterior",
-        "instruccion": "Completar el mismo recorrido utilizando principalmente el exterior del pie en cada cambio de dirección."
-      },
-      {
-        "nombre": "Serie 3 · Suela / Recorte",
-        "instruccion": "Frenar o acomodar con la suela en cada cambio y salir con un recorte corto y controlado."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Jugador A sale con balón."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Alterna un cono de un lado y el siguiente del contrario."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Completa el recorrido hasta la llegada."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Vuelve por fuera con su propio balón."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Sale el siguiente cuando hay distancia suficiente."
+        }
+      ],
     "explicacion_breve": "Cada jugador sale con balón, completa el zigzag, llega al final y vuelve por fuera con su propio balón dejando espacio al siguiente.",
     "leyenda": "Azul: jugador · Balón junto al poseedor · Cono naranja/rojo · Negro: conducción · Azul discontinua: regreso con balón"
   },
@@ -135,19 +143,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 escalera de coordinación + 2 vallas bajas + conos suficientes para montar el zigzag y delimitar la salida. La fuente no fija un número exacto de conos.",
     "series": [
-      {
-        "nombre": "Vuelta 1",
-        "instruccion": "Completar las cuatro estaciones a ritmo inicial controlado."
-      },
-      {
-        "nombre": "Vuelta 2",
-        "instruccion": "Repetir el circuito aumentando progresivamente el ritmo."
-      },
-      {
-        "nombre": "Vuelta 3",
-        "instruccion": "Completar la tercera vuelta al ritmo más alto de las tres, manteniendo buena ejecución."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Estación A: trote suave durante 30 segundos."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Estación B: escalera con 1 paso por casilla, combinando cambio frontal y lateral."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Estación C: pasar 2 vallas bajas con desplazamiento lateral y skipping medio."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Estación D: realizar zigzag entre conos con desplazamientos cortos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Completar 3 vueltas al circuito a ritmo creciente."
+        }
+      ],
     "explicacion_breve": "Circuito continuo de cuatro estaciones: trote suave, escalera de coordinación, dos vallas bajas y zigzag entre conos. Se realizan 3 vueltas a ritmo creciente.",
     "leyenda": "Azul: jugador · Q: jugador esperando · Naranja: cono · Blanco: escalera/valla · Azul discontinuo: desplazamiento"
   },
@@ -249,11 +265,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería + balones + petos de 2 colores + conos/marcadores para las posiciones de salida",
     "series": [
-      {
-        "nombre": "Acciones consecutivas",
-        "instruccion": "Repetir la situación 4v3. Tras gol, palo o pérdida, salen los participantes de la acción y entra el siguiente grupo desde las colas."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El entrenador pasa el balón a uno de los atacantes."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "En ese momento comienza el ataque 4v3."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Los tres defensores salen a recuperar."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Los cuatro atacantes deben finalizar antes de 8 segundos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Tras gol, palo o pérdida, terminan la acción y entra el siguiente grupo."
+        }
+      ],
     "explicacion_breve": "El entrenador pasa a uno de los cuatro atacantes y comienza un 4v3 hacia portería. Los atacantes deben finalizar antes de 8 segundos mientras los tres defensores intentan recuperar.",
     "leyenda": "Azul: atacante · Rojo: defensor · Negro: entrenador · Balón junto al poseedor · Cono: punto de salida · Azul discontinuo: pase del entrenador · Negro discontinuo: movimiento atacante · Rojo discontinuo: movimiento defensor · Azul continuo: tiro"
   },
@@ -355,23 +387,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones + 2 juegos de petos + conos para delimitar 40 x 30 m y dividir 3 zonas + 2 porterías",
     "series": [
-      {
-        "nombre": "Serie 1",
-        "instruccion": "5 min de juego condicionado con la regla base."
-      },
-      {
-        "nombre": "Serie 2",
-        "instruccion": "5 min de juego condicionado con la misma regla base."
-      },
-      {
-        "nombre": "Serie 3",
-        "instruccion": "5 min de juego condicionado con la misma regla base."
-      },
-      {
-        "nombre": "Serie 4",
-        "instruccion": "5 min de juego condicionado con la misma regla base."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El equipo con balón inicia desde su zona defensiva."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Debe progresar hasta la zona intermedia y después hasta la zona ofensiva."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Para que el gol sea válido, el balón debe haber pasado por las tres zonas."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "En cada zona debe intervenir al menos un compañero distinto."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si cambia la posesión, la misma regla comienza para el otro equipo."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Realizar cuatro series de cinco minutos."
+        }
+      ],
     "explicacion_breve": "Partido en un campo dividido en tres zonas. Para que el gol sea válido, el balón debe pasar por las tres y participar al menos un compañero distinto en cada zona.",
     "leyenda": "Azul: equipo con balón · Rojo: rival · Amarillo: relevo rotativo · Balón junto al poseedor · Negro: pase/progresión · Línea blanca: límite de zona"
   },
@@ -474,23 +514,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería + balones. Para el bloque de juego con los pies se necesita al menos un compañero receptor y un jugador que ejerza presión. La fuente no especifica conos ni petos como material obligatorio.",
     "series": [
-      {
-        "nombre": "Bloque 1 · Blocaje",
-        "instruccion": "8 min: blocaje frontal y lateral con balones rasos y a media altura."
-      },
-      {
-        "nombre": "Bloque 2 · Despeje",
-        "instruccion": "6 min: despeje con dos puños tras centro al área."
-      },
-      {
-        "nombre": "Bloque 3 · Saque",
-        "instruccion": "6 min: saque de mano rodante y tenso, y saque de volea."
-      },
-      {
-        "nombre": "Bloque 4 · Juego con los pies",
-        "instruccion": "10 min: salida del balón con los pies a un compañero presionado."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Bloque 1 (8 min): realizar blocajes frontales y laterales con balones rasos y a media altura."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Bloque 2 (6 min): realizar despejes con dos puños tras centros al área."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Bloque 3 (6 min): practicar saque de mano rodante, saque de mano tenso y saque de volea."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Bloque 4 (10 min): trabajar la salida del balón con los pies hacia un compañero presionado."
+        }
+      ],
     "explicacion_breve": "Sesión específica de portero dividida en cuatro bloques: blocaje, despeje, saques y salida con los pies.",
     "leyenda": "P: portero · S: servidor · C: compañero · D: jugador que presiona · Azul: envío/saque/pase · Rojo: despeje/volea · Rojo discontinuo: movimiento de presión"
   },
@@ -590,19 +630,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "8 miniporterías + balones + petos de 2 colores + conos para delimitar 2 campos de 25 x 20 m",
     "series": [
-      {
-        "nombre": "Serie 1",
-        "instruccion": "4 min de 3v3 con la regla base. Después, 1 min para descanso y rotación."
-      },
-      {
-        "nombre": "Serie 2",
-        "instruccion": "4 min de 3v3 con la misma regla base. Después, 1 min para descanso y rotación."
-      },
-      {
-        "nombre": "Serie 3",
-        "instruccion": "4 min de 3v3 con la misma regla base."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Jugar un partido 3v3."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Cualquier miniportería de la línea de fondo rival es válida para marcar."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "No hay porteros."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "No se permiten saques largos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Cuando el balón sale fuera, se reanuda con un pase rasante."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Realizar 3 series de 4 minutos con 1 minuto de descanso."
+        }
+      ],
     "explicacion_breve": "Dos equipos de 3 juegan sin portero. Cada equipo puede marcar en cualquiera de las dos miniporterías situadas en la línea de fondo rival.",
     "leyenda": "Azul: un equipo · Rojo: rival · Amarillo: relevo rotativo · Balón junto al poseedor · Blanco: miniportería · Azul: tiro a una de las dos miniporterías rivales"
   },
@@ -705,23 +757,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "15 balones + conos para marcar dos líneas separadas 40 m",
     "series": [
-      {
-        "nombre": "Serie 1 · 14 s / 14 s",
-        "instruccion": "8 repeticiones. Ida y vuelta de 40 m con balón en 14 s y descanso de 14 s."
-      },
-      {
-        "nombre": "Serie 2 · 12 s / 12 s",
-        "instruccion": "6 repeticiones. Ida y vuelta de 40 m con balón en 12 s y descanso de 12 s."
-      },
-      {
-        "nombre": "Serie 3 · 10 s / 20 s",
-        "instruccion": "5 repeticiones. Ida y vuelta de 40 m con balón en 10 s y descanso de 20 s."
-      },
-      {
-        "nombre": "Cierre · Estiramientos",
-        "instruccion": "5 min de estiramientos pasivos."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Serie 1: realizar 8 repeticiones de ida y vuelta en 14 segundos, seguidas de 14 segundos de descanso."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Serie 2: realizar 6 repeticiones de ida y vuelta en 12 segundos, seguidas de 12 segundos de descanso."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Serie 3: realizar 5 repeticiones de ida y vuelta en 10 segundos, seguidas de 20 segundos de descanso."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Finalizar con 5 minutos de estiramientos pasivos."
+        }
+      ],
     "explicacion_breve": "Cada jugador conduce su propio balón entre dos líneas separadas 40 m, realizando idas y vueltas cada vez más rápidas con pausas entre repeticiones.",
     "leyenda": "Azul: jugador · Balón junto al poseedor · Naranja: cono de línea · Azul discontinuo: conducción ida · Negro discontinuo: conducción vuelta"
   },
@@ -822,19 +874,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones + petos para 2 equipos + 1 peto de color distinto para el comodín + conos para delimitar 40 x 30 m",
     "series": [
-      {
-        "nombre": "Serie 1",
-        "instruccion": "6 min de posesión. 1 punto por 8 pases consecutivos."
-      },
-      {
-        "nombre": "Serie 2",
-        "instruccion": "6 min de posesión. Rotar quién actúa como comodín."
-      },
-      {
-        "nombre": "Serie 3",
-        "instruccion": "6 min de posesión. Nueva rotación del comodín."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El equipo que tiene el balón intenta conservar la posesión."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "El comodín neutral juega siempre con el equipo que está en posesión."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Cada 8 pases consecutivos sin pérdida suman 1 punto."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Si cambia la posesión, el contador comienza de nuevo para el otro equipo."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Realizar 3 bloques de 6 minutos."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Rotar el rol de comodín entre bloques."
+        }
+      ],
     "explicacion_breve": "Dos equipos intentan conservar el balón. El comodín neutral juega siempre con el equipo que tiene la posesión. Cada 8 pases consecutivos se consigue 1 punto.",
     "leyenda": "Azul: equipo A · Rojo: equipo B · Amarillo: comodín neutral que juega con quien tiene el balón · Balón junto al poseedor · Azul: pase"
   },
@@ -937,11 +1001,43 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones + conos para marcar las posiciones y organizar 3 circuitos dentro de un espacio aproximado de 40 x 25 m",
     "series": [
-      {
-        "nombre": "Trabajo continuo",
-        "instruccion": "15 min de ejecución continua según la fuente, aplicando la rotación alterna definida para CampoBase."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Acción 1: el jugador de Banda A realiza un pase largo a Banda B."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "El receptor de Banda B controla orientado y juega un pase corto con el jugador central."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El central devuelve el balón a la Banda A, donde recibe el siguiente jugador de esa fila."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Después de su pase largo, el jugador que salió de Banda A pasa al puesto central."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Acción 2: ahora sale el jugador de Banda B con pase largo hacia Banda A."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "El receptor de Banda A juega corto con el central."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "El central devuelve el balón a la Banda B."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Después de esta segunda acción, el jugador que actuó como central pasa a la Banda B."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "La secuencia sigue alternando de un lado a otro."
+        }
+      ],
     "explicacion_breve": "Sale un lado con pase largo a la banda opuesta. El receptor juega con el centro y el centro devuelve a la banda de origen. El iniciador pasa al centro. En la siguiente acción sale el lado contrario y el centro pasa a esa banda.",
     "leyenda": "Azul: jugador · Balón junto al poseedor · Naranja: posición · Azul continuo: pase largo · Negro continuo: pase corto · Rojo discontinuo: rotación"
   },
@@ -1048,11 +1144,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 miniporterías + balón + 5 juegos/colores de petos + conos para delimitar 20 x 15 m",
     "series": [
-      {
-        "nombre": "Juego continuo",
-        "instruccion": "Rotación tras cada gol. La fuente original utiliza 3 equipos de 3; con 15 se amplía a una cola de 5 equipos de 3."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Empiezan dos equipos dentro."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Los demás esperan en orden."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Cuando un equipo recibe gol, sale."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Entra inmediatamente el siguiente equipo de la cola."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "El equipo que sale pasa al final de la cola."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Se mantiene el juego durante el tiempo previsto."
+        }
+      ],
     "explicacion_breve": "Dos equipos juegan 3v3. Cuando uno recibe gol, sale del campo y entra el siguiente equipo que está esperando.",
     "leyenda": "Colores: equipos · Balón junto al poseedor · Azul: ataque/tiro · Flecha discontinua: salida/entrada tras gol"
   },
@@ -1146,11 +1262,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 balones + conos para delimitar 2 cuadrados de 12 x 12 m + petos para defensores y pivotes",
     "series": [
-      {
-        "nombre": "Trabajo continuo",
-        "instruccion": "Rotar el relevo, los defensores y el pivote durante el ejercicio."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los 5 jugadores de posesión intentan conservar el balón."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Los 2 defensores intentan recuperar."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Si el pivote toca y devuelve hacia un lado distinto, suma 2 puntos."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Cada 6 pases normales se suma 1 punto."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Cuando un defensor recupera, cambia con el jugador que perdió el balón."
+        }
+      ],
     "explicacion_breve": "Cuatro jugadores exteriores y un pivote conservan el balón contra dos defensores. Cuando el pivote recibe y devuelve a un lado distinto, la acción vale 2 puntos.",
     "leyenda": "Azul: exterior · Amarillo: pivote · Rojo: defensor · Morado: relevo · Azul: pase al pivote · Negro: pase normal"
   },
@@ -1246,11 +1378,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería real + 2 miniporterías + balones + petos + conos para delimitar medio campo",
     "series": [
-      {
-        "nombre": "Acciones desde portero",
-        "instruccion": "Cada acción comienza con el portero jugando con los pies hacia uno de los centrales."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El portero inicia la acción jugando con los pies hacia uno de los centrales."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Los dos presionadores intentan recuperar."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El equipo de salida intenta superar esa primera línea de presión."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "El objetivo final es marcar en cualquiera de las dos miniporterías."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si recuperan los presionadores, atacan inmediatamente la portería real."
+        }
+      ],
     "explicacion_breve": "El portero inicia con los pies hacia un central. Los dos centrales y el mediocampista intentan superar a los dos presionadores y marcar en una de las dos miniporterías situadas en mitad de campo.",
     "leyenda": "Verde: portero · Rojo: equipo de salida · Azul: presionadores · Amarillo: relevos · Negro discontinuo: pase/progresión representativa"
   },
@@ -1351,23 +1499,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 miniporterías + balones + petos + conos para 20 x 15 m",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "2v2. Entrenador entrega a atacantes; primer defensor salta y segundo cubre."
-      },
-      {
-        "nombre": "Variante 1 · 3v2",
-        "instruccion": "Añadir comodín ofensivo permanente."
-      },
-      {
-        "nombre": "Variante 2 · 2 toques",
-        "instruccion": "Limitar al atacante a 2 toques."
-      },
-      {
-        "nombre": "Variante 3 · sin entrada al suelo",
-        "instruccion": "Los defensores no pueden entrar al suelo."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Entrenador entrega a atacantes."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Defensor cercano salta al poseedor."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Segundo defensor cubre detrás/interior."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Si recuperan, atacan la portería opuesta."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Series de 90 s con rotación."
+        }
+      ],
     "explicacion_breve": "El defensor más cercano sale al poseedor y el compañero se coloca unos 2 m por detrás y hacia el interior. Si recuperan, atacan la miniportería opuesta.",
     "leyenda": "Rojo: atacantes · Azul: defensores · Morado: entrenador · Amarillo: comodín/relevos · Negro discontinuo: pase/progresión · Azul discontinuo: ajuste defensivo"
   },
@@ -1459,23 +1611,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería + balones + conos para 3 pasillos",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Atacante elige uno de 3 pasillos; defensor sale cuando elige."
-      },
-      {
-        "nombre": "Variante 1 · 3 toques",
-        "instruccion": "Máximo 3 toques antes de tirar."
-      },
-      {
-        "nombre": "Variante 2 · defensor antes",
-        "instruccion": "Defensor sale antes de que el atacante elija pasillo."
-      },
-      {
-        "nombre": "Variante 3 · pierna débil",
-        "instruccion": "Bonificar gol con pierna débil."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Atacante elige pasillo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Defensor sale al elegirlo."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Se juega 1v1 hasta remate."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Ambos rotan al final de sus filas."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Fuente indica 12 acciones por jugador."
+        }
+      ],
     "explicacion_breve": "El atacante conduce desde mediocampo, elige uno de tres pasillos y entra al 1v1. El defensor parte cerca del área y solo sale al elegirse la vía, salvo en la variante 2.",
     "leyenda": "Rojo atacante · Azul defensor · Verde portero · Conos tres vías · Rojo remate"
   },
@@ -1566,23 +1722,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "4 miniporterías + balones + petos + conos para 40 x 30 m",
     "series": [
-      {
-        "nombre": "Base · 6 s",
-        "instruccion": "Tras pérdida, 6 s para recuperar."
-      },
-      {
-        "nombre": "Variante 1 · 4 s",
-        "instruccion": "Reducir a 4 s."
-      },
-      {
-        "nombre": "Variante 2 · gol bonus",
-        "instruccion": "Bonificar el gol tras counter-press."
-      },
-      {
-        "nombre": "Variante 3 · 2 toques",
-        "instruccion": "Tras recuperar, máximo 2 toques."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Partido normal."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Al perder, comienza cuenta."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Si recuperan a tiempo, se premia la acción según regla."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Si no, repliegue sobre línea propia."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "4 series de 5 min."
+        }
+      ],
     "explicacion_breve": "Partido 6v6. Al perder, el jugador más cercano presiona al nuevo poseedor y los demás cierran líneas. Si no recuperan en el tiempo, repliegue obligatorio.",
     "leyenda": "Azul y rojo equipos · Azul discontinuo presión/cierre · 4 miniporterías totales"
   },
@@ -1674,23 +1834,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Por estación: 4 conos de colores. Para 3 estaciones: 12 conos de colores; balón para variante 2.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Un color: sprint, tocar cono y volver al centro."
-      },
-      {
-        "nombre": "Variante 1 · dos colores",
-        "instruccion": "Encadenar dos colores."
-      },
-      {
-        "nombre": "Variante 2 · balón",
-        "instruccion": "Añadir balón al final del recorrido."
-      },
-      {
-        "nombre": "Variante 3 · 20 m",
-        "instruccion": "Cerrar con sprint progresivo de 20 m."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Entrenador dice color."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Jugador sprinta, toca y vuelve."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "8 reacciones = 1 serie."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "4 series con 90 s descanso."
+        }
+      ],
     "explicacion_breve": "Jugador en el centro con cuatro conos a 5 m. A la voz de un color, sprinta, toca el cono y vuelve.",
     "leyenda": "Cuatro conos por color · Negro: sprint/desplazamiento · Balón solo en variante 2"
   },
@@ -1781,23 +1941,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería + balones + petos + conos",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Lateral conduce hasta línea de fondo y alterna centro raso al primer palo y alto al segundo."
-      },
-      {
-        "nombre": "Variante 1 · defensor pasivo",
-        "instruccion": "Añadir defensor pasivo en el área."
-      },
-      {
-        "nombre": "Variante 2 · ambas bandas",
-        "instruccion": "Realizar centros desde derecha e izquierda."
-      },
-      {
-        "nombre": "Variante 3 · chilena/tijera",
-        "instruccion": "El último rematador puede finalizar con chilena o tijera."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Lateral conduce a fondo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Centra."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Tres rematadores atacan primer palo, penalti y segundo."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Rotan funciones."
+        }
+      ],
     "explicacion_breve": "El lateral llega a línea de fondo y el balón viaja claramente desde el pie del centrador hasta la zona de remate.",
     "leyenda": "Azul: lateral/centro · Rojo: rematadores · Verde: portero · Morado: defensor pasivo · Balón grande durante el centro para que se vea el vuelo."
   },
@@ -1886,23 +2046,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balón + petos + conos para 25 x 20 m",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "4 exteriores + 2 interiores contra 3 defensores."
-      },
-      {
-        "nombre": "Variante 1 · exteriores a 1 toque",
-        "instruccion": "Exteriores a un toque."
-      },
-      {
-        "nombre": "Variante 2 · 6v4",
-        "instruccion": "Añadir un cuarto defensor."
-      },
-      {
-        "nombre": "Variante 3 · un bote interiores",
-        "instruccion": "Interiores pueden usar un solo bote antes de pasar."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Circular."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Buscar interiores."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Moverse tras pase."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Defensores cierran líneas."
+        }
+      ],
     "explicacion_breve": "Cada fase tiene circulación distinta y movimiento real de exteriores, interiores y defensores.",
     "leyenda": "Rojo: 4 exteriores + 2 interiores · Azul: defensores · Negro: pase · Discontinuas: movimiento real de apoyo/basculación"
   },
@@ -1990,23 +2150,19 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 porterías reales + balones + petos + conos",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "4v4 con porteros y saque rápido."
-      },
-      {
-        "nombre": "Variante 1 · 3 toques",
-        "instruccion": "Máximo 3 toques."
-      },
-      {
-        "nombre": "Variante 2 · comodín",
-        "instruccion": "Comodín neutral con equipo en posesión."
-      },
-      {
-        "nombre": "Variante 3 · pared x2",
-        "instruccion": "Gol tras pared vale doble."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Partido."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Saque rápido."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "4x4 min."
+        }
+      ],
     "explicacion_breve": "Cada variante es una fase real del GIF y ambos equipos atacan siempre la portería rival.",
     "leyenda": "Azul ataca derecha · Rojo ataca izquierda · Verde porteros · Amarillo comodín · Negro pase/tiro"
   },
@@ -2093,23 +2249,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 miniportería + balones + petos + conos para pasillo 30 x 15 m; segunda miniportería solo en variante 2.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "3 atacantes contra 2 defensores. El cercano orienta al portador hacia la línea; el segundo corta el pase interior."
-      },
-      {
-        "nombre": "Variante 1 · 3v3",
-        "instruccion": "Añadir un tercer defensor."
-      },
-      {
-        "nombre": "Variante 2 · segunda mini",
-        "instruccion": "Añadir miniportería para los defensores en la banda contraria."
-      },
-      {
-        "nombre": "Variante 3 · 2 toques",
-        "instruccion": "Atacantes a máximo 2 toques."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los atacantes conservan/progresan en el pasillo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "D1 presiona al poseedor y lo orienta a banda."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "D2 corta la línea interior."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Si recuperan, los defensores atacan la miniportería."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Series de 90 s."
+        }
+      ],
     "explicacion_breve": "Los dos defensores trabajan coordinados: uno fuerza al poseedor hacia banda y el otro protege el pase hacia el centro. Tras robo, salen con balón hacia miniportería.",
     "leyenda": "Rojo atacantes · Azul defensores · Negro pase/salida · Azul discontinuo presión/cobertura"
   },
@@ -2199,23 +2359,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "16 conos para 4 cuadrados + 2 conos interiores extra en estación 3 + 4 balones.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "E1: pase+control interior 2 toques. E2: control orientado y un toque. E3: conducir entre 2 conos antes de pasar. E4: pared antes de pasar."
-      },
-      {
-        "nombre": "Variante 1 · pierna no dominante",
-        "instruccion": "Realizar las tareas usando la pierna no dominante."
-      },
-      {
-        "nombre": "Variante 2 · concurso",
-        "instruccion": "Cerrar con concurso de pases durante 1 minuto."
-      },
-      {
-        "nombre": "Variante 3 · defensor pasivo",
-        "instruccion": "Añadir un defensor pasivo en una estación."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "E1: pase y control con interior, dos toques."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "E2: control orientado y un toque."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "E3: conducir entre dos conos antes de pasar."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "E4: pared con compañero antes de pasar."
+        }
+      ],
     "explicacion_breve": "Cuatro cuadrados funcionan a la vez, cada uno con una tarea técnica diferente. El GIF muestra las cuatro simultáneamente y luego las tres variantes reales.",
     "leyenda": "E1 pase/control · E2 control orientado · E3 conducción entre conos · E4 pared · Azul conducción · Negro pase"
   },
@@ -2303,23 +2463,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería real + balones + petos + conos para rondo y medio campo.",
     "series": [
-      {
-        "nombre": "Base · 8 s",
-        "instruccion": "Tras robo, 2 defensores suman al compañero de mediocampo y atacan 3v2; finalizar antes de 8 s."
-      },
-      {
-        "nombre": "Variante 1 · 6 s",
-        "instruccion": "Reducir el límite a 6 s."
-      },
-      {
-        "nombre": "Variante 2 · usar mediocampista",
-        "instruccion": "Premiar gol que utilice al mediocampista."
-      },
-      {
-        "nombre": "Variante 3 · al menos un pase",
-        "instruccion": "Obligar a realizar al menos un pase antes de rematar."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "4 atacantes mantienen rondo contra 2 defensores."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Cuando los defensores recuperan, suman al compañero adelantado."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Los 3 atacan portería."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "2 de los 4 antiguos atacantes corren a defender."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Finalizar antes de 8 s."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Reiniciar."
+        }
+      ],
     "explicacion_breve": "El ejercicio empieza como rondo 4v2. Cuando uno de los dos defensores roba, ambos se convierten en atacantes, suman al compañero adelantado y atacan 3v2 hacia la portería.",
     "leyenda": "Rojo: atacantes del rondo que pasan a defender · Azul: defensores del rondo que pasan a atacar · M: compañero esperando"
   },
@@ -2416,19 +2584,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "16 delimitadores + balones",
     "series": [
-      {
-        "nombre": "Planta + interior",
-        "instruccion": "Recorrido completo: salida diagonal, giro, regreso y acción técnica con planta para desplazar en diagonal + interior de la pierna contraria."
-      },
-      {
-        "nombre": "Croqueta",
-        "instruccion": "Mismo recorrido completo; en la zona amarilla realizar interior de una pierna + interior de la otra."
-      },
-      {
-        "nombre": "Interior + exterior",
-        "instruccion": "Mismo recorrido completo; en la zona amarilla realizar interior de izquierda + exterior de la misma pierna."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Salida diagonal conduciendo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Rodear cono."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Ejecutar acción técnica entre conos amarillos."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Completar relevo."
+        }
+      ],
     "explicacion_breve": "Cada pestaña enseña el recorrido completo de un relevo. Solo cambia la acción técnica ejecutada al volver por la zona de conos amarillos.",
     "leyenda": "Azul y rojo: equipos · Negro: conducción · Amarillo: zona técnica"
   },
@@ -2526,19 +2698,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "6 conos + 4 porterías de entrenamiento",
     "series": [
-      {
-        "nombre": "1 · Ataque 2x2",
-        "instruccion": "Jugar el 2x2 central y finalizar en menos de 7 s y máximo 3 pases."
-      },
-      {
-        "nombre": "2 · Cambio de rol",
-        "instruccion": "Nada más terminar, los dos atacantes van a los balones laterales y pasan a ser defensores."
-      },
-      {
-        "nombre": "3 · 1x1 laterales",
-        "instruccion": "Cada nuevo defensor pasa al rival que espera en su banda y lo defiende en 1x1; si roba, puede finalizar en la portería contraria."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "2x2 central."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Finalización <7 s y máx. 3 pases."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Atacantes van a laterales y pasan a defender."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Pasan balón al rival y defienden 1x1."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si recuperan, pueden finalizar en portería contraria."
+        }
+      ],
     "explicacion_breve": "El GIF enseña la cadena completa: 2x2 → finalización → atacantes cambian de rol → dos 1x1 laterales.",
     "leyenda": "Azul: atacantes iniciales que pasan a defender · Rojo: defensores/rivales laterales"
   },
@@ -2632,19 +2812,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones + conos/pivotes + 1 portería",
     "series": [
-      {
-        "nombre": "Inicio",
-        "instruccion": "El defensor inicia pasando a A1."
-      },
-      {
-        "nombre": "D va al poseedor",
-        "instruccion": "A2 ataca profundidad, A1 pasa al espacio y A2 finaliza."
-      },
-      {
-        "nombre": "D va al atacante sin balón",
-        "instruccion": "A1 reconoce el espacio libre, conduce en jugada individual y finaliza."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Defensor pasa a un atacante."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Defensor decide ir al poseedor o al atacante sin balón."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Poseedor responde con pase en profundidad o jugada individual."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Finalización."
+        }
+      ],
     "explicacion_breve": "Cada decisión del defensor se representa como una jugada completa hasta la finalización, para que se vea la lectura del 2x1 sin tener que reconstruir fases.",
     "leyenda": "Rojo: atacantes · Azul: defensor · Verde: portero · Negro: pase/tiro"
   },
@@ -2736,15 +2920,23 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Fuente: 4 delimitadores y porterías de competición. La descripción indica dos porterías aunque la ficha de material menciona una; se representa con dos, porque es lo que exige la lógica del ejercicio.",
     "series": [
-      {
-        "nombre": "Gol arriba → contra",
-        "instruccion": "Tras gol en la portería superior, entra el equipo que esperaba allí y contraataca inmediatamente; el equipo que marcó debe replegar."
-      },
-      {
-        "nombre": "Gol abajo → contra",
-        "instruccion": "Misma lógica en sentido contrario."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "4v4."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Cuando un equipo marca, el grupo que espera en esa portería entra para contraatacar."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El equipo que marcó repliega."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "El equipo que recibió el gol queda esperando en los laterales de esa portería para una acción posterior."
+        }
+      ],
     "explicacion_breve": "El gol no cierra la acción: activa la siguiente transición. Entra un equipo fresco desde esa portería y obliga al equipo que acaba de marcar a replegar.",
     "leyenda": "Cian: equipo que entra inmediatamente tras el gol · Discontinuas: entrada/repliegue"
   },
@@ -2836,15 +3028,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/pivotes, petos y balones; espacio 20x16 m.",
     "series": [
-      {
-        "nombre": "Posesión completa",
-        "instruccion": "Tres atacantes exteriores combinan con 2 comodines interiores y 1 comodín exterior superior contra 3 defensores."
-      },
-      {
-        "nombre": "Robo + cambio de rol",
-        "instruccion": "Tras recuperación, los defensores ocupan los lados exteriores y los antiguos atacantes pasan a defender."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Equipo atacante conserva con comodines."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Defensores intentan recuperar."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Tras robo, defensores pasan al exterior y antiguos atacantes buscan recuperación."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "12 pases seguidos: repite el equipo defensivo."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si sale fuera, reinicia comodín exterior."
+        }
+      ],
     "explicacion_breve": "Lo importante no es solo conservar: cuando hay robo, los roles y posiciones cambian inmediatamente.",
     "leyenda": "Cian: comodines · Segunda pestaña: se ve el cambio completo de roles tras el robo."
   },
@@ -2938,19 +3142,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 porterías, balones, petos y conos; espacio 30x25 m.",
     "series": [
-      {
-        "nombre": "Ataque izquierdo completo",
-        "instruccion": "Progresar, conectar con comodín de fondo izquierdo, recibir pase atrás y finalizar."
-      },
-      {
-        "nombre": "Ataque derecho completo",
-        "instruccion": "Misma conducta utilizando el comodín de fondo derecho."
-      },
-      {
-        "nombre": "Tras gol",
-        "instruccion": "Cambia la posesión y el rival inicia su ataque hacia la portería contraria."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Equipo atacante progresa."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Conecta con un comodín de la línea de fondo rival."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Comodín juega pase atrás."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Atacante finaliza."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Tras gol cambia la posesión."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Tras fuera, saca portero correspondiente."
+        }
+      ],
     "explicacion_breve": "No vale finalizar de cualquier manera: la jugada debe llegar a un comodín de línea de fondo y volver mediante pase atrás antes del tiro.",
     "leyenda": "Cian: 4 comodines de fondo · Cada pestaña de ataque enseña la secuencia completa hasta el remate."
   },
@@ -3047,11 +3263,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Cada jugador con referencia central y dos referencias laterales de color.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "3 series de 30-35 s."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Cada jugador parte sobre su referencia blanca central."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Aparece o se da un estímulo de color."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Naranja: acelerar hacia la referencia naranja situada a la derecha."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Verde: acelerar hacia la referencia verde situada a la izquierda."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Blanco: regresar o mantenerse en la referencia blanca central."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Los estímulos cambian de forma no predecible para obligar a reaccionar y cambiar de dirección."
+        }
+      ],
     "explicacion_breve": "Cada jugador parte sobre su referencia blanca central. Aparece o se da un estímulo de color. Naranja: acelerar hacia la referencia naranja situada a la derecha. Verde: acelerar hacia la referencia verde situada a la izquierda. Blanco: regresar o mantenerse en la referencia blanca central. Los estímulos cambian de forma no predecible para obligar a reaccionar y cambiar de dirección.",
     "leyenda": ""
   },
@@ -3166,11 +3402,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Referencias de colores",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "2 series de 4-6 s desde «preparados» + color + sprint completo. con descanso de 1 min 30 s - 2 min. entre series."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los jugadores se colocan en su línea de salida."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "El entrenador dice en voz alta un color previamente asociado a una dirección."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Los jugadores no pueden salir antes de escuchar la palabra completa."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Al oír el color, arrancan a máxima intención hacia la dirección correspondiente."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Cruzan la referencia final sin frenar antes."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Salen del recorrido y entra la siguiente oleada."
+        }
+      ],
     "explicacion_breve": "Los jugadores se colocan en su línea de salida. El entrenador dice en voz alta un color previamente asociado a una dirección. Los jugadores no pueden salir antes de escuchar la palabra completa. Al oír el color, arrancan a máxima intención hacia la dirección correspondiente. Cruzan la referencia final sin frenar antes. Salen del recorrido y entra la siguiente oleada.",
     "leyenda": ""
   },
@@ -3276,11 +3532,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/cúpulas verdes en la zona central. · Conos/cúpulas blancas como referencias laterales.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "2 series de 75-90 s de rotación continua por carril. por carril, 2-3 recorridos. por jugador. Descanso 60-75 s. entre series."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador entra en el montaje con una acción de knee drive: eleva la rodilla y prepara el primer apoyo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Desde el primer apoyo realiza un salto lateral hacia un lado, aterrizando sobre una pierna."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Estabiliza de forma muy breve sin quedarse parado."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Impulsa inmediatamente hacia el lado contrario."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Repite derecha-izquierda-derecha-izquierda mientras avanza hacia delante."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Sale del montaje manteniendo el control corporal."
+        }
+      ],
     "explicacion_breve": "El jugador entra en el montaje con una acción de knee drive: eleva la rodilla y prepara el primer apoyo. Desde el primer apoyo realiza un salto lateral hacia un lado, aterrizando sobre una pierna. Estabiliza de forma muy breve sin quedarse parado. Impulsa inmediatamente hacia el lado contrario. Repite derecha-izquierda-derecha-izquierda mientras avanza hacia delante. Sale del montaje manteniendo el control corporal.",
     "leyenda": "Knee drive de entrada + saltos laterales tipo skater alternando apoyos, con progresión hacia delante."
   },
@@ -3412,19 +3688,27 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/cúpulas verdes y blancas alternados. Sin balón.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Base · Saltos laterales tipo skater con fase aérea y recepción unilateral antes del nuevo impulso."
-      },
-      {
-        "nombre": "Variación 1",
-        "instruccion": "Variación 1 · Knee drive más marcado antes del apoyo y del nuevo impulso lateral."
-      },
-      {
-        "nombre": "Variación 2",
-        "instruccion": "Variación 2 · Patrón desde el extremo contrario con apoyos de preparación más cortos antes del cambio lateral."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador entra en el montaje y realiza saltos laterales tipo skater (BASE)."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Cada salto tiene fase aérea y recepción unilateral antes del nuevo impulso."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "VARIACIÓN 1: knee drive más marcado antes del apoyo y del nuevo impulso lateral."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "VARIACIÓN 2: patrón desde el extremo contrario con apoyos de preparación más cortos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "En los tres bloques se combinan control unilateral, desplazamiento lateral y progresión hacia delante."
+        }
+      ],
     "explicacion_breve": "El jugador trabaja de forma individual y sin balón sobre un montaje de conos verdes y blancos alternados. BASE: saltos laterales tipo skater con fase aérea y recepción unilateral antes del nuevo impulso. VARIACIÓN 1: knee drive más marcado antes del apoyo y del nuevo impulso lateral. VARIACIÓN 2: patrón desde el extremo contrario con apoyos de preparación más cortos antes del cambio lateral. En los tres bloques se combinan control unilateral, desplazamiento lateral y progresión hacia delante.",
     "leyenda": "Conos verdes y blancos alternados · Salto lateral tipo skater · Recepción unilateral · Progresión hacia delante"
   },
@@ -3561,15 +3845,43 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Fila de conos planos + una pica alta por calle. Balones junto al servidor.",
     "series": [
-      {
-        "nombre": "Serie raso",
-        "instruccion": "Serie raso · El servidor juega raso y el jugador devuelve de primeras con el pie en cada lado de la pica."
-      },
-      {
-        "nombre": "Serie aérea",
-        "instruccion": "Serie aérea · El servidor envía alto; el jugador controla con el pecho y, antes de que el balón bote, devuelve de volea. Se realiza en los dos lados de la pica."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador parte en un extremo de la línea de conos."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Se desplaza lateralmente paralelo a esa línea; los conos actúan como referencia del recorrido."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al llegar a la zona de la pica se abre para ver al servidor."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Serie raso: el servidor pasa raso al Lado A y el jugador devuelve de primeras."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Nada más devolver, inicia una curva alrededor de la pica por la cara opuesta al servidor."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Sale por el Lado B, vuelve a orientarse al servidor y repite la devolución de primeras."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Serie aérea: el servidor lanza alto; el jugador amortigua con el pecho y devuelve de volea antes del bote."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Rodea la pica y repite pecho + volea en el otro lado."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "Finaliza regresando con desplazamiento lateral junto a la línea de conos."
+        }
+      ],
     "explicacion_breve": "El jugador se desplaza lateralmente en paralelo a una línea de conos planos (que solo delimitan el recorrido, sin acción técnica sobre cada cono). Al llegar a la pica se orienta al servidor y ejecuta la acción técnica: en la serie rasa devuelve de primeras con el pie; en la aérea controla con el pecho y devuelve de volea antes del bote. Después rodea la pica por la cara opuesta al servidor (girando el cuerpo, sin backpedal), repite la acción en el otro lado y regresa con desplazamiento lateral siguiendo de nuevo la línea de conos.",
     "leyenda": "Conos planos: solo delimitan el recorrido lateral · Pica alta: punto de giro · Servidor enfrente · Raso: devolución de primeras · Aéreo: pecho + volea sin bote"
   },
@@ -3715,11 +4027,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Por calle: 4 discos/setas + 3 conos altos. Sin balón.",
     "series": [
-      {
-        "nombre": "Recorrido completo",
-        "instruccion": "Recorrido completo · Rodillas altas laterales sobre 4 discos → diagonal al cono 1 → cambio de dirección sin tocar → diagonal al cono 2 → cambio → diagonal al cono 3 → sprint recto final de 5 m."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador parte junto al extremo exterior de los cuatro discos/setas."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Recorre lateralmente la línea de discos con rodillas altas, sin convertir el inicio en carrera frontal."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al salir del último disco, acelera en diagonal hacia el primer cono."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Llega al primer cono y cambia de dirección sin tocarlo con la mano."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Corre en diagonal hacia el segundo cono y vuelve a cambiar de dirección."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Corre en diagonal hacia el tercer cono y realiza el último cambio de dirección."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Desde el tercer cono acelera recto durante el tramo final de 5 m."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Sale del recorrido y vuelve andando por fuera para no cruzarse con quien está ejecutando."
+        }
+      ],
     "explicacion_breve": "Dos jugadores realizan simultáneamente el mismo ejercicio en calles espejo y sin balón. Cada uno parte junto a una fila de 4 discos/setas y hace rodillas altas con desplazamiento lateral hacia el interior. Al terminar los discos sale en diagonal hacia el primer cono naranja, cambia de dirección sin tocarlo, continúa en zigzag por un segundo y un tercer cono, y tras el tercero acelera en línea recta durante 5 m. Vuelve andando por fuera para no cruzarse con quien ejecuta.",
     "leyenda": "Discos/setas: rodillas altas laterales · Conos: cambios de dirección (sin tocar) · Tramo final: sprint recto de 5 m"
   },
@@ -3855,11 +4195,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/discos verdes formando dos hileras paralelas. Sin balón.",
     "series": [
-      {
-        "nombre": "Recorrido completo",
-        "instruccion": "Recorrido completo · Salida en un lateral → cruce lateral al lado opuesto → cambio de apoyo → cruce lateral al otro lado con progresión hacia delante → alternancias sucesivas hasta el final → salida frontal."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador parte junto a uno de los laterales del pasillo, orientado hacia el fondo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Inicia un desplazamiento lateral rápido hacia la hilera contraria."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al llegar al lateral opuesto, apoya, frena lo necesario y cambia la dirección sin girarse para correr de espaldas."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Cruza lateralmente hacia el otro lado mientras gana terreno hacia delante."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Repite el patrón de lado a lado, alternando los cambios de apoyo y avanzando por el pasillo."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Mantiene el tronco principalmente orientado al frente y usa los conos como referencias."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Al terminar el pasillo, sale hacia delante y abandona la zona de trabajo."
+        }
+      ],
     "explicacion_breve": "Un jugador realiza el ejercicio sin balón dentro de un pasillo delimitado por dos hileras paralelas de conos/discos verdes. Comienza junto a un lateral, orientado hacia delante, y se desplaza lateralmente de una hilera a la otra mientras progresa hacia el fondo. En cada llegada lateral realiza un cambio de apoyo/dirección y vuelve a cruzar el pasillo hacia el lado contrario, alternando derecha e izquierda. Los conos funcionan como referencia espacial, sin contacto deliberado. Al completar el pasillo sale hacia delante.",
     "leyenda": "Conos/discos verdes: referencias del pasillo · Desplazamiento lateral alternando lados · Progresión hacia delante · Salida frontal"
   },
@@ -3992,11 +4356,47 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/discos naranjas y balones en una línea central entre las dos filas.",
     "series": [
-      {
-        "nombre": "Secuencia de señales",
-        "instruccion": "Secuencia de señales · De espaldas → «giramos» una vez → de frente al centro → señales izquierda/derecha/tocar cono encadenadas sin retorno automático → coger balón → fin."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los jugadores se colocan en dos filas horizontales a ambos lados de la línea central, de espaldas a conos y balones."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Con la indicación «giramos», se giran UNA SOLA VEZ hacia el material central."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Desde ese momento permanecen orientados hacia el centro durante toda la repetición."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "El entrenador va dando señales de izquierda, derecha y tocar cono."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "En «izquierda» cada jugador se desplaza hacia su propia izquierda y queda preparado allí para la siguiente señal."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "En «derecha» cada jugador se desplaza hacia su propia derecha y queda preparado allí."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "No hay un retorno automático al punto anterior: la siguiente orden determina el siguiente movimiento."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "En «tocar cono», el jugador baja y toca la referencia naranja con la mano; se reincorpora y continúa orientado hacia el centro."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "La señal final es «coger balón»: el jugador baja y coge el balón con la mano."
+        },
+        {
+          "nombre": "Paso 10",
+          "instruccion": "Al coger el balón termina la repetición."
+        }
+      ],
     "explicacion_breve": "Los jugadores parten en dos filas horizontales a ambos lados de una línea central de conos y balones, de espaldas al material. Con la indicación «giramos» se giran UNA sola vez hacia el material y permanecen de frente al centro durante toda la repetición. El entrenador va dando señales de izquierda, derecha y tocar cono: en izquierda/derecha se desplazan lateralmente y se quedan donde termina la señal (sin retorno automático); en tocar cono bajan, tocan la referencia naranja con la mano y se reincorporan. La señal final es coger el balón con la mano, que termina la repetición.",
     "leyenda": "Conos/discos naranjas y balones en línea central · Giro inicial único · Señales izquierda/derecha/tocar cono · Coger balón = fin"
   },
@@ -4128,11 +4528,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Conos/discos blancos en el eje central y conos/discos naranjas a ambos lados, alternados. Sin balón.",
     "series": [
-      {
-        "nombre": "Recorrido fijo",
-        "instruccion": "Recorrido fijo · Blanco central → naranja lateral → siguiente blanco central → naranja del lado contrario → siguiente blanco central, y así sucesivamente hasta salir."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador empieza en la primera referencia blanca central."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Se desplaza hacia la referencia naranja lateral del primer lado."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Desde ahí enlaza con la siguiente referencia blanca central."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Continúa hacia la referencia naranja del lado contrario."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Vuelve a enlazar con el siguiente cono blanco central."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Repite la alternancia central–lateral–central mientras progresa hacia delante."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Al completar la última referencia, sale del recorrido."
+        }
+      ],
     "explicacion_breve": "El jugador avanza encadenando cambios de dirección en un recorrido fijo, sin señales del entrenador. Hay una línea central de conos/discos blancos y, a ambos lados, conos/discos naranjas colocados de forma alternada. El patrón es: blanco central → naranja lateral → siguiente blanco central → naranja del lado contrario → siguiente blanco central, y así sucesivamente hasta salir.",
     "leyenda": "Conos blancos: eje central · Conos naranjas: laterales alternados · Recorrido fijo en zigzag · Sin señales"
   },
@@ -4252,11 +4676,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balón en la zona de inicio, conos rojos de salida, mini vallas blancas y cono final amarillo.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Pases continuos en la salida → señal del entrenador → sale el pasador sin balón → mini vallas → sprint al cono final → vuelta al final de la cola."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "En la salida, el apoyo y el jugador activo se pasan el balón de forma continua."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Mantienen esos pases hasta la señal del entrenador."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Cuando llega la señal, sale el jugador que estaba pasando."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Sale sin balón hacia la zona de mini vallas."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Salta por encima de las mini vallas, una tras otra, avanzando hacia delante."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Al superar la última valla, acelera y hace sprint hasta el cono final."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Cuando termina, se coloca al final de la cola."
+        }
+      ],
     "explicacion_breve": "En la zona inicial, el apoyo y el jugador activo se pasan el balón de forma continua hasta la señal del entrenador. Cuando llega la señal, sale el jugador que estaba pasando, continúa sin balón y salta por encima de las mini vallas, una tras otra. Al superar la última valla acelera y hace sprint hasta el cono final. Al terminar, se coloca al final de la cola.",
     "leyenda": "Balón: pases continuos en la salida · Mini vallas: salto · Cono final: sprint · Vuelta al final de la cola"
   },
@@ -4382,11 +4830,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones, cruces marcadas en el suelo y picas amarillas.",
     "series": [
-      {
-        "nombre": "Recorrido completo",
-        "instruccion": "Recorrido completo · Salida con balón → derecha de la cruz → pinchada en la intersección → pica → giro → izquierda de la cruz → pinchada en la intersección → salida."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador sale conduciendo con balón desde la parte inferior del carril."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Se acerca a la cruz y, en la ida, pasa por la derecha de la cruz."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al pasar por la intersección de la cruz, hace una pinchada del balón."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Continúa conduciendo hacia delante hasta la pica amarilla."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Gira en la pica para iniciar la vuelta."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "En la vuelta, pasa por la izquierda de la cruz."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Al volver a pasar por la intersección de la cruz, realiza otra pinchada del balón."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Sale del recorrido y se prepara para repetir."
+        }
+      ],
     "explicacion_breve": "Cada jugador sale conduciendo con balón desde la parte inferior del carril. En la ida pasa por la derecha de la cruz y, al pasar por la intersección, hace una pinchada del balón. Continúa hasta la pica amarilla, gira y vuelve. En la vuelta pasa por la izquierda de la cruz y vuelve a hacer una pinchada en la intersección. Todo el recorrido se hace con balón.",
     "leyenda": "Cruz marcada en el suelo: referencia central · Pica amarilla: punto de giro · Ida por la derecha · Vuelta por la izquierda · Pinchada en la intersección"
   },
@@ -4513,11 +4989,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones, conos intermedios y conos de giro.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Salida con balón → cono intermedio → dejar balón → giro alrededor del cono de delante → vuelta al balón → pase desde el cono al siguiente → final de la cola."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador sale conduciendo con balón desde la cola."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Llega al cono intermedio de su carril."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Deja el balón junto a ese cono."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Continúa sin balón hacia el cono de delante."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Gira alrededor de ese cono."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Vuelve al cono donde dejó el balón."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Desde ese cono pasa el balón al siguiente jugador que espera en la cola."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Después se coloca al final de la cola."
+        }
+      ],
     "explicacion_breve": "Cada jugador sale conduciendo con balón hasta un cono intermedio, donde deja el balón. Continúa sin balón hasta el cono de delante y gira alrededor de él. Vuelve al cono donde dejó el balón y, desde ese mismo cono, pasa el balón al siguiente jugador que espera en la cola. Después se coloca al final de la cola.",
     "leyenda": "Cono intermedio: dejar balón · Cono de delante: giro · Pase desde el cono al siguiente · Final de cola"
   },
@@ -4647,11 +5151,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Pica roja central, referencias blancas (delante) y amarillas (detrás). Sin balón.",
     "series": [
-      {
-        "nombre": "Secuencia de señales",
-        "instruccion": "Secuencia de señales · Espera activa junto a la pica → señal del entrenador → salida a blanco o amarillo según par/impar o color → vuelta → entra la siguiente pareja."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Se coloca una pareja, un jugador a cada lado de la pica roja central."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Esperan en posición activa con pies cortos, sin tocar la pica."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El entrenador da una señal: número par, número impar o un color."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Si dice número impar, los dos salen a la referencia amarilla de su lado."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si dice número par, los dos salen a la referencia blanca de su lado."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Si dice blanco o amarillo, los dos salen directamente a ese color."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Vuelven a la zona central y entra la siguiente pareja."
+        }
+      ],
     "explicacion_breve": "Trabajan dos jugadores a la vez, uno a cada lado de la pica roja central, sin balón. Esperan en posición activa con pies cortos, sin tocar la pica. Hay referencias blancas hacia delante y amarillas hacia detrás. Si el entrenador dice un número impar, los dos salen hacia amarillo; si dice un número par, salen hacia blanco; si nombra un color, salen directamente a ese color. Después vuelve la pareja y entra la siguiente.",
     "leyenda": "Pica roja central · Blanco: delante · Amarillo: detrás · Impar → amarillo · Par → blanco · Color nombrado → ese color"
   },
@@ -4782,11 +5310,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Referencia verde de inicio y cono final a 13,7 m. Sin balón.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · 6 saltos laterales → 7.º apoyo de impulso → knee drive → sprint recto de 13,7 m. 6 repeticiones totales: 3 saliendo desde cada lado."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador se coloca junto a la referencia verde."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Realiza 6 saltos laterales cortos con ambos pies, alternando de un lado al otro."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El 7.º apoyo ya no es otro salto igual: se utiliza para impulsar el cuerpo lateralmente."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Ese impulso se acompaña de un knee drive explosivo."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Desde ese gesto enlaza inmediatamente con la aceleración."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Hace sprint recto hasta el cono situado a 13,7 m."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Se repite 6 veces en total: 3 saliendo desde cada lado."
+        }
+      ],
     "explicacion_breve": "El jugador comienza junto a una referencia verde y realiza 6 saltos laterales cortos con los dos pies, alternando de un lado al otro. El 7.º apoyo ya no es otro salto igual: se utiliza para impulsar el cuerpo lateralmente, enlazando con un knee drive explosivo. Desde ese gesto acelera inmediatamente y hace sprint recto hasta el cono situado a 13,7 m. Se repite 6 veces en total: 3 saliendo desde cada lado.",
     "leyenda": "Referencia verde: inicio · 6 saltos laterales · 7.º apoyo: impulso · Knee drive · Sprint recto de 13,7 m"
   },
@@ -4913,11 +5465,43 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "2 conos altos, 6 conos bajos (3 por carril) y balones.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Conducción → dejar balón → continuar sin balón → vuelta lateral saltando 3 conos con rodillas altas → balón → pase al siguiente → final de la cola."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Sale un jugador de cada cola con balón."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Conduce hasta el cono alto."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Deja el balón junto al cono alto."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Continúa sin balón hasta el final del tramo de 3 conos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Vuelve por los 3 conos mediante saltos laterales con rodillas altas."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Llega de nuevo a la zona del balón."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Pasa el balón al siguiente jugador de la cola."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "El siguiente inicia la repetición."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "El jugador que termina se coloca al final de la cola."
+        }
+      ],
     "explicacion_breve": "Trabajan dos jugadores a la vez, uno por carril. Cada uno sale con balón desde su cola, conduce hasta el cono alto y deja el balón en esa zona. Continúa sin balón hasta el extremo del tramo de 3 conos bajos (rectos y paralelos, no en zigzag) y vuelve saltándolos lateralmente con rodillas altas. Llega de nuevo al balón y pasa desde la zona del cono alto al siguiente jugador de la cola. El jugador que termina se coloca al final de la cola.",
     "leyenda": "Cono alto: dejar balón · 3 conos bajos rectos: vuelta lateral con rodillas altas · Pase al siguiente · Final de cola"
   },
@@ -5051,19 +5635,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "5 conos/cúpulas verdes cercanos en patrón escalonado + 1 cono verde adelantado para el sprint. Sin balón.",
     "series": [
-      {
-        "nombre": "Base",
-        "instruccion": "Base · Pies rápidos con apoyos cortos atravesando el patrón → salida del último apoyo sin detenerse → sprint explosivo hasta la referencia adelantada."
-      },
-      {
-        "nombre": "Variación 1",
-        "instruccion": "Variación 1 · Adelante-atrás dentro del patrón → termina orientado hacia la salida → sprint inmediato."
-      },
-      {
-        "nombre": "Variación 2",
-        "instruccion": "Variación 2 · Desplazamientos laterales rápidos dentro del patrón → cambio a sprint frontal sin pausa."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador entra en la zona de conos."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Realiza pies rápidos con apoyos cortos atravesando el patrón (BASE)."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "VARIACIÓN 1: alterna desplazamientos hacia delante y hacia atrás, finaliza orientado hacia la salida."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "VARIACIÓN 2: realiza desplazamientos laterales rápidos manteniendo el cuerpo bajo."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Sale del último apoyo sin detenerse."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Acelera en sprint explosivo hasta la referencia adelantada."
+        }
+      ],
     "explicacion_breve": "El jugador trabaja individualmente y sin balón sobre un patrón de cinco conos verdes cercanos, con un cono verde más adelantado como referencia de sprint. En los tres bloques hay trabajo rápido de pies dentro de la zona de conos y transferencia inmediata a sprint. BASE: pies rápidos atravesando el patrón. VARIACIÓN 1: adelante-atrás antes de enlazar con el sprint. VARIACIÓN 2: desplazamientos laterales rápidos antes de enlazar con sprint frontal.",
     "leyenda": "5 conos verdes: patrón de pies rápidos · Cono adelantado: sprint · Base / Variación 1 (adelante-atrás) / Variación 2 (lateral)"
   },
@@ -5198,11 +5794,31 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones, 1 portería y 1 portero.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Fila lateral → carrera de llegada → remate de primeras → salida de la zona de tiro → incorporación a la fila opuesta."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los jugadores esperan en dos filas, una a cada lado del entrenador."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Sale el primer jugador de uno de los lados y entra en carrera hacia la zona de finalización."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El entrenador sirve un balón raso desde la zona central hacia su carril de llegada."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "El jugador ajusta la carrera y finaliza de primeras a portería."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Después de finalizar, el jugador se desplaza a la fila opuesta."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Se repite la misma lógica desde el otro lado."
+        }
+      ],
     "explicacion_breve": "El entrenador se sitúa en una zona central con varios balones y un portero defiende la portería. Los jugadores esperan en dos filas, una a cada lado del entrenador. Sale el primer jugador de un lado, entra en carrera hacia la zona de finalización, y el entrenador sirve un balón raso hacia su carril de llegada. El jugador ajusta la carrera y finaliza de primeras a portería. Después de finalizar, cambia a la fila opuesta. Izquierda y derecha son el mismo ejercicio, no variantes independientes.",
     "leyenda": "Entrenador: sirve balón raso desde el centro · Portero en portería · Remate de primeras · Cambio a la fila opuesta"
   },
@@ -5333,11 +5949,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería grande, balones y petos de dos colores.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Inicio 3v2 → progresión ofensiva → finalización o robo → fin de repetición → atacantes a su cola y defensores a su cola."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Entran 3 atacantes contra 2 defensores."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Los atacantes progresan hacia portería intentando crear un jugador libre."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Los defensores temporizan, basculan y cierran líneas de pase/tiro."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "La acción continúa hasta finalización, balón fuera o robo defensivo."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si los defensores roban, la repetición termina en ese instante."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Los 3 atacantes vuelven a la cola de atacantes."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Los 2 defensores vuelven a la cola de defensores."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Entra el siguiente grupo."
+        }
+      ],
     "explicacion_breve": "El ejercicio enfrenta 3 atacantes contra 2 defensores con portería grande y portero. Los atacantes progresan hacia portería buscando finalizar la superioridad; los defensores protegen portería e intentan cortar o robar. Cuando los defensores roban, la repetición termina inmediatamente (no hay transición ofensiva). Tras terminar, los atacantes vuelven a la cola de atacantes y los defensores a la cola de defensores.",
     "leyenda": "3 atacantes vs 2 defensores · Portería grande con portero · Robo = fin de repetición · Rotación por roles (atacantes y defensores en colas separadas)"
   },
@@ -5475,11 +6119,51 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones, conos, 4 picas, 1 cono amarillo, 1 portería y 1 portero.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Salida → ida por conos con intercambios de pase → cambio de sentido → vuelta en zigzag por 4 picas → pase al espacio → aceleración → finalización → sprint al cono amarillo → giro → regreso."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador inicia la acción con un pase al entrenador."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Avanza por el carril de conos."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Durante la ida combina con el entrenador y devuelve de primeras."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Completa un segundo intercambio de pase durante el recorrido de conos."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Al llegar al final de la ida, cambia de sentido."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Regresa realizando zigzag entre las 4 picas."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Al completar las picas, el entrenador juega el balón al espacio."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "El jugador acelera para atacar el pase."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "Finaliza a portería."
+        },
+        {
+          "nombre": "Paso 10",
+          "instruccion": "Después del remate continúa en sprint hasta el cono amarillo."
+        },
+        {
+          "nombre": "Paso 11",
+          "instruccion": "En el cono amarillo gira y regresa."
+        }
+      ],
     "explicacion_breve": "El jugador inicia con un pase al entrenador y avanza por el carril de conos, combinando con él y devolviendo de primeras. Al llegar al final de la ida cambia de sentido y regresa haciendo zigzag entre las 4 picas. Al completar las picas, el entrenador juega el balón al espacio; el jugador acelera para atacarlo, finaliza a portería y, después del remate, continúa en sprint hasta el cono amarillo, donde gira y regresa.",
     "leyenda": "Carril de conos: ida con pases · 4 picas: vuelta en zigzag · Pase al espacio: aceleración · Finalización a portería · Cono amarillo: sprint final"
   },
@@ -5626,11 +6310,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "3 muñecos, 1 portería, 1 portero, balones y servidores.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Pase raso + finalización central → cambio de zona → pase raso + finalización exterior → ataque del área → centro lateral + remate de primeras → fin."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador inicia la repetición preparado frente al primer sector."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Recibe un pase raso, rodea la primera referencia y finaliza por la zona central."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Sin detener la secuencia, cambia de zona hacia el sector exterior."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Recibe un segundo pase raso y finaliza desde la zona exterior."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Continúa su carrera hacia el área."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Ataca el centro lateral."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Remata de primeras."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Tras la tercera finalización termina la repetición."
+        }
+      ],
     "explicacion_breve": "El mismo jugador realiza tres finalizaciones consecutivas en una sola repetición. La primera acción termina con una finalización por la zona central de portería; la segunda se realiza desde una zona exterior; la tercera llega tras un centro lateral y se remata de primeras. Entre finalizaciones el jugador continúa desplazándose para enlazar la siguiente acción.",
     "leyenda": "3 muñecos: referencias de zona · Finalización central → exterior → centro lateral de primeras · Portero en portería"
   },
@@ -5757,11 +6469,35 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "Balones, 1 portería, 1 portero fijo y petos para diferenciar equipos.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Servidor lanza con las manos → rematador sale de la fila → ataca el balón → remate de cabeza → gol = 1 punto → ataca el equipo contrario."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Los equipos esperan en dos filas verticales, una a cada lado de la portería."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "El servidor del equipo que tiene el turno lanza el balón con las manos."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "El primer rematador sale de la fila y entra hacia la zona frontal."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Ataca el balón y remata de cabeza."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Si marca, su equipo suma 1 punto."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "El portero permanece fijo."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Ataca el equipo contrario."
+        }
+      ],
     "explicacion_breve": "Los jugadores se colocan en dos filas verticales perfectas, una roja y una azul, cada una a un lado de la portería. Desde la parte delantera de cada fila se manda el balón con las manos hacia la zona de remate de cabeza. El primer rematador sale de la fila, ataca el balón y remata de cabeza; cada gol vale 1 punto. El portero permanece fijo defendiendo los remates de ambos equipos, que alternan intento a intento.",
     "leyenda": "Dos filas (roja y azul) a cada lado de la portería · Servicio con las manos · Remate de cabeza · Gol = 1 punto · Portero fijo"
   },
@@ -5888,11 +6624,43 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería con portero, balones, conos azules y amarillos, y discos naranjas.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · 2 salidas con 2 balones → azul diagonal y amarillo transversal → J1 finaliza → J1 defiende → J2 ataca 1v1 con su balón → segunda finalización → cambio de carril."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "J1 y J2 salen simultáneamente, cada uno con su balón."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "J1 conduce desde el disco naranja inferior por la diagonal de 3 conos azules."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "J2 conduce desde el disco naranja de banda por la línea transversal de 4 conos amarillos."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "J1 termina antes su recorrido y realiza la primera finalización."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Nada más tirar, J1 cambia de rol y corre a defender."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "J2 conserva su propio balón, sale de los amarillos y ataca a J1 en un 1v1."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "J2 busca superar al defensor y realizar la segunda finalización."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Termina la repetición."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "J1 va a la cola amarilla y J2 a la cola azul."
+        }
+      ],
     "explicacion_breve": "Salen dos jugadores a la vez, cada uno con balón. J1 recorre la línea de 3 conos azules en diagonal y finaliza primero; J2 recorre simultáneamente la línea de 4 conos amarillos en transversal y conserva su balón. Tras finalizar, J1 cambia inmediatamente a defensor. J2 continúa con su balón y se genera un 1v1 antes de la segunda finalización. Al terminar, ambos cambian de carril: J1 va a la cola amarilla y J2 a la cola azul.",
     "leyenda": "Azul: diagonal de 3 conos · Amarillo: línea transversal de 4 conos · J1 finaliza y defiende · J2 ataca 1v1 · Cambio de carril al final"
   },
@@ -6022,11 +6790,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "4 picas, balones, 1 portería y 1 portero.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · Pica 1 → pica 2 → pica 3 → pica 4 → disparo. Solo se mueve el balón; al terminar el disparo rotan todos simultáneamente."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El balón parte de la pica 1."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Se pasa a la pica 2."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "De la pica 2 se pasa a la pica 3."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "De la pica 3 se pasa a la pica 4."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "Desde la pica 4 se finaliza con disparo."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "Durante toda esta secuencia los jugadores permanecen fijos."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "Una vez finaliza el disparo, rotan todos los jugadores simultáneamente a la siguiente pica."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Tras completar la rotación comienza una nueva repetición."
+        }
+      ],
     "explicacion_breve": "El balón parte de la pica 1 y sigue la secuencia pica 1 → pica 2 → pica 3 → pica 4, desde donde se dispara a portería. Durante toda la secuencia solo se mueve el balón: los jugadores permanecen fijos en su pica. Una vez finaliza el disparo, rotan todos los jugadores simultáneamente a la siguiente pica (1→2, 2→3, 3→4, 4→1) y comienza una nueva repetición.",
     "leyenda": "4 picas: secuencia de pase · Solo se mueve el balón · Disparo desde la pica 4 · Rotación simultánea al terminar"
   },
@@ -6152,11 +6948,39 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "3 maniquíes, 1 portería, balones y 1 portero.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "Secuencia completa · A→B (izquierda) → B→C (derecha) → B se desmarca → C filtra a B → B finaliza. Rotación: C→izquierda, B→cola, A→derecha."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "A pasa desde la cola a B, junto al maniquí izquierdo."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "B recibe y pasa a C, junto al maniquí derecho."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "B sale del puesto izquierdo hacia la zona izquierda de finalización."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "C recibe."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "C mete un pase filtrado entre líneas hacia B."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "B recibe y finaliza a portería."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "El portero defiende."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "Rotación: C→izquierda, B→cola, A→derecha."
+        }
+      ],
     "explicacion_breve": "A pasa desde la cola a B, junto al maniquí izquierdo. B recibe y pasa a C, junto al maniquí derecho, y sale del puesto izquierdo hacia la zona izquierda de finalización. C recibe y mete un pase filtrado entre líneas hacia B, que recibe y finaliza a portería. El maniquí central representa un defensor. Al terminar, rotan: C pasa a la izquierda, B a la cola y A a la derecha.",
     "leyenda": "3 maniquíes (izquierdo, central, derecho) · A→B→C→B→disparo · Pase filtrado entre líneas · Rotación C→izquierda, B→cola, A→derecha"
   },
@@ -6280,11 +7104,43 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     },
     "material": "1 portería, 1 portero, un circuito de conos bajos y altos y 1 balón.",
     "series": [
-      {
-        "nombre": "Secuencia completa",
-        "instruccion": "A pasa a B y sale por banda → B devuelve y entra al circuito de conos → A progresa con balón y centra → B ataca el área y remata."
-      }
-    ],
+        {
+          "nombre": "Paso 1",
+          "instruccion": "A inicia con balón y pasa a B."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "A sale inmediatamente hacia el carril exterior."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "B devuelve el balón a A."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "B entra en el circuito de conos y completa el recorrido."
+        },
+        {
+          "nombre": "Paso 5",
+          "instruccion": "A progresa con balón por la banda."
+        },
+        {
+          "nombre": "Paso 6",
+          "instruccion": "B sale del circuito y ataca la zona de remate."
+        },
+        {
+          "nombre": "Paso 7",
+          "instruccion": "A realiza un centro lateral desde el carril exterior."
+        },
+        {
+          "nombre": "Paso 8",
+          "instruccion": "B ajusta su carrera y remata ante el portero."
+        },
+        {
+          "nombre": "Paso 9",
+          "instruccion": "La siguiente pareja inicia una nueva repetición."
+        }
+      ],
     "explicacion_breve": "Trabajan dos jugadores de campo y un portero. A inicia con balón, pasa a B y sale por la banda. B devuelve el balón y completa el circuito de conos para atacar el área. A progresa por fuera y realiza un centro lateral; B llega desde el circuito y remata a portería. Las dos acciones del vídeo son repeticiones del mismo ejercicio.",
     "leyenda": "A: pasador y centrador · B: apoyo, circuito de conos y rematador · P: portero · Naranja: conos · Blanco: pase/devolución · Amarillo: centro lateral"
   },
@@ -6381,7 +7237,2561 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   },
   "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/video.mp4"
-}
+},
+{
+  "id": "CAMPOBASE-PACK150-001-ESCALERA-BASICA-FRONTAL",
+  "nombre": "Escalera básica frontal — un pie por cuadro",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Coordinación", "Velocidad de pies", "Agilidad", "Desplazamiento"],
+    "tiempo_estimado_15": "5-8 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8 en fila, uno por turno"
+    },
+    "material": "1 escalera de coordinación (o cinta adhesiva para marcar 10 cuadros de 30x30 cm)",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "El jugador entra por un extremo apoyando un pie por cuadro sin pisar líneas."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Al llegar al final, sale corriendo 5 metros más y desacelera."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Vuelve caminando por fuera."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "El siguiente turno inicia."
+        }
+      ],
+    "explicacion_breve": "El jugador entra por un extremo de la escalera apoyando un pie por cuadro sin pisar las líneas. Al llegar al final sale corriendo 5 metros más, desacelera y vuelve caminando por fuera para que inicie el siguiente.",
+    "leyenda": "Azul: jugador · Escalera blanca: coordinación · Flecha azul: carrera · Flecha amarilla discontinua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar velocidad de pies.",
+      "Mejorar la coordinación motora fina en desplazamiento hacia delante."
+    ],
+    "claves_entrenador": [
+      "Mirar al frente, nunca al suelo.",
+      "La coordinación se logra con visión periférica y ritmo constante."
+    ],
+    "montaje": [
+      "Colocar la escalera en el suelo o marcar 10 cuadros de 30x30 cm con cinta.",
+      "Dejar 5 metros libres al final para el sprint de salida."
+    ],
+    "desarrollo": [
+      "El jugador entra por un extremo apoyando un pie por cuadro sin pisar líneas.",
+      "Al llegar al final, sale corriendo 5 metros más y desacelera.",
+      "Vuelve caminando por fuera.",
+      "El siguiente turno inicia."
+    ],
+    "que_buscamos": [
+      "Velocidad de pies.",
+      "Coordinación motora fina.",
+      "Ritmo constante."
+    ],
+    "que_observar": [
+      "Un pie por cuadro.",
+      "No pisar las líneas.",
+      "Mirada al frente."
+    ],
+    "correcciones": [
+      "Mirar al frente.",
+      "Ritmo constante.",
+      "No pisar las líneas."
+    ],
+    "reglas": [
+      "Un pie por cuadro.",
+      "No pisar las líneas.",
+      "Salir corriendo 5 metros al final.",
+      "Volver caminando por fuera."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Marcar los cuadros más grandes."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad progresivamente hasta el máximo sin fallar la técnica."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8 jugadores en fila, uno por turno. · 5-8 min.",
+      "Fútbol 11: 1-8 jugadores en fila, uno por turno. · 5-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 001",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 3 x 1 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-001-ESCALERA-BASICA-FRONTAL/CampoBase_Escalera_Basica_Frontal.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-001-ESCALERA-BASICA-FRONTAL/frames/f",
+    "total": 42,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-002-ESCALERA-DOS-PIES-POR-CUADRO",
+  "nombre": "Escalera dos pies por cuadro",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Cadencia de pies", "Ritmo de contacto", "Coordinación", "Equilibrio"],
+    "tiempo_estimado_15": "5-8 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8 en fila, uno por turno"
+    },
+    "material": "1 escalera de coordinación",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Preparar escalera de 10 cuadros."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "El jugador entra apoyando AMBOS pies dentro de cada cuadro (izq-der en cada uno)."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Cadencia lo más rápida posible sin perder equilibrio."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Al salir, sprint de 5 m y regreso caminando."
+        }
+      ],
+    "explicacion_breve": "El jugador entra por un extremo apoyando ambos pies dentro de cada cuadro (izquierda-derecha en cada uno), con la cadencia más rápida posible sin perder equilibrio. Al salir hace un sprint de 5 metros y vuelve caminando por fuera.",
+    "leyenda": "Azul: jugador · Escalera blanca: coordinación · Flecha azul: carrera · Flecha amarilla discontinua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar cadencia rápida de pies.",
+      "Trabajar ritmo de contacto con el suelo."
+    ],
+    "claves_entrenador": [
+      "Brazos siempre en movimiento sincronizado con los pies.",
+      "Sin los brazos se pierde equilibrio y ritmo."
+    ],
+    "montaje": [
+      "Preparar escalera de 10 cuadros."
+    ],
+    "desarrollo": [
+      "Preparar escalera de 10 cuadros.",
+      "El jugador entra apoyando AMBOS pies dentro de cada cuadro (izq-der en cada uno).",
+      "Cadencia lo más rápida posible sin perder equilibrio.",
+      "Al salir, sprint de 5 m y regreso caminando."
+    ],
+    "que_buscamos": [
+      "Cadencia rápida de pies.",
+      "Ritmo de contacto con el suelo.",
+      "Equilibrio."
+    ],
+    "que_observar": [
+      "Ambos pies dentro de cada cuadro.",
+      "Cadencia rápida.",
+      "Brazos sincronizados con los pies."
+    ],
+    "correcciones": [
+      "Brazos sincronizados con los pies.",
+      "No perder el equilibrio.",
+      "Cadencia constante."
+    ],
+    "reglas": [
+      "Ambos pies dentro de cada cuadro.",
+      "Cadencia lo más rápida posible.",
+      "Sprint de 5 m al salir.",
+      "Regreso caminando."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Marcar los cuadros más grandes."
+    ],
+    "si_sale_bien": [
+      "Cronometrar cada pasada y batir marca personal 3 veces por sesión."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8 jugadores en fila, uno por turno. · 5-8 min.",
+      "Fútbol 11: 1-8 jugadores en fila, uno por turno. · 5-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 002",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media-alta.",
+        "Espacio: 3 x 1 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-002-ESCALERA-DOS-PIES-POR-CUADRO/CampoBase_Escalera_Dos_Pies_Por_Cuadro.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-002-ESCALERA-DOS-PIES-POR-CUADRO/frames/f",
+    "total": 33,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-003-ESCALERA-LATERAL-DENTRO-FUERA",
+  "nombre": "Escalera lateral — dentro/fuera",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Coordinación multiplanar", "Agilidad lateral", "Desplazamiento lateral"],
+    "tiempo_estimado_15": "6-10 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8, uno por turno"
+    },
+    "material": "1 escalera de coordinación",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Ubicar al jugador de lado a la escalera."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Pie dominante entra en cuadro, luego el otro; salen ambos hacia el lado opuesto de la escalera."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Avanzar así hasta el final de la escalera, siempre lateralmente."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Repetir del lado contrario para trabajar ambos pies."
+        }
+      ],
+    "explicacion_breve": "El jugador se coloca de lado a la escalera. El pie dominante entra en el cuadro y luego el otro; ambos salen hacia el lado opuesto. Avanza así hasta el final, siempre lateralmente, y repite del lado contrario para trabajar ambos pies.",
+    "leyenda": "Azul: jugador · Escalera blanca: coordinación · Flecha azul: desplazamiento lateral"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar coordinación multiplanar.",
+      "Desarrollar agilidad lateral."
+    ],
+    "claves_entrenador": [
+      "Rodillas semiflexionadas siempre.",
+      "Postura baja de defensor para transferir al juego real."
+    ],
+    "montaje": [
+      "Colocar la escalera en el suelo."
+    ],
+    "desarrollo": [
+      "Ubicar al jugador de lado a la escalera.",
+      "Pie dominante entra en cuadro, luego el otro; salen ambos hacia el lado opuesto de la escalera.",
+      "Avanzar así hasta el final de la escalera, siempre lateralmente.",
+      "Repetir del lado contrario para trabajar ambos pies."
+    ],
+    "que_buscamos": [
+      "Coordinación multiplanar.",
+      "Agilidad lateral.",
+      "Postura baja."
+    ],
+    "que_observar": [
+      "Movimiento lateral.",
+      "Rodillas semiflexionadas.",
+      "Ambos pies trabajando."
+    ],
+    "correcciones": [
+      "Rodillas semiflexionadas.",
+      "Postura baja de defensor.",
+      "Movimiento lateral constante."
+    ],
+    "reglas": [
+      "De lado a la escalera.",
+      "Pie dominante entra, luego el otro.",
+      "Salir por el lado opuesto.",
+      "Repetir del lado contrario."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Marcar los cuadros más grandes."
+    ],
+    "si_sale_bien": [
+      "Añadir un balón conducido con la mano opuesta al desplazamiento."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8 jugadores, uno por turno. · 6-10 min.",
+      "Fútbol 11: 1-8 jugadores, uno por turno. · 6-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 003",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 3 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-003-ESCALERA-LATERAL-DENTRO-FUERA/CampoBase_Escalera_Lateral_Dentro_Fuera.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-003-ESCALERA-LATERAL-DENTRO-FUERA/frames/f",
+    "total": 34,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-004-ICKY-SHUFFLE-ESCALERA",
+  "nombre": "Icky Shuffle en escalera",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Coordinación compleja", "Cambio de pie", "Patrón cruzado"],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "1-6, uno por turno"
+    },
+    "material": "1 escalera de coordinación",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Iniciar con pie derecho FUERA lateral izquierdo de la escalera."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Entrar con pie izquierdo al primer cuadro, luego derecho."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Salir con pie izquierdo por el lado derecho de la escalera."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Repetir el patrón invertido en el próximo cuadro, avanzando en zigzag."
+        }
+      ],
+    "explicacion_breve": "El jugador inicia con el pie derecho fuera (lateral izquierdo de la escalera), entra con el pie izquierdo al primer cuadro y luego el derecho, sale con el pie izquierdo por el lado derecho, y repite el patrón invertido en el próximo cuadro avanzando en zigzag.",
+    "leyenda": "Azul: jugador · Escalera blanca: coordinación · Flecha azul: zigzag"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar patrones complejos de coordinación con cambio de pie."
+    ],
+    "claves_entrenador": [
+      "Al principio hacer LENTO para aprender el patrón.",
+      "La velocidad viene después, no antes."
+    ],
+    "montaje": [
+      "Colocar la escalera en el suelo."
+    ],
+    "desarrollo": [
+      "Iniciar con pie derecho FUERA lateral izquierdo de la escalera.",
+      "Entrar con pie izquierdo al primer cuadro, luego derecho.",
+      "Salir con pie izquierdo por el lado derecho de la escalera.",
+      "Repetir el patrón invertido en el próximo cuadro, avanzando en zigzag."
+    ],
+    "que_buscamos": [
+      "Automatización del patrón.",
+      "Cambio de pie.",
+      "Coordinación compleja."
+    ],
+    "que_observar": [
+      "Patrón cruzado correcto.",
+      "Cambio de pie.",
+      "Avance en zigzag."
+    ],
+    "correcciones": [
+      "Hacerlo lento primero.",
+      "Aprender el patrón antes de acelerar.",
+      "Cambio de pie correcto."
+    ],
+    "reglas": [
+      "Pie derecho fuera, lateral izquierdo.",
+      "Entrar izquierdo, luego derecho.",
+      "Salir por el lado derecho.",
+      "Repetir patrón invertido en zigzag."
+    ],
+    "si_sale_mal": [
+      "Hacerlo lento hasta dominar el patrón.",
+      "Descomponer el movimiento por partes."
+    ],
+    "si_sale_bien": [
+      "Agregar salida explosiva con sprint de 8-10 metros."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-6 jugadores, uno por turno. · 8-10 min.",
+      "Fútbol 11: 1-6 jugadores, uno por turno. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 004",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 3 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-004-ICKY-SHUFFLE-ESCALERA/CampoBase_Icky_Shuffle_Escalera.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-004-ICKY-SHUFFLE-ESCALERA/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-005-ESCALERA-SALIDA-EXPLOSIVA-BALON",
+  "nombre": "Escalera con salida explosiva a balón",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Coordinación", "Recepción", "Control", "Salida explosiva"],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 mínimo (o pared)"
+    },
+    "material": "1 escalera + 1 balón",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Escalera colocada. Un asistente/compañero a 5 m del final con balón."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Jugador cruza la escalera (patrón a elección) y sale corriendo."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al salir, recibe pase raso del compañero y controla con el pie más adecuado."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Devuelve pase, corre a la fila. Rotación."
+        }
+      ],
+    "explicacion_breve": "Con la escalera colocada y un compañero a 5 m del final con balón, el jugador cruza la escalera (patrón a elección) y sale corriendo. Al salir recibe un pase raso y controla con el pie más adecuado, devuelve el pase y corre a la fila para rotar.",
+    "leyenda": "Azul: jugador · Amarillo: compañero · Balón: pase raso · Flecha azul discontinua: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Transferir la coordinación al gesto técnico real de recepción y control."
+    ],
+    "claves_entrenador": [
+      "El control debe ser orientado hacia una zona libre, no simplemente parar el balón."
+    ],
+    "montaje": [
+      "Escalera colocada.",
+      "Un asistente/compañero a 5 m del final con balón."
+    ],
+    "desarrollo": [
+      "Escalera colocada. Un asistente/compañero a 5 m del final con balón.",
+      "Jugador cruza la escalera (patrón a elección) y sale corriendo.",
+      "Al salir, recibe pase raso del compañero y controla con el pie más adecuado.",
+      "Devuelve pase, corre a la fila. Rotación."
+    ],
+    "que_buscamos": [
+      "Transferencia de la coordinación al gesto técnico.",
+      "Recepción y control.",
+      "Control orientado."
+    ],
+    "que_observar": [
+      "Salida explosiva.",
+      "Recepción del pase raso.",
+      "Control orientado a zona libre."
+    ],
+    "correcciones": [
+      "Control orientado a zona libre.",
+      "No parar el balón.",
+      "Salida explosiva."
+    ],
+    "reglas": [
+      "Compañero a 5 m del final con balón.",
+      "Cruzar la escalera y salir corriendo.",
+      "Recibir pase raso y controlar.",
+      "Devolver pase y rotar."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad de la escalera.",
+      "Pase más lento y cercano."
+    ],
+    "si_sale_bien": [
+      "Variar la altura del pase entrante (raso, medio, alto) para trabajar todas las superficies."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 jugadores mínimo (o pared). · 10-12 min.",
+      "Fútbol 11: 2 jugadores mínimo (o pared). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 005",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-005-ESCALERA-SALIDA-EXPLOSIVA-BALON/CampoBase_Escalera_Salida_Explosiva_Balon.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-005-ESCALERA-SALIDA-EXPLOSIVA-BALON/frames/f",
+    "total": 23,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-006-SLALOM-FRONTAL-CONOS",
+  "nombre": "Slalom frontal entre conos",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": ["Aceleración corta", "Precisión de trayectoria", "Zigzag"],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10, uno por turno"
+    },
+    "material": "5 conos o marcadores",
+    "series": [
+        {
+          "nombre": "Paso 1",
+          "instruccion": "Colocar 5 conos en línea separados por 1,5 metros."
+        },
+        {
+          "nombre": "Paso 2",
+          "instruccion": "Jugador arranca a máxima velocidad haciendo zigzag entre los conos."
+        },
+        {
+          "nombre": "Paso 3",
+          "instruccion": "Al final, sprint recto de 5 m y desaceleración."
+        },
+        {
+          "nombre": "Paso 4",
+          "instruccion": "Vuelta trotando por fuera de los conos."
+        }
+      ],
+    "explicacion_breve": "Con 5 conos en línea separados por 1,5 metros, el jugador arranca a máxima velocidad haciendo zigzag entre los conos. Al final hace un sprint recto de 5 metros y desacelera, y vuelve trotando por fuera de los conos.",
+    "leyenda": "Azul: jugador · Cono naranja: marcador · Flecha azul: zigzag · Flecha amarilla discontinua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar aceleración corta.",
+      "Trabajar precisión de trayectoria."
+    ],
+    "claves_entrenador": [
+      "El pie de apoyo debe pisar del lado externo del cono para cambiar de dirección con eficacia."
+    ],
+    "montaje": [
+      "Colocar 5 conos en línea separados por 1,5 metros."
+    ],
+    "desarrollo": [
+      "Colocar 5 conos en línea separados por 1,5 metros.",
+      "Jugador arranca a máxima velocidad haciendo zigzag entre los conos.",
+      "Al final, sprint recto de 5 m y desaceleración.",
+      "Vuelta trotando por fuera de los conos."
+    ],
+    "que_buscamos": [
+      "Aceleración corta.",
+      "Precisión de trayectoria.",
+      "Cambio de dirección."
+    ],
+    "que_observar": [
+      "Zigzag entre conos.",
+      "Pie de apoyo al lado externo del cono.",
+      "Sprint final."
+    ],
+    "correcciones": [
+      "Pie de apoyo al lado externo del cono.",
+      "Cambio de dirección eficaz.",
+      "Aceleración máxima."
+    ],
+    "reglas": [
+      "5 conos en línea a 1,5 m.",
+      "Zigzag a máxima velocidad.",
+      "Sprint recto de 5 m al final.",
+      "Vuelta trotando por fuera."
+    ],
+    "si_sale_mal": [
+      "Separar más los conos.",
+      "Reducir la velocidad inicial."
+    ],
+    "si_sale_bien": [
+      "Agregar balón conducido durante el slalom, alternando pies."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10 jugadores, uno por turno. · 6-8 min.",
+      "Fútbol 11: 1-10 jugadores, uno por turno. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 006",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 10 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-006-SLALOM-FRONTAL-CONOS/CampoBase_Slalom_Frontal_Conos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-006-SLALOM-FRONTAL-CONOS/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-007-SLALOM-LATERAL-DEFENSIVO",
+  "nombre": "Slalom lateral defensivo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Postura defensiva",
+      "Desplazamiento lateral",
+      "Agilidad"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8, uno por turno"
+    },
+    "material": "5 conos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 5 conos en línea con separación de 2 metros."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador posicionado lateralmente al inicio, con rodillas flexionadas."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Se desplaza en zigzag entre los conos SIN cruzar los pies, mirando siempre al frente."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Al final, sprint frontal explosivo de 5 metros."
+      }
+    ],
+    "explicacion_breve": "El jugador se desplaza lateralmente en zigzag entre 5 conos sin cruzar los pies, con rodillas flexionadas y mirando al frente, y termina con un sprint frontal de 5 metros.",
+    "leyenda": "Azul: jugador (defensor) · Cono naranja: marcador · Flecha azul: desplazamiento lateral · Flecha amarilla discontinua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Reforzar postura y desplazamiento del defensor en situación 1v1."
+    ],
+    "claves_entrenador": [
+      "Los pies NUNCA se cruzan. Se separan y se juntan alternadamente, como un defensor real."
+    ],
+    "montaje": [
+      "Colocar 5 conos en línea con separación de 2 metros."
+    ],
+    "desarrollo": [
+      "Colocar 5 conos en línea con separación de 2 metros.",
+      "Jugador posicionado lateralmente al inicio, con rodillas flexionadas.",
+      "Se desplaza en zigzag entre los conos SIN cruzar los pies, mirando siempre al frente.",
+      "Al final, sprint frontal explosivo de 5 metros."
+    ],
+    "que_buscamos": [
+      "Postura defensiva",
+      "Desplazamiento lateral",
+      "Agilidad"
+    ],
+    "que_observar": [
+      "Que los pies no se crucen.",
+      "Postura baja de defensor.",
+      "Mirada al frente."
+    ],
+    "correcciones": [
+      "Separar y juntar los pies alternadamente.",
+      "Bajar el centro de gravedad."
+    ],
+    "reglas": [
+      "No cruzar los pies.",
+      "Rodillas flexionadas.",
+      "Mirar al frente.",
+      "Sprint final de 5 m."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar una señal visual al final que indique hacia qué lado hacer el sprint."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8, uno por turno. · 8-10 min.",
+      "Fútbol 11: 1-8, uno por turno. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 007",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 10 x 3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-007-SLALOM-LATERAL-DEFENSIVO/CampoBase_Slalom_Lateral_Defensivo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-007-SLALOM-LATERAL-DEFENSIVO/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-008-CAMBIO-DIRECCION-CRUZ",
+  "nombre": "Cambio de dirección en cruz (4 conos)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Frenado",
+      "Giro",
+      "Reaceleración",
+      "Reacción"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "1-6, uno por turno"
+    },
+    "material": "4 conos + 1 cono central",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 4 conos formando una cruz de 5 metros de radio, con uno en el centro."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador en el centro. Adulto o entrenador nombra un cono (norte/sur/este/oeste)."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Jugador corre al cono nombrado, lo toca con la mano, y vuelve al centro."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Se le nombra el próximo cono en cuanto vuelve. 8-10 repeticiones."
+      }
+    ],
+    "explicacion_breve": "Con 4 conos en cruz y uno central, el jugador corre al cono que nombra el entrenador, lo toca con la mano y vuelve al centro, repitiendo 8-10 veces.",
+    "leyenda": "Azul: jugador · Cono naranja: marcador · Flecha azul: ida y vuelta"
+  },
+  "detalle": {
+    "objetivos": [
+      "Mejorar la capacidad de frenado, giro y reaceleración en múltiples direcciones."
+    ],
+    "claves_entrenador": [
+      "El primer paso post-cambio debe ser explosivo y bajo. Nunca lento y de pie erguido."
+    ],
+    "montaje": [
+      "Colocar 4 conos formando una cruz de 5 metros de radio, con uno en el centro."
+    ],
+    "desarrollo": [
+      "Colocar 4 conos formando una cruz de 5 metros de radio, con uno en el centro.",
+      "Jugador en el centro. Adulto o entrenador nombra un cono (norte/sur/este/oeste).",
+      "Jugador corre al cono nombrado, lo toca con la mano, y vuelve al centro.",
+      "Se le nombra el próximo cono en cuanto vuelve. 8-10 repeticiones."
+    ],
+    "que_buscamos": [
+      "Frenado",
+      "Giro",
+      "Reaceleración",
+      "Reacción"
+    ],
+    "que_observar": [
+      "Primer paso explosivo y bajo.",
+      "Frenado antes del giro.",
+      "Reacción al estímulo."
+    ],
+    "correcciones": [
+      "Primer paso explosivo y bajo.",
+      "No frenar de pie erguido."
+    ],
+    "reglas": [
+      "Tocar el cono con la mano.",
+      "Volver al centro.",
+      "Reaccionar al cono nombrado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Realizar la misma dinámica conduciendo un balón hacia cada cono."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-6, uno por turno. · 8-10 min.",
+      "Fútbol 11: 1-6, uno por turno. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 008",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 8 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-008-CAMBIO-DIRECCION-CRUZ/CampoBase_Cambio_Direccion_Cruz.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-008-CAMBIO-DIRECCION-CRUZ/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-009-T-DRILL-AGILIDAD",
+  "nombre": "T-drill de agilidad",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Sprint",
+      "Desplazamiento lateral",
+      "Carrera atrás"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8, uno por turno"
+    },
+    "material": "4 conos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 3 conos formando la parte superior de una T (separados 4 m entre sí), y 1 cono en la base a 8 m del central."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador sale del cono base y hace sprint frontal hasta el cono central."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Se desplaza LATERALMENTE hasta el cono izquierdo, toca, y vuelve lateralmente al cono derecho."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Vuelve al central lateralmente, y corre HACIA ATRÁS al cono base."
+      }
+    ],
+    "explicacion_breve": "En una T de 4 conos, el jugador hace sprint frontal al central, se desplaza lateralmente a izquierda y derecha, y vuelve corriendo hacia atrás a la base.",
+    "leyenda": "Azul: jugador · Cono naranja: marcador · Flecha azul: recorrido · Flecha amarilla discontinua: carrera atrás"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar sprint, desplazamiento lateral y carrera atrás en un solo circuito."
+    ],
+    "claves_entrenador": [
+      "Al desplazarse lateralmente, mantener el pecho apuntando al frente en TODO momento."
+    ],
+    "montaje": [
+      "Colocar 3 conos formando la parte superior de una T (separados 4 m entre sí), y 1 cono en la base a 8 m del central."
+    ],
+    "desarrollo": [
+      "Colocar 3 conos formando la parte superior de una T (separados 4 m entre sí), y 1 cono en la base a 8 m del central.",
+      "Jugador sale del cono base y hace sprint frontal hasta el cono central.",
+      "Se desplaza LATERALMENTE hasta el cono izquierdo, toca, y vuelve lateralmente al cono derecho.",
+      "Vuelve al central lateralmente, y corre HACIA ATRÁS al cono base."
+    ],
+    "que_buscamos": [
+      "Sprint",
+      "Desplazamiento lateral",
+      "Carrera atrás"
+    ],
+    "que_observar": [
+      "Pecho al frente en el lateral.",
+      "Tocar los conos.",
+      "Carrera atrás controlada."
+    ],
+    "correcciones": [
+      "Mantener el pecho al frente.",
+      "No cruzar los pies en el lateral."
+    ],
+    "reglas": [
+      "Sprint frontal al central.",
+      "Lateral sin cruzar pies.",
+      "Carrera atrás a la base."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cronometrar y buscar romper récord personal semana a semana."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8, uno por turno. · 10-12 min.",
+      "Fútbol 11: 1-8, uno por turno. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 009",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-009-T-DRILL-AGILIDAD/CampoBase_T_Drill_Agilidad.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-009-T-DRILL-AGILIDAD/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-010-SPRINT-FRENO-REACCION-VISUAL",
+  "nombre": "Sprint - freno - reacción visual",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Desaceleración",
+      "Reacción",
+      "Sprint"
+    ],
+    "tiempo_estimado_15": "10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2+ (uno corre, otro da la señal)"
+    },
+    "material": "2 conos de colores distintos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 2 conos de colores diferentes a 5 m de distancia entre sí."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador arranca sprint de 8 m hacia una zona neutra."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "El entrenador levanta la mano o grita un color EN el momento del sprint."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "El jugador debe frenar y correr al cono del color indicado."
+      }
+    ],
+    "explicacion_breve": "El jugador hace un sprint de 8 m y, cuando el entrenador grita un color, frena y corre al cono de ese color.",
+    "leyenda": "Azul: jugador · Cono rojo/azul: destino · Flecha azul: sprint · Flecha amarilla discontinua: reacción"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar la desaceleración controlada y la respuesta a estímulo externo."
+    ],
+    "claves_entrenador": [
+      "El freno se hace bajando el centro de gravedad, NO apretando talones. Rodillas absorben el impacto."
+    ],
+    "montaje": [
+      "Colocar 2 conos de colores diferentes a 5 m de distancia entre sí."
+    ],
+    "desarrollo": [
+      "Colocar 2 conos de colores diferentes a 5 m de distancia entre sí.",
+      "Jugador arranca sprint de 8 m hacia una zona neutra.",
+      "El entrenador levanta la mano o grita un color EN el momento del sprint.",
+      "El jugador debe frenar y correr al cono del color indicado."
+    ],
+    "que_buscamos": [
+      "Desaceleración",
+      "Reacción",
+      "Sprint"
+    ],
+    "que_observar": [
+      "Freno bajando el centro de gravedad.",
+      "Rodillas absorben el impacto.",
+      "Reacción al color."
+    ],
+    "correcciones": [
+      "Bajar el centro de gravedad al frenar.",
+      "No apretar los talones."
+    ],
+    "reglas": [
+      "Sprint de 8 m.",
+      "Frenar al oír el color.",
+      "Correr al cono indicado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar un tercer color y estímulo auditivo doble (voz + palma) para desafiar la atención."
+    ],
+    "variantes": [
+      "Fútbol 7: 2+ (uno corre, otro da la señal). · 10 min.",
+      "Fútbol 11: 2+ (uno corre, otro da la señal). · 10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 010",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 15 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-010-SPRINT-FRENO-REACCION-VISUAL/CampoBase_Sprint_Freno_Reaccion_Visual.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-010-SPRINT-FRENO-REACCION-VISUAL/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-011-EJERCICIO-SEMAFORO",
+  "nombre": "Ejercicio del semáforo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Reacción visual",
+      "Control corporal"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15, corriendo libremente"
+    },
+    "material": "Ninguno (voz o pañuelos)",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Jugadores corren libremente por el espacio a ritmo suave."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Entrenador grita 'ROJO' → todos frenan inmediatamente y se quedan quietos."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "'AMARILLO' → trote muy suave en el sitio."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "'VERDE' → sprint corto de 5 m hacia adelante."
+      }
+    ],
+    "explicacion_breve": "Los jugadores corren libremente y reaccionan a las señales: ROJO frenan, AMARILLO trote en el sitio, VERDE sprint de 5 m.",
+    "leyenda": "Azul: jugador · Flecha azul: movimiento"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar reacción a estímulos visuales y control corporal simultáneos."
+    ],
+    "claves_entrenador": [
+      "El objetivo NO es la velocidad — es que la reacción sea inmediata al estímulo."
+    ],
+    "montaje": [
+      "Jugadores corren libremente por el espacio a ritmo suave."
+    ],
+    "desarrollo": [
+      "Jugadores corren libremente por el espacio a ritmo suave.",
+      "Entrenador grita 'ROJO' → todos frenan inmediatamente y se quedan quietos.",
+      "'AMARILLO' → trote muy suave en el sitio.",
+      "'VERDE' → sprint corto de 5 m hacia adelante."
+    ],
+    "que_buscamos": [
+      "Reacción visual",
+      "Control corporal"
+    ],
+    "que_observar": [
+      "Reacción inmediata.",
+      "Control corporal.",
+      "Atención al estímulo."
+    ],
+    "correcciones": [
+      "Reaccionar al instante.",
+      "No anticiparse a la señal."
+    ],
+    "reglas": [
+      "ROJO: frenar.",
+      "AMARILLO: trote en el sitio.",
+      "VERDE: sprint de 5 m."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir señales visuales (pañuelos de colores) sin voz para forzar atención visual constante."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15, corriendo libremente. · 8-10 min.",
+      "Fútbol 11: 1-15, corriendo libremente. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 011",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-011-EJERCICIO-SEMAFORO/CampoBase_Ejercicio_Semaforo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-011-EJERCICIO-SEMAFORO/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-012-REACCION-BALON-CAIDO",
+  "nombre": "Reacción al balón caído",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Tiempo de reacción",
+      "Arranque explosivo"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (uno con balón, otro reacciona)"
+    },
+    "material": "1 balón",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Adulto/compañero sostiene el balón con brazo estirado a la altura del hombro."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador a 3 m de frente, en postura básica de defensor (rodillas flexionadas)."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "En cualquier momento, el balón cae. El jugador debe correr y agarrarlo (o tocarlo) antes del segundo bote."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "10 repeticiones. Alternar roles."
+      }
+    ],
+    "explicacion_breve": "El compañero sostiene el balón con el brazo estirado y lo suelta; el jugador, a 3 m en postura de defensor, corre a agarrarlo antes del segundo bote.",
+    "leyenda": "Azul: jugador · Amarillo: compañero · Balón: cae · Flecha azul: arranque"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar tiempo de reacción y arranque explosivo desde parada."
+    ],
+    "claves_entrenador": [
+      "La postura de espera es CLAVE. Rodillas bajas, peso adelante, no de pie erguido esperando."
+    ],
+    "montaje": [
+      "Adulto/compañero sostiene el balón con brazo estirado a la altura del hombro."
+    ],
+    "desarrollo": [
+      "Adulto/compañero sostiene el balón con brazo estirado a la altura del hombro.",
+      "Jugador a 3 m de frente, en postura básica de defensor (rodillas flexionadas).",
+      "En cualquier momento, el balón cae. El jugador debe correr y agarrarlo (o tocarlo) antes del segundo bote.",
+      "10 repeticiones. Alternar roles."
+    ],
+    "que_buscamos": [
+      "Tiempo de reacción",
+      "Arranque explosivo"
+    ],
+    "que_observar": [
+      "Postura de espera.",
+      "Arranque explosivo.",
+      "Reacción al balón."
+    ],
+    "correcciones": [
+      "Rodillas bajas, peso adelante.",
+      "No esperar de pie erguido."
+    ],
+    "reglas": [
+      "Postura de defensor.",
+      "Agarrar antes del segundo bote.",
+      "Alternar roles."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la distancia progresivamente (4 m, 5 m, 6 m) y variar la altura desde donde cae el balón."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (uno con balón, otro reacciona). · 6-8 min.",
+      "Fútbol 11: 2 (uno con balón, otro reacciona). · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 012",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media-alta.",
+        "Espacio: 5 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-012-REACCION-BALON-CAIDO/CampoBase_Reaccion_Balon_Caido.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-012-REACCION-BALON-CAIDO/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-013-SALTOS-OBSTACULOS-BAJOS",
+  "nombre": "Saltos sobre obstáculos bajos",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Potencia reactiva",
+      "Coordinación de aterrizaje"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "1-6, uno por turno"
+    },
+    "material": "4-6 conos bajos o aros",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 4-6 obstáculos bajos (15-25 cm) en línea, separados por 60 cm."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "El jugador salta con AMBOS pies juntos sobre cada obstáculo."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "El contacto con el suelo entre saltos debe ser MÍNIMO (efecto rebote)."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Al terminar la línea, sprint corto de 5 m."
+      }
+    ],
+    "explicacion_breve": "El jugador salta con ambos pies juntos sobre 4-6 obstáculos bajos en línea, con contacto mínimo con el suelo, y termina con un sprint de 5 m.",
+    "leyenda": "Azul: jugador · Valla amarilla: obstáculo · Flecha azul: recorrido · Flecha amarilla discontinua: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar potencia reactiva del tren inferior y coordinación de aterrizaje."
+    ],
+    "claves_entrenador": [
+      "El aterrizaje debe ser silencioso. Ruido fuerte al caer = mala absorción de impacto."
+    ],
+    "montaje": [
+      "Colocar 4-6 obstáculos bajos (15-25 cm) en línea, separados por 60 cm."
+    ],
+    "desarrollo": [
+      "Colocar 4-6 obstáculos bajos (15-25 cm) en línea, separados por 60 cm.",
+      "El jugador salta con AMBOS pies juntos sobre cada obstáculo.",
+      "El contacto con el suelo entre saltos debe ser MÍNIMO (efecto rebote).",
+      "Al terminar la línea, sprint corto de 5 m."
+    ],
+    "que_buscamos": [
+      "Potencia reactiva",
+      "Coordinación de aterrizaje"
+    ],
+    "que_observar": [
+      "Aterrizaje silencioso.",
+      "Efecto rebote.",
+      "Ambos pies juntos."
+    ],
+    "correcciones": [
+      "Aterrizar silencioso.",
+      "Absorber el impacto con las rodillas."
+    ],
+    "reglas": [
+      "Saltar con ambos pies juntos.",
+      "Contacto mínimo con el suelo.",
+      "Sprint final de 5 m."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Alternar saltos: 2 pies → 1 pie izquierdo → 1 pie derecho, cambiando cada 2 obstáculos."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-6, uno por turno. · 8-10 min.",
+      "Fútbol 11: 1-6, uno por turno. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 013",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: alta.",
+        "Espacio: 5 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-013-SALTOS-OBSTACULOS-BAJOS/CampoBase_Saltos_Obstaculos_Bajos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-013-SALTOS-OBSTACULOS-BAJOS/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-014-SALTO-LATERAL-LINEA",
+  "nombre": "Salto lateral sobre línea (skater jumps)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Estabilidad lateral",
+      "Transferencia de peso"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8, uno por turno"
+    },
+    "material": "1 línea marcada o cinta",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Marcar una línea recta en el suelo. Jugador de pie a un lado."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Salta LATERALMENTE cruzando la línea, aterrizando con el pie contrario (izq → der, der → izq)."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Al aterrizar, sostener 1 segundo en equilibrio antes del próximo salto."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "3 series de 10 saltos por lado."
+      }
+    ],
+    "explicacion_breve": "El jugador salta lateralmente cruzando una línea, aterrizando con el pie contrario y sosteniendo 1 segundo de equilibrio antes del siguiente salto.",
+    "leyenda": "Azul: jugador · Línea blanca: marca · Flecha azul: salto lateral"
+  },
+  "detalle": {
+    "objetivos": [
+      "Fortalecer estabilidad lateral y transferencia de peso pierna a pierna."
+    ],
+    "claves_entrenador": [
+      "Al aterrizar, la rodilla NO debe caer hacia adentro. Alineada con el pie."
+    ],
+    "montaje": [
+      "Marcar una línea recta en el suelo. Jugador de pie a un lado."
+    ],
+    "desarrollo": [
+      "Marcar una línea recta en el suelo. Jugador de pie a un lado.",
+      "Salta LATERALMENTE cruzando la línea, aterrizando con el pie contrario (izq → der, der → izq).",
+      "Al aterrizar, sostener 1 segundo en equilibrio antes del próximo salto.",
+      "3 series de 10 saltos por lado."
+    ],
+    "que_buscamos": [
+      "Estabilidad lateral",
+      "Transferencia de peso"
+    ],
+    "que_observar": [
+      "Rodilla alineada con el pie.",
+      "Equilibrio al aterrizar.",
+      "Transferencia de peso."
+    ],
+    "correcciones": [
+      "No dejar caer la rodilla hacia adentro.",
+      "Alinear rodilla con el pie."
+    ],
+    "reglas": [
+      "Aterrizar con el pie contrario.",
+      "Sostener 1 s de equilibrio.",
+      "3 series de 10 saltos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la distancia del salto poco a poco y luego eliminar la pausa de aterrizaje."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8, uno por turno. · 6-8 min.",
+      "Fútbol 11: 1-8, uno por turno. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 014",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 2 x 1 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-014-SALTO-LATERAL-LINEA/CampoBase_Salto_Lateral_Linea.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-014-SALTO-LATERAL-LINEA/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-015-SALTO-PROFUNDIDAD-ARRANQUE",
+  "nombre": "Salto en profundidad + arranque",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Potencia de salto",
+      "Sprint inmediato"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "1-6, uno por turno"
+    },
+    "material": "1 caja o step de 30 cm",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar un step o caja baja (30 cm) al inicio del recorrido."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador se sube al step, y cae con ambos pies."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "En el momento del aterrizaje, arranca inmediatamente en sprint de 8 metros."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "5-6 repeticiones con recuperación completa entre cada una."
+      }
+    ],
+    "explicacion_breve": "El jugador se sube a un step de 30 cm, cae con ambos pies y arranca inmediatamente en un sprint de 8 metros.",
+    "leyenda": "Azul: jugador · Caja marrón: step 30 cm · Flecha azul discontinua: caída · Flecha amarilla: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Transferir la potencia del salto en acción de sprint inmediato."
+    ],
+    "claves_entrenador": [
+      "La transición aterrizaje-sprint debe ser INSTANTÁNEA. Sin pausa, sin ajuste, salir ya."
+    ],
+    "montaje": [
+      "Colocar un step o caja baja (30 cm) al inicio del recorrido."
+    ],
+    "desarrollo": [
+      "Colocar un step o caja baja (30 cm) al inicio del recorrido.",
+      "Jugador se sube al step, y cae con ambos pies.",
+      "En el momento del aterrizaje, arranca inmediatamente en sprint de 8 metros.",
+      "5-6 repeticiones con recuperación completa entre cada una."
+    ],
+    "que_buscamos": [
+      "Potencia de salto",
+      "Sprint inmediato"
+    ],
+    "que_observar": [
+      "Transición instantánea.",
+      "Caída con ambos pies.",
+      "Sprint explosivo."
+    ],
+    "correcciones": [
+      "Salir sin pausa tras aterrizar.",
+      "No ajustar la postura antes de arrancar."
+    ],
+    "reglas": [
+      "Caer con ambos pies.",
+      "Arrancar al instante.",
+      "Sprint de 8 m."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la altura del step gradualmente (nunca más de 50 cm en menores de 15 años)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-6, uno por turno. · 8-10 min.",
+      "Fútbol 11: 1-6, uno por turno. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 015",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-015-SALTO-PROFUNDIDAD-ARRANQUE/CampoBase_Salto_Profundidad_Arranque.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-015-SALTO-PROFUNDIDAD-ARRANQUE/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-016-COORDINACION-CRUZADA",
+  "nombre": "Coordinación cruzada rodilla-mano opuesta",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Coordinación cruzada",
+      "Estabilidad postural"
+    ],
+    "tiempo_estimado_15": "5-6 min",
+    "jugadores": {
+      "total": 15,
+      "organizacion": "1-15, individual"
+    },
+    "material": "Ninguno",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Jugador de pie, brazos a los lados."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Sube rodilla derecha y toca con mano IZQUIERDA."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Baja. Sube rodilla izquierda, toca con mano derecha."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Ritmo constante, 30 segundos. Descansa 15. Repite 4 veces."
+      }
+    ],
+    "explicacion_breve": "De pie, el jugador sube la rodilla derecha y la toca con la mano izquierda, y viceversa, a ritmo constante durante 30 segundos.",
+    "leyenda": "Azul: jugador · Flecha azul: movimiento cruzado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar coordinación cruzada del cerebro y estabilidad postural."
+    ],
+    "claves_entrenador": [
+      "El objetivo no es velocidad — es coordinación cruzada limpia. Si se pierde, bajar ritmo."
+    ],
+    "montaje": [
+      "Jugador de pie, brazos a los lados."
+    ],
+    "desarrollo": [
+      "Jugador de pie, brazos a los lados.",
+      "Sube rodilla derecha y toca con mano IZQUIERDA.",
+      "Baja. Sube rodilla izquierda, toca con mano derecha.",
+      "Ritmo constante, 30 segundos. Descansa 15. Repite 4 veces."
+    ],
+    "que_buscamos": [
+      "Coordinación cruzada",
+      "Estabilidad postural"
+    ],
+    "que_observar": [
+      "Coordinación cruzada limpia.",
+      "Estabilidad postural.",
+      "Ritmo constante."
+    ],
+    "correcciones": [
+      "Bajar el ritmo si se pierde la coordinación.",
+      "Movimiento cruzado limpio."
+    ],
+    "reglas": [
+      "Rodilla derecha con mano izquierda.",
+      "Rodilla izquierda con mano derecha.",
+      "Ritmo constante."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cerrar los ojos durante el ejercicio para desafiar propiocepción."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-15, individual. · 5-6 min.",
+      "Fútbol 11: 1-15, individual. · 5-6 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 016",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: baja.",
+        "Espacio: 1 x 1 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-016-COORDINACION-CRUZADA/CampoBase_Coordinacion_Cruzada.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-016-COORDINACION-CRUZADA/frames/f",
+    "total": 30,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-017-SKIPPING-ALTO-SPRINT",
+  "nombre": "Skipping alto con progresión a sprint",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Activación del muslo",
+      "Carrera explosiva"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10, uno por turno"
+    },
+    "material": "Ninguno (conos opcional)",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Jugador arranca haciendo skipping alto (rodillas al pecho) durante 5 metros."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Al llegar al cono/marca, transiciona a sprint durante 10 metros."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Desacelera y vuelve caminando."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "6-8 repeticiones con pausa entre cada una."
+      }
+    ],
+    "explicacion_breve": "El jugador hace skipping alto (rodillas al pecho) durante 5 m y, al llegar al cono, transiciona a un sprint de 10 m.",
+    "leyenda": "Azul: jugador · Cono naranja: marca · Flecha azul: skipping · Flecha amarilla: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Activar musculatura del muslo y transferir a la carrera explosiva."
+    ],
+    "claves_entrenador": [
+      "En el skipping, los brazos deben acompañar activamente el movimiento — no colgar inertes."
+    ],
+    "montaje": [
+      "Jugador arranca haciendo skipping alto (rodillas al pecho) durante 5 metros."
+    ],
+    "desarrollo": [
+      "Jugador arranca haciendo skipping alto (rodillas al pecho) durante 5 metros.",
+      "Al llegar al cono/marca, transiciona a sprint durante 10 metros.",
+      "Desacelera y vuelve caminando.",
+      "6-8 repeticiones con pausa entre cada una."
+    ],
+    "que_buscamos": [
+      "Activación del muslo",
+      "Carrera explosiva"
+    ],
+    "que_observar": [
+      "Rodillas al pecho.",
+      "Brazos activos.",
+      "Transición a sprint."
+    ],
+    "correcciones": [
+      "Acompañar con los brazos.",
+      "No colgar los brazos inertes."
+    ],
+    "reglas": [
+      "Skipping alto 5 m.",
+      "Sprint 10 m.",
+      "Brazos activos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Alternar variantes: talones al glúteo, saltos alternados, skipping lateral."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10, uno por turno. · 6-8 min.",
+      "Fútbol 11: 1-10, uno por turno. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 017",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-017-SKIPPING-ALTO-SPRINT/CampoBase_Skipping_Alto_Sprint.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-017-SKIPPING-ALTO-SPRINT/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-018-TALONES-GLUTEO-SPRINT",
+  "nombre": "Talones al glúteo con sprint final",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Fase de recobro",
+      "Aceleración"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10, uno por turno"
+    },
+    "material": "Ninguno",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Jugador arranca 'pateando' con los talones hacia el glúteo durante 5 metros."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Al llegar a la marca, cambia a sprint durante 10 metros."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Desacelera y camina al punto de inicio."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "6-8 repeticiones."
+      }
+    ],
+    "explicacion_breve": "El jugador patea con los talones hacia el glúteo durante 5 m y, al llegar a la marca, cambia a un sprint de 10 m.",
+    "leyenda": "Azul: jugador · Cono naranja: marca · Flecha azul: talones al glúteo · Flecha amarilla: sprint"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la fase de recobro de la carrera y transferir a la aceleración."
+    ],
+    "claves_entrenador": [
+      "El talón debe TOCAR el glúteo. Si no llega, se está haciendo mal — bajar velocidad, mejorar técnica."
+    ],
+    "montaje": [
+      "Jugador arranca 'pateando' con los talones hacia el glúteo durante 5 metros."
+    ],
+    "desarrollo": [
+      "Jugador arranca 'pateando' con los talones hacia el glúteo durante 5 metros.",
+      "Al llegar a la marca, cambia a sprint durante 10 metros.",
+      "Desacelera y camina al punto de inicio.",
+      "6-8 repeticiones."
+    ],
+    "que_buscamos": [
+      "Fase de recobro",
+      "Aceleración"
+    ],
+    "que_observar": [
+      "El talón toca el glúteo.",
+      "Fase de recobro.",
+      "Transición a sprint."
+    ],
+    "correcciones": [
+      "Bajar velocidad si el talón no llega.",
+      "Mejorar la técnica de recobro."
+    ],
+    "reglas": [
+      "Talones al glúteo 5 m.",
+      "Sprint 10 m.",
+      "El talón toca el glúteo."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Combinar en circuito con skipping alto y sprint (ejercicio 22 usa esta base)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10, uno por turno. · 6-8 min.",
+      "Fútbol 11: 1-10, uno por turno. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 018",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 2 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-018-TALONES-GLUTEO-SPRINT/CampoBase_Talones_Gluteo_Sprint.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-018-TALONES-GLUTEO-SPRINT/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-019-CIRCUITO-COORDINATIVO-COMPLETO",
+  "nombre": "Circuito coordinativo completo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Coordinación",
+      "Finalización",
+      "Circuito"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3+ mínimo"
+    },
+    "material": "1 escalera, 5 conos, 3 obstáculos, 1 balón, 1 portería",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Secuencia 1: escalera (patrón a elección) - 5 m."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Secuencia 2: slalom entre 5 conos - 5 m."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Secuencia 3: saltos sobre 3 obstáculos bajos - 3 m."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Secuencia 4: recibir pase y finalizar a portería."
+      }
+    ],
+    "explicacion_breve": "Circuito de 4 secuencias: escalera, slalom entre conos, saltos sobre obstáculos y finalización a portería tras recibir un pase.",
+    "leyenda": "Azul: jugador · Escalera/conos/vallas: secuencias · Balón: pase · Portería: finalización"
+  },
+  "detalle": {
+    "objetivos": [
+      "Integrar escalera, slalom, salto y finalización en secuencia realista."
+    ],
+    "claves_entrenador": [
+      "Es un circuito realista, no un test. La calidad de la finalización importa más que el tiempo."
+    ],
+    "montaje": [
+      "Secuencia 1: escalera (patrón a elección) - 5 m."
+    ],
+    "desarrollo": [
+      "Secuencia 1: escalera (patrón a elección) - 5 m.",
+      "Secuencia 2: slalom entre 5 conos - 5 m.",
+      "Secuencia 3: saltos sobre 3 obstáculos bajos - 3 m.",
+      "Secuencia 4: recibir pase y finalizar a portería."
+    ],
+    "que_buscamos": [
+      "Coordinación",
+      "Finalización",
+      "Circuito"
+    ],
+    "que_observar": [
+      "Calidad de la finalización.",
+      "Encadenar las secuencias.",
+      "Control antes del remate."
+    ],
+    "correcciones": [
+      "Priorizar la calidad de la finalización.",
+      "No correr por correr."
+    ],
+    "reglas": [
+      "Escalera, slalom, saltos y finalización.",
+      "Recibir pase antes de rematar.",
+      "Calidad en la finalización."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cronometrar el circuito completo y competir por mejor tiempo entre jugadores."
+    ],
+    "variantes": [
+      "Fútbol 7: 3+ mínimo. · 15-20 min.",
+      "Fútbol 11: 3+ mínimo. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 019",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-019-CIRCUITO-COORDINATIVO-COMPLETO/CampoBase_Circuito_Coordinativo_Completo_v4.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-019-CIRCUITO-COORDINATIVO-COMPLETO/frames/f",
+    "total": 72,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-020-REACCION-PELOTAS-TENIS",
+  "nombre": "Reacción con pelotas de tenis",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Reflejos oculares",
+      "Coordinación óculo-manual",
+      "Velocidad de reacción"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (uno tira, otro reacciona)"
+    },
+    "material": "2 pelotas de tenis",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Jugador de pie frente al compañero a 2 m de distancia, brazos abajo."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Compañero suelta o tira SUAVEMENTE una pelota. Jugador debe agarrarla antes del primer bote."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Progresivamente, compañero tira DOS pelotas simultáneas (una a cada mano)."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "3 series de 20 segundos, 30 segundos de descanso."
+      }
+    ],
+    "explicacion_breve": "El compañero suelta una pelota de tenis y el jugador debe agarrarla antes del primer bote; luego se progresa a dos pelotas simultáneas.",
+    "leyenda": "Azul: jugador · Amarillo: compañero · Pelota: cae · Flecha azul: reacción"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar reflejos oculares, coordinación óculo-manual y velocidad de reacción."
+    ],
+    "claves_entrenador": [
+      "La postura de espera es CLAVE — rodillas semiflexionadas, brazos relajados listos para reaccionar."
+    ],
+    "montaje": [
+      "Jugador de pie frente al compañero a 2 m de distancia, brazos abajo."
+    ],
+    "desarrollo": [
+      "Jugador de pie frente al compañero a 2 m de distancia, brazos abajo.",
+      "Compañero suelta o tira SUAVEMENTE una pelota. Jugador debe agarrarla antes del primer bote.",
+      "Progresivamente, compañero tira DOS pelotas simultáneas (una a cada mano).",
+      "3 series de 20 segundos, 30 segundos de descanso."
+    ],
+    "que_buscamos": [
+      "Reflejos oculares",
+      "Coordinación óculo-manual",
+      "Velocidad de reacción"
+    ],
+    "que_observar": [
+      "Reflejos oculares.",
+      "Coordinación óculo-manual.",
+      "Postura de espera."
+    ],
+    "correcciones": [
+      "Rodillas semiflexionadas.",
+      "Brazos relajados listos para reaccionar."
+    ],
+    "reglas": [
+      "Agarrar antes del primer bote.",
+      "Postura de espera.",
+      "Progresar a dos pelotas."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Variar la altura y velocidad de las pelotas, o usar 3 pelotas de colores con reglas."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (uno tira, otro reacciona). · 6-8 min.",
+      "Fútbol 11: 2 (uno tira, otro reacciona). · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 020",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 3 x 3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-020-REACCION-PELOTAS-TENIS/CampoBase_Reaccion_Pelotas_Tenis_v4.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-020-REACCION-PELOTAS-TENIS/frames/f",
+    "total": 48,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-021-ESPEJO-COMPANERO",
+  "nombre": "Espejo del compañero (mirroring)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Reacción visual",
+      "Anticipación"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "Ninguno",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Dos jugadores frente a frente separados por 2 metros."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Uno es 'líder' y se mueve libremente (adelante, atrás, laterales, saltos suaves)."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "El otro debe COPIAR sus movimientos como si fuera un espejo, en tiempo real."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Cambiar roles cada 30 segundos. 6-8 rondas."
+      }
+    ],
+    "explicacion_breve": "Dos jugadores frente a frente: uno es líder y se mueve libremente, el otro copia sus movimientos como un espejo en tiempo real, cambiando roles cada 30 segundos.",
+    "leyenda": "Azul: líder (A) · Amarillo: espejo (B) · Flecha: movimiento"
+  },
+  "detalle": {
+    "objetivos": [
+      "Desarrollar reacción visual y capacidad de anticipación en 1v1."
+    ],
+    "claves_entrenador": [
+      "El objetivo NO es imitar exacto — es reaccionar rápido. Mirar caderas del líder, no pies."
+    ],
+    "montaje": [
+      "Dos jugadores frente a frente separados por 2 metros."
+    ],
+    "desarrollo": [
+      "Dos jugadores frente a frente separados por 2 metros.",
+      "Uno es 'líder' y se mueve libremente (adelante, atrás, laterales, saltos suaves).",
+      "El otro debe COPIAR sus movimientos como si fuera un espejo, en tiempo real.",
+      "Cambiar roles cada 30 segundos. 6-8 rondas."
+    ],
+    "que_buscamos": [
+      "Reacción visual",
+      "Anticipación"
+    ],
+    "que_observar": [
+      "Reacción rápida.",
+      "Anticipación.",
+      "Mirada a las caderas."
+    ],
+    "correcciones": [
+      "Mirar las caderas, no los pies.",
+      "Reaccionar rápido, no imitar exacto."
+    ],
+    "reglas": [
+      "Copiar en tiempo real.",
+      "Cambiar roles cada 30 s.",
+      "Mirar las caderas del líder."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar balón (líder conduce, seguidor debe reflejar sin balón), o hacer 2v2."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 8-10 min.",
+      "Fútbol 11: 2 por pareja. · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 021",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media-alta.",
+        "Espacio: 5 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-021-ESPEJO-COMPANERO/CampoBase_Espejo_Companero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-021-ESPEJO-COMPANERO/frames/f",
+    "total": 40,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-022-AGILIDAD-REACTIVA-1V1",
+  "nombre": "Agilidad reactiva 1v1 sin balón (sombreado)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Agilidad",
+      "Marcaje individual"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "4 conos delimitando zona",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Delimitar una zona rectangular con 4 conos."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Un jugador es 'atacante' — se mueve libremente por la zona sin balón, cambiando de dirección."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Otro es 'defensor' — debe seguirlo a 1-2 m de distancia, sin dejarse superar."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "60 segundos por ronda. Cambio de roles. 4-6 rondas."
+      }
+    ],
+    "explicacion_breve": "En una zona rectangular, el atacante se mueve libremente sin balón y el defensor lo sigue a 1-2 m sin dejarse superar, durante 60 segundos por ronda.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Flecha azul: movimiento"
+  },
+  "detalle": {
+    "objetivos": [
+      "Transferir agilidad al gesto real de marcaje individual."
+    ],
+    "claves_entrenador": [
+      "El defensor debe mirar el CENTRO DE GRAVEDAD del atacante (caderas), no los pies o el balón."
+    ],
+    "montaje": [
+      "Delimitar una zona rectangular con 4 conos."
+    ],
+    "desarrollo": [
+      "Delimitar una zona rectangular con 4 conos.",
+      "Un jugador es 'atacante' — se mueve libremente por la zona sin balón, cambiando de dirección.",
+      "Otro es 'defensor' — debe seguirlo a 1-2 m de distancia, sin dejarse superar.",
+      "60 segundos por ronda. Cambio de roles. 4-6 rondas."
+    ],
+    "que_buscamos": [
+      "Agilidad",
+      "Marcaje individual"
+    ],
+    "que_observar": [
+      "Distancia de marcaje.",
+      "Centro de gravedad del atacante.",
+      "Cambios de dirección."
+    ],
+    "correcciones": [
+      "Mirar las caderas del atacante.",
+      "Mantener 1-2 m de distancia."
+    ],
+    "reglas": [
+      "Seguir a 1-2 m.",
+      "No dejarse superar.",
+      "Cambiar roles cada 60 s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar un balón al atacante. Convertir en 1v1 real con posesión."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 022",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 8 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-022-AGILIDAD-REACTIVA-1V1/CampoBase_Agilidad_Reactiva_1v1.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-022-AGILIDAD-REACTIVA-1V1/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-023-CIRCUITO-COORDINACION-MOTORA",
+  "nombre": "Circuito de coordinación motora general",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Coordinación motora",
+      "Agilidad"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 10,
+      "organizacion": "1-10, uno por turno"
+    },
+    "material": "Escalera, 3 aros, 2 conos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Secuencia 1: escalera (2 pies por cuadro) - 3 m."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Secuencia 2: 3 aros en zigzag - 1 pie en cada uno."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Secuencia 3: salto a pies juntos entre 2 conos (1 m), con bote en medio."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Secuencia 4: trote suave de vuelta al punto inicial."
+      }
+    ],
+    "explicacion_breve": "Circuito de 4 secuencias: escalera, 3 aros en zigzag, salto a pies juntos entre 2 conos (con bote en medio) y trote de vuelta.",
+    "leyenda": "Azul: jugador · Escalera/aros/conos: secuencias · Flecha azul: recorrido"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar movimientos coordinativos variados en un solo bloque de trabajo."
+    ],
+    "claves_entrenador": [
+      "Al inicio, hacer TODO el circuito lento — enfocado en técnica. La velocidad se agrega semanas después."
+    ],
+    "montaje": [
+      "Secuencia 1: escalera (2 pies por cuadro) - 3 m."
+    ],
+    "desarrollo": [
+      "Secuencia 1: escalera (2 pies por cuadro) - 3 m.",
+      "Secuencia 2: 3 aros en zigzag - 1 pie en cada uno.",
+      "Secuencia 3: salto a pies juntos entre 2 conos (1 m), con bote en medio.",
+      "Secuencia 4: trote suave de vuelta al punto inicial."
+    ],
+    "que_buscamos": [
+      "Coordinación motora",
+      "Agilidad"
+    ],
+    "que_observar": [
+      "Técnica de cada secuencia.",
+      "Bote en medio entre conos.",
+      "Ritmo controlado."
+    ],
+    "correcciones": [
+      "Hacerlo lento al inicio.",
+      "Enfocarse en la técnica."
+    ],
+    "reglas": [
+      "Escalera, aros, salto y trote.",
+      "Bote en medio entre los conos.",
+      "Técnica antes que velocidad."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar dificultad de escalera (Icky Shuffle) y agregar balón conducido en la vuelta."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-10, uno por turno. · 10-12 min.",
+      "Fútbol 11: 1-10, uno por turno. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 023",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: 12 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-023-CIRCUITO-COORDINACION-MOTORA/CampoBase_Circuito_Coordinacion_Motora.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-023-CIRCUITO-COORDINACION-MOTORA/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-024-OCHO-INVERTIDO-CONOS",
+  "nombre": "Ocho invertido con conos (figura 8)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Giros continuos",
+      "Desaceleración",
+      "Equilibrio dinámico"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 8,
+      "organizacion": "1-8, uno por turno"
+    },
+    "material": "2 conos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 2 conos separados por 3 metros."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador dibuja con su carrera un OCHO alrededor de los conos, sin detenerse."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Girar SIEMPRE por el lado externo del cono."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "30-40 segundos de trabajo, 30 segundos de descanso. 4-5 series."
+      }
+    ],
+    "explicacion_breve": "El jugador dibuja con su carrera un ocho alrededor de 2 conos separados por 3 m, girando siempre por el lado externo, sin detenerse.",
+    "leyenda": "Azul: jugador · Cono naranja: marcador · Círculo azul: figura 8"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar giros continuos, desaceleración y equilibrio dinámico."
+    ],
+    "claves_entrenador": [
+      "Al girar, apoyar bien el pie externo y usar el interno para impulsar la salida."
+    ],
+    "montaje": [
+      "Colocar 2 conos separados por 3 metros."
+    ],
+    "desarrollo": [
+      "Colocar 2 conos separados por 3 metros.",
+      "Jugador dibuja con su carrera un OCHO alrededor de los conos, sin detenerse.",
+      "Girar SIEMPRE por el lado externo del cono.",
+      "30-40 segundos de trabajo, 30 segundos de descanso. 4-5 series."
+    ],
+    "que_buscamos": [
+      "Giros continuos",
+      "Desaceleración",
+      "Equilibrio dinámico"
+    ],
+    "que_observar": [
+      "Giros continuos.",
+      "Pie externo al girar.",
+      "Equilibrio dinámico."
+    ],
+    "correcciones": [
+      "Apoyar el pie externo.",
+      "Impulsar con el pie interno."
+    ],
+    "reglas": [
+      "Dibujar un ocho.",
+      "Girar por el lado externo.",
+      "Sin detenerse."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un balón conducido durante los ochos, alternando pies según el cono."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-8, uno por turno. · 6-8 min.",
+      "Fútbol 11: 1-8, uno por turno. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 024",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 6 x 3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-024-OCHO-INVERTIDO-CONOS/CampoBase_Ocho_Invertido_Conos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-024-OCHO-INVERTIDO-CONOS/frames/f",
+    "total": 50,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-025-COORDINACION-PAREJA-PASE",
+  "nombre": "Coordinación en pareja — pase con cambio de dirección",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Agilidad y coordinación",
+    "que_se_trabaja": [
+      "Coordinación",
+      "Pase",
+      "Control"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón, 4 conos",
+    "series": [
+      {
+        "nombre": "Secuencia 1",
+        "instruccion": "Colocar 2 conos en línea para cada jugador (2 líneas paralelas separadas por 5 m)."
+      },
+      {
+        "nombre": "Secuencia 2",
+        "instruccion": "Jugador A pasa a Jugador B, y hace slalom por los conos de su lado hasta el otro extremo."
+      },
+      {
+        "nombre": "Secuencia 3",
+        "instruccion": "Jugador B controla, pasa de vuelta a A, y hace su propio slalom."
+      },
+      {
+        "nombre": "Secuencia 4",
+        "instruccion": "Trabajo continuo 45 segundos. Descanso 30. Repetir 5 veces."
+      }
+    ],
+    "explicacion_breve": "Dos jugadores se pasan el balón y, tras cada pase, cada uno hace slalom por los 2 conos de su línea, en trabajo continuo de 45 segundos.",
+    "leyenda": "Azul: jugador A · Amarillo: jugador B · Cono naranja: slalom · Balón: pase · Flecha azul discontinua: pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Integrar coordinación pura al gesto técnico de pase y control."
+    ],
+    "claves_entrenador": [
+      "B conserva el balón y espera a que A complete el slalom y vuelva a su posición antes de devolver el pase."
+    ],
+    "montaje": [
+      "Colocar 2 conos en línea para cada jugador (2 líneas paralelas separadas por 5 m)."
+    ],
+    "desarrollo": [
+      "Colocar 2 conos en línea para cada jugador (2 líneas paralelas separadas por 5 m).",
+      "Jugador A pasa a Jugador B, y hace slalom por los conos de su lado hasta el otro extremo.",
+      "Jugador B controla, pasa de vuelta a A, y hace su propio slalom.",
+      "Trabajo continuo 45 segundos. Descanso 30. Repetir 5 veces."
+    ],
+    "que_buscamos": [
+      "Coordinación",
+      "Pase",
+      "Control"
+    ],
+    "que_observar": [
+      "Timing del pase.",
+      "Control antes de pasar.",
+      "Slalom por los conos."
+    ],
+    "correcciones": [
+      "Esperar a que el compañero vuelva antes de pasar.",
+      "Controlar antes de pasar."
+    ],
+    "reglas": [
+      "Pasar y hacer slalom.",
+      "2 conos por jugador.",
+      "Trabajo continuo 45 s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Alternar pases con pie no dominante en cada segunda repetición."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 1 Agilidad y Coordinación, ejercicio 025",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 10 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-025-COORDINACION-PAREJA-PASE/CampoBase_Coordinacion_Pareja_Pase_v4.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-025-COORDINACION-PAREJA-PASE/frames/f",
+    "total": 84,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
