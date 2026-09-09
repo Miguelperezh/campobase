@@ -3,3 +3,6 @@ import './beta-v6-data.js';
 import './beta-v6-shell.js';
 import './beta-v6-training.js';
 import './beta-v6-crud.js';
+
+const closeMoreOnNavigation=new MutationObserver((mutations)=>{if(!mutations.some(m=>m.target?.classList?.contains('view')&&m.target.classList.contains('active')))return;const d=document.querySelector('#fc-v6-more');if(d?.open)d.close();});
+closeMoreOnNavigation.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
