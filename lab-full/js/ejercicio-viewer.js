@@ -1,27 +1,22 @@
 // Renderizador y reproductor de la ficha de ejercicio validado.
-// Vista rápida (textos + vídeo protagonista) + "Ver detalles" + tiempo editable.
-// El GIF se convierte a MP4 y se reproduce con <video> nativo (fluidez real,
-// sin efecto "fotogramas"). Las pausas entre variantes se conservan en el MP4.
+// La ficha no descarga el MP4 al renderizarse. Cuando entra en pantalla se carga
+// únicamente ese MP4 para mostrar su primer fotograma; al pulsar ▶ se reproduce.
 
 import { renderVideoSectionHTML } from './ejercicio-videos.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
-
 const list = (values) => `<ul class="plain-list">${(values || []).map((v) => `<li>${esc(v)}</li>`).join('')}</ul>`;
 
 export function renderValidatedExerciseHTML(item, options = {}) {
   const vr = item.vista_rapida || {};
   const det = item.detalle || {};
   const anim = item.animacion || {};
-  const videoSrc = (anim.gif || '').replace(/\.gif$/i, '.mp4');
+  const videoSrc = anim.mp4 || (anim.gif || '').replace(/\.gif$/i, '.mp4');
   const realVideo = item.video || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
-
   const pillsTrabaja = (vr.que_se_trabaja || []).map((t) => `<span class="pill trabaja">${esc(t)}</span>`).join('');
 
-  // Series: si todas comparten la misma instrucción (o el mismo núcleo), se muestra
-  // el texto una sola vez y solo se indica cuántas series son. Si difieren, se muestra cada una.
   const seriesList = vr.series || [];
   const normalizar = (t) => (t || '').trim().replace(/la misma\s+/gi, 'la ');
   const nucleo = (t) => normalizar(t).split('.')[0].trim();
@@ -31,9 +26,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   if (todasIguales) {
     series = `<div class="serie"><span class="n">${seriesList.length}×</span><div class="t">${esc(seriesList[0].instruccion)}</div></div>`;
   } else {
-    series = seriesList.map((s, i) =>
-      `<div class="serie"><span class="n">${i + 1}</span><div class="t">${esc(s.instruccion)}</div></div>`
-    ).join('');
+    series = seriesList.map((s, i) => `<div class="serie"><span class="n">${i + 1}</span><div class="t">${esc(s.instruccion)}</div></div>`).join('');
   }
 
   const detalleBloques = [
@@ -51,12 +44,12 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   ].filter(([, v]) => Array.isArray(v) && v.length)
     .map(([titulo, valores]) => `<h3>${esc(titulo)}</h3>${list(valores)}`).join('');
 
-  const fuente = det.fuente || {};
-  // La línea "Fuente: ..." se ha retirado de la ficha por decisión de Migue.
-  // Se conserva el objeto `fuente` en el JSON (no se borra), pero no se muestra.
+  const placeholder = videoSrc
+    ? '<div class="video-placeholder" style="display:flex;position:absolute;inset:0;z-index:2;align-items:center;justify-content:center;padding:1rem;text-align:center;background:#0c3b2e;color:#fff">Cargando vista previa…</div>'
+    : '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff">Demostración no disponible</div>';
 
   return `
-  <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}">
+  <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}" style="content-visibility:auto;contain-intrinsic-size:auto 900px">
     <div class="pills">
       <span class="pill tipo">${esc(vr.tipo_principal)}</span>
       ${pillsTrabaja}
@@ -73,7 +66,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="explicacion">${esc(vr.explicacion_breve)}</div>
 
     <div class="player">
-      <div class="stage"><video class="frame-video" src="${esc(videoSrc)}" playsinline muted loop preload="auto"></video></div>
+      <div class="stage" style="position:relative">${placeholder}<video class="frame-video" data-src="${esc(videoSrc)}" playsinline muted loop preload="none" style="display:block"></video></div>
       <div class="controls">
         <button type="button" class="btn-prev" title="Paso anterior">⏮</button>
         <button type="button" class="btn-play primary" title="Reproducir / Pausar">▶</button>
@@ -123,18 +116,78 @@ function parseDuration(text) {
   return single ? Number(single[1]) : 15;
 }
 
-// Inicializa el reproductor y el visor de un contenedor de ficha validada.
 export function initValidatedExerciseViewer(root) {
   if (!root || root.dataset._viewerInit) return;
   root.dataset._viewerInit = '1';
 
   const video = root.querySelector('.frame-video');
   const stage = root.querySelector('.stage');
+  const placeholder = root.querySelector('.video-placeholder');
   const btnPlay = root.querySelector('.btn-play');
   const lb = root.querySelector('.lightbox');
   const lbPlay = root.querySelector('.lb-play');
 
-  let speed = 1; // playbackRate inicial (1× = velocidad real del GIF)
+  let speed = 1;
+  let loadPromise = null;
+
+  function setPlaceholder(text, hidden = false) {
+    if (!placeholder) return;
+    placeholder.textContent = text;
+    placeholder.style.display = hidden ? 'none' : 'flex';
+  }
+
+  function ensureVideoLoaded(previewOnly = false) {
+    if (!video) return Promise.resolve(false);
+    const src = video.dataset.src;
+    if (!src) return Promise.resolve(false);
+    if (video.readyState >= 2 && video.getAttribute('src')) {
+      setPlaceholder('', true);
+      return Promise.resolve(true);
+    }
+    if (loadPromise) return loadPromise;
+
+    setPlaceholder(previewOnly ? 'Cargando vista previa…' : 'Cargando demostración…');
+    if (!video.getAttribute('src')) video.src = src;
+    video.preload = previewOnly ? 'metadata' : 'auto';
+    video.load();
+
+    loadPromise = new Promise((resolve) => {
+      const ready = () => {
+        cleanup();
+        video.pause();
+        try { video.currentTime = 0; } catch {}
+        setPlaceholder('', true);
+        resolve(true);
+      };
+      const failed = () => {
+        cleanup();
+        setPlaceholder('No se pudo cargar la demostración. Comprueba la conexión y vuelve a intentarlo.');
+        video.removeAttribute('src');
+        video.load();
+        loadPromise = null;
+        resolve(false);
+      };
+      const cleanup = () => {
+        video.removeEventListener('loadeddata', ready);
+        video.removeEventListener('error', failed);
+      };
+      if (video.readyState >= 2) return ready();
+      video.addEventListener('loadeddata', ready, { once: true });
+      video.addEventListener('error', failed, { once: true });
+    });
+    return loadPromise;
+  }
+
+  if (video?.dataset.src) {
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        ensureVideoLoaded(true);
+      }, { rootMargin: '300px 0px' });
+      observer.observe(root);
+    }
+  }
 
   function setSpeed(s) {
     speed = s;
@@ -142,24 +195,32 @@ export function initValidatedExerciseViewer(root) {
     root.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
   }
 
-  function play() {
-    if (!video) return;
-    video.play();
-    btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
-    window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+  async function play() {
+    if (!video || !await ensureVideoLoaded(false)) return;
+    try {
+      video.playbackRate = speed;
+      await video.play();
+      btnPlay.textContent = '⏸';
+      lbPlay.textContent = '⏸';
+      window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+    } catch {
+      setPlaceholder('Pulsa ▶ de nuevo para reproducir la demostración.');
+    }
   }
+
   function pause() {
     if (!video) return;
     if (!video.paused) window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
     video.pause();
-    btnPlay.textContent = '▶'; lbPlay.textContent = '▶';
+    btnPlay.textContent = '▶';
+    lbPlay.textContent = '▶';
   }
-  function toggle() { (video && video.paused) ? play() : pause(); }
 
-  // Paso a paso: avanza/retrocede ~1 frame (los GIFs van a ~8 fps).
+  function toggle() { video && video.paused ? play() : pause(); }
+
   const STEP = 0.125;
-  function step(delta) {
-    if (!video) return;
+  async function step(delta) {
+    if (!video || !await ensureVideoLoaded(false)) return;
     pause();
     const d = video.duration || 0;
     video.currentTime = Math.max(0, Math.min(d, video.currentTime + delta));
@@ -169,15 +230,12 @@ export function initValidatedExerciseViewer(root) {
   lbPlay.addEventListener('click', toggle);
   root.querySelector('.btn-prev').addEventListener('click', () => step(-STEP));
   root.querySelector('.btn-next').addEventListener('click', () => step(STEP));
-  root.querySelector('.btn-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
+  root.querySelector('.btn-restart').addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded(false)) video.currentTime = 0; });
   root.querySelector('.lb-prev').addEventListener('click', () => step(-STEP));
   root.querySelector('.lb-next').addEventListener('click', () => step(STEP));
-  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
-  root.querySelectorAll('.speed button').forEach((b) => {
-    b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s'))));
-  });
+  root.querySelector('.lb-restart').addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded(false)) video.currentTime = 0; });
+  root.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s')))));
 
-  // Detalle
   const detalle = root.querySelector('.detalle');
   const btnDetalle = root.querySelector('.btn-detalle');
   btnDetalle.addEventListener('click', () => {
@@ -185,10 +243,9 @@ export function initValidatedExerciseViewer(root) {
     btnDetalle.textContent = detalle.classList.contains('open') ? 'Ocultar detalles' : 'Ver detalles';
   });
 
-  // Pantalla completa: mueve el vídeo al lightbox (un solo elemento, un solo estado).
   const btnFull = root.querySelector('.btn-full');
-  btnFull.addEventListener('click', () => {
-    if (!video) return;
+  btnFull.addEventListener('click', async () => {
+    if (!video || !await ensureVideoLoaded(false)) return;
     const wasPlaying = !video.paused;
     const t = video.currentTime;
     lb.appendChild(video);
@@ -198,7 +255,6 @@ export function initValidatedExerciseViewer(root) {
     resetLightbox(lb);
   });
 
-  // Vídeo real (demostración): visor a pantalla completa con play/pausa + velocidad + cerrar.
   const realVideoEl = root.querySelector('.real-video-el');
   const realVideoLb = root.querySelector('.real-video-lightbox');
   const realVideoFull = root.querySelector('.real-video-full');
@@ -242,13 +298,13 @@ export function initValidatedExerciseViewer(root) {
   setSpeed(speed);
 }
 
-// Visor genérico (se crea una vez por ficha en el HTML; aquí se inicializa el comportamiento).
 function resetLightbox(box) {
   box.dataset.zoom = '1';
   box.dataset.tx = '0';
   box.dataset.ty = '0';
   applyLightbox(box);
 }
+
 function applyLightbox(box) {
   const el = box.querySelector('.frame-video');
   if (!el) return;
@@ -258,7 +314,6 @@ function applyLightbox(box) {
   el.style.transform = `translate(${tx}px,${ty}px) scale(${z})`;
 }
 
-// Se llama desde app.js tras insertar el HTML, para conectar el visor de cada ficha.
 export function attachLightbox(root) {
   const box = root.querySelector('.lightbox');
   if (!box || box.dataset._lbInit) return;
@@ -280,10 +335,8 @@ export function attachLightbox(root) {
   }
 
   box.addEventListener('click', (e) => { if (e.target === box) close(); });
-
   const lbClose = box.querySelector('.lb-close');
   if (lbClose) lbClose.addEventListener('click', close);
-
   const lbCloseFull = box.querySelector('.tg-close-full');
   if (lbCloseFull) lbCloseFull.addEventListener('click', close);
 
@@ -292,7 +345,7 @@ export function attachLightbox(root) {
     const el = box.querySelector('.frame-video');
     if (!el) return;
     const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-    let z = Number(box.dataset.zoom || 1);
+    const z = Number(box.dataset.zoom || 1);
     const nz = Math.max(MINZ, Math.min(MAXZ, z * factor));
     const rect = el.getBoundingClientRect();
     const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
@@ -337,7 +390,9 @@ export function attachLightbox(root) {
       const a = e.touches[0], b = e.touches[1];
       const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
       const nz = Math.max(MINZ, Math.min(MAXZ, pinch.zoom * (d / pinch.dist)));
-      const rect = box.querySelector('.frame-video').getBoundingClientRect();
+      const frameVideo = box.querySelector('.frame-video');
+      if (!frameVideo) return;
+      const rect = frameVideo.getBoundingClientRect();
       const k = nz / Number(box.dataset.zoom || 1);
       const cx = pinch.cx - rect.left, cy = pinch.cy - rect.top;
       let tx = Number(box.dataset.tx || 0), ty = Number(box.dataset.ty || 0);
