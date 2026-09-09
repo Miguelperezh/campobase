@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0';
+const CACHE = 'campobase-v2.44.0-hotfix-partido';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/domain.js', './js/demo-session.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/ejercicios-validados.js', './js/ejercicio-viewer.js', './js/ejercicio-videos.js', './js/frame-durations.js', './js/tactics.js', './js/live-tactics.js', './js/tacticas-interactivas.js', './js/tactica-viewer.js', './js/tactica-frame-durations.js', './js/tactica-1231-frames.js', './js/tactica-1213-frames.js', './js/tactica-1321-frames.js', './js/tactica-1222-frames.js', './js/tactica-1132-frames.js', './js/tactica-133-frames.js', './js/tactica-1312-frames.js', './js/tactica-final-frames.js', './js/tactica-11311-frames.js', './js/tactica-1141-frames.js', './js/tactica-1411-frames.js', './js/tactica-12211-frames.js', './js/tactic-board-controller.js', './js/tactica-guia-viewer.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js',
@@ -16,22 +16,26 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first: siempre intenta la red primero (versión más reciente).
-// Solo cae a caché si no hay conexión. Así las actualizaciones se ven al instante.
+// Stale-while-revalidate para el shell: si el archivo ya está en caché se sirve
+// inmediatamente. La red actualiza la copia en segundo plano, pero nunca bloquea
+// el arranque por una cobertura débil o una conexión que figura como online.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  const network = fetch(event.request).then((response) => {
+    if (response.ok) {
+      const copy = response.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    }
+    return response;
+  });
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('./index.html')))
+    caches.match(event.request).then((cached) => cached ?? network)
+      .catch(() => caches.match('./index.html'))
   );
+
+  event.waitUntil(network.catch(() => undefined));
 });
