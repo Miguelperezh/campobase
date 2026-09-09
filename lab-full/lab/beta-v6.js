@@ -4,5 +4,12 @@ import './beta-v6-shell.js';
 import './beta-v6-training.js';
 import './beta-v6-crud.js';
 
-const closeMoreOnNavigation=new MutationObserver((mutations)=>{if(!mutations.some(m=>m.target?.classList?.contains('view')&&m.target.classList.contains('active')))return;const d=document.querySelector('#fc-v6-more');if(d?.open)d.close();});
-closeMoreOnNavigation.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+const extraViews=new Set(['fc-hub-analisis','fc-hub-ajustes','fc-informes','fc-identidad','ajustes','fc-postpartido','fc-planificacion']);
+const syncExtraNavigation=new MutationObserver((mutations)=>{
+  if(!mutations.some(m=>m.target?.classList?.contains('view')&&m.target.classList.contains('active')))return;
+  const active=document.querySelector('.view.active')?.id||'';
+  const more=document.querySelector('#fc-v6-more');if(more?.open)more.close();
+  const moreButton=document.querySelector('#fc-v6-nav [data-group="mas"]');
+  if(moreButton)moreButton.classList.toggle('active',extraViews.has(active));
+});
+syncExtraNavigation.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
