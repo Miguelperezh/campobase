@@ -3,111 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>FútbolControl · Preview integral</title>
+  <meta name="theme-color" content="#102f28">
+  <title>FútbolControl · Beta funcional aislada</title>
   <style>
     *{box-sizing:border-box}body{margin:0;background:#eef2f0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17211d}
     .lab-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#102f28;color:#fff;font-size:13px}
-    .lab-banner strong{font-size:14px}.lab-banner span{opacity:.85}.frame-wrap{width:100%;background:#fff}.frame{display:block;width:100%;height:1500px;border:0;background:white}
-    @media(max-width:700px){.frame{height:1850px}.lab-banner{padding:8px 10px}}
+    .lab-banner strong{font-size:14px}.lab-banner span{opacity:.86}.frame{display:block;width:100%;height:2200px;border:0;background:#fff}
+    @media(max-width:720px){.frame{height:2800px}.lab-banner{padding:8px 10px}}
   </style>
 </head>
 <body>
-  <div class="lab-banner"><strong>FútbolControl · Laboratorio integral</strong><span>Copia completa aislada · sin Supabase real · datos ficticios</span></div>
-  <div class="frame-wrap"><iframe id="fcapp" class="frame" src="index.html" title="FútbolControl laboratorio"></iframe></div>
-<script>
-const frame=document.getElementById('fcapp');
-frame.addEventListener('load',()=>{
-  const d=frame.contentDocument,w=frame.contentWindow;if(!d)return;
-  const auth=d.querySelector('#auth-dialog');try{if(auth&&auth.open)auth.close()}catch(e){}
-  d.body.classList.remove('auth-locked');
-  d.title='FútbolControl · Laboratorio';
-  const brand=d.querySelector('.topbar-brand');
-  if(brand){const img=brand.querySelector('img');if(img){img.src='lab/futbolcontrol-logo.svg';img.alt='FútbolControl';}const eye=brand.querySelector('.eyebrow');if(eye)eye.textContent='Gestión integral de fútbol';const h=brand.querySelector('h1');if(h)h.textContent='FútbolControl';}
-  const role=d.querySelector('#role-label');if(role)role.textContent='Entrenador · LAB';
-  const net=d.querySelector('#network-label');if(net){net.textContent='LAB · Solo local';net.title='Esta copia no lee ni escribe el Supabase real.';}
-  const logout=d.querySelector('#logout');if(logout)logout.style.display='none';
-  const style=d.createElement('style');style.textContent=`
-    :root{--fc-primary:#0b5b49;--fc-secondary:#16211d;--fc-accent:#c3a654}
-    .topbar{background:var(--fc-primary)!important}.topbar-brand .club-crest{object-fit:contain;background:#fff;border-radius:12px;padding:3px}
-    .primary{background:var(--fc-primary)!important;border-color:var(--fc-primary)!important}.bottom-nav button.active{color:var(--fc-primary)!important;border-color:var(--fc-primary)!important}
-    .fc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.fc-card{border:1px solid #dce4e0;border-radius:14px;padding:16px;background:#fff}.fc-card h3,.fc-card h4{margin-top:0}
-    .fc-kpi{font-size:30px;font-weight:800;line-height:1}.fc-muted{color:#66736d;font-size:.9rem}.fc-tag{display:inline-block;padding:4px 9px;border-radius:999px;background:#e7f1ed;color:#184d3f;font-size:.78rem;font-weight:700;margin:2px}
-    .fc-tag.warn{background:#fff2d6;color:#704c00}.fc-tag.bad{background:#fde6e6;color:#7d2222}.fc-tag.good{background:#e3f5e9;color:#24623a}.fc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .fc-bar{height:9px;background:#e7ece9;border-radius:999px;overflow:hidden;margin-top:5px}.fc-bar>span{display:block;height:100%;background:var(--fc-primary);border-radius:999px}
-    .fc-table{width:100%;border-collapse:collapse;font-size:.9rem}.fc-table th,.fc-table td{padding:9px 7px;border-bottom:1px solid #e5eae7;text-align:left}.fc-table th{font-size:.78rem;color:#65736c;text-transform:uppercase}
-    .fc-form{display:grid;gap:10px}.fc-form label{display:grid;gap:5px;font-weight:650}.fc-form input,.fc-form select,.fc-form textarea{font:inherit;padding:10px;border:1px solid #ccd6d1;border-radius:9px;background:#fff}.fc-form textarea{min-height:78px;resize:vertical}
-    .fc-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:650px){.fc-two{grid-template-columns:1fr}.fc-table{font-size:.82rem}}
-    .fc-section-title{margin:2px 0 14px}.fc-note{padding:11px 13px;border-left:4px solid var(--fc-accent);background:#faf7eb;border-radius:6px;margin:10px 0}
-    .fc-score{display:flex;gap:5px;flex-wrap:wrap}.fc-score button{min-width:38px;height:38px;border-radius:9px;border:1px solid #cdd7d2;background:#fff}.fc-score button.on{background:var(--fc-primary);color:#fff;border-color:var(--fc-primary)}
-    .fc-crest-preview{width:72px;height:72px;border-radius:14px;border:1px solid #d7dfdb;object-fit:contain;background:#fff;padding:5px}.fc-color-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.fc-color-row input[type=color]{width:100%;height:46px;padding:3px}
-    .fc-report{border:1px solid #d9e0dc;border-radius:14px;padding:18px;background:linear-gradient(180deg,#fff,#f7faf8)}
-    .fc-nav-new{font-weight:800}.fc-lab-ribbon{background:#fff4c8;color:#644c00;padding:8px 12px;text-align:center;font-size:.82rem;border-bottom:1px solid #e8d99a}
-  `;d.head.appendChild(style);
-
-  const top=d.querySelector('.topbar');if(top){const ribbon=d.createElement('div');ribbon.className='fc-lab-ribbon';ribbon.textContent='PREVIEW FÚTBOLCONTROL · Copia completa aislada · los cambios se guardan solo en este navegador';top.insertAdjacentElement('afterend',ribbon);}
-
-  const main=d.querySelector('#app'),nav=d.querySelector('.bottom-nav');if(!main||!nav)return;
-  const make=(id,label,html)=>{const s=d.createElement('section');s.id=id;s.className='view';s.innerHTML=`<div class="section-head"><div><p class="eyebrow">FútbolControl Beta</p><h2 class="fc-section-title">${label}</h2></div></div>${html}`;main.prepend(s);return s;};
-
-  make('fc-identidad','Identidad del equipo',`
-    <div class="fc-two"><article class="panel"><h3>Personalización de club</h3><form id="fc-brand-form" class="fc-form"><label>Nombre del equipo<input id="fc-team-name" value="Atlético Demo Alevín A"></label><label>Escudo del club<input id="fc-crest-input" type="file" accept="image/*"></label><div class="fc-color-row"><label>Principal<input id="fc-primary" type="color" value="#0b5b49"></label><label>Secundario<input id="fc-secondary" type="color" value="#16211d"></label><label>Acento<input id="fc-accent" type="color" value="#c3a654"></label></div><div class="fc-actions"><button type="submit" class="primary">Aplicar identidad</button><button id="fc-brand-reset" type="button" class="secondary">Restablecer</button></div></form></article><article class="panel"><h3>Vista previa</h3><div style="display:flex;align-items:center;gap:14px"><img id="fc-crest-preview" class="fc-crest-preview" src="lab/futbolcontrol-logo.svg" alt="Escudo de prueba"><div><strong id="fc-team-preview">Atlético Demo Alevín A</strong><p class="fc-muted">Los colores se aplican a cabecera, botones, destacados e informes.</p></div></div><div class="fc-note">La identidad visual pertenece al equipo/club, no obliga a cambiar el logo de FútbolControl.</div></article></div>`);
-
-  make('fc-informes','Informes y evolución',`
-    <div class="fc-grid"><article class="fc-card"><h3>Informe de jugador</h3><p>Objetivos, posiciones probadas, asistencia, puntuaciones y evolución.</p><button class="primary fc-report-btn" data-report="player">Vista previa</button></article><article class="fc-card"><h3>Informe postpartido</h3><p>Qué salió bien, prioridades y tareas relacionadas.</p><button class="primary fc-report-btn" data-report="match">Vista previa</button></article><article class="fc-card"><h3>Informe de temporada</h3><p>Principios trabajados, evolución colectiva y objetivos consolidados.</p><button class="primary fc-report-btn" data-report="season">Vista previa</button></article></div><div id="fc-report-preview" class="fc-report" style="margin-top:14px"><strong>Selecciona un informe para ver cómo quedaría.</strong></div>`);
-
-  make('fc-rivales','Rivales',`
-    <div class="fc-two"><div id="fc-rival-list" class="stack"></div><article class="panel"><h3>Nueva ficha de rival</h3><form id="fc-rival-form" class="fc-form"><label>Rival<input name="name" required placeholder="Ej. Unión Sur A"></label><label>Sistema observado<input name="system" placeholder="Ej. 1-2-3-1"></label><label>Fortaleza<input name="strength" placeholder="Ej. presión alta"></label><label>Debilidad<input name="weakness" placeholder="Ej. espacio a espalda de laterales"></label><label>Nota<textarea name="note" placeholder="Qué nos funcionó contra ellos"></textarea></label><button class="primary">Guardar rival</button></form></article></div>`);
-
-  make('fc-combinaciones','Combinaciones de jugadores',`
-    <article class="panel"><div class="section-head"><div><h3>Coincidencias en campo</h3><p class="fc-muted">Evidencia, no sentencia: la app no etiqueta automáticamente una pareja como buena o mala.</p></div></div><div style="overflow:auto"><table class="fc-table"><thead><tr><th>Combinación</th><th>Min juntos</th><th>Partidos</th><th>GF</th><th>GC</th><th>Muestra</th></tr></thead><tbody><tr><td>Álex Martín + Hugo Santana</td><td>126</td><td>4</td><td>5</td><td>2</td><td><span class="fc-tag warn">Baja</span></td></tr><tr><td>Lucas Vega + Mateo Cruz</td><td>214</td><td>7</td><td>8</td><td>6</td><td><span class="fc-tag">Media</span></td></tr><tr><td>Sergio Gil + Iker Ramos</td><td>301</td><td>10</td><td>12</td><td>5</td><td><span class="fc-tag good">Útil</span></td></tr></tbody></table></div><div class="fc-note">Al superar una muestra mínima configurable, FútbolControl puede destacar tendencias, nunca conclusiones absolutas.</div></article>`);
-
-  make('fc-planificacion','Planificación por objetivos',`
-    <div class="fc-two"><article class="panel"><h3>Temporada → mes → semana</h3><div class="fc-card"><strong>Objetivo de temporada</strong><p>Equipo capaz de iniciar, progresar y defender con estructura propia.</p></div><div class="fc-card" style="margin-top:10px"><strong>Septiembre</strong><p><span class="fc-tag">Salida de balón</span><span class="fc-tag">Estructura 1-3-2-1</span><span class="fc-tag">Reacción tras pérdida</span></p></div><div class="fc-card" style="margin-top:10px"><strong>Semana actual</strong><p>Principal: posicionamiento y compensaciones.</p><p>Secundario: reacción inmediata tras pérdida.</p></div></article><article class="panel"><h3>Mapa de necesidades</h3><p>Salida de balón <span class="fc-muted">4/5</span></p><div class="fc-bar"><span style="width:80%"></span></div><p>Reacción tras pérdida <span class="fc-muted">2/5</span></p><div class="fc-bar"><span style="width:40%"></span></div><p>Amplitud <span class="fc-muted">3/5</span></p><div class="fc-bar"><span style="width:60%"></span></div><p>Defensa del centro <span class="fc-muted">3/5</span></p><div class="fc-bar"><span style="width:60%"></span></div><p>Finalización <span class="fc-muted">2/5</span></p><div class="fc-bar"><span style="width:40%"></span></div></article></div><article class="panel" style="margin-top:14px"><h3>Diario rápido del entrenamiento</h3><form id="fc-training-diary" class="fc-form"><div class="fc-two"><label>Objetivo trabajado<input value="Reacción tras pérdida"></label><label>¿Se consiguió?<select><option>1/5</option><option>2/5</option><option selected>3/5</option><option>4/5</option><option>5/5</option></select></label></div><label>Qué funcionó<textarea>La regla de 3 segundos mejoró la reacción de varios jugadores.</textarea></label><label>Qué ajustar<textarea>Reducir explicaciones y repetir con menos espacio.</textarea></label><div class="fc-actions"><button class="primary" type="submit">Guardar diario</button><span id="fc-diary-msg" class="fc-muted"></span></div></form></article>`);
-
-  make('fc-postpartido','Postpartido → siguiente entrenamiento',`
-    <div class="fc-two"><article class="panel"><h3>Informe de 30 segundos</h3><form id="fc-post-form" class="fc-form"><label>Qué salió bien<select multiple size="4"><option selected>Salida de balón</option><option selected>Amplitud</option><option>Presión</option><option>Finalización</option></select></label><label>Prioridad 1<select name="p1"><option>Reacción tras pérdida</option><option>Pérdidas en salida</option><option>Defensa del centro</option><option>Poca profundidad</option></select></label><label>Prioridad 2<select name="p2"><option>Defensa del centro</option><option>Reacción tras pérdida</option><option>Poca profundidad</option></select></label><label>Prioridad 3<select name="p3"><option>Poca profundidad</option><option>Defensa del centro</option><option>Presión desordenada</option></select></label><button class="primary">Guardar y conectar con entrenamiento</button></form></article><article class="panel"><h3>Conexión automática</h3><div id="fc-training-link"><p class="fc-muted">Guarda el postpartido para generar la conexión.</p></div></article></div>`);
-
-  make('fc-desarrollo','Desarrollo individual',`
-    <div class="fc-two"><article class="panel"><label style="display:grid;gap:6px;font-weight:700">Jugador<select id="fc-player-select"><option>Álex Martín</option><option>Lucas Vega</option><option>Hugo Santana</option><option>Mateo Cruz</option></select></label><div id="fc-player-detail" style="margin-top:14px"></div></article><article class="panel"><h3>Evaluación técnica/táctica · 1–5</h3><p class="fc-muted">Evaluación periódica, separada de la puntuación de partido.</p><div id="fc-eval"><p>Control</p><div class="fc-score" data-skill="Control"></div><p>Pase</p><div class="fc-score" data-skill="Pase"></div><p>Visión</p><div class="fc-score" data-skill="Visión"></div><p>Colocación</p><div class="fc-score" data-skill="Colocación"></div><p>Reacción tras pérdida</p><div class="fc-score" data-skill="Reacción"></div></div><p id="fc-eval-msg" class="fc-muted">Pulsa del 1 al 5 para registrar una valoración ficticia.</p></article></div>`);
-
-  make('fc-inicio','Inicio del entrenador',`
-    <div class="fc-grid"><article class="fc-card"><span class="fc-tag">HOY</span><h3>Entrenamiento · 18:00</h3><p>Objetivo principal: posicionamiento y compensaciones.</p><strong>60 min</strong></article><article class="fc-card"><span class="fc-tag">PRÓXIMO</span><h3>Atlético Norte</h3><p>Amistoso · sábado · 10:30</p><strong>F7 · 14 disponibles</strong></article><article class="fc-card"><span class="fc-tag warn">PRIORIDAD</span><h3>Reacción tras pérdida</h3><p>Detectada en 2 partidos y 2 entrenamientos.</p><strong>Estado: en progreso</strong></article><article class="fc-card"><span class="fc-tag good">DESARROLLO</span><h3>4 objetivos individuales</h3><p>2 mejorando · 2 iniciados</p><strong>Revisar esta semana</strong></article></div><div class="fc-two" style="margin-top:14px"><article class="panel"><h3>Último partido</h3><p><strong>3–2 · victoria</strong></p><p>Bien: amplitud y salida.</p><p>A mejorar: reacción tras pérdida y protección central.</p><button class="secondary fc-jump" data-target="fc-postpartido">Abrir postpartido</button></article><article class="panel"><h3>Qué necesita atención</h3><p><span class="fc-tag bad">2 jugadores</span> con objetivo sin revisar.</p><p><span class="fc-tag warn">1 principio</span> repetido 3 semanas sin consolidar.</p><p><span class="fc-tag">Rival</span> ya tiene informe anterior.</p></article></div>`);
-
-  const labels=[['fc-inicio','Inicio'],['fc-desarrollo','Desarrollo'],['fc-postpartido','Postpartido'],['fc-planificacion','Planificación'],['fc-combinaciones','Combinaciones'],['fc-rivales','Rivales'],['fc-informes','Informes'],['fc-identidad','Identidad']];
-  labels.reverse().forEach(([id,label])=>{const b=d.createElement('button');b.type='button';b.dataset.fcView=id;b.className='fc-nav-new';b.textContent=label;nav.prepend(b);});
-  const show=id=>{d.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',(b.dataset.fcView||b.dataset.view)===id));d.querySelector('#app')?.scrollIntoView({block:'start'});};
-  nav.querySelectorAll('[data-fc-view]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.fcView)));
-  d.querySelectorAll('.fc-jump').forEach(b=>b.addEventListener('click',()=>show(b.dataset.target)));
-
-  const playerData={
-    'Álex Martín':{position:'Central / Pivote',goals:[['Escaneo antes de recibir','Táctica','Mejorando'],['Orientación corporal','Técnica','Iniciado']],tests:[['03/09/2026','Central','Partido','4/5','Buena salida y corrección de espalda'],['06/09/2026','Pivote','Entrenamiento','3/5','Da continuidad; falta ajustar distancias']]},
-    'Lucas Vega':{position:'Extremo / Delantero',goals:[['Reacción inmediata tras pérdida','Táctica','Iniciado']],tests:[['05/09/2026','Delantero centro','Amistoso','3/5','Ataca bien el espacio; mejorar apoyos']]},
-    'Hugo Santana':{position:'Mediocentro',goals:[['Jugar a uno o dos toques','Técnica','Consolidado']],tests:[['02/09/2026','Mediocentro','Entrenamiento','4/5','Ordena y ofrece línea de pase']]},
-    'Mateo Cruz':{position:'Carrilero',goals:[['Elegir cuándo subir','Táctica','Mejorando']],tests:[['07/09/2026','Carrilero derecho','Partido','3/5','Buena vuelta; todavía conservador con balón']]}
-  };
-  const renderPlayer=()=>{const name=d.querySelector('#fc-player-select').value,p=playerData[name];d.querySelector('#fc-player-detail').innerHTML=`<h3>${name}</h3><p class="fc-muted">${p.position}</p><h4>Objetivos actuales</h4>${p.goals.map(g=>`<div class="fc-card" style="margin:8px 0"><strong>${g[0]}</strong><p><span class="fc-tag">${g[1]}</span><span class="fc-tag ${g[2]==='Consolidado'?'good':g[2]==='Iniciado'?'warn':''}">${g[2]}</span></p></div>`).join('')}<h4>Pruebas de posición</h4><div style="overflow:auto"><table class="fc-table"><thead><tr><th>Fecha</th><th>Posición</th><th>Contexto</th><th>Valoración</th></tr></thead><tbody>${p.tests.map(t=>`<tr title="${t[4]}"><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td><td>${t[3]}</td></tr>`).join('')}</tbody></table></div><div class="fc-actions"><button class="primary" id="fc-add-goal">+ Objetivo</button><button class="secondary" id="fc-add-position">+ Prueba de posición</button></div>`;d.querySelector('#fc-add-goal').addEventListener('click',()=>{p.goals.push(['Nuevo objetivo de prueba','Táctica','Iniciado']);renderPlayer();});d.querySelector('#fc-add-position').addEventListener('click',()=>{p.tests.unshift(['09/09/2026','Nueva posición','Entrenamiento','3/5','Prueba añadida en laboratorio']);renderPlayer();});};
-  d.querySelector('#fc-player-select').addEventListener('change',renderPlayer);renderPlayer();
-
-  d.querySelectorAll('.fc-score').forEach(row=>{for(let i=1;i<=5;i++){const b=d.createElement('button');b.type='button';b.textContent=i;b.addEventListener('click',()=>{row.querySelectorAll('button').forEach(x=>x.classList.toggle('on',Number(x.textContent)<=i));d.querySelector('#fc-eval-msg').textContent=`${row.dataset.skill}: ${i}/5 guardado en la prueba local.`;});row.appendChild(b);}});
-
-  d.querySelector('#fc-post-form').addEventListener('submit',e=>{e.preventDefault();const fd=new w.FormData(e.target);const ps=[fd.get('p1'),fd.get('p2'),fd.get('p3')];d.querySelector('#fc-training-link').innerHTML=`<p><strong>Prioridades guardadas</strong></p>${ps.map((x,i)=>`<p>${i+1}. ${x}</p>`).join('')}<hr><p><strong>Siguiente sesión sugerida</strong></p><p>Objetivo principal: ${ps[0]}</p><p><span class="fc-tag">Biblioteca de ejercicios relacionada</span> <span class="fc-tag">Táctica relacionada</span></p><div class="fc-card"><strong>Conexión CampoBase/FútbolControl</strong><p>Problema → principio → ejercicios existentes → bloque táctico → sesión.</p><p><strong>Ejemplo:</strong> ${ps[0]} → transición defensiva → filtrar ejercicios relacionados → Sistema 1-3-2-1 · Defensa por carriles y basculaciones.</p></div>`;});
-
-  d.querySelector('#fc-training-diary').addEventListener('submit',e=>{e.preventDefault();d.querySelector('#fc-diary-msg').textContent='Diario guardado en la prueba local.';});
-
-  const rivals=[['Atlético Norte','1-2-3-1','Presión alta','Espalda de los extremos'],['UD Costa','1-3-2-1','Juego directo','Le cuesta salir bajo presión']];
-  const renderRivals=()=>{d.querySelector('#fc-rival-list').innerHTML=rivals.map(r=>`<article class="panel"><h3>${r[0]}</h3><p><strong>Sistema:</strong> ${r[1]}</p><p><strong>Fortaleza:</strong> ${r[2]}</p><p><strong>Debilidad:</strong> ${r[3]}</p><span class="fc-tag">Informe previo disponible</span></article>`).join('');};renderRivals();
-  d.querySelector('#fc-rival-form').addEventListener('submit',e=>{e.preventDefault();const fd=new w.FormData(e.target);rivals.unshift([fd.get('name'),fd.get('system')||'Sin observar',fd.get('strength')||'—',fd.get('weakness')||'—']);renderRivals();e.target.reset();});
-
-  d.querySelectorAll('.fc-report-btn').forEach(b=>b.addEventListener('click',()=>{const type=b.dataset.report,out=d.querySelector('#fc-report-preview');if(type==='player')out.innerHTML='<h3>Álex Martín · Evolución</h3><p><strong>Objetivos:</strong> 1 mejorando · 1 iniciado</p><p><strong>Posiciones probadas:</strong> Central 4/5 · Pivote 3/5</p><p><strong>Evaluación:</strong> pase 4/5 · visión 4/5 · colocación 3/5</p><p class="fc-muted">Informe pensado para entrenador y, si se desea, exportación posterior.</p>';if(type==='match')out.innerHTML='<h3>Postpartido · Atlético Norte</h3><p><strong>Bien:</strong> salida de balón, amplitud.</p><p><strong>Prioridades:</strong> reacción tras pérdida · protección central · profundidad.</p><p><strong>Próxima sesión:</strong> transición defensiva + compensaciones.</p>';if(type==='season')out.innerHTML='<h3>Temporada · evolución colectiva</h3><p>Salida de balón: <strong>mejorando</strong></p><p>Reacción tras pérdida: <strong>en progreso</strong></p><p>Amplitud: <strong>mejorando</strong></p><p>Defensa del centro: <strong>en progreso</strong></p>'; }));
-
-  const applyColors=()=>{const p=d.querySelector('#fc-primary').value,s=d.querySelector('#fc-secondary').value,a=d.querySelector('#fc-accent').value;d.documentElement.style.setProperty('--fc-primary',p);d.documentElement.style.setProperty('--fc-secondary',s);d.documentElement.style.setProperty('--fc-accent',a);};
-  d.querySelector('#fc-brand-form').addEventListener('submit',e=>{e.preventDefault();applyColors();const name=d.querySelector('#fc-team-name').value.trim()||'Mi equipo';d.querySelector('#fc-team-preview').textContent=name;});
-  d.querySelectorAll('#fc-primary,#fc-secondary,#fc-accent').forEach(x=>x.addEventListener('input',applyColors));
-  d.querySelector('#fc-brand-reset').addEventListener('click',()=>{d.querySelector('#fc-primary').value='#0b5b49';d.querySelector('#fc-secondary').value='#16211d';d.querySelector('#fc-accent').value='#c3a654';applyColors();});
-  d.querySelector('#fc-crest-input').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new w.FileReader();r.onload=()=>{d.querySelector('#fc-crest-preview').src=r.result;const head=d.querySelector('.topbar-brand img');if(head)head.src=r.result;};r.readAsDataURL(f);});
-
-  show('fc-inicio');
-});
-</script>
+  <div class="lab-banner"><strong>FútbolControl · Beta funcional</strong><span>Copia completa de CampoBase · base local futbolcontrol-lab-v2 · Supabase real desactivado</span></div>
+  <iframe id="fcapp" class="frame" src="index.html?v=fc-beta-v3" title="FútbolControl beta aislada"></iframe>
+  <script>
+    const frame=document.getElementById('fcapp');
+    frame.addEventListener('load',()=>{
+      const d=frame.contentDocument;if(!d)return;
+      const unlock=()=>{try{const auth=d.querySelector('#auth-dialog');if(auth&&auth.open)auth.close();}catch(e){}d.body.classList.remove('auth-locked');};
+      unlock();setTimeout(unlock,500);setTimeout(unlock,1200);
+      if(!d.querySelector('script[data-fc-beta]')){
+        const s=d.createElement('script');s.type='module';s.src='lab/beta-ui.js?v=3';s.dataset.fcBeta='true';d.body.appendChild(s);
+      }
+    });
+  </script>
 </body>
 </html>
