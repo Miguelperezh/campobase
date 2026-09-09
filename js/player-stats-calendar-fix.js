@@ -238,7 +238,7 @@ function bind() {
   const list = $('#players-list');
   if (list) {
     const observer = new MutationObserver(() => setTimeout(patchPlayerCards, 0));
-    observer.observe(list, { childList: true, subtree: true });
+    observer.observe(list, { childList: true, subtree: false });
     patchPlayerCards();
   }
   document.addEventListener('click', (event) => {
