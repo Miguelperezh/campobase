@@ -18,7 +18,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   const videoSrc = anim.mp4 || (anim.gif || '').replace(/\.gif$/i, '.mp4');
   // El primer frame pesa muy poco y actúa como vista previa. loading="lazy" evita
   // descargar las 149 imágenes de golpe al entrar en Ejercicios.
-  const posterSrc = anim.poster || (anim.frames ? `${anim.frames}000.jpg` : '');
+  const posterSrc = anim.poster || (anim.frames ? `${anim.frames}001.jpg` : '');
   const realVideo = item.video || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
