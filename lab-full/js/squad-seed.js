@@ -30,11 +30,10 @@ export function planSquadSeed(currentPlayers, createdAt = Date.now()) {
       ratingHistory: [],
       createdAt: createdAt + index,
     })),
-    settings: [{
-      id: 'futbolcontrol-lab-real-squad-v2',
-      recordType: 'migration',
-      version: 2,
-      createdAt,
-    }],
+    settings: [
+      { id: 'main', teamName: 'Unión Viera Alevín D', format: 'F7', createdAt },
+      { id: 'squad-26-27-seeded', recordType: 'migration', version: 2, createdAt },
+      { id: 'futbolcontrol-lab-real-squad-v2', recordType: 'migration', version: 2, createdAt },
+    ],
   };
 }
