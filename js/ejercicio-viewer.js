@@ -1,7 +1,7 @@
 // Renderizador y reproductor de la ficha de ejercicio validado.
 // Vista rápida (textos + vídeo protagonista) + "Ver detalles" + tiempo editable.
-// El GIF se convierte a MP4 y se reproduce con <video> nativo (fluidez real,
-// sin efecto "fotogramas"). Las pausas entre variantes se conservan en el MP4.
+// Las demostraciones se reproducen en MP4 y se cargan únicamente cuando el usuario
+// pulsa reproducir o avanza/retrocede. Así abrir CampoBase no dispara decenas de vídeos.
 
 import { renderVideoSectionHTML } from './ejercicio-videos.js';
 
@@ -13,7 +13,9 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   const vr = item.vista_rapida || {};
   const det = item.detalle || {};
   const anim = item.animacion || {};
-  const videoSrc = (anim.gif || '').replace(/\.gif$/i, '.mp4');
+  // Compatibilidad con las fichas actuales: si todavía guardan `gif`, usamos el
+  // MP4 homónimo. Las fichas nuevas pueden declarar `mp4` directamente.
+  const videoSrc = anim.mp4 || (anim.gif || '').replace(/\.gif$/i, '.mp4');
   const realVideo = item.video || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
@@ -51,9 +53,12 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   ].filter(([, v]) => Array.isArray(v) && v.length)
     .map(([titulo, valores]) => `<h3>${esc(titulo)}</h3>${list(valores)}`).join('');
 
-  const fuente = det.fuente || {};
   // La línea "Fuente: ..." se ha retirado de la ficha por decisión de Migue.
-  // Se conserva el objeto `fuente` en el JSON (no se borra), pero no se muestra.
+  // El objeto `fuente` se conserva en el JSON, pero no se muestra.
+
+  const placeholder = videoSrc
+    ? '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff;border-radius:10px">Demostración MP4 preparada · pulsa ▶ para cargarla</div>'
+    : '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff;border-radius:10px">Demostración no disponible</div>';
 
   return `
   <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}">
@@ -73,7 +78,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="explicacion">${esc(vr.explicacion_breve)}</div>
 
     <div class="player">
-      <div class="stage"><video class="frame-video" src="${esc(videoSrc)}" playsinline muted loop preload="auto"></video></div>
+      <div class="stage">${placeholder}<video class="frame-video" data-src="${esc(videoSrc)}" playsinline muted loop preload="none"></video></div>
       <div class="controls">
         <button type="button" class="btn-prev" title="Paso anterior">⏮</button>
         <button type="button" class="btn-play primary" title="Reproducir / Pausar">▶</button>
@@ -130,11 +135,55 @@ export function initValidatedExerciseViewer(root) {
 
   const video = root.querySelector('.frame-video');
   const stage = root.querySelector('.stage');
+  const placeholder = root.querySelector('.video-placeholder');
   const btnPlay = root.querySelector('.btn-play');
   const lb = root.querySelector('.lightbox');
   const lbPlay = root.querySelector('.lb-play');
 
-  let speed = 1; // playbackRate inicial (1× = velocidad real del GIF)
+  let speed = 1;
+  let loadPromise = null;
+
+  function setPlaceholder(text, hidden = false) {
+    if (!placeholder) return;
+    placeholder.textContent = text;
+    placeholder.hidden = hidden;
+  }
+
+  function ensureVideoLoaded() {
+    if (!video) return Promise.resolve(false);
+    if (video.getAttribute('src')) return Promise.resolve(true);
+    const src = video.dataset.src;
+    if (!src) return Promise.resolve(false);
+    if (loadPromise) return loadPromise;
+
+    setPlaceholder('Cargando demostración…');
+    video.src = src;
+    video.preload = 'metadata';
+    video.load();
+    loadPromise = new Promise((resolve) => {
+      const ready = () => {
+        cleanup();
+        setPlaceholder('', true);
+        resolve(true);
+      };
+      const failed = () => {
+        cleanup();
+        setPlaceholder('No se pudo cargar la demostración. Comprueba la conexión y vuelve a intentarlo.');
+        video.removeAttribute('src');
+        video.load();
+        loadPromise = null;
+        resolve(false);
+      };
+      const cleanup = () => {
+        video.removeEventListener('loadedmetadata', ready);
+        video.removeEventListener('error', failed);
+      };
+      if (video.readyState >= 1) return ready();
+      video.addEventListener('loadedmetadata', ready, { once: true });
+      video.addEventListener('error', failed, { once: true });
+    });
+    return loadPromise;
+  }
 
   function setSpeed(s) {
     speed = s;
@@ -142,11 +191,16 @@ export function initValidatedExerciseViewer(root) {
     root.querySelectorAll('.speed button').forEach((x) => x.classList.toggle('on', parseFloat(x.getAttribute('data-s')) === s));
   }
 
-  function play() {
-    if (!video) return;
-    video.play();
-    btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
-    window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+  async function play() {
+    if (!video || !await ensureVideoLoaded()) return;
+    try {
+      video.playbackRate = speed;
+      await video.play();
+      btnPlay.textContent = '⏸'; lbPlay.textContent = '⏸';
+      window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+    } catch {
+      setPlaceholder('Pulsa ▶ de nuevo para reproducir la demostración.');
+    }
   }
   function pause() {
     if (!video) return;
@@ -156,10 +210,10 @@ export function initValidatedExerciseViewer(root) {
   }
   function toggle() { (video && video.paused) ? play() : pause(); }
 
-  // Paso a paso: avanza/retrocede ~1 frame (los GIFs van a ~8 fps).
+  // Paso a paso: avanza/retrocede aproximadamente un fotograma a 8 fps.
   const STEP = 0.125;
-  function step(delta) {
-    if (!video) return;
+  async function step(delta) {
+    if (!video || !await ensureVideoLoaded()) return;
     pause();
     const d = video.duration || 0;
     video.currentTime = Math.max(0, Math.min(d, video.currentTime + delta));
@@ -169,10 +223,10 @@ export function initValidatedExerciseViewer(root) {
   lbPlay.addEventListener('click', toggle);
   root.querySelector('.btn-prev').addEventListener('click', () => step(-STEP));
   root.querySelector('.btn-next').addEventListener('click', () => step(STEP));
-  root.querySelector('.btn-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
+  root.querySelector('.btn-restart').addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded()) video.currentTime = 0; });
   root.querySelector('.lb-prev').addEventListener('click', () => step(-STEP));
   root.querySelector('.lb-next').addEventListener('click', () => step(STEP));
-  root.querySelector('.lb-restart').addEventListener('click', () => { pause(); if (video) video.currentTime = 0; });
+  root.querySelector('.lb-restart').addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded()) video.currentTime = 0; });
   root.querySelectorAll('.speed button').forEach((b) => {
     b.addEventListener('click', () => setSpeed(parseFloat(b.getAttribute('data-s'))));
   });
@@ -186,6 +240,7 @@ export function initValidatedExerciseViewer(root) {
   });
 
   // Pantalla completa: mueve el vídeo al lightbox (un solo elemento, un solo estado).
+  // Abrir el lightbox NO descarga el MP4; se descarga al pulsar reproducción/paso.
   const btnFull = root.querySelector('.btn-full');
   btnFull.addEventListener('click', () => {
     if (!video) return;
@@ -337,7 +392,9 @@ export function attachLightbox(root) {
       const a = e.touches[0], b = e.touches[1];
       const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
       const nz = Math.max(MINZ, Math.min(MAXZ, pinch.zoom * (d / pinch.dist)));
-      const rect = box.querySelector('.frame-video').getBoundingClientRect();
+      const frameVideo = box.querySelector('.frame-video');
+      if (!frameVideo) return;
+      const rect = frameVideo.getBoundingClientRect();
       const k = nz / Number(box.dataset.zoom || 1);
       const cx = pinch.cx - rect.left, cy = pinch.cy - rect.top;
       let tx = Number(box.dataset.tx || 0), ty = Number(box.dataset.ty || 0);
