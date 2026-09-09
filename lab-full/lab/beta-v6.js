@@ -1,5 +1,6 @@
 if(!document.querySelector('#fc-v6-style')){const l=document.createElement('link');l.id='fc-v6-style';l.rel='stylesheet';l.href='lab/beta-v6.css?v=6.1';document.head.appendChild(l);}
 if(!document.querySelector('#fc-v6-post-style')){const l=document.createElement('link');l.id='fc-v6-post-style';l.rel='stylesheet';l.href='lab/beta-v6-postmatch.css?v=6.2';document.head.appendChild(l);}
+if(!document.querySelector('#fc-v6-focus-style')){const l=document.createElement('link');l.id='fc-v6-focus-style';l.rel='stylesheet';l.href='lab/beta-v6-exercise-focus.css?v=6.2';document.head.appendChild(l);}
 import './beta-v6-data.js';
 import './beta-v6-shell.js';
 import './beta-v6-training.js';
