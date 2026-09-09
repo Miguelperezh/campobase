@@ -1,0 +1,1 @@
+Copia completa aislada de CampoBase para FútbolControl Lab. No conectar a Supabase real.
