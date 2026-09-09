@@ -19995,6 +19995,2581 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-126-POSTURA-BASICA-PORTERO",
+  "nombre": "Postura básica del portero",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Postura",
+      "Posición inicial",
+      "Reacción"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "1-4 porteros"
+    },
+    "material": "portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Pies separados al ancho de los hombros, ligeramente adelantados."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rodillas flexionadas, peso adelantado sobre puntas de pies."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Brazos flexionados a los lados, manos a la altura de la cadera, palmas al frente."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Ojos fijos en el balón. Mantener postura 30s × 4 series."
+      }
+    ],
+    "explicacion_breve": "El portero adopta y mantiene la postura activa: pies separados, rodillas flexionadas, peso adelantado y brazos listos, con los ojos fijos en el balón.",
+    "leyenda": "Teal: portero (K) · Líneas negras: pies separados y brazos flexionados · Flecha roja: reacción al estímulo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar la posición inicial correcta — la base de toda intervención."
+    ],
+    "claves_entrenador": [
+      "El portero NUNCA está de pie erguido. Siempre en postura activa, listo para reaccionar."
+    ],
+    "montaje": [
+      "Pies separados al ancho de los hombros, ligeramente adelantados."
+    ],
+    "desarrollo": [
+      "Pies separados al ancho de los hombros, ligeramente adelantados.",
+      "Rodillas flexionadas, peso adelantado sobre puntas de pies.",
+      "Brazos flexionados a los lados, manos a la altura de la cadera, palmas al frente.",
+      "Ojos fijos en el balón. Mantener postura 30s × 4 series."
+    ],
+    "que_buscamos": [
+      "Postura",
+      "Posición inicial",
+      "Reacción"
+    ],
+    "que_observar": [
+      "Separación de los pies.",
+      "Flexión de rodillas.",
+      "Posición de brazos y manos."
+    ],
+    "correcciones": [
+      "No estar erguido.",
+      "Mantener el peso adelantado."
+    ],
+    "reglas": [
+      "Pies separados al ancho de los hombros.",
+      "Rodillas flexionadas, peso adelantado.",
+      "Mantener postura 30s × 4 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Después de mantener la postura, reaccionar a estímulo del entrenador (izq/der)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-4 porteros. · 6-8 min.",
+      "Fútbol 11: 1-4 porteros. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 126",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: baja.",
+        "Espacio: área pequeña o portería."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-126-POSTURA-BASICA-PORTERO/CampoBase_Postura_Basica_Portero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-126-POSTURA-BASICA-PORTERO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-127-DESPLAZAMIENTOS-LATERALES-SIN-BALON",
+  "nombre": "Desplazamientos laterales sin balón",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Desplazamiento",
+      "Agilidad",
+      "Posición"
+    ],
+    "tiempo_estimado_15": "6-8 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "1-4 porteros"
+    },
+    "material": "portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero en el centro del arco, en postura básica."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Entrenador indica lado (izq/der)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero se desplaza lateralmente al palo indicado SIN cruzar pies."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Vuelve al centro. 15 desplazamientos × 3 series."
+      }
+    ],
+    "explicacion_breve": "El portero se desplaza lateralmente de un palo a otro siguiendo la indicación del entrenador, sin cruzar los pies y manteniendo el peso bajo.",
+    "leyenda": "Teal: portero (K) · Flecha roja: desplazamiento lateral · Líneas negras: pies que se desplazan"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar el movimiento lateral del portero sin cruzar pies."
+    ],
+    "claves_entrenador": [
+      "Los pies se DESPLAZAN, no se cruzan. Peso siempre adelantado y bajo."
+    ],
+    "montaje": [
+      "Portero en el centro del arco, en postura básica."
+    ],
+    "desarrollo": [
+      "Portero en el centro del arco, en postura básica.",
+      "Entrenador indica lado (izq/der).",
+      "Portero se desplaza lateralmente al palo indicado SIN cruzar pies.",
+      "Vuelve al centro. 15 desplazamientos × 3 series."
+    ],
+    "que_buscamos": [
+      "Desplazamiento",
+      "Agilidad",
+      "Posición"
+    ],
+    "que_observar": [
+      "Que no cruce los pies.",
+      "Peso adelantado y bajo.",
+      "Velocidad del desplazamiento."
+    ],
+    "correcciones": [
+      "No cruzar los pies.",
+      "Mantener el peso bajo."
+    ],
+    "reglas": [
+      "Portero en el centro del arco.",
+      "Desplazamiento lateral sin cruzar pies.",
+      "15 desplazamientos × 3 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Alternar palo izquierdo, derecho y centro con velocidad creciente."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-4 porteros. · 6-8 min.",
+      "Fútbol 11: 1-4 porteros. · 6-8 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 127",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio sin balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: portería completa."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-127-DESPLAZAMIENTOS-LATERALES-SIN-BALON/CampoBase_Desplazamientos_Laterales_Sin_Balon.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-127-DESPLAZAMIENTOS-LATERALES-SIN-BALON/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-128-RECEPCION-BALON-RASO",
+  "nombre": "Recepción de balón raso",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Blocaje raso",
+      "Técnica",
+      "Seguridad"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "5 balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador a 8m del portero, envía balón raso a distintos lados."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero se agacha, forma cuchara con las manos, blocaje seguro."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Una rodilla al suelo detrás del balón como 'seguro' en caso de rebote."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 recepciones. Cambiar."
+      }
+    ],
+    "explicacion_breve": "El lanzador envía balones rasos a distintos lados y el portero los bloca formando cuchara con las manos, con una rodilla al suelo como seguro.",
+    "leyenda": "Naranja: lanzador (L) · Teal: portero (K) · Flecha roja discontinua: balón raso"
+  },
+  "detalle": {
+    "objetivos": [
+      "Dominar la técnica del blocaje de balón raso — la más frecuente."
+    ],
+    "claves_entrenador": [
+      "Las manos van al balón, NUNCA el balón viene solo. Cuerpo detrás del balón, siempre."
+    ],
+    "montaje": [
+      "Lanzador a 8m del portero, envía balón raso a distintos lados."
+    ],
+    "desarrollo": [
+      "Lanzador a 8m del portero, envía balón raso a distintos lados.",
+      "Portero se agacha, forma cuchara con las manos, blocaje seguro.",
+      "Una rodilla al suelo detrás del balón como 'seguro' en caso de rebote.",
+      "10 recepciones. Cambiar."
+    ],
+    "que_buscamos": [
+      "Blocaje raso",
+      "Técnica",
+      "Seguridad"
+    ],
+    "que_observar": [
+      "Forma de cuchara con las manos.",
+      "Rodilla al suelo como seguro.",
+      "Cuerpo detrás del balón."
+    ],
+    "correcciones": [
+      "Ir al balón con las manos.",
+      "Poner el cuerpo detrás del balón."
+    ],
+    "reglas": [
+      "Lanzador a 8m del portero.",
+      "Blocaje en cuchara.",
+      "10 recepciones y cambio."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Lanzar más fuerte, más rápido, o con desvío inesperado."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 128",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-8+.",
+        "Intensidad: media.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-128-RECEPCION-BALON-RASO/CampoBase_Recepcion_Balon_Raso.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-128-RECEPCION-BALON-RASO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-129-RECEPCION-BALON-MEDIO",
+  "nombre": "Recepción de balón medio (a la cadera)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Blocaje medio",
+      "Técnica",
+      "Protección"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "5 balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador envía balón medio (altura entre cadera y pecho)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero recibe con las manos, y ABRAZA con brazos y pecho."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Balón se pega al pecho, protegido por brazos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 recepciones. Cambiar."
+      }
+    ],
+    "explicacion_breve": "El lanzador envía balones a altura media y el portero los recibe abrazándolos contra el pecho, protegidos por los brazos.",
+    "leyenda": "Naranja: lanzador (L) · Teal: portero (K) · Flecha roja discontinua: balón a altura media"
+  },
+  "detalle": {
+    "objetivos": [
+      "Recibir balones a altura media con blocaje al pecho."
+    ],
+    "claves_entrenador": [
+      "Los codos protegen el balón — cierran naturalmente al recibir. Nunca dejar el balón 'suelto'."
+    ],
+    "montaje": [
+      "Lanzador envía balón medio (altura entre cadera y pecho)."
+    ],
+    "desarrollo": [
+      "Lanzador envía balón medio (altura entre cadera y pecho).",
+      "Portero recibe con las manos, y ABRAZA con brazos y pecho.",
+      "Balón se pega al pecho, protegido por brazos.",
+      "10 recepciones. Cambiar."
+    ],
+    "que_buscamos": [
+      "Blocaje medio",
+      "Técnica",
+      "Protección"
+    ],
+    "que_observar": [
+      "Abrazo con brazos y pecho.",
+      "Protección del balón.",
+      "Cierre de codos."
+    ],
+    "correcciones": [
+      "No dejar el balón suelto.",
+      "Pegar el balón al pecho."
+    ],
+    "reglas": [
+      "Balón a altura media.",
+      "Blocaje al pecho con abrazo.",
+      "10 recepciones y cambio."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Lanzar con desvío o velocidad variable para forzar ajuste de posición."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 129",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-129-RECEPCION-BALON-MEDIO/CampoBase_Recepcion_Balon_Medio.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-129-RECEPCION-BALON-MEDIO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-130-RECEPCION-BALON-ALTO-SALTO",
+  "nombre": "Recepción de balón alto (salto)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Blocaje aéreo",
+      "Salto",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "5 balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón alto en parábola al centro del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero salta, lleva las manos al PUNTO MÁS ALTO posible."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al agarrar, protege el balón contra el pecho."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 saltos. 30s descanso. 3 series."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira balones altos en parábola y el portero salta llevando las manos al punto más alto para agarrar y proteger el balón contra el pecho.",
+    "leyenda": "Naranja: lanzador (L) · Teal: portero (K) · Flecha azul discontinua: balón alto en parábola · Flecha roja: salto vertical"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el blocaje aéreo con salto vertical."
+    ],
+    "claves_entrenador": [
+      "Salto explosivo con impulso de una pierna, brazos extendidos hacia el balón. Ver el balón HASTA el impacto."
+    ],
+    "montaje": [
+      "Lanzador tira balón alto en parábola al centro del área."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón alto en parábola al centro del área.",
+      "Portero salta, lleva las manos al PUNTO MÁS ALTO posible.",
+      "Al agarrar, protege el balón contra el pecho.",
+      "10 saltos. 30s descanso. 3 series."
+    ],
+    "que_buscamos": [
+      "Blocaje aéreo",
+      "Salto",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Impulso del salto.",
+      "Manos al punto más alto.",
+      "Protección del balón al caer."
+    ],
+    "correcciones": [
+      "Saltar con impulso de una pierna.",
+      "Ver el balón hasta el impacto."
+    ],
+    "reglas": [
+      "Balón alto en parábola.",
+      "Salto al punto más alto.",
+      "10 saltos, 3 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir presión (jugador saltando cerca sin contacto directo)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 12-15 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 130",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-130-RECEPCION-BALON-ALTO-SALTO/CampoBase_Recepcion_Balon_Alto_Salto.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-130-RECEPCION-BALON-ALTO-SALTO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-131-ACHIQUE-1V1-CARA-A-CARA",
+  "nombre": "Achique al 1v1 — cara a cara",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "1v1",
+      "Achique",
+      "Ángulo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (portero + atacante)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Atacante inicia con balón a 20m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando el atacante cruza los 15m, portero SALE a achicar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Postura baja, brazos abiertos, cerrando el ángulo del remate."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 duelos. Rotar posición de inicio del atacante."
+      }
+    ],
+    "explicacion_breve": "El atacante inicia con balón a 20m y el portero sale a achicar cuando cruza los 15m, con postura baja y brazos abiertos para cerrar el ángulo.",
+    "leyenda": "Azul: atacante (A) · Teal: portero (K) · Flecha roja: carrera de ambos"
+  },
+  "detalle": {
+    "objetivos": [
+      "Achicar al atacante en 1v1 sin exponerse al chip."
+    ],
+    "claves_entrenador": [
+      "El portero achica CAMINANDO, no corriendo. Corriendo se cae si el atacante define."
+    ],
+    "montaje": [
+      "Atacante inicia con balón a 20m."
+    ],
+    "desarrollo": [
+      "Atacante inicia con balón a 20m.",
+      "Cuando el atacante cruza los 15m, portero SALE a achicar.",
+      "Postura baja, brazos abiertos, cerrando el ángulo del remate.",
+      "10 duelos. Rotar posición de inicio del atacante."
+    ],
+    "que_buscamos": [
+      "1v1",
+      "Achique",
+      "Ángulo"
+    ],
+    "que_observar": [
+      "Momento de la salida.",
+      "Postura baja y brazos abiertos.",
+      "Cierre del ángulo."
+    ],
+    "correcciones": [
+      "Achicar caminando, no corriendo.",
+      "Cerrar el ángulo del remate."
+    ],
+    "reglas": [
+      "Atacante inicia a 20m.",
+      "Portero sale a achicar a los 15m.",
+      "10 duelos con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir defensor persiguiendo al atacante — más presión sobre el rematador."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + atacante). · 12-15 min.",
+      "Fútbol 11: 2 (portero + atacante). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 131",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-131-ACHIQUE-1V1-CARA-A-CARA/CampoBase_Achique_1v1_Cara_A_Cara.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-131-ACHIQUE-1V1-CARA-A-CARA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-132-ANGULO-REMATE-CENTRO",
+  "nombre": "Ángulo de remate desde el centro",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Ángulo",
+      "Colocación",
+      "Lectura"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (portero + rematador)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rematador con balón frente al arco a 15m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero se ubica en la mediana del arco."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Estudiante prueba distintas posiciones para cubrir mejor el ángulo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rematador dispara. Portero blocajá o desvía. 15 remates."
+      }
+    ],
+    "explicacion_breve": "El rematador dispara desde el frente y el portero experimenta distintas posiciones para alinear su cuerpo con el eje balón-centro del arco y cubrir mejor el ángulo.",
+    "leyenda": "Azul: rematador (A) · Teal: portero (K) · Flecha roja discontinua: eje del remate · Líneas grises punteadas: ángulo de tiro"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a colocarse correctamente para cubrir el ángulo del remate frontal."
+    ],
+    "claves_entrenador": [
+      "La regla: portero DEBE alinear su cuerpo con el eje balón-centro del arco."
+    ],
+    "montaje": [
+      "Rematador con balón frente al arco a 15m."
+    ],
+    "desarrollo": [
+      "Rematador con balón frente al arco a 15m.",
+      "Portero se ubica en la mediana del arco.",
+      "Estudiante prueba distintas posiciones para cubrir mejor el ángulo.",
+      "Rematador dispara. Portero blocajá o desvía. 15 remates."
+    ],
+    "que_buscamos": [
+      "Ángulo",
+      "Colocación",
+      "Lectura"
+    ],
+    "que_observar": [
+      "Alineación con el eje balón-centro.",
+      "Ajuste de posición.",
+      "Cobertura del ángulo."
+    ],
+    "correcciones": [
+      "Alinear el cuerpo con el eje balón-centro.",
+      "Ajustar la posición al rematador."
+    ],
+    "reglas": [
+      "Rematador a 15m del arco.",
+      "Portero en la mediana.",
+      "15 remates."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Rematador se mueve lateralmente antes de disparar — portero ajusta posición."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + rematador). · 10-12 min.",
+      "Fútbol 11: 2 (portero + rematador). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 132",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-132-ANGULO-REMATE-CENTRO/CampoBase_Angulo_Remate_Centro.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-132-ANGULO-REMATE-CENTRO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-133-ANGULO-REMATE-BANDA",
+  "nombre": "Ángulo de remate desde banda",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Ángulo",
+      "Primer palo",
+      "Colocación"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (portero + rematador)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rematador con balón en la banda, entre 15-20m del arco."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero cierra el PRIMER PALO (siempre prioridad)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Rematador dispara a primer palo o segundo palo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 remates por banda. Alternar."
+      }
+    ],
+    "explicacion_breve": "El rematador dispara desde la banda y el portero cierra el primer palo con el cuerpo, dejando el segundo palo para el reflejo.",
+    "leyenda": "Azul: rematador (A) · Teal: portero (K) · Flecha roja: remate diagonal al 2º palo · Línea verde punteada: 1er palo cerrado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Cubrir el ángulo desde disparo diagonal — primer palo o segundo."
+    ],
+    "claves_entrenador": [
+      "Desde diagonal, el atacante intenta cruzarla al 2º palo. Portero cubre 1er palo con cuerpo, 2º con reflejo."
+    ],
+    "montaje": [
+      "Rematador con balón en la banda, entre 15-20m del arco."
+    ],
+    "desarrollo": [
+      "Rematador con balón en la banda, entre 15-20m del arco.",
+      "Portero cierra el PRIMER PALO (siempre prioridad).",
+      "Rematador dispara a primer palo o segundo palo.",
+      "10 remates por banda. Alternar."
+    ],
+    "que_buscamos": [
+      "Ángulo",
+      "Primer palo",
+      "Colocación"
+    ],
+    "que_observar": [
+      "Cierre del primer palo.",
+      "Cobertura del segundo palo.",
+      "Posición del cuerpo."
+    ],
+    "correcciones": [
+      "Cerrar el primer palo con el cuerpo.",
+      "Cubrir el segundo con reflejo."
+    ],
+    "reglas": [
+      "Rematador en banda a 15-20m.",
+      "Cerrar el primer palo.",
+      "10 remates por banda."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar centro rápido al 2º palo — portero decide entre cortar o quedarse en línea."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + rematador). · 12-15 min.",
+      "Fútbol 11: 2 (portero + rematador). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 133",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: área + banda."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-133-ANGULO-REMATE-BANDA/CampoBase_Angulo_Remate_Banda.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-133-ANGULO-REMATE-BANDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-134-SALIDA-ESQUINA-CORTAR-CENTRO",
+  "nombre": "Salida en esquina — cortar centro",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Esquina",
+      "Salida",
+      "Decisión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3+ (ejecutor, rematadores, portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Ejecutor patea corner al área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero decide: SALIR a interceptar el balón, o QUEDARSE en el arco."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si sale, debe llegar con puños o mano alta y sacar el balón lejos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 corners por serie. 3 series."
+      }
+    ],
+    "explicacion_breve": "El ejecutor patea el córner y el portero decide salir a interceptar con puños o mano alta, o quedarse en el arco.",
+    "leyenda": "Naranja: ejecutor (E) · Azul: rematadores (A1, A2) · Teal: portero (K) · Flecha azul discontinua: centro · Flecha roja: salida del portero"
+  },
+  "detalle": {
+    "objetivos": [
+      "Salir en corners para cortar centros y proteger el arco."
+    ],
+    "claves_entrenador": [
+      "La decisión de salir es CLAVE — si sales, tienes que llegar. Si dudas, quedate en línea."
+    ],
+    "montaje": [
+      "Ejecutor patea corner al área."
+    ],
+    "desarrollo": [
+      "Ejecutor patea corner al área.",
+      "Portero decide: SALIR a interceptar el balón, o QUEDARSE en el arco.",
+      "Si sale, debe llegar con puños o mano alta y sacar el balón lejos.",
+      "10 corners por serie. 3 series."
+    ],
+    "que_buscamos": [
+      "Esquina",
+      "Salida",
+      "Decisión"
+    ],
+    "que_observar": [
+      "Decisión de salir o quedarse.",
+      "Llegada con puños o mano alta.",
+      "Despeje lejos."
+    ],
+    "correcciones": [
+      "Si sales, llegar.",
+      "Si dudas, quedarse en línea."
+    ],
+    "reglas": [
+      "Ejecutor patea el córner.",
+      "Decidir salir o quedarse.",
+      "10 corners por serie, 3 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir 2-3 rematadores en el área para presionar la decisión."
+    ],
+    "variantes": [
+      "Fútbol 7: 3+ (ejecutor, rematadores, portero). · 12-15 min.",
+      "Fútbol 11: 3+ (ejecutor, rematadores, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 134",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: área + esquina."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-134-SALIDA-ESQUINA-CORTAR-CENTRO/CampoBase_Salida_Esquina_Cortar_Centro.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-134-SALIDA-ESQUINA-CORTAR-CENTRO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-135-BLOCAJE-AEREO-PUNOS",
+  "nombre": "Blocaje aéreo con puños",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Despeje",
+      "Puños",
+      "Aéreo"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón alto con curva o rebote."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero salta y despeja con AMBOS puños hacia adelante."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El objetivo: alejar el balón lo más lejos y ancho posible."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 despejes. Cambiar."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira balones altos con curva o rebote y el portero salta a despejar con ambos puños, alejando el balón lo más lejos y ancho posible.",
+    "leyenda": "Teal: portero (K) · Círculo blanco: balón · Puños negros: despeje · Flecha roja: despeje alto, ancho y lejos"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar el despeje con puños cuando no se puede agarrar el balón."
+    ],
+    "claves_entrenador": [
+      "Puños juntos con nudillos hacia el balón. Sacar hacia arriba y lejos — nunca hacia abajo."
+    ],
+    "montaje": [
+      "Lanzador tira balón alto con curva o rebote."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón alto con curva o rebote.",
+      "Portero salta y despeja con AMBOS puños hacia adelante.",
+      "El objetivo: alejar el balón lo más lejos y ancho posible.",
+      "10 despejes. Cambiar."
+    ],
+    "que_buscamos": [
+      "Despeje",
+      "Puños",
+      "Aéreo"
+    ],
+    "que_observar": [
+      "Puños juntos con nudillos al balón.",
+      "Despeje hacia arriba y lejos.",
+      "Salto al balón."
+    ],
+    "correcciones": [
+      "Sacar hacia arriba y lejos, no hacia abajo.",
+      "Puños juntos."
+    ],
+    "reglas": [
+      "Balón alto con curva o rebote.",
+      "Despeje con ambos puños.",
+      "10 despejes y cambio."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Agregar 2 rematadores compitiendo por el rebote — portero debe despejar mejor."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 135",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-135-BLOCAJE-AEREO-PUNOS/CampoBase_Blocaje_Aereo_Punos.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-135-BLOCAJE-AEREO-PUNOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-136-BLOCAJE-AEREO-MANOS-ABIERTAS",
+  "nombre": "Blocaje aéreo con manos abiertas",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Blocaje aéreo",
+      "Captura",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón alto suave y controlado al portero."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero salta, manos abiertas hacia el balón, dedos separados."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al agarrar, absorbe el impacto trayendo el balón al pecho."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 blocajes. Cambiar."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira balones altos suaves y el portero salta con las manos abiertas en forma de W para agarrar y absorber el impacto trayendo el balón al pecho.",
+    "leyenda": "Teal: portero (K) · Flecha roja: salto · Líneas negras: manos abiertas en W"
+  },
+  "detalle": {
+    "objetivos": [
+      "Perfeccionar la captura del balón alto para controlar la jugada."
+    ],
+    "claves_entrenador": [
+      "Las manos forman una W detrás del balón (pulgares e índices haciendo triángulo)."
+    ],
+    "montaje": [
+      "Lanzador tira balón alto suave y controlado al portero."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón alto suave y controlado al portero.",
+      "Portero salta, manos abiertas hacia el balón, dedos separados.",
+      "Al agarrar, absorbe el impacto trayendo el balón al pecho.",
+      "10 blocajes. Cambiar."
+    ],
+    "que_buscamos": [
+      "Blocaje aéreo",
+      "Captura",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Manos en forma de W.",
+      "Dedos separados.",
+      "Absorción del impacto al pecho."
+    ],
+    "correcciones": [
+      "Formar la W detrás del balón.",
+      "Absorber trayendo el balón al pecho."
+    ],
+    "reglas": [
+      "Balón alto suave y controlado.",
+      "Manos abiertas en W.",
+      "10 blocajes y cambio."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir presión de un jugador cerca sin contacto directo, para simular partido."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 136",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-136-BLOCAJE-AEREO-MANOS-ABIERTAS/CampoBase_Blocaje_Aereo_Manos_Abiertas.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-136-BLOCAJE-AEREO-MANOS-ABIERTAS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-137-ESTIRADA-BAJA-PALO",
+  "nombre": "Estirada baja al palo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Estirada",
+      "Blocaje",
+      "Reacción"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero en el centro del arco."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanzador remata raso al palo (izq o der)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero da un paso lateral y se ESTIRA con ambas manos al balón."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Blocaje con manos, cadera aterrizando primero. 10 por lado."
+      }
+    ],
+    "explicacion_breve": "El lanzador remata raso al palo y el portero da un paso lateral y se estira con ambas manos para blocar, aterrizando con la cadera primero.",
+    "leyenda": "Naranja: lanzador (L) · Teal: portero (K) · Flecha roja discontinua: remate raso al palo · Flecha roja: estirada horizontal"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar la estirada horizontal baja para llegar al balón cerca del palo."
+    ],
+    "claves_entrenador": [
+      "El pie más cercano al palo empuja PRIMERO. Nunca lanzarse — es una estirada CONTROLADA."
+    ],
+    "montaje": [
+      "Portero en el centro del arco."
+    ],
+    "desarrollo": [
+      "Portero en el centro del arco.",
+      "Lanzador remata raso al palo (izq o der).",
+      "Portero da un paso lateral y se ESTIRA con ambas manos al balón.",
+      "Blocaje con manos, cadera aterrizando primero. 10 por lado."
+    ],
+    "que_buscamos": [
+      "Estirada",
+      "Blocaje",
+      "Reacción"
+    ],
+    "que_observar": [
+      "Paso lateral previo.",
+      "Estirada con ambas manos.",
+      "Aterrizaje con la cadera."
+    ],
+    "correcciones": [
+      "Empujar con el pie más cercano al palo.",
+      "Estirada controlada, no lanzarse."
+    ],
+    "reglas": [
+      "Portero en el centro del arco.",
+      "Remate raso al palo.",
+      "10 estiradas por lado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Rematar más rápido, o con desvíos, para forzar reacción explosiva."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 12-15 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 137",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: portería."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-137-ESTIRADA-BAJA-PALO/CampoBase_Estirada_Baja_Palo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-137-ESTIRADA-BAJA-PALO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-138-ESTIRADA-ALTA-ANGULO",
+  "nombre": "Estirada alta al ángulo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Estirada",
+      "Ángulo",
+      "Salto"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero en postura básica."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanzador tira balón elevado al ángulo (izq o der)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero SALTA lateralmente con impulso de pie más lejano al palo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Manos al balón, desvío al menos hacia el poste o afuera. 8-10 por lado."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira balones elevados al ángulo y el portero salta lateralmente con impulso del pie contrario para desviar el balón hacia el poste o afuera.",
+    "leyenda": "Naranja: lanzador (L) · Teal: portero (K) · Flecha roja discontinua: remate alto al ángulo · Flecha roja: estirada alta"
+  },
+  "detalle": {
+    "objetivos": [
+      "Alcanzar remates altos al ángulo con estirada vertical."
+    ],
+    "claves_entrenador": [
+      "La estirada alta requiere el impulso del pie CONTRARIO al lado que se va. Rutina y potencia."
+    ],
+    "montaje": [
+      "Portero en postura básica."
+    ],
+    "desarrollo": [
+      "Portero en postura básica.",
+      "Lanzador tira balón elevado al ángulo (izq o der).",
+      "Portero SALTA lateralmente con impulso de pie más lejano al palo.",
+      "Manos al balón, desvío al menos hacia el poste o afuera. 8-10 por lado."
+    ],
+    "que_buscamos": [
+      "Estirada",
+      "Ángulo",
+      "Salto"
+    ],
+    "que_observar": [
+      "Impulso del pie contrario.",
+      "Salto lateral.",
+      "Desvío hacia el poste o afuera."
+    ],
+    "correcciones": [
+      "Impulsar con el pie contrario.",
+      "Desviar hacia el poste o afuera."
+    ],
+    "reglas": [
+      "Balón elevado al ángulo.",
+      "Salto lateral con impulso del pie contrario.",
+      "8-10 por lado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir movimiento previo (portero se mueve al centro antes de que salga el remate)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 12-15 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 138",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: portería."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-138-ESTIRADA-ALTA-ANGULO/CampoBase_Estirada_Alta_Angulo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-138-ESTIRADA-ALTA-ANGULO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-139-RECUPERACION-TRAS-ESTIRADA",
+  "nombre": "Recuperación tras estirada (levantarse rápido)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Recuperación",
+      "Reacción",
+      "Segunda intervención"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón raso al palo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero se estira y blocajá."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Suelta el balón (o rebota) — portero debe levantarse INMEDIATAMENTE."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Lanzador tira segundo balón al otro lado. 8 secuencias dobles."
+      }
+    ],
+    "explicacion_breve": "Tras una estirada y blocaje, el portero suelta el balón y se levanta inmediatamente para afrontar un segundo balón al otro lado.",
+    "leyenda": "Teal: portero (K1, K2, K3) · Flecha roja discontinua: estirada → levantar → nueva estirada"
+  },
+  "detalle": {
+    "objetivos": [
+      "Recuperarse rápido después de una estirada para posible segunda intervención."
+    ],
+    "claves_entrenador": [
+      "Nunca quedarse en el suelo tras estirada. Levantarse con impulso, siempre listo."
+    ],
+    "montaje": [
+      "Lanzador tira balón raso al palo."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón raso al palo.",
+      "Portero se estira y blocajá.",
+      "Suelta el balón (o rebota) — portero debe levantarse INMEDIATAMENTE.",
+      "Lanzador tira segundo balón al otro lado. 8 secuencias dobles."
+    ],
+    "que_buscamos": [
+      "Recuperación",
+      "Reacción",
+      "Segunda intervención"
+    ],
+    "que_observar": [
+      "Velocidad al levantarse.",
+      "Reacción al segundo balón.",
+      "Impulso al levantarse."
+    ],
+    "correcciones": [
+      "No quedarse en el suelo.",
+      "Levantarse con impulso."
+    ],
+    "reglas": [
+      "Estirada y blocaje.",
+      "Levantarse inmediatamente.",
+      "8 secuencias dobles."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Tercer balón inmediatamente después del segundo (triple secuencia)."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 10-12 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 139",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: portería."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-139-RECUPERACION-TRAS-ESTIRADA/CampoBase_Recuperacion_Tras_Estirada.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-139-RECUPERACION-TRAS-ESTIRADA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-140-SAQUES-MANOS-ROLLING",
+  "nombre": "Saques con las manos (rolling)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Saque",
+      "Precisión",
+      "Distribución"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (portero + receptor)"
+    },
+    "material": "balones + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Receptor a 15-20m del portero."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero rueda el balón con la mano por el suelo con precisión."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El pase debe llegar RASO y controlable al receptor."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 saques por brazo (dominante y no dominante)."
+      }
+    ],
+    "explicacion_breve": "El portero rueda el balón con la mano por el suelo con precisión para que llegue raso y controlable al receptor a 15-20m.",
+    "leyenda": "Teal: portero (K) · Naranja: receptor (R) · Flecha azul discontinua: saque raso rodado"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar el saque preciso con las manos para iniciar contragolpe."
+    ],
+    "claves_entrenador": [
+      "El rolling se hace agachado, con giro del hombro. Precisión antes que fuerza."
+    ],
+    "montaje": [
+      "Receptor a 15-20m del portero."
+    ],
+    "desarrollo": [
+      "Receptor a 15-20m del portero.",
+      "Portero rueda el balón con la mano por el suelo con precisión.",
+      "El pase debe llegar RASO y controlable al receptor.",
+      "10 saques por brazo (dominante y no dominante)."
+    ],
+    "que_buscamos": [
+      "Saque",
+      "Precisión",
+      "Distribución"
+    ],
+    "que_observar": [
+      "Precisión del saque.",
+      "Llegada rasa y controlable.",
+      "Giro del hombro."
+    ],
+    "correcciones": [
+      "Precisión antes que fuerza.",
+      "Saque agachado con giro del hombro."
+    ],
+    "reglas": [
+      "Receptor a 15-20m.",
+      "Saque raso rodado.",
+      "10 saques por brazo."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar distancia a 25m; añadir movimiento del receptor."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + receptor). · 10-12 min.",
+      "Fútbol 11: 2 (portero + receptor). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 140",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: baja-media.",
+        "Espacio: área + 20m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-140-SAQUES-MANOS-ROLLING/CampoBase_Saques_Manos_Rolling.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-140-SAQUES-MANOS-ROLLING/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-141-SAQUE-VOLEA-LARGA",
+  "nombre": "Saque con volea larga",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Saque",
+      "Volea",
+      "Distribución"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (portero + receptor)"
+    },
+    "material": "balones + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero con balón en la mano en el área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Toma 2-3 pasos, suelta el balón, y golpea con VOLEA."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Objetivo: llegar controlado a un receptor a 40-50m."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 voleas por sesión."
+      }
+    ],
+    "explicacion_breve": "El portero toma 2-3 pasos, suelta el balón y golpea con volea para llegar controlado a un receptor a 40-50m.",
+    "leyenda": "Teal: portero (K) · Naranja: receptor (R) · Flecha azul discontinua: volea larga en parábola"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar el saque largo con volea para llegar a la mitad del campo."
+    ],
+    "claves_entrenador": [
+      "Suelta el balón antes de pegarle — no cargarlo con el pie. Empeine, tobillo firme."
+    ],
+    "montaje": [
+      "Portero con balón en la mano en el área."
+    ],
+    "desarrollo": [
+      "Portero con balón en la mano en el área.",
+      "Toma 2-3 pasos, suelta el balón, y golpea con VOLEA.",
+      "Objetivo: llegar controlado a un receptor a 40-50m.",
+      "10 voleas por sesión."
+    ],
+    "que_buscamos": [
+      "Saque",
+      "Volea",
+      "Distribución"
+    ],
+    "que_observar": [
+      "Suelta del balón antes de pegarle.",
+      "Golpeo con empeine.",
+      "Llegada controlada al receptor."
+    ],
+    "correcciones": [
+      "Soltar el balón antes de pegarle.",
+      "Empeine y tobillo firme."
+    ],
+    "reglas": [
+      "Balón en la mano en el área.",
+      "2-3 pasos y volea.",
+      "10 voleas por sesión."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Precisar zonas (izq o der del campo) con conos como objetivo."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + receptor). · 10-12 min.",
+      "Fútbol 11: 2 (portero + receptor). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 141",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: campo o medio campo."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-141-SAQUE-VOLEA-LARGA/CampoBase_Saque_Volea_Larga.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-141-SAQUE-VOLEA-LARGA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-142-SAQUE-META-CORTO-LARGO",
+  "nombre": "Saque de meta corto y largo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Saque de meta",
+      "Precisión",
+      "Distribución"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "2 (portero + 2 receptores)"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero coloca balón en el punto de saque de meta."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "5 saques cortos a un receptor a 15m (para iniciar jugada)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "5 saques largos a un receptor a 40m (para contragolpe)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Alternar. 3 series."
+      }
+    ],
+    "explicacion_breve": "El portero practica saques cortos a 15m para iniciar jugada y saques largos a 40m para contragolpe, alternando ambos.",
+    "leyenda": "Teal: portero (K) · Naranja: receptor corto (C) y largo (L) · Flecha azul discontinua: saque corto / largo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Dominar el saque de arco con precisión (corto para iniciar, largo para llegar)."
+    ],
+    "claves_entrenador": [
+      "El corto es CON precisión, no fuerza. El largo es con empeine completo, cuerpo detrás del balón."
+    ],
+    "montaje": [
+      "Portero coloca balón en el punto de saque de meta."
+    ],
+    "desarrollo": [
+      "Portero coloca balón en el punto de saque de meta.",
+      "5 saques cortos a un receptor a 15m (para iniciar jugada).",
+      "5 saques largos a un receptor a 40m (para contragolpe).",
+      "Alternar. 3 series."
+    ],
+    "que_buscamos": [
+      "Saque de meta",
+      "Precisión",
+      "Distribución"
+    ],
+    "que_observar": [
+      "Precisión del saque corto.",
+      "Potencia del saque largo.",
+      "Alternancia corto/largo."
+    ],
+    "correcciones": [
+      "Corto con precisión, no fuerza.",
+      "Largo con empeine completo."
+    ],
+    "reglas": [
+      "Balón en el punto de saque de meta.",
+      "5 cortos + 5 largos.",
+      "Alternar, 3 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir presión de un rival marcando al receptor para forzar decisión."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (portero + 2 receptores). · 12-15 min.",
+      "Fútbol 11: 2 (portero + 2 receptores). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 142",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media.",
+        "Espacio: campo o mitad."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-142-SAQUE-META-CORTO-LARGO/CampoBase_Saque_Meta_Corto_Largo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-142-SAQUE-META-CORTO-LARGO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-143-JUEGO-PIES-BAJO-PRESION",
+  "nombre": "Juego con los pies bajo presión",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Juego de pies",
+      "Presión",
+      "Distribución"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3+ (portero + defensor + atacante)"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero recibe pase atrás de un defensor."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Un atacante lo presiona activamente."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero debe controlar, decidir y pasar a un compañero libre."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 60s con 3 opciones (izq, der, largo)."
+      }
+    ],
+    "explicacion_breve": "El portero recibe un pase atrás, es presionado por un atacante y debe controlar, decidir y pasar a un compañero libre.",
+    "leyenda": "Teal: portero (K) · Azul: defensor (D) y medio libre (M) · Púrpura: atacante (A) · Flecha roja discontinua: presión · Flecha azul discontinua: pase de salida"
+  },
+  "detalle": {
+    "objetivos": [
+      "El portero moderno juega con los pies como un defensor más."
+    ],
+    "claves_entrenador": [
+      "El portero SIEMPRE tiene 2-3 opciones de pase. Elegir la de menor riesgo, no la más 'linda'."
+    ],
+    "montaje": [
+      "Portero recibe pase atrás de un defensor."
+    ],
+    "desarrollo": [
+      "Portero recibe pase atrás de un defensor.",
+      "Un atacante lo presiona activamente.",
+      "Portero debe controlar, decidir y pasar a un compañero libre.",
+      "Rondas de 60s con 3 opciones (izq, der, largo)."
+    ],
+    "que_buscamos": [
+      "Juego de pies",
+      "Presión",
+      "Distribución"
+    ],
+    "que_observar": [
+      "Control del balón.",
+      "Decisión de pase.",
+      "Elección de la opción de menor riesgo."
+    ],
+    "correcciones": [
+      "Elegir la opción de menor riesgo.",
+      "Decidir rápido."
+    ],
+    "reglas": [
+      "Pase atrás del defensor.",
+      "Presión activa del atacante.",
+      "Rondas de 60s con 3 opciones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir tiempo de decisión: pase en menos de 2 segundos."
+    ],
+    "variantes": [
+      "Fútbol 7: 3+ (portero + defensor + atacante). · 15-20 min.",
+      "Fútbol 11: 3+ (portero + defensor + atacante). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 143",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: área + 20m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-143-JUEGO-PIES-BAJO-PRESION/CampoBase_Juego_Pies_Bajo_Presion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-143-JUEGO-PIES-BAJO-PRESION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-144-SALIDA-PIES-FUERA-AREA",
+  "nombre": "Salida con los pies fuera del área",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Salida",
+      "Despeje",
+      "Decisión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (portero + atacante + lanzador)"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Lanzador tira balón profundo entre defensa y arco (diagonal)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Atacante corre a alcanzarlo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero decide: SALIR corriendo del área para despejar antes que el atacante."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Si sale, despejar con el pie lejos y ancho. 8 salidas."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira un balón profundo, el atacante corre a alcanzarlo y el portero decide salir del área para despejar con el pie antes que el atacante.",
+    "leyenda": "Teal: portero (K) · Púrpura: atacante (A) · Flecha roja: salida del portero · Flecha roja discontinua: despeje lejos"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a salir del área para despejar balón profundo o dividir."
+    ],
+    "claves_entrenador": [
+      "La decisión de salir tiene que ser INMEDIATA. Si dudas, no salgas."
+    ],
+    "montaje": [
+      "Lanzador tira balón profundo entre defensa y arco (diagonal)."
+    ],
+    "desarrollo": [
+      "Lanzador tira balón profundo entre defensa y arco (diagonal).",
+      "Atacante corre a alcanzarlo.",
+      "Portero decide: SALIR corriendo del área para despejar antes que el atacante.",
+      "Si sale, despejar con el pie lejos y ancho. 8 salidas."
+    ],
+    "que_buscamos": [
+      "Salida",
+      "Despeje",
+      "Decisión"
+    ],
+    "que_observar": [
+      "Inmediatez de la decisión.",
+      "Salida corriendo del área.",
+      "Despeje lejos y ancho."
+    ],
+    "correcciones": [
+      "Decidir inmediatamente.",
+      "Despejar lejos y ancho."
+    ],
+    "reglas": [
+      "Balón profundo en diagonal.",
+      "Decidir salir o no.",
+      "8 salidas."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir defensor propio persiguiendo — portero decide si sale o cede al defensor."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (portero + atacante + lanzador). · 12-15 min.",
+      "Fútbol 11: 3 (portero + atacante + lanzador). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 144",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: área + 30m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-144-SALIDA-PIES-FUERA-AREA/CampoBase_Salida_Pies_Fuera_Area.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-144-SALIDA-PIES-FUERA-AREA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-145-REACCION-DOBLE-REMATE",
+  "nombre": "Reacción a doble remate (segunda pelota)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Reacción",
+      "Segunda pelota",
+      "Rebote"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2+ (portero + rematadores)"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rematador 1 dispara. Portero blocajá o rechaza."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Rematador 2 aparece para el rebote y dispara de primera."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero debe reaccionar INMEDIATAMENTE al segundo remate."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8 secuencias dobles. Descanso completo entre cada una."
+      }
+    ],
+    "explicacion_breve": "Tras el primer remate y blocaje o rechazo, un segundo rematador aparece para el rebote y dispara de primera, obligando al portero a reaccionar inmediatamente.",
+    "leyenda": "Azul: rematadores (R1, R2) · Teal: portero (K) · Flecha roja discontinua: 1er y 2º remate · Flecha azul discontinua: rechazo/rebote"
+  },
+  "detalle": {
+    "objetivos": [
+      "Reaccionar al rebote propio o de un compañero — segunda intervención."
+    ],
+    "claves_entrenador": [
+      "Tras el primer blocaje/rechazo, el portero se levanta YA. Nunca celebrar mentalmente la parada."
+    ],
+    "montaje": [
+      "Rematador 1 dispara. Portero blocajá o rechaza."
+    ],
+    "desarrollo": [
+      "Rematador 1 dispara. Portero blocajá o rechaza.",
+      "Rematador 2 aparece para el rebote y dispara de primera.",
+      "Portero debe reaccionar INMEDIATAMENTE al segundo remate.",
+      "8 secuencias dobles. Descanso completo entre cada una."
+    ],
+    "que_buscamos": [
+      "Reacción",
+      "Segunda pelota",
+      "Rebote"
+    ],
+    "que_observar": [
+      "Reacción al segundo remate.",
+      "Levantarse tras el primer blocaje.",
+      "Posición para el rebote."
+    ],
+    "correcciones": [
+      "Levantarse ya tras el primer blocaje.",
+      "No celebrar mentalmente la parada."
+    ],
+    "reglas": [
+      "Primer remate y blocaje/rechazo.",
+      "Segundo remate de primera.",
+      "8 secuencias dobles."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Triple remate: 3 disparos consecutivos con recuperación mínima."
+    ],
+    "variantes": [
+      "Fútbol 7: 2+ (portero + rematadores). · 12-15 min.",
+      "Fútbol 11: 2+ (portero + rematadores). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 145",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: muy alta.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-145-REACCION-DOBLE-REMATE/CampoBase_Reaccion_Doble_Remate.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-145-REACCION-DOBLE-REMATE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-146-COORDINACION-OCULO-MANUAL",
+  "nombre": "Coordinación óculo-manual con pelotas",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Reflejos",
+      "Coordinación",
+      "Reacción"
+    ],
+    "tiempo_estimado_15": "8-10 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (lanzador + portero)"
+    },
+    "material": "3 pelotas de tenis",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Portero de pie en postura activa, brazos abajo."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Lanzador tira pelotas de tenis rápido a distintas alturas y direcciones."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero debe agarrar cada una antes del primer bote."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "3 series de 30 segundos. 30s descanso."
+      }
+    ],
+    "explicacion_breve": "El lanzador tira pelotas de tenis rápido a distintas alturas y direcciones, y el portero debe agarrar cada una antes del primer bote.",
+    "leyenda": "Teal: portero (K) · Naranja: lanzador (L) · Círculos blancos: pelotas de tenis · Flechas azules discontinuas: trayectorias"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar los reflejos y coordinación manos-ojos del portero."
+    ],
+    "claves_entrenador": [
+      "Los ojos siguen la pelota HASTA las manos. Nunca mirar antes de agarrar."
+    ],
+    "montaje": [
+      "Portero de pie en postura activa, brazos abajo."
+    ],
+    "desarrollo": [
+      "Portero de pie en postura activa, brazos abajo.",
+      "Lanzador tira pelotas de tenis rápido a distintas alturas y direcciones.",
+      "Portero debe agarrar cada una antes del primer bote.",
+      "3 series de 30 segundos. 30s descanso."
+    ],
+    "que_buscamos": [
+      "Reflejos",
+      "Coordinación",
+      "Reacción"
+    ],
+    "que_observar": [
+      "Seguimiento visual de la pelota.",
+      "Agarre antes del primer bote.",
+      "Reacción a distintas alturas."
+    ],
+    "correcciones": [
+      "Seguir la pelota hasta las manos.",
+      "No mirar antes de agarrar."
+    ],
+    "reglas": [
+      "Postura activa, brazos abajo.",
+      "Pelotas a distintas alturas.",
+      "3 series de 30s."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Usar pelotas de colores distintos con reglas ('solo agarrar la roja')."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (lanzador + portero). · 8-10 min.",
+      "Fútbol 11: 2 (lanzador + portero). · 8-10 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 146",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-10+.",
+        "Intensidad: media.",
+        "Espacio: 3 x 3 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-146-COORDINACION-OCULO-MANUAL/CampoBase_Coordinacion_Oculo_Manual.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-146-COORDINACION-OCULO-MANUAL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-147-FORTALEZA-MENTAL-RESPUESTA-GOL",
+  "nombre": "Fortaleza mental — respuesta al gol recibido",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Mental",
+      "Resiliencia",
+      "Concentración"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 0,
+      "organizacion": "grupo"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Simulación de partido con múltiples remates."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando entra un gol, portero debe hacer RUTINA DE RESETEO: respirar 3 veces, tomar postura."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El próximo balón lo trata como el PRIMERO del partido."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "20 intervenciones simuladas con 3-4 goles intercalados."
+      }
+    ],
+    "explicacion_breve": "En una simulación de partido con múltiples remates, cuando entra un gol el portero hace una rutina de reseteo (respirar 3 veces y tomar postura) y trata el siguiente balón como el primero.",
+    "leyenda": "Teal: portero (K) · Círculo blanco: rematador · Flecha roja discontinua: remate y gol · X roja: gol recibido"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar la resistencia mental del portero para no derrumbarse después de un gol."
+    ],
+    "claves_entrenador": [
+      "El gol pasado NO se puede cambiar. El próximo balón sí. Enfoque siempre adelante."
+    ],
+    "montaje": [
+      "Simulación de partido con múltiples remates."
+    ],
+    "desarrollo": [
+      "Simulación de partido con múltiples remates.",
+      "Cuando entra un gol, portero debe hacer RUTINA DE RESETEO: respirar 3 veces, tomar postura.",
+      "El próximo balón lo trata como el PRIMERO del partido.",
+      "20 intervenciones simuladas con 3-4 goles intercalados."
+    ],
+    "que_buscamos": [
+      "Mental",
+      "Resiliencia",
+      "Concentración"
+    ],
+    "que_observar": [
+      "Rutina de reseteo tras el gol.",
+      "Enfoque en el siguiente balón.",
+      "Respuesta mental al gol."
+    ],
+    "correcciones": [
+      "No derrumbarse tras el gol.",
+      "Enfoque siempre adelante."
+    ],
+    "reglas": [
+      "Simulación de partido con remates.",
+      "Rutina de reseteo tras cada gol.",
+      "20 intervenciones con 3-4 goles."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la frecuencia de goles simulados para entrenar resistencia mental extrema."
+    ],
+    "variantes": [
+      "Fútbol 7: grupo. · 10-12 min.",
+      "Fútbol 11: grupo. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 147",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: variable.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-147-FORTALEZA-MENTAL-RESPUESTA-GOL/CampoBase_Fortaleza_Mental_Respuesta_Gol.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-147-FORTALEZA-MENTAL-RESPUESTA-GOL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-148-COMUNICACION-DEFENSA-BARRERA",
+  "nombre": "Comunicación con defensa (dirigir barrera)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Barrera",
+      "Comunicación",
+      "Organización"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 5,
+      "organizacion": "5+ (portero + 4 defensores)"
+    },
+    "material": "balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Simulación de tiro libre a 25m del arco."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Portero organiza la barrera (3-4 defensores) — indica posición, distancia, altura."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Portero se ubica al lado opuesto de la barrera para ver el balón."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8-10 tiros libres con distintas ubicaciones."
+      }
+    ],
+    "explicacion_breve": "En un tiro libre a 25m, el portero organiza la barrera indicando posición, distancia y altura, y se ubica al lado opuesto para ver el balón.",
+    "leyenda": "Naranja: lanzador (A) · Púrpura: barrera (D) · Teal: portero (K) · Flecha roja discontinua: trayectoria del tiro"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar la organización de la barrera y comunicación con defensores."
+    ],
+    "claves_entrenador": [
+      "El portero es el DIRECTOR de la defensa. Su voz debe ser clara, firme, alta."
+    ],
+    "montaje": [
+      "Simulación de tiro libre a 25m del arco."
+    ],
+    "desarrollo": [
+      "Simulación de tiro libre a 25m del arco.",
+      "Portero organiza la barrera (3-4 defensores) — indica posición, distancia, altura.",
+      "Portero se ubica al lado opuesto de la barrera para ver el balón.",
+      "8-10 tiros libres con distintas ubicaciones."
+    ],
+    "que_buscamos": [
+      "Barrera",
+      "Comunicación",
+      "Organización"
+    ],
+    "que_observar": [
+      "Organización de la barrera.",
+      "Comunicación clara y firme.",
+      "Ubicación al lado opuesto."
+    ],
+    "correcciones": [
+      "Voz clara, firme y alta.",
+      "Ubicarse para ver el balón."
+    ],
+    "reglas": [
+      "Tiro libre a 25m.",
+      "Organizar la barrera de 3-4 defensores.",
+      "8-10 tiros libres."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Combinar tiro libre con posibilidad de pase al área (organización completa)."
+    ],
+    "variantes": [
+      "Fútbol 7: 5+ (portero + 4 defensores). · 12-15 min.",
+      "Fútbol 11: 5+ (portero + 4 defensores). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 148",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media.",
+        "Espacio: área + tiro libre."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-148-COMUNICACION-DEFENSA-BARRERA/CampoBase_Comunicacion_Defensa_Barrera.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-148-COMUNICACION-DEFENSA-BARRERA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-149-CIRCUITO-INTEGRADO-PORTERO",
+  "nombre": "Circuito integrado del portero",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Circuito",
+      "Integración",
+      "Técnica"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3+ (portero + 2 lanzadores)"
+    },
+    "material": "balones + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Estación 1: 3 blocajes rasos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Estación 2: 2 blocajes altos con salto."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Estación 3: 2 estiradas al palo (izq y der)."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Estación 4: 2 saques largos precisos. Circuito × 3 rondas."
+      }
+    ],
+    "explicacion_breve": "Un circuito de cuatro estaciones (blocajes rasos, blocajes altos, estiradas al palo y saques largos) que se repite tres rondas.",
+    "leyenda": "Teal: portero (K) · Círculos blancos: lanzadores · Flechas rojas discontinuas: remates de cada estación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar todos los gestos técnicos del portero en un circuito realista."
+    ],
+    "claves_entrenador": [
+      "El circuito trabaja bajo cansancio — así se entrena el portero real del partido."
+    ],
+    "montaje": [
+      "Estación 1: 3 blocajes rasos."
+    ],
+    "desarrollo": [
+      "Estación 1: 3 blocajes rasos.",
+      "Estación 2: 2 blocajes altos con salto.",
+      "Estación 3: 2 estiradas al palo (izq y der).",
+      "Estación 4: 2 saques largos precisos. Circuito × 3 rondas."
+    ],
+    "que_buscamos": [
+      "Circuito",
+      "Integración",
+      "Técnica"
+    ],
+    "que_observar": [
+      "Calidad de cada gesto técnico.",
+      "Transición entre estaciones.",
+      "Rendimiento bajo cansancio."
+    ],
+    "correcciones": [
+      "Mantener la calidad bajo cansancio.",
+      "Integrar todos los gestos."
+    ],
+    "reglas": [
+      "4 estaciones: rasos, altos, estiradas, saques.",
+      "Circuito × 3 rondas.",
+      "Trabajo bajo cansancio."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir tiempo entre estaciones para aumentar fatiga acumulada."
+    ],
+    "variantes": [
+      "Fútbol 7: 3+ (portero + 2 lanzadores). · 20-25 min.",
+      "Fútbol 11: 3+ (portero + 2 lanzadores). · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 149",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-149-CIRCUITO-INTEGRADO-PORTERO/CampoBase_Circuito_Integrado_Portero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-149-CIRCUITO-INTEGRADO-PORTERO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-150-TEST-EVALUACION-PORTERO",
+  "nombre": "Test evaluación del portero",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Porteros",
+    "que_se_trabaja": [
+      "Evaluación",
+      "Medición",
+      "Rendimiento"
+    ],
+    "tiempo_estimado_15": "25-30 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "1-3 porteros + evaluador"
+    },
+    "material": "balones + planilla + cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "20 remates variados — porcentaje de blocajes exitosos."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Estiradas al palo — balones alcanzados de 10."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Precisión de saques largos — aciertos de 5."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "1v1 — porcentaje de 1v1 detenidos de 8 intentos."
+      }
+    ],
+    "explicacion_breve": "Una batería de cuatro tests (blocajes, estiradas, saques y 1v1) para medir el rendimiento del portero de forma estandarizada y comparable.",
+    "leyenda": "Teal: portero (K) · Naranja: lanzador/atacante (L/A) · Azul: receptor del saque (R) · Flecha roja discontinua: remate/trayectoria"
+  },
+  "detalle": {
+    "objetivos": [
+      "Medir el rendimiento del portero de forma estandarizada."
+    ],
+    "claves_entrenador": [
+      "Registrar todo en planilla comparando trimestre a trimestre. El progreso se ve en meses, no semanas."
+    ],
+    "montaje": [
+      "20 remates variados — porcentaje de blocajes exitosos."
+    ],
+    "desarrollo": [
+      "20 remates variados — porcentaje de blocajes exitosos.",
+      "Estiradas al palo — balones alcanzados de 10.",
+      "Precisión de saques largos — aciertos de 5.",
+      "1v1 — porcentaje de 1v1 detenidos de 8 intentos."
+    ],
+    "que_buscamos": [
+      "Evaluación",
+      "Medición",
+      "Rendimiento"
+    ],
+    "que_observar": [
+      "Porcentaje de blocajes exitosos.",
+      "Balones alcanzados en estiradas.",
+      "Precisión de saques y porcentaje de 1v1."
+    ],
+    "correcciones": [
+      "Registrar todo en planilla.",
+      "Comparar trimestre a trimestre."
+    ],
+    "reglas": [
+      "4 tests: blocajes, estiradas, saques, 1v1.",
+      "Registrar en planilla.",
+      "Comparar trimestre a trimestre."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir test de resistencia (mantener rendimiento tras 15 min de fatiga)."
+    ],
+    "variantes": [
+      "Fútbol 7: 1-3 porteros + evaluador. · 25-30 min.",
+      "Fútbol 11: 1-3 porteros + evaluador. · 25-30 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 6 Portería, ejercicio 150",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: área."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-150-TEST-EVALUACION-PORTERO/CampoBase_Test_Evaluacion_Portero.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-150-TEST-EVALUACION-PORTERO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).

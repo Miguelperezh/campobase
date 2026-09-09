@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.44.0 — 2026-09-09
+
+- Pack150: 25 ejercicios nuevos publicados — 126-150 (Sección 6 «Portería», categoría Porteros), completando el Pack150 (149 ejercicios; el 096 omitido por decisión de Migue).
+- Animaciones desarrolladas leyendo y entendiendo cada ejercicio contra el diagrama del PDF: postura básica, desplazamientos, recepciones (raso/medio/alto), achique 1v1, ángulos de remate, salida en esquina, blocajes aéreos (puños/manos), estiradas (baja/alta), recuperación tras estirada, saques (rolling/volea/meta), juego con los pies, salida fuera del área, doble remate, coordinación óculo-manual, fortaleza mental, comunicación con defensa, circuito integrado y test de evaluación.
+- Correcciones de Migue aplicadas: portero bajo palos en todos los ejercicios, lanzador en el 139, salida del portero hacia el balón en el 134, portería en el 146, test 150 reproduciendo las 4 series sin artefactos, extremidades en negro.
+- 170 pruebas automatizadas en verde; sin cambios en cronómetro, sustituciones, minutos, eventos, puntuaciones ni finalización del partido.
+
 ## 2.43.0 — 2026-09-09
 
 - Pack150: 20 ejercicios nuevos publicados — 106-125 (Sección 5 «Defensa y Duelos 1v1», categoría Táctica), completando la sección.
