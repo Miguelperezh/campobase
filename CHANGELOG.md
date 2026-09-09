@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.43.0 — 2026-09-09
+
+- Pack150: 20 ejercicios nuevos publicados — 106-125 (Sección 5 «Defensa y Duelos 1v1», categoría Táctica), completando la sección.
+- Animaciones desarrolladas leyendo y entendiendo cada ejercicio contra el diagrama del PDF: basculación colectiva, presión alta secuencial, duelo aéreo, marcaje en balón parado, slide tackle (entrada legal), bloqueo de remate, defensa del carril central con comodín, 1v1 lateral por banda (recortar), duelo por segunda pelota, salida ordenada tras robo, zona 4-4-2 y circuito defensivo integrado.
+- 170 pruebas automatizadas en verde; sin cambios en cronómetro, sustituciones, minutos, eventos, puntuaciones ni finalización del partido.
+
 ## 2.42.0 — 2026-09-08
 
 - Preparación de partido: al guardar, la alineación completa de siete jugadores, formación y porteros crea o actualiza automáticamente el partido en vivo en fase «Preparado».

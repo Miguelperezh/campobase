@@ -17935,6 +17935,2066 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
     "frameMs": 100
   }
 },
+{
+  "id": "CAMPOBASE-PACK150-106-2V2-CON-TRANSICIONES",
+  "nombre": "2v2 con transiciones",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Defensa",
+      "Transición",
+      "Cambio de rol"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 5,
+      "organizacion": "4 + portero"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 vs 2 en zona de ataque, con portería defendida."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Si los atacantes marcan, los equipos cambian roles automáticamente."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si los defensores roban, transicionan al ataque en 5 segundos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 3 min con descanso de 1 min."
+      }
+    ],
+    "explicacion_breve": "Un 2v2 en zona de ataque con portería defendida donde, al marcar o al robar, los equipos cambian de rol automáticamente y transicionan en 5 segundos.",
+    "leyenda": "Azul: atacantes (A1, A2) · Púrpura: defensores (D1, D2) · Teal: portero (K) · Flecha azul: pase · Flecha roja: transición al ataque"
+  },
+  "detalle": {
+    "objetivos": [
+      "Combinar defensa y ataque en el mismo ejercicio con cambios de rol."
+    ],
+    "claves_entrenador": [
+      "La transición defensa → ataque debe ser INMEDIATA. Los primeros 5 segundos definen el resultado."
+    ],
+    "montaje": [
+      "2 vs 2 en zona de ataque, con portería defendida."
+    ],
+    "desarrollo": [
+      "2 vs 2 en zona de ataque, con portería defendida.",
+      "Si los atacantes marcan, los equipos cambian roles automáticamente.",
+      "Si los defensores roban, transicionan al ataque en 5 segundos.",
+      "Rondas de 3 min con descanso de 1 min."
+    ],
+    "que_buscamos": [
+      "Defensa",
+      "Transición",
+      "Cambio de rol"
+    ],
+    "que_observar": [
+      "Velocidad de la transición.",
+      "Cambio de rol inmediato.",
+      "Ocupación de espacios tras el robo."
+    ],
+    "correcciones": [
+      "Transicionar en los primeros 5 segundos.",
+      "Cambiar de rol sin dudar."
+    ],
+    "reglas": [
+      "2v2 en zona de ataque con portería defendida.",
+      "Cambio de rol automático al marcar o robar.",
+      "Transición al ataque en 5 segundos."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un jugador comodín para hacer 2v2+1 con superioridad rotativa."
+    ],
+    "variantes": [
+      "Fútbol 7: 4 + portero. · 15-20 min.",
+      "Fútbol 11: 4 + portero. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 106",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-106-2V2-CON-TRANSICIONES/CampoBase_2v2_Con_Transiciones.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-106-2V2-CON-TRANSICIONES/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-107-COBERTURA-DEFENSIVA",
+  "nombre": "Cobertura defensiva (2 defensores triangulando)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Cobertura",
+      "Triangulación",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (2 defensores + 1 atacante)"
+    },
+    "material": "1 balón + 4 conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Zona delimitada. 1 atacante con balón, 2 defensores."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor MÁS CERCA va al balón (primer defensor)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El segundo defensor se ubica en cobertura, 3-4 m detrás y al lado."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Si el primero es superado, el segundo entra al duelo. 60 s por ronda."
+      }
+    ],
+    "explicacion_breve": "En una zona delimitada, un atacante con balón se enfrenta a dos defensores: el más cercano va al balón y el segundo se coloca en cobertura, en triángulo, 3-4 m detrás y al lado.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensores (D1, D2) · Flecha roja: primer defensor al balón · Flecha roja discontinua: cobertura del segundo defensor"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la cobertura del compañero cuando uno va al balón."
+    ],
+    "claves_entrenador": [
+      "El segundo defensor NO se pega al primero — se coloca en TRIÁNGULO. Distancia y ángulo."
+    ],
+    "montaje": [
+      "Zona delimitada. 1 atacante con balón, 2 defensores."
+    ],
+    "desarrollo": [
+      "Zona delimitada. 1 atacante con balón, 2 defensores.",
+      "El defensor MÁS CERCA va al balón (primer defensor).",
+      "El segundo defensor se ubica en cobertura, 3-4 m detrás y al lado.",
+      "Si el primero es superado, el segundo entra al duelo. 60 s por ronda."
+    ],
+    "que_buscamos": [
+      "Cobertura",
+      "Triangulación",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Distancia y ángulo de la cobertura.",
+      "Reacción del segundo defensor.",
+      "Entrada al duelo si el primero es superado."
+    ],
+    "correcciones": [
+      "No pegarse al primer defensor.",
+      "Colocarse en triángulo, no en línea."
+    ],
+    "reglas": [
+      "Zona delimitada con 1 atacante y 2 defensores.",
+      "Primer defensor va al balón.",
+      "Segundo defensor en cobertura a 3-4 m."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un tercer defensor (basculación con 3) para conceptos más colectivos."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (2 defensores + 1 atacante). · 12-15 min.",
+      "Fútbol 11: 3 (2 defensores + 1 atacante). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 107",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-107-COBERTURA-DEFENSIVA/CampoBase_Cobertura_Defensiva.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-107-COBERTURA-DEFENSIVA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-108-BASCULACION-DEFENSIVA-COLECTIVA",
+  "nombre": "Basculación defensiva colectiva",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Basculación",
+      "Línea defensiva",
+      "Sincronización"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6+ (4 defensores + 2-4 atacantes)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 defensores en línea, los atacantes circulan la pelota por la zona ofensiva."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando el balón va a la banda derecha, TODA la línea defensiva se desplaza a la derecha."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cuando cambia de banda, TODA la línea bascula al otro lado."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo continuo 5 min por serie. 3 series."
+      }
+    ],
+    "explicacion_breve": "Cuatro defensores en línea se desplazan como una sola unidad siguiendo la circulación del balón: cuando va a una banda, toda la línea bascula hacia ese lado.",
+    "leyenda": "Púrpura: defensores (D1-D4) · Azul: atacantes (A1-A4) · Flecha roja: basculación de la línea · Flecha azul: circulación del balón"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender el movimiento sincronizado de la línea defensiva."
+    ],
+    "claves_entrenador": [
+      "La línea se mueve como una SOLA UNIDAD. Si un defensor se atrasa, se abre hueco."
+    ],
+    "montaje": [
+      "4 defensores en línea, los atacantes circulan la pelota por la zona ofensiva."
+    ],
+    "desarrollo": [
+      "4 defensores en línea, los atacantes circulan la pelota por la zona ofensiva.",
+      "Cuando el balón va a la banda derecha, TODA la línea defensiva se desplaza a la derecha.",
+      "Cuando cambia de banda, TODA la línea bascula al otro lado.",
+      "Trabajo continuo 5 min por serie. 3 series."
+    ],
+    "que_buscamos": [
+      "Basculación",
+      "Línea defensiva",
+      "Sincronización"
+    ],
+    "que_observar": [
+      "Sincronización de la línea.",
+      "Distancia entre defensores.",
+      "Basculación al cambiar de banda."
+    ],
+    "correcciones": [
+      "Moverse como una sola unidad.",
+      "No dejar huecos al atrasarse."
+    ],
+    "reglas": [
+      "4 defensores en línea.",
+      "Basculación sincronizada con el balón.",
+      "5 min por serie, 3 series."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir defensa en profundidad — subir/bajar juntos según pase adelante/atrás."
+    ],
+    "variantes": [
+      "Fútbol 7: 6+ (4 defensores + 2-4 atacantes). · 15-20 min.",
+      "Fútbol 11: 6+ (4 defensores + 2-4 atacantes). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 108",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media.",
+        "Espacio: 30 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-108-BASCULACION-DEFENSIVA-COLECTIVA/CampoBase_Basculacion_Defensiva_Colectiva.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-108-BASCULACION-DEFENSIVA-COLECTIVA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-109-PRESION-ALTA-3V3",
+  "nombre": "Presión alta 3v3",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Presión",
+      "Presión alta",
+      "Recuperación"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 7,
+      "organizacion": "6 + portero"
+    },
+    "material": "1 balón + portería pequeña",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "3 atacantes intentan salir jugando desde su portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "3 defensores presionan alto — el primer defensor va al balón, los otros cubren líneas de pase."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El objetivo defensivo: forzar error para recuperar cerca de la portería rival."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 2 min. Cambiar roles."
+      }
+    ],
+    "explicacion_breve": "Tres atacantes intentan salir jugando desde su portería mientras tres defensores presionan alto: el primero va al balón y los otros cubren las líneas de pase para forzar el error.",
+    "leyenda": "Azul: atacantes (A1-A3) · Púrpura: defensores (D1-D3) · Teal: portero (K) · Flecha roja: presión · Flecha azul: salida de balón"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar la presión colectiva agresiva en campo rival."
+    ],
+    "claves_entrenador": [
+      "La presión debe ser COLECTIVA. Un solo defensor presionando es un suicidio — el resto tapa opciones."
+    ],
+    "montaje": [
+      "3 atacantes intentan salir jugando desde su portería."
+    ],
+    "desarrollo": [
+      "3 atacantes intentan salir jugando desde su portería.",
+      "3 defensores presionan alto — el primer defensor va al balón, los otros cubren líneas de pase.",
+      "El objetivo defensivo: forzar error para recuperar cerca de la portería rival.",
+      "Rondas de 2 min. Cambiar roles."
+    ],
+    "que_buscamos": [
+      "Presión",
+      "Presión alta",
+      "Recuperación"
+    ],
+    "que_observar": [
+      "Presión colectiva.",
+      "Cobertura de líneas de pase.",
+      "Recuperación cerca de la portería rival."
+    ],
+    "correcciones": [
+      "Presionar en bloque, no en solitario.",
+      "Tapar las líneas de pase."
+    ],
+    "reglas": [
+      "3 atacantes salen jugando desde su portería.",
+      "Presión alta colectiva.",
+      "Rondas de 2 min con cambio de roles."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cambiar a 4v4 con más espacio para trabajar la coordinación de 4 defensores."
+    ],
+    "variantes": [
+      "Fútbol 7: 6 + portero. · 15-20 min.",
+      "Fútbol 11: 6 + portero. · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 109",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-109-PRESION-ALTA-3V3/CampoBase_Presion_Alta_3v3.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-109-PRESION-ALTA-3V3/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-110-ANTICIPACION-AL-PASE",
+  "nombre": "Anticipación al pase",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Anticipación",
+      "Lectura del pase",
+      "Interceptación"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (pasador, receptor, defensor)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Pasador a 12 m, receptor a 8 m del pasador, defensor detrás."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor debe ANTICIPARSE al pase — cuando lee que va, se lanza a interceptar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si intercepta gana punto. Si falla y el receptor recibe libre, punto para los atacantes."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 pases por serie. Rotar."
+      }
+    ],
+    "explicacion_breve": "Con un pasador, un receptor y un defensor detrás, el defensor debe leer la postura del pasador y lanzarse a interceptar el pase antes de que llegue al receptor.",
+    "leyenda": "Naranja: pasador (P) · Azul: receptor (R) · Púrpura: defensor (D) · Flecha azul: pase · Flecha roja: anticipación/interceptación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Entrenar la lectura del pase para robar antes de que llegue al destino."
+    ],
+    "claves_entrenador": [
+      "La anticipación viene de leer la POSTURA del pasador — su pie de apoyo delata a dónde va el balón."
+    ],
+    "montaje": [
+      "Pasador a 12 m, receptor a 8 m del pasador, defensor detrás."
+    ],
+    "desarrollo": [
+      "Pasador a 12 m, receptor a 8 m del pasador, defensor detrás.",
+      "El defensor debe ANTICIPARSE al pase — cuando lee que va, se lanza a interceptar.",
+      "Si intercepta gana punto. Si falla y el receptor recibe libre, punto para los atacantes.",
+      "10 pases por serie. Rotar."
+    ],
+    "que_buscamos": [
+      "Anticipación",
+      "Lectura del pase",
+      "Interceptación"
+    ],
+    "que_observar": [
+      "Lectura de la postura del pasador.",
+      "Momento del lanzamiento a interceptar.",
+      "Precisión de la interceptación."
+    ],
+    "correcciones": [
+      "Leer la postura antes de lanzarse.",
+      "No llegar tarde al pase."
+    ],
+    "reglas": [
+      "Pasador a 12 m, receptor a 8 m.",
+      "Anticiparse al pase.",
+      "10 pases por serie."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "El pasador puede hacer pases 'trampa' (finge un lado, pasa al otro)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (pasador, receptor, defensor). · 12-15 min.",
+      "Fútbol 11: 3 (pasador, receptor, defensor). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 110",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 15 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-110-ANTICIPACION-AL-PASE/CampoBase_Anticipacion_Al_Pase.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-110-ANTICIPACION-AL-PASE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-111-RECUPERACION-TRAS-PERDIDA",
+  "nombre": "Recuperación tras pérdida (contrapresión)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Contrapresión",
+      "Recuperación",
+      "Presión"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "4+ (2v2 mínimo)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 atacantes tienen balón, 2 defensores lo persiguen."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Si los atacantes pierden el balón, tienen 5 SEGUNDOS para recuperarlo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si lo recuperan en ese tiempo, ganan punto extra."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 2 min. Trabajo continuo 15 min."
+      }
+    ],
+    "explicacion_breve": "Dos atacantes con balón son perseguidos por dos defensores; si pierden el balón, tienen 5 segundos para recuperarlo y ganar un punto extra.",
+    "leyenda": "Azul: atacantes (A1, A2) · Púrpura: defensores (D1, D2) · Flecha roja: contrapresión · Flecha azul: posesión"
+  },
+  "detalle": {
+    "objetivos": [
+      "Automatizar el gesto de presionar inmediatamente tras perder el balón."
+    ],
+    "claves_entrenador": [
+      "La contrapresión es CONCEPTUAL, no física. Los primeros 5 segundos tras la pérdida son ORO."
+    ],
+    "montaje": [
+      "2 atacantes tienen balón, 2 defensores lo persiguen."
+    ],
+    "desarrollo": [
+      "2 atacantes tienen balón, 2 defensores lo persiguen.",
+      "Si los atacantes pierden el balón, tienen 5 SEGUNDOS para recuperarlo.",
+      "Si lo recuperan en ese tiempo, ganan punto extra.",
+      "Rondas de 2 min. Trabajo continuo 15 min."
+    ],
+    "que_buscamos": [
+      "Contrapresión",
+      "Recuperación",
+      "Presión"
+    ],
+    "que_observar": [
+      "Reacción inmediata tras la pérdida.",
+      "Presión colectiva.",
+      "Recuperación en 5 segundos."
+    ],
+    "correcciones": [
+      "Presionar de inmediato, no lamentarse.",
+      "Recuperar en los primeros 5 segundos."
+    ],
+    "reglas": [
+      "2v2 con balón.",
+      "5 segundos para recuperar tras la pérdida.",
+      "Rondas de 2 min, 15 min total."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir el tiempo de recuperación a 3 segundos — presión aún más intensa."
+    ],
+    "variantes": [
+      "Fútbol 7: 4+ (2v2 mínimo). · 12-15 min.",
+      "Fútbol 11: 4+ (2v2 mínimo). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 111",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-111-RECUPERACION-TRAS-PERDIDA/CampoBase_Recuperacion_Tras_Perdida.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-111-RECUPERACION-TRAS-PERDIDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-112-DUELO-AEREO-DEFENSIVO",
+  "nombre": "Duelo aéreo defensivo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Juego aéreo",
+      "Despeje",
+      "Duelo"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (lanzador + 2 competidores)"
+    },
+    "material": "5 balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El lanzador tira el balón alto al centro del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "2 jugadores (uno defensivo, uno ofensivo) compiten por el cabeceo."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El defensor debe DESPEJAR (alto, ancho, lejos). El ofensivo cabecea a portería."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 duelos. Alternar posiciones."
+      }
+    ],
+    "explicacion_breve": "Un lanzador tira el balón alto al centro del área y dos jugadores compiten por el cabeceo: el defensor debe despejar alto, ancho y lejos, mientras el ofensivo cabecea a portería.",
+    "leyenda": "Naranja: lanzador (L) · Azul: atacante (A) · Púrpura: defensor (D) · Flecha azul: trayectoria del balón · Flecha roja: despeje"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a ganar el duelo aéreo defensivamente — despejar, no dejar bajar."
+    ],
+    "claves_entrenador": [
+      "Al saltar, usar los brazos para PROTEGER el espacio del cuerpo. Salto vertical explosivo."
+    ],
+    "montaje": [
+      "El lanzador tira el balón alto al centro del área."
+    ],
+    "desarrollo": [
+      "El lanzador tira el balón alto al centro del área.",
+      "2 jugadores (uno defensivo, uno ofensivo) compiten por el cabeceo.",
+      "El defensor debe DESPEJAR (alto, ancho, lejos). El ofensivo cabecea a portería.",
+      "10 duelos. Alternar posiciones."
+    ],
+    "que_buscamos": [
+      "Juego aéreo",
+      "Despeje",
+      "Duelo"
+    ],
+    "que_observar": [
+      "Salto vertical explosivo.",
+      "Protección del espacio con los brazos.",
+      "Despeje alto, ancho y lejos."
+    ],
+    "correcciones": [
+      "Proteger el espacio con los brazos.",
+      "Despejar, no dejar bajar."
+    ],
+    "reglas": [
+      "Balón alto al centro del área.",
+      "Duelo aéreo 1v1.",
+      "10 duelos alternando posiciones."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir presión (correr 5 m antes de saltar) para simular ganancia real de posición."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (lanzador + 2 competidores). · 10-12 min.",
+      "Fútbol 11: 3 (lanzador + 2 competidores). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 112",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 8 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-112-DUELO-AEREO-DEFENSIVO/CampoBase_Duelo_Aereo_Defensivo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-112-DUELO-AEREO-DEFENSIVO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-113-MARCAJE-BALON-PARADO",
+  "nombre": "Marcaje en jugada de balón parado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Marcaje",
+      "Balón parado",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 7,
+      "organizacion": "6+ (3 defensores + 3 rematadores + portero)"
+    },
+    "material": "balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Simulación de tiro de esquina."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cada defensor se asigna a un rematador — marcaje individual antes del centro."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Al centro, el defensor debe mantenerse ENTRE su marcado y el balón."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "8-10 esquinas. Rotar."
+      }
+    ],
+    "explicacion_breve": "En una simulación de tiro de esquina, cada defensor se asigna a un rematador y, al centro, debe mantenerse entre su marcado y el balón.",
+    "leyenda": "Púrpura: defensores (D1-D3) · Azul: rematadores (A1-A3) · Teal: portero (K) · Flecha azul: centro · Flecha roja: marcaje"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la marca individual en tiros de esquina y tiros libres cercanos."
+    ],
+    "claves_entrenador": [
+      "El defensor sigue a su marcado, NUNCA sigue el balón. Este es el error más común."
+    ],
+    "montaje": [
+      "Simulación de tiro de esquina."
+    ],
+    "desarrollo": [
+      "Simulación de tiro de esquina.",
+      "Cada defensor se asigna a un rematador — marcaje individual antes del centro.",
+      "Al centro, el defensor debe mantenerse ENTRE su marcado y el balón.",
+      "8-10 esquinas. Rotar."
+    ],
+    "que_buscamos": [
+      "Marcaje",
+      "Balón parado",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Marcaje individual.",
+      "Posición entre marcado y balón.",
+      "Seguimiento del marcado, no del balón."
+    ],
+    "correcciones": [
+      "Seguir al marcado, no al balón.",
+      "Mantenerse entre el marcado y el balón."
+    ],
+    "reglas": [
+      "Simulación de tiro de esquina.",
+      "Marcaje individual antes del centro.",
+      "8-10 esquinas con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Mezclar marca zonal + individual (asignar zonas + 1 marca especial al rematador estrella)."
+    ],
+    "variantes": [
+      "Fútbol 7: 6+ (3 defensores + 3 rematadores + portero). · 12-15 min.",
+      "Fútbol 11: 6+ (3 defensores + 3 rematadores + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 113",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-113-MARCAJE-BALON-PARADO/CampoBase_Marcaje_Balon_Parado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-113-MARCAJE-BALON-PARADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-114-SLIDE-TACKLE-CORRECTO",
+  "nombre": "Slide tackle correcto (entrada legal)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Entrada",
+      "Slide tackle",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 por pareja"
+    },
+    "material": "1 balón + colchoneta opcional",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El atacante conduce a media velocidad por un carril lineal."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor persigue, y en el momento clave se DESLIZA con la pierna extendida."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El pie que va al balón debe tocarlo antes que al rival."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 entradas por lado. Alternar."
+      }
+    ],
+    "explicacion_breve": "Un atacante conduce a media velocidad por un carril lineal y el defensor, en el momento clave, se desliza con la pierna extendida tocando el balón antes que al rival.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Flecha azul: conducción · Flecha roja: entrada deslizante"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender la técnica de la entrada al piso — solo cuando ES necesaria."
+    ],
+    "claves_entrenador": [
+      "El slide NUNCA es la primera opción. Solo cuando ya perdiste posición y no queda alternativa."
+    ],
+    "montaje": [
+      "El atacante conduce a media velocidad por un carril lineal."
+    ],
+    "desarrollo": [
+      "El atacante conduce a media velocidad por un carril lineal.",
+      "El defensor persigue, y en el momento clave se DESLIZA con la pierna extendida.",
+      "El pie que va al balón debe tocarlo antes que al rival.",
+      "10 entradas por lado. Alternar."
+    ],
+    "que_buscamos": [
+      "Entrada",
+      "Slide tackle",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Momento de la entrada.",
+      "Contacto con el balón antes que con el rival.",
+      "Técnica de deslizamiento."
+    ],
+    "correcciones": [
+      "Tocar el balón antes que al rival.",
+      "No usar el slide como primera opción."
+    ],
+    "reglas": [
+      "Conducción a media velocidad por carril lineal.",
+      "Deslizarse con la pierna extendida.",
+      "10 entradas por lado."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Practicar slide con progresión: primero suelo blando, después terreno normal."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 por pareja. · 10-12 min.",
+      "Fútbol 11: 2 por pareja. · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 114",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 5 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-114-SLIDE-TACKLE-CORRECTO/CampoBase_Slide_Tackle_Correcto.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-114-SLIDE-TACKLE-CORRECTO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-115-BLOQUEO-DE-REMATE",
+  "nombre": "Bloqueo de remate",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Bloqueo",
+      "Defensa",
+      "Remate"
+    ],
+    "tiempo_estimado_15": "10-12 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor, portero)"
+    },
+    "material": "balones + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El atacante recibe el balón a 18 m de la portería."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor está a 3 m del atacante, en postura activa."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cuando el atacante va a rematar, el defensor CIERRA el ángulo con el cuerpo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Objetivo: bloquear el disparo con el cuerpo (piernas o pecho)."
+      }
+    ],
+    "explicacion_breve": "Un atacante recibe a 18 m de la portería y, cuando va a rematar, el defensor cierra el ángulo con el cuerpo para bloquear el disparo con piernas o pecho.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Teal: portero (K) · Flecha azul: remate · Flecha roja: cierre del ángulo"
+  },
+  "detalle": {
+    "objetivos": [
+      "Interceptar disparos con posición corporal correcta."
+    ],
+    "claves_entrenador": [
+      "El bloqueo se hace de FRENTE al balón, no de costado. Cuerpo compacto, brazos pegados."
+    ],
+    "montaje": [
+      "El atacante recibe el balón a 18 m de la portería."
+    ],
+    "desarrollo": [
+      "El atacante recibe el balón a 18 m de la portería.",
+      "El defensor está a 3 m del atacante, en postura activa.",
+      "Cuando el atacante va a rematar, el defensor CIERRA el ángulo con el cuerpo.",
+      "Objetivo: bloquear el disparo con el cuerpo (piernas o pecho)."
+    ],
+    "que_buscamos": [
+      "Bloqueo",
+      "Defensa",
+      "Remate"
+    ],
+    "que_observar": [
+      "Posición de frente al balón.",
+      "Cuerpo compacto.",
+      "Cierre del ángulo."
+    ],
+    "correcciones": [
+      "Bloquear de frente, no de costado.",
+      "Cuerpo compacto, brazos pegados."
+    ],
+    "reglas": [
+      "Atacante recibe a 18 m de la portería.",
+      "Defensor a 3 m en postura activa.",
+      "Cerrar el ángulo y bloquear."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Aumentar la velocidad del disparo, o hacer el bloqueo desde diagonal."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor, portero). · 10-12 min.",
+      "Fútbol 11: 3 (atacante, defensor, portero). · 10-12 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 115",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 18 x 12 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-115-BLOQUEO-DE-REMATE/CampoBase_Bloqueo_De_Remate.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-115-BLOQUEO-DE-REMATE/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-116-ROBO-POR-INTERCEPTACION",
+  "nombre": "Robo por interceptación",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Interceptación",
+      "Rondo",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "4+ (2v2 o rondo con recuperador)"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Rondo 4v2 clásico."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Los 2 recuperadores deben tratar de INTERCEPTAR pases, NO de meter pierna."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cada interceptación limpia = 1 punto para el defensor."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo 12 min con rotación."
+      }
+    ],
+    "explicacion_breve": "En un rondo 4v2 clásico, los dos recuperadores deben interceptar los pases (no meter la pierna); cada interceptación limpia vale un punto.",
+    "leyenda": "Azul: poseedores (A1-A4) · Púrpura: recuperadores (D1, D2) · Flecha azul: pase · Flecha roja: interceptación"
+  },
+  "detalle": {
+    "objetivos": [
+      "Robar el balón interceptando el pase — el robo más limpio del fútbol."
+    ],
+    "claves_entrenador": [
+      "Leer el pase antes de que salga. El defensor que se mueve cuando el balón ya viene, siempre llega tarde."
+    ],
+    "montaje": [
+      "Rondo 4v2 clásico."
+    ],
+    "desarrollo": [
+      "Rondo 4v2 clásico.",
+      "Los 2 recuperadores deben tratar de INTERCEPTAR pases, NO de meter pierna.",
+      "Cada interceptación limpia = 1 punto para el defensor.",
+      "Trabajo 12 min con rotación."
+    ],
+    "que_buscamos": [
+      "Interceptación",
+      "Rondo",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Lectura del pase.",
+      "Interceptación limpia.",
+      "Anticipación."
+    ],
+    "correcciones": [
+      "Leer el pase antes de que salga.",
+      "Interceptar, no meter la pierna."
+    ],
+    "reglas": [
+      "Rondo 4v2.",
+      "Interceptar, no meter pierna.",
+      "12 min con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir el espacio del rondo para forzar más pases y mayor riesgo de intercepción."
+    ],
+    "variantes": [
+      "Fútbol 7: 4+ (2v2 o rondo con recuperador). · 12-15 min.",
+      "Fútbol 11: 4+ (2v2 o rondo con recuperador). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 116",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: media-alta.",
+        "Espacio: 12 x 12 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-116-ROBO-POR-INTERCEPTACION/CampoBase_Robo_Por_Interceptacion.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-116-ROBO-POR-INTERCEPTACION/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-117-ACHICAR-ESPACIOS",
+  "nombre": "Achicar espacios (defender profundidad)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Línea defensiva",
+      "Profundidad",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 7,
+      "organizacion": "6+ (4 def + 2 atac + portero)"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "4 defensores en línea, 2 atacantes con balón."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando el balón está lejos de la portería, los defensores SUBEN la línea (achican espacios)."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cuando el balón progresa, la línea RETROCEDE compacta."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo 15 min con rotación."
+      }
+    ],
+    "explicacion_breve": "Cuatro defensores en línea ajustan su altura según la posición del balón: suben cuando está lejos de la portería y retroceden compactos cuando progresa.",
+    "leyenda": "Púrpura: defensores (D1-D4) · Azul: atacantes (A1, A2) · Teal: portero (K) · Flecha roja: subida de la línea · Flecha azul: progresión del balón"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprender a subir la línea defensiva para reducir espacio al ataque."
+    ],
+    "claves_entrenador": [
+      "Subir la línea da MUCHO espacio a la espalda — solo hacerlo cuando el rival no puede pasar largo cómodo."
+    ],
+    "montaje": [
+      "4 defensores en línea, 2 atacantes con balón."
+    ],
+    "desarrollo": [
+      "4 defensores en línea, 2 atacantes con balón.",
+      "Cuando el balón está lejos de la portería, los defensores SUBEN la línea (achican espacios).",
+      "Cuando el balón progresa, la línea RETROCEDE compacta.",
+      "Trabajo 15 min con rotación."
+    ],
+    "que_buscamos": [
+      "Línea defensiva",
+      "Profundidad",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Altura de la línea.",
+      "Compacidad al retroceder.",
+      "Sincronización."
+    ],
+    "correcciones": [
+      "Subir solo si no hay pase largo cómodo.",
+      "Retroceder compactos."
+    ],
+    "reglas": [
+      "4 defensores en línea, 2 atacantes.",
+      "Subir la línea con el balón lejos.",
+      "Retroceder compactos cuando progresa."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir defensor a la 'trampa del offside' — sincronizar la salida cuando el atacante recibe."
+    ],
+    "variantes": [
+      "Fútbol 7: 6+ (4 def + 2 atac + portero). · 15-20 min.",
+      "Fútbol 11: 6+ (4 def + 2 atac + portero). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 117",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media-alta.",
+        "Espacio: 30 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-117-ACHICAR-ESPACIOS/CampoBase_Achicar_Espacios.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-117-ACHICAR-ESPACIOS/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-118-DEFENSA-CARRIL-CENTRAL",
+  "nombre": "Defensa del carril central (bloquear pase clave)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Carril central",
+      "Bloqueo de pase",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 5,
+      "organizacion": "5 (2 def + 2 atac + portero)"
+    },
+    "material": "1 balón + 1 portería + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "2 atacantes intentan pasar la pelota por el CARRIL CENTRAL a un tercero (comodín)."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "2 defensores deben bloquear ese pase."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si el pase pasa, punto para los atacantes. Si intercepta, punto para la defensa."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 3 min. Rotar."
+      }
+    ],
+    "explicacion_breve": "Dos atacantes intentan pasar por el carril central a un comodín mientras dos defensores bloquean ese pase; si pasa, punto para los atacantes, si intercepta, para la defensa.",
+    "leyenda": "Azul: atacantes (A1, A2) · Púrpura: defensores (D1, D2) · Teal: portero (K) · Líneas grises: carril central · Flecha azul: pase a bloquear"
+  },
+  "detalle": {
+    "objetivos": [
+      "Cerrar el carril central que da entrada al remate — la zona más peligrosa."
+    ],
+    "claves_entrenador": [
+      "El carril central es 'el pasillo del gol'. Cerrarlo obliga a jugar por bandas — menos peligroso."
+    ],
+    "montaje": [
+      "2 atacantes intentan pasar la pelota por el CARRIL CENTRAL a un tercero (comodín)."
+    ],
+    "desarrollo": [
+      "2 atacantes intentan pasar la pelota por el CARRIL CENTRAL a un tercero (comodín).",
+      "2 defensores deben bloquear ese pase.",
+      "Si el pase pasa, punto para los atacantes. Si intercepta, punto para la defensa.",
+      "Rondas de 3 min. Rotar."
+    ],
+    "que_buscamos": [
+      "Carril central",
+      "Bloqueo de pase",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Cierre del carril central.",
+      "Bloqueo del pase clave.",
+      "Orientación defensiva."
+    ],
+    "correcciones": [
+      "Cerrar el carril central.",
+      "Obligar a jugar por bandas."
+    ],
+    "reglas": [
+      "Pase por el carril central a un comodín.",
+      "2 defensores bloquean el pase.",
+      "Rondas de 3 min con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un tercer atacante para forzar una circulación más veloz."
+    ],
+    "variantes": [
+      "Fútbol 7: 5 (2 def + 2 atac + portero). · 12-15 min.",
+      "Fútbol 11: 5 (2 def + 2 atac + portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 118",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: media-alta.",
+        "Espacio: 25 x 18 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-118-DEFENSA-CARRIL-CENTRAL/CampoBase_Defensa_Carril_Central.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-118-DEFENSA-CARRIL-CENTRAL/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-119-1V1-LATERAL-POR-BANDA",
+  "nombre": "1v1 lateral por banda",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "1v1",
+      "Banda",
+      "Defensa"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 2,
+      "organizacion": "2 (atacante + defensor) + portero opcional"
+    },
+    "material": "1 balón + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El atacante recibe la pelota en la banda, cerca del área."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Debe conducir hasta el fondo para centrar, o cortar hacia el centro para rematar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El defensor debe cerrar el centro y forzarlo hacia la línea de fondo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 duelos. Alternar bandas."
+      }
+    ],
+    "explicacion_breve": "Un atacante recibe en la banda cerca del área y debe conducir al fondo para centrar o cortar al centro; el defensor cierra el centro y lo fuerza hacia la línea de fondo.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Flecha azul: conducción/centro · Flecha roja: cierre del defensor"
+  },
+  "detalle": {
+    "objetivos": [
+      "Defender el 1v1 típico de banda — evitar centro y desborde."
+    ],
+    "claves_entrenador": [
+      "Nunca ir al balón de frente. Perfil abierto, empujar al atacante hacia la línea — menos peligroso."
+    ],
+    "montaje": [
+      "El atacante recibe la pelota en la banda, cerca del área."
+    ],
+    "desarrollo": [
+      "El atacante recibe la pelota en la banda, cerca del área.",
+      "Debe conducir hasta el fondo para centrar, o cortar hacia el centro para rematar.",
+      "El defensor debe cerrar el centro y forzarlo hacia la línea de fondo.",
+      "10 duelos. Alternar bandas."
+    ],
+    "que_buscamos": [
+      "1v1",
+      "Banda",
+      "Defensa"
+    ],
+    "que_observar": [
+      "Perfil abierto.",
+      "Cierre del centro.",
+      "Forzar hacia la línea de fondo."
+    ],
+    "correcciones": [
+      "No ir de frente al balón.",
+      "Empujar al atacante hacia la línea."
+    ],
+    "reglas": [
+      "Atacante recibe en la banda cerca del área.",
+      "Defensor cierra el centro.",
+      "10 duelos alternando bandas."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir un compañero en cobertura interna, trabajar la coordinación."
+    ],
+    "variantes": [
+      "Fútbol 7: 2 (atacante + defensor) + portero opcional. · 12-15 min.",
+      "Fútbol 11: 2 (atacante + defensor) + portero opcional. · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 119",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-119-1V1-LATERAL-POR-BANDA/CampoBase_1v1_Lateral_Por_Banda.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-119-1V1-LATERAL-POR-BANDA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-120-1V1-CENTRAL-ENCARADO",
+  "nombre": "1v1 central encarado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "1v1",
+      "Defensa central",
+      "Duelo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor, portero)"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El atacante recibe el balón de frente a la portería a 20 m."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El defensor está a 3 m, en postura activa."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El atacante trata de encarar y rematar. El defensor debe evitar el remate limpio."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 duelos. Rotar."
+      }
+    ],
+    "explicacion_breve": "Un atacante recibe de frente a la portería a 20 m y trata de encarar y rematar; el defensor, a 3 m en postura activa, debe evitar el remate limpio.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Teal: portero (K) · Flecha azul: encare/remate · Flecha roja: reacción defensiva"
+  },
+  "detalle": {
+    "objetivos": [
+      "Defender el 1v1 en zona central — el más peligroso."
+    ],
+    "claves_entrenador": [
+      "El central es el 1v1 más letal. Cuerpo bajo, primer paso reactivo, no lanzarse temprano."
+    ],
+    "montaje": [
+      "El atacante recibe el balón de frente a la portería a 20 m."
+    ],
+    "desarrollo": [
+      "El atacante recibe el balón de frente a la portería a 20 m.",
+      "El defensor está a 3 m, en postura activa.",
+      "El atacante trata de encarar y rematar. El defensor debe evitar el remate limpio.",
+      "10 duelos. Rotar."
+    ],
+    "que_buscamos": [
+      "1v1",
+      "Defensa central",
+      "Duelo"
+    ],
+    "que_observar": [
+      "Cuerpo bajo.",
+      "Primer paso reactivo.",
+      "No lanzarse temprano."
+    ],
+    "correcciones": [
+      "Cuerpo bajo, no lanzarse temprano.",
+      "Primer paso reactivo."
+    ],
+    "reglas": [
+      "Atacante recibe de frente a 20 m.",
+      "Defensor a 3 m en postura activa.",
+      "10 duelos con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir espacio y tiempo (el atacante tiene 5 s desde que recibe)."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor, portero). · 12-15 min.",
+      "Fútbol 11: 3 (atacante, defensor, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 120",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-120-1V1-CENTRAL-ENCARADO/CampoBase_1v1_Central_Encarado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-120-1V1-CENTRAL-ENCARADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-121-DUELO-SEGUNDA-PELOTA",
+  "nombre": "Duelo por segunda pelota",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Segunda pelota",
+      "Duelo",
+      "Anticipación"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 4,
+      "organizacion": "4 (2v2)"
+    },
+    "material": "5 balones",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El entrenador tira el balón alto o lo rebota contra la pared."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "2 vs 2 se disputan el balón dividido en el aire o al pique."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El equipo que gana el control debe pasarse 2 veces la pelota entre ellos."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 60 s. Trabajo 15 min."
+      }
+    ],
+    "explicacion_breve": "El entrenador tira el balón alto o lo rebota contra la pared y un 2v2 se disputa el balón dividido; el equipo que gana el control debe pasarse dos veces la pelota.",
+    "leyenda": "Azul: equipo A (A1, A2) · Púrpura: equipo D (D1, D2) · Flecha azul: trayectoria del balón · Flecha roja: disputa"
+  },
+  "detalle": {
+    "objetivos": [
+      "Ganar el balón dividido tras rebote, choque o disputa aérea."
+    ],
+    "claves_entrenador": [
+      "En la segunda pelota, ANTICIPAR la posición es más importante que la velocidad al balón."
+    ],
+    "montaje": [
+      "El entrenador tira el balón alto o lo rebota contra la pared."
+    ],
+    "desarrollo": [
+      "El entrenador tira el balón alto o lo rebota contra la pared.",
+      "2 vs 2 se disputan el balón dividido en el aire o al pique.",
+      "El equipo que gana el control debe pasarse 2 veces la pelota entre ellos.",
+      "Rondas de 60 s. Trabajo 15 min."
+    ],
+    "que_buscamos": [
+      "Segunda pelota",
+      "Duelo",
+      "Anticipación"
+    ],
+    "que_observar": [
+      "Anticipación de la posición.",
+      "Disputa del balón dividido.",
+      "Control tras ganar el balón."
+    ],
+    "correcciones": [
+      "Anticipar la posición, no solo correr.",
+      "Asegurar el control tras ganar el balón."
+    ],
+    "reglas": [
+      "Balón dividido lanzado por el entrenador.",
+      "2v2 por el control.",
+      "Rondas de 60 s, 15 min total."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir portería y tiempo de finalización tras ganar el balón dividido."
+    ],
+    "variantes": [
+      "Fútbol 7: 4 (2v2). · 12-15 min.",
+      "Fútbol 11: 4 (2v2). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 121",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-12+.",
+        "Intensidad: alta.",
+        "Espacio: 10 x 10 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-121-DUELO-SEGUNDA-PELOTA/CampoBase_Duelo_Segunda_Pelota.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-121-DUELO-SEGUNDA-PELOTA/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-122-SALIDA-ORDENADA-TRAS-ROBO",
+  "nombre": "Salida ordenada tras robo (transición def→ataque)",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Transición",
+      "Salida de balón",
+      "Contraataque"
+    ],
+    "tiempo_estimado_15": "15-20 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "6+ (3v3 con portería)"
+    },
+    "material": "1 balón + 1 portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "3v3 en zona central."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Cuando la defensa recupera el balón, tiene 10 SEGUNDOS para llegar a la portería rival."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Si no llega, se anula el ataque y vuelven a defender."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Rondas de 2 min. 15 min total."
+      }
+    ],
+    "explicacion_breve": "En un 3v3 en zona central, cuando la defensa recupera el balón tiene 10 segundos para llegar a la portería rival; si no llega, se anula el ataque.",
+    "leyenda": "Azul: atacantes (A1-A3) · Púrpura: defensores (D1-D3) · Flecha roja: transición al ataque · Flecha azul: primer pase"
+  },
+  "detalle": {
+    "objetivos": [
+      "Aprovechar el momento clave: los 5 segundos post-robo son de oro."
+    ],
+    "claves_entrenador": [
+      "Tras el robo, el ATACANTE MÁS ADELANTADO ya está corriendo — buscarlo con el primer pase."
+    ],
+    "montaje": [
+      "3v3 en zona central."
+    ],
+    "desarrollo": [
+      "3v3 en zona central.",
+      "Cuando la defensa recupera el balón, tiene 10 SEGUNDOS para llegar a la portería rival.",
+      "Si no llega, se anula el ataque y vuelven a defender.",
+      "Rondas de 2 min. 15 min total."
+    ],
+    "que_buscamos": [
+      "Transición",
+      "Salida de balón",
+      "Contraataque"
+    ],
+    "que_observar": [
+      "Primer pase tras el robo.",
+      "Búsqueda del atacante adelantado.",
+      "Velocidad de la transición."
+    ],
+    "correcciones": [
+      "Buscar al atacante adelantado con el primer pase.",
+      "Transicionar sin dudar."
+    ],
+    "reglas": [
+      "3v3 en zona central.",
+      "10 segundos para llegar a la portería rival.",
+      "Rondas de 2 min, 15 min total."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir el tiempo a 7 segundos para forzar una transición más veloz."
+    ],
+    "variantes": [
+      "Fútbol 7: 6+ (3v3 con portería). · 15-20 min.",
+      "Fútbol 11: 6+ (3v3 con portería). · 15-20 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 122",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 25 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-122-SALIDA-ORDENADA-TRAS-ROBO/CampoBase_Salida_Ordenada_Tras_Robo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-122-SALIDA-ORDENADA-TRAS-ROBO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-123-DEFENSOR-PRESION-TIEMPO",
+  "nombre": "Defensor bajo presión de tiempo",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Reacción",
+      "Defensa",
+      "Presión de tiempo"
+    ],
+    "tiempo_estimado_15": "12-15 min",
+    "jugadores": {
+      "total": 3,
+      "organizacion": "3 (atacante, defensor, portero)"
+    },
+    "material": "1 balón + portería + cronómetro",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "El atacante inicia con balón a 20 m. Al mismo tiempo, el entrenador dispara el cronómetro."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El atacante tiene 5 segundos para rematar."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "El defensor debe evitarlo en ese tiempo."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "10 duelos. Rotar."
+      }
+    ],
+    "explicacion_breve": "Un atacante inicia con balón a 20 m mientras el entrenador dispara el cronómetro; el atacante tiene 5 segundos para rematar y el defensor debe evitarlo.",
+    "leyenda": "Azul: atacante (A) · Púrpura: defensor (D) · Teal: portero (K) · Flecha azul: conducción/remate · Flecha roja: reacción defensiva"
+  },
+  "detalle": {
+    "objetivos": [
+      "Trabajar la reacción defensiva en situaciones de gran velocidad."
+    ],
+    "claves_entrenador": [
+      "Bajo presión de tiempo, el atacante fuerza. El defensor debe estar tranquilo y esperar el error."
+    ],
+    "montaje": [
+      "El atacante inicia con balón a 20 m. Al mismo tiempo, el entrenador dispara el cronómetro."
+    ],
+    "desarrollo": [
+      "El atacante inicia con balón a 20 m. Al mismo tiempo, el entrenador dispara el cronómetro.",
+      "El atacante tiene 5 segundos para rematar.",
+      "El defensor debe evitarlo en ese tiempo.",
+      "10 duelos. Rotar."
+    ],
+    "que_buscamos": [
+      "Reacción",
+      "Defensa",
+      "Presión de tiempo"
+    ],
+    "que_observar": [
+      "Tranquilidad del defensor.",
+      "Reacción defensiva.",
+      "Espera del error del atacante."
+    ],
+    "correcciones": [
+      "Mantener la calma bajo presión.",
+      "Esperar el error, no lanzarse."
+    ],
+    "reglas": [
+      "Atacante inicia a 20 m con cronómetro.",
+      "5 segundos para rematar.",
+      "10 duelos con rotación."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Reducir a 4 segundos, aumentando la urgencia del atacante."
+    ],
+    "variantes": [
+      "Fútbol 7: 3 (atacante, defensor, portero). · 12-15 min.",
+      "Fútbol 11: 3 (atacante, defensor, portero). · 12-15 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 123",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 20 x 15 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-123-DEFENSOR-PRESION-TIEMPO/CampoBase_Defensor_Presion_Tiempo.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-123-DEFENSOR-PRESION-TIEMPO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-124-ZONA-DEFENSIVA-4-4-2",
+  "nombre": "Zona defensiva 4-4-2 conceptual",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Sistema 4-4-2",
+      "Zona",
+      "Defensa colectiva"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 11,
+      "organizacion": "10 + portero (4-4-2 completo)"
+    },
+    "material": "1 balón + portería",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Organizar 4 defensores + 4 medios + 2 delanteros en formación 4-4-2."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "El rival ataca con 6-7 jugadores en distintos ángulos."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Cada línea (defensa, medio, ataque) debe bascular, cubrir y coordinar."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Trabajo continuo 20 min con pausas para corrección."
+      }
+    ],
+    "explicacion_breve": "Diez jugadores se organizan en 4-4-2 y un rival ataca con 6-7 jugadores desde distintos ángulos; cada línea debe bascular, cubrir y coordinar.",
+    "leyenda": "Púrpura: defensores (D1-D4) · Verde: medios (M1-M4) · Azul: delanteros (F1, F2) · Flecha roja: basculación · Flecha azul: ataque rival"
+  },
+  "detalle": {
+    "objetivos": [
+      "Practicar el sistema defensivo colectivo más usado en el fútbol."
+    ],
+    "claves_entrenador": [
+      "En un 4-4-2 zonal, cada jugador cubre una zona — no persigue. La zona cambia según dónde está el balón."
+    ],
+    "montaje": [
+      "Organizar 4 defensores + 4 medios + 2 delanteros en formación 4-4-2."
+    ],
+    "desarrollo": [
+      "Organizar 4 defensores + 4 medios + 2 delanteros en formación 4-4-2.",
+      "El rival ataca con 6-7 jugadores en distintos ángulos.",
+      "Cada línea (defensa, medio, ataque) debe bascular, cubrir y coordinar.",
+      "Trabajo continuo 20 min con pausas para corrección."
+    ],
+    "que_buscamos": [
+      "Sistema 4-4-2",
+      "Zona",
+      "Defensa colectiva"
+    ],
+    "que_observar": [
+      "Basculación de cada línea.",
+      "Cobertura de zonas.",
+      "Coordinación entre líneas."
+    ],
+    "correcciones": [
+      "Cubrir la zona, no perseguir.",
+      "Bascular según la posición del balón."
+    ],
+    "reglas": [
+      "Formación 4-4-2 (4 def + 4 medios + 2 delanteros).",
+      "Rival ataca con 6-7 jugadores.",
+      "20 min con pausas de corrección."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Cambiar a 4-3-3 o 3-5-2 para trabajar sistemas alternativos."
+    ],
+    "variantes": [
+      "Fútbol 7: 10 + portero (4-4-2 completo). · 20-25 min.",
+      "Fútbol 11: 10 + portero (4-4-2 completo). · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 124",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-14+.",
+        "Intensidad: media-alta.",
+        "Espacio: campo o medio campo."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-124-ZONA-DEFENSIVA-4-4-2/CampoBase_Zona_Defensiva_4_4_2.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-124-ZONA-DEFENSIVA-4-4-2/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
+{
+  "id": "CAMPOBASE-PACK150-125-CIRCUITO-DEFENSIVO-INTEGRADO",
+  "nombre": "Circuito defensivo integrado",
+  "estado": "validado",
+  "enumerar_ejercicios": false,
+  "vista_rapida": {
+    "tipo_principal": "Táctica",
+    "que_se_trabaja": [
+      "Circuito",
+      "Defensa",
+      "Integración"
+    ],
+    "tiempo_estimado_15": "20-25 min",
+    "jugadores": {
+      "total": 6,
+      "organizacion": "4-6"
+    },
+    "material": "balones + portería + conos",
+    "series": [
+      {
+        "nombre": "Paso 1",
+        "instruccion": "Secuencia 1: sombreado sin balón 60 s."
+      },
+      {
+        "nombre": "Paso 2",
+        "instruccion": "Secuencia 2: 1v1 en la banda."
+      },
+      {
+        "nombre": "Paso 3",
+        "instruccion": "Secuencia 3: 2v2 con transición."
+      },
+      {
+        "nombre": "Paso 4",
+        "instruccion": "Secuencia 4: defensa de tiro parado. Circuito × 3 rondas."
+      }
+    ],
+    "explicacion_breve": "Un circuito de cuatro secuencias (sombreado sin balón, 1v1 en banda, 2v2 con transición y defensa de tiro parado) que se repite tres rondas.",
+    "leyenda": "Círculos azules: secuencias del circuito · Flecha roja: orden de las secuencias"
+  },
+  "detalle": {
+    "objetivos": [
+      "Integrar todos los conceptos defensivos en un circuito realista."
+    ],
+    "claves_entrenador": [
+      "El circuito integra TODO. La calidad de cada secuencia importa más que el tiempo total."
+    ],
+    "montaje": [
+      "Secuencia 1: sombreado sin balón 60 s."
+    ],
+    "desarrollo": [
+      "Secuencia 1: sombreado sin balón 60 s.",
+      "Secuencia 2: 1v1 en la banda.",
+      "Secuencia 3: 2v2 con transición.",
+      "Secuencia 4: defensa de tiro parado. Circuito × 3 rondas."
+    ],
+    "que_buscamos": [
+      "Circuito",
+      "Defensa",
+      "Integración"
+    ],
+    "que_observar": [
+      "Calidad de cada secuencia.",
+      "Transición entre secuencias.",
+      "Aplicación de los conceptos."
+    ],
+    "correcciones": [
+      "Priorizar la calidad de cada secuencia.",
+      "Integrar todos los conceptos."
+    ],
+    "reglas": [
+      "4 secuencias: sombreado, 1v1, 2v2, tiro parado.",
+      "Circuito × 3 rondas.",
+      "Calidad por encima del tiempo."
+    ],
+    "si_sale_mal": [
+      "Reducir la velocidad.",
+      "Simplificar el movimiento."
+    ],
+    "si_sale_bien": [
+      "Añadir cronómetro y competición entre grupos por mejor puntuación defensiva."
+    ],
+    "variantes": [
+      "Fútbol 7: 4-6. · 20-25 min.",
+      "Fútbol 11: 4-6. · 20-25 min."
+    ],
+    "fuente": {
+      "documento": "Pack150 Manual Completo — Sección 5 Defensa y Duelos 1v1, ejercicio 125",
+      "adaptacion_operativa": true,
+      "notas": [
+        "Ejercicio con balón.",
+        "Edad recomendada: Sub-13+.",
+        "Intensidad: alta.",
+        "Espacio: 30 x 20 m."
+      ]
+    }
+  },
+  "animacion": {
+    "gif": "assets/ejercicios/CAMPOBASE-PACK150-125-CIRCUITO-DEFENSIVO-INTEGRADO/CampoBase_Circuito_Defensivo_Integrado.gif",
+    "frames": "assets/ejercicios/CAMPOBASE-PACK150-125-CIRCUITO-DEFENSIVO-INTEGRADO/frames/f",
+    "total": 60,
+    "frameMs": 100
+  }
+},
 ]);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
