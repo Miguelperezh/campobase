@@ -1,7 +1,6 @@
 import { activateView } from './beta-v6-shell.js';
 
 const $=(s,r=document)=>r.querySelector(s);const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-let focusId='';
 
 function clearFilters(){
   const global=$('#global-search');if(global){global.value='';global.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -9,7 +8,7 @@ function clearFilters(){
 }
 function removeBar(){$('#fc-v6-exercise-focusbar')?.remove();}
 function showAll(){
-  focusId='';removeBar();
+  removeBar();
   $$('.ejercicio-validado').forEach(card=>{card.hidden=false;card.classList.remove('fc-v6-focused-exercise');card.style.removeProperty('display');});
   clearFilters();
   window.scrollTo({top:0,behavior:'smooth'});$('#app')?.scrollTo?.({top:0,behavior:'smooth'});
@@ -19,14 +18,13 @@ function installBar(card){
   const bar=document.createElement('div');bar.id='fc-v6-exercise-focusbar';bar.innerHTML='<button type="button" class="secondary">← Ver todos los ejercicios</button><div><small>Ejercicio recomendado</small><strong></strong></div>';
   bar.querySelector('strong').textContent=card.querySelector('.nombre')?.textContent||'Ejercicio';
   bar.querySelector('button').addEventListener('click',showAll);
-  const list=card.parentElement;list?.insertBefore(bar,card);
+  card.parentElement?.insertBefore(bar,card);
 }
 function applyFocus(id,tries=0){
   const cards=$$('.ejercicio-validado');
   const target=cards.find(card=>card.dataset.id===id);
   if(!target&&tries<40)return setTimeout(()=>applyFocus(id,tries+1),120);
   if(!target)return;
-  focusId=id;
   cards.forEach(card=>{const keep=card===target;card.hidden=!keep;card.classList.toggle('fc-v6-focused-exercise',keep);if(keep)card.style.removeProperty('display');});
   installBar(target);
   target.scrollIntoView({behavior:'smooth',block:'start'});
@@ -45,6 +43,3 @@ document.addEventListener('click',e=>{
   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
   openFocusedExercise(b.dataset.play);
 },true);
-
-const observer=new MutationObserver(()=>{if(focusId)setTimeout(()=>applyFocus(focusId),0);});
-observer.observe(document.body,{childList:true,subtree:true});
