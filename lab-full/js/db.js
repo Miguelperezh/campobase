@@ -1,7 +1,9 @@
 import { buildMutation, mergeCloudRecord, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 
-const REAL_DB_NAME = 'campobase';
+// LABORATORIO FÚTBOLCONTROL: base local independiente y nube desactivada.
+// Esta copia nunca lee ni escribe el Supabase real de CampoBase.
+const REAL_DB_NAME = 'futbolcontrol-lab';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
@@ -51,7 +53,7 @@ export function openDatabase() {
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Cierra otras pestañas de CampoBase para actualizar la base de datos.'));
+    request.onblocked = () => reject(new Error('Cierra otras pestañas de FútbolControl Lab para actualizar la base de datos.'));
   }));
   return databasePromises.get(name);
 }
@@ -91,22 +93,19 @@ async function removeQueuedMutation(id) {
 }
 
 function canUseCloud() {
-  return Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
+  return false;
 }
 
 export function configureCloudStore(store) {
   cloudStore = store;
 }
 
-// Storage de vídeos: delega en el cliente Supabase configurado.
-export async function uploadVideo(path, file) {
-  if (!cloudStore?.uploadVideo) throw new Error('El almacenamiento de vídeos no está disponible.');
-  return cloudStore.uploadVideo(path, file);
+export async function uploadVideo() {
+  throw new Error('Vídeo desactivado en FútbolControl Lab.');
 }
 
-export async function removeVideo(path) {
-  if (!cloudStore?.removeVideo) throw new Error('El almacenamiento de vídeos no está disponible.');
-  return cloudStore.removeVideo(path);
+export async function removeVideo() {
+  throw new Error('Vídeo desactivado en FútbolControl Lab.');
 }
 
 export async function getAll(store) {
@@ -123,11 +122,9 @@ export async function put(store, value) {
     return value;
   }
   const db = await openDatabase();
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+  const transaction = db.transaction(store, 'readwrite');
   transaction.objectStore(store).put(value);
-  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', value));
   await transactionDone(transaction);
-  await flushSyncQueue().catch(() => false);
   return value;
 }
 
@@ -144,16 +141,12 @@ export async function putBatch(recordsByStore) {
     return;
   }
   const db = await openDatabase();
-  const transaction = db.transaction([...storeNames, SYNC_QUEUE], 'readwrite');
+  const transaction = db.transaction(storeNames, 'readwrite');
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
-    for (const record of records) {
-      transaction.objectStore(storeName).put(record);
-      transaction.objectStore(SYNC_QUEUE).put(buildMutation(storeName, 'upsert', record));
-    }
+    for (const record of records) transaction.objectStore(storeName).put(record);
   }
   await transactionDone(transaction);
-  await flushSyncQueue().catch(() => false);
 }
 
 export async function remove(store, id) {
@@ -162,88 +155,36 @@ export async function remove(store, id) {
     return;
   }
   const db = await openDatabase();
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+  const transaction = db.transaction(store, 'readwrite');
   transaction.objectStore(store).delete(id);
-  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
-  await flushSyncQueue().catch(() => false);
 }
 
 export async function flushSyncQueue() {
-  if (isDemoDatabase()) return false;
-  if (!canUseCloud()) return false;
-  const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
-  for (const mutation of mutations) {
-    if (mutation.operation === 'delete') await cloudStore.remove(mutation);
-    else await cloudStore.upsert(mutation);
-    await removeQueuedMutation(mutation.id);
-  }
-  return true;
+  return false;
 }
 
 async function replaceLocalStore(store, cloudRecords) {
   const db = await openDatabase();
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  const completed = transactionDone(transaction);
+  const transaction = db.transaction(store, 'readwrite');
   const objectStore = transaction.objectStore(store);
-  const [localRecords, pendingMutations] = await Promise.all([
-    requestResult(objectStore.getAll()),
-    requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
-  ]);
-  const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
   objectStore.clear();
-  for (const record of reconciledRecords) objectStore.put(record);
-  await completed;
-}
-
-async function queueInitialRecords(store, records) {
-  if (!records.length) return;
-  const db = await openDatabase();
-  const transaction = db.transaction(SYNC_QUEUE, 'readwrite');
-  const queue = transaction.objectStore(SYNC_QUEUE);
-  for (const record of records) queue.put(buildMutation(store, 'upsert', record));
+  for (const record of cloudRecords) objectStore.put(record);
   await transactionDone(transaction);
 }
 
+async function queueInitialRecords() {
+  return;
+}
+
 export async function syncFromCloud() {
-  if (isDemoDatabase()) return { online: false, pending: 0, demo: true };
-  if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
-  if (syncPromise) return syncPromise;
-  syncPromise = (async () => {
-    await flushSyncQueue();
-    let downloaded = 0;
-    for (const store of STORES) {
-      const snapshot = await cloudStore.getSnapshot(store);
-      const localRecords = await localGetAll(store);
-      if (snapshot.rowCount === 0 && localRecords.length) {
-        await queueInitialRecords(store, localRecords);
-        await flushSyncQueue();
-        continue;
-      }
-      if (store === 'settings') {
-        const localMain = localRecords.find(({ id }) => id === 'main');
-        const cloudMainIndex = snapshot.records.findIndex(({ id }) => id === 'main');
-        if (localMain && cloudMainIndex >= 0) {
-          const mergedMain = mergeCloudRecord(store, localMain, snapshot.records[cloudMainIndex]);
-          if (JSON.stringify(mergedMain) !== JSON.stringify(snapshot.records[cloudMainIndex])) {
-            snapshot.records[cloudMainIndex] = mergedMain;
-            await queueInitialRecords(store, [mergedMain]);
-            await flushSyncQueue();
-          }
-        }
-      }
-      await replaceLocalStore(store, snapshot.records);
-      downloaded += snapshot.records.length;
-    }
-    return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
-  })().finally(() => { syncPromise = null; });
-  return syncPromise;
+  return { online: false, pending: 0, lab: true };
 }
 
 export async function exportDatabase() {
   const data = {};
   for (const store of STORES) data[store] = await localGetAll(store);
-  return { app: 'CampoBase', version: 1, exportedAt: new Date().toISOString(), data };
+  return { app: 'FútbolControl Lab', version: 1, exportedAt: new Date().toISOString(), data };
 }
 
 export async function importDatabase(backup) {
@@ -255,15 +196,11 @@ export async function importDatabase(backup) {
     return;
   }
   const db = await openDatabase();
-  const transaction = db.transaction([...STORES, SYNC_QUEUE], 'readwrite');
+  const transaction = db.transaction(STORES, 'readwrite');
   for (const storeName of STORES) {
     const store = transaction.objectStore(storeName);
     store.clear();
-    for (const record of backup.data[storeName]) {
-      store.put(record);
-      transaction.objectStore(SYNC_QUEUE).put(buildMutation(storeName, 'upsert', record));
-    }
+    for (const record of backup.data[storeName]) store.put(record);
   }
   await transactionDone(transaction);
-  await flushSyncQueue().catch(() => false);
 }
