@@ -14,15 +14,30 @@
 </head>
 <body>
   <div class="lab-banner"><strong>FútbolControl · Beta funcional</strong><span>Copia completa de CampoBase · base local futbolcontrol-lab-v2 · Supabase real desactivado</span></div>
-  <iframe id="fcapp" class="frame" src="index.html?v=fc-beta-v3" title="FútbolControl beta aislada"></iframe>
+  <iframe id="fcapp" class="frame" src="index.html?v=fc-beta-v4" title="FútbolControl beta aislada"></iframe>
   <script>
     const frame=document.getElementById('fcapp');
     frame.addEventListener('load',()=>{
       const d=frame.contentDocument;if(!d)return;
-      const unlock=()=>{try{const auth=d.querySelector('#auth-dialog');if(auth&&auth.open)auth.close();}catch(e){}d.body.classList.remove('auth-locked');};
-      unlock();setTimeout(unlock,500);setTimeout(unlock,1200);
+      const autoLabLogin=()=>{
+        const form=d.querySelector('#auth-form');
+        const dialog=d.querySelector('#auth-dialog');
+        if(!form||!dialog?.open)return false;
+        const initial=!d.querySelector('#initial-pin-fields')?.classList.contains('hidden');
+        if(initial){
+          form.elements.newOwnerPin.value='7411';
+          form.elements.newDelegatePin.value='8522';
+        }else{
+          form.elements.pin.value='7411';
+        }
+        form.requestSubmit();
+        return true;
+      };
+      setTimeout(autoLabLogin,350);
+      setTimeout(autoLabLogin,800);
+      setTimeout(autoLabLogin,1500);
       if(!d.querySelector('script[data-fc-beta]')){
-        const s=d.createElement('script');s.type='module';s.src='lab/beta-ui.js?v=3';s.dataset.fcBeta='true';d.body.appendChild(s);
+        const s=d.createElement('script');s.type='module';s.src='lab/beta-ui.js?v=4';s.dataset.fcBeta='true';d.body.appendChild(s);
       }
     });
   </script>
