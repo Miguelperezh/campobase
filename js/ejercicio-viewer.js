@@ -1,7 +1,7 @@
 // Renderizador y reproductor de la ficha de ejercicio validado.
 // Vista rápida (textos + vídeo protagonista) + "Ver detalles" + tiempo editable.
 // Las demostraciones se reproducen en MP4 y se cargan únicamente cuando el usuario
-// pulsa reproducir o avanza/retrocede. Así abrir CampoBase no dispara decenas de vídeos.
+// pulsa reproducir o avanza/retrocede. Antes se muestra el primer frame como poster lazy.
 
 import { renderVideoSectionHTML } from './ejercicio-videos.js';
 
@@ -16,6 +16,9 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   // Compatibilidad con las fichas actuales: si todavía guardan `gif`, usamos el
   // MP4 homónimo. Las fichas nuevas pueden declarar `mp4` directamente.
   const videoSrc = anim.mp4 || (anim.gif || '').replace(/\.gif$/i, '.mp4');
+  // El primer frame pesa muy poco y actúa como vista previa. loading="lazy" evita
+  // descargar las 149 imágenes de golpe al entrar en Ejercicios.
+  const posterSrc = anim.poster || (anim.frames ? `${anim.frames}000.jpg` : '');
   const realVideo = item.video || '';
   const tiempo = parseDuration(vr.tiempo_estimado_15);
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
@@ -56,8 +59,11 @@ export function renderValidatedExerciseHTML(item, options = {}) {
   // La línea "Fuente: ..." se ha retirado de la ficha por decisión de Migue.
   // El objeto `fuente` se conserva en el JSON, pero no se muestra.
 
+  const poster = posterSrc
+    ? `<img class="video-poster" src="${esc(posterSrc)}" loading="lazy" decoding="async" alt="Vista previa de ${esc(item.nombre)}">`
+    : '';
   const placeholder = videoSrc
-    ? '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff;border-radius:10px">Demostración MP4 preparada · pulsa ▶ para cargarla</div>'
+    ? '<div class="video-placeholder" style="display:none;position:absolute;inset:auto 1rem 1rem 1rem;z-index:2;align-items:center;justify-content:center;padding:.65rem .8rem;text-align:center;background:rgba(12,59,46,.92);color:#fff;border-radius:10px"></div>'
     : '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff;border-radius:10px">Demostración no disponible</div>';
 
   return `
@@ -78,7 +84,7 @@ export function renderValidatedExerciseHTML(item, options = {}) {
     <div class="explicacion">${esc(vr.explicacion_breve)}</div>
 
     <div class="player">
-      <div class="stage">${placeholder}<video class="frame-video" data-src="${esc(videoSrc)}" playsinline muted loop preload="none"></video></div>
+      <div class="stage">${poster}${placeholder}<video class="frame-video" data-src="${esc(videoSrc)}" playsinline muted loop preload="none" style="display:none"></video></div>
       <div class="controls">
         <button type="button" class="btn-prev" title="Paso anterior">⏮</button>
         <button type="button" class="btn-play primary" title="Reproducir / Pausar">▶</button>
@@ -134,6 +140,7 @@ export function initValidatedExerciseViewer(root) {
   root.dataset._viewerInit = '1';
 
   const video = root.querySelector('.frame-video');
+  const poster = root.querySelector('.video-poster');
   const stage = root.querySelector('.stage');
   const placeholder = root.querySelector('.video-placeholder');
   const btnPlay = root.querySelector('.btn-play');
@@ -146,12 +153,25 @@ export function initValidatedExerciseViewer(root) {
   function setPlaceholder(text, hidden = false) {
     if (!placeholder) return;
     placeholder.textContent = text;
-    placeholder.hidden = hidden;
+    placeholder.style.display = hidden ? 'none' : 'flex';
+  }
+
+  function showPoster() {
+    if (poster) poster.style.display = 'block';
+    if (video) video.style.display = 'none';
+  }
+
+  function showVideo() {
+    if (poster) poster.style.display = 'none';
+    if (video) video.style.display = 'block';
   }
 
   function ensureVideoLoaded() {
     if (!video) return Promise.resolve(false);
-    if (video.getAttribute('src')) return Promise.resolve(true);
+    if (video.getAttribute('src')) {
+      showVideo();
+      return Promise.resolve(true);
+    }
     const src = video.dataset.src;
     if (!src) return Promise.resolve(false);
     if (loadPromise) return loadPromise;
@@ -164,10 +184,12 @@ export function initValidatedExerciseViewer(root) {
       const ready = () => {
         cleanup();
         setPlaceholder('', true);
+        showVideo();
         resolve(true);
       };
       const failed = () => {
         cleanup();
+        showPoster();
         setPlaceholder('No se pudo cargar la demostración. Comprueba la conexión y vuelve a intentarlo.');
         video.removeAttribute('src');
         video.load();
@@ -239,11 +261,10 @@ export function initValidatedExerciseViewer(root) {
     btnDetalle.textContent = detalle.classList.contains('open') ? 'Ocultar detalles' : 'Ver detalles';
   });
 
-  // Pantalla completa: mueve el vídeo al lightbox (un solo elemento, un solo estado).
-  // Abrir el lightbox NO descarga el MP4; se descarga al pulsar reproducción/paso.
+  // Pantalla completa: al pedirla se carga solo este MP4 y se abre el visor.
   const btnFull = root.querySelector('.btn-full');
-  btnFull.addEventListener('click', () => {
-    if (!video) return;
+  btnFull.addEventListener('click', async () => {
+    if (!video || !await ensureVideoLoaded()) return;
     const wasPlaying = !video.paused;
     const t = video.currentTime;
     lb.appendChild(video);
