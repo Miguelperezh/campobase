@@ -30,10 +30,11 @@ test('todas las demostraciones validadas tienen un MP4 disponible', async () => 
 
 test('las demostraciones MP4 no se descargan al renderizar la lista', async () => {
   const viewer = await projectFile('js/ejercicio-viewer.js');
-  assert.match(viewer, /data-src=\\"\$\{esc\(videoSrc\)\}\\"/);
-  assert.match(viewer, /preload=\\"none\\"/);
+  assert.match(viewer, /data-src="\$\{esc\(videoSrc\)\}"/);
+  assert.match(viewer, /preload="none"/);
   assert.match(viewer, /function ensureVideoLoaded\(\)/);
   assert.match(viewer, /const videoSrc = anim\.mp4 \|\|/);
-  assert.doesNotMatch(viewer, /class=\\"frame-video\\" src=/);
-  assert.doesNotMatch(viewer, /class=\\"frame-video\\"[^>]*preload=\\"auto\\"/);
+  assert.match(viewer, /video\.src = src;/);
+  assert.doesNotMatch(viewer, /class="frame-video" src=/);
+  assert.doesNotMatch(viewer, /class="frame-video"[^>]*preload="auto"/);
 });
