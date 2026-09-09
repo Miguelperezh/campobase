@@ -3,7 +3,7 @@ import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 
 // LABORATORIO FÚTBOLCONTROL: base local independiente y nube desactivada.
 // Esta copia nunca lee ni escribe el Supabase real de CampoBase.
-const REAL_DB_NAME = 'futbolcontrol-lab';
+const REAL_DB_NAME = 'futbolcontrol-lab-v2';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
@@ -46,14 +46,12 @@ export function openDatabase() {
     const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
       for (const store of [...STORES, SYNC_QUEUE]) {
-        if (!request.result.objectStoreNames.contains(store)) {
-          request.result.createObjectStore(store, { keyPath: 'id' });
-        }
+        if (!request.result.objectStoreNames.contains(store)) request.result.createObjectStore(store, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Cierra otras pestañas de FútbolControl Lab para actualizar la base de datos.'));
+    request.onblocked = () => reject(new Error('Cierra otras pestañas de FútbolControl Lab para actualizar la base local.'));
   }));
   return databasePromises.get(name);
 }
@@ -85,36 +83,21 @@ async function localGetOne(store, id) {
   return requestResult(db.transaction(store, 'readonly').objectStore(store).get(id));
 }
 
-async function removeQueuedMutation(id) {
-  const db = await openDatabase();
-  const transaction = db.transaction(SYNC_QUEUE, 'readwrite');
-  transaction.objectStore(SYNC_QUEUE).delete(id);
-  await transactionDone(transaction);
-}
-
-function canUseCloud() {
-  return false;
-}
-
-export function configureCloudStore(store) {
-  cloudStore = store;
+export function configureCloudStore() {
+  // Intencionadamente vacío en el laboratorio: jamás se conecta a Supabase.
+  cloudStore = null;
 }
 
 export async function uploadVideo() {
-  throw new Error('Vídeo desactivado en FútbolControl Lab.');
+  throw new Error('Los vídeos están desactivados en FútbolControl Lab.');
 }
 
 export async function removeVideo() {
-  throw new Error('Vídeo desactivado en FútbolControl Lab.');
+  throw new Error('Los vídeos están desactivados en FútbolControl Lab.');
 }
 
-export async function getAll(store) {
-  return localGetAll(store);
-}
-
-export async function getOne(store, id) {
-  return localGetOne(store, id);
-}
+export async function getAll(store) { return localGetAll(store); }
+export async function getOne(store, id) { return localGetOne(store, id); }
 
 export async function put(store, value) {
   if (isDemoDatabase()) {
@@ -130,9 +113,7 @@ export async function put(store, value) {
 
 export async function putBatch(recordsByStore) {
   const storeNames = Object.keys(recordsByStore);
-  if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
-    throw new TypeError('La operación contiene almacenes no válidos.');
-  }
+  if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) throw new TypeError('La operación contiene almacenes no válidos.');
   if (isDemoDatabase()) {
     for (const [storeName, records] of Object.entries(recordsByStore)) {
       if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
@@ -160,47 +141,22 @@ export async function remove(store, id) {
   await transactionDone(transaction);
 }
 
-export async function flushSyncQueue() {
-  return false;
-}
-
-async function replaceLocalStore(store, cloudRecords) {
-  const db = await openDatabase();
-  const transaction = db.transaction(store, 'readwrite');
-  const objectStore = transaction.objectStore(store);
-  objectStore.clear();
-  for (const record of cloudRecords) objectStore.put(record);
-  await transactionDone(transaction);
-}
-
-async function queueInitialRecords() {
-  return;
-}
-
-export async function syncFromCloud() {
-  return { online: false, pending: 0, lab: true };
-}
+export async function flushSyncQueue() { return false; }
+export async function syncFromCloud() { return { online: false, pending: 0, lab: true }; }
 
 export async function exportDatabase() {
   const data = {};
   for (const store of STORES) data[store] = await localGetAll(store);
-  return { app: 'FútbolControl Lab', version: 1, exportedAt: new Date().toISOString(), data };
+  return { app: 'FútbolControl Lab', version: 2, exportedAt: new Date().toISOString(), data };
 }
 
 export async function importDatabase(backup) {
-  if (isDemoDatabase()) {
-    for (const storeName of STORES) {
-      demoStores[storeName].clear();
-      for (const record of backup.data[storeName]) demoStores[storeName].set(record.id, structuredClone(record));
-    }
-    return;
-  }
   const db = await openDatabase();
   const transaction = db.transaction(STORES, 'readwrite');
   for (const storeName of STORES) {
     const store = transaction.objectStore(storeName);
     store.clear();
-    for (const record of backup.data[storeName]) store.put(record);
+    for (const record of backup.data?.[storeName] ?? []) store.put(record);
   }
   await transactionDone(transaction);
 }
