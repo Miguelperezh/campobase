@@ -1,5 +1,6 @@
 import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
+import './match-postgame-editor.js';
 import { CLOUD_TABLES } from './sync-core.js';
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
