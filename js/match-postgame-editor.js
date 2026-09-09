@@ -19,13 +19,11 @@ export function postgameScope(match = {}) {
 export function rebaseScopeAdjustments(player, scope, oldDisplayed, newAutomatic) {
   const statAdjustments = structuredClone(player.statAdjustments ?? {});
   const current = { ...(statAdjustments[scope] ?? {}) };
-
   if (Number.isFinite(current.minutes)) {
     const difference = Math.round(Number(oldDisplayed.minutes ?? 0) - Number(newAutomatic.minutes ?? 0));
     if (difference === 0) delete current.minutes;
     else current.minutes = difference;
   }
-
   if (Number.isFinite(current.averageRating)) {
     const oldTarget = Number(oldDisplayed.averageRating ?? 0);
     const newBase = Number(newAutomatic.averageRating ?? 0);
@@ -33,7 +31,6 @@ export function rebaseScopeAdjustments(player, scope, oldDisplayed, newAutomatic
     if (difference === 0) delete current.averageRating;
     else current.averageRating = difference;
   }
-
   if (Object.keys(current).length) statAdjustments[scope] = current;
   else delete statAdjustments[scope];
   return Object.keys(statAdjustments).length ? statAdjustments : undefined;
@@ -46,7 +43,6 @@ export function buildPostgameMatchUpdate(match, entries, matchComment = '', dura
   const ratings = { ...(match.ratings ?? {}) };
   const playerComments = { ...(match.playerComments ?? {}) };
   let totalPlayerMinutes = 0;
-
   for (const entry of entries) {
     const playerId = String(entry.playerId ?? '').trim();
     if (!playerId) throw new TypeError('Falta el jugador en una fila del partido.');
@@ -56,24 +52,20 @@ export function buildPostgameMatchUpdate(match, entries, matchComment = '', dura
     }
     minuteTotals[playerId] = minutes * 60;
     totalPlayerMinutes += minutes;
-
     if (entry.rating === '' || entry.rating === null || entry.rating === undefined) delete ratings[playerId];
     else {
       const rating = Number(entry.rating);
       if (![1, 2, 3, 4, 5].includes(rating)) throw new RangeError('La puntuación debe estar entre 1 y 5.');
       ratings[playerId] = rating;
     }
-
     const comment = String(entry.comment ?? '').trim();
     if (comment) playerComments[playerId] = comment;
     else delete playerComments[playerId];
   }
-
   const maximumPlayerMinutes = duration * playersOnField;
   if (totalPlayerMinutes > maximumPlayerMinutes) {
     throw new RangeError(`La suma de minutos no puede superar ${maximumPlayerMinutes} (${duration} min × ${playersOnField} jugadores en campo).`);
   }
-
   return {
     ...match,
     minuteTotals,
@@ -85,14 +77,8 @@ export function buildPostgameMatchUpdate(match, entries, matchComment = '', dura
   };
 }
 
-function durationForMatch(match) {
-  return match.format === 'F11' ? 90 : 70;
-}
-
-function playersOnFieldForMatch(match) {
-  return match.format === 'F11' ? 11 : 7;
-}
-
+function durationForMatch(match) { return match.format === 'F11' ? 90 : 70; }
+function playersOnFieldForMatch(match) { return match.format === 'F11' ? 11 : 7; }
 function participantIds(match, callup) {
   return [...new Set([
     ...(callup?.availableIds ?? []),
@@ -182,7 +168,6 @@ async function savePostgame(event) {
   const [players, matches, trainings, callups] = await Promise.all(['players', 'matches', 'trainings', 'callups'].map(getAll));
   const match = matches.find((item) => item.id === matchId);
   if (!match) throw new TypeError('No se encontró el partido.');
-
   const entries = $$('.postgame-player-row', dialog).map((row) => ({
     playerId: row.dataset.playerId,
     minutes: Number($('[data-postgame="minutes"]', row).value),
@@ -193,7 +178,6 @@ async function savePostgame(event) {
   const updatedMatches = matches.map((item) => item.id === match.id ? updatedMatch : item);
   const scope = postgameScope(match);
   const affectedIds = new Set(entries.map((entry) => entry.playerId));
-
   const updatedPlayers = players.filter((player) => affectedIds.has(player.id)).map((player) => {
     const oldAutomatic = buildPlayerSummary(player.id, matches, trainings, callups, scope);
     const oldDisplayed = applyPlayerStatAdjustments(oldAutomatic, player.statAdjustments?.[scope]);
@@ -205,7 +189,6 @@ async function savePostgame(event) {
     else delete next.statAdjustments;
     return next;
   });
-
   await putBatch({ matches: [updatedMatch], players: updatedPlayers });
   dialog.close();
   window.setTimeout(() => window.location.reload(), 120);
@@ -284,8 +267,7 @@ async function patchPlayerHistories() {
 
 async function patchMatchComments(matchId) {
   const body = $('#match-detail-body');
-  if (!body || !matchId) return;
-  $('.postgame-comments-detail', body)?.remove();
+  if (!body || !matchId || $('.postgame-comments-detail', body)) return;
   const [matches, players] = await Promise.all(['matches', 'players'].map(getAll));
   const match = matches.find((item) => item.id === matchId);
   if (!match) return;
@@ -318,7 +300,6 @@ function bind() {
   injectStyles();
   patchButtons();
   patchPlayerHistories().catch(console.warn);
-
   document.addEventListener('click', (event) => {
     const edit = event.target.closest('.edit-match-performance, .rate-match');
     if (edit?.dataset.id) {
@@ -329,9 +310,8 @@ function bind() {
       return;
     }
     const detail = event.target.closest('.match-detail');
-    if (detail?.dataset.id) window.setTimeout(() => patchMatchComments(detail.dataset.id).catch(console.warn), 80);
+    if (detail?.dataset.id) window.setTimeout(() => patchMatchComments(detail.dataset.id).catch(console.warn), 100);
   }, true);
-
   const rootObserver = new MutationObserver(() => {
     patchButtons();
     patchPlayerHistories().catch(console.warn);
@@ -340,16 +320,6 @@ function bind() {
   const players = $('#players-list');
   if (matches) rootObserver.observe(matches, { childList: true, subtree: false });
   if (players) rootObserver.observe(players, { childList: true, subtree: false });
-
-  const detailBody = $('#match-detail-body');
-  if (detailBody) {
-    const detailObserver = new MutationObserver(() => {
-      patchButtons();
-      const matchId = $('#match-detail-dialog')?.dataset.matchId;
-      if (matchId) patchMatchComments(matchId).catch(console.warn);
-    });
-    detailObserver.observe(detailBody, { childList: true, subtree: false });
-  }
 }
 
 if (typeof document !== 'undefined') {
