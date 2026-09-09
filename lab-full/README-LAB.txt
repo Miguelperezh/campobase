@@ -1,0 +1,1 @@
+FútbolControl Lab aislado. Esta copia se usa solo para pruebas visuales y funcionales. No integrar en main sin validación expresa de Miguel.
