@@ -11,6 +11,11 @@ function mp4Path(item) {
   return anim.mp4 || String(anim.gif || '').replace(/\.gif$/i, '.mp4');
 }
 
+function posterPath(item) {
+  const anim = item.animacion || {};
+  return anim.poster || (anim.frames ? `${anim.frames}000.jpg` : '');
+}
+
 test('todas las demostraciones validadas tienen un MP4 disponible', async () => {
   const missing = [];
   for (const item of EJERCICIOS_VALIDADOS) {
@@ -28,6 +33,23 @@ test('todas las demostraciones validadas tienen un MP4 disponible', async () => 
   assert.deepEqual(missing, [], `Faltan MP4 para:\n${missing.join('\n')}`);
 });
 
+test('todos los ejercicios validados tienen una imagen inicial disponible', async () => {
+  const missing = [];
+  for (const item of EJERCICIOS_VALIDADOS) {
+    const path = posterPath(item);
+    if (!path) {
+      missing.push(`${item.id}: sin poster ni frames`);
+      continue;
+    }
+    try {
+      await access(fileURLToPath(new URL(`../${path}`, import.meta.url)));
+    } catch {
+      missing.push(`${item.id}: ${path}`);
+    }
+  }
+  assert.deepEqual(missing, [], `Faltan imágenes iniciales para:\n${missing.join('\n')}`);
+});
+
 test('las demostraciones MP4 no se descargan al renderizar la lista', async () => {
   const viewer = await projectFile('js/ejercicio-viewer.js');
   assert.match(viewer, /data-src="\$\{esc\(videoSrc\)\}"/);
@@ -37,4 +59,14 @@ test('las demostraciones MP4 no se descargan al renderizar la lista', async () =
   assert.match(viewer, /video\.src = src;/);
   assert.doesNotMatch(viewer, /class="frame-video" src=/);
   assert.doesNotMatch(viewer, /class="frame-video"[^>]*preload="auto"/);
+});
+
+test('la imagen inicial se carga de forma diferida y el vídeo la sustituye al solicitarlo', async () => {
+  const viewer = await projectFile('js/ejercicio-viewer.js');
+  assert.match(viewer, /class="video-poster"/);
+  assert.match(viewer, /loading="lazy"/);
+  assert.match(viewer, /decoding="async"/);
+  assert.match(viewer, /const posterSrc = anim\.poster \|\|/);
+  assert.match(viewer, /poster\.style\.display = 'none'/);
+  assert.match(viewer, /video\.style\.display = 'block'/);
 });
