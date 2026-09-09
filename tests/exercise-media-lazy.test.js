@@ -13,7 +13,7 @@ function mp4Path(item) {
 
 function posterPath(item) {
   const anim = item.animacion || {};
-  return anim.poster || (anim.frames ? `${anim.frames}000.jpg` : '');
+  return anim.poster || (anim.frames ? `${anim.frames}001.jpg` : '');
 }
 
 test('todas las demostraciones validadas tienen un MP4 disponible', async () => {
