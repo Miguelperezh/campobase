@@ -7,7 +7,6 @@
 // El reproductor usa la URL pública del bucket, así que cualquier dispositivo con la
 // metadata puede reproducir el vídeo sin descargarlo a IndexedDB.
 
-import './player-stats-calendar-fix.js';
 import { SUPABASE_URL, VIDEO_BUCKET } from './supabase-client.js';
 
 // Límite global de Supabase en el plan Free: 50 MB por archivo.
