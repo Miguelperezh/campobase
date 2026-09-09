@@ -17,7 +17,7 @@
 </head>
 <body>
   <div class="lab-banner"><strong>FútbolControl · Beta funcional</strong><span>Copia completa aislada · base local futbolcontrol-lab-v2 · Supabase real desactivado</span></div>
-  <iframe id="fcapp" class="frame" src="index.html?v=fc-beta-v5" title="FútbolControl beta aislada"></iframe>
+  <iframe id="fcapp" class="frame" src="index.html?v=fc-beta-v6" title="FútbolControl beta aislada"></iframe>
   <script>
     const frame=document.getElementById('fcapp');
     frame.addEventListener('load',()=>{
@@ -36,6 +36,7 @@
       addModule('lab/beta-ui.js?v=5','fcBeta');
       setTimeout(()=>addModule('lab/beta-patches-v5-core.js?v=5','fcCore'),450);
       setTimeout(()=>addModule('lab/beta-patches-v5-session.js?v=5','fcSession'),650);
+      setTimeout(()=>addModule('lab/beta-v6.js?v=6','fcV6'),900);
     });
   </script>
 </body>
