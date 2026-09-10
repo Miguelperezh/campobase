@@ -1,7 +1,8 @@
 import './calendar-substitutions-entry.js?v=2447';
 import './session-visual-planner.js?v=2451';
 import './session-materials.js?v=2452';
-import './attendance-linked-sources.js?v=2452';
+import './attendance-linked-sources.js?v=2453';
+import './player-data-sync.js?v=2453';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
