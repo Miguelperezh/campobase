@@ -60,13 +60,16 @@ export function sortVideos(videos) {
 }
 
 // HTML de la sección de vídeos de un ejercicio. Solo Migue (owner) puede subir o borrar.
+// Importante: ningún vídeo recibe `src` al construir la biblioteca. La URL queda en
+// `data-src` y se activa solo cuando el vídeo se aproxima a la pantalla o el usuario
+// intenta reproducirlo.
 export function renderVideoSectionHTML(videos = [], { role = null, exerciseId = '' } = {}) {
   const canManage = role === 'owner';
   const list = sortVideos(videos);
   if (!list.length && !canManage) return '';
   const items = list.map((video) => `
     <div class="video-item" data-video-id="${esc(video.id)}">
-      <video controls preload="metadata" playsinline src="${esc(videoPublicUrl(video.path))}"></video>
+      <video controls preload="none" playsinline data-src="${esc(videoPublicUrl(video.path))}"></video>
       <div class="video-meta">
         <span class="video-name">${esc(video.nombre)}</span>
         ${canManage ? `<button type="button" class="delete-video danger compact" data-video-id="${esc(video.id)}" aria-label="Borrar vídeo">Borrar</button>` : ''}
@@ -83,10 +86,44 @@ export function renderVideoSectionHTML(videos = [], { role = null, exerciseId = 
     </div>`;
 }
 
+function activateVideo(video, preload = 'metadata') {
+  if (!video?.dataset.src) return false;
+  if (!video.getAttribute('src')) {
+    video.src = video.dataset.src;
+    video.preload = preload;
+    video.load();
+  } else if (preload === 'auto') {
+    video.preload = 'auto';
+  }
+  return true;
+}
+
+function initLazyVideo(video) {
+  if (!video || video.dataset._lazyVideoInit) return;
+  video.dataset._lazyVideoInit = '1';
+
+  // Si el usuario interactúa antes de que el observer lo acerque al viewport,
+  // damos prioridad a la reproducción y activamos la carga completa.
+  video.addEventListener('play', () => activateVideo(video, 'auto'));
+  video.addEventListener('pointerdown', () => activateVideo(video, 'auto'), { once: true });
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      activateVideo(video, 'metadata');
+    }, { rootMargin: '300px 0px' });
+    observer.observe(video);
+  }
+}
+
 // Conecta la subida y el borrado de la sección de vídeos de un contenedor.
 export function initVideoSection(root, { onUpload, onDelete } = {}) {
   if (!root || root.dataset._videoInit) return;
   root.dataset._videoInit = '1';
+
+  root.querySelectorAll('video[data-src]').forEach(initLazyVideo);
+
   const input = root.querySelector('.video-file-input');
   if (input) {
     input.addEventListener('change', async () => {
