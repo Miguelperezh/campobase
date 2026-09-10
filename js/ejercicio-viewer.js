@@ -7,6 +7,7 @@ import { attachMediaLightbox } from './media-lightbox.js';
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 const list = (values) => `<ul class="plain-list">${(values || []).map((v) => `<li>${esc(v)}</li>`).join('')}</ul>`;
 const itemRegistry = new Map();
+const viewerTargets = new Set();
 let viewerObserver = null;
 
 function detailHTML(item) {
@@ -296,12 +297,22 @@ function activateValidatedExerciseViewer(root) {
   setSpeed(speed);
 }
 
+function pruneDisconnectedViewerTargets() {
+  if (!viewerObserver || viewerTargets.size === 0) return;
+  for (const target of viewerTargets) {
+    if (target.isConnected) continue;
+    viewerObserver.unobserve(target);
+    viewerTargets.delete(target);
+  }
+}
+
 function getViewerObserver() {
   if (!viewerObserver && typeof IntersectionObserver !== 'undefined') {
     viewerObserver = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         viewerObserver.unobserve(entry.target);
+        viewerTargets.delete(entry.target);
         activateValidatedExerciseViewer(entry.target);
       }
     }, { rootMargin: '350px 0px' });
@@ -314,8 +325,11 @@ export function initValidatedExerciseViewer(root) {
   if (!target || target.dataset._viewerScheduled === '1' || target.dataset._viewerInit === '1') return;
   target.dataset._viewerScheduled = '1';
   const observer = getViewerObserver();
-  if (observer) observer.observe(target);
-  else activateValidatedExerciseViewer(target);
+  if (observer) {
+    pruneDisconnectedViewerTargets();
+    viewerTargets.add(target);
+    observer.observe(target);
+  } else activateValidatedExerciseViewer(target);
 }
 
 // Compatibilidad con las llamadas existentes de app.js y Sesiones. La preparación
