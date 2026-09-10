@@ -4,6 +4,7 @@
 
 import { getAll } from './db.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
+import { initVideoSection } from './ejercicio-videos.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -83,20 +84,29 @@ async function enhanceSessionList() {
 
 async function enhanceSessionDetail() {
   const visual = $('#session-detail-body .session-visual-detail');
-  if (!visual || visual.querySelector(':scope > .session-materials-auto')) return;
+  if (!visual) return;
   const data = await snapshot();
   const session = data.sessions.find((item) => item.id === visual.dataset.sessionId);
   if (!session) return;
-  const html = materialHTML(session, data.exercises, false);
-  if (!html) return;
-  const summary = visual.querySelector('.session-detail-summary');
-  if (summary) summary.insertAdjacentHTML('afterend', html);
+
+  if (!visual.querySelector(':scope > .session-materials-auto')) {
+    const html = materialHTML(session, data.exercises, false);
+    if (html) {
+      const summary = visual.querySelector('.session-detail-summary');
+      if (summary) summary.insertAdjacentHTML('afterend', html);
+    }
+  }
+
   // El módulo visual anterior mostraba el campo manual como "Material total".
   // Lo retiramos solo en la vista visual para no duplicar la información.
   $$('#session-detail-body .session-visual-detail > .panel').forEach((panel) => {
     const strong = panel.querySelector(':scope > strong');
-    if (strong?.textContent.trim() === 'Material total' && panel !== visual.querySelector('.session-materials-auto')) panel.remove();
+    if (strong?.textContent.trim() === 'Material total' && !panel.classList.contains('session-materials-auto')) panel.remove();
   });
+
+  // Los vídeos subidos a Supabase también respetan lazy loading cuando aparecen
+  // dentro de "Ver sesión". initVideoSection es idempotente.
+  $$('#session-detail-body .videos').forEach((videos) => initVideoSection(videos));
 }
 
 function schedule() {
