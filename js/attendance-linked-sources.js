@@ -2,7 +2,7 @@
 // Los partidos vienen de Calendario (matchId) y las sesiones de Sesiones (sessionId).
 // No crea una segunda sesión/partido: solo crea o edita su registro de asistencia.
 
-import { getAll, put } from './db.js';
+import { getAll, put, remove } from './db.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -12,6 +12,7 @@ const esc = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
 
 let renderQueued = false;
 let rendering = false;
+let cleanupQueued = false;
 
 function formatDate(value = '') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
@@ -131,11 +132,13 @@ function decorateExistingAttendance(data) {
     const record = recordsById.get(button.dataset.id);
     if (!record?.sessionId) return;
     const session = sessionsById.get(record.sessionId);
+    if (!session) return;
     const card = button.closest('.panel');
     const title = card?.querySelector('.section-head h3');
     const pill = card?.querySelector('.section-head .pill');
-    if (title) title.textContent = sessionName(session);
-    if (pill) pill.textContent = 'Sesión';
+    const wantedTitle = sessionName(session);
+    if (title && title.textContent !== wantedTitle) title.textContent = wantedTitle;
+    if (pill && pill.textContent !== 'Sesión') pill.textContent = 'Sesión';
   });
 }
 
@@ -146,6 +149,24 @@ function scheduleRender() {
     renderQueued = false;
     renderSources();
   }, 50);
+}
+
+async function cleanupOrphanSessionAttendance() {
+  const [settings, trainings] = await Promise.all([getAll('settings'), getAll('trainings')]);
+  const sessionIds = new Set(settings.filter((item) => item?.recordType === 'trainingSession').map((item) => item.id));
+  const orphans = trainings.filter((record) => record?.sessionId && !sessionIds.has(record.sessionId));
+  for (const record of orphans) await remove('trainings', record.id);
+  if (orphans.length) scheduleRender();
+  return orphans.length;
+}
+
+function scheduleCleanup() {
+  if (cleanupQueued) return;
+  cleanupQueued = true;
+  window.setTimeout(() => {
+    cleanupQueued = false;
+    cleanupOrphanSessionAttendance().catch((error) => console.warn('No se pudo limpiar una asistencia huérfana:', error));
+  }, 150);
 }
 
 function statusRow(player, entry = {}) {
@@ -217,8 +238,7 @@ async function saveSessionAttendance(form) {
   await put('trainings', record);
   $('#training-builder')?.classList.add('hidden');
   await renderSources();
-  // CampoBase ya escucha `online` para sincronizar + ejecutar refresh(); reutilizamos
-  // esa ruta para repintar estadísticas y base de datos de asistencia sin recargar.
+  // Reutiliza la sincronización existente de CampoBase para actualizar estadísticas sin recarga manual.
   window.dispatchEvent(new Event('online'));
   showToast('Asistencia de la sesión guardada.');
 }
@@ -259,7 +279,7 @@ function installStyles() {
     .attendance-source-panel{margin-bottom:1rem}
     .attendance-source-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
     .attendance-source-list{display:grid;gap:.55rem;margin-top:.8rem;max-height:430px;overflow:auto}
-    .attendance-source-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.7rem;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .attendance-source-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.7rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
     .attendance-source-info{display:grid;gap:.2rem;min-width:0}
     .attendance-source-info>div{display:flex;gap:.35rem;flex-wrap:wrap}
     .attendance-source-info strong,.attendance-source-info span{overflow-wrap:anywhere}
@@ -273,11 +293,15 @@ function install() {
   installStyles();
   sourcePanel();
   scheduleRender();
+  scheduleCleanup();
 
   const stats = $('#attendance-stats');
   const list = $('#trainings-list');
+  const sessions = $('#sessions-list');
   if (stats) new MutationObserver(scheduleRender).observe(stats, { childList: true, subtree: false });
-  if (list) new MutationObserver(scheduleRender).observe(list, { childList: true, subtree: true });
+  // Solo observamos el reemplazo de la lista. No los cambios de texto internos para evitar bucles.
+  if (list) new MutationObserver(scheduleRender).observe(list, { childList: true, subtree: false });
+  if (sessions) new MutationObserver(() => { scheduleCleanup(); scheduleRender(); }).observe(sessions, { childList: true, subtree: false });
 
   document.addEventListener('click', (event) => {
     const sessionButton = event.target.closest('[data-linked-session]');
@@ -311,6 +335,7 @@ function install() {
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-view="asistencia"]')) scheduleRender();
+    if (event.target.closest('.delete-session')) scheduleCleanup();
   });
 }
 
