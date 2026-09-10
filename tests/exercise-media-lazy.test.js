@@ -28,25 +28,43 @@ test('todas las demostraciones validadas tienen un MP4 disponible', async () => 
   assert.deepEqual(missing, [], `Faltan MP4 para:\n${missing.join('\n')}`);
 });
 
-test('las demostraciones MP4 no se descargan al construir las 149 fichas', async () => {
+test('las demostraciones de Ejercicios no reciben src ni preload auto al construir la biblioteca', async () => {
   const viewer = await projectFile('js/ejercicio-viewer.js');
   assert.match(viewer, /data-src="\$\{esc\(videoSrc\)\}"/);
   assert.match(viewer, /preload="none"/);
-  assert.match(viewer, /function ensureVideoLoaded\(previewOnly = false\)/);
-  assert.match(viewer, /const videoSrc = anim\.mp4 \|\|/);
+  assert.match(viewer, /function ensureVideoLoaded\(video, placeholder, previewOnly = false\)/);
   assert.match(viewer, /if \(!video\.getAttribute\('src'\)\) video\.src = src;/);
-  assert.doesNotMatch(viewer, /class="frame-video" src=/);
+  assert.doesNotMatch(viewer, /class="frame-video"\s+src=/);
 });
 
-test('solo las fichas próximas a la pantalla cargan su primer fotograma MP4', async () => {
+test('los visores pesados de Ejercicios se inicializan solo cerca del viewport y limpian fichas retiradas', async () => {
   const viewer = await projectFile('js/ejercicio-viewer.js');
   assert.match(viewer, /IntersectionObserver/);
-  assert.match(viewer, /rootMargin: '300px 0px'/);
-  assert.match(viewer, /ensureVideoLoaded\(true\)/);
-  assert.match(viewer, /video\.addEventListener\('loadeddata', ready/);
-  assert.match(viewer, /video\.pause\(\)/);
+  assert.match(viewer, /rootMargin: '350px 0px'/);
+  assert.match(viewer, /activateValidatedExerciseViewer/);
   assert.match(viewer, /content-visibility:auto/);
   assert.match(viewer, /contain-intrinsic-size:auto 900px/);
+  assert.match(viewer, /data-lazy-detail="1"/);
+  assert.match(viewer, /const viewerTargets = new Set\(\)/);
+  assert.match(viewer, /pruneDisconnectedViewerTargets/);
+  assert.match(viewer, /viewerObserver\.unobserve\(target\)/);
   assert.doesNotMatch(viewer, /video-poster/);
   assert.doesNotMatch(viewer, /f00[01]\.jpg/);
+});
+
+test('los vídeos subidos a Supabase también usan data-src y preload none', async () => {
+  const videos = await projectFile('js/ejercicio-videos.js');
+  assert.match(videos, /<video controls preload="none" playsinline data-src=/);
+  assert.match(videos, /IntersectionObserver/);
+  assert.match(videos, /rootMargin: '300px 0px'/);
+  assert.doesNotMatch(videos, /<video controls preload="metadata" playsinline src=/);
+});
+
+test('las tácticas interactivas tampoco precargan el MP4', async () => {
+  const tactics = await projectFile('js/tactica-viewer.js');
+  assert.match(tactics, /class="frame-video" data-src=/);
+  assert.match(tactics, /preload="none"/);
+  assert.match(tactics, /IntersectionObserver/);
+  assert.doesNotMatch(tactics, /class="frame-video" src=/);
+  assert.doesNotMatch(tactics, /preload="auto"><\/video>/);
 });
