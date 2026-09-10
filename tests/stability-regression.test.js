@@ -27,7 +27,16 @@ test('el material de sesión se deriva de los ejercicios sin inventar sumas', ()
   ]);
 });
 
-test('Asistencia enlaza sesiones por sessionId y partidos por matchId', async () => {
+test('Sesiones mantiene selector por categorías, MP4 lazy y flujo de añadir sin bloquear el clic', async () => {
+  const source = await projectFile('js/session-visual-planner.js');
+  assert.match(source, /EXERCISE_CATEGORIES/);
+  assert.match(source, /session-category-select/);
+  assert.match(source, /session-picker-video[^>]*preload="none"[^>]*data-src|session-picker-video[^>]*data-src[^>]*preload="none"/);
+  assert.match(source, /rememberPickerAnchor\(add\)/);
+  assert.doesNotMatch(source, /add\.disabled\s*=\s*true/);
+});
+
+test('Asistencia enlaza sesiones por sessionId y partidos por matchId sin dejar sesiones huérfanas', async () => {
   const source = await projectFile('js/attendance-linked-sources.js');
   assert.match(source, /record\?\.sessionId === sessionId/);
   assert.match(source, /record\?\.kind === 'match' && record\.matchId === matchId/);
@@ -36,6 +45,9 @@ test('Asistencia enlaza sesiones por sessionId y partidos por matchId', async ()
   assert.match(source, /data-linked-session/);
   assert.match(source, /data-linked-match/);
   assert.match(source, /Asistencia registrada/);
+  assert.match(source, /cleanupOrphanSessionAttendance/);
+  assert.match(source, /remove\('trainings', record\.id\)/);
+  assert.match(source, /subtree: false/);
 });
 
 test('los módulos nuevos se cargan desde CampoBase y están incluidos en la caché PWA', async () => {
@@ -46,4 +58,5 @@ test('los módulos nuevos se cargan desde CampoBase y están incluidos en la cac
     assert.match(sw, new RegExp(name.replace('.', '\\.')));
   }
   assert.match(sw, /media-lightbox\.js/);
+  assert.match(sw, /campobase-v2\.44\.0/);
 });
