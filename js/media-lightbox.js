@@ -36,6 +36,7 @@ export function attachMediaLightbox({ box, stage, mediaSelector = '.frame-video'
   let drag = null;
   let pinch = null;
   let locked = false;
+  let interactionCounted = false;
 
   const media = () => box.querySelector(mediaSelector) || stage.querySelector(mediaSelector);
 
@@ -77,6 +78,12 @@ export function attachMediaLightbox({ box, stage, mediaSelector = '.frame-video'
       lockDocument();
       locked = true;
     }
+    // app.js usa este contador para no repintar mientras el usuario interactúa.
+    // Contamos también un visor abierto aunque el vídeo esté pausado.
+    if (!interactionCounted) {
+      window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
+      interactionCounted = true;
+    }
   }
 
   function close() {
@@ -96,6 +103,10 @@ export function attachMediaLightbox({ box, stage, mediaSelector = '.frame-video'
     if (locked) {
       unlockDocument();
       locked = false;
+    }
+    if (interactionCounted) {
+      window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
+      interactionCounted = false;
     }
   }
 
