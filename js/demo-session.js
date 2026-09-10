@@ -1,4 +1,5 @@
 import './calendar-substitutions-entry.js?v=2447';
+import './session-visual-planner.js?v=2450';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
