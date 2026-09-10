@@ -1,4 +1,37 @@
-import './calendar-substitutions-v2.js';
+import { getAll } from './db.js';
+
+let editorModuleLoaded = false;
+
+async function ensureEditorModule() {
+  if (!editorModuleLoaded) {
+    await import('./calendar-substitutions-v2.js');
+    editorModuleLoaded = true;
+  }
+}
+
+async function openWithValidCallup(button) {
+  const matchId = button.dataset.id;
+  const [matches, callups] = await Promise.all([getAll('matches'), getAll('callups')]);
+  const match = matches.find((item) => item.id === matchId);
+  if (!match) return window.alert('No se encontró el partido.');
+  const callup = callups.find((item) => item.id === match.callupId || item.matchId === match.id);
+  if (!callup?.availableIds?.length) {
+    return window.alert('Este partido no tiene una convocatoria válida. Crea o vincula la convocatoria antes de editar alineación y cambios.');
+  }
+
+  await ensureEditorModule();
+  button.dataset.callupValidated = '1';
+  button.click();
+  delete button.dataset.callupValidated;
+}
+
+function protectCalendarEditor(event) {
+  const button = event.target.closest('.edit-lineup-changes');
+  if (!button || button.dataset.callupValidated === '1') return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  openWithValidCallup(button).catch((error) => window.alert(error.message || 'No se pudo comprobar la convocatoria del partido.'));
+}
 
 function addCalendarButtons() {
   const root = document.querySelector('#matches-list');
@@ -43,6 +76,7 @@ function installCalendarButtons() {
 }
 
 if (typeof document !== 'undefined') {
+  document.addEventListener('click', protectCalendarEditor, true);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installCalendarButtons, { once: true });
   else installCalendarButtons();
 }
