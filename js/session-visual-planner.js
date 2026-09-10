@@ -1,6 +1,7 @@
 import { getAll } from './db.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
+import { renderVideoSectionHTML, videoPublicUrl } from './ejercicio-videos.js';
 import { completeExercise, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -24,9 +25,20 @@ function videoSource(validated) {
   return animation.mp4 || String(animation.gif || '').replace(/\.gif$/i, '.mp4');
 }
 
+function firstUploadedVideo(videos = []) {
+  const video = [...videos].sort((a, b) => Number(a.orden ?? 0) - Number(b.orden ?? 0) || Number(a.createdAt ?? 0) - Number(b.createdAt ?? 0))[0];
+  return video?.path ? videoPublicUrl(video.path) : '';
+}
+
 function formatDate(value = '') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   return match ? `${match[3]}/${match[2]}/${match[1]}` : 'Sin fecha';
+}
+
+function asTextList(value) {
+  if (Array.isArray(value)) return value.filter(Boolean).map(String);
+  if (value == null || value === '') return [];
+  return [String(value)];
 }
 
 async function librarySnapshot() {
@@ -35,12 +47,14 @@ async function librarySnapshot() {
   const mappedValidated = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
   const exercisesById = new Map(storedExercises.map((item) => [item.id, item]));
   for (const exercise of mappedValidated) exercisesById.set(exercise.id, exercise);
+
   const videos = records.filter((item) => item?.recordType === 'exerciseVideo');
   const videosByExercise = new Map();
   for (const video of videos) {
     if (!videosByExercise.has(video.exerciseId)) videosByExercise.set(video.exerciseId, []);
     videosByExercise.get(video.exerciseId).push(video);
   }
+
   return {
     exercises: [...exercisesById.values()].sort((a, b) =>
       String(a.category || '').localeCompare(String(b.category || ''), 'es')
@@ -50,10 +64,10 @@ async function librarySnapshot() {
   };
 }
 
-function pickerCard(exercise) {
+function pickerCard(exercise, videos = []) {
   const validated = findValidatedExercise(exercise.id);
-  const src = videoSource(validated);
-  const works = validated?.vista_rapida?.que_se_trabaja ?? exercise.works ?? [];
+  const src = videoSource(validated) || firstUploadedVideo(videos);
+  const works = asTextList(validated?.vista_rapida?.que_se_trabaja ?? exercise.works);
   const players = validated?.vista_rapida?.jugadores?.total ?? exercise.players ?? '';
   const duration = Number(exercise.duration) || 0;
   const preview = src
@@ -62,6 +76,7 @@ function pickerCard(exercise) {
         <button type="button" class="session-picker-play" aria-label="Reproducir demostración de ${esc(exercise.name)}">▶</button>
       </div>`
     : `<div class="session-picker-media session-picker-fallback">${renderBoardDiagrams(completeExercise(exercise))}</div>`;
+
   return `<article class="panel session-picker-card" data-session-category="${esc(exercise.category || 'Sin categoría')}">
     ${preview}
     <div class="session-picker-card-body">
@@ -84,10 +99,10 @@ function categoryButtons(exercises) {
     counts.set(category, (counts.get(category) || 0) + 1);
   }
   return [
-    `<button type="button" class="session-category-tab active" data-session-category-filter="">Todos <span>${exercises.length}</span></button>`,
+    `<button type="button" class="session-category-tab secondary active" data-session-category-filter="">Todos <span>${exercises.length}</span></button>`,
     ...[...counts.entries()]
       .sort(([a], [b]) => a.localeCompare(b, 'es'))
-      .map(([category, count]) => `<button type="button" class="session-category-tab" data-session-category-filter="${esc(category)}">${esc(category)} <span>${count}</span></button>`),
+      .map(([category, count]) => `<button type="button" class="session-category-tab secondary" data-session-category-filter="${esc(category)}">${esc(category)} <span>${count}</span></button>`),
   ].join('');
 }
 
@@ -98,6 +113,7 @@ function initPickerVideos(root) {
     video.src = video.dataset.src;
     video.load();
   };
+
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -129,30 +145,31 @@ async function enhanceSessionBuilder() {
   enhancingBuilder = true;
   picker.dataset.visualPicker = '1';
   try {
-    const { exercises } = await librarySnapshot();
+    const { exercises, videosByExercise } = await librarySnapshot();
     if (!picker.isConnected) return;
     picker.innerHTML = `
       <div class="session-picker-head">
         <div>
           <h3>Añadir ejercicios</h3>
-          <p class="meta">Filtra por categoría, mira la demostración y añade el ejercicio. Los minutos del bloque se editan arriba en la sesión.</p>
+          <p class="meta">Filtra por categoría, mira la demostración y añade el ejercicio. El buscador general sigue funcionando sobre estas fichas.</p>
         </div>
       </div>
       <div class="session-category-tabs" role="group" aria-label="Categorías de ejercicios">${categoryButtons(exercises)}</div>
-      <div class="exercise-grid session-picker-grid">${exercises.map(pickerCard).join('')}</div>`;
+      <div class="exercise-grid session-picker-grid">${exercises.map((exercise) => pickerCard(exercise, videosByExercise.get(exercise.id) || [])).join('')}</div>`;
     initPickerVideos(picker);
   } finally {
     enhancingBuilder = false;
   }
 }
 
-function genericDetailCard(exercise) {
+function genericDetailCard(exercise, videos = []) {
   const item = completeExercise(exercise);
-  const list = (items) => `<ul class="plain-list">${(items || []).map((value) => `<li>${esc(value)}</li>`).join('')}</ul>`;
+  const list = (items) => `<ul class="plain-list">${asTextList(items).map((value) => `<li>${esc(value)}</li>`).join('')}</ul>`;
   return `<article class="panel exercise-card session-generic-detail">
     <div class="exercise-card-head"><div><span class="pill">${esc(item.category)}</span>${item.code ? `<span class="pill accent">${esc(item.code)}</span>` : ''}<h2>${esc(item.name)}</h2></div></div>
     <div class="exercise-highlights"><span>${esc(item.players)}</span><span class="pill accent">${Number(item.duration) || 0} min</span><span class="meta">${esc(item.space)}</span></div>
     ${renderBoardDiagrams(item)}
+    ${videos.length ? renderVideoSectionHTML(videos, { exerciseId: exercise.id }) : ''}
     <p>${esc(item.description)}</p>
     <h3>Objetivo</h3><p>${esc(item.objective)}</p>
     <h3>Montaje</h3>${list(item.montage)}
@@ -166,8 +183,7 @@ function genericDetailCard(exercise) {
 }
 
 function prepareValidatedDetail(wrapper, block) {
-  const addButton = $('.add-exercise-to-session', wrapper);
-  addButton?.remove();
+  $('.add-exercise-to-session', wrapper)?.remove();
   const timeInput = $('.tiempo-ejercicio', wrapper);
   if (timeInput) {
     timeInput.value = Number(block.duration) || 1;
@@ -208,10 +224,11 @@ async function renderSessionDetail(sessionId) {
         ${(session.blocks || []).map((block, index) => {
           const exercise = exercisesById.get(block.exerciseId);
           if (!exercise) return `<section class="session-detail-block panel"><div class="session-detail-block-head"><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min</span></div><p>Este ejercicio ya no está disponible.</p></section>`;
+          const exerciseVideos = snapshot.videosByExercise.get(exercise.id) || [];
           const validated = findValidatedExercise(exercise.id);
           const content = validated
-            ? renderValidatedExerciseHTML(validated, { videos: snapshot.videosByExercise.get(exercise.id) || [] })
-            : genericDetailCard(exercise);
+            ? renderValidatedExerciseHTML(validated, { videos: exerciseVideos })
+            : genericDetailCard(exercise, exerciseVideos);
           return `<section class="session-detail-block" data-session-block="${index}">
             <div class="session-detail-block-head"><div><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min en esta sesión</span></div>${block.notes ? `<p class="meta">${esc(block.notes)}</p>` : ''}</div>
             <div class="session-detail-exercise-card">${content}</div>
@@ -261,16 +278,16 @@ function installStyles() {
   style.id = 'session-visual-planner-styles';
   style.textContent = `
     .session-category-tabs{display:flex;gap:.5rem;overflow-x:auto;padding:.2rem 0 .8rem;scrollbar-width:thin}
-    .session-category-tab{white-space:nowrap;min-height:38px;padding:.48rem .75rem;background:#e6ebe7;color:var(--ink)}
-    .session-category-tab.active{background:var(--brand);color:#fff}
+    .session-category-tab{white-space:nowrap;min-height:38px;padding:.48rem .75rem}
+    .session-category-tab.active{background:var(--brand);color:var(--card)}
     .session-category-tab span{opacity:.75;font-size:.78em}
     .session-picker-grid{align-items:start}
-    .session-picker-card{padding:0;overflow:hidden;display:grid;align-content:start}
+    .session-picker-card{padding:0;overflow:hidden;display:grid;align-content:start;content-visibility:auto;contain-intrinsic-size:480px}
     .session-picker-card-body{padding:1rem}
     .session-picker-card h3{margin:.55rem 0 .35rem}
-    .session-picker-media{position:relative;aspect-ratio:16/10;background:#10251f;overflow:hidden;display:grid;place-items:center}
-    .session-picker-video{width:100%;height:100%;object-fit:contain;background:#10251f}
-    .session-picker-play{position:absolute;inset:auto auto .7rem .7rem;width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--ink);box-shadow:var(--shadow)}
+    .session-picker-media{position:relative;aspect-ratio:16/10;background:var(--ink);overflow:hidden;display:grid;place-items:center}
+    .session-picker-video{width:100%;height:100%;object-fit:contain;background:var(--ink)}
+    .session-picker-play{position:absolute;inset:auto auto .7rem .7rem;width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
     .session-picker-fallback{padding:.5rem;background:var(--paper);overflow:hidden}
     .session-picker-fallback .exercise-board-sequence{max-height:260px;overflow:hidden}
     .session-picker-card[hidden]{display:none!important}
