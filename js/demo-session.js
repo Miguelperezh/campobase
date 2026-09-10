@@ -4,6 +4,7 @@ import './session-materials.js?v=2452';
 import './attendance-linked-sources.js?v=2453';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
+import './today-dashboard.js?v=2456';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
