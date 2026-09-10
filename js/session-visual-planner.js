@@ -1,0 +1,346 @@
+import { getAll } from './db.js';
+import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
+import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
+import { completeExercise, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const esc = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[character]);
+
+let enhancingBuilder = false;
+let detailSessionId = '';
+let detailRenderToken = 0;
+
+function blockLabel(type) {
+  if (type === 'warmup') return 'Calentamiento';
+  if (type === 'final') return 'Juego final';
+  return 'Parte principal';
+}
+
+function videoSource(validated) {
+  const animation = validated?.animacion ?? {};
+  return animation.mp4 || String(animation.gif || '').replace(/\.gif$/i, '.mp4');
+}
+
+function formatDate(value = '') {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : 'Sin fecha';
+}
+
+async function librarySnapshot() {
+  const records = await getAll('settings');
+  const storedExercises = records.filter((item) => item?.recordType === 'exercise' && item.example !== true);
+  const mappedValidated = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+  const exercisesById = new Map(storedExercises.map((item) => [item.id, item]));
+  for (const exercise of mappedValidated) exercisesById.set(exercise.id, exercise);
+  const videos = records.filter((item) => item?.recordType === 'exerciseVideo');
+  const videosByExercise = new Map();
+  for (const video of videos) {
+    if (!videosByExercise.has(video.exerciseId)) videosByExercise.set(video.exerciseId, []);
+    videosByExercise.get(video.exerciseId).push(video);
+  }
+  return {
+    exercises: [...exercisesById.values()].sort((a, b) =>
+      String(a.category || '').localeCompare(String(b.category || ''), 'es')
+      || String(a.name || '').localeCompare(String(b.name || ''), 'es')),
+    sessions: records.filter((item) => item?.recordType === 'trainingSession'),
+    videosByExercise,
+  };
+}
+
+function pickerCard(exercise) {
+  const validated = findValidatedExercise(exercise.id);
+  const src = videoSource(validated);
+  const works = validated?.vista_rapida?.que_se_trabaja ?? exercise.works ?? [];
+  const players = validated?.vista_rapida?.jugadores?.total ?? exercise.players ?? '';
+  const duration = Number(exercise.duration) || 0;
+  const preview = src
+    ? `<div class="session-picker-media">
+        <video class="session-picker-video" muted loop playsinline preload="none" data-src="${esc(src)}"></video>
+        <button type="button" class="session-picker-play" aria-label="Reproducir demostración de ${esc(exercise.name)}">▶</button>
+      </div>`
+    : `<div class="session-picker-media session-picker-fallback">${renderBoardDiagrams(completeExercise(exercise))}</div>`;
+  return `<article class="panel session-picker-card" data-session-category="${esc(exercise.category || 'Sin categoría')}">
+    ${preview}
+    <div class="session-picker-card-body">
+      <div class="pills"><span class="pill">${esc(exercise.category || 'Sin categoría')}</span>${duration ? `<span class="pill accent">${duration} min</span>` : ''}</div>
+      <h3>${esc(exercise.name || 'Ejercicio')}</h3>
+      ${works.length ? `<p class="meta">${works.slice(0, 4).map(esc).join(' · ')}</p>` : ''}
+      ${players ? `<p class="meta">Jugadores: ${esc(players)}</p>` : ''}
+      <div class="button-row">
+        <button type="button" class="view-exercise secondary" data-exercise-id="${esc(exercise.id)}">Ver ejercicio</button>
+        <button type="button" class="add-exercise-to-session primary" data-id="${esc(exercise.id)}">+ Añadir</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function categoryButtons(exercises) {
+  const counts = new Map();
+  for (const exercise of exercises) {
+    const category = exercise.category || 'Sin categoría';
+    counts.set(category, (counts.get(category) || 0) + 1);
+  }
+  return [
+    `<button type="button" class="session-category-tab active" data-session-category-filter="">Todos <span>${exercises.length}</span></button>`,
+    ...[...counts.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, 'es'))
+      .map(([category, count]) => `<button type="button" class="session-category-tab" data-session-category-filter="${esc(category)}">${esc(category)} <span>${count}</span></button>`),
+  ].join('');
+}
+
+function initPickerVideos(root) {
+  const videos = $$('.session-picker-video[data-src]', root);
+  const load = (video) => {
+    if (video.src) return;
+    video.src = video.dataset.src;
+    video.load();
+  };
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        load(entry.target);
+        observer.unobserve(entry.target);
+      }
+    }, { rootMargin: '250px 0px' });
+    videos.forEach((video) => observer.observe(video));
+  } else {
+    videos.slice(0, 8).forEach(load);
+  }
+}
+
+async function enhanceSessionBuilder() {
+  const root = $('#session-builder');
+  const form = $('#session-form', root);
+  if (!root || !form || root.classList.contains('hidden') || enhancingBuilder) return;
+
+  const name = form.elements.name;
+  if (name) {
+    name.removeAttribute('required');
+    name.setAttribute('aria-required', 'false');
+  }
+
+  const picker = $('.session-exercise-picker', form);
+  if (!picker || picker.dataset.visualPicker === '1') return;
+
+  enhancingBuilder = true;
+  picker.dataset.visualPicker = '1';
+  try {
+    const { exercises } = await librarySnapshot();
+    if (!picker.isConnected) return;
+    picker.innerHTML = `
+      <div class="session-picker-head">
+        <div>
+          <h3>Añadir ejercicios</h3>
+          <p class="meta">Filtra por categoría, mira la demostración y añade el ejercicio. Los minutos del bloque se editan arriba en la sesión.</p>
+        </div>
+      </div>
+      <div class="session-category-tabs" role="group" aria-label="Categorías de ejercicios">${categoryButtons(exercises)}</div>
+      <div class="exercise-grid session-picker-grid">${exercises.map(pickerCard).join('')}</div>`;
+    initPickerVideos(picker);
+  } finally {
+    enhancingBuilder = false;
+  }
+}
+
+function genericDetailCard(exercise) {
+  const item = completeExercise(exercise);
+  const list = (items) => `<ul class="plain-list">${(items || []).map((value) => `<li>${esc(value)}</li>`).join('')}</ul>`;
+  return `<article class="panel exercise-card session-generic-detail">
+    <div class="exercise-card-head"><div><span class="pill">${esc(item.category)}</span>${item.code ? `<span class="pill accent">${esc(item.code)}</span>` : ''}<h2>${esc(item.name)}</h2></div></div>
+    <div class="exercise-highlights"><span>${esc(item.players)}</span><span class="pill accent">${Number(item.duration) || 0} min</span><span class="meta">${esc(item.space)}</span></div>
+    ${renderBoardDiagrams(item)}
+    <p>${esc(item.description)}</p>
+    <h3>Objetivo</h3><p>${esc(item.objective)}</p>
+    <h3>Montaje</h3>${list(item.montage)}
+    <h3>Desarrollo paso a paso</h3>${list(item.steps)}
+    <h3>Qué se trabaja</h3>${list(item.works)}
+    <h3>Qué observar</h3>${list(item.observe)}
+    <h3>Correcciones</h3>${list(item.corrections)}
+    <p><strong>Si sale mal:</strong> ${esc(item.ifBad)}</p>
+    <p><strong>Si sale bien:</strong> ${esc(item.ifGood)}</p>
+  </article>`;
+}
+
+function prepareValidatedDetail(wrapper, block) {
+  const addButton = $('.add-exercise-to-session', wrapper);
+  addButton?.remove();
+  const timeInput = $('.tiempo-ejercicio', wrapper);
+  if (timeInput) {
+    timeInput.value = Number(block.duration) || 1;
+    timeInput.disabled = true;
+    const dataBox = timeInput.closest('.dato');
+    const label = dataBox?.querySelector('small');
+    const strong = dataBox?.querySelector('strong');
+    const editable = dataBox?.querySelector('.editable');
+    if (label) label.textContent = 'Tiempo en esta sesión';
+    if (strong) strong.textContent = `${Number(block.duration) || 1} min`;
+    if (editable) editable.textContent = 'editable desde «Editar sesión y tiempos»';
+  }
+  const validatedRoot = $('.ejercicio-validado', wrapper);
+  if (validatedRoot) initValidatedExerciseViewer(validatedRoot);
+  attachLightbox(wrapper);
+}
+
+async function renderSessionDetail(sessionId) {
+  const token = ++detailRenderToken;
+  const dialog = $('#session-detail-dialog');
+  const body = $('#session-detail-body');
+  if (!dialog || !body || !sessionId) return;
+
+  const snapshot = await librarySnapshot();
+  if (token !== detailRenderToken) return;
+  const session = snapshot.sessions.find((item) => item.id === sessionId);
+  if (!session || !dialog.open) return;
+  const exercisesById = new Map(snapshot.exercises.map((item) => [item.id, item]));
+  const status = sessionDurationStatus(session.blocks || [], session.targetDuration);
+
+  body.innerHTML = `
+    <div class="session-visual-detail" data-session-id="${esc(session.id)}">
+      <div class="session-detail-summary panel">
+        <div><strong>${esc(formatDate(session.date))}</strong><span>${session.blocks?.length || 0} ejercicios · ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
+        <button type="button" class="edit-session secondary" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
+      </div>
+      <div class="session-detail-exercises">
+        ${(session.blocks || []).map((block, index) => {
+          const exercise = exercisesById.get(block.exerciseId);
+          if (!exercise) return `<section class="session-detail-block panel"><div class="session-detail-block-head"><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min</span></div><p>Este ejercicio ya no está disponible.</p></section>`;
+          const validated = findValidatedExercise(exercise.id);
+          const content = validated
+            ? renderValidatedExerciseHTML(validated, { videos: snapshot.videosByExercise.get(exercise.id) || [] })
+            : genericDetailCard(exercise);
+          return `<section class="session-detail-block" data-session-block="${index}">
+            <div class="session-detail-block-head"><div><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min en esta sesión</span></div>${block.notes ? `<p class="meta">${esc(block.notes)}</p>` : ''}</div>
+            <div class="session-detail-exercise-card">${content}</div>
+          </section>`;
+        }).join('')}
+      </div>
+      ${session.material ? `<div class="panel"><strong>Material total</strong><p>${esc(session.material)}</p></div>` : ''}
+      ${session.notes ? `<div class="panel"><strong>Observaciones generales</strong><p>${esc(session.notes)}</p></div>` : ''}
+      <div class="button-row"><button type="button" class="edit-session primary" data-id="${esc(session.id)}">Editar sesión y tiempos</button></div>
+    </div>`;
+
+  $$('.session-detail-block', body).forEach((wrapper, index) => {
+    const block = session.blocks[index];
+    if (block && findValidatedExercise(block.exerciseId)) prepareValidatedDetail(wrapper, block);
+  });
+}
+
+function applyCategoryFilter(button) {
+  const picker = button.closest('.session-exercise-picker');
+  if (!picker) return;
+  const filter = button.dataset.sessionCategoryFilter ?? '';
+  $$('.session-category-tab', picker).forEach((item) => item.classList.toggle('active', item === button));
+  $$('.session-picker-card', picker).forEach((card) => {
+    card.hidden = Boolean(filter && card.dataset.sessionCategory !== filter);
+  });
+}
+
+function togglePickerVideo(button) {
+  const card = button.closest('.session-picker-card');
+  const video = $('.session-picker-video', card);
+  if (!video) return;
+  if (!video.src && video.dataset.src) {
+    video.src = video.dataset.src;
+    video.load();
+  }
+  if (video.paused) {
+    video.play().then(() => { button.textContent = '⏸'; }).catch(() => {});
+  } else {
+    video.pause();
+    button.textContent = '▶';
+  }
+}
+
+function installStyles() {
+  if ($('#session-visual-planner-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'session-visual-planner-styles';
+  style.textContent = `
+    .session-category-tabs{display:flex;gap:.5rem;overflow-x:auto;padding:.2rem 0 .8rem;scrollbar-width:thin}
+    .session-category-tab{white-space:nowrap;min-height:38px;padding:.48rem .75rem;background:#e6ebe7;color:var(--ink)}
+    .session-category-tab.active{background:var(--brand);color:#fff}
+    .session-category-tab span{opacity:.75;font-size:.78em}
+    .session-picker-grid{align-items:start}
+    .session-picker-card{padding:0;overflow:hidden;display:grid;align-content:start}
+    .session-picker-card-body{padding:1rem}
+    .session-picker-card h3{margin:.55rem 0 .35rem}
+    .session-picker-media{position:relative;aspect-ratio:16/10;background:#10251f;overflow:hidden;display:grid;place-items:center}
+    .session-picker-video{width:100%;height:100%;object-fit:contain;background:#10251f}
+    .session-picker-play{position:absolute;inset:auto auto .7rem .7rem;width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--ink);box-shadow:var(--shadow)}
+    .session-picker-fallback{padding:.5rem;background:var(--paper);overflow:hidden}
+    .session-picker-fallback .exercise-board-sequence{max-height:260px;overflow:hidden}
+    .session-picker-card[hidden]{display:none!important}
+    .session-detail-summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+    .session-detail-summary>div{display:grid;gap:.2rem}
+    .session-detail-summary span{font-size:.82rem;color:var(--muted)}
+    .session-detail-exercises{display:grid;gap:1.2rem}
+    .session-detail-block{border-top:1px solid var(--line);padding-top:1rem}
+    .session-detail-block:first-child{border-top:0;padding-top:0}
+    .session-detail-block-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;margin-bottom:.7rem}
+    .session-detail-block-head>div{display:flex;gap:.45rem;flex-wrap:wrap}
+    .session-detail-exercise-card>.ejercicio-validado,.session-detail-exercise-card>.exercise-card{margin:0}
+    #session-detail-dialog{width:min(900px,calc(100% - 1rem))}
+    @media(max-width:650px){
+      .session-detail-summary,.session-detail-block-head{align-items:stretch;flex-direction:column}
+      .session-detail-summary button{width:100%}
+      .session-picker-grid{grid-template-columns:1fr}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function scheduleBuilderEnhancement() {
+  window.setTimeout(() => enhanceSessionBuilder().catch((error) => console.warn('No se pudo mejorar el selector de ejercicios de la sesión:', error)), 0);
+}
+
+function install() {
+  installStyles();
+
+  const builder = $('#session-builder');
+  if (builder) new MutationObserver(scheduleBuilderEnhancement).observe(builder, { childList: true, subtree: true });
+  scheduleBuilderEnhancement();
+
+  const detailBody = $('#session-detail-body');
+  if (detailBody) {
+    new MutationObserver(() => {
+      if (!detailSessionId || detailBody.querySelector('.session-visual-detail')) return;
+      window.setTimeout(() => renderSessionDetail(detailSessionId).catch((error) => console.warn('No se pudo mostrar la sesión visual:', error)), 0);
+    }).observe(detailBody, { childList: true, subtree: false });
+  }
+
+  document.addEventListener('click', (event) => {
+    const category = event.target.closest('.session-category-tab');
+    if (category) {
+      event.preventDefault();
+      applyCategoryFilter(category);
+      return;
+    }
+
+    const play = event.target.closest('.session-picker-play');
+    if (play) {
+      event.preventDefault();
+      event.stopPropagation();
+      togglePickerVideo(play);
+      return;
+    }
+
+    const viewSession = event.target.closest('.view-session');
+    if (viewSession?.dataset.id) {
+      detailSessionId = viewSession.dataset.id;
+      window.setTimeout(() => renderSessionDetail(detailSessionId).catch((error) => console.warn('No se pudo mostrar la sesión visual:', error)), 0);
+    }
+
+    if (event.target.closest('.edit-session')) detailRenderToken += 1;
+  }, true);
+
+  window.addEventListener('pageshow', scheduleBuilderEnhancement);
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  else install();
+}
