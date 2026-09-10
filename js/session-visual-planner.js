@@ -80,9 +80,8 @@ async function pickerLibrary() {
 
 export function orderedSessionCategories(exercises = []) {
   const found = new Set(exercises.map((exercise) => String(exercise?.category || '').trim()).filter(Boolean));
-  const preferred = EXERCISE_CATEGORIES.filter((category) => found.has(category));
   const extras = [...found].filter((category) => !EXERCISE_CATEGORIES.includes(category)).sort((a, b) => a.localeCompare(b, 'es'));
-  return [...preferred, ...extras];
+  return [...EXERCISE_CATEGORIES, ...extras];
 }
 
 export function filterSessionExercises(exercises = [], category = '') {
@@ -180,7 +179,6 @@ function rememberPickerAnchor(button) {
     top: picker.getBoundingClientRect().top,
     blockCount: $$('.session-block', $('#session-form')).length,
   };
-  button.disabled = true;
 }
 
 function restorePickerAnchor(picker) {
@@ -192,7 +190,7 @@ function restorePickerAnchor(picker) {
     const newBlockCount = $$('.session-block', $('#session-form')).length;
     if (newBlockCount <= anchor.blockCount) return;
     const delta = picker.getBoundingClientRect().top - anchor.top;
-    if (Math.abs(delta) > 1) window.scrollBy({ top: delta, left: 0, behavior: 'instant' });
+    if (Math.abs(delta) > 1) window.scrollBy(0, delta);
   });
 }
 
@@ -416,6 +414,7 @@ function install() {
       window.setTimeout(() => renderSessionDetail(detailSessionId).catch((error) => console.warn('No se pudo mostrar la sesión visual:', error)), 0);
     }
 
+    if (event.target.closest('#new-session, #new-session-exercises, .edit-session')) pickerCache = null;
     if (event.target.closest('.edit-session')) detailRenderToken += 1;
   }, true);
 
