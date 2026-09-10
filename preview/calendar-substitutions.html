@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CampoBase · Preview Calendario</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body{padding:18px;max-width:1050px;margin:auto}.preview-banner{margin-bottom:16px}.preview-grid{display:grid;grid-template-columns:1fr;gap:14px}.demo-lineup{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.action-card{margin-top:12px}.action-actions{display:flex;gap:8px;flex-wrap:wrap}.status-box{white-space:pre-wrap}.hidden{display:none!important}@media(max-width:640px){body{padding:10px}}
+  </style>
+</head>
+<body>
+  <header class="topbar" style="position:static;margin-bottom:16px">
+    <div class="topbar-brand"><div><p class="eyebrow">PRUEBA AISLADA · DATOS DEMO</p><h1>CampoBase</h1></div></div>
+    <div class="status"><strong class="format-badge">F7 · 7 en campo · 70 min</strong></div>
+  </header>
+
+  <main>
+    <article class="panel preview-banner warning">
+      <strong>Preview aislada.</strong> Esta página no conecta con Supabase ni modifica CampoBase real. Sirve para probar el flujo de Calendario → alineación, cambios, posiciones y observaciones.
+    </article>
+
+    <section class="panel">
+      <p class="eyebrow">Calendario · Partido DEMO</p>
+      <h2>Unión Viera Alevín D — Rival DEMO</h2>
+      <p class="meta">Todo lo que guardes aquí queda solo en memoria de esta página y se pierde al recargar.</p>
+    </section>
+
+    <section class="panel">
+      <h3>Alineación inicial</h3>
+      <div id="lineup" class="demo-lineup"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">Durante el partido</p><h3>Cambios y posiciones</h3></div></div>
+      <div class="button-row">
+        <button id="add-sub" class="secondary" type="button">+ Cambio</button>
+        <button id="add-pos" class="secondary" type="button">+ Cambio de posición</button>
+        <button id="add-obs" class="secondary" type="button">+ Observación</button>
+      </div>
+      <div id="actions" class="stack"></div>
+      <div class="button-row" style="margin-top:14px"><button id="save" class="primary" type="button">Guardar todo en el partido DEMO</button></div>
+    </section>
+
+    <section class="panel">
+      <h3>Estado actual</h3>
+      <div id="state" class="status-box meta"></div>
+    </section>
+  </main>
+
+<script>
+const players=[
+{id:'p1',name:'Álex',n:1},{id:'p2',name:'Pablo',n:2},{id:'p3',name:'Ezequiel',n:3},{id:'p4',name:'Santiago',n:4},{id:'p5',name:'Aitor',n:5},{id:'p6',name:'Víctor',n:6},{id:'p7',name:'Nicolás',n:7},{id:'p8',name:'Thiago',n:8},{id:'p9',name:'Carlos',n:9},{id:'p10',name:'Antonio',n:10},{id:'p11',name:'Valeria',n:11},{id:'p12',name:'Einar',n:12}
+];
+const initial=[
+{playerId:'p1',pos:'Portero'},{playerId:'p2',pos:'Defensa izq.'},{playerId:'p3',pos:'Central'},{playerId:'p4',pos:'Defensa der.'},{playerId:'p5',pos:'Medio izq.'},{playerId:'p6',pos:'Medio der.'},{playerId:'p7',pos:'Delantero'}
+];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const label=id=>{const p=players.find(x=>x.id===id);return p?`${p.n} · ${p.name}`:'—'};
+const opts=(ids,selected='')=>'<option value="">—</option>'+ids.map(id=>`<option value="${id}" ${id===selected?'selected':''}>${label(id)}</option>`).join('');
+function readLineup(){return $$('.lineup-row').map(r=>({playerId:r.querySelector('.lp').value,pos:r.querySelector('.pos').value.trim()})).filter(x=>x.playerId)}
+function baseState(){const lineup=readLineup(), onField=lineup.map(x=>x.playerId), positions=new Map(lineup.map(x=>[x.playerId,x.pos]));return{onField,bench:players.map(p=>p.id).filter(id=>!onField.includes(id)),positions}}
+function readAction(row,state){const minute=Math.max(0,Number(row.querySelector('.min')?.value)||0); if(row.dataset.type==='sub'){const outId=row.querySelector('.out').value,inId=row.querySelector('.in').value;return{type:'sub',minute,outId,inId,inPos:row.querySelector('.inpos').value.trim()||state.positions.get(outId)||''}} if(row.dataset.type==='pos'){const a=row.querySelector('.a').value,b=row.querySelector('.b').value;return{type:'pos',minute,a,b}} const playerId=row.querySelector('.player').value;return{type:'obs',minute,playerId,note:row.querySelector('.note').value.trim(),position:state.positions.get(playerId)||''}}
+function apply(state,a){const s={onField:[...state.onField],bench:[...state.bench],positions:new Map(state.positions)};if(a.type==='sub'&&a.outId&&a.inId&&s.onField.includes(a.outId)&&s.bench.includes(a.inId)){const i=s.onField.indexOf(a.outId),p=s.positions.get(a.outId)||'';s.onField[i]=a.inId;s.bench=s.bench.filter(x=>x!==a.inId);s.bench.push(a.outId);s.positions.delete(a.outId);s.positions.set(a.inId,a.inPos||p)}else if(a.type==='pos'&&a.a&&a.b&&s.onField.includes(a.a)&&s.onField.includes(a.b)&&a.a!==a.b){const pa=s.positions.get(a.a)||'',pb=s.positions.get(a.b)||'';s.positions.set(a.a,pb);s.positions.set(a.b,pa)}return s}
+function refresh(){let s=baseState();for(const row of $$('.action-row')){if(row.dataset.type==='sub'){const out=row.querySelector('.out'),inn=row.querySelector('.in'),oo=out.value,ii=inn.value;out.innerHTML=opts(s.onField,oo);inn.innerHTML=opts(s.bench,ii);if(s.onField.includes(oo))out.value=oo;if(s.bench.includes(ii))inn.value=ii;const p=s.positions.get(out.value)||'';row.querySelector('.current').textContent=out.value?`Está jugando de: ${p||'Sin posición'}`:'Solo aparecen jugadores que están en el campo.'}else if(row.dataset.type==='pos'){const a=row.querySelector('.a'),b=row.querySelector('.b'),aa=a.value,bb=b.value;a.innerHTML=opts(s.onField,aa);if(s.onField.includes(aa))a.value=aa;b.innerHTML=opts(s.onField.filter(id=>id!==a.value),bb);if(s.onField.includes(bb)&&bb!==a.value)b.value=bb;row.querySelector('.current').textContent=a.value&&b.value?`${s.positions.get(a.value)||'Sin posición'} ↔ ${s.positions.get(b.value)||'Sin posición'}`:'Solo jugadores actualmente en campo.'}else{const p=row.querySelector('.player'),old=p.value;p.innerHTML=opts(s.onField,old);if(s.onField.includes(old))p.value=old;row.querySelector('.current').textContent=p.value?`Posición en este momento: ${s.positions.get(p.value)||'Sin posición'}`:'Solo jugadores actualmente en campo.'}s=apply(s,readAction(row,s))}
+$('#state').textContent=`EN CAMPO (${s.onField.length}/7)\n${s.onField.map(id=>`${label(id)} · ${s.positions.get(id)||'Sin posición'}`).join('\n')}\n\nSUPLENTES\n${s.bench.map(label).join('\n')}`}
+function row(type){const d=document.createElement('article');d.className='panel action-row action-card';d.dataset.type=type;if(type==='sub')d.innerHTML=`<h4>Cambio</h4><div class="form-row"><label>Minuto<input class="min" type="number" min="0" max="70" value="10"></label><label>Quién sale<select class="out"></select></label><label>Quién entra<select class="in"></select></label><label>Posición en la que entra<input class="inpos" placeholder="Puede ser cualquiera"></label></div><p class="meta current"></p><button type="button" class="danger compact remove">Quitar</button>`;else if(type==='pos')d.innerHTML=`<h4>Cambio de posición</h4><div class="form-row"><label>Minuto<input class="min" type="number" min="0" max="70" value="20"></label><label>Jugador 1<select class="a"></select></label><label>Jugador 2<select class="b"></select></label></div><p class="meta current"></p><button type="button" class="danger compact remove">Quitar</button>`;else d.innerHTML=`<h4>Observación por posición</h4><div class="form-row"><label>Minuto<input class="min" type="number" min="0" max="70" value="25"></label><label>Jugador<select class="player"></select></label></div><label>Observación<textarea class="note" maxlength="800" placeholder="Observación de este jugador en esta posición"></textarea></label><p class="meta current"></p><button type="button" class="danger compact remove">Quitar</button>`;d.addEventListener('change',refresh);d.querySelector('.remove').onclick=()=>{d.remove();refresh()};$('#actions').appendChild(d);refresh()}
+$('#lineup').innerHTML=initial.map((slot,i)=>`<div class="panel lineup-row"><label>Jugador<select class="lp">${opts(players.map(p=>p.id),slot.playerId)}</select></label><label>Posición<input class="pos" value="${slot.pos}"></label></div>`).join('');
+$('#lineup').addEventListener('change',refresh);$('#add-sub').onclick=()=>row('sub');$('#add-pos').onclick=()=>row('pos');$('#add-obs').onclick=()=>row('obs');
+$('#save').onclick=()=>{let s=baseState(),log=[];for(const r of $$('.action-row')){const a=readAction(r,s);if(a.type==='sub'&&(!a.outId||!a.inId))return alert('Completa quién sale y quién entra.');if(a.type==='pos'&&(!a.a||!a.b))return alert('Completa los dos jugadores del cambio de posición.');if(a.type==='obs'&&(!a.playerId||!a.note))return alert('Completa jugador y observación.');log.push(a);s=apply(s,a)}alert(`Guardado en PARTIDO DEMO.\n\n${log.length} registros.\nNo se ha escrito nada en Supabase.`)};
+refresh();
+</script>
+</body>
+</html>
