@@ -371,6 +371,9 @@ function install() {
   document.addEventListener('change', (event) => {
     const form = event.target.closest('#training-form[data-visual-attendance="1"]');
     if (!form || !event.target.matches('input[type="radio"][name^="status-"]')) return;
+    // El formulario visual comparte contenedor con el editor histórico. Cortamos este
+    // cambio aquí para que el listener legado no intente tratar estos chips como <select>.
+    event.stopImmediatePropagation();
     updateEditorSummary(form);
   }, true);
 
