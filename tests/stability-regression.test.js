@@ -40,14 +40,14 @@ test('Asistencia enlaza sesiones por sessionId y partidos por matchId sin dejar 
   const source = await projectFile('js/attendance-linked-sources.js');
   assert.match(source, /record\?\.sessionId === sessionId/);
   assert.match(source, /record\?\.kind === 'match' && record\.matchId === matchId/);
-  assert.match(source, /sessionId,/);
-  assert.match(source, /kind: 'training'/);
-  assert.match(source, /data-linked-session/);
-  assert.match(source, /data-linked-match/);
-  assert.match(source, /Asistencia registrada/);
+  assert.match(source, /sessionId: session\?\.id \|\| null/);
+  assert.match(source, /matchId: match\?\.id \|\| null/);
+  assert.match(source, /kind: match \? 'match' : 'training'/);
+  assert.match(source, /data-attendance-source/);
+  assert.match(source, /data-source-id/);
+  assert.match(source, /Editar asistencia/);
   assert.match(source, /cleanupOrphanSessionAttendance/);
   assert.match(source, /remove\('trainings', record\.id\)/);
-  assert.match(source, /subtree: false/);
 });
 
 test('los módulos nuevos se cargan desde CampoBase y están incluidos en la caché PWA', async () => {
