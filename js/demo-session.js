@@ -1,4 +1,4 @@
-import './calendar-substitutions-v2.js';
+import './calendar-substitutions-entry.js';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
