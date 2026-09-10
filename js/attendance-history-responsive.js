@@ -11,12 +11,15 @@ export function installAttendanceHistoryResponsiveStyles() {
   style.textContent = `
     .attendance-grid {
       grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      align-items: start;
     }
 
     .attendance-player {
       min-width: 0;
       max-width: 100%;
       overflow: hidden;
+      align-self: start;
+      height: max-content;
     }
 
     .attendance-player details {
