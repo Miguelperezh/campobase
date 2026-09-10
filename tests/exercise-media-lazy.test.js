@@ -37,7 +37,7 @@ test('las demostraciones de Ejercicios no reciben src ni preload auto al constru
   assert.doesNotMatch(viewer, /class="frame-video"\s+src=/);
 });
 
-test('los visores pesados de Ejercicios se inicializan solo cerca del viewport', async () => {
+test('los visores pesados de Ejercicios se inicializan solo cerca del viewport y limpian fichas retiradas', async () => {
   const viewer = await projectFile('js/ejercicio-viewer.js');
   assert.match(viewer, /IntersectionObserver/);
   assert.match(viewer, /rootMargin: '350px 0px'/);
@@ -45,6 +45,9 @@ test('los visores pesados de Ejercicios se inicializan solo cerca del viewport',
   assert.match(viewer, /content-visibility:auto/);
   assert.match(viewer, /contain-intrinsic-size:auto 900px/);
   assert.match(viewer, /data-lazy-detail="1"/);
+  assert.match(viewer, /const viewerTargets = new Set\(\)/);
+  assert.match(viewer, /pruneDisconnectedViewerTargets/);
+  assert.match(viewer, /viewerObserver\.unobserve\(target\)/);
   assert.doesNotMatch(viewer, /video-poster/);
   assert.doesNotMatch(viewer, /f00[01]\.jpg/);
 });
