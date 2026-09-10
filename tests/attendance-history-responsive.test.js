@@ -16,5 +16,5 @@ test('la corrección responsive se carga en app y PWA sin tocar la lógica de As
   const [demo, sw] = await Promise.all([projectFile('js/demo-session.js'), projectFile('sw.js')]);
   assert.match(demo, /attendance-history-responsive\.js\?v=2454/);
   assert.match(sw, /attendance-history-responsive\.js\?v=2454/);
-  assert.match(sw, /campobase-v2\.44\.0-attendance-responsive-2454/);
+  assert.match(sw, /campobase-v2\.44\.0-player-sync-attendance-2453-responsive-2454/);
 });
