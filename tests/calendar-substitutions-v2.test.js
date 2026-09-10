@@ -32,14 +32,27 @@ test('una observación solo puede registrarse para un jugador en campo', () => {
   assert.throws(() => applyCalendarAction(state, { type: 'observation', playerId: 'p2', note: 'No válido' }), /campo/);
 });
 
+test('un cambio de táctica se registra sin alterar quién está en campo ni los minutos', () => {
+  const state = buildMatchState([
+    { playerId: 'p1', pos: 'Portero' },
+    { playerId: 'p2', pos: 'Central' },
+  ], ['p1', 'p2', 'p3']);
+  const next = applyCalendarAction(state, { type: 'tactic_change', formation: '1-2-3-1' });
+  assert.deepEqual(next.onField, ['p1', 'p2']);
+  assert.deepEqual(next.bench, ['p3']);
+  assert.equal(next.positions.get('p2'), 'Central');
+  assert.throws(() => applyCalendarAction(state, { type: 'tactic_change', formation: '9-9-9' }), /táctica válida/);
+});
+
 test('los minutos se recalculan desde los cambios reales del partido', () => {
   const lineup = [
     { playerId: 'p1', pos: 'Portero' },
     { playerId: 'p2', pos: 'Defensa' },
   ];
   const actions = [
-    { type: 'substitution', second: 35 * 60, order: 0, outId: 'p2', inId: 'p3' },
-    { type: 'substitution', second: 50 * 60, order: 1, outId: 'p1', inId: 'p4' },
+    { type: 'tactic_change', second: 20 * 60, order: 0, formation: '1-2-3-1' },
+    { type: 'substitution', second: 35 * 60, order: 1, outId: 'p2', inId: 'p3' },
+    { type: 'substitution', second: 50 * 60, order: 2, outId: 'p1', inId: 'p4' },
   ];
   assert.deepEqual(calculateMatchMinutes(lineup, actions, 70 * 60), {
     p2: 35 * 60,

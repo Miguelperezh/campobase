@@ -1,4 +1,5 @@
 import { getAll, put } from './db.js';
+import { FORMATION_NAMES } from './tactics.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -20,6 +21,10 @@ function options(ids, playersById, selected = '', empty = true) {
   const list = [...ids].map((id) => playersById.get(id)).filter(Boolean)
     .sort((a, b) => Number(a.number ?? 999) - Number(b.number ?? 999) || String(a.name).localeCompare(String(b.name), 'es'));
   return `${empty ? '<option value="">—</option>' : ''}${list.map((player) => `<option value="${esc(player.id)}" ${player.id === selected ? 'selected' : ''}>${esc(playerLabel(player))}</option>`).join('')}`;
+}
+
+function formationOptions(selected = '1-3-2-1') {
+  return FORMATION_NAMES.map((formation) => `<option value="${esc(formation)}" ${formation === selected ? 'selected' : ''}>${esc(formation)}</option>`).join('');
 }
 
 export function buildMatchState(lineup = [], availableIds = []) {
@@ -63,6 +68,8 @@ export function applyCalendarAction(state, action) {
     const b = next.positions.get(playerBId) ?? '';
     next.positions.set(playerAId, action.playerAPosition || b);
     next.positions.set(playerBId, action.playerBPosition || a);
+  } else if (action.type === 'tactic_change') {
+    if (!FORMATION_NAMES.includes(action.formation)) throw new RangeError('Selecciona una táctica válida.');
   } else if (action.type === 'observation') {
     if (!next.onField.includes(action.playerId)) throw new RangeError('La observación debe corresponder a un jugador que esté en el campo en ese momento.');
   }
@@ -105,6 +112,7 @@ function existingActions(match) {
     });
   }
   for (const event of match.positionEvents ?? []) actions.push({ ...event, type: 'position_swap', order: order++ });
+  for (const event of match.tacticEvents ?? []) actions.push({ ...event, type: 'tactic_change', order: order++ });
   for (const event of match.positionObservations ?? []) actions.push({ ...event, type: 'observation', order: order++ });
   return actions.sort((a, b) => Number(a.second) - Number(b.second) || a.order - b.order);
 }
@@ -120,6 +128,10 @@ function substitutionRow(action = {}) {
 
 function positionRow(action = {}) {
   return `<div class="panel calendar-action-row" data-type="position_swap">${minuteInput(action)}<div class="form-row"><label>Jugador 1<select class="action-player-a"></select></label><label>Jugador 2<select class="action-player-b"></select></label></div><p class="meta action-position-summary"></p><button type="button" class="remove-calendar-action danger compact">Quitar</button></div>`;
+}
+
+function tacticRow(action = {}) {
+  return `<div class="panel calendar-action-row" data-type="tactic_change">${minuteInput(action)}<label>Nueva táctica<select class="action-formation">${formationOptions(action.formation || '1-3-2-1')}</select></label><p class="meta action-tactic-summary"></p><button type="button" class="remove-calendar-action danger compact">Quitar</button></div>`;
 }
 
 function observationRow(action = {}) {
@@ -156,6 +168,11 @@ function readAction(row, state, strict = true) {
     if (strict && (!playerAId || !playerBId)) throw new RangeError('Selecciona los dos jugadores que cambian de posición.');
     return { ...base, playerAId, playerBId, playerAPosition: state.positions.get(playerBId) ?? '', playerBPosition: state.positions.get(playerAId) ?? '' };
   }
+  if (base.type === 'tactic_change') {
+    const formation = $('.action-formation', row).value;
+    if (strict && !FORMATION_NAMES.includes(formation)) throw new RangeError('Selecciona una táctica válida.');
+    return { ...base, formation };
+  }
   const playerId = $('.action-player', row).value;
   const note = $('.action-note', row).value.trim();
   if (strict && (!playerId || !note)) throw new RangeError('Selecciona un jugador y escribe la observación.');
@@ -165,6 +182,7 @@ function readAction(row, state, strict = true) {
 function refreshActionRows(dialog) {
   if (!context) return;
   let state = buildMatchState(readLineup(dialog), context.availableIds);
+  let currentFormation = $('#v2-initial-formation', dialog)?.value || '1-3-2-1';
   for (const row of $$('.calendar-action-row', dialog)) {
     const type = row.dataset.type;
     if (type === 'substitution') {
@@ -185,6 +203,11 @@ function refreshActionRows(dialog) {
       if (state.onField.includes(oldA)) a.value = oldA;
       if (state.onField.includes(oldB) && oldB !== a.value) b.value = oldB;
       $('.action-position-summary', row).textContent = a.value && b.value ? `${state.positions.get(a.value) || 'Sin posición'} ↔ ${state.positions.get(b.value) || 'Sin posición'}` : 'Solo aparecen jugadores que están en el campo.';
+    } else if (type === 'tactic_change') {
+      const select = $('.action-formation', row);
+      const formation = select.value;
+      $('.action-tactic-summary', row).textContent = formation ? `${currentFormation} → ${formation}` : 'Selecciona la nueva táctica.';
+      if (formation) currentFormation = formation;
     } else {
       const player = $('.action-player', row); const old = player.value;
       player.innerHTML = options(state.onField, context.playersById, old);
@@ -197,7 +220,13 @@ function refreshActionRows(dialog) {
 
 function appendAction(dialog, type, action = {}) {
   const list = $('#v2-actions-list', dialog);
-  const markup = type === 'substitution' ? substitutionRow(action) : type === 'position_swap' ? positionRow(action) : observationRow(action);
+  const markup = type === 'substitution'
+    ? substitutionRow(action)
+    : type === 'position_swap'
+      ? positionRow(action)
+      : type === 'tactic_change'
+        ? tacticRow(action)
+        : observationRow(action);
   list.insertAdjacentHTML('beforeend', markup);
   refreshActionRows(dialog);
 }
@@ -207,11 +236,12 @@ function ensureDialog() {
   if (dialog) return dialog;
   dialog = document.createElement('dialog');
   dialog.id = 'calendar-substitutions-v2-dialog';
-  dialog.innerHTML = `<form id="calendar-substitutions-v2-form"><div class="dialog-head"><h2 id="calendar-substitutions-v2-title">Alineación, cambios y posiciones</h2><button type="button" data-v2-close aria-label="Cerrar">×</button></div><p class="meta">Todo lo que guardes aquí queda dentro del partido: siete inicial, sustituciones, cambios de posición, minutos y observaciones por posición.</p><h3>Alineación inicial</h3><div id="v2-lineup-list"></div><div class="section-head"><h3>Durante el partido</h3></div><div class="button-row"><button type="button" id="v2-add-sub" class="secondary">+ Cambio</button><button type="button" id="v2-add-position" class="secondary">+ Cambio de posición</button><button type="button" id="v2-add-observation" class="secondary">+ Observación</button></div><div id="v2-actions-list" class="stack"></div><div class="button-row"><button type="submit" class="primary">Guardar todo en el partido</button><button type="button" class="secondary" data-v2-close>Cancelar</button></div></form>`;
+  dialog.innerHTML = `<form id="calendar-substitutions-v2-form"><div class="dialog-head"><h2 id="calendar-substitutions-v2-title">Alineación, cambios y tácticas</h2><button type="button" data-v2-close aria-label="Cerrar">×</button></div><p class="meta">Todo lo que guardes aquí queda dentro del partido: siete inicial, táctica inicial, sustituciones, cambios de posición, cambios de táctica, minutos y observaciones por posición.</p><h3>Alineación inicial</h3><div id="v2-lineup-list"></div><h3>Táctica inicial</h3><label>Formación de inicio<select id="v2-initial-formation"></select></label><div class="section-head"><h3>Durante el partido</h3></div><div class="button-row"><button type="button" id="v2-add-sub" class="secondary">+ Cambio</button><button type="button" id="v2-add-position" class="secondary">+ Cambio de posición</button><button type="button" id="v2-add-tactic" class="secondary">+ Cambio de táctica</button><button type="button" id="v2-add-observation" class="secondary">+ Observación</button></div><div id="v2-actions-list" class="stack"></div><div class="button-row"><button type="submit" class="primary">Guardar todo en el partido</button><button type="button" class="secondary" data-v2-close>Cancelar</button></div></form>`;
   document.body.appendChild(dialog);
   $$('[data-v2-close]', dialog).forEach((button) => button.addEventListener('click', () => dialog.close()));
   $('#v2-add-sub', dialog).addEventListener('click', () => appendAction(dialog, 'substitution'));
   $('#v2-add-position', dialog).addEventListener('click', () => appendAction(dialog, 'position_swap'));
+  $('#v2-add-tactic', dialog).addEventListener('click', () => appendAction(dialog, 'tactic_change'));
   $('#v2-add-observation', dialog).addEventListener('click', () => appendAction(dialog, 'observation'));
   dialog.addEventListener('click', (event) => { const remove = event.target.closest('.remove-calendar-action'); if (remove) { remove.closest('.calendar-action-row').remove(); refreshActionRows(dialog); } });
   dialog.addEventListener('change', (event) => { if (event.target.matches('select, input')) refreshActionRows(dialog); });
@@ -229,12 +259,27 @@ async function open(matchId) {
   const lineup = lineupFromMatch(match, settings);
   context = { match, availableIds, playersById: new Map(available.map((player) => [player.id, player])) };
   const dialog = ensureDialog();
-  $('#calendar-substitutions-v2-title', dialog).textContent = `${match.opponent || 'Partido'} · alineación, cambios y posiciones`;
+  $('#calendar-substitutions-v2-title', dialog).textContent = `${match.opponent || 'Partido'} · alineación, cambios y tácticas`;
   const size = match.format === 'F11' ? 11 : 7;
   $('#v2-lineup-list', dialog).innerHTML = Array.from({ length: size }, (_, index) => {
     const slot = lineup[index] ?? {};
     return `<div class="panel v2-lineup-row"><div class="form-row"><label>Jugador<select class="v2-lineup-player">${options(availableIds, context.playersById, slot.playerId)}</select></label><label>Posición<input class="v2-lineup-position" maxlength="50" value="${esc(slot.pos ?? '')}" placeholder="Ej. Central"></label></div></div>`;
   }).join('');
+  const initialFormation = FORMATION_NAMES.includes(match.initialFormation) ? match.initialFormation : '1-3-2-1';
+  const formationSelect = $('#v2-initial-formation', dialog);
+  const tacticButton = $('#v2-add-tactic', dialog);
+  if (match.format === 'F11') {
+    formationSelect.innerHTML = '<option value="custom">Personalizada F11</option>';
+    formationSelect.disabled = true;
+    tacticButton.disabled = true;
+    tacticButton.title = 'Los cambios de táctica predefinidos están disponibles en F7.';
+  } else {
+    formationSelect.disabled = false;
+    formationSelect.innerHTML = formationOptions(initialFormation);
+    formationSelect.value = initialFormation;
+    tacticButton.disabled = false;
+    tacticButton.removeAttribute('title');
+  }
   $('#v2-actions-list', dialog).innerHTML = '';
   for (const action of existingActions(match)) appendAction(dialog, action.type, action);
   refreshActionRows(dialog);
@@ -260,9 +305,11 @@ async function save(event) {
 
   const substitutionEvents = actions.filter((action) => action.type === 'substitution').map((action) => ({ second: action.second, outIds: [action.outId], inIds: [action.inId], outPositions: [action.outPosition], inPositions: [action.inPosition], source: 'calendar_manual_v2' }));
   const positionEvents = actions.filter((action) => action.type === 'position_swap').map(({ second, playerAId, playerBId, playerAPosition, playerBPosition }) => ({ second, playerAId, playerBId, playerAPosition, playerBPosition, source: 'calendar_manual_v2' }));
+  const tacticEvents = actions.filter((action) => action.type === 'tactic_change').map(({ second, formation }) => ({ second, formation, source: 'calendar_manual_v2' }));
   const positionObservations = actions.filter((action) => action.type === 'observation').map(({ second, playerId, position, note }) => ({ second, playerId, position, note, source: 'calendar_manual_v2' }));
   const minuteTotals = calculateMatchMinutes(lineupSnapshot, actions, durationSeconds(context.match));
-  const updatedMatch = { ...context.match, lineupSnapshot, substitutionEvents, positionEvents, positionObservations, minuteTotals, updatedAt: Date.now() };
+  const initialFormation = context.match.format === 'F11' ? (context.match.initialFormation || 'custom') : $('#v2-initial-formation', dialog).value;
+  const updatedMatch = { ...context.match, lineupSnapshot, initialFormation, substitutionEvents, positionEvents, tacticEvents, positionObservations, minuteTotals, updatedAt: Date.now() };
   await put('matches', updatedMatch);
   dialog.close();
   context = null;
