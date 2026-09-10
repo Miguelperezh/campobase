@@ -13,6 +13,15 @@ let demoStores = null;
 let cloudStore;
 let syncPromise;
 
+function notifyDataChanged(stores, operation = 'write') {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;
+  const uniqueStores = [...new Set((Array.isArray(stores) ? stores : [stores]).filter(Boolean))];
+  if (!uniqueStores.length) return;
+  window.dispatchEvent(new CustomEvent('campobase:data-changed', {
+    detail: { stores: uniqueStores, operation, at: Date.now() },
+  }));
+}
+
 export function currentDatabaseName() {
   return activeDatabaseName;
 }
@@ -120,6 +129,7 @@ export async function getOne(store, id) {
 export async function put(store, value) {
   if (isDemoDatabase()) {
     demoStores[store].set(value.id, structuredClone(value));
+    notifyDataChanged(store, 'upsert');
     return value;
   }
   const db = await openDatabase();
@@ -128,6 +138,7 @@ export async function put(store, value) {
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', value));
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
+  notifyDataChanged(store, 'upsert');
   return value;
 }
 
@@ -141,6 +152,7 @@ export async function putBatch(recordsByStore) {
       if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
       for (const record of records) demoStores[storeName].set(record.id, structuredClone(record));
     }
+    notifyDataChanged(storeNames, 'batch');
     return;
   }
   const db = await openDatabase();
@@ -154,11 +166,13 @@ export async function putBatch(recordsByStore) {
   }
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
+  notifyDataChanged(storeNames, 'batch');
 }
 
 export async function remove(store, id) {
   if (isDemoDatabase()) {
     demoStores[store].delete(id);
+    notifyDataChanged(store, 'delete');
     return;
   }
   const db = await openDatabase();
@@ -167,6 +181,7 @@ export async function remove(store, id) {
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
+  notifyDataChanged(store, 'delete');
 }
 
 export async function flushSyncQueue() {
@@ -252,6 +267,7 @@ export async function importDatabase(backup) {
       demoStores[storeName].clear();
       for (const record of backup.data[storeName]) demoStores[storeName].set(record.id, structuredClone(record));
     }
+    notifyDataChanged(STORES, 'import');
     return;
   }
   const db = await openDatabase();
@@ -266,4 +282,5 @@ export async function importDatabase(backup) {
   }
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
+  notifyDataChanged(STORES, 'import');
 }
