@@ -129,7 +129,7 @@ function installStyles() {
   style.id = 'session-materials-styles';
   style.textContent = `
     .session-materials-auto{margin-top:.8rem}
-    .session-materials-auto.compact{padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px;background:#f7f9f7}
+    .session-materials-auto.compact{padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
     .session-materials-auto .plain-list{margin:.45rem 0 0}
     .session-materials-auto li{margin:.25rem 0;line-height:1.35}
     .session-materials-auto li small{display:block;color:var(--muted);font-size:.72rem;font-weight:500;margin-top:.12rem}
