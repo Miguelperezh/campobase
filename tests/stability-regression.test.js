@@ -29,8 +29,8 @@ test('el material de sesión se deriva de los ejercicios sin inventar sumas', ()
 
 test('Asistencia enlaza sesiones por sessionId y partidos por matchId', async () => {
   const source = await projectFile('js/attendance-linked-sources.js');
-  assert.match(source, /record\.sessionId === sessionId/);
-  assert.match(source, /record\.matchId === matchId/);
+  assert.match(source, /record\?\.sessionId === sessionId/);
+  assert.match(source, /record\?\.kind === 'match' && record\.matchId === matchId/);
   assert.match(source, /sessionId,/);
   assert.match(source, /kind: 'training'/);
   assert.match(source, /data-linked-session/);
