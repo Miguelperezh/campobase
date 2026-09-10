@@ -55,9 +55,9 @@ test('Plantilla se recalcula desde partidos, asistencias y convocatorias y conse
 test('Asistencia usa controles visuales y un resumen que cambia al marcar Presente, Tarde o Ausente', async () => {
   const source = await projectFile('js/attendance-linked-sources.js');
   assert.match(source, /attendance-status-choices/);
-  assert.match(source, /value="present"/);
-  assert.match(source, /value="late"/);
-  assert.match(source, /value="absent"/);
+  assert.match(source, /statusChoice\(player\.id, 'present'/);
+  assert.match(source, /statusChoice\(player\.id, 'late'/);
+  assert.match(source, /statusChoice\(player\.id, 'absent'/);
   assert.match(source, /Todos presentes/);
   assert.match(source, /attendance-editor-summary/);
   assert.match(source, /data-visual-attendance="1"/);
