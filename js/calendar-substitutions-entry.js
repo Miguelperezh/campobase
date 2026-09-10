@@ -16,7 +16,7 @@ async function openWithValidCallup(button) {
   if (!match) return window.alert('No se encontró el partido.');
   const callup = callups.find((item) => item.id === match.callupId || item.matchId === match.id);
   if (!callup?.availableIds?.length) {
-    return window.alert('Este partido no tiene una convocatoria válida. Crea o vincula la convocatoria antes de editar alineación y cambios.');
+    return window.alert('Este partido no tiene una convocatoria válida. Crea o vincula la convocatoria antes de editar alineación, cambios y tácticas.');
   }
 
   await ensureEditorModule();
@@ -46,7 +46,7 @@ function addCalendarButtons() {
       button.type = 'button';
       button.className = 'edit-lineup-changes secondary';
       button.dataset.id = detail.dataset.id;
-      button.textContent = 'Alineación y cambios';
+      button.textContent = 'Alineación, cambios y tácticas';
       actions.insertBefore(button, detail.nextSibling);
     });
   }
@@ -61,7 +61,7 @@ function addCalendarButtons() {
       button.type = 'button';
       button.className = 'edit-lineup-changes secondary';
       button.dataset.id = matchId;
-      button.textContent = 'Alineación y cambios';
+      button.textContent = 'Alineación, cambios y tácticas';
       actions.prepend(button);
     }
   }
