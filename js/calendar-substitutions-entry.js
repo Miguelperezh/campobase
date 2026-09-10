@@ -4,7 +4,7 @@ let editorModuleLoaded = false;
 
 async function ensureEditorModule() {
   if (!editorModuleLoaded) {
-    await import('./calendar-substitutions-v2.js');
+    await import('./calendar-substitutions-v2.js?v=2447');
     editorModuleLoaded = true;
   }
 }
@@ -33,6 +33,15 @@ function protectCalendarEditor(event) {
   openWithValidCallup(button).catch((error) => window.alert(error.message || 'No se pudo comprobar la convocatoria del partido.'));
 }
 
+function makeCalendarEditorButton(matchId) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'edit-lineup-changes secondary';
+  button.dataset.id = matchId;
+  button.textContent = 'Alineación, cambios y tácticas';
+  return button;
+}
+
 function addCalendarButtons() {
   const root = document.querySelector('#matches-list');
   if (root) {
@@ -40,30 +49,17 @@ function addCalendarButtons() {
       const detail = card.querySelector('.match-detail');
       const actions = detail?.closest('.button-row');
       const finished = [...card.querySelectorAll('.pill')].some((pill) => pill.textContent.trim() === 'Finalizado');
-      if (!detail || !actions || !finished) return;
-      if (actions.querySelector(`.edit-lineup-changes[data-id="${CSS.escape(detail.dataset.id)}"]`)) return;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'edit-lineup-changes secondary';
-      button.dataset.id = detail.dataset.id;
-      button.textContent = 'Alineación, cambios y tácticas';
-      actions.insertBefore(button, detail.nextSibling);
+      if (!detail || !actions || !finished || actions.querySelector('.edit-lineup-changes')) return;
+      actions.insertBefore(makeCalendarEditorButton(detail.dataset.id), detail.nextSibling);
     });
   }
 
   const dialog = document.querySelector('#match-detail-dialog');
   const body = document.querySelector('#match-detail-body');
   const matchId = dialog?.dataset.matchId;
-  if (dialog?.open && body && matchId && !body.querySelector(`.edit-lineup-changes[data-id="${CSS.escape(matchId)}"]`)) {
+  if (dialog?.open && body && matchId && !body.querySelector('.edit-lineup-changes')) {
     const actions = body.querySelector('.button-row');
-    if (actions) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'edit-lineup-changes secondary';
-      button.dataset.id = matchId;
-      button.textContent = 'Alineación, cambios y tácticas';
-      actions.prepend(button);
-    }
+    if (actions) actions.prepend(makeCalendarEditorButton(matchId));
   }
 }
 
@@ -73,6 +69,13 @@ function installCalendarButtons() {
   const detailBody = document.querySelector('#match-detail-body');
   if (matchesRoot) new MutationObserver(addCalendarButtons).observe(matchesRoot, { childList: true, subtree: true });
   if (detailBody) new MutationObserver(addCalendarButtons).observe(detailBody, { childList: true, subtree: true });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-view="calendario"], .match-detail')) window.setTimeout(addCalendarButtons, 0);
+  });
+  window.addEventListener('pageshow', addCalendarButtons);
+  window.addEventListener('focus', addCalendarButtons);
+  window.setInterval(addCalendarButtons, 1500);
 }
 
 if (typeof document !== 'undefined') {
