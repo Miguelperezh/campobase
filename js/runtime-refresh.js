@@ -44,12 +44,18 @@ let boardHtmlPromise = null;
 async function getBoardHtml() {
   if (!boardHtmlPromise) {
     boardHtmlPromise = (async () => {
-      if (typeof DecompressionStream !== 'function') throw new Error('Este navegador no admite el creador de ejercicios integrado.');
       const response = await fetch('./assets/exercise-board.html.gz', { cache: 'no-store' });
       if (!response.ok) throw new Error('No se pudo cargar la pizarra táctica.');
-      const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      const isGzip = bytes.length > 2 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+      if (!isGzip) return new TextDecoder().decode(bytes);
+      if (typeof DecompressionStream !== 'function') throw new Error('Este navegador no admite el creador de ejercicios integrado.');
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
       return new Response(stream).text();
-    })();
+    })().catch((error) => {
+      boardHtmlPromise = null;
+      throw error;
+    });
   }
   return boardHtmlPromise;
 }
