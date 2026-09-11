@@ -120,7 +120,7 @@ if (typeof document !== 'undefined') {
   new MutationObserver(discoverFrames).observe(document.documentElement, { childList: true, subtree: true });
 }
 
-window.addEventListener('message', async (event) => {
+if (typeof window !== 'undefined') window.addEventListener('message', async (event) => {
   const data = event.data || {};
 
   if (data.type === 'campobase:exercise-saved' && data.exercise) {
