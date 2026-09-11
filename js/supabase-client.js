@@ -1,7 +1,7 @@
 import './match-postgame-editor.js';
 import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
-import './exercise-board-persistence.js?v=2466';
+import './exercise-board-persistence.js?v=2467';
 import './runtime-refresh.js?v=2465';
 import { CLOUD_TABLES } from './sync-core.js';
 
