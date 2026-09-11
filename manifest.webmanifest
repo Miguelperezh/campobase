@@ -1,9 +1,9 @@
 {
-  "name": "CampoBase — Gestión F7/F11",
-  "short_name": "CampoBase",
+  "name": "FútbolControl — Gestión F7/F11",
+  "short_name": "FútbolControl",
   "description": "Gestión local y sin conexión de equipos de fútbol base.",
   "lang": "es",
-  "start_url": "./",
+  "start_url": "./futbolcontrol.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f6f3",
