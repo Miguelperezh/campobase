@@ -2,6 +2,7 @@ import './calendar-substitutions-entry.js?v=2447';
 import './session-visual-planner.js?v=2451';
 import './session-materials.js?v=2452';
 import './session-top-actions.js?v=2458';
+import './session-planner-ui.js?v=2459';
 import './attendance-linked-sources.js?v=2453';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
