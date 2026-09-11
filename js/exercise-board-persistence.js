@@ -3,6 +3,8 @@ import { getAll, put, remove, syncFromCloud } from './db.js';
 const CATEGORY = 'Mis ejercicios';
 const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
 const FRAME_TITLE = 'Creador de ejercicios CampoBase';
+const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+const escapeMultiline = (value = '') => escapeHtml(value).replace(/\n/g, '<br>');
 
 function toBoardExercise(record = {}) {
   return {
@@ -133,45 +135,128 @@ function activateEmbeddedBoard(doc) {
   doc.body.append(patched);
 }
 
-function installCreatorDelete(frame, doc) {
+function creatorCardMarkup(record) {
+  const hasMovement = Boolean(record.boardAnimation?.phases?.length > 1);
+  const preview = record.boardPreview || '<div class="cb-creator-no-preview">Sin plano guardado</div>';
+  const duration = Number(record.duration) > 0 ? `${Number(record.duration)} min` : '—';
+  const reps = Number(record.boardReps) > 0 ? `${Number(record.boardReps)} rep.` : '—';
+  const pause = Number(record.boardPause) > 0 ? `${Number(record.boardPause)} s pausa` : '—';
+  return `
+    <article class="cb-creator-card" data-creator-card-id="${escapeHtml(record.id)}">
+      <div class="cb-creator-preview">${preview}${hasMovement ? '<span class="cb-creator-motion">▶ Movimiento</span>' : ''}</div>
+      <div class="cb-creator-body">
+        <div class="cb-creator-title-row"><h4>${escapeHtml(record.name || 'Ejercicio')}</h4><span>Mis ejercicios</span></div>
+        <div class="cb-creator-chips"><b>${escapeHtml(duration)}</b><b>${escapeHtml(record.intensity || '—')}</b><b>${escapeHtml(reps)}</b><b>${escapeHtml(pause)}</b>${record.players ? `<b>${escapeHtml(record.players)} jugadores</b>` : ''}</div>
+        <div class="cb-creator-data">
+          <p><strong>Material:</strong> ${escapeHtml(record.material || '—')}</p>
+          <p><strong>Objetivo:</strong> ${escapeHtml(record.objective || '—')}</p>
+          <p><strong>Explicación / observaciones:</strong> ${escapeMultiline(record.description || '—')}</p>
+        </div>
+        <div class="cb-creator-actions">
+          <button type="button" data-creator-action="ficha" data-id="${escapeHtml(record.id)}">Editar ficha</button>
+          <button type="button" data-creator-action="static" data-id="${escapeHtml(record.id)}">Editar plano fijo</button>
+          <button type="button" data-creator-action="motion" data-id="${escapeHtml(record.id)}">Editar movimientos</button>
+          <button type="button" class="danger" data-creator-action="delete" data-id="${escapeHtml(record.id)}">Borrar</button>
+        </div>
+      </div>
+    </article>`;
+}
+
+function creatorManagerStyle(doc) {
+  if (doc.getElementById('campobase-creator-manager-style')) return;
+  const style = doc.createElement('style');
+  style.id = 'campobase-creator-manager-style';
+  style.textContent = `
+    body.embedded-create .creator-manage{display:block!important;padding:14px!important;background:#fff!important;border:1px solid #e3e0d8!important;border-radius:18px!important;box-shadow:0 8px 24px rgba(26,26,26,.06)!important}
+    body.embedded-create .creator-manage>strong,body.embedded-create .creator-manage>select,body.embedded-create .creator-manage>button{display:none!important}
+    body.embedded-create .catalog-panel,body.embedded-create .demo-session-panel{display:none!important}
+    .cb-creator-manager-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .cb-creator-manager-head h3{margin:0;font-size:18px;color:#1a1a1a}.cb-creator-manager-head p{margin:4px 0 0;color:#6b6b6b;font-size:11px;line-height:1.4}
+    .cb-creator-manager-count{border-radius:999px;background:#f7f5f0;border:1px solid #e3e0d8;padding:6px 9px;font-size:10px;font-weight:900;color:#1a1a1a;white-space:nowrap}
+    .cb-creator-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+    .cb-creator-card{border:1px solid #e3e0d8;border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(26,26,26,.06);min-width:0}
+    .cb-creator-preview{position:relative;background:#15533a;aspect-ratio:16/9;overflow:hidden}.cb-creator-preview svg{width:100%;height:100%;display:block}.cb-creator-no-preview{height:100%;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800}
+    .cb-creator-motion{position:absolute;right:9px;top:9px;background:#fff4b8;border:1px solid #e4c31b;color:#4d4100;border-radius:999px;padding:5px 8px;font-size:9px;font-weight:950}
+    .cb-creator-body{padding:12px}.cb-creator-title-row{display:flex;align-items:start;justify-content:space-between;gap:8px}.cb-creator-title-row h4{margin:0;font-size:16px;color:#1a1a1a}.cb-creator-title-row span{background:#f3eee5;border:1px solid #ddd4c6;color:#5c564d;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900;white-space:nowrap}
+    .cb-creator-chips{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}.cb-creator-chips b{font-size:9px;border-radius:999px;background:#f7f5f0;border:1px solid #e3e0d8;padding:4px 7px;color:#47433c}
+    .cb-creator-data{display:grid;gap:5px;margin:8px 0 10px}.cb-creator-data p{margin:0;font-size:11px;line-height:1.4;color:#3f3b35}.cb-creator-data strong{color:#1a1a1a}
+    .cb-creator-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;border-top:1px solid #eee9df;padding-top:10px}.cb-creator-actions button{min-height:38px!important;height:auto!important;border-radius:10px!important;border:1px solid #d8d3c8!important;background:#fff!important;padding:7px 8px!important;font-size:10px!important;font-weight:850!important;color:#1a1a1a!important}.cb-creator-actions button[data-creator-action="motion"]{background:#f5fff7!important;border-color:#8db69a!important}.cb-creator-actions button[data-creator-action="static"]{background:#fffdf2!important;border-color:#d6bd3b!important}.cb-creator-actions button.danger{color:#c8102e!important;border-color:#c8102e!important;background:#fff!important}
+    .cb-creator-empty{padding:18px;border:1px dashed #d8d3c8;border-radius:13px;color:#6b6b6b;text-align:center;font-size:11px}
+    @media(max-width:700px){.cb-creator-manager-head{align-items:start;flex-direction:column}.cb-creator-grid{grid-template-columns:1fr}.cb-creator-actions{grid-template-columns:1fr}}
+  `;
+  doc.head.append(style);
+}
+
+async function renderCreatorManager(frame, doc, suppliedRecords = null) {
   if (!doc.body.classList.contains('embedded-create')) return;
   const manage = doc.querySelector('.creator-manage');
   const select = doc.getElementById('creatorExerciseSelect');
-  if (!manage || !select || doc.getElementById('creatorDeleteExercise')) return;
+  if (!manage || !select) return;
+  creatorManagerStyle(doc);
 
-  const button = doc.createElement('button');
-  button.id = 'creatorDeleteExercise';
-  button.type = 'button';
-  button.className = 'danger';
-  button.textContent = 'Borrar ejercicio';
-  button.title = 'Borrar el ejercicio seleccionado de Mis ejercicios';
-  manage.append(button);
+  let root = doc.getElementById('campobaseCreatorManager');
+  if (!root) {
+    root = doc.createElement('section');
+    root.id = 'campobaseCreatorManager';
+    root.innerHTML = '<div class="cb-creator-manager-head"><div><h3>Tus ejercicios guardados</h3><p>Edita o borra aquí. En la biblioteca de Ejercicios solo se consultan y se añaden a sesiones.</p></div><span class="cb-creator-manager-count"></span></div><div class="cb-creator-grid"></div>';
+    manage.append(root);
 
-  button.addEventListener('click', async () => {
-    const exerciseId = select.value;
-    if (!exerciseId) {
-      button.textContent = 'Selecciona un ejercicio';
-      setTimeout(() => { button.textContent = 'Borrar ejercicio'; }, 1400);
-      return;
-    }
-    const previous = button.textContent;
-    button.disabled = true;
-    button.textContent = 'Borrando…';
-    try {
-      await deleteExercise(exerciseId);
-      const exercises = await customExerciseRecords({ sync: true });
-      frame.contentWindow?.postMessage({ type: 'campobase:init-editor', exercises: exercises.map(toBoardExercise) }, '*');
-      button.textContent = 'Borrado';
-      setTimeout(() => { button.textContent = previous; }, 900);
-    } catch (error) {
-      console.error('No se pudo borrar el ejercicio:', error);
-      button.textContent = 'Error al borrar';
-      alert(error?.message || String(error));
-      setTimeout(() => { button.textContent = previous; }, 1400);
-    } finally {
-      button.disabled = false;
-    }
-  });
+    root.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-creator-action][data-id]');
+      if (!button) return;
+      const id = button.dataset.id;
+      const action = button.dataset.creatorAction;
+      select.value = id;
+      if (action === 'ficha') { doc.getElementById('creatorEditFicha')?.click(); return; }
+      if (action === 'static') { doc.getElementById('creatorEditStatic')?.click(); return; }
+      if (action === 'motion') { doc.getElementById('creatorEditMotion')?.click(); return; }
+      if (action !== 'delete') return;
+      if (!window.confirm(`¿Borrar "${customExerciseName(id)}" de Mis ejercicios?`)) return;
+      button.disabled = true;
+      const previous = button.textContent;
+      button.textContent = 'Borrando…';
+      try {
+        await deleteExercise(id);
+        const exercises = await customExerciseRecords({ sync: true });
+        frame.contentWindow?.postMessage({ type: 'campobase:init-editor', exercises: exercises.map(toBoardExercise) }, '*');
+        await renderCreatorManager(frame, doc, exercises);
+      } catch (error) {
+        console.error('No se pudo borrar el ejercicio:', error);
+        alert(error?.message || String(error));
+        button.disabled = false;
+        button.textContent = previous;
+      }
+    });
+  }
+
+  const records = suppliedRecords || await customExerciseRecords({ sync: true }).catch(() => customExerciseRecords());
+  root.querySelector('.cb-creator-manager-count').textContent = `${records.length} ${records.length === 1 ? 'ejercicio' : 'ejercicios'}`;
+  root.querySelector('.cb-creator-grid').innerHTML = records.length
+    ? records.map(creatorCardMarkup).join('')
+    : '<div class="cb-creator-empty">Todavía no tienes ejercicios guardados. Crea uno y aparecerá aquí con su plano.</div>';
+}
+
+function customExerciseName(id) {
+  return document.querySelector(`iframe[title="${FRAME_TITLE}"]`)?.contentDocument?.querySelector(`[data-creator-card-id="${CSS.escape(id)}"] h4`)?.textContent || 'este ejercicio';
+}
+
+function applyReadOnlyViewer(doc) {
+  if (!doc.body.classList.contains('embedded-view')) return;
+  const closeView = doc.getElementById('closeBoardView');
+  if (closeView) { closeView.disabled = true; closeView.hidden = true; closeView.tabIndex = -1; }
+  if (doc.getElementById('campobase-readonly-view-style')) return;
+  const style = doc.createElement('style');
+  style.id = 'campobase-readonly-view-style';
+  style.textContent = `
+    body.embedded-view #closeBoardView{display:none!important}
+    body.embedded-view .material-panel,body.embedded-view .inspector-panel,body.embedded-view .board-toolbar,body.embedded-view .phase3-shell,body.embedded-view .phase2-shell,body.embedded-view .board-help,body.embedded-view .bottom-note,body.embedded-view .board-edit-banner{display:none!important}
+    body.embedded-view .editor-shell{grid-template-columns:minmax(0,1fr)!important;max-width:1180px!important;margin:0 auto!important;width:100%!important}
+    body.embedded-view .center{grid-column:1!important;width:100%!important;max-width:none!important}
+    body.embedded-view .board-view-banner{margin:8px 10px!important;padding:10px 12px!important;font-size:12px!important;border-radius:12px!important}
+    body.embedded-view .board-view-actions .view-play{height:40px!important;padding:0 14px!important;border-radius:10px!important;font-size:11px!important}
+    body.embedded-view .board-card{margin:0 10px 14px!important}
+  `;
+  doc.head.append(style);
 }
 
 function patchEmbeddedFrame(frame) {
@@ -197,8 +282,6 @@ function patchEmbeddedFrame(frame) {
           font-size:14px!important;line-height:1.15!important;font-weight:700!important;white-space:nowrap!important;
           box-shadow:none!important;position:relative!important;z-index:60!important
         }
-        #creatorDeleteExercise{background:#fff!important;color:#c8102e!important;border:1px solid #c8102e!important;font-weight:800!important}
-        #creatorDeleteExercise:disabled{opacity:.6!important}
         @media(max-width:860px){
           .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
           #embeddedBack{display:inline-flex!important;flex:0 0 auto!important}
@@ -217,7 +300,10 @@ function patchEmbeddedFrame(frame) {
       }, true);
     }
 
-    installCreatorDelete(frame, doc);
+    setTimeout(() => {
+      applyReadOnlyViewer(doc);
+      renderCreatorManager(frame, doc).catch((error) => console.warn('No se pudieron mostrar las fichas del Creador:', error.message));
+    }, 0);
   });
 }
 
