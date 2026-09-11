@@ -20,12 +20,12 @@ test('el visor mantiene una sola pareja Plano fijo/Movimiento y agranda Volver a
   assert.match(layoutSource, /exercise-board-viewer-play/);
 });
 
-test('2473 publica el visor con Play y ajuste de campo sin tocar la pizarra validada', () => {
+test('2474 publica la corrección de reproducción sin tocar el resto de la integración validada', () => {
   assert.match(supabaseClient, /exercise-viewer-controls\.js\?v=2473/);
-  assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=2473/);
+  assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=2474/);
   assert.match(supabaseClient, /exercise-board-persistence\.js\?v=2473/);
   assert.match(supabaseClient, /runtime-refresh\.js\?v=2473/);
-  assert.match(serviceWorker, /exerciseboard-2473/);
+  assert.match(serviceWorker, /exerciseboard-2474/);
   assert.match(serviceWorker, /exercise-viewer-controls\.js\?v=2473/);
-  assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=2473/);
+  assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=2474/);
 });
