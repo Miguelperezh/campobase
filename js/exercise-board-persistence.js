@@ -4,6 +4,31 @@ const CATEGORY = 'Mis ejercicios';
 const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
 const FRAME_TITLE = 'Creador de ejercicios CampoBase';
 
+function toBoardExercise(record = {}) {
+  return {
+    id: record.id,
+    name: record.name || 'Ejercicio',
+    objective: record.objective || '',
+    description: record.description || '',
+    players: record.players || '',
+    material: record.material || '',
+    duration: Number(record.duration) || 0,
+    reps: Number(record.reps ?? record.boardReps) || 1,
+    pause: Number(record.pause ?? record.boardPause) || 0,
+    intensity: record.intensity || record.difficulty || '',
+    saveMode: record.saveMode || record.boardSaveMode || (record.boardAnimation ? 'both' : 'static'),
+    staticBoard: record.staticBoard ?? record.boardStatic ?? null,
+    animatedBoard: record.animatedBoard ?? record.boardAnimation ?? null,
+    preview: record.preview || record.boardPreview || '',
+    coverSourceType: record.coverSourceType || record.boardCoverSourceType || 'phase',
+    coverPhaseId: record.coverPhaseId || record.boardCoverPhaseId || '',
+    coverPhaseName: record.coverPhaseName || record.boardCoverPhaseName || '',
+    coverFrameProgress: Number(record.coverFrameProgress ?? record.boardCoverFrameProgress) || 0,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
+
 function normalizedRecord(exercise, existing = null) {
   const now = Date.now();
   const duration = Number(exercise.duration);
@@ -86,7 +111,7 @@ async function deleteExercise(exerciseId) {
 function closeEmbeddedBoard(frame) {
   const overlay = frame?.closest('.exercise-board-overlay');
   if (!overlay) return;
-  overlay.classList.remove('open');
+  overlay.classList.remove('open', 'viewer-mode');
   overlay.setAttribute('aria-hidden', 'true');
   frame.src = 'about:blank';
 }
@@ -135,7 +160,7 @@ function installCreatorDelete(frame, doc) {
     try {
       await deleteExercise(exerciseId);
       const exercises = await customExerciseRecords({ sync: true });
-      frame.contentWindow?.postMessage({ type: 'campobase:init-editor', exercises }, '*');
+      frame.contentWindow?.postMessage({ type: 'campobase:init-editor', exercises: exercises.map(toBoardExercise) }, '*');
       button.textContent = 'Borrado';
       setTimeout(() => { button.textContent = previous; }, 900);
     } catch (error) {
@@ -215,7 +240,7 @@ async function handlePersistRequest(event, data) {
   const requestId = data.requestId || '';
   try {
     const record = await persistExercise(data.exercise);
-    replyToBoard(event, { type: 'campobase:exercise-persisted', requestId, exercise: record });
+    replyToBoard(event, { type: 'campobase:exercise-persisted', requestId, exercise: toBoardExercise(record) });
     if (!data.stayOpen) {
       try { sessionStorage.setItem(OPEN_AFTER_SAVE_KEY, '1'); } catch { /* no bloquea */ }
       setTimeout(() => window.location.reload(), 300);
