@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CampoBase · Pizarra táctica aislada</title>
+<style>
+  :root{--bg:#0d1117;--panel:#151b23;--panel2:#1c2430;--line:#2a3544;--text:#f4f7fb;--muted:#9aa8b8;--accent:#f4d037;--green:#1f6f43;--green2:#195b37;--danger:#d9534f}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .app{min-height:100vh;display:grid;grid-template-columns:310px 1fr}
+  .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:18px;overflow:auto}
+  h1{font-size:20px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;line-height:1.45;margin-bottom:18px}
+  .section{margin:18px 0}.section h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#c9d2dc;margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tool,.action{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px;cursor:pointer;text-align:left;font-size:13px}.tool:hover,.action:hover{border-color:#526174}.tool.active{outline:2px solid var(--accent);border-color:transparent}.tool small{display:block;color:var(--muted);margin-top:3px}
+  .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.action{text-align:center}.action.danger{color:#ffb4b0}
+  .workspace{display:flex;flex-direction:column;min-width:0}.topbar{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:#111821;flex-wrap:wrap}.topbar label{font-size:12px;color:var(--muted)} select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 9px}.pill{margin-left:auto;font-size:12px;color:#cdd6df;background:#19212b;border:1px solid var(--line);padding:7px 10px;border-radius:999px}
+  .stagewrap{padding:16px;display:flex;justify-content:center;align-items:flex-start;overflow:auto}.board{width:min(1100px,100%);aspect-ratio:16/10;border-radius:18px;box-shadow:0 20px 60px #0008;touch-action:none;user-select:none;background:#184d30;position:relative}.board svg{display:block;width:100%;height:100%;border-radius:18px;background:linear-gradient(90deg,var(--green),var(--green2))}.selected{filter:drop-shadow(0 0 5px var(--accent))}.hint{font-size:12px;color:var(--muted);padding:0 16px 16px}
+  @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--line)}.grid{grid-template-columns:repeat(3,1fr)}.pill{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>Pizarra táctica · prueba aislada</h1>
+    <div class="sub">No guarda nada en Supabase ni toca CampoBase. Sirve para validar materiales, interacción y flujo visual.</div>
+
+    <div class="section">
+      <h2>Personas y balón</h2>
+      <div class="grid">
+        <button class="tool" data-add="playerA">Jugador A<small>Azul</small></button>
+        <button class="tool" data-add="playerB">Jugador B<small>Rojo</small></button>
+        <button class="tool" data-add="coach">Entrenador<small>Negro</small></button>
+        <button class="tool" data-add="ball">Balón<small>Fútbol</small></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Porterías y material</h2>
+      <div class="grid">
+        <button class="tool" data-add="goalLarge">Portería grande<small>F7/F11</small></button>
+        <button class="tool" data-add="goalSmall">Portería pequeña<small>Mini</small></button>
+        <button class="tool" data-add="cone">Cono<small>Unidad</small></button>
+        <button class="tool" data-add="pole">Pica<small>Vertical</small></button>
+        <button class="tool" data-add="hurdle">Valla<small>Baja</small></button>
+        <button class="tool" data-add="ladder">Escalera<small>Coordinación</small></button>
+        <button class="tool" data-add="ring">Aro<small>Coordinación</small></button>
+        <button class="tool" data-add="mannequin">Muñeco<small>Barrera</small></button>
+        <button class="tool" data-add="marker">Seta<small>Marcador plano</small></button>
+        <button class="tool" data-add="zone">Zona<small>Área marcada</small></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Trazados</h2>
+      <div class="grid">
+        <button class="tool draw" data-draw="pass">Pase<small>Línea continua</small></button>
+        <button class="tool draw" data-draw="move">Movimiento<small>Línea discontinua</small></button>
+        <button class="tool draw" data-draw="dribble">Conducción<small>Línea ondulada</small></button>
+        <button class="tool draw" data-draw="sprint">Sprint<small>Flecha doble</small></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Elemento seleccionado</h2>
+      <div class="actions">
+        <button class="action" id="rotate">Rotar 15°</button>
+        <button class="action" id="duplicate">Duplicar</button>
+        <button class="action danger" id="delete">Borrar</button>
+        <button class="action" id="clearSel">Deseleccionar</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Tablero</h2>
+      <div class="actions">
+        <button class="action" id="undo">Deshacer</button>
+        <button class="action" id="redo">Rehacer</button>
+        <button class="action danger" id="clearAll">Vaciar</button>
+        <button class="action" id="sample">Ejemplo</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <div class="topbar">
+      <label>Campo</label>
+      <select id="fieldType">
+        <option value="full">Campo completo</option>
+        <option value="half">Medio campo</option>
+        <option value="third">Tercio de campo</option>
+      </select>
+      <label>Formato</label>
+      <select id="format"><option>F7</option><option>F11</option></select>
+      <div class="pill" id="status">Selecciona material o dibuja una trayectoria</div>
+    </div>
+    <div class="stagewrap"><div class="board"><svg id="board" viewBox="0 0 1000 625" aria-label="Pizarra táctica"></svg></div></div>
+    <div class="hint">Uso: pulsa un material para colocarlo en el centro; arrastra cualquier elemento para moverlo. Para dibujar una línea, elige Pase/Movimiento/Conducción/Sprint y arrastra sobre el campo.</div>
+  </main>
+</div>
+<script>
+const svg=document.getElementById('board'), statusEl=document.getElementById('status'), fieldType=document.getElementById('fieldType');
+let state={items:[],lines:[],field:'full'}, selected=null, drawMode=null, history=[], future=[];
+const NS='http://www.w3.org/2000/svg'; let drag=null, draft=null, idc=1;
+const clone=o=>JSON.parse(JSON.stringify(o));
+function pushHistory(){history.push(clone({items:state.items,lines:state.lines,field:state.field})); if(history.length>60)history.shift(); future=[]}
+function restore(s){state.items=s.items;state.lines=s.lines;state.field=s.field;fieldType.value=state.field;selected=null;render()}
+function el(tag,attrs={}){const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);return n}
+function field(){svg.innerHTML=''; const bg=el('rect',{x:0,y:0,width:1000,height:625,fill:'#1e6a41'});svg.append(bg); for(let i=0;i<10;i++)svg.append(el('rect',{x:i*100,y:0,width:100,height:625,fill:i%2?'#1d633d':'#236f47',opacity:.45})); const g=el('g',{stroke:'#fff','stroke-width':4,fill:'none',opacity:.95});g.append(el('rect',{x:18,y:18,width:964,height:589,rx:3})); if(state.field==='full'){g.append(el('line',{x1:500,y1:18,x2:500,y2:607}));g.append(el('circle',{cx:500,cy:312.5,r:72}));g.append(el('circle',{cx:500,cy:312.5,r:4,fill:'#fff'}));g.append(el('rect',{x:18,y:155,width:150,height:315}));g.append(el('rect',{x:832,y:155,width:150,height:315}));g.append(el('rect',{x:18,y:230,width:60,height:165}));g.append(el('rect',{x:922,y:230,width:60,height:165}));} else {g.append(el('rect',{x:18,y:155,width:150,height:315}));g.append(el('rect',{x:18,y:230,width:60,height:165}));g.append(el('line',{x1:500,y1:18,x2:500,y2:607,opacity:.35}));} svg.append(g)}
+function iconMarkup(it){const g=el('g',{'data-id':it.id,transform:`translate(${it.x} ${it.y}) rotate(${it.rot||0})`,class:selected===it.id?'selected':''}); let n;
+ if(it.type==='playerA'||it.type==='playerB'||it.type==='coach'){const c=it.type==='playerA'?'#2f80ed':it.type==='playerB'?'#e55353':'#111'; n=el('g');n.append(el('circle',{cx:0,cy:0,r:20,fill:c,stroke:'#fff','stroke-width':3}));const t=el('text',{x:0,y:6,'text-anchor':'middle','font-size':16,'font-weight':800,fill:'#fff'});t.textContent=it.type==='coach'?'E':(it.label||'J');n.append(t)}
+ else if(it.type==='ball'){n=el('g');n.append(el('circle',{r:15,fill:'#fff',stroke:'#111','stroke-width':2}));n.append(el('path',{d:'M-6 -2 L0 -8 L6 -2 L4 6 L-4 6 Z',fill:'#111'}))}
+ else if(it.type==='cone'){n=el('path',{d:'M0 -18 L15 16 L-15 16 Z',fill:'#ff8a00',stroke:'#fff','stroke-width':2})}
+ else if(it.type==='marker'){n=el('ellipse',{cx:0,cy:0,rx:18,ry:9,fill:'#ffd54f',stroke:'#fff','stroke-width':2})}
+ else if(it.type==='pole'){n=el('g');n.append(el('rect',{x:-3,y:-26,width:6,height:52,rx:3,fill:'#f44336'}));n.append(el('line',{x1:-11,y1:26,x2:11,y2:26,stroke:'#fff','stroke-width':3}))}
+ else if(it.type==='hurdle'){n=el('g',{stroke:'#f5f5f5','stroke-width':5,fill:'none'});n.append(el('path',{d:'M-24 18 V-10 H24 V18'}));}
+ else if(it.type==='ladder'){n=el('g',{stroke:'#ffd54f','stroke-width':4,fill:'none'});n.append(el('rect',{x:-38,y:-16,width:76,height:32,rx:2}));[-19,0,19].forEach(x=>n.append(el('line',{x1:x,y1:-16,x2:x,y2:16})))}
+ else if(it.type==='ring'){n=el('circle',{r:22,fill:'none',stroke:'#8bc34a','stroke-width':7})}
+ else if(it.type==='mannequin'){n=el('g',{stroke:'#ffeb3b','stroke-width':6,fill:'none'});n.append(el('circle',{cy:-22,r:9}));n.append(el('line',{x1:0,y1:-13,x2:0,y2:20}));n.append(el('line',{x1:-14,y1:-2,x2:14,y2:-2}));n.append(el('line',{x1:0,y1:20,x2:-11,y2:34}));n.append(el('line',{x1:0,y1:20,x2:11,y2:34}))}
+ else if(it.type==='goalLarge'||it.type==='goalSmall'){const w=it.type==='goalLarge'?95:58,h=it.type==='goalLarge'?52:36;n=el('g',{stroke:'#fff','stroke-width':4,fill:'none'});n.append(el('rect',{x:-w/2,y:-h/2,width:w,height:h}));for(let x=-w/2+12;x<w/2;x+=12)n.append(el('line',{x1:x,y1:-h/2,x2:x,y2:h/2,opacity:.35}));}
+ else if(it.type==='zone'){n=el('rect',{x:-55,y:-35,width:110,height:70,rx:8,fill:'#f4d03733',stroke:'#f4d037','stroke-width':3,'stroke-dasharray':'8 6'})}
+ g.append(n);return g}
+function renderLines(){for(const l of state.lines){let d=`M ${l.x1} ${l.y1} L ${l.x2} ${l.y2}`;const path=el('path',{d,fill:'none',stroke:l.kind==='pass'?'#fff':l.kind==='move'?'#00e5ff':l.kind==='dribble'?'#ffeb3b':'#ff7043','stroke-width':l.kind==='sprint'?6:4,'stroke-dasharray':l.kind==='move'?'12 9':l.kind==='dribble'?'3 8':'', 'stroke-linecap':'round'}); svg.append(path); const a=Math.atan2(l.y2-l.y1,l.x2-l.x1),s=13;const pts=[[l.x2,l.y2],[l.x2-s*Math.cos(a-.55),l.y2-s*Math.sin(a-.55)],[l.x2-s*Math.cos(a+.55),l.y2-s*Math.sin(a+.55)]].map(p=>p.join(',')).join(' ');svg.append(el('polygon',{points:pts,fill:path.getAttribute('stroke')}));}}
+function render(){field();renderLines();for(const it of state.items)svg.append(iconMarkup(it)); statusEl.textContent=drawMode?`Modo dibujo: ${drawMode}`:selected?'Elemento seleccionado':'Selecciona material o dibuja una trayectoria'}
+function add(type){pushHistory(); state.items.push({id:'i'+idc++,type,x:500,y:312,rot:0});selected=state.items.at(-1).id;drawMode=null;document.querySelectorAll('.draw').forEach(b=>b.classList.remove('active'));render()}
+function point(e){const r=svg.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*1000,y:(e.clientY-r.top)/r.height*625}}
+document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>add(b.dataset.add));
+document.querySelectorAll('[data-draw]').forEach(b=>b.onclick=()=>{drawMode=b.dataset.draw;selected=null;document.querySelectorAll('.draw').forEach(x=>x.classList.toggle('active',x===b));render()});
+svg.addEventListener('pointerdown',e=>{const p=point(e), hit=e.target.closest('[data-id]'); if(drawMode){pushHistory();draft={x1:p.x,y1:p.y,x2:p.x,y2:p.y,kind:drawMode};state.lines.push(draft);svg.setPointerCapture(e.pointerId);render();return} if(hit){selected=hit.dataset.id;const it=state.items.find(x=>x.id===selected);drag={id:selected,dx:p.x-it.x,dy:p.y-it.y,started:false};svg.setPointerCapture(e.pointerId);render()}else{selected=null;render()}});
+svg.addEventListener('pointermove',e=>{const p=point(e);if(draft){draft.x2=p.x;draft.y2=p.y;render();return}if(drag){const it=state.items.find(x=>x.id===drag.id);if(!drag.started){pushHistory();drag.started=true}it.x=Math.max(10,Math.min(990,p.x-drag.dx));it.y=Math.max(10,Math.min(615,p.y-drag.dy));render()}});
+svg.addEventListener('pointerup',()=>{drag=null;draft=null});
+function selectedItem(){return state.items.find(x=>x.id===selected)}
+document.getElementById('rotate').onclick=()=>{const it=selectedItem();if(!it)return;pushHistory();it.rot=(it.rot+15)%360;render()};
+document.getElementById('duplicate').onclick=()=>{const it=selectedItem();if(!it)return;pushHistory();const c={...clone(it),id:'i'+idc++,x:it.x+28,y:it.y+28};state.items.push(c);selected=c.id;render()};
+document.getElementById('delete').onclick=()=>{if(!selected)return;pushHistory();state.items=state.items.filter(x=>x.id!==selected);selected=null;render()};
+document.getElementById('clearSel').onclick=()=>{selected=null;render()};
+document.getElementById('clearAll').onclick=()=>{pushHistory();state.items=[];state.lines=[];selected=null;render()};
+document.getElementById('undo').onclick=()=>{if(!history.length)return;future.push(clone({items:state.items,lines:state.lines,field:state.field}));restore(history.pop())};
+document.getElementById('redo').onclick=()=>{if(!future.length)return;history.push(clone({items:state.items,lines:state.lines,field:state.field}));restore(future.pop())};
+fieldType.onchange=()=>{pushHistory();state.field=fieldType.value;render()};
+document.getElementById('sample').onclick=()=>{pushHistory();state.items=[{id:'i'+idc++,type:'goalSmall',x:120,y:160,rot:90},{id:'i'+idc++,type:'goalSmall',x:120,y:465,rot:90},{id:'i'+idc++,type:'playerA',x:350,y:235,rot:0,label:'1'},{id:'i'+idc++,type:'playerA',x:350,y:390,rot:0,label:'2'},{id:'i'+idc++,type:'ball',x:455,y:312,rot:0},{id:'i'+idc++,type:'cone',x:560,y:220,rot:0},{id:'i'+idc++,type:'cone',x:560,y:405,rot:0},{id:'i'+idc++,type:'ladder',x:710,y:312,rot:90},{id:'i'+idc++,type:'hurdle',x:830,y:250,rot:90},{id:'i'+idc++,type:'hurdle',x:830,y:375,rot:90}];state.lines=[{x1:455,y1:312,x2:690,y2:312,kind:'pass'},{x1:350,y1:235,x2:540,y2:220,kind:'move'}];selected=null;render()};
+window.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected){e.preventDefault();document.getElementById('delete').click()} if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();(e.shiftKey?document.getElementById('redo'):document.getElementById('undo')).click()}});
+render();
+</script>
+</body>
+</html>
