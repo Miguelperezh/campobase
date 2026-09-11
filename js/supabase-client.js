@@ -1,7 +1,7 @@
 import './match-postgame-editor.js';
 import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
-import './exercise-board-persistence.js?v=2465';
+import './exercise-board-persistence.js?v=2466';
 import './runtime-refresh.js?v=2465';
 import { CLOUD_TABLES } from './sync-core.js';
 
@@ -54,6 +54,7 @@ export function createCampoBaseCloudStore() {
       }, { onConflict: 'id' }));
     },
 
+    // Storage: vídeos de ejercicios (bucket público `ejercicio-videos`).
     async uploadVideo(path, file) {
       const { data, error } = await client.storage.from(VIDEO_BUCKET).upload(path, file, {
         cacheControl: '3600',
