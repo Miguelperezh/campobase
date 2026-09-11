@@ -19,3 +19,28 @@ button{cursor:pointer}.topbar{height:78px;display:flex;align-items:center;justif
 @media(max-width:1250px){.editor-shell{grid-template-columns:220px minmax(0,1fr)}.inspector-panel{grid-column:1/-1;position:static;max-height:none}.inspector-panel .inspector-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.inspector-panel .inspector-actions,.inspector-panel .selection-note{grid-column:1/-1}.editor-shell.material-collapsed{grid-template-columns:62px minmax(0,1fr)}}
 @media(max-width:860px){.topbar{height:auto;min-height:72px;padding:10px 14px}.safe{display:none}.editor-shell,.editor-shell.material-collapsed{grid-template-columns:1fr}.material-panel,.inspector-panel{position:static;max-height:none}.editor-shell.material-collapsed .material-body,.editor-shell.material-collapsed .material-title{display:block}.material-grid{grid-template-columns:repeat(4,1fr)}.board-toolbar{position:sticky;top:72px;z-index:10}.phase-chip{margin-left:0}.board-help{flex-direction:column}.inspector-panel .inspector-body{display:block}}
 @media(max-width:560px){.material-grid{grid-template-columns:repeat(3,1fr)}.brand h1{font-size:19px}.legend{gap:9px}.legend-item{font-size:11px}}
+
+/* V3.1: material siempre visible, inspector simultáneo y pase negro coherente */
+#collapseMaterial{display:none!important}
+.editor-shell{width:100%;max-width:1800px;grid-template-columns:220px minmax(0,1fr) 240px}
+.editor-shell.material-collapsed{grid-template-columns:220px minmax(0,1fr) 240px}
+.editor-shell.material-collapsed .material-body,.editor-shell.material-collapsed .material-title{display:block}
+.editor-shell.material-collapsed .material-panel{padding:14px}
+.editor-shell.material-collapsed .panel-head{border-bottom:1px solid var(--line);justify-content:space-between}
+.board [data-line-id] [stroke="#ffffff"]{stroke:#222!important}
+.board [data-line-id] [fill="#ffffff"]{fill:#222!important}
+@media (min-width:861px) and (max-width:1250px){
+  .editor-shell,.editor-shell.material-collapsed{grid-template-columns:190px minmax(380px,1fr) 220px;gap:10px;padding:10px}
+  .material-panel,.inspector-panel{position:sticky;top:88px;max-height:calc(100dvh - 98px)}
+  .inspector-panel{grid-column:auto}
+  .inspector-panel .inspector-body{display:block}
+  .inspector-panel .inspector-actions,.inspector-panel .selection-note{grid-column:auto}
+  .panel{padding:11px}
+  .material-btn{min-height:72px;font-size:11px;padding:6px 4px}
+  .material-btn svg{width:48px;height:31px}
+  .section-title{margin-top:13px}
+  .legend{gap:9px;padding:8px 10px}
+  .legend-item{font-size:11px}
+  .board-card{padding:9px}
+  .range-row{grid-template-columns:32px 1fr 44px;gap:5px}
+}
