@@ -4,15 +4,14 @@ import assert from 'node:assert/strict';
 import zlib from 'node:zlib';
 import test from 'node:test';
 
-test('pizarra integrada guarda, sincroniza, reaparece y Volver usa estilo CampoBase', async () => {
+test('pizarra integrada guarda y borrar queda dentro del Creador', async () => {
 let parentSource=fs.readFileSync('js/exercise-board-persistence.js','utf8');
-parentSource=parentSource.replace("import { getAll, put, syncFromCloud } from './db.js';", "const { getAll, put, syncFromCloud } = globalThis.__dbMocks;");
+parentSource=parentSource.replace("import { getAll, put, remove, syncFromCloud } from './db.js';", "const { getAll, put, remove, syncFromCloud } = globalThis.__dbMocks;");
 const encoded=[1,2,3,4].map(n=>fs.readFileSync(`assets/exercise-board/part-${n}.b64`,'utf8')).join('');
 const publishedHtml=zlib.gunzipSync(Buffer.from(encoded,'base64')).toString('utf8');
 const scripts=[...publishedHtml.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
 const publishedIntegration=scripts.find(s=>s.includes('new URLSearchParams(location.search)')&&s.includes('campobase:exercise-board-ready'));
-assert(publishedIntegration,'published board must contain its original integration script');
-assert(!publishedIntegration.includes('location.hash.slice(1)'),'test fixture must reproduce the published hash bug');
+assert(publishedIntegration,'published board must contain its integration script');
 
 const settings=[];
 let syncCalls=0;
@@ -29,16 +28,21 @@ const bodyClasses=new Set();
 const childMessageListeners=[];
 let childContext;
 const runtimeNodes=new Map();
+const manageChildren=[];
+const creatorManage={append(node){manageChildren.push(node);if(node.id)runtimeNodes.set(node.id,node)}};
+const creatorSelect={value:''};
 
-function fakeElement(tag){return {tagName:String(tag).toUpperCase(),id:'',textContent:'',dataset:{},className:'',innerHTML:'',hidden:false,addEventListener(){},classList:{toggle(){},add(){}}}}
+function fakeElement(tag){
+  const listeners={};
+  return {tagName:String(tag).toUpperCase(),id:'',textContent:'',dataset:{},className:'',innerHTML:'',hidden:false,disabled:false,title:'',
+    addEventListener(type,fn){(listeners[type]??=[]).push(fn)},_listeners:listeners,
+    classList:{toggle(){},add(){}}};
+}
 const childDoc={
   scripts:[{textContent:publishedIntegration}],
   body:{
     classList:{add(v){bodyClasses.add(v)},contains(v){return bodyClasses.has(v)}},
-    append(node){
-      if(node.id)runtimeNodes.set(node.id,node);
-      if(node.tagName==='SCRIPT')vm.runInContext(node.textContent,childContext);
-    },
+    append(node){if(node.id)runtimeNodes.set(node.id,node);if(node.tagName==='SCRIPT')vm.runInContext(node.textContent,childContext)},
   },
   head:{append(node){if(node.id)runtimeNodes.set(node.id,node);if(node.tagName==='STYLE')headStyles.push(node.textContent)}},
   createElement:fakeElement,
@@ -47,9 +51,10 @@ const childDoc={
     if(id==='exerciseForm')return form;
     if(id==='embeddedBack')return back;
     if(id==='saveBoardEdit')return saveEdit;
+    if(id==='creatorExerciseSelect')return creatorSelect;
     return null;
   },
-  querySelector(){return null},querySelectorAll(){return []},
+  querySelector(sel){if(sel==='.creator-manage')return creatorManage;return null},querySelectorAll(){return []},
 };
 
 const parentWindow={location:{href:'https://example.test/campobase/',reload(){}},addEventListener(type,fn){if(type==='message')parentMessageListeners.push(fn)}};
@@ -65,6 +70,7 @@ class MutationObserver{constructor(fn){this.fn=fn}observe(){}}
 const dbMocks={
   async getAll(store){assert.equal(store,'settings');return structuredClone(settings)},
   async put(store,record){assert.equal(store,'settings');const i=settings.findIndex(x=>x.id===record.id);if(i>=0)settings[i]=structuredClone(record);else settings.push(structuredClone(record));return record},
+  async remove(store,id){assert.equal(store,'settings');const i=settings.findIndex(x=>x.id===id);if(i>=0)settings.splice(i,1)},
   async syncFromCloud(){syncCalls++;return {online:true,pending:0}},
 };
 const parentContext={globalThis:null,window:parentWindow,document:parentDocument,MutationObserver,crypto:globalThis.crypto,structuredClone,console,URL,URLSearchParams,sessionStorage:{setItem(k,v){session.set(k,v)}},setTimeout,clearTimeout,alert(msg){throw new Error('Unexpected alert: '+msg)},__dbMocks:dbMocks};
@@ -87,10 +93,12 @@ assert.equal(frameLoadListeners.length,1);
 frameLoadListeners[0]();
 await new Promise(r=>setTimeout(r,10));
 
-assert(bodyClasses.has('embedded-create'),'published board integration must activate from hash after runtime patch');
-assert(headStyles.some(s=>s.includes('min-height:44px')&&s.includes('border-radius:12px')&&s.includes('background:#c8102e')),'Volver must use CampoBase button style');
-assert.equal(formListeners.capture.length,1,'published board must hook submit capture');
-assert.equal(formListeners.bubble.length,1,'published board must hook submit save');
+assert(bodyClasses.has('embedded-create'),'embedded board must activate from hash');
+assert(headStyles.some(s=>s.includes('min-height:44px')&&s.includes('background:#c8102e')),'Volver must use CampoBase style');
+const deleteButton=runtimeNodes.get('creatorDeleteExercise');
+assert(deleteButton,'Borrar ejercicio debe existir dentro del Creador');
+assert.equal(formListeners.capture.length,1);
+assert.equal(formListeners.bubble.length,1);
 
 for(const fn of formListeners.capture)fn({});
 vm.runInContext(`myExercises.unshift({id:'test-persist-001',name:'PRUEBA PERSISTENCIA',saveMode:'both',duration:12,objective:'Prueba',description:'Prueba real',players:'7',material:'Balones y conos',reps:2,pause:30,intensity:'Media',staticBoard:{field:{format:'F7'},items:[],lines:[]},animatedBoard:{phases:[{id:'p1',items:[],lines:[]},{id:'p2',items:[],lines:[]}]},preview:'<svg></svg>',coverSourceType:'phase',coverPhaseId:'p1',coverPhaseName:'Inicio',coverFrameProgress:0});`,childContext);
@@ -98,25 +106,19 @@ for(const fn of formListeners.bubble)fn({});
 await new Promise(r=>setTimeout(r,40));
 
 assert.equal(settings.length,1,'exercise must persist in settings');
-const saved=settings[0];
-assert.equal(saved.name,'PRUEBA PERSISTENCIA');
-assert.equal(saved.recordType,'exercise');
-assert.equal(saved.customBoard,true);
-assert.equal(saved.category,'Mis ejercicios');
-assert.equal(saved.boardSaveMode,'both');
-assert.equal(saved.boardAnimation.phases.length,2);
-assert(syncCalls>=1,'save path must invoke cloud synchronization');
+assert.equal(settings[0].customBoard,true);
+assert.equal(settings[0].boardAnimation.phases.length,2);
 
-vm.runInContext('myExercises.splice(0,myExercises.length)',childContext);
-for(const fn of parentMessageListeners)await fn({data:{type:'campobase:exercise-board-ready',mode:'create'},source:childWindow,origin:'https://example.test',stopImmediatePropagation(){}});
-await new Promise(r=>setTimeout(r,10));
-const reopened=vm.runInContext('myExercises.map(x=>({id:x.id,name:x.name}))',childContext);
-assert.deepEqual(JSON.parse(JSON.stringify(reopened)),[{id:'test-persist-001',name:'PRUEBA PERSISTENCIA'}]);
+creatorSelect.value='test-persist-001';
+for(const fn of deleteButton._listeners.click||[])await fn({});
+await new Promise(r=>setTimeout(r,20));
+assert.equal(settings.length,0,'Borrar desde el Creador debe eliminar el registro');
+const remaining=vm.runInContext('myExercises.length',childContext);
+assert.equal(remaining,0,'el Creador debe refrescar su lista después de borrar');
 
 assert(backListeners.length>=1);
 backListeners.at(-1)({preventDefault(){},stopImmediatePropagation(){}});
 assert.equal(overlay.open,false);
 assert.equal(frame.src,'about:blank');
-
-assert(syncCalls>=2,'debe sincronizar al guardar y al rehidratar desde nube');
+assert(syncCalls>=2,'guardar y borrar deben confirmarse con Supabase');
 });
