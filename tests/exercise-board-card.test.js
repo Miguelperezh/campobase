@@ -16,6 +16,7 @@ test('Mis ejercicios no inventa contenido ni mantiene un segundo manejador de gu
     "import { syncFromCloud, getAll } from './db.js';",
     "const syncFromCloud=async()=>({online:true,pending:0}); const getAll=async()=>[];",
   );
+  source = source.replace('export function installRuntimeRefresh()', 'function installRuntimeRefresh()');
   source += '\nglobalThis.__renderCustomBoardCard = customBoardCardMarkup;';
 
   const context = {
