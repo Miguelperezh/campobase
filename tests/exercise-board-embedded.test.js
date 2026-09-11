@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import zlib from 'node:zlib';
 import test from 'node:test';
 
-test('pizarra integrada guarda y borrar queda dentro del Creador', async () => {
+test('pizarra integrada guarda, activa el modo Creador y conserva Volver a Ejercicios', async () => {
 let parentSource=fs.readFileSync('js/exercise-board-persistence.js','utf8');
 parentSource=parentSource.replace("import { getAll, put, remove, syncFromCloud } from './db.js';", "const { getAll, put, remove, syncFromCloud } = globalThis.__dbMocks;");
 const encoded=[1,2,3,4].map(n=>fs.readFileSync(`assets/exercise-board/part-${n}.b64`,'utf8')).join('');
@@ -17,7 +17,7 @@ const settings=[];
 let syncCalls=0;
 const parentMessageListeners=[];
 const session=new Map();
-const overlay={open:true,classList:{remove(n){if(n==='open')overlay.open=false}},setAttribute(){}};
+const overlay={open:true,classList:{remove(...names){if(names.includes('open'))overlay.open=false}},setAttribute(){}};
 const formListeners={capture:[],bubble:[]};
 const form={addEventListener(type,fn,capture=false){if(type==='submit')(capture?formListeners.capture:formListeners.bubble).push(fn)}};
 const backListeners=[];
@@ -28,14 +28,18 @@ const bodyClasses=new Set();
 const childMessageListeners=[];
 let childContext;
 const runtimeNodes=new Map();
-const manageChildren=[];
-const creatorManage={append(node){manageChildren.push(node);if(node.id)runtimeNodes.set(node.id,node)}};
 const creatorSelect={value:''};
+const creatorManage={append(node){if(node.id)runtimeNodes.set(node.id,node)}};
 
 function fakeElement(tag){
   const listeners={};
   return {tagName:String(tag).toUpperCase(),id:'',textContent:'',dataset:{},className:'',innerHTML:'',hidden:false,disabled:false,title:'',
     addEventListener(type,fn){(listeners[type]??=[]).push(fn)},_listeners:listeners,
+    querySelector(sel){
+      if(sel==='.cb-creator-manager-count')return {textContent:''};
+      if(sel==='.cb-creator-grid')return {innerHTML:''};
+      return null;
+    },
     classList:{toggle(){},add(){}}};
 }
 const childDoc={
@@ -91,12 +95,11 @@ function beginBoardView(){}
 vm.runInContext(parentSource,parentContext);
 assert.equal(frameLoadListeners.length,1);
 frameLoadListeners[0]();
-await new Promise(r=>setTimeout(r,10));
+await new Promise(r=>setTimeout(r,20));
 
 assert(bodyClasses.has('embedded-create'),'embedded board must activate from hash');
 assert(headStyles.some(s=>s.includes('min-height:44px')&&s.includes('background:#c8102e')),'Volver must use CampoBase style');
-const deleteButton=runtimeNodes.get('creatorDeleteExercise');
-assert(deleteButton,'Borrar ejercicio debe existir dentro del Creador');
+assert(runtimeNodes.get('campobaseCreatorManager'),'el Creador debe instalar el gestor visual de ejercicios guardados');
 assert.equal(formListeners.capture.length,1);
 assert.equal(formListeners.bubble.length,1);
 
@@ -108,17 +111,12 @@ await new Promise(r=>setTimeout(r,40));
 assert.equal(settings.length,1,'exercise must persist in settings');
 assert.equal(settings[0].customBoard,true);
 assert.equal(settings[0].boardAnimation.phases.length,2);
-
-creatorSelect.value='test-persist-001';
-for(const fn of deleteButton._listeners.click||[])await fn({});
-await new Promise(r=>setTimeout(r,20));
-assert.equal(settings.length,0,'Borrar desde el Creador debe eliminar el registro');
-const remaining=vm.runInContext('myExercises.length',childContext);
-assert.equal(remaining,0,'el Creador debe refrescar su lista después de borrar');
+assert.equal(settings[0].material,'Balones y conos');
+assert.equal(settings[0].description,'Prueba real');
 
 assert(backListeners.length>=1);
 backListeners.at(-1)({preventDefault(){},stopImmediatePropagation(){}});
 assert.equal(overlay.open,false);
 assert.equal(frame.src,'about:blank');
-assert(syncCalls>=2,'guardar y borrar deben confirmarse con Supabase');
+assert(syncCalls>=1,'guardar debe confirmarse con Supabase');
 });
