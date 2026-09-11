@@ -40,10 +40,7 @@ function normalizedRecord(exercise, existing = null) {
 }
 
 async function customExerciseRecords({ sync = false } = {}) {
-  if (sync) {
-    try { await syncFromCloud(); }
-    catch (error) { console.warn('Mis ejercicios: sincronización pendiente:', error?.message || error); }
-  }
+  if (sync) await syncFromCloud();
   const settings = await getAll('settings');
   return settings.filter((record) => record.recordType === 'exercise' && record.customBoard === true);
 }
@@ -52,10 +49,9 @@ async function persistExercise(exercise) {
   const settings = await getAll('settings');
   const existing = settings.find((record) => record.id === exercise.id) || null;
   const record = normalizedRecord(exercise, existing);
-  await put('settings', record);
 
-  try { await syncFromCloud(); }
-  catch (error) { console.warn('Ejercicio guardado localmente; sincronización con Supabase pendiente:', error?.message || error); }
+  await put('settings', record);
+  await syncFromCloud();
 
   const verified = (await getAll('settings')).find((item) => item.id === record.id && item.customBoard === true);
   if (!verified) throw new Error('CampoBase no pudo verificar el ejercicio guardado.');
@@ -84,15 +80,28 @@ function patchEmbeddedFrame(frame) {
       style.id = 'campobase-back-fix-style';
       style.textContent = `
         body.embedded-create #embeddedBack{
-          display:inline-flex!important;align-items:center!important;justify-content:center!important;
-          background:#c8102e!important;border:1px solid #c8102e!important;color:#fff!important;
-          border-radius:999px!important;padding:9px 13px!important;min-height:38px!important;
-          font-size:12px!important;font-weight:900!important;white-space:nowrap!important;
-          box-shadow:0 4px 12px rgba(200,16,46,.18)!important;position:relative!important;z-index:60!important
+          display:inline-flex!important;
+          align-items:center!important;
+          justify-content:center!important;
+          min-height:44px!important;
+          min-width:170px!important;
+          padding:.72rem 1rem!important;
+          border:0!important;
+          border-radius:12px!important;
+          background:#c8102e!important;
+          color:#fff!important;
+          font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+          font-size:14px!important;
+          line-height:1.15!important;
+          font-weight:700!important;
+          white-space:nowrap!important;
+          box-shadow:none!important;
+          position:relative!important;
+          z-index:60!important;
         }
         @media(max-width:860px){
-          body.embedded-create .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important}
-          body.embedded-create #embeddedBack{display:inline-flex!important;flex:0 0 auto!important}
+          body.embedded-create .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+          body.embedded-create #embeddedBack{display:inline-flex!important;flex:0 0 auto!important;min-width:158px!important}
         }
       `;
       doc.head.append(style);
@@ -120,28 +129,56 @@ if (typeof document !== 'undefined') {
   new MutationObserver(discoverFrames).observe(document.documentElement, { childList: true, subtree: true });
 }
 
+function replyToBoard(event, payload) {
+  try { event.source?.postMessage(payload, '*'); }
+  catch (error) { console.warn('No se pudo responder a la pizarra:', error); }
+}
+
+async function handlePersistRequest(event, data) {
+  const requestId = data.requestId || '';
+  try {
+    const record = await persistExercise(data.exercise);
+    replyToBoard(event, {
+      type: 'campobase:exercise-persisted',
+      requestId,
+      exercise: record,
+    });
+
+    if (!data.stayOpen) {
+      try { sessionStorage.setItem(OPEN_AFTER_SAVE_KEY, '1'); } catch { /* no bloquea */ }
+      setTimeout(() => window.location.reload(), 300);
+    }
+  } catch (error) {
+    console.error('No se pudo persistir el ejercicio:', error);
+    replyToBoard(event, {
+      type: 'campobase:exercise-persist-failed',
+      requestId,
+      message: error?.message || String(error),
+    });
+    if (!requestId) alert(`No se pudo guardar el ejercicio: ${error?.message || error}`);
+  }
+}
+
 if (typeof window !== 'undefined') window.addEventListener('message', async (event) => {
   const data = event.data || {};
 
+  if (data.type === 'campobase:persist-exercise' && data.exercise) {
+    event.stopImmediatePropagation();
+    await handlePersistRequest(event, data);
+    return;
+  }
+
+  // Compatibilidad con la primera integración de la pizarra.
   if (data.type === 'campobase:exercise-saved' && data.exercise) {
     event.stopImmediatePropagation();
-    try {
-      await persistExercise(data.exercise);
-      if (!data.stayOpen) {
-        try { sessionStorage.setItem(OPEN_AFTER_SAVE_KEY, '1'); } catch { /* no bloquea */ }
-        setTimeout(() => window.location.reload(), 100);
-      }
-    } catch (error) {
-      console.error('No se pudo persistir el ejercicio:', error);
-      alert(`No se pudo guardar el ejercicio: ${error?.message || error}`);
-    }
+    await handlePersistRequest(event, data);
     return;
   }
 
   if (data.type === 'campobase:exercise-board-ready' && data.mode === 'create') {
     try {
       const exercises = await customExerciseRecords({ sync: true });
-      event.source?.postMessage({ type: 'campobase:init-editor', exercises }, '*');
+      replyToBoard(event, { type: 'campobase:init-editor', exercises });
     } catch (error) {
       console.error('No se pudieron cargar Mis ejercicios:', error);
     }
