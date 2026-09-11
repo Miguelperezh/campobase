@@ -18,10 +18,13 @@ test('Sesiones conserva el flujo visual validado', () => {
   assert.match(source, /Recuperación \/ baja carga/);
 });
 
-test('la biblioteca carga portadas JPG ligeras y no MP4 en las tarjetas', () => {
-  assert.match(source, /\$\{f\}000\.jpg/);
+test('la biblioteca usa portadas ligeras y recupera las que no tienen frames', () => {
+  assert.match(source, /\$\{frames\}000\.jpg/);
   assert.match(source, /loading="lazy"/);
   assert.match(source, /decoding="async"/);
+  assert.match(source, /captureCoverFromVideo/);
+  assert.match(source, /sp-cover-canvas/);
+  assert.match(source, /preload = 'metadata'/);
   assert.doesNotMatch(source, /<video[^>]*class="sp-cover/);
 });
 
@@ -33,23 +36,27 @@ test('la biblioteca mantiene favoritos, vídeo, ver y añadir', () => {
   assert.match(source, /add-exercise-to-session/);
 });
 
-test('el resumen fijo expresa minutos y permite ver o quitar ejercicios', () => {
+test('el resumen expresa minutos y permite ver o quitar sin quedarse fijo al hacer scroll', () => {
   assert.match(source, /min de \$\{target\} min/);
   assert.match(source, /remove-session-block/);
   assert.match(source, /data-exercise-id/);
-  assert.match(source, /position:sticky/);
+  assert.match(source, /\.session-plan-control\{position:static/);
+  assert.doesNotMatch(source, /\.session-plan-control\{position:sticky/);
+  assert.match(source, /Añade ejercicios desde abajo\./);
 });
 
-test('el buscador global usa el formato validado en todas las pestañas', () => {
-  assert.match(source, /i\.placeholder='Buscar'/);
+test('el buscador global conserva el formato validado pero no queda fijado', () => {
+  assert.match(source, /input\.placeholder = 'Buscar'/);
   assert.match(source, /\.search-bar:before\{content:"Buscar"/);
   assert.match(source, /background:var\(--brand\)/);
+  assert.match(source, /\.search-bar\{position:static/);
+  assert.doesNotMatch(source, /\.search-bar\{position:sticky/);
 });
 
-test('2459 queda integrado en carga, cache y check', () => {
-  assert.match(demo, /session-planner-ui\.js\?v=2459/);
-  assert.match(sw, /sessionplanner-2459/);
-  assert.match(sw, /session-planner-ui\.js\?v=2459/);
+test('2460 queda integrado en carga, cache y check', () => {
+  assert.match(demo, /session-planner-ui\.js\?v=2460/);
+  assert.match(sw, /sessionplanner-2460/);
+  assert.match(sw, /session-planner-ui\.js\?v=2460/);
   assert.match(pkg.scripts.check, /node --check js\/session-planner-ui\.js/);
   assert.equal(pkg.version, '2.44.0');
 });
