@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CampoBase · Pizarra táctica V3</title>
+<link rel="stylesheet" href="pizarra-materiales-v3.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">CB</div><div><div class="eyebrow">CampoBase · laboratorio</div><h1>Pizarra táctica</h1></div></div>
+  <div class="safe">PRUEBA AISLADA · NO GUARDA DATOS</div>
+</header>
+
+<div class="editor-shell" id="editorShell">
+  <aside class="panel sticky material-panel">
+    <div class="panel-head"><h2 class="material-title">Material</h2><button class="mini-btn" id="collapseMaterial" title="Ocultar/mostrar material">‹</button></div>
+    <div class="material-body">
+      <div class="section-title">Personas y balón</div>
+      <div class="material-grid">
+        <button class="material-btn" data-add="attacker"><span class="mi"><svg viewBox="0 0 60 36"><circle cx="30" cy="18" r="14" fill="#1667d9" stroke="#fff" stroke-width="2"/><text x="30" y="23" text-anchor="middle" font-size="14" font-weight="900" fill="#fff">1</text></svg></span>Atacante azul</button>
+        <button class="material-btn" data-add="defender"><span class="mi"><svg viewBox="0 0 60 36"><circle cx="30" cy="18" r="14" fill="#e12f3b" stroke="#fff" stroke-width="2"/><text x="30" y="23" text-anchor="middle" font-size="14" font-weight="900" fill="#fff">1</text></svg></span>Defensa rojo</button>
+        <button class="material-btn" data-add="coach"><span class="mi"><svg viewBox="0 0 60 36"><circle cx="30" cy="18" r="14" fill="#161616" stroke="#fff" stroke-width="2"/><text x="30" y="23" text-anchor="middle" font-size="13" font-weight="900" fill="#fff">E</text></svg></span>Entrenador</button>
+        <button class="material-btn" data-add="ball"><span class="mi"><svg viewBox="0 0 60 36"><circle cx="30" cy="18" r="12" fill="#fff" stroke="#111" stroke-width="2"/><path d="M26 14l4-4 4 4-2 5h-4z" fill="#111"/></svg></span>Balón</button>
+      </div>
+      <div class="count-row" id="counts">Azules 0 · Rojos 0</div>
+
+      <div class="section-title">Porterías y material</div>
+      <div class="material-grid">
+        <button class="material-btn" data-add="goalLarge"><span class="mi"><svg viewBox="0 0 70 38"><path d="M8 31V8h42v23M50 8l10 7v20M8 8l10 7h42" fill="none" stroke="#333" stroke-width="3"/><path d="M18 15v20m10-20v20m10-20v20m10-20v20M18 21h42M18 28h42" stroke="#777" stroke-width="1"/></svg></span>Portería F7/F11</button>
+        <button class="material-btn" data-add="goalSmall"><span class="mi"><svg viewBox="0 0 70 38"><path d="M14 31V12h31v19M45 12l9 6v16M14 12l9 6h31" fill="none" stroke="#333" stroke-width="3"/><path d="M23 18v16m9-16v16m9-16v16M23 24h31" stroke="#777" stroke-width="1"/></svg></span>Portería pequeña</button>
+        <button class="material-btn" data-add="cone"><span class="mi"><svg viewBox="0 0 60 36"><path d="M30 3L43 29H17z" fill="#ff7a00" stroke="#b34b00" stroke-width="2"/><rect x="14" y="29" width="32" height="4" rx="2" fill="#6d3a18"/></svg></span>Cono</button>
+        <button class="material-btn" data-add="marker"><span class="mi"><svg viewBox="0 0 60 36"><ellipse cx="30" cy="21" rx="17" ry="8" fill="#ffd23a" stroke="#c79a00" stroke-width="2"/><ellipse cx="30" cy="18" rx="8" ry="3" fill="#fff4a8"/></svg></span>Chincheta</button>
+        <button class="material-btn" data-add="pole"><span class="mi"><svg viewBox="0 0 60 36"><rect x="28" y="3" width="5" height="28" rx="2" fill="#e13d48"/><rect x="18" y="30" width="25" height="4" rx="2" fill="#444"/></svg></span>Pica</button>
+        <button class="material-btn" data-add="hurdle"><span class="mi"><svg viewBox="0 0 60 36"><path d="M12 30V13h36v17M10 30h9M41 30h9" fill="none" stroke="#e34b43" stroke-width="5"/></svg></span>Valla</button>
+        <button class="material-btn" data-add="ladder"><span class="mi"><svg viewBox="0 0 70 36"><rect x="5" y="9" width="60" height="18" rx="2" fill="none" stroke="#d7a900" stroke-width="3"/><path d="M17 9v18M29 9v18M41 9v18M53 9v18" stroke="#d7a900" stroke-width="3"/></svg></span>Escalera</button>
+        <button class="material-btn" data-add="ring"><span class="mi"><svg viewBox="0 0 60 36"><ellipse cx="30" cy="18" rx="17" ry="11" fill="none" stroke="#52aa43" stroke-width="5"/></svg></span>Aro</button>
+        <button class="material-btn" data-add="mannequin"><span class="mi"><svg viewBox="0 0 60 36"><circle cx="30" cy="7" r="5" fill="#e0ad00"/><path d="M21 14h18l-3 13H24z" fill="#e0ad00"/><path d="M30 27v6M20 33h20" stroke="#5b4a00" stroke-width="3"/></svg></span>Muñeco</button>
+        <button class="material-btn" data-add="zone"><span class="mi"><svg viewBox="0 0 60 36"><rect x="10" y="7" width="40" height="22" rx="4" fill="#ffd70055" stroke="#d1ac00" stroke-width="2" stroke-dasharray="5 3"/></svg></span>Zona</button>
+      </div>
+
+      <div class="section-title">Flechas</div>
+      <div class="draw-grid">
+        <button class="draw-btn" data-draw="pass">Pase <span class="line-sample"><svg viewBox="0 0 64 18"><path d="M2 9H55" stroke="#222" stroke-width="3"/><path d="M55 4l7 5-7 5" fill="none" stroke="#222" stroke-width="3"/></svg></span></button>
+        <button class="draw-btn" data-draw="move">Movimiento <span class="line-sample"><svg viewBox="0 0 64 18"><path d="M2 9H55" stroke="#08bfe8" stroke-width="3" stroke-dasharray="8 5"/><path d="M55 4l7 5-7 5" fill="none" stroke="#08bfe8" stroke-width="3"/></svg></span></button>
+        <button class="draw-btn" data-draw="dribble">Conducción <span class="line-sample"><svg viewBox="0 0 64 18"><path d="M2 9H55" stroke="#d8ac00" stroke-width="3" stroke-dasharray="2 5"/><path d="M55 4l7 5-7 5" fill="none" stroke="#d8ac00" stroke-width="3"/></svg></span></button>
+        <button class="draw-btn" data-draw="sprint">Sprint <span class="line-sample"><svg viewBox="0 0 64 18"><path d="M2 9H55" stroke="#ff6b35" stroke-width="5"/><path d="M55 3l8 6-8 6" fill="none" stroke="#ff6b35" stroke-width="4"/></svg></span></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="center">
+    <div class="board-toolbar">
+      <label for="fieldType">Campo</label><select id="fieldType"><option value="full">Campo completo</option><option value="half">Medio campo</option><option value="third">Tercio real</option></select>
+      <label for="format">Formato</label><select id="format"><option>F7</option><option>F11</option></select>
+      <div class="toolbar-actions"><button id="undo">↶ Deshacer</button><button id="redo">↷ Rehacer</button><button id="sample">Ejemplo</button><button id="clearAll" class="danger">Vaciar</button></div>
+      <div class="phase-chip">Fase 1 · estructura preparada para Fase 2</div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-title">Leyenda</span>
+      <span class="legend-item"><span class="dot blue"></span> Atacante</span><span class="legend-item"><span class="dot red"></span> Defensa</span><span class="legend-item"><span class="dot black"></span> Entrenador</span>
+      <span class="legend-item"><svg class="legend-line" viewBox="0 0 44 16"><path d="M1 8H35" stroke="#222" stroke-width="3"/><path d="M34 3l8 5-8 5" fill="none" stroke="#222" stroke-width="3"/></svg>Pase</span>
+      <span class="legend-item"><svg class="legend-line" viewBox="0 0 44 16"><path d="M1 8H35" stroke="#08bfe8" stroke-width="3" stroke-dasharray="7 4"/><path d="M34 3l8 5-8 5" fill="none" stroke="#08bfe8" stroke-width="3"/></svg>Movimiento</span>
+      <span class="legend-item"><svg class="legend-line" viewBox="0 0 44 16"><path d="M1 8H35" stroke="#d8ac00" stroke-width="3" stroke-dasharray="2 4"/><path d="M34 3l8 5-8 5" fill="none" stroke="#d8ac00" stroke-width="3"/></svg>Conducción</span>
+      <span class="legend-item"><svg class="legend-line" viewBox="0 0 44 16"><path d="M1 8H35" stroke="#ff6b35" stroke-width="5"/><path d="M34 2l9 6-9 6" fill="none" stroke="#ff6b35" stroke-width="4"/></svg>Sprint</span>
+    </div>
+
+    <section class="board-card">
+      <div class="board-wrap"><svg id="board" class="board" viewBox="0 0 1000 625" aria-label="Pizarra táctica editable"></svg></div>
+      <div class="board-help"><span><strong>Clic:</strong> seleccionar · <strong>Arrastrar:</strong> mover cualquier objeto o flecha</span><span>El marco amarillo indica el elemento seleccionado.</span></div>
+    </section>
+    <div class="bottom-note">La prueba continúa aislada: sin Supabase, sin guardar ejercicios y sin tocar CampoBase estable.</div>
+  </main>
+
+  <aside class="panel sticky inspector-panel">
+    <div class="panel-head"><h2>Editar</h2><button class="mini-btn" id="deselect" title="Deseleccionar">×</button></div>
+    <div id="inspectorEmpty" class="inspector-empty">Selecciona un jugador, portería, pica, cono, escalera, valla, zona, balón o flecha. Aquí aparecerán tamaño, giro y opciones del elemento.</div>
+    <div id="inspectorBody" class="inspector-body hidden">
+      <div class="selected-badge" id="selectedLabel">SELECCIONADO</div>
+      <div class="field-row" id="sizeControl"><label>Tamaño</label><div class="range-row"><button data-size-step="-10">−</button><input id="sizeRange" type="range" min="40" max="220" value="100" step="5"><output id="sizeOut">100%</output></div></div>
+      <div class="field-row" id="rotationControl"><label>Orientación</label><div class="range-row"><button data-rot-step="-15">↺</button><input id="rotRange" type="range" min="-180" max="180" value="0" step="5"><output id="rotOut">0°</output></div></div>
+      <div id="zoneControls" class="hidden">
+        <div class="field-row"><label>Forma de zona</label><select id="zoneShape"><option value="rect">Cuadrada / rectangular</option><option value="circle">Circular</option></select></div>
+        <div class="field-row"><label>Color de zona</label><input id="zoneColor" type="color" value="#ffd700"></div>
+        <div class="field-row"><label>Ancho</label><div class="range-row"><button data-zone-w="-10">−</button><input id="zoneW" type="range" min="50" max="280" value="140" step="5"><output id="zoneWOut">140</output></div></div>
+        <div class="field-row"><label>Alto</label><div class="range-row"><button data-zone-h="-10">−</button><input id="zoneH" type="range" min="50" max="240" value="90" step="5"><output id="zoneHOut">90</output></div></div>
+      </div>
+      <div class="inspector-actions"><button id="duplicate">Duplicar</button><button id="deleteSelected" class="danger">Borrar</button></div>
+      <div class="selection-note">Los controles actúan sobre el objeto marcado en amarillo. También puedes moverlo directamente arrastrándolo en el campo.</div>
+    </div>
+  </aside>
+</div>
+
+<script src="pizarra-materiales-v3.js"></script>
+</body>
+</html>
