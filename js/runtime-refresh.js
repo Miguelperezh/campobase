@@ -1,6 +1,18 @@
 import { syncFromCloud, getAll } from './db.js';
 
 const BUTTON_ID = 'manual-refresh';
+const CATEGORY = 'Mis ejercicios';
+const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
+const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let customExercises = new Map();
+let overlay;
+let frame;
+let pendingViewer = null;
+let boardObjectUrl = '';
+let boardHtmlPromise = null;
+let hydrationPromise = null;
 
 function buttonMarkup() {
   const button = document.createElement('button');
@@ -27,21 +39,6 @@ export function installRuntimeRefresh() {
   status.insertBefore(button, logout ?? null);
   button.addEventListener('click', () => refreshNow(button));
 }
-
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installRuntimeRefresh, { once: true });
-  else installRuntimeRefresh();
-}
-
-const CATEGORY = 'Mis ejercicios';
-const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
-const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
-let customExercises = new Map();
-let overlay;
-let frame;
-let pendingViewer = null;
-let boardObjectUrl = '';
-let boardHtmlPromise = null;
 
 async function getBoardHtml() {
   if (!boardHtmlPromise) {
@@ -103,6 +100,29 @@ async function readCustomExercises() {
   return [...customExercises.values()];
 }
 
+function clearPatchedFlags() {
+  document.querySelectorAll('.exercise-card[data-custom-board-patched="1"]').forEach((card) => {
+    delete card.dataset.customBoardPatched;
+  });
+}
+
+async function hydrateCustomExercises({ attempts = 1 } = {}) {
+  if (hydrationPromise) return hydrationPromise;
+  hydrationPromise = (async () => {
+    let cloudReady = false;
+    for (let attempt = 0; attempt < Math.max(1, attempts); attempt += 1) {
+      const result = await syncFromCloud().catch(() => null);
+      if (result?.online === true) { cloudReady = true; break; }
+      if (attempt < attempts - 1) await delay(150);
+    }
+    const records = await readCustomExercises();
+    clearPatchedFlags();
+    patchSoon();
+    return { records, cloudReady };
+  })().finally(() => { hydrationPromise = null; });
+  return hydrationPromise;
+}
+
 function ensureCategoryOption() {
   const select = document.querySelector('#exercise-filters select[name="category"]');
   if (!select) return;
@@ -139,7 +159,7 @@ function customBoardCardMarkup(record) {
     ${highlights ? `<div class="exercise-highlights">${highlights}</div>` : ''}
     ${metadata}
     ${preview}
-    <div class="button-row"><button type="button" class="view-exercise secondary" data-exercise-id="${escapeHtml(record.id)}">Ver</button>${movementButton}<button type="button" class="add-exercise-to-session primary" data-id="${escapeHtml(record.id)}">Añadir a sesión</button><button type="button" class="delete-exercise danger" data-id="${escapeHtml(record.id)}">Borrar</button></div>`;
+    <div class="button-row"><button type="button" class="view-exercise secondary" data-exercise-id="${escapeHtml(record.id)}">Ver ejercicio</button>${movementButton}<button type="button" class="add-exercise-to-session primary" data-id="${escapeHtml(record.id)}">Añadir a sesión</button></div>`;
 }
 
 function patchExerciseCards() {
@@ -164,12 +184,15 @@ function patchSoon() {
 }
 
 async function openCreator() {
+  const { records } = await hydrateCustomExercises({ attempts: 20 });
   ensureOverlay();
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
+  pendingViewer = null;
   if (boardObjectUrl) URL.revokeObjectURL(boardObjectUrl);
   const boardHtml = await getBoardHtml();
   boardObjectUrl = URL.createObjectURL(new Blob([boardHtml], { type: 'text/html' }));
+  frame.dataset.creatorExerciseCount = String(records.length);
   frame.src = `${boardObjectUrl}#embedded=1&mode=create`;
 }
 
@@ -184,11 +207,16 @@ async function openViewer(record, version = 'static') {
   frame.src = `${boardObjectUrl}#embedded=1&mode=view`;
 }
 
-function handleBoardMessage(event) {
+async function handleBoardMessage(event) {
   if (!frame || event.source !== frame.contentWindow) return;
   const data = event.data || {};
   if (data.type === 'campobase:close-exercise-board') {
     closeOverlay();
+    return;
+  }
+  if (data.type === 'campobase:exercise-board-ready' && data.mode === 'create') {
+    const { records } = await hydrateCustomExercises({ attempts: 3 }).catch(() => ({ records: [...customExercises.values()] }));
+    frame.contentWindow.postMessage({ type: 'campobase:init-editor', exercises: records }, '*');
     return;
   }
   if (data.type === 'campobase:exercise-board-ready' && data.mode === 'view' && pendingViewer) {
@@ -216,10 +244,18 @@ function interceptClicks(event) {
   const viewButton = event.target.closest('.view-exercise[data-exercise-id], .session-exercise-link[data-exercise-id]');
   if (viewButton) {
     const record = customExercises.get(viewButton.dataset.exerciseId);
-    if (!record) return;
+    const card = viewButton.closest('.exercise-card');
+    const isMyExerciseCard = card?.querySelector('.pill')?.textContent?.trim() === CATEGORY;
+    if (!record && !isMyExerciseCard) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    openViewer(record, 'static').catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el ejercicio.'); });
+    const id = viewButton.dataset.exerciseId;
+    (record ? Promise.resolve(record) : hydrateCustomExercises({ attempts: 3 }).then(() => customExercises.get(id)))
+      .then((loaded) => {
+        if (!loaded) throw new Error('No se encontró el ejercicio de pizarra guardado.');
+        return openViewer(loaded, 'static');
+      })
+      .catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el ejercicio.'); });
   }
 }
 
@@ -240,7 +276,7 @@ function restoreExercisesViewAfterSave() {
       nav.click();
       select.value = CATEGORY;
       select.dispatchEvent(new Event('change', { bubbles: true }));
-      patchSoon();
+      hydrateCustomExercises({ attempts: 3 }).catch(() => patchSoon());
       clearInterval(timer);
     } else if (attempts > 80) clearInterval(timer);
   }, 100);
@@ -248,15 +284,13 @@ function restoreExercisesViewAfterSave() {
 
 async function install() {
   ensureOverlay();
-  await readCustomExercises().catch((error) => console.warn('No se pudieron leer Mis ejercicios:', error.message));
   ensureCategoryOption();
-  patchExerciseCards();
   document.addEventListener('click', interceptClicks, true);
-  window.addEventListener('message', handleBoardMessage);
+  window.addEventListener('message', (event) => { handleBoardMessage(event).catch((error) => console.error(error)); });
   window.addEventListener('campobase:data-changed', async (event) => {
     if (!event.detail?.stores?.includes('settings')) return;
     await readCustomExercises().catch(() => null);
-    document.querySelectorAll('.exercise-card[data-custom-board-patched="1"]').forEach((card) => { delete card.dataset.customBoardPatched; });
+    clearPatchedFlags();
     patchSoon();
   });
   const filterSelect = document.querySelector('#exercise-filters select[name="category"]');
@@ -264,9 +298,13 @@ async function install() {
   const list = document.getElementById('exercises-list');
   if (list) new MutationObserver(patchSoon).observe(list, { childList: true, subtree: true });
   restoreExercisesViewAfterSave();
+  hydrateCustomExercises({ attempts: 30 }).catch((error) => {
+    console.warn('No se pudieron hidratar Mis ejercicios al arrancar:', error.message);
+    return readCustomExercises().then(() => patchSoon()).catch(() => null);
+  });
 }
 
 if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { installRuntimeRefresh(); install(); }, { once: true });
+  else { installRuntimeRefresh(); install(); }
 }
