@@ -1,4 +1,4 @@
-import { getAll, put, syncFromCloud } from './db.js';
+import { getAll, put, remove, syncFromCloud } from './db.js';
 
 const CATEGORY = 'Mis ejercicios';
 const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
@@ -69,6 +69,20 @@ async function persistExercise(exercise) {
   return verified;
 }
 
+async function deleteExercise(exerciseId) {
+  if (!exerciseId) throw new Error('Selecciona un ejercicio para borrar.');
+  const settings = await getAll('settings');
+  const existing = settings.find((record) => record.id === exerciseId && record.customBoard === true);
+  if (!existing) throw new Error('El ejercicio ya no está disponible.');
+  await remove('settings', exerciseId);
+  const syncResult = await syncFromCloud();
+  if (syncResult?.online !== true || Number(syncResult?.pending || 0) !== 0) {
+    throw new Error('No se ha podido confirmar el borrado en Supabase.');
+  }
+  const remains = (await getAll('settings')).some((record) => record.id === exerciseId && record.customBoard === true);
+  if (remains) throw new Error('El ejercicio sigue presente después del borrado.');
+}
+
 function closeEmbeddedBoard(frame) {
   const overlay = frame?.closest('.exercise-board-overlay');
   if (!overlay) return;
@@ -84,7 +98,7 @@ function activateEmbeddedBoard(doc) {
     script.textContent.includes('new URLSearchParams(location.search)')
     && script.textContent.includes('campobase:exercise-board-ready')
   ));
-  if (!original) throw new Error('No se ha encontrado el puente integrado de la pizarra.');
+  if (!original) return;
   const patched = doc.createElement('script');
   patched.id = 'campobase-embedded-runtime-fix';
   patched.textContent = original.textContent.replace(
@@ -92,6 +106,47 @@ function activateEmbeddedBoard(doc) {
     'new URLSearchParams(location.search || location.hash.slice(1))',
   );
   doc.body.append(patched);
+}
+
+function installCreatorDelete(frame, doc) {
+  if (!doc.body.classList.contains('embedded-create')) return;
+  const manage = doc.querySelector('.creator-manage');
+  const select = doc.getElementById('creatorExerciseSelect');
+  if (!manage || !select || doc.getElementById('creatorDeleteExercise')) return;
+
+  const button = doc.createElement('button');
+  button.id = 'creatorDeleteExercise';
+  button.type = 'button';
+  button.className = 'danger';
+  button.textContent = 'Borrar ejercicio';
+  button.title = 'Borrar el ejercicio seleccionado de Mis ejercicios';
+  manage.append(button);
+
+  button.addEventListener('click', async () => {
+    const exerciseId = select.value;
+    if (!exerciseId) {
+      button.textContent = 'Selecciona un ejercicio';
+      setTimeout(() => { button.textContent = 'Borrar ejercicio'; }, 1400);
+      return;
+    }
+    const previous = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Borrando…';
+    try {
+      await deleteExercise(exerciseId);
+      const exercises = await customExerciseRecords({ sync: true });
+      frame.contentWindow?.postMessage({ type: 'campobase:init-editor', exercises }, '*');
+      button.textContent = 'Borrado';
+      setTimeout(() => { button.textContent = previous; }, 900);
+    } catch (error) {
+      console.error('No se pudo borrar el ejercicio:', error);
+      button.textContent = 'Error al borrar';
+      alert(error?.message || String(error));
+      setTimeout(() => { button.textContent = previous; }, 1400);
+    } finally {
+      button.disabled = false;
+    }
+  });
 }
 
 function patchEmbeddedFrame(frame) {
@@ -117,6 +172,8 @@ function patchEmbeddedFrame(frame) {
           font-size:14px!important;line-height:1.15!important;font-weight:700!important;white-space:nowrap!important;
           box-shadow:none!important;position:relative!important;z-index:60!important
         }
+        #creatorDeleteExercise{background:#fff!important;color:#c8102e!important;border:1px solid #c8102e!important;font-weight:800!important}
+        #creatorDeleteExercise:disabled{opacity:.6!important}
         @media(max-width:860px){
           .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
           #embeddedBack{display:inline-flex!important;flex:0 0 auto!important}
@@ -134,6 +191,8 @@ function patchEmbeddedFrame(frame) {
         closeEmbeddedBoard(frame);
       }, true);
     }
+
+    installCreatorDelete(frame, doc);
   });
 }
 
@@ -173,15 +232,5 @@ if (typeof window !== 'undefined') window.addEventListener('message', async (eve
   if ((data.type === 'campobase:persist-exercise' || data.type === 'campobase:exercise-saved') && data.exercise) {
     event.stopImmediatePropagation();
     await handlePersistRequest(event, data);
-    return;
-  }
-  if (data.type === 'campobase:exercise-board-ready' && data.mode === 'create') {
-    try {
-      const exercises = await customExerciseRecords({ sync: true });
-      replyToBoard(event, { type: 'campobase:init-editor', exercises });
-    } catch (error) {
-      console.error('No se pudieron cargar Mis ejercicios:', error);
-      replyToBoard(event, { type: 'campobase:init-editor', exercises: [], error: error?.message || String(error) });
-    }
   }
 }, true);
