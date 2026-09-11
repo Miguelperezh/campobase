@@ -6,6 +6,9 @@ const FRAME_TITLE = 'Creador de ejercicios CampoBase';
 
 function normalizedRecord(exercise, existing = null) {
   const now = Date.now();
+  const duration = Number(exercise.duration);
+  const reps = Number(exercise.reps);
+  const pause = Number(exercise.pause);
   return {
     ...(existing || {}),
     id: exercise.id || crypto.randomUUID(),
@@ -14,33 +17,38 @@ function normalizedRecord(exercise, existing = null) {
     customBoard: true,
     name: String(exercise.name || 'Ejercicio').trim(),
     category: CATEGORY,
-    difficulty: exercise.intensity || 'Media',
-    players: String(exercise.players || '').trim() || 'Adaptable',
-    duration: Math.max(1, Number(exercise.duration) || 10),
-    material: String(exercise.material || '').trim() || 'Según pizarra',
+    difficulty: String(exercise.intensity || '').trim(),
+    players: String(exercise.players || '').trim(),
+    duration: Number.isFinite(duration) && duration > 0 ? duration : 0,
+    material: String(exercise.material || '').trim(),
     space: 'Pizarra táctica',
-    description: String(exercise.description || exercise.objective || '').trim() || 'Ejercicio creado con la pizarra táctica de CampoBase.',
+    description: String(exercise.description || '').trim(),
     variants: '',
     objective: String(exercise.objective || '').trim(),
-    intensity: exercise.intensity || 'Media',
+    intensity: String(exercise.intensity || '').trim(),
     favorite: Boolean(existing?.favorite),
     boardSaveMode: exercise.saveMode || 'static',
-    boardStatic: exercise.staticBoard,
+    boardStatic: exercise.staticBoard ?? null,
     boardAnimation: exercise.animatedBoard || null,
     boardPreview: exercise.preview || '',
     boardCoverSourceType: exercise.coverSourceType || 'phase',
     boardCoverPhaseId: exercise.coverPhaseId || '',
-    boardCoverPhaseName: exercise.coverPhaseName || 'Plano fijo',
+    boardCoverPhaseName: exercise.coverPhaseName || '',
     boardCoverFrameProgress: Number(exercise.coverFrameProgress) || 0,
-    boardReps: Math.max(1, Number(exercise.reps) || 1),
-    boardPause: Math.max(0, Number(exercise.pause) || 0),
+    boardReps: Number.isFinite(reps) && reps > 0 ? reps : 0,
+    boardPause: Number.isFinite(pause) && pause >= 0 ? pause : 0,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
 }
 
 async function customExerciseRecords({ sync = false } = {}) {
-  if (sync) await syncFromCloud();
+  if (sync) {
+    const result = await syncFromCloud();
+    if (result?.online !== true || Number(result?.pending || 0) !== 0) {
+      throw new Error('No se ha podido confirmar la sincronización con Supabase.');
+    }
+  }
   const settings = await getAll('settings');
   return settings.filter((record) => record.recordType === 'exercise' && record.customBoard === true);
 }
@@ -50,9 +58,14 @@ async function persistExercise(exercise) {
   const existing = settings.find((record) => record.id === exercise.id) || null;
   const record = normalizedRecord(exercise, existing);
   await put('settings', record);
-  await syncFromCloud();
+
+  const syncResult = await syncFromCloud();
+  if (syncResult?.online !== true || Number(syncResult?.pending || 0) !== 0) {
+    throw new Error('El ejercicio no se ha podido confirmar en Supabase. No se cerrará el editor.');
+  }
+
   const verified = (await getAll('settings')).find((item) => item.id === record.id && item.customBoard === true);
-  if (!verified) throw new Error('CampoBase no pudo verificar el ejercicio guardado.');
+  if (!verified) throw new Error('Supabase no devolvió el ejercicio después de guardarlo.');
   return verified;
 }
 
@@ -151,7 +164,7 @@ async function handlePersistRequest(event, data) {
   } catch (error) {
     console.error('No se pudo persistir el ejercicio:', error);
     replyToBoard(event, { type: 'campobase:exercise-persist-failed', requestId, message: error?.message || String(error) });
-    if (!requestId) alert(`No se pudo guardar el ejercicio: ${error?.message || error}`);
+    alert(`No se pudo guardar el ejercicio: ${error?.message || error}`);
   }
 }
 
@@ -168,6 +181,7 @@ if (typeof window !== 'undefined') window.addEventListener('message', async (eve
       replyToBoard(event, { type: 'campobase:init-editor', exercises });
     } catch (error) {
       console.error('No se pudieron cargar Mis ejercicios:', error);
+      replyToBoard(event, { type: 'campobase:init-editor', exercises: [], error: error?.message || String(error) });
     }
   }
 }, true);
