@@ -3,23 +3,13 @@ const FRAME_TITLE = 'Creador de ejercicios CampoBase';
 const normalize = (value = '') => String(value).replace(/\s+/g, ' ').trim();
 
 function findInnerPlaybackButton(doc) {
-  return [...doc.querySelectorAll('button')].find((button) => {
-    const label = normalize(button.textContent);
-    return label.includes('Reproducir') || label.includes('Pausar');
-  }) || null;
-}
-
-function findLargestSvg(doc) {
-  const svgs = [...doc.querySelectorAll('svg')];
-  if (!svgs.length) return null;
-  return svgs
-    .map((svg) => {
-      const rect = svg.getBoundingClientRect();
-      const viewBox = svg.viewBox?.baseVal;
-      const score = Math.max(1, rect.width * rect.height, (viewBox?.width || 0) * (viewBox?.height || 0));
-      return { svg, score };
+  return doc.getElementById('phasePlay')
+    || doc.getElementById('viewPlay')
+    || [...doc.querySelectorAll('button')].find((button) => {
+      const label = normalize(button.textContent);
+      return label.includes('Reproducir') || label.includes('Pausar');
     })
-    .sort((a, b) => b.score - a.score)[0]?.svg || null;
+    || null;
 }
 
 function installInnerViewerStyle(doc) {
@@ -40,8 +30,18 @@ function fitBoardToViewport(frame) {
   if (!doc?.body?.classList?.contains('embedded-view')) return;
   installInnerViewerStyle(doc);
 
-  const svg = findLargestSvg(doc);
+  const svgs = [...doc.querySelectorAll('svg')];
+  if (!svgs.length) return;
+  const svg = svgs
+    .map((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      const viewBox = candidate.viewBox?.baseVal;
+      const score = Math.max(1, rect.width * rect.height, (viewBox?.width || 0) * (viewBox?.height || 0));
+      return { svg: candidate, score };
+    })
+    .sort((a, b) => b.score - a.score)[0]?.svg;
   if (!svg) return;
+
   svg.classList.add('campobase-view-board-svg');
   const host = svg.parentElement;
   host?.classList.add('campobase-view-board-host');
@@ -57,18 +57,30 @@ function fitBoardToViewport(frame) {
   }
 }
 
+function runInnerPlayback(frame, attempt = 0) {
+  let doc;
+  try { doc = frame?.contentDocument; } catch { return; }
+  if (!doc) return;
+  const inner = findInnerPlaybackButton(doc);
+  if (inner && !inner.disabled) {
+    inner.click();
+    return;
+  }
+  if (attempt < 14) setTimeout(() => runInnerPlayback(frame, attempt + 1), 90);
+}
+
 function syncPlayLabel(frame, outerPlay) {
   let doc;
   try { doc = frame.contentDocument; } catch { return; }
-  const inner = doc ? findInnerPlaybackButton(doc) : null;
-  if (!inner) {
-    outerPlay.disabled = false;
-    outerPlay.textContent = '▶ Reproducir';
+  if (!doc) return;
+  const stop = doc.getElementById('phaseStop');
+  if (stop && !stop.disabled) {
+    outerPlay.disabled = true;
+    outerPlay.textContent = '▶ Reproduciendo…';
     return;
   }
-  const label = normalize(inner.textContent);
-  outerPlay.disabled = Boolean(inner.disabled);
-  outerPlay.textContent = label.includes('Pausar') ? '⏸ Pausar' : '▶ Reproducir';
+  outerPlay.disabled = false;
+  outerPlay.textContent = '▶ Reproducir';
 }
 
 function installOuterPlay(frame) {
@@ -77,41 +89,43 @@ function installOuterPlay(frame) {
   const modes = overlay.querySelector('.exercise-board-viewer-modes');
   if (!modes || modes.querySelector('.exercise-board-viewer-play')) return;
 
+  const movement = modes.querySelector('[data-board-view="movement"]');
   const play = document.createElement('button');
   play.type = 'button';
   play.className = 'secondary exercise-board-viewer-play';
   play.textContent = '▶ Reproducir';
-  play.setAttribute('aria-label', 'Reproducir o pausar movimiento');
+  play.setAttribute('aria-label', 'Reproducir movimiento');
+  play.hidden = Boolean(movement?.hidden);
   modes.append(play);
 
+  if (movement) {
+    const syncVisibility = () => { play.hidden = Boolean(movement.hidden); };
+    new MutationObserver(syncVisibility).observe(movement, { attributes: true, attributeFilter: ['hidden', 'style'] });
+  }
+
   play.addEventListener('click', () => {
-    let doc;
-    try { doc = frame.contentDocument; } catch { return; }
-    const movement = modes.querySelector('[data-board-view="movement"]');
+    if (movement?.hidden) return;
     if (movement && movement.getAttribute('aria-pressed') !== 'true') movement.click();
-    setTimeout(() => {
-      const inner = doc ? findInnerPlaybackButton(doc) : null;
-      inner?.click();
-      setTimeout(() => syncPlayLabel(frame, play), 0);
-    }, 80);
+    runInnerPlayback(frame);
+    setTimeout(() => syncPlayLabel(frame, play), 180);
+    setTimeout(() => syncPlayLabel(frame, play), 650);
+    setTimeout(() => syncPlayLabel(frame, play), 1700);
   });
 
-  const update = () => syncPlayLabel(frame, play);
-  setTimeout(update, 0);
-  setTimeout(update, 120);
-  setTimeout(update, 350);
+  setTimeout(() => syncPlayLabel(frame, play), 0);
+  setTimeout(() => syncPlayLabel(frame, play), 200);
 }
 
 function hideInnerPlayback(frame) {
   let doc;
   try { doc = frame.contentDocument; } catch { return; }
   if (!doc?.body?.classList?.contains('embedded-view')) return;
-  const inner = findInnerPlaybackButton(doc);
-  if (!inner) return;
-  inner.style.setProperty('display', 'none', 'important');
-  inner.hidden = true;
-  inner.tabIndex = -1;
-  inner.setAttribute('aria-hidden', 'true');
+  [doc.getElementById('viewPlay'), doc.getElementById('phasePlay')].filter(Boolean).forEach((inner) => {
+    inner.style.setProperty('display', 'none', 'important');
+    inner.hidden = true;
+    inner.tabIndex = -1;
+    inner.setAttribute('aria-hidden', 'true');
+  });
 }
 
 function patchFrame(frame) {
