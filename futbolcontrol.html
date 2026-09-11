@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173f35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FútbolControl</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7f5f0}
+    #futbolcontrol-app{display:block;width:100%;height:100dvh;border:0;background:#f7f5f0}
+  </style>
+</head>
+<body>
+  <iframe id="futbolcontrol-app" src="index.html" title="FútbolControl"></iframe>
+  <script>
+    (() => {
+      const frame = document.getElementById('futbolcontrol-app');
+      const BRAND_FROM = 'CampoBase';
+      const BRAND_TO = 'FútbolControl';
+
+      function replaceText(value) {
+        return typeof value === 'string' ? value.replaceAll(BRAND_FROM, BRAND_TO) : value;
+      }
+
+      function applyBrand(doc) {
+        if (!doc?.documentElement) return;
+        doc.title = BRAND_TO;
+        doc.documentElement.dataset.productBrand = 'futbolcontrol';
+
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+          const parent = node.parentElement;
+          if (!parent || ['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName)) continue;
+          const next = replaceText(node.nodeValue);
+          if (next !== node.nodeValue) node.nodeValue = next;
+        }
+
+        for (const el of doc.querySelectorAll('[title],[aria-label],[alt],[placeholder]')) {
+          for (const attr of ['title','aria-label','alt','placeholder']) {
+            if (!el.hasAttribute(attr)) continue;
+            const current = el.getAttribute(attr);
+            const next = replaceText(current);
+            if (next !== current) el.setAttribute(attr, next);
+          }
+        }
+
+        const styleId = 'futbolcontrol-brand-style';
+        if (!doc.getElementById(styleId)) {
+          const style = doc.createElement('style');
+          style.id = styleId;
+          style.textContent = `
+            .topbar-brand h1{font-weight:850;letter-spacing:-.025em}
+            .fc-wordmark-positive{color:#171717}
+            .fc-wordmark-negative{color:#fff}
+          `;
+          doc.head.appendChild(style);
+        }
+        doc.querySelector('.topbar-brand h1')?.classList.add('fc-wordmark-positive');
+      }
+
+      frame.addEventListener('load', () => {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        applyBrand(doc);
+        const observer = new MutationObserver(() => applyBrand(doc));
+        observer.observe(doc.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['title','aria-label','alt','placeholder'] });
+      });
+    })();
+  </script>
+</body>
+</html>
