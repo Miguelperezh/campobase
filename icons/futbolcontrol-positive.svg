@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="160" viewBox="0 0 760 160" role="img" aria-labelledby="title desc">
+  <title id="title">FútbolControl</title>
+  <desc id="desc">Logotipo positivo de FútbolControl para fondos claros</desc>
+  <g fill="none" fill-rule="evenodd">
+    <rect x="8" y="8" width="144" height="144" rx="34" fill="#173F35"/>
+    <rect x="29" y="34" width="102" height="72" rx="4" stroke="#D8F06A" stroke-width="6"/>
+    <path d="M80 34v72M29 61h16v24H29m102-24h-16v24h16" stroke="#D8F06A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="80" cy="70" r="15" stroke="#D8F06A" stroke-width="6"/>
+    <text x="182" y="102" fill="#171717" font-family="Inter, Arial, Helvetica, sans-serif" font-size="62" font-weight="800" letter-spacing="-2">Fútbol</text>
+    <text x="370" y="102" fill="#C8102E" font-family="Inter, Arial, Helvetica, sans-serif" font-size="62" font-weight="800" letter-spacing="-2">Control</text>
+  </g>
+</svg>
