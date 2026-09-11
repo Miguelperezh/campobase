@@ -1,4 +1,4 @@
-import { syncFromCloud, getAll, put } from './db.js';
+import { syncFromCloud, getAll } from './db.js';
 
 const BUTTON_ID = 'manual-refresh';
 
@@ -35,12 +35,14 @@ if (typeof document !== 'undefined') {
 
 const CATEGORY = 'Mis ejercicios';
 const OPEN_AFTER_SAVE_KEY = 'campobase.openMyExercises';
+const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 let customExercises = new Map();
 let overlay;
 let frame;
 let pendingViewer = null;
 let boardObjectUrl = '';
 let boardHtmlPromise = null;
+
 async function getBoardHtml() {
   if (!boardHtmlPromise) {
     boardHtmlPromise = (async () => {
@@ -67,9 +69,11 @@ function ensureOverlay() {
     .exercise-board-overlay{position:fixed;inset:0;z-index:1200;background:#f7f5f0;display:none}
     .exercise-board-overlay.open{display:block}
     .exercise-board-overlay iframe{width:100%;height:100%;border:0;background:#f7f5f0;display:block}
-    .custom-board-preview{overflow:hidden;border-radius:14px;background:#15533a;aspect-ratio:16/10}
+    .custom-board-preview{overflow:hidden;border-radius:14px;background:#15533a;aspect-ratio:16/10;margin-top:.65rem}
     .custom-board-preview svg{width:100%;height:100%;display:block}
     .custom-board-motion-pill{margin-left:.35rem}
+    .custom-board-card .exercise-highlights{margin-top:.75rem}
+    .custom-board-card .custom-board-preview{max-height:360px}
   `;
   document.head.append(style);
   overlay = document.createElement('div');
@@ -111,6 +115,33 @@ function ensureCategoryOption() {
   if (select.lastElementChild !== option) select.append(option);
 }
 
+function customBoardCardMarkup(record) {
+  const hasMovement = Boolean(record.boardAnimation?.phases?.length > 1);
+  const highlights = [
+    record.players ? `<span class="player-count">👥 ${escapeHtml(record.players)}</span>` : '',
+    Number(record.duration) > 0 ? `<span class="pill accent">${Number(record.duration)} min</span>` : '',
+    '<span class="meta">Pizarra táctica</span>',
+  ].filter(Boolean).join('');
+  const metadata = [
+    record.material ? `<p><strong>Material:</strong> ${escapeHtml(record.material)}</p>` : '',
+    record.intensity ? `<p><strong>Intensidad:</strong> ${escapeHtml(record.intensity)}</p>` : '',
+    record.objective ? `<p><strong>Objetivo:</strong> ${escapeHtml(record.objective)}</p>` : '',
+    record.description ? `<p>${escapeHtml(record.description)}</p>` : '',
+  ].filter(Boolean).join('');
+  const preview = record.boardPreview
+    ? `<details class="diagram-details" open><summary>Plano de pizarra</summary><div class="custom-board-preview">${record.boardPreview}</div></details>`
+    : '';
+  const movementButton = hasMovement
+    ? `<button type="button" class="view-exercise-motion secondary" data-exercise-id="${escapeHtml(record.id)}">Ver movimiento</button>`
+    : '';
+  return `
+    <div class="exercise-card-head"><div><span class="pill">Mis ejercicios</span>${hasMovement ? '<span class="pill accent custom-board-motion-pill">▶ Movimiento</span>' : ''}<h3>${escapeHtml(record.name || 'Ejercicio')}</h3></div><button type="button" class="favorite-exercise ${record.favorite ? 'active' : ''}" data-id="${escapeHtml(record.id)}" aria-label="${record.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${record.favorite ? '★' : '☆'}</button></div>
+    ${highlights ? `<div class="exercise-highlights">${highlights}</div>` : ''}
+    ${metadata}
+    ${preview}
+    <div class="button-row"><button type="button" class="view-exercise secondary" data-exercise-id="${escapeHtml(record.id)}">Ver</button>${movementButton}<button type="button" class="add-exercise-to-session primary" data-id="${escapeHtml(record.id)}">Añadir a sesión</button><button type="button" class="delete-exercise danger" data-id="${escapeHtml(record.id)}">Borrar</button></div>`;
+}
+
 function patchExerciseCards() {
   const list = document.getElementById('exercises-list');
   if (!list || !customExercises.size) return;
@@ -120,20 +151,8 @@ function patchExerciseCards() {
     const record = customExercises.get(id);
     if (!record || card.dataset.customBoardPatched === '1') return;
     card.dataset.customBoardPatched = '1';
-    card.querySelector('.edit-exercise')?.remove();
-    const details = card.querySelector('.diagram-details');
-    if (details && record.boardPreview) {
-      details.innerHTML = `<summary>Gráfico tipo pizarra</summary><div class="custom-board-preview">${record.boardPreview}</div>`;
-    }
-    if (record.boardAnimation?.phases?.length > 1) {
-      const head = card.querySelector('.exercise-card-head > div');
-      if (head && !head.querySelector('.custom-board-motion-pill')) {
-        const pill = document.createElement('span');
-        pill.className = 'pill accent custom-board-motion-pill';
-        pill.textContent = '▶ Movimiento';
-        head.insertBefore(pill, head.querySelector('h3'));
-      }
-    }
+    card.classList.add('custom-board-card');
+    card.innerHTML = customBoardCardMarkup(record);
   });
 }
 
@@ -165,49 +184,6 @@ async function openViewer(record, version = 'static') {
   frame.src = `${boardObjectUrl}#embedded=1&mode=view`;
 }
 
-function normalizedRecord(exercise) {
-  const now = Date.now();
-  return {
-    id: exercise.id || crypto.randomUUID(),
-    recordType: 'exercise',
-    example: false,
-    customBoard: true,
-    name: String(exercise.name || 'Ejercicio').trim(),
-    category: CATEGORY,
-    difficulty: exercise.intensity || 'Media',
-    players: String(exercise.players || '').trim() || 'Adaptable',
-    duration: Math.max(1, Number(exercise.duration) || 10),
-    material: String(exercise.material || '').trim() || 'Según pizarra',
-    space: 'Pizarra táctica',
-    description: String(exercise.description || exercise.objective || '').trim() || 'Ejercicio creado con la pizarra táctica de CampoBase.',
-    variants: '',
-    objective: String(exercise.objective || '').trim(),
-    intensity: exercise.intensity || 'Media',
-    favorite: false,
-    boardSaveMode: exercise.saveMode || 'static',
-    boardStatic: exercise.staticBoard,
-    boardAnimation: exercise.animatedBoard || null,
-    boardPreview: exercise.preview || '',
-    boardCoverSourceType: exercise.coverSourceType || 'phase',
-    boardCoverPhaseId: exercise.coverPhaseId || '',
-    boardCoverPhaseName: exercise.coverPhaseName || 'Plano fijo',
-    boardCoverFrameProgress: Number(exercise.coverFrameProgress) || 0,
-    boardReps: Math.max(1, Number(exercise.reps) || 1),
-    boardPause: Math.max(0, Number(exercise.pause) || 0),
-    createdAt: customExercises.get(exercise.id)?.createdAt ?? now,
-    updatedAt: now,
-  };
-}
-
-async function saveFromBoard(exercise, stayOpen = false) {
-  const record = normalizedRecord(exercise);
-  await put('settings', { ...customExercises.get(record.id), ...record });
-  customExercises.set(record.id, record);
-  if (stayOpen) return;
-  try { sessionStorage.setItem(OPEN_AFTER_SAVE_KEY, '1'); } catch { /* sin bloqueo */ }
-  window.location.reload();
-}
-
 function handleBoardMessage(event) {
   if (!frame || event.source !== frame.contentWindow) return;
   const data = event.data || {};
@@ -215,19 +191,8 @@ function handleBoardMessage(event) {
     closeOverlay();
     return;
   }
-  if (data.type === 'campobase:exercise-board-ready') {
-    if (data.mode === 'create') {
-      frame.contentWindow.postMessage({ type: 'campobase:init-editor', exercises: [...customExercises.values()] }, '*');
-    } else if (data.mode === 'view' && pendingViewer) {
-      frame.contentWindow.postMessage({ type: 'campobase:load-exercise', exercise: pendingViewer.record, version: pendingViewer.version }, '*');
-    }
-    return;
-  }
-  if (data.type === 'campobase:exercise-saved' && data.exercise) {
-    saveFromBoard(data.exercise, Boolean(data.stayOpen)).catch((error) => {
-      console.error(error);
-      alert(`No se pudo guardar el ejercicio: ${error.message || error}`);
-    });
+  if (data.type === 'campobase:exercise-board-ready' && data.mode === 'view' && pendingViewer) {
+    frame.contentWindow.postMessage({ type: 'campobase:load-exercise', exercise: pendingViewer.record, version: pendingViewer.version }, '*');
   }
 }
 
@@ -237,6 +202,15 @@ function interceptClicks(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
     openCreator().catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el creador.'); });
+    return;
+  }
+  const movementButton = event.target.closest('.view-exercise-motion[data-exercise-id]');
+  if (movementButton) {
+    const record = customExercises.get(movementButton.dataset.exerciseId);
+    if (!record) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openViewer(record, 'movement').catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el movimiento.'); });
     return;
   }
   const viewButton = event.target.closest('.view-exercise[data-exercise-id], .session-exercise-link[data-exercise-id]');
