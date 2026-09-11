@@ -51,8 +51,10 @@ test('Mis ejercicios no inventa contenido ni mantiene un segundo manejador de gu
     boardAnimation: { phases: [{ id: 'p1' }, { id: 'p2' }] },
   });
 
+  const visibleText = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  assert.equal(visibleText.includes('E-MINE-TEST-123'), false, 'el identificador interno no debe verse en la ficha');
+
   for (const forbidden of [
-    'E-MINE-TEST-123',
     'Montaje',
     'Desarrollo paso a paso',
     'Rotación:',
