@@ -1527,11 +1527,17 @@ body.cb-redesign-active .today-pending {
   }
 
   body.cb-redesign-active .topbar-brand h1 {
-    font-size: 0.95rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 130px !important;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    word-break: break-word !important;
   }
 
   body.cb-redesign-active .topbar-brand p {
