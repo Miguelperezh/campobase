@@ -18,10 +18,9 @@ function triggerEmbeddedMode(mode) {
   if (!frame?.contentDocument) return false;
   const doc = frame.contentDocument;
   if (!doc.body?.classList?.contains('embedded-view')) return false;
-  const selector = mode === 'movement'
+  const target = doc.querySelector(mode === 'movement'
     ? '[data-embedded-view="animated"]'
-    : '[data-embedded-view="static"]';
-  const target = doc.querySelector(selector);
+    : '[data-embedded-view="static"]');
   if (!target) return false;
   target.click();
   setOuterMode(mode);
@@ -42,63 +41,13 @@ function installOuterModeBridge() {
   }, true);
 }
 
-function patchEmbeddedViewer(doc) {
+function hideOnlyDuplicateInnerBar(doc) {
   if (!doc?.body?.classList?.contains('embedded-view')) return;
-
-  if (!doc.getElementById('campobase-readonly-view-layout')) {
-    const style = doc.createElement('style');
-    style.id = 'campobase-readonly-view-layout';
-    style.textContent = `
-      body.embedded-view .embedded-view-controls{display:none!important}
-      body.embedded-view .topbar{display:none!important}
-      body.embedded-view .phase3-shell{display:none!important}
-      body.embedded-view #closeBoardView{display:none!important}
-      body.embedded-view .board-help,
-      body.embedded-view .bottom-note{display:none!important}
-      body.embedded-view .editor-shell{
-        width:100%!important;
-        max-width:min(1120px,calc((100dvh - 110px)*1.6))!important;
-        margin:0 auto!important;
-        padding:6px 8px!important;
-        gap:6px!important;
-      }
-      body.embedded-view .center{gap:6px!important}
-      body.embedded-view #boardViewBanner:not(.hidden){
-        min-height:42px!important;
-        padding:7px 10px!important;
-        font-size:11px!important;
-        border-radius:10px!important;
-      }
-      body.embedded-view #viewPlay:not(.hidden){
-        display:inline-flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        min-height:38px!important;
-        height:38px!important;
-        padding:0 14px!important;
-        border-radius:9px!important;
-        font-size:11px!important;
-        font-weight:900!important;
-      }
-      body.embedded-view .legend{
-        margin:0!important;
-        padding:5px 7px!important;
-        gap:6px!important;
-        border-radius:10px!important;
-      }
-      body.embedded-view .legend-item{font-size:9.5px!important}
-      body.embedded-view .legend-line{width:32px!important}
-      body.embedded-view .board-card{padding:6px!important;border-radius:12px!important}
-      body.embedded-view .board-wrap{border-radius:10px!important}
-    `;
-    doc.head.append(style);
-  }
-
-  const duplicateControls = doc.querySelector('.embedded-view-controls');
-  if (duplicateControls) {
-    duplicateControls.hidden = true;
-    duplicateControls.setAttribute('aria-hidden', 'true');
-  }
+  const duplicateBar = doc.querySelector('.embedded-view-controls');
+  if (!duplicateBar) return;
+  duplicateBar.hidden = true;
+  duplicateBar.setAttribute('aria-hidden', 'true');
+  duplicateBar.style.setProperty('display', 'none', 'important');
 }
 
 function patchViewerFrame(frame) {
@@ -109,12 +58,11 @@ function patchViewerFrame(frame) {
     let doc;
     try { doc = frame.contentDocument; } catch { return; }
     if (!doc) return;
-
-    const apply = () => patchEmbeddedViewer(doc);
-    apply();
-    setTimeout(apply, 0);
-    setTimeout(apply, 80);
-    setTimeout(apply, 250);
+    const clean = () => hideOnlyDuplicateInnerBar(doc);
+    clean();
+    setTimeout(clean, 0);
+    setTimeout(clean, 80);
+    setTimeout(clean, 250);
   });
 }
 
