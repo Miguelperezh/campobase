@@ -11,19 +11,39 @@
   <link rel="icon" href="icons/icon-192.svg">
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-redesign.css">
 </head>
 <body class="auth-locked">
   <header class="topbar">
-    <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1>CampoBase</h1></div></div>
+    <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
     <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label">Local</span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
   </header>
   <div class="search-bar"><input id="global-search" type="search" placeholder="Buscar por nombre o palabra…" aria-label="Buscar en la pestaña actual" autocomplete="off"></div>
 
   <main id="app" tabindex="-1">
-    <section id="plantilla" class="view active" aria-labelledby="title-plantilla">
+    <section id="hoy" class="view active" aria-labelledby="title-hoy">
+      <div class="section-head today-section-head">
+        <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
+        <button type="button" class="secondary today-refresh">Actualizar</button>
+      </div>
+      <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
+    </section>
+
+    <section id="plantilla" class="view" aria-labelledby="title-plantilla">
       <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><button data-dialog="player-dialog" class="primary">+ Jugador</button></div>
       <article id="demo-team-panel" class="panel hidden"><h3>Equipo de demostración</h3><p class="meta">Esta información es temporal, no se sincroniza y se elimina al cerrar la demo o al cumplirse dos horas.</p><form id="demo-team-form"><label>Nombre del equipo de prueba<input name="teamName" maxlength="100" required placeholder="Ej. Equipo de prueba"></label><label>Formato<select name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo de prueba</button></form></article>
       <div id="squad-stats" class="stats"></div><div id="players-list" class="card-grid"></div>
+    </section>
+
+    <section id="cuerpo-tecnico" class="view" aria-labelledby="title-cuerpo-tecnico">
+      <div class="section-head">
+        <div><p class="eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
+        <div class="button-row">
+          <span class="badge staff-count-badge" id="staff-total-count">0 miembros</span>
+          <button type="button" id="new-staff-btn" class="primary">+ Añadir técnico</button>
+        </div>
+      </div>
+      <div id="staff-list-container" class="staff-container"></div>
     </section>
 
     <section id="convocatorias" class="view" aria-labelledby="title-callups">
@@ -89,6 +109,64 @@
     <section id="ajustes" class="view" aria-labelledby="title-settings">
       <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
       <div class="settings-grid">
+        <article class="panel">
+          <h3>Identidad del club</h3>
+          <p class="meta">Personaliza el escudo y nombre de tu equipo para toda la aplicación.</p>
+          <div class="club-identity-customizer">
+            <div class="crest-preview-box">
+              <img id="preview-crest-thumb" src="icons/escudo.png" alt="Escudo actual" class="crest-preview-img">
+            </div>
+            <div class="crest-actions-col">
+              <input type="file" id="crest-file-input" accept="image/*" class="hidden">
+              <input type="hidden" id="club-crest-value" value="icons/escudo.png">
+              <button type="button" class="secondary compact" id="upload-crest-btn">Subir escudo (PNG / JPG)</button>
+              <button type="button" class="ghost compact" id="reset-crest-btn">Restaurar escudo por defecto</button>
+            </div>
+          </div>
+        </article>
+        <article class="panel">
+          <h3>Preferencias visuales y tema</h3>
+          <p class="meta">Adapta el aspecto visual según tus condiciones de uso en el campo o despacho.</p>
+          <form id="theme-settings-form">
+            <div class="theme-field-group">
+              <label>Tono de fondo de la app</label>
+              <div class="theme-bg-chips" role="radiogroup" aria-label="Fondo de la app">
+                <button type="button" class="theme-bg-btn active" data-bg="default">Campo Esmeralda</button>
+                <button type="button" class="theme-bg-btn" data-bg="dark">Modo Noche Profundo</button>
+                <button type="button" class="theme-bg-btn" data-bg="light">Alto Contraste Claro</button>
+                <button type="button" class="theme-bg-btn" data-bg="slate">Pizarra Púrpura</button>
+              </div>
+              <input type="hidden" id="theme-bg-select" value="default">
+            </div>
+            <div class="theme-field-group">
+              <label>Color de acento del club</label>
+              <div class="theme-color-swatches">
+                <button type="button" class="color-swatch-btn active" data-color="#10b981" data-preset="emerald" style="background:#10b981" title="Verde Viera"></button>
+                <button type="button" class="color-swatch-btn" data-color="#2563eb" data-preset="blue" style="background:#2563eb" title="Azul Real"></button>
+                <button type="button" class="color-swatch-btn" data-color="#e02444" data-preset="red" style="background:#e02444" title="Rojo Pasión"></button>
+                <button type="button" class="color-swatch-btn" data-color="#f59e0b" data-preset="gold" style="background:#f59e0b" title="Dorado Campeón"></button>
+                <input type="color" id="theme-accent-color" value="#10b981" title="Color personalizado">
+              </div>
+              <input type="hidden" id="theme-accent-preset" value="emerald">
+            </div>
+            <div class="form-row">
+              <label>Tamaño de texto en listas
+                <select id="theme-font-scale">
+                  <option value="normal" selected>Estándar</option>
+                  <option value="large">Grande (+15% para sol/campo)</option>
+                  <option value="compact">Compacto</option>
+                </select>
+              </label>
+              <label>Legibilidad de fuentes
+                <select id="theme-text-color">
+                  <option value="dark-slate" selected>Contraste óptimo</option>
+                  <option value="high-contrast">Máxima nitidez en exteriores</option>
+                </select>
+              </label>
+            </div>
+            <button class="primary" type="submit">Guardar preferencias visuales</button>
+          </form>
+        </article>
         <article class="panel"><h3>Equipo y modalidad</h3><form id="team-settings-form"><label>Nombre de mi equipo<input name="teamName" maxlength="100" required placeholder="Ej. Unión Viera Alevín D"></label><label>Formato<select id="format" name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo</button></form><p class="meta">F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p></article>
         <article class="panel"><h3>Copia de seguridad</h3><p>Supabase sincroniza los dispositivos e IndexedDB conserva una caché para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
@@ -130,8 +208,74 @@
 
   <dialog id="confirmation-dialog"><div class="dialog-head"><h2 id="confirmation-title">Confirmar acción</h2></div><p id="confirmation-message"></p><div class="button-row"><button id="confirmation-accept" type="button" class="primary">Confirmar</button><button id="confirmation-cancel" type="button" class="secondary">Cancelar</button></div></dialog>
 
+  <dialog id="staff-dialog">
+    <form id="staff-form">
+      <div class="dialog-head">
+        <h2>Ficha de Cuerpo Técnico</h2>
+        <button type="button" data-close aria-label="Cerrar">×</button>
+      </div>
+      <input name="id" type="hidden">
+      <input name="existingPhoto" type="hidden">
+
+      <div class="form-row">
+        <div class="staff-photo-field">
+          <label>Foto (cámara o galería)
+            <input name="photoFile" type="file" accept="image/*" capture="environment">
+          </label>
+          <div class="staff-preview-wrapper">
+            <img id="staff-photo-preview" src="" alt="Vista previa" class="staff-preview-img hidden">
+            <button type="button" id="staff-remove-photo-btn" class="ghost-danger compact">Eliminar foto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Nombre y apellidos
+          <input name="name" required maxlength="80" placeholder="Ej. Carlos Morales" autocomplete="off">
+        </label>
+        <label>Cargo / Rol
+          <select name="role" required>
+            <option value="head_coach">Primer Entrenador</option>
+            <option value="assistant_coach">Segundo Entrenador</option>
+            <option value="goalkeeper_coach">Preparador de Porteros</option>
+            <option value="fitness_coach">Preparador Físico</option>
+            <option value="team_delegate">Delegado de Equipo</option>
+            <option value="pitch_delegate">Delegado de Campo</option>
+            <option value="physio">Fisioterapeuta / Médico</option>
+            <option value="rehab">Readaptador Físico</option>
+            <option value="analyst">Analista Táctico</option>
+            <option value="kitman">Encargado de Material</option>
+            <option value="other">Otro cargo (personalizado)</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="staff-custom-role-group" class="form-row hidden">
+        <label>Especificar cargo personalizado
+          <input name="customRole" maxlength="60" placeholder="Ej. Coach Emocional / Nutricionista">
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>Teléfono móvil (llamadas y WhatsApp)
+          <input name="phone" type="tel" maxlength="30" placeholder="Ej. +34 600 000 000" autocomplete="tel">
+        </label>
+      </div>
+
+      <label>Notas internas / Titulación / Licencia
+        <textarea name="notes" maxlength="1000" placeholder="Ej. UEFA Pro, contacto de emergencia, disponibilidad horaria..."></textarea>
+      </label>
+
+      <div class="button-row">
+        <button class="primary" type="submit">Guardar perfil</button>
+        <button type="button" class="secondary" data-close>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
   <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/redesign-nav.js"></script>
 </body>
 </html>

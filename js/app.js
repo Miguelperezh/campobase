@@ -223,6 +223,8 @@ async function refresh() {
   $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.format.value = state.format;
+  applyTeamIdentity();
+  applyCustomTheme();
   if (!isUserInteracting()) renderAll();
 }
 
@@ -270,9 +272,24 @@ function renderPlayers() {
       return `<li class="history-row"><span class="history-date">${escapeHtml(localDate(item.date))}</span><span class="history-type">${typeLabel}</span><span class="history-detail">${escapeHtml(detail)}</span></li>`;
     }).join('');
     const incidentRows = playerIncidentRows(player.id).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.label)}${item.note ? `: ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-player-incident" data-key="${escapeHtml(item.key)}" aria-label="Borrar incidencia">×</button></li>`).join('');
+    const playerTotalMinutes = summary.minutes + preseasonSummary.minutes;
+    const maxMinutes = Math.max(1, ...Array.from(playerSummaryTotals.values()).map((v) => v.summary.minutes + v.preseasonSummary.minutes));
+    const minutePercent = Math.min(100, Math.round((playerTotalMinutes / maxMinutes) * 100));
+
     return `<article class="card player">
-    <div class="player-head">${playerCardPhoto(player)}<div class="player-name"><h3>${escapeHtml(player.name)}</h3><p>Ficha de plantilla</p></div><div class="liga-media" title="Media de liga"><span class="valor">${summary.averageRating ?? '—'}</span><span class="etiqueta">Media</span></div><div class="player-actions"><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div></div>
-    <div class="player-body"><div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(player.number || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div><details class="player-performance"><summary>Ver actividad y estadísticas</summary><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}</details></div>
+    <div class="player-head">
+      <div class="player-identity">${playerCardPhoto(player)}<div class="player-name"><h3>${escapeHtml(player.name)}</h3><p>Ficha de plantilla</p></div></div>
+      <div class="player-head-right">
+        <div class="liga-media" title="Media de liga"><span class="valor">${summary.averageRating ?? '—'}</span><span class="etiqueta">Media</span></div>
+        <div class="player-actions"><button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button><button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button></div>
+      </div>
+    </div>
+    <div class="player-body">
+      <div class="player-minute-bar" title="${playerTotalMinutes} min disputados (${minutePercent}% sobre el máximo)">
+        <div class="player-minute-meta"><span>Minutos disputados</span><span>${playerTotalMinutes} min (${minutePercent}%)</span></div>
+        <div class="player-minute-track"><div class="player-minute-fill" style="width:${minutePercent}%"></div></div>
+      </div>
+      <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(player.number || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div><details class="player-performance"><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
 }
@@ -2579,17 +2596,214 @@ async function importData(event) {
   try { const backup = validateBackup(JSON.parse(await file.text())); if (!await askConfirmation({ title: 'Importar copia', message: 'La importación sustituirá todos los datos locales.', acceptLabel: 'Importar y sustituir', danger: true })) return; await importDatabase(backup); state.timer = null; await refresh(); toast('Copia importada correctamente.'); } catch (error) { console.error(error); toast(`No se pudo importar: ${error.message}`); } finally { event.target.value = ''; }
 }
 
+function applyTeamIdentity(settings = state.settings) {
+  const crestImg = $('#topbar-club-crest');
+  const previewThumb = $('#preview-crest-thumb');
+  const teamHeading = $('#topbar-team-name');
+  const crestSrc = settings?.clubCrest || 'icons/escudo.png';
+  if (crestImg) crestImg.src = crestSrc;
+  if (previewThumb) previewThumb.src = crestSrc;
+  const crestHidden = $('#club-crest-value');
+  if (crestHidden && settings?.clubCrest) crestHidden.value = settings.clubCrest;
+  if (settings?.teamName) {
+    if (teamHeading) teamHeading.textContent = settings.teamName;
+    const formInput = $('#team-settings-form')?.elements.teamName;
+    if (formInput && formInput.value !== settings.teamName) formInput.value = settings.teamName;
+  }
+}
+
+function applyCustomTheme(theme = state.settings?.theme) {
+  if (!theme) {
+    try {
+      theme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    } catch {
+      theme = {};
+    }
+  }
+  const body = document.body;
+  if (!body) return;
+
+  if (theme.themeBg && theme.themeBg !== 'default') {
+    body.setAttribute('data-theme-bg', theme.themeBg);
+  } else {
+    body.removeAttribute('data-theme-bg');
+  }
+
+  if (theme.accentColor) {
+    body.style.setProperty('--cb-pitch-600', theme.accentColor);
+    body.style.setProperty('--cb-pitch-700', theme.accentColor);
+    body.style.setProperty('--cb-brand', theme.accentColor);
+  } else {
+    body.style.removeProperty('--cb-pitch-600');
+    body.style.removeProperty('--cb-pitch-700');
+    body.style.removeProperty('--cb-brand');
+  }
+
+  if (theme.textColor && theme.textColor !== 'dark-slate') {
+    body.setAttribute('data-theme-font', theme.textColor);
+  } else {
+    body.removeAttribute('data-theme-font');
+  }
+
+  if (theme.fontScale && theme.fontScale !== 'normal') {
+    body.setAttribute('data-font-scale', theme.fontScale);
+  } else {
+    body.removeAttribute('data-font-scale');
+  }
+
+  const themeForm = $('#theme-settings-form');
+  if (themeForm) {
+    if (theme.themeBg && themeForm.elements.themeBg) themeForm.elements.themeBg.value = theme.themeBg;
+    if (theme.accentPreset && themeForm.elements.accentPreset) themeForm.elements.accentPreset.value = theme.accentPreset;
+    if (theme.accentColor && themeForm.elements.accentColor) themeForm.elements.accentColor.value = theme.accentColor;
+    if (theme.textColor && themeForm.elements.textColor) themeForm.elements.textColor.value = theme.textColor;
+    if (theme.fontScale && themeForm.elements.fontScale) themeForm.elements.fontScale.value = theme.fontScale;
+  }
+}
+
 async function saveTeamSettings(event) {
   event.preventDefault();
-  if (state.role !== 'owner') return toast('Solo Migue puede cambiar los ajustes del equipo.');
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede cambiar los ajustes del equipo.');
   const values = formObject(event.currentTarget);
   const teamName = values.teamName.trim();
   if (!teamName) return toast('Escribe el nombre de tu equipo.');
   state.format = values.format;
-  state.settings = { ...state.settings, id: 'main', format: state.format, teamName };
+  const clubCrest = $('#club-crest-value')?.value || state.settings?.clubCrest || '';
+  state.settings = { ...state.settings, id: 'main', format: state.format, teamName, clubCrest };
   await put('settings', state.settings);
+  applyTeamIdentity(state.settings);
   renderAll();
-  toast('Nombre y modalidad del equipo guardados.');
+  toast('Identidad y modalidad del equipo guardadas.');
+}
+
+async function saveThemeSettings(event) {
+  event.preventDefault();
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede cambiar las preferencias visuales.');
+  const form = event.currentTarget;
+  const values = formObject(form);
+  const theme = {
+    themeBg: values.themeBg || 'default',
+    accentPreset: values.accentPreset || 'emerald',
+    accentColor: values.accentColor || '#10b981',
+    textColor: values.textColor || 'dark-slate',
+    fontScale: values.fontScale || 'normal',
+  };
+  state.settings = { ...state.settings, id: 'main', theme };
+  await put('settings', state.settings);
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(theme));
+  } catch {}
+  applyCustomTheme(theme);
+  toast('Preferencias visuales y tema guardados.');
+}
+
+function initCustomizationListeners() {
+  const uploadBtn = $('#upload-crest-btn');
+  const fileInput = $('#crest-file-input');
+  const resetBtn = $('#reset-crest-btn');
+  const crestHidden = $('#club-crest-value');
+  const previewThumb = $('#preview-crest-thumb');
+  const topbarCrest = $('#topbar-club-crest');
+
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        return toast('La imagen no debe superar 2 MB.');
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        if (crestHidden) crestHidden.value = dataUrl;
+        if (previewThumb) previewThumb.src = dataUrl;
+        if (topbarCrest) topbarCrest.src = dataUrl;
+        toast('Escudo cargado. Pulsa "Guardar identidad" para confirmarlo.');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (crestHidden) crestHidden.value = 'icons/escudo.png';
+      if (previewThumb) previewThumb.src = 'icons/escudo.png';
+      if (topbarCrest) topbarCrest.src = 'icons/escudo.png';
+      toast('Escudo restaurado por defecto.');
+    });
+  }
+
+  const themeForm = $('#theme-settings-form');
+  if (themeForm) {
+    themeForm.addEventListener('submit', (e) => saveThemeSettings(e).catch(handleError));
+    const accentPreset = $('#theme-accent-preset');
+    const accentColorInput = $('#theme-accent-color');
+    const PRESETS = {
+      emerald: '#10b981',
+      blue: '#2563eb',
+      red: '#e02444',
+      gold: '#f59e0b',
+    };
+    if (accentPreset && accentColorInput) {
+      accentPreset.addEventListener('change', () => {
+        if (PRESETS[accentPreset.value]) {
+          accentColorInput.value = PRESETS[accentPreset.value];
+        }
+      });
+    }
+
+    // Chips de fondo de la app
+    $$('.theme-bg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $$('.theme-bg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const bgVal = btn.dataset.bg;
+        const hiddenInput = $('#theme-bg-select');
+        if (hiddenInput) hiddenInput.value = bgVal;
+        applyCustomTheme({ ...state.settings?.theme, themeBg: bgVal });
+      });
+    });
+
+    // Swatches de color de acento
+    $$('.color-swatch-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $$('.color-swatch-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const color = btn.dataset.color;
+        const preset = btn.dataset.preset;
+        const presetInput = $('#theme-accent-preset');
+        const colorInput = $('#theme-accent-color');
+        if (presetInput) presetInput.value = preset;
+        if (colorInput) colorInput.value = color;
+        applyCustomTheme({ ...state.settings?.theme, accentColor: color, accentPreset: preset });
+      });
+    });
+
+    accentColorInput?.addEventListener('input', () => {
+      applyCustomTheme({ ...state.settings?.theme, accentColor: accentColorInput.value, accentPreset: 'custom' });
+    });
+
+    $('#theme-text-color')?.addEventListener('change', (e) => {
+      applyCustomTheme({ ...state.settings?.theme, textColor: e.target.value });
+    });
+
+    $('#theme-font-scale')?.addEventListener('change', (e) => {
+      applyCustomTheme({ ...state.settings?.theme, fontScale: e.target.value });
+    });
+  }
+
+  // Delegación para replegar estadísticas con el botón al final del desplegable
+  document.addEventListener('click', (e) => {
+    const collapseBtn = e.target.closest('.collapse-stats-btn');
+    if (collapseBtn) {
+      const details = collapseBtn.closest('details.player-performance');
+      if (details) {
+        details.open = false;
+        details.closest('.card.player')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  });
 }
 
 async function saveDemoTeam(event) {
@@ -2807,6 +3021,7 @@ function wireEvents() {
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
   $('#demo-team-form').addEventListener('submit', (event) => saveDemoTeam(event).catch(handleError));
+  initCustomizationListeners();
   $('#new-callup').addEventListener('click', () => callupBuilder()); $('#new-training').addEventListener('click', () => attendanceBuilder()); $('#new-session').addEventListener('click', () => sessionBuilder()); $('#new-session-exercises').addEventListener('click', () => { showView('sesiones'); sessionBuilder(); }); $('#new-tactic').addEventListener('click', () => tacticBuilder());
   $('#exercise-filters').addEventListener('input', renderExercises);
   $('#exercise-filters').addEventListener('change', renderExercises);
@@ -3151,10 +3366,25 @@ async function init() {
   await ensureRealExercisesSeeded();
   await ensureSlideshareSeeded();
   await ensureLegacyExercisesNotPresent();
-  await refresh(); const live = await getOne('settings', 'live'); state.timer = live?.timer ?? null; state.liveUpdatedAt = live?.updatedAt ?? 0; await reapplyPreparacionToTimer(); renderLive(); renderDelegate();
+  await refresh();
+  const live = await getOne('settings', 'live');
+  state.timer = live?.timer ?? null;
+  state.liveUpdatedAt = live?.updatedAt ?? 0;
+  await reapplyPreparacionToTimer();
+  renderLive();
+  renderDelegate();
   if (!await restoreSessionRole()) showAuth();
+  if (typeof window !== 'undefined' && window.location) {
+    const params = new URLSearchParams(window.location.search);
+    const requestedView = params.get('view');
+    if (requestedView) showView(requestedView);
+  }
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
+}
+
+if (typeof window !== 'undefined') {
+  window.__campobase = { refresh, renderAll, showView, get state() { return state; } };
 }
 
 init().catch(handleError);

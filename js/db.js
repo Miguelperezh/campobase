@@ -72,7 +72,7 @@ function requestResult(request) {
   });
 }
 
-function transactionDone(transaction) {
+export function transactionDone(transaction) {
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
