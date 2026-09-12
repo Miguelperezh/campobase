@@ -12,6 +12,22 @@
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="styles-redesign.css">
+  <script>
+    try {
+      const t = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+      const r = document.documentElement;
+      if (t.themeBg && t.themeBg !== 'default') r.setAttribute('data-theme-bg', t.themeBg);
+      if (t.fontFamily && t.fontFamily !== 'system') r.setAttribute('data-theme-family', t.fontFamily);
+      if (t.fontScale && t.fontScale !== 'normal') r.setAttribute('data-font-scale', t.fontScale);
+      if (t.fontWeight && t.fontWeight !== 'normal') r.setAttribute('data-font-weight', t.fontWeight);
+      if (t.textColor && t.textColor !== 'dark-slate') r.setAttribute('data-theme-font', t.textColor);
+      if (t.accentColor) {
+        r.style.setProperty('--cb-pitch-600', t.accentColor);
+        r.style.setProperty('--cb-pitch-700', t.accentColor);
+        r.style.setProperty('--cb-brand', t.accentColor);
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body class="auth-locked">
   <header class="topbar">
@@ -131,13 +147,18 @@
             <div class="theme-field-group">
               <label>Tono de fondo de la app</label>
               <div class="theme-bg-chips" role="radiogroup" aria-label="Fondo de la app">
-                <button type="button" class="theme-bg-btn active" data-bg="default">Campo Esmeralda</button>
-                <button type="button" class="theme-bg-btn" data-bg="dark">Modo Noche Profundo</button>
-                <button type="button" class="theme-bg-btn" data-bg="light">Alto Contraste Claro</button>
-                <button type="button" class="theme-bg-btn" data-bg="slate">Pizarra Púrpura</button>
+                <button type="button" class="theme-bg-btn active" data-bg="default"><span class="theme-chip-dot" style="background:#0a251b"></span>Campo Esmeralda</button>
+                <button type="button" class="theme-bg-btn" data-bg="dark"><span class="theme-chip-dot" style="background:#080d0a"></span>Noche OLED Profundo</button>
+                <button type="button" class="theme-bg-btn" data-bg="light"><span class="theme-chip-dot" style="background:#ffffff;border:1px solid #cbd5e1"></span>Luz Solar / Blanco</button>
+                <button type="button" class="theme-bg-btn" data-bg="navy"><span class="theme-chip-dot" style="background:#0c1e3d"></span>Pizarra Azul Marino</button>
+                <button type="button" class="theme-bg-btn" data-bg="charcoal"><span class="theme-chip-dot" style="background:#18181b"></span>Gris Carbón Pro</button>
+                <button type="button" class="theme-bg-btn" data-bg="warm"><span class="theme-chip-dot" style="background:#f6f3eb;border:1px solid #dcd7cb"></span>Arena Marfil Cálida</button>
+                <button type="button" class="theme-bg-btn" data-bg="pitch-vivid"><span class="theme-chip-dot" style="background:#032917"></span>Césped Intenso</button>
+                <button type="button" class="theme-bg-btn" data-bg="high-vis"><span class="theme-chip-dot" style="background:#000000;border:1px solid #facc15"></span>Negro Contraste Sol</button>
               </div>
               <input type="hidden" id="theme-bg-select" name="themeBg" value="default">
             </div>
+
             <div class="theme-field-group">
               <label>Color de acento del club</label>
               <div class="theme-color-swatches">
@@ -145,25 +166,57 @@
                 <button type="button" class="color-swatch-btn" data-color="#2563eb" data-preset="blue" style="background:#2563eb" title="Azul Real"></button>
                 <button type="button" class="color-swatch-btn" data-color="#e02444" data-preset="red" style="background:#e02444" title="Rojo Pasión"></button>
                 <button type="button" class="color-swatch-btn" data-color="#f59e0b" data-preset="gold" style="background:#f59e0b" title="Dorado Campeón"></button>
+                <button type="button" class="color-swatch-btn" data-color="#ea580c" data-preset="orange" style="background:#ea580c" title="Naranja Fuego"></button>
+                <button type="button" class="color-swatch-btn" data-color="#7c3aed" data-preset="purple" style="background:#7c3aed" title="Morado / Violeta"></button>
+                <button type="button" class="color-swatch-btn" data-color="#0284c7" data-preset="cyan" style="background:#0284c7" title="Celeste Unión"></button>
+                <button type="button" class="color-swatch-btn" data-color="#18181b" data-preset="black" style="background:#18181b" title="Negro Ónix"></button>
                 <input type="color" id="theme-accent-color" name="accentColor" value="#10b981" title="Color personalizado">
               </div>
               <input type="hidden" id="theme-accent-preset" name="accentPreset" value="emerald">
             </div>
+
             <div class="form-row">
-              <label>Tamaño de texto en listas
-                <select id="theme-font-scale" name="fontScale">
-                  <option value="normal" selected>Estándar</option>
-                  <option value="large">Grande (+15% para sol/campo)</option>
-                  <option value="compact">Compacto</option>
+              <label>Familia tipográfica / Fuente
+                <select id="theme-font-family" name="fontFamily">
+                  <option value="system" selected>Sistema moderna (San Francisco / Roboto)</option>
+                  <option value="sport">Deportiva de estadio (Titulares compactos)</option>
+                  <option value="readable">Máxima legibilidad (Inter / Nitidez en campo)</option>
+                  <option value="technical">Pizarra técnica (Monospace / Táctico)</option>
+                  <option value="classic">Clásica editorial (Serif / Informes)</option>
                 </select>
               </label>
-              <label>Legibilidad de fuentes
-                <select id="theme-text-color" name="textColor">
-                  <option value="dark-slate" selected>Contraste óptimo</option>
-                  <option value="high-contrast">Máxima nitidez en exteriores</option>
+              <label>Tamaño de texto en listas y fichas
+                <select id="theme-font-scale" name="fontScale">
+                  <option value="normal" selected>Normal / Estándar (100%)</option>
+                  <option value="large">Grande (+15% lectura cómoda)</option>
+                  <option value="xlarge">Muy grande (+30% banquillo)</option>
+                  <option value="huge">Gigante para sol directo (+50%)</option>
+                  <option value="ultra">Ultra accesible (+75% máxima visibilidad)</option>
+                  <option value="compact">Compacto (-10%)</option>
                 </select>
               </label>
             </div>
+
+            <div class="form-row">
+              <label>Grosor de texto y negrita
+                <select id="theme-font-weight" name="fontWeight">
+                  <option value="normal">Normal / Equilibrado</option>
+                  <option value="semibold">Seminegrita reforzada (600)</option>
+                  <option value="bold" selected>Negrita de campo (700 - Recomendado sol)</option>
+                  <option value="ultra-bold">Ultra negrita (800/900 - Máximo contraste)</option>
+                </select>
+              </label>
+              <label>Legibilidad y contraste de fuentes
+                <select id="theme-text-color" name="textColor">
+                  <option value="dark-slate" selected>Contraste óptimo (Gris pizarra)</option>
+                  <option value="pure-black">Negro puro 100% (Máxima nitidez exterior)</option>
+                  <option value="high-contrast">Contraste extremo para sol directo</option>
+                  <option value="navy">Azul noche técnico (#0a1c36)</option>
+                  <option value="pure-white">Blanco puro (Para fondos oscuros)</option>
+                </select>
+              </label>
+            </div>
+
             <button class="primary" type="submit">Guardar preferencias visuales</button>
           </form>
         </article>

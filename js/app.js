@@ -2620,44 +2620,97 @@ function applyCustomTheme(theme = state.settings?.theme) {
       theme = {};
     }
   }
+  const root = document.documentElement;
   const body = document.body;
   if (!body) return;
 
-  if (theme.themeBg && theme.themeBg !== 'default') {
-    body.setAttribute('data-theme-bg', theme.themeBg);
+  // 1. Tono de fondo (data-theme-bg)
+  const bg = theme.themeBg || 'default';
+  if (bg && bg !== 'default') {
+    root.setAttribute('data-theme-bg', bg);
+    body.setAttribute('data-theme-bg', bg);
   } else {
+    root.removeAttribute('data-theme-bg');
     body.removeAttribute('data-theme-bg');
   }
 
+  // 2. Color de acento del club
   if (theme.accentColor) {
+    root.style.setProperty('--cb-pitch-600', theme.accentColor);
+    root.style.setProperty('--cb-pitch-700', theme.accentColor);
+    root.style.setProperty('--cb-brand', theme.accentColor);
     body.style.setProperty('--cb-pitch-600', theme.accentColor);
     body.style.setProperty('--cb-pitch-700', theme.accentColor);
     body.style.setProperty('--cb-brand', theme.accentColor);
   } else {
+    root.style.removeProperty('--cb-pitch-600');
+    root.style.removeProperty('--cb-pitch-700');
+    root.style.removeProperty('--cb-brand');
     body.style.removeProperty('--cb-pitch-600');
     body.style.removeProperty('--cb-pitch-700');
     body.style.removeProperty('--cb-brand');
   }
 
-  if (theme.textColor && theme.textColor !== 'dark-slate') {
-    body.setAttribute('data-theme-font', theme.textColor);
+  // 3. Familia tipográfica (data-theme-family)
+  const family = theme.fontFamily || 'system';
+  if (family && family !== 'system') {
+    root.setAttribute('data-theme-family', family);
+    body.setAttribute('data-theme-family', family);
   } else {
-    body.removeAttribute('data-theme-font');
+    root.removeAttribute('data-theme-family');
+    body.removeAttribute('data-theme-family');
   }
 
-  if (theme.fontScale && theme.fontScale !== 'normal') {
-    body.setAttribute('data-font-scale', theme.fontScale);
+  // 4. Tamaño / Escala de fuentes (data-font-scale)
+  const scale = theme.fontScale || 'normal';
+  if (scale && scale !== 'normal') {
+    root.setAttribute('data-font-scale', scale);
+    body.setAttribute('data-font-scale', scale);
   } else {
+    root.removeAttribute('data-font-scale');
     body.removeAttribute('data-font-scale');
   }
 
+  // 5. Grosor / Negritas (data-font-weight)
+  const weight = theme.fontWeight || 'bold';
+  if (weight && weight !== 'normal') {
+    root.setAttribute('data-font-weight', weight);
+    body.setAttribute('data-font-weight', weight);
+  } else {
+    root.removeAttribute('data-font-weight');
+    body.removeAttribute('data-font-weight');
+  }
+
+  // 6. Color y contraste de textos (data-theme-font)
+  const textColor = theme.textColor || 'dark-slate';
+  if (textColor && textColor !== 'dark-slate') {
+    root.setAttribute('data-theme-font', textColor);
+    body.setAttribute('data-theme-font', textColor);
+  } else {
+    root.removeAttribute('data-theme-font');
+    body.removeAttribute('data-theme-font');
+  }
+
+  // Sincronizar controles en el formulario si está renderizado
   const themeForm = $('#theme-settings-form');
   if (themeForm) {
-    if (theme.themeBg && themeForm.elements.themeBg) themeForm.elements.themeBg.value = theme.themeBg;
-    if (theme.accentPreset && themeForm.elements.accentPreset) themeForm.elements.accentPreset.value = theme.accentPreset;
-    if (theme.accentColor && themeForm.elements.accentColor) themeForm.elements.accentColor.value = theme.accentColor;
-    if (theme.textColor && themeForm.elements.textColor) themeForm.elements.textColor.value = theme.textColor;
-    if (theme.fontScale && themeForm.elements.fontScale) themeForm.elements.fontScale.value = theme.fontScale;
+    if (themeForm.elements.themeBg) themeForm.elements.themeBg.value = bg;
+    if (themeForm.elements.accentPreset && theme.accentPreset) themeForm.elements.accentPreset.value = theme.accentPreset;
+    if (themeForm.elements.accentColor && theme.accentColor) themeForm.elements.accentColor.value = theme.accentColor;
+    if (themeForm.elements.fontFamily && theme.fontFamily) themeForm.elements.fontFamily.value = theme.fontFamily;
+    if (themeForm.elements.fontScale && theme.fontScale) themeForm.elements.fontScale.value = theme.fontScale;
+    if (themeForm.elements.fontWeight && theme.fontWeight) themeForm.elements.fontWeight.value = theme.fontWeight;
+    if (themeForm.elements.textColor && theme.textColor) themeForm.elements.textColor.value = theme.textColor;
+
+    // Actualizar clase activa en chips de fondo
+    $$('.theme-bg-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.bg === bg);
+    });
+
+    // Actualizar clase activa en swatches de color
+    $$('.color-swatch-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.preset === theme.accentPreset || btn.dataset.color === theme.accentColor);
+    });
   }
 }
 
@@ -2685,8 +2738,10 @@ async function saveThemeSettings(event) {
     themeBg: values.themeBg || 'default',
     accentPreset: values.accentPreset || 'emerald',
     accentColor: values.accentColor || '#10b981',
-    textColor: values.textColor || 'dark-slate',
+    fontFamily: values.fontFamily || 'system',
     fontScale: values.fontScale || 'normal',
+    fontWeight: values.fontWeight || 'bold',
+    textColor: values.textColor || 'dark-slate',
   };
   state.settings = { ...state.settings, id: 'main', theme };
   await put('settings', state.settings);
@@ -2744,52 +2799,91 @@ function initCustomizationListeners() {
       blue: '#2563eb',
       red: '#e02444',
       gold: '#f59e0b',
+      orange: '#ea580c',
+      purple: '#7c3aed',
+      cyan: '#0284c7',
+      black: '#18181b',
     };
-    if (accentPreset && accentColorInput) {
-      accentPreset.addEventListener('change', () => {
-        if (PRESETS[accentPreset.value]) {
-          accentColorInput.value = PRESETS[accentPreset.value];
-        }
-      });
-    }
 
-    // Chips de fondo de la app
+    const updateThemeProperty = (prop, val) => {
+      const currentTheme = {
+        themeBg: 'default',
+        accentPreset: 'emerald',
+        accentColor: '#10b981',
+        fontFamily: 'system',
+        fontScale: 'normal',
+        fontWeight: 'bold',
+        textColor: 'dark-slate',
+        ...state.settings?.theme,
+        [prop]: val,
+      };
+      if (state.settings) state.settings.theme = currentTheme;
+      try {
+        localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+      } catch {}
+      applyCustomTheme(currentTheme);
+    };
+
+    // Chips de fondo de la app (reactivo al instante)
     $$('.theme-bg-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        $$('.theme-bg-btn').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
         const bgVal = btn.dataset.bg;
         const hiddenInput = $('#theme-bg-select');
         if (hiddenInput) hiddenInput.value = bgVal;
-        applyCustomTheme({ ...state.settings?.theme, themeBg: bgVal });
+        updateThemeProperty('themeBg', bgVal);
       });
     });
 
     // Swatches de color de acento
     $$('.color-swatch-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        $$('.color-swatch-btn').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
         const color = btn.dataset.color;
         const preset = btn.dataset.preset;
         const presetInput = $('#theme-accent-preset');
         const colorInput = $('#theme-accent-color');
         if (presetInput) presetInput.value = preset;
         if (colorInput) colorInput.value = color;
-        applyCustomTheme({ ...state.settings?.theme, accentColor: color, accentPreset: preset });
+        const currentTheme = {
+          ...state.settings?.theme,
+          accentColor: color,
+          accentPreset: preset,
+        };
+        if (state.settings) state.settings.theme = currentTheme;
+        try {
+          localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+        } catch {}
+        applyCustomTheme(currentTheme);
       });
     });
 
     accentColorInput?.addEventListener('input', () => {
-      applyCustomTheme({ ...state.settings?.theme, accentColor: accentColorInput.value, accentPreset: 'custom' });
+      const color = accentColorInput.value;
+      const currentTheme = {
+        ...state.settings?.theme,
+        accentColor: color,
+        accentPreset: 'custom',
+      };
+      if (state.settings) state.settings.theme = currentTheme;
+      try {
+        localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+      } catch {}
+      applyCustomTheme(currentTheme);
     });
 
-    $('#theme-text-color')?.addEventListener('change', (e) => {
-      applyCustomTheme({ ...state.settings?.theme, textColor: e.target.value });
+    $('#theme-font-family')?.addEventListener('change', (e) => {
+      updateThemeProperty('fontFamily', e.target.value);
     });
 
     $('#theme-font-scale')?.addEventListener('change', (e) => {
-      applyCustomTheme({ ...state.settings?.theme, fontScale: e.target.value });
+      updateThemeProperty('fontScale', e.target.value);
+    });
+
+    $('#theme-font-weight')?.addEventListener('change', (e) => {
+      updateThemeProperty('fontWeight', e.target.value);
+    });
+
+    $('#theme-text-color')?.addEventListener('change', (e) => {
+      updateThemeProperty('textColor', e.target.value);
     });
   }
 
