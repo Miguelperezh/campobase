@@ -136,7 +136,7 @@
                 <button type="button" class="theme-bg-btn" data-bg="light">Alto Contraste Claro</button>
                 <button type="button" class="theme-bg-btn" data-bg="slate">Pizarra Púrpura</button>
               </div>
-              <input type="hidden" id="theme-bg-select" value="default">
+              <input type="hidden" id="theme-bg-select" name="themeBg" value="default">
             </div>
             <div class="theme-field-group">
               <label>Color de acento del club</label>
@@ -145,20 +145,20 @@
                 <button type="button" class="color-swatch-btn" data-color="#2563eb" data-preset="blue" style="background:#2563eb" title="Azul Real"></button>
                 <button type="button" class="color-swatch-btn" data-color="#e02444" data-preset="red" style="background:#e02444" title="Rojo Pasión"></button>
                 <button type="button" class="color-swatch-btn" data-color="#f59e0b" data-preset="gold" style="background:#f59e0b" title="Dorado Campeón"></button>
-                <input type="color" id="theme-accent-color" value="#10b981" title="Color personalizado">
+                <input type="color" id="theme-accent-color" name="accentColor" value="#10b981" title="Color personalizado">
               </div>
-              <input type="hidden" id="theme-accent-preset" value="emerald">
+              <input type="hidden" id="theme-accent-preset" name="accentPreset" value="emerald">
             </div>
             <div class="form-row">
               <label>Tamaño de texto en listas
-                <select id="theme-font-scale">
+                <select id="theme-font-scale" name="fontScale">
                   <option value="normal" selected>Estándar</option>
                   <option value="large">Grande (+15% para sol/campo)</option>
                   <option value="compact">Compacto</option>
                 </select>
               </label>
               <label>Legibilidad de fuentes
-                <select id="theme-text-color">
+                <select id="theme-text-color" name="textColor">
                   <option value="dark-slate" selected>Contraste óptimo</option>
                   <option value="high-contrast">Máxima nitidez en exteriores</option>
                 </select>
