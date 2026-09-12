@@ -3,8 +3,8 @@ const FRAME_TITLE = 'Creador de ejercicios CampoBase';
 const normalize = (value = '') => String(value).replace(/\s+/g, ' ').trim();
 
 function findInnerPlaybackButton(doc) {
-  return doc.getElementById('phasePlay')
-    || doc.getElementById('viewPlay')
+  return doc.getElementById('viewPlay')
+    || doc.getElementById('phasePlay')
     || [...doc.querySelectorAll('button')].find((button) => {
       const label = normalize(button.textContent);
       return label.includes('Reproducir') || label.includes('Pausar');
