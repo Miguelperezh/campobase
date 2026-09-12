@@ -3,8 +3,8 @@ import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
 import './exercise-board-persistence.js?v=2473';
 import './runtime-refresh.js?v=2473';
-import './exercise-viewer-controls.js?v=2473';
-import './exercise-viewer-layout.js?v=2474';
+import './exercise-viewer-controls.js?v=2475';
+import './exercise-viewer-layout.js?v=2475';
 import { CLOUD_TABLES } from './sync-core.js';
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
