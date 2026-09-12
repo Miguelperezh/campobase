@@ -231,7 +231,7 @@ async function hydrateCustomExercises({ attempts = 1 } = {}) {
     let cloudReady = false;
     for (let attempt = 0; attempt < Math.max(1, attempts); attempt += 1) {
       const result = await syncFromCloud().catch(() => null);
-      if (result?.online === true || result?.demo === true) { cloudReady = true; break; }
+      if (result?.online === true) { cloudReady = true; break; }
       if (attempt < attempts - 1) await delay(150);
     }
     const records = await readCustomExercises();

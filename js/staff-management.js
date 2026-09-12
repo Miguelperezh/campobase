@@ -46,7 +46,20 @@ export async function getStaffMembers() {
 }
 
 export async function saveStaffMember(data) {
-  const id = data.id || `staff-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  if (!data || typeof data !== 'object') {
+    throw new TypeError('Los datos del miembro del cuerpo técnico son obligatorios.');
+  }
+
+  let id;
+  if (data.id !== undefined && data.id !== null && data.id !== '') {
+    if (typeof data.id !== 'string' || !data.id.startsWith('staff-')) {
+      throw new Error('Identificador no válido: el ID de un miembro del cuerpo técnico debe comenzar obligatoriamente por "staff-".');
+    }
+    id = data.id;
+  } else {
+    id = `staff-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
   const roleMeta = getRoleMeta(data.role);
   const record = {
     id,
@@ -71,6 +84,9 @@ export async function saveStaffMember(data) {
 }
 
 export async function deleteStaffMember(id) {
+  if (typeof id !== 'string' || !id.startsWith('staff-')) {
+    throw new Error('Identificador no válido: solo se pueden eliminar registros cuyo ID comience por "staff-".');
+  }
   await remove('settings', id);
 }
 
