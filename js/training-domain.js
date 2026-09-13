@@ -20,6 +20,38 @@ export const EXERCISE_CATEGORIES = Object.freeze([
 
 export const EXERCISE_DIFFICULTIES = Object.freeze(['Baja', 'Media', 'Alta']);
 
+export const CANONICAL_MATERIALS = Object.freeze([
+  { id: 'balon', label: 'Balones de fútbol' },
+  { id: 'cono', label: 'Conos y chinos' },
+  { id: 'porteria', label: 'Porterías' },
+  { id: 'miniporteria', label: 'Miniporterías' },
+  { id: 'pica', label: 'Picas y postes' },
+  { id: 'valla', label: 'Vallas' },
+  { id: 'aro', label: 'Aros' },
+  { id: 'escalera', label: 'Escalera de agilidad' },
+  { id: 'peto', label: 'Petos' },
+  { id: 'colchoneta', label: 'Colchonetas' },
+  { id: 'elastica', label: 'Bandas elásticas / Gomas' },
+  { id: 'step', label: 'Step' },
+  { id: 'medicinal', label: 'Balón medicinal' },
+  { id: 'tenis', label: 'Pelotas de tenis' },
+]);
+
+export const PLAYER_COUNT_OPTIONS = Object.freeze([
+  { id: '1-2', label: '1–2 jugadores (Individual / Parejas)', min: 1, max: 2 },
+  { id: '3-4', label: '3–4 jugadores (Grupo reducido)', min: 3, max: 4 },
+  { id: '5-6', label: '5–6 jugadores (Rondos pequeños)', min: 5, max: 6 },
+  { id: '7-8', label: '7–8 jugadores (Líneas y duelos)', min: 7, max: 8 },
+  { id: '9-11', label: '9–11 jugadores (Equipo medio)', min: 9, max: 11 },
+  { id: '12-14', label: '12–14 jugadores (Plantilla F7)', min: 12, max: 14 },
+  { id: '15+', label: '15+ jugadores (Fútbol 11 / Grupos amplios)', min: 15, max: 99 },
+]);
+
+export const FORMAT_OPTIONS = Object.freeze([
+  { id: 'F7', label: 'Fútbol 7 (F7)' },
+  { id: 'F11', label: 'Fútbol 11 (F11)' },
+]);
+
 const playerTotal = (players) => Math.min(12, Math.max(2, Number(String(players).match(/\d+/)?.[0]) || 8));
 
 export function inferExerciseDiagram(values = {}) {
@@ -275,12 +307,63 @@ export function filterExercises(exercises, filters = {}) {
   if (!Array.isArray(exercises)) throw new TypeError('Los ejercicios deben ser una lista.');
   const material = clean(filters.material).toLocaleLowerCase('es');
   const players = clean(filters.players).toLocaleLowerCase('es');
-  return exercises.filter((item) => (!filters.category || item.category === filters.category)
-    && (!filters.difficulty || item.difficulty === filters.difficulty)
-    && (!filters.favorites || item.favorite)
-    && (!filters.video || Boolean(item.video))
-    && (!material || clean(item.material).toLocaleLowerCase('es').includes(material))
-    && (!players || clean(item.players).toLocaleLowerCase('es').includes(players)));
+  const format = clean(filters.format).toUpperCase();
+
+  return exercises.filter((item) => {
+    if (filters.category && item.category !== filters.category) return false;
+    if (filters.difficulty && item.difficulty !== filters.difficulty) return false;
+    if (filters.favorites && !item.favorite) return false;
+    if (filters.video && !item.video) return false;
+
+    // Filtro por formato F7 / F11
+    if (format) {
+      const text = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.space || ''}`.toLowerCase();
+      const numMatch = String(item.players || '').match(/\d+/);
+      const count = numMatch ? parseInt(numMatch[0], 10) : 8;
+      if (format === 'F7') {
+        const isF11Exclusive = count >= 16 && (text.includes('11x11') || text.includes('11v11') || text.includes('fútbol 11') || text.includes('f11'));
+        if (isF11Exclusive) return false;
+      } else if (format === 'F11') {
+        const isF7Exclusive = count <= 2 && (text.includes('parejas') || text.includes('sombreado') || text.includes('individual'));
+        if (isF7Exclusive) return false;
+      }
+    }
+
+    // Filtro por material
+    if (material) {
+      const itemMat = clean(item.material).toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const queryMat = material.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const matchMat = itemMat.includes(queryMat) ||
+        (queryMat === 'cono' && (itemMat.includes('cono') || itemMat.includes('chino'))) ||
+        (queryMat === 'balon' && (itemMat.includes('balon') || itemMat.includes('pelota'))) ||
+        (queryMat === 'porteria' && itemMat.includes('porteria')) ||
+        (queryMat === 'miniporteria' && itemMat.includes('miniporteria')) ||
+        (queryMat === 'pica' && (itemMat.includes('pica') || itemMat.includes('palo'))) ||
+        (queryMat === 'elastica' && (itemMat.includes('elastica') || itemMat.includes('goma')));
+      if (!matchMat) return false;
+    }
+
+    // Filtro por jugadores
+    if (players) {
+      const itemP = clean(item.players).toLocaleLowerCase('es');
+      if (itemP.includes(players)) return true;
+      const numMatch = itemP.match(/\d+/);
+      const count = numMatch ? parseInt(numMatch[0], 10) : null;
+      if (count !== null) {
+        if (players === '1-2' && (count >= 1 && count <= 2)) return true;
+        if (players === '3-4' && (count >= 3 && count <= 4)) return true;
+        if (players === '5-6' && (count >= 5 && count <= 6)) return true;
+        if (players === '7-8' && (count >= 7 && count <= 8)) return true;
+        if (players === '9-11' && (count >= 9 && count <= 11)) return true;
+        if (players === '12-14' && (count >= 12 && count <= 14)) return true;
+        if (players === '15+' && count >= 15) return true;
+        if (String(count) === players) return true;
+      }
+      return false;
+    }
+
+    return true;
+  });
 }
 
 export function buildTrainingSession(values, metadata = {}) {

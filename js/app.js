@@ -1,7 +1,7 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
-import { CANONICAL_V2_CATEGORIES, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
@@ -2113,6 +2113,7 @@ function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
   const filters = {
+    format: form.elements.format?.value || '',
     category: form.elements.category.value,
     players: form.elements.players.value,
     material: form.elements.material.value,
@@ -2143,8 +2144,8 @@ function editExercise(id) {
   const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
   if (!item) return;
   const form = $('#exercise-form');
-  for (const key of ['id', 'name', 'category', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
-    form.elements[key].value = item[key] ?? '';
+  for (const key of ['id', 'name', 'category', 'format', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
+    if (form.elements[key]) form.elements[key].value = item[key] ?? '';
   }
   $('#exercise-dialog').showModal();
 }
@@ -3820,6 +3821,31 @@ async function init() {
   const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
   $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
+
+  const exFilters = $('#exercise-filters');
+  if (exFilters) {
+    if (exFilters.elements.format) {
+      exFilters.elements.format.insertAdjacentHTML('beforeend', FORMAT_OPTIONS.map((f) => `<option value="${f.id}">${f.label}</option>`).join(''));
+    }
+    if (exFilters.elements.players) {
+      exFilters.elements.players.insertAdjacentHTML('beforeend', PLAYER_COUNT_OPTIONS.map((p) => `<option value="${p.id}">${p.label}</option>`).join(''));
+    }
+    if (exFilters.elements.material) {
+      exFilters.elements.material.insertAdjacentHTML('beforeend', CANONICAL_MATERIALS.map((m) => `<option value="${m.id}">${m.label}</option>`).join(''));
+    }
+  }
+
+  const exerciseMatHelper = $('#exercise-form-material-helper');
+  if (exerciseMatHelper) {
+    exerciseMatHelper.insertAdjacentHTML('beforeend', CANONICAL_MATERIALS.map((m) => `<option value="${m.label}">${m.label}</option>`).join(''));
+    exerciseMatHelper.addEventListener('change', () => {
+      const val = exerciseMatHelper.value;
+      if (!val) return;
+      const input = $('#exercise-form').elements.material;
+      input.value = input.value ? `${input.value}, ${val}` : val;
+      exerciseMatHelper.value = '';
+    });
+  }
   wireEvents(); networkStatus();
   configureCloudStore(createCampoBaseCloudStore());
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));

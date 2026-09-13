@@ -101,6 +101,21 @@ test('filtra ejercicios por categoría, jugadores, material, dificultad y favori
   assert.deepEqual(filterExercises(exercises, { material: 'conos' }).map(({ id }) => id), ['2']);
 });
 
+test('filtra ejercicios por formato F7/F11, materiales canónicos y rangos de jugadores', () => {
+  const exercises = [
+    { id: 'f7-1', name: 'Rondo 4v2', category: 'Pase y posesión', players: '6 jugadores', material: '8 conos + balones', difficulty: 'Media' },
+    { id: 'f11-1', name: 'Partido 11v11 táctico', category: 'Táctica', players: '22 jugadores', material: '2 porterías + balones', space: 'campo fútbol 11', difficulty: 'Alta' },
+    { id: 'ind-1', name: 'Agilidad individual', category: 'Coordinación y agilidad', players: '1 jugadores', material: 'escalera de agilidad', difficulty: 'Baja' },
+  ];
+  assert.deepEqual(filterExercises(exercises, { format: 'F7' }).map(({ id }) => id), ['f7-1', 'ind-1']);
+  assert.deepEqual(filterExercises(exercises, { format: 'F11' }).map(({ id }) => id), ['f7-1', 'f11-1']);
+  assert.deepEqual(filterExercises(exercises, { material: 'cono' }).map(({ id }) => id), ['f7-1']);
+  assert.deepEqual(filterExercises(exercises, { material: 'escalera' }).map(({ id }) => id), ['ind-1']);
+  assert.deepEqual(filterExercises(exercises, { players: '5-6' }).map(({ id }) => id), ['f7-1']);
+  assert.deepEqual(filterExercises(exercises, { players: '1-2' }).map(({ id }) => id), ['ind-1']);
+  assert.deepEqual(filterExercises(exercises, { players: '15+' }).map(({ id }) => id), ['f11-1']);
+});
+
 test('crea una sesión con calentamiento, dos o tres ejercicios y juego final', () => {
   const session = buildTrainingSession({
     date: '2026-09-03', name: 'Salida de balón', warmupId: 'warmup-training-10', warmupDuration: '10',

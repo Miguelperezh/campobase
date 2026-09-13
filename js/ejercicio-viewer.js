@@ -409,6 +409,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 
     <!-- Reproductor de animación con controles y zoom integrado -->
     <div class="exercise-video-wrap">
+      <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="position:relative">
         <video class="frame-video" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" playsinline muted loop preload="none"></video>
         <div class="video-overlay-play" title="Reproducir animación">
@@ -421,32 +422,54 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
         <input type="range" class="v-seek-bar" min="0" max="100" step="0.1" value="0" aria-label="Línea de tiempo de la animación">
       </div>
 
-      <!-- Controles tácticos: Play, 5s back/fwd, Loop, Velocidad, Zoom y Fullscreen -->
+      <!-- Selector interactivo de zonas para enfocar y ampliar -->
+      <div class="v-zones-bar" role="toolbar" aria-label="Zonas tácticas para enfocar y ampliar">
+        <span class="v-zones-label">🔍 Zona a ampliar:</span>
+        <div class="v-zones-track">
+          <button type="button" class="v-zone-chip active" data-zone="all" title="Todo el campo (vista general 100%)">🏟️ Todo (100%)</button>
+          <button type="button" class="v-zone-chip" data-zone="goal" title="Área rival / Portería / Finalización">🥅 Área / Gol</button>
+          <button type="button" class="v-zone-chip" data-zone="midfield" title="Centro del campo / Construcción">⚙️ Centro</button>
+          <button type="button" class="v-zone-chip" data-zone="defense" title="Zona defensiva / Inicio de jugada">🛡️ Defensa</button>
+          <button type="button" class="v-zone-chip" data-zone="left" title="Banda izquierda">◀ Banda Izq</button>
+          <button type="button" class="v-zone-chip" data-zone="right" title="Banda derecha">▶ Banda Der</button>
+        </div>
+      </div>
+
+      <!-- Controles tácticos: Organizados en 2 filas fijas, compactas y siempre visibles -->
       <div class="v-controls-bar">
-        <div class="v-controls-left">
-          <button type="button" class="v-btn v-btn-play primary" title="Reproducir / Pausar">▶</button>
-          <button type="button" class="v-btn v-btn-rewind" title="Retroceder 5 segundos">⏪ 5s</button>
-          <button type="button" class="v-btn v-btn-forward" title="Adelantar 5 segundos">5s ⏩</button>
-          <span class="v-time-display">00:00 / 00:00</span>
+        <!-- Fila 1: Reproducción, saltos 5s, tiempo, bucle y botón de pantalla completa -->
+        <div class="v-controls-row v-controls-playback-row">
+          <div class="v-controls-subgroup">
+            <button type="button" class="v-btn v-btn-play primary" title="Reproducir / Pausar">▶</button>
+            <button type="button" class="v-btn v-btn-rewind" title="Retroceder 5 segundos">⏪ 5s</button>
+            <button type="button" class="v-btn v-btn-forward" title="Adelantar 5 segundos">5s ⏩</button>
+            <span class="v-time-display">00:00 / 00:00</span>
+          </div>
+          <div class="v-controls-subgroup">
+            <button type="button" class="v-btn v-btn-loop active" title="Bucle continuo (repetir)" aria-label="Repetir en bucle">🔁</button>
+            <button type="button" class="v-btn v-btn-fullscreen" title="Ampliar a pantalla completa" aria-label="Ampliar a pantalla completa">⛶ <span class="v-btn-text">Ampliar</span></button>
+          </div>
         </div>
 
-        <div class="v-controls-right">
-          <!-- Selector de velocidad -->
-          <div class="v-speed-group" title="Velocidad de reproducción">
-            <button type="button" class="v-btn-speed" data-speed="0.5">0.5×</button>
-            <button type="button" class="v-btn-speed active" data-speed="1.0">1×</button>
-            <button type="button" class="v-btn-speed" data-speed="1.5">1.5×</button>
+        <!-- Fila 2: Velocidad y controles de zoom táctico con clamping -->
+        <div class="v-controls-row v-controls-tools-row">
+          <div class="v-tools-item">
+            <span class="v-tools-label">Velocidad:</span>
+            <div class="v-speed-group" title="Velocidad de reproducción">
+              <button type="button" class="v-btn-speed" data-speed="0.5">0.5×</button>
+              <button type="button" class="v-btn-speed active" data-speed="1.0">1×</button>
+              <button type="button" class="v-btn-speed" data-speed="1.5">1.5×</button>
+            </div>
           </div>
 
-          <!-- Controles de zoom táctico con clamping -->
-          <div class="v-zoom-group" title="Zoom táctico">
-            <button type="button" class="v-btn v-btn-zoom-out" title="Alejar zoom" aria-label="Alejar zoom">🔍−</button>
-            <button type="button" class="v-btn v-btn-zoom-reset" title="Restablecer zoom al 100%" aria-label="Restablecer zoom">100%</button>
-            <button type="button" class="v-btn v-btn-zoom-in" title="Acercar zoom" aria-label="Acercar zoom">🔍+</button>
+          <div class="v-tools-item">
+            <span class="v-tools-label">Zoom:</span>
+            <div class="v-zoom-group" title="Zoom táctico">
+              <button type="button" class="v-btn v-btn-zoom-out" title="Alejar zoom" aria-label="Alejar zoom">🔍−</button>
+              <button type="button" class="v-btn v-btn-zoom-reset" title="Restablecer zoom al 100%" aria-label="Restablecer zoom">100%</button>
+              <button type="button" class="v-btn v-btn-zoom-in" title="Acercar zoom" aria-label="Acercar zoom">🔍+</button>
+            </div>
           </div>
-
-          <button type="button" class="v-btn v-btn-loop active" title="Bucle continuo (repetir)" aria-label="Repetir en bucle">🔁</button>
-          <button type="button" class="v-btn v-btn-fullscreen" title="Ampliar a pantalla completa" aria-label="Ampliar a pantalla completa">⛶ <span class="v-btn-text">Ampliar</span></button>
         </div>
       </div>
     </div>
@@ -651,6 +674,9 @@ export function initValidatedExerciseViewer(root) {
   });
 
   // ZOOM Y PAN TÁCTICO CON CLAMPING
+  const zoneChips = root.querySelectorAll('.v-zone-chip');
+  const theaterExitBtn = root.querySelector('.theater-exit-btn');
+
   function clampPan() {
     if (zoom <= 1.0) {
       panX = 0;
@@ -676,9 +702,58 @@ export function initValidatedExerciseViewer(root) {
     if (zoom === 1.0) {
       panX = 0;
       panY = 0;
+      zoneChips.forEach((btn) => btn.classList.toggle('active', btn.dataset.zone === 'all'));
     }
     updateTransform();
   }
+
+  function focusZone(zoneKey) {
+    zoneChips.forEach((btn) => btn.classList.toggle('active', btn.dataset.zone === zoneKey));
+    if (zoneKey === 'all') {
+      applyZoom(1.0);
+      return;
+    }
+    zoom = 1.85;
+    const rect = stage ? stage.getBoundingClientRect() : { width: 360, height: 240 };
+    const maxPanX = (rect.width * (zoom - 1)) / 2;
+    const maxPanY = (rect.height * (zoom - 1)) / 2;
+
+    switch (zoneKey) {
+      case 'goal':
+        // Portería y área de finalización
+        panX = -maxPanX * 0.85;
+        panY = 0;
+        break;
+      case 'midfield':
+        // Centro del campo
+        panX = 0;
+        panY = 0;
+        break;
+      case 'defense':
+        // Zona defensiva y salida
+        panX = maxPanX * 0.85;
+        panY = 0;
+        break;
+      case 'left':
+        // Banda izquierda
+        panX = 0;
+        panY = maxPanY * 0.85;
+        break;
+      case 'right':
+        // Banda derecha
+        panX = 0;
+        panY = -maxPanY * 0.85;
+        break;
+    }
+    updateTransform();
+  }
+
+  zoneChips.forEach((chip) => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      focusZone(chip.dataset.zone);
+    });
+  });
 
   if (btnZoomIn) btnZoomIn.addEventListener('click', () => applyZoom(zoom + 0.25));
   if (btnZoomOut) btnZoomOut.addEventListener('click', () => applyZoom(zoom - 0.25));
@@ -748,14 +823,38 @@ export function initValidatedExerciseViewer(root) {
   }
 
   // Modo Teatro / Ampliar a pantalla completa
-  if (btnFullscreen) {
-    btnFullscreen.addEventListener('click', () => {
-      const wrap = root.querySelector('.exercise-video-wrap');
-      if (!wrap) return;
-      const isFull = wrap.classList.toggle('theater-fullscreen');
-      btnFullscreen.classList.toggle('active', isFull);
-      btnFullscreen.innerHTML = isFull ? '✕ <span class="v-btn-text">Reducir</span>' : '⛶ <span class="v-btn-text">Ampliar</span>';
-      applyZoom(1.0);
+  function toggleTheater(force) {
+    const wrap = root.querySelector('.exercise-video-wrap');
+    if (!wrap) return;
+    const dialog = root.closest('dialog') || document.querySelector('#exercise-detail-dialog');
+    const willBeFull = typeof force === 'boolean' ? force : !wrap.classList.contains('theater-fullscreen');
+    wrap.classList.toggle('theater-fullscreen', willBeFull);
+    if (dialog) {
+      dialog.classList.toggle('is-theater-active', willBeFull);
+    }
+    if (theaterExitBtn) theaterExitBtn.classList.toggle('hidden', !willBeFull);
+    if (btnFullscreen) {
+      btnFullscreen.classList.toggle('active', willBeFull);
+      btnFullscreen.innerHTML = willBeFull ? '✕ <span class="v-btn-text">Reducir</span>' : '⛶ <span class="v-btn-text">Ampliar</span>';
+    }
+    applyZoom(1.0);
+    zoneChips.forEach((btn) => btn.classList.toggle('active', btn.dataset.zone === 'all'));
+  }
+
+  if (btnFullscreen) btnFullscreen.addEventListener('click', () => toggleTheater());
+  if (theaterExitBtn) theaterExitBtn.addEventListener('click', () => toggleTheater(false));
+
+  const parentDialog = root.closest('dialog');
+  if (parentDialog) {
+    parentDialog.addEventListener('close', () => {
+      toggleTheater(false);
     });
   }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const wrap = root.querySelector('.exercise-video-wrap.theater-fullscreen');
+      if (wrap) toggleTheater(false);
+    }
+  });
 }
