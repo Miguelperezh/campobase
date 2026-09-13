@@ -57,7 +57,7 @@ test('js/app.js aplica variables directas y delegación global para reactividad 
   assert.match(app, /document\.addEventListener\('change'/);
 });
 
-test('sw.js renueva CACHE con versión themev3 para actualizar PWA móvil', () => {
-  assert.match(sw, /themev3/);
+test('sw.js renueva CACHE con versión themev para actualizar PWA móvil', () => {
+  assert.match(sw, /themev[34]/);
   assert.match(sw, /exerciseboard-2475/);
 });

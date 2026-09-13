@@ -324,5 +324,5 @@ function bind() {
 
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
-  else bind();
+  else queueMicrotask(bind);
 }

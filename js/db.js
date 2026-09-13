@@ -6,12 +6,12 @@ const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
 
-const databasePromises = new Map();
-let activeDatabaseName = REAL_DB_NAME;
-let demoSession = null;
-let demoStores = null;
-let cloudStore;
-let syncPromise;
+var databasePromises = new Map();
+var activeDatabaseName = REAL_DB_NAME;
+var demoSession = null;
+var demoStores = null;
+var cloudStore = null;
+var syncPromise = null;
 
 function notifyDataChanged(stores, operation = 'write') {
   if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;

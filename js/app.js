@@ -3030,7 +3030,6 @@ function initCustomizationListeners() {
       updateThemeProperty('textColor', e.target.value);
     }
   });
-}
 
   // Delegación para replegar estadísticas con el botón al final del desplegable
   document.addEventListener('click', (e) => {
