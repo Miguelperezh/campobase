@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Biblioteca V2 · Prueba Aislada (248 Ejercicios)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #091a14;
+      --card-bg: #112820;
+      --card-hover: #163328;
+      --surface: #143026;
+      --border: #1e4536;
+      --border-focus: #4ade80;
+      --text: #f0fdf4;
+      --text-muted: #86efac;
+      --text-dim: #4ade80b3;
+      --text-dimmer: #22c55e88;
+      --brand: #22c55e;
+      --brand-glow: rgba(34, 197, 94, 0.25);
+      --accent: #facc15;
+      --tag-bg: #19382c;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 90px;
+      -webkit-font-smoothing: antialiased;
+    }
+    header.topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(9, 26, 20, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-badge {
+      background: var(--brand);
+      color: #04140e;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .topbar-count {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .topbar-count strong {
+      font-size: 1.2rem;
+      color: var(--brand);
+    }
+    main.container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    /* Filtros y barra de búsqueda */
+    .controls-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .search-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 1rem 0 2.75rem;
+      background: #0d221a;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--brand-glow);
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 1.1rem;
+    }
+    .clear-btn {
+      height: 48px;
+      padding: 0 1.25rem;
+      background: #183a2d;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+    }
+    .clear-btn:hover {
+      background: #204b3a;
+    }
+    /* Filtros por Categoría Chips */
+    .categories-bar {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.35rem;
+      scrollbar-width: thin;
+    }
+    .cat-chip {
+      background: #0d221a;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .cat-chip:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+    .cat-chip.active {
+      background: var(--brand);
+      color: #04140e;
+      border-color: var(--brand);
+      font-weight: 800;
+    }
+    /* Filtros secundarios */
+    .secondary-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+    .filter-select {
+      height: 40px;
+      background: #0d221a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.82rem;
+      padding: 0 0.6rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      border-color: var(--border-focus);
+    }
+    /* Parrilla de Ejercicios */
+    .results-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding: 0 0.25rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    /* Tarjeta de Ejercicio */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .card:hover {
+      border-color: var(--border-focus);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    .card-preview-wrap {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: #06110d;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .card-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .card:hover .card-preview-img {
+      transform: scale(1.03);
+    }
+    .card-badge {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: rgba(9, 26, 20, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      color: var(--brand);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+    }
+    .card-body {
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 0.75rem;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .card-title:hover {
+      color: var(--brand);
+    }
+    .card-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .chip {
+      background: var(--tag-bg);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-sm);
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: auto;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(30, 69, 54, 0.4);
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.6rem;
+      padding-top: 0.5rem;
+    }
+    .btn-view {
+      background: #183d2e;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .btn-view:hover {
+      background: var(--brand);
+      color: #04140e;
+      border-color: var(--brand);
+    }
+    .btn-add-session {
+      background: #0d221a;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+    }
+    .btn-add-session:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-add-session.added {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    /* Barra flotante de sesión de prueba */
+    .session-floating-bar {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: #0b1f17;
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(250, 204, 21, 0.2);
+      border-radius: 999px;
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .session-floating-bar.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 20px);
+    }
+    .session-count-badge {
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+    }
+    .session-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .session-clear-btn {
+      background: transparent;
+      border: 0;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    /* Modal / Ficha completa de ejercicio */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(4, 13, 9, 0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: #0f261e;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      max-width: 900px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15, 38, 30, 0.95);
+      backdrop-filter: blur(12px);
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .modal-title-group h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-top: 0.25rem;
+    }
+    .modal-close-btn {
+      background: #193d2f;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.5rem;
+      line-height: 1;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .modal-close-btn:hover {
+      background: #255945;
+      color: #fff;
+    }
+    .modal-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    /* Reproductor de vídeo */
+    .video-container {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    /* Secciones de la ficha */
+    .section-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      background: #143227;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+    }
+    .section-block h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-block p, .section-block li {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .section-block ul, .section-block ol {
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .pill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .pill-item {
+      background: #0d221a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem;
+    }
+    .pill-item strong {
+      color: var(--text-muted);
+    }
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .step-item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: #0d221a;
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(30, 69, 54, 0.4);
+    }
+    .step-num {
+      background: var(--brand);
+      color: #04140e;
+      font-weight: 800;
+      font-size: 0.78rem;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand-group">
+      <span class="brand-badge">Prueba Aislada</span>
+      <h1 class="brand-title">Biblioteca V2</h1>
+    </div>
+    <div class="topbar-count">
+      <strong id="visible-count">248</strong> / <span id="total-count">248</span> ejercicios
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls-panel" aria-label="Controles de búsqueda y filtros">
+      <div class="search-row">
+        <div class="search-input-wrapper">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input id="search-input" type="search" class="search-input" placeholder="Buscar por nombre, qué se trabaja, objetivos, material..." autocomplete="off" aria-label="Buscar ejercicio">
+        </div>
+        <button id="clear-filters-btn" class="clear-btn" type="button">Restablecer</button>
+      </div>
+
+      <div class="categories-bar" id="categories-bar" role="tablist" aria-label="Categorías">
+        <button class="cat-chip active" data-cat="" role="tab" aria-selected="true">Todas las categorías</button>
+      </div>
+
+      <div class="secondary-filters">
+        <select id="filter-players" class="filter-select" aria-label="Filtrar por jugadores">
+          <option value="">Jugadores: Todos</option>
+        </select>
+        <select id="filter-material" class="filter-select" aria-label="Filtrar por material">
+          <option value="">Material: Todos</option>
+        </select>
+        <select id="filter-keeper" class="filter-select" aria-label="Filtrar por portero">
+          <option value="">Portero: Todos</option>
+          <option value="con-portero">Con portero</option>
+          <option value="sin-portero">Sin portero</option>
+        </select>
+        <select id="filter-space" class="filter-select" aria-label="Filtrar por espacio">
+          <option value="">Espacio: Todos</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="results-info">
+      <span id="results-label">Mostrando 248 ejercicios</span>
+    </div>
+
+    <section id="exercises-grid" class="grid" aria-label="Listado de ejercicios"></section>
+    <div id="empty-results" class="empty-state" style="display: none;">
+      No se encontraron ejercicios que coincidan con los filtros seleccionados.
+    </div>
+  </main>
+
+  <!-- Barra flotante de sesión de prueba -->
+  <aside id="session-bar" class="session-floating-bar hidden" aria-live="polite">
+    <span class="session-count-badge" id="session-badge">0</span>
+    <span class="session-title">Ejercicios en sesión de prueba</span>
+    <button id="session-clear-btn" class="session-clear-btn" type="button">Vaciar</button>
+  </aside>
+
+  <!-- Modal / Ficha completa de ejercicio -->
+  <div id="exercise-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="card-chips" id="modal-tags"></div>
+          <h2 id="modal-title">Título del ejercicio</h2>
+        </div>
+        <button id="modal-close" class="modal-close-btn" type="button" aria-label="Cerrar ficha">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Reproductor de Vídeo MP4 -->
+        <div class="video-container" id="video-wrapper">
+          <video id="modal-video" controls preload="none" playsinline></video>
+        </div>
+
+        <!-- Secciones dinámicas: solo se muestran si existen datos -->
+        <div id="section-objetivos" class="section-block">
+          <h3>🎯 Qué se trabaja y Objetivos</h3>
+          <div id="modal-objetivos-content"></div>
+        </div>
+
+        <div id="section-organizacion" class="section-block">
+          <h3>👥 Organización y Roles</h3>
+          <div id="modal-organizacion-content"></div>
+        </div>
+
+        <div id="section-espacio" class="section-block">
+          <h3>📐 Espacio y Dimensiones</h3>
+          <div id="modal-espacio-content"></div>
+        </div>
+
+        <div id="section-material" class="section-block">
+          <h3>📦 Material necesario</h3>
+          <div id="modal-material-content"></div>
+        </div>
+
+        <div id="section-desarrollo" class="section-block">
+          <h3>⚡ Desarrollo de la tarea</h3>
+          <div id="modal-desarrollo-content"></div>
+        </div>
+
+        <div id="section-coaching" class="section-block">
+          <h3>📋 Consignas y Correcciones del Entrenador</h3>
+          <div id="modal-coaching-content"></div>
+        </div>
+
+        <div id="section-carga" class="section-block">
+          <h3>⏱ Carga y Tiempos</h3>
+          <div id="modal-carga-content"></div>
+        </div>
+
+        <div id="section-variantes" class="section-block">
+          <h3>🔄 Variantes y Reglas</h3>
+          <div id="modal-variantes-content"></div>
+        </div>
+
+        <div id="section-leyenda" class="section-block">
+          <h3>🗺 Leyenda</h3>
+          <div id="modal-leyenda-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="library-v2/data/catalog-data.js"></script>
+  <script>
+    (async function() {
+      let catalog = window.CATALOG_V2 || [];
+      if (!catalog.length) {
+        try {
+          const res = await fetch('library-v2/data/catalog.json');
+          if (res.ok) catalog = await res.json();
+        } catch (e) {
+          console.warn('Carga alternativa de catálogo:', e);
+        }
+      }
+
+      const state = {
+        catalog,
+        searchQuery: '',
+        selectedCategory: '',
+        selectedPlayers: '',
+        selectedMaterial: '',
+        selectedKeeper: '',
+        selectedSpace: '',
+        stagedSession: new Set(),
+      };
+
+      const $ = (sel, parent = document) => parent.querySelector(sel);
+      const $$ = (sel, parent = document) => [...parent.querySelectorAll(sel)];
+
+      const gridEl = $('#exercises-grid');
+      const emptyEl = $('#empty-results');
+      const visibleCountEl = $('#visible-count');
+      const totalCountEl = $('#total-count');
+      const resultsLabelEl = $('#results-label');
+      const searchInput = $('#search-input');
+      const clearFiltersBtn = $('#clear-filters-btn');
+      const categoriesBar = $('#categories-bar');
+      const filterPlayers = $('#filter-players');
+      const filterMaterial = $('#filter-material');
+      const filterKeeper = $('#filter-keeper');
+      const filterSpace = $('#filter-space');
+
+      const modalEl = $('#exercise-modal');
+      const modalCloseBtn = $('#modal-close');
+      const modalVideo = $('#modal-video');
+
+      const sessionBar = $('#session-bar');
+      const sessionBadge = $('#session-badge');
+      const sessionClearBtn = $('#session-clear-btn');
+
+      totalCountEl.textContent = catalog.length;
+
+      // Inicializar categorías únicas
+      const categories = [...new Set(catalog.map(e => e.categoria).filter(Boolean))].sort();
+      for (const cat of categories) {
+        const btn = document.createElement('button');
+        btn.className = 'cat-chip';
+        btn.dataset.cat = cat;
+        btn.role = 'tab';
+        btn.textContent = cat;
+        categoriesBar.appendChild(btn);
+      }
+
+      // Inicializar filtros desplegables con valores reales existentes
+      const materialsSet = new Set();
+      const playersSet = new Set();
+      const spaceSet = new Set();
+
+      for (const ex of catalog) {
+        if (ex.materiales) {
+          for (const m of ex.materiales) {
+            if (m.nombre) materialsSet.add(m.nombre.toLowerCase());
+          }
+        }
+        if (ex.organizacion?.jugadores) {
+          playersSet.add(String(ex.organizacion.jugadores).trim());
+        }
+        if (ex.espacio?.zona) {
+          spaceSet.add(ex.espacio.zona.trim());
+        }
+      }
+
+      for (const mat of [...materialsSet].sort().slice(0, 30)) {
+        const opt = document.createElement('option');
+        opt.value = mat;
+        opt.textContent = `Material: ${mat.charAt(0).toUpperCase() + mat.slice(1)}`;
+        filterMaterial.appendChild(opt);
+      }
+
+      for (const p of [...playersSet].sort()) {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = `Jugadores: ${p}`;
+        filterPlayers.appendChild(opt);
+      }
+
+      for (const sp of [...spaceSet].sort().slice(0, 20)) {
+        const opt = document.createElement('option');
+        opt.value = sp;
+        opt.textContent = `Espacio: ${sp.slice(0, 30)}${sp.length > 30 ? '…' : ''}`;
+        filterSpace.appendChild(opt);
+      }
+
+      function filterCatalog() {
+        const q = state.searchQuery.toLowerCase().trim();
+        return state.catalog.filter(ex => {
+          // Filtro de categoría
+          if (state.selectedCategory && ex.categoria !== state.selectedCategory) {
+            return false;
+          }
+
+          // Filtro de jugadores
+          if (state.selectedPlayers) {
+            const pj = String(ex.organizacion?.jugadores || '').trim();
+            if (pj !== state.selectedPlayers) return false;
+          }
+
+          // Filtro de material
+          if (state.selectedMaterial) {
+            const hasMat = (ex.materiales || []).some(m => (m.nombre || '').toLowerCase().includes(state.selectedMaterial));
+            if (!hasMat) return false;
+          }
+
+          // Filtro de portero
+          if (state.selectedKeeper) {
+            const hasKeeper = (ex.organizacion?.porteros && ex.organizacion.porteros > 0)
+              || (ex.organizacion?.roles || []).some(r => (r.rol || '').toLowerCase().includes('portero'));
+            if (state.selectedKeeper === 'con-portero' && !hasKeeper) return false;
+            if (state.selectedKeeper === 'sin-portero' && hasKeeper) return false;
+          }
+
+          // Filtro de espacio
+          if (state.selectedSpace && (ex.espacio?.zona || '').trim() !== state.selectedSpace) {
+            return false;
+          }
+
+          // Búsqueda de texto completo
+          if (q) {
+            const hay = [
+              ex.nombre,
+              ex.categoria,
+              ex.subcategoria,
+              ...(ex.etiquetas || []),
+              ...(ex.contenidos || []),
+              ...(ex.objetivos?.general || []),
+              ...(ex.objetivos?.tacticos || []),
+              ...(ex.objetivos?.tecnicos || []),
+              ...(ex.objetivos?.coordinativos || []),
+              ...(ex.objetivos?.fisicos || []),
+              ex.desarrollo?.explicacion,
+              ...(ex.desarrollo?.pasos || []),
+              ...(ex.coaching?.puntos_entrenador || []),
+              ...(ex.coaching?.consignas || []),
+              ...(ex.materiales || []).map(m => m.nombre),
+              ex.espacio?.zona,
+              ex.espacio?.dimensiones
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            if (!hay.includes(q)) return false;
+          }
+
+          return true;
+        });
+      }
+
+      function escapeHtml(str = '') {
+        return String(str).replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
+
+      function renderGrid() {
+        const filtered = filterCatalog();
+        visibleCountEl.textContent = filtered.length;
+        resultsLabelEl.textContent = `Mostrando ${filtered.length} ejercicio${filtered.length === 1 ? '' : 's'}`;
+
+        if (!filtered.length) {
+          gridEl.innerHTML = '';
+          emptyEl.style.display = 'block';
+          return;
+        }
+        emptyEl.style.display = 'none';
+
+        gridEl.innerHTML = filtered.map(ex => {
+          const isStaged = state.stagedSession.has(ex.id);
+          const chips = (ex.contenidos || []).slice(0, 3);
+          const players = ex.organizacion?.jugadores || (ex.organizacion?.jugadores_de_campo ? `${ex.organizacion.jugadores_de_campo} jugadores` : null);
+          const duration = ex.carga?.duracion;
+          const materialsCount = ex.materiales?.length ? `${ex.materiales.length} materiales` : null;
+
+          return `
+            <article class="card" data-id="${ex.id}">
+              <div class="card-preview-wrap" data-action="view">
+                <img class="card-preview-img" src="${ex.media.preview}" alt="${escapeHtml(ex.nombre)}" loading="lazy">
+                ${ex.categoria ? `<span class="card-badge">${escapeHtml(ex.categoria)}</span>` : ''}
+              </div>
+              <div class="card-body">
+                <h3 class="card-title" data-action="view">${escapeHtml(ex.nombre)}</h3>
+                ${chips.length ? `
+                  <div class="card-chips">
+                    ${chips.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')}
+                  </div>
+                ` : ''}
+                <div class="card-meta">
+                  ${players ? `<div class="meta-item"><span>👥</span> ${escapeHtml(players)}</div>` : ''}
+                  ${duration ? `<div class="meta-item"><span>⏱</span> ${escapeHtml(duration)}</div>` : ''}
+                  ${materialsCount ? `<div class="meta-item"><span>📦</span> ${escapeHtml(materialsCount)}</div>` : ''}
+                </div>
+                <div class="card-actions">
+                  <button class="btn-view" type="button" data-action="view">Ver ejercicio</button>
+                  <button class="btn-add-session ${isStaged ? 'added' : ''}" type="button" data-action="toggle-session">
+                    ${isStaged ? '✓ Añadido' : '+ Sesión'}
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      // Manejo de eventos en la parrilla
+      gridEl.addEventListener('click', e => {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+        const card = target.closest('.card');
+        if (!card) return;
+        const id = card.dataset.id;
+        const exercise = state.catalog.find(ex => ex.id === id);
+        if (!exercise) return;
+
+        const action = target.dataset.action;
+        if (action === 'view') {
+          openModal(exercise);
+        } else if (action === 'toggle-session') {
+          if (state.stagedSession.has(id)) {
+            state.stagedSession.delete(id);
+          } else {
+            state.stagedSession.add(id);
+          }
+          updateSessionBar();
+          renderGrid();
+        }
+      });
+
+      function updateSessionBar() {
+        const count = state.stagedSession.size;
+        sessionBadge.textContent = count;
+        if (count > 0) {
+          sessionBar.classList.remove('hidden');
+        } else {
+          sessionBar.classList.add('hidden');
+        }
+      }
+
+      sessionClearBtn.addEventListener('click', () => {
+        state.stagedSession.clear();
+        updateSessionBar();
+        renderGrid();
+      });
+
+      // Apertura de ficha completa con vídeo lazy
+      function openModal(ex) {
+        $('#modal-title').textContent = ex.nombre;
+        
+        // Tags en cabecera
+        const tagsContainer = $('#modal-tags');
+        const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean);
+        tagsContainer.innerHTML = tags.map(t => `<span class="brand-badge">${escapeHtml(t)}</span>`).join('');
+
+        // Vídeo con asignación lazy (solo se carga al abrir la ficha)
+        modalVideo.poster = ex.media.preview;
+        modalVideo.src = ex.media.video;
+        modalVideo.load();
+
+        // 1. Objetivos
+        const objBlock = $('#section-objetivos');
+        const objContent = $('#modal-objetivos-content');
+        const allObj = [
+          ...(ex.objetivos?.general ? ex.objetivos.general.map(o => `<li><strong>General:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.tacticos ? ex.objetivos.tacticos.map(o => `<li><strong>Táctico:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.tecnicos ? ex.objetivos.tecnicos.map(o => `<li><strong>Técnico:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.coordinativos ? ex.objetivos.coordinativos.map(o => `<li><strong>Coordinativo:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.fisicos ? ex.objetivos.fisicos.map(o => `<li><strong>Físico:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.secundarios ? ex.objetivos.secundarios.map(o => `<li><strong>Secundario:</strong> ${escapeHtml(o)}</li>`) : []),
+          ...(ex.objetivos?.otros ? ex.objetivos.otros.map(o => `<li>${escapeHtml(o)}</li>`) : [])
+        ];
+        if (allObj.length || (ex.contenidos && ex.contenidos.length)) {
+          objBlock.style.display = 'flex';
+          objContent.innerHTML = `
+            ${ex.contenidos?.length ? `<div class="pill-grid" style="margin-bottom: 0.75rem;">${ex.contenidos.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+            ${allObj.length ? `<ul>${allObj.join('')}</ul>` : ''}
+          `;
+        } else {
+          objBlock.style.display = 'none';
+        }
+
+        // 2. Organización
+        const orgBlock = $('#section-organizacion');
+        const orgContent = $('#modal-organizacion-content');
+        const orgItems = [];
+        if (ex.organizacion?.jugadores) orgItems.push(`<div class="pill-item"><strong>Jugadores:</strong> ${escapeHtml(ex.organizacion.jugadores)}</div>`);
+        if (ex.organizacion?.jugadores_de_campo) orgItems.push(`<div class="pill-item"><strong>De campo:</strong> ${ex.organizacion.jugadores_de_campo}</div>`);
+        if (ex.organizacion?.porteros !== null && ex.organizacion?.porteros !== undefined) orgItems.push(`<div class="pill-item"><strong>Porteros:</strong> ${ex.organizacion.porteros}</div>`);
+        if (ex.organizacion?.entrenadores) orgItems.push(`<div class="pill-item"><strong>Entrenadores:</strong> ${ex.organizacion.entrenadores}</div>`);
+        if (ex.organizacion?.oposicion) orgItems.push(`<div class="pill-item"><strong>Oposición:</strong> ${escapeHtml(ex.organizacion.oposicion)}</div>`);
+        
+        const rolesList = (ex.organizacion?.roles || []).map(r => `<li><strong>${escapeHtml(r.rol || r.id)}:</strong> ${escapeHtml(r.funcion || r.descripcion || 'Posición en campo')}</li>`).join('');
+
+        if (orgItems.length || rolesList) {
+          orgBlock.style.display = 'flex';
+          orgContent.innerHTML = `
+            ${orgItems.length ? `<div class="pill-grid" style="margin-bottom: 0.75rem;">${orgItems.join('')}</div>` : ''}
+            ${rolesList ? `<ul>${rolesList}</ul>` : ''}
+          `;
+        } else {
+          orgBlock.style.display = 'none';
+        }
+
+        // 3. Espacio
+        const espBlock = $('#section-espacio');
+        const espContent = $('#modal-espacio-content');
+        const espItems = [];
+        if (ex.espacio?.dimensiones) espItems.push(`<p><strong>Dimensiones:</strong> ${escapeHtml(ex.espacio.dimensiones)}</p>`);
+        if (ex.espacio?.zona) espItems.push(`<p><strong>Zona utilizada:</strong> ${escapeHtml(ex.espacio.zona)}</p>`);
+        if (ex.espacio?.forma) espItems.push(`<p><strong>Forma:</strong> ${escapeHtml(ex.espacio.forma)}</p>`);
+        if (ex.espacio?.organizacion) espItems.push(`<p><strong>Orientación:</strong> ${escapeHtml(ex.espacio.organizacion)}</p>`);
+        if (espItems.length) {
+          espBlock.style.display = 'flex';
+          espContent.innerHTML = espItems.join('');
+        } else {
+          espBlock.style.display = 'none';
+        }
+
+        // 4. Material
+        const matBlock = $('#section-material');
+        const matContent = $('#modal-material-content');
+        const matList = (ex.materiales || []).map(m => `
+          <li>
+            <strong>${escapeHtml(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}:</strong>
+            ${m.funcion ? escapeHtml(m.funcion) : ''}
+            ${m.detalle ? `<span style="opacity:0.7;"> — ${escapeHtml(m.detalle)}</span>` : ''}
+          </li>
+        `).join('');
+        if (matList) {
+          matBlock.style.display = 'flex';
+          matContent.innerHTML = `<ul>${matList}</ul>`;
+        } else {
+          matBlock.style.display = 'none';
+        }
+
+        // 5. Desarrollo
+        const desBlock = $('#section-desarrollo');
+        const desContent = $('#modal-desarrollo-content');
+        let desHtml = '';
+        if (ex.desarrollo?.explicacion) {
+          desHtml += `<p style="margin-bottom: 0.75rem;">${escapeHtml(ex.desarrollo.explicacion).replace(/\n/g, '<br>')}</p>`;
+        }
+        if (ex.desarrollo?.pasos && ex.desarrollo.pasos.length) {
+          desHtml += `
+            <div class="step-list">
+              ${ex.desarrollo.pasos.map((p, idx) => `
+                <div class="step-item">
+                  <span class="step-num">${idx + 1}</span>
+                  <div>${escapeHtml(p)}</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else if (ex.desarrollo?.fases && ex.desarrollo.fases.length) {
+          desHtml += `
+            <div class="step-list">
+              ${ex.desarrollo.fases.map(f => `
+                <div class="step-item">
+                  <span class="step-num">${f.orden}</span>
+                  <div>
+                    <strong>${escapeHtml(f.descripcion || f.accion_principal)}</strong>
+                    ${f.que_ocurre_despues ? `<p style="margin-top:0.25rem; opacity:0.85;">${escapeHtml(f.que_ocurre_despues)}</p>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        if (desHtml) {
+          desBlock.style.display = 'flex';
+          desContent.innerHTML = desHtml;
+        } else {
+          desBlock.style.display = 'none';
+        }
+
+        // 6. Coaching
+        const coachBlock = $('#section-coaching');
+        const coachContent = $('#modal-coaching-content');
+        const coachItems = [];
+        if (ex.coaching?.puntos_entrenador?.length) {
+          coachItems.push(`<div><strong>Puntos de observación:</strong><ul>${ex.coaching.puntos_entrenador.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul></div>`);
+        }
+        if (ex.coaching?.correcciones?.length) {
+          coachItems.push(`<div><strong>Correcciones clave:</strong><ul>${ex.coaching.correcciones.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div>`);
+        }
+        if (ex.coaching?.consignas?.length) {
+          coachItems.push(`<div><strong>Consignas:</strong><ul>${ex.coaching.consignas.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div>`);
+        }
+        if (coachItems.length) {
+          coachBlock.style.display = 'flex';
+          coachContent.innerHTML = coachItems.join('<div style="height:0.5rem"></div>');
+        } else {
+          coachBlock.style.display = 'none';
+        }
+
+        // 7. Carga y Tiempos
+        const cargaBlock = $('#section-carga');
+        const cargaContent = $('#modal-carga-content');
+        const cargaItems = [];
+        if (ex.carga?.duracion) cargaItems.push(`<div class="pill-item"><strong>Duración:</strong> ${escapeHtml(ex.carga.duracion)}</div>`);
+        if (ex.carga?.series) cargaItems.push(`<div class="pill-item"><strong>Series:</strong> ${escapeHtml(ex.carga.series)}</div>`);
+        if (ex.carga?.repeticiones) cargaItems.push(`<div class="pill-item"><strong>Repeticiones:</strong> ${escapeHtml(ex.carga.repeticiones)}</div>`);
+        if (ex.carga?.descansos) cargaItems.push(`<div class="pill-item"><strong>Descansos:</strong> ${escapeHtml(ex.carga.descansos)}</div>`);
+        if (ex.carga?.intensidad) cargaItems.push(`<div class="pill-item"><strong>Intensidad:</strong> ${escapeHtml(ex.carga.intensidad)}</div>`);
+        if (cargaItems.length) {
+          cargaBlock.style.display = 'flex';
+          cargaContent.innerHTML = `<div class="pill-grid">${cargaItems.join('')}</div>`;
+        } else {
+          cargaBlock.style.display = 'none';
+        }
+
+        // 8. Variantes y Reglas
+        const varBlock = $('#section-variantes');
+        const varContent = $('#modal-variantes-content');
+        const varItems = [];
+        if (ex.variantes?.length) {
+          varItems.push(`<div><strong>Variantes:</strong><ul>${ex.variantes.map(v => `<li>${escapeHtml(v)}</li>`).join('')}</ul></div>`);
+        }
+        if (ex.rotaciones?.reglas?.length) {
+          varItems.push(`<div><strong>Reglas adicionales:</strong><ul>${ex.rotaciones.reglas.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>`);
+        }
+        if (varItems.length) {
+          varBlock.style.display = 'flex';
+          varContent.innerHTML = varItems.join('<div style="height:0.5rem"></div>');
+        } else {
+          varBlock.style.display = 'none';
+        }
+
+        // 9. Leyenda
+        const leyBlock = $('#section-leyenda');
+        const leyContent = $('#modal-leyenda-content');
+        if (ex.leyenda && typeof ex.leyenda === 'object') {
+          const leyEntries = [];
+          for (const [k, v] of Object.entries(ex.leyenda)) {
+            if (v && Array.isArray(v) && v.length) {
+              leyEntries.push(`<div><strong>${escapeHtml(k)}:</strong> ${v.map(i => typeof i === 'string' ? escapeHtml(i) : (i.label || i.nombre || i.tipo || '')).filter(Boolean).join(', ')}</div>`);
+            }
+          }
+          if (leyEntries.length) {
+            leyBlock.style.display = 'flex';
+            leyContent.innerHTML = leyEntries.join('');
+          } else {
+            leyBlock.style.display = 'none';
+          }
+        } else {
+          leyBlock.style.display = 'none';
+        }
+
+        modalEl.classList.add('open');
+        modalEl.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        modalEl.classList.remove('open');
+        modalEl.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        // Liberar el vídeo inmediatamente para no consumir ancho de banda ni memoria
+        modalVideo.pause();
+        modalVideo.removeAttribute('src');
+        modalVideo.load();
+      }
+
+      modalCloseBtn.addEventListener('click', closeModal);
+      modalEl.addEventListener('click', e => {
+        if (e.target === modalEl) closeModal();
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modalEl.classList.contains('open')) {
+          closeModal();
+        }
+      });
+
+      // Búsqueda en vivo y filtros reactivos
+      let searchTimeout;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          state.searchQuery = searchInput.value;
+          renderGrid();
+        }, 150);
+      });
+
+      categoriesBar.addEventListener('click', e => {
+        const chip = e.target.closest('.cat-chip');
+        if (!chip) return;
+        $$('.cat-chip', categoriesBar).forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.selectedCategory = chip.dataset.cat;
+        renderGrid();
+      });
+
+      filterPlayers.addEventListener('change', () => {
+        state.selectedPlayers = filterPlayers.value;
+        renderGrid();
+      });
+      filterMaterial.addEventListener('change', () => {
+        state.selectedMaterial = filterMaterial.value;
+        renderGrid();
+      });
+      filterKeeper.addEventListener('change', () => {
+        state.selectedKeeper = filterKeeper.value;
+        renderGrid();
+      });
+      filterSpace.addEventListener('change', () => {
+        state.selectedSpace = filterSpace.value;
+        renderGrid();
+      });
+
+      clearFiltersBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        state.searchQuery = '';
+        state.selectedCategory = '';
+        state.selectedPlayers = '';
+        state.selectedMaterial = '';
+        state.selectedKeeper = '';
+        state.selectedSpace = '';
+        filterPlayers.value = '';
+        filterMaterial.value = '';
+        filterKeeper.value = '';
+        filterSpace.value = '';
+        $$('.cat-chip', categoriesBar).forEach(c => c.classList.remove('active'));
+        $('.cat-chip[data-cat=""]', categoriesBar)?.classList.add('active');
+        renderGrid();
+      });
+
+      // Primer renderizado
+      renderGrid();
+      console.log('Biblioteca V2 inicializada con 248 ejercicios.');
+    })();
+  </script>
+</body>
+</html>
