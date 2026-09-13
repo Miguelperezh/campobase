@@ -550,9 +550,16 @@
       transition: opacity 0.2s ease, background 0.2s ease;
       z-index: 5;
     }
-    .video-overlay-play.playing {
-      opacity: 0;
-      pointer-events: none;
+    .video-overlay-play.playing,
+    .video-overlay-play.hidden,
+    .video-overlay-play.is-playing,
+    .video-overlay-play[hidden],
+    .video-overlay-play[style*="display: none"],
+    .video-stage.is-playing .video-overlay-play {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
     }
     .video-overlay-play:hover {
       background: rgba(0, 0, 0, 0.45);
@@ -2345,6 +2352,8 @@
 
       function togglePlay() {
         if (modalVideo.paused || modalVideo.ended) {
+          videoOverlayPlay.classList.add('playing', 'hidden');
+          videoOverlayPlay.style.setProperty('display', 'none', 'important');
           modalVideo.play().catch(() => {});
         } else {
           modalVideo.pause();
@@ -2353,12 +2362,20 @@
 
       modalVideo.addEventListener('play', () => {
         playIconText.textContent = '⏸';
-        videoOverlayPlay.classList.add('playing');
+        videoOverlayPlay.classList.add('playing', 'hidden');
+        videoOverlayPlay.style.setProperty('display', 'none', 'important');
+      });
+
+      modalVideo.addEventListener('playing', () => {
+        playIconText.textContent = '⏸';
+        videoOverlayPlay.classList.add('playing', 'hidden');
+        videoOverlayPlay.style.setProperty('display', 'none', 'important');
       });
 
       modalVideo.addEventListener('pause', () => {
         playIconText.textContent = '▶';
-        videoOverlayPlay.classList.remove('playing');
+        videoOverlayPlay.classList.remove('playing', 'hidden');
+        videoOverlayPlay.style.removeProperty('display');
       });
 
       modalVideo.addEventListener('timeupdate', updateVideoTime);

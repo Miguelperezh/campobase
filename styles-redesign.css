@@ -3771,13 +3771,16 @@ div:has(> .date-24) {
   transition: opacity 0.2s ease, visibility 0.2s ease !important;
 }
 
-/* Ocultar INMEDIATAMENTE y de forma definitiva el botón de play cuando el video se reproduce */
+/* Ocultar INMEDIATAMENTE y de forma definitiva el botón de play y su icono cuando el video se reproduce */
 .video-overlay-play.hidden,
 .video-overlay-play.is-playing,
+.video-overlay-play.playing,
 .video-overlay-play[hidden],
 .video-overlay-play[style*="display: none"],
 .video-stage.is-playing .video-overlay-play,
-.exercise-video-wrap.is-playing .video-overlay-play {
+.exercise-video-wrap.is-playing .video-overlay-play,
+.video-stage.is-playing .overlay-play-icon,
+.exercise-video-wrap.is-playing .overlay-play-icon {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;

@@ -3870,7 +3870,15 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js').catch(handleError);
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        reg.update().catch(() => {});
+      }).catch(handleError);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!window._swReloading) {
+          window._swReloading = true;
+          location.reload();
+        }
+      });
     }
   }
   await synchronizeCloud();

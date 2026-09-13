@@ -613,9 +613,21 @@ export function initValidatedExerciseViewer(root) {
     if (btnPlay) btnPlay.textContent = isPlaying ? '⏸' : '▶';
     if (overlayPlay) {
       overlayPlay.classList.toggle('is-playing', isPlaying);
+      overlayPlay.classList.toggle('playing', isPlaying);
       overlayPlay.classList.toggle('hidden', isPlaying);
-      overlayPlay.toggleAttribute('hidden', isPlaying);
-      overlayPlay.style.setProperty('display', isPlaying ? 'none' : 'flex', 'important');
+      if (isPlaying) {
+        overlayPlay.setAttribute('hidden', '');
+        overlayPlay.style.setProperty('display', 'none', 'important');
+        overlayPlay.style.setProperty('opacity', '0', 'important');
+        overlayPlay.style.setProperty('visibility', 'hidden', 'important');
+        overlayPlay.style.setProperty('pointer-events', 'none', 'important');
+      } else {
+        overlayPlay.removeAttribute('hidden');
+        overlayPlay.style.removeProperty('display');
+        overlayPlay.style.removeProperty('opacity');
+        overlayPlay.style.removeProperty('visibility');
+        overlayPlay.style.removeProperty('pointer-events');
+      }
     }
     if (stage) stage.classList.toggle('is-playing', isPlaying);
     const wrap = root.querySelector('.exercise-video-wrap');
@@ -630,8 +642,8 @@ export function initValidatedExerciseViewer(root) {
       // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
       try {
-        await ensureVideoLoaded(video);
-        await video.play();
+        const p = video.play();
+        if (p !== undefined) await p;
       } catch (err) {
         console.warn('Error al reproducir vídeo:', err);
         if (video.paused) updatePlayState(false);
@@ -649,7 +661,10 @@ export function initValidatedExerciseViewer(root) {
   video.addEventListener('play', () => updatePlayState(true));
   video.addEventListener('playing', () => updatePlayState(true));
   video.addEventListener('pause', () => updatePlayState(false));
-  video.addEventListener('timeupdate', updateTime);
+  video.addEventListener('timeupdate', () => {
+    if (!video.paused) updatePlayState(true);
+    updateTime();
+  });
   video.addEventListener('loadedmetadata', updateTime);
   video.addEventListener('ended', () => {
     if (!video.loop) {
