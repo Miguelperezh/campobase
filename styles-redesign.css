@@ -4567,8 +4567,23 @@ div:has(> .date-24) {
   gap: 0.8rem;
 }
 
+.session-details-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.session-details-row > .form-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
 @media (max-width: 600px) {
-  .session-datetime-row {
+  .session-datetime-row,
+  .session-details-row,
+  .session-details-row > .form-row {
     grid-template-columns: 1fr;
   }
 }

@@ -1,3 +1,5 @@
+import { findValidatedExercise } from './ejercicios-validados.js';
+
 const clean = (value) => String(value ?? '').trim();
 const xml = (value) => clean(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[character]);
 
@@ -173,6 +175,96 @@ export function sessionDurationStatus(blocks = [], target = 60) {
   return { total, difference, exact, message };
 }
 
+export function normalizeMaterialKey(rawName) {
+  let text = clean(rawName).toLowerCase();
+  text = text.replace(/\s*\([^)]*\)/g, '').trim();
+  if (text.includes('balón') || text.includes('balon')) {
+    if (text.includes('medicinal')) return 'balón medicinal';
+    return 'balón de fútbol';
+  }
+  if (text.includes('miniportería') || text.includes('mini-portería') || text.includes('miniporteria')) return 'miniportería';
+  if (text.includes('portería') || text.includes('porteria')) return 'portería';
+  if (text.includes('cono')) return 'cono';
+  if (text.includes('pica')) return 'pica';
+  if (text.includes('valla')) return 'valla';
+  if (text.includes('aro')) return 'aro';
+  if (text.includes('escalera')) return 'escalera de agilidad';
+  if (text.includes('peto')) return 'peto';
+  if (text.includes('tenis')) return 'pelota de tenis';
+  if (text.includes('elástica') || text.includes('elastica') || text.includes('goma')) return 'banda elástica';
+  if (text.includes('colchoneta')) return 'colchoneta';
+  if (text.includes('step')) return 'step';
+  return text;
+}
+
+export function formatMaterialQuantity(key, count) {
+  if (count === 1) {
+    if (key === 'balón de fútbol') return '1 balón de fútbol';
+    if (key === 'balón medicinal') return '1 balón medicinal';
+    if (key === 'escalera de agilidad') return '1 escalera de agilidad';
+    if (key === 'pelota de tenis') return '1 pelota de tenis';
+    if (key === 'banda elástica') return '1 banda elástica';
+    return `1 ${key}`;
+  }
+  if (key === 'balón de fútbol') return `${count} balones de fútbol`;
+  if (key === 'balón medicinal') return `${count} balones medicinales`;
+  if (key === 'escalera de agilidad') return `${count} escaleras de agilidad`;
+  if (key === 'pelota de tenis') return `${count} pelotas de tenis`;
+  if (key === 'banda elástica') return `${count} bandas elásticas`;
+  if (key.endsWith('a') || key.endsWith('o') || key.endsWith('e')) return `${count} ${key}s`;
+  if (key.endsWith('ón') || key.endsWith('on')) return `${count} ${key.replace(/ó?n$/i, 'ones')}`;
+  return `${count} ${key}s`;
+}
+
+export function calculateSessionTotalMaterial(blocks = [], exercisesLookup = null) {
+  if (!Array.isArray(blocks) || !blocks.length) return '';
+  const totals = new Map();
+  for (const block of blocks) {
+    const exerciseId = block?.exerciseId;
+    if (!exerciseId) continue;
+    let exercise = null;
+    if (typeof exercisesLookup === 'function') exercise = exercisesLookup(exerciseId);
+    else if (exercisesLookup instanceof Map) exercise = exercisesLookup.get(exerciseId);
+    else if (Array.isArray(exercisesLookup)) exercise = exercisesLookup.find((e) => e?.id === exerciseId);
+    if (!exercise && typeof findValidatedExercise === 'function') exercise = findValidatedExercise(exerciseId);
+    if (!exercise) continue;
+
+    if (Array.isArray(exercise.materiales) && exercise.materiales.length) {
+      for (const item of exercise.materiales) {
+        const key = normalizeMaterialKey(item?.nombre);
+        if (!key) continue;
+        const qty = Math.max(1, Number(item?.cantidad) || 1);
+        totals.set(key, (totals.get(key) || 0) + qty);
+      }
+    } else if (exercise.material || exercise.vista_rapida?.material) {
+      const text = String(exercise.vista_rapida?.material || exercise.material || '').trim();
+      const parts = text.split(/[,;\n+]+/).map((part) => part.trim()).filter(Boolean);
+      for (const part of parts) {
+        const match = part.match(/^(\d+)\s*(.+)$/);
+        if (match) {
+          const qty = Math.max(1, Number(match[1]) || 1);
+          const key = normalizeMaterialKey(match[2]);
+          if (key) totals.set(key, (totals.get(key) || 0) + qty);
+        } else {
+          const key = normalizeMaterialKey(part);
+          if (key) totals.set(key, (totals.get(key) || 0) + 1);
+        }
+      }
+    }
+  }
+  if (totals.size === 0) return '';
+  const order = ['balón de fútbol', 'cono', 'peto', 'portería', 'miniportería', 'valla', 'escalera de agilidad', 'pica', 'aro', 'colchoneta', 'step', 'banda elástica', 'balón medicinal', 'pelota de tenis'];
+  const sorted = [...totals.entries()].sort((a, b) => {
+    const iA = order.indexOf(a[0]);
+    const iB = order.indexOf(b[0]);
+    if (iA !== -1 && iB !== -1) return iA - iB;
+    if (iA !== -1) return -1;
+    if (iB !== -1) return 1;
+    return b[1] - a[1];
+  });
+  return sorted.map(([key, count]) => formatMaterialQuantity(key, count)).join(', ');
+}
+
 export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
   const date = clean(values.date);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new TypeError('Selecciona una fecha válida para la sesión.');
@@ -186,15 +278,18 @@ export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
   if (!blocks.length) throw new RangeError('Añade al menos un ejercicio a la sesión.');
   const target = Number(values.targetDuration) > 0 ? Number(values.targetDuration) : 60;
   const status = sessionDurationStatus(blocks, target);
+  const autoMaterial = calculateSessionTotalMaterial(blocks, metadata.exercises || metadata.exercisesLookup || metadata.availableExerciseIds);
+  const material = clean(values.material) || autoMaterial;
   return {
     id: metadata.id,
     recordType: 'trainingSession',
     date,
     time: clean(values.time),
     name: clean(values.name) || 'Sesión de entrenamiento',
+    pitch: clean(values.pitch),
     targetDuration: target,
     sessionKind: clean(values.sessionKind) || 'training',
-    material: clean(values.material),
+    material,
     notes: clean(values.notes),
     blocks,
     totalDuration: status.total,

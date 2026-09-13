@@ -3,7 +3,7 @@ import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
-import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
@@ -2184,6 +2184,7 @@ function syncSessionDraft() {
   } catch {
     values.time = '';
   }
+  values.pitch = form.elements.pitch?.value?.trim() || '';
   sessionDraftMeta = { ...sessionDraftMeta, ...values };
   sessionDraftBlocks = $$('.session-block', form).map((row) => ({
     type: row.querySelector('[name="blockType"]').value,
@@ -2213,21 +2214,31 @@ function renderSessionDraft() {
   const target = Number(sessionDraftMeta?.targetDuration) > 0 ? Number(sessionDraftMeta.targetDuration) : 60;
   const status = sessionDurationStatus(sessionDraftBlocks, target);
   root.classList.remove('hidden');
+  const autoMaterial = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+  if (!sessionDraftMeta.material || sessionDraftMeta.material === sessionDraftMeta._autoMaterial) {
+    sessionDraftMeta.material = autoMaterial;
+    sessionDraftMeta._autoMaterial = autoMaterial;
+  }
   const picker = `<div class="session-exercise-picker"><h3>Añadir ejercicios</h3><p class="meta">Pulsa <strong>+ Añadir</strong> en cada ejercicio. Entra como calentamiento, parte principal o juego final según su categoría.</p><div class="exercise-grid">${state.exercises.map((rawItem) => {
     const item = completeExercise(rawItem);
     return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const existing = state.trainingSessions.find(({ id }) => id === editId);
   const today = new Date().toISOString().slice(0, 10);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
     if (exercise) sessionDraftBlocks = addExerciseToSession({ blocks: sessionDraftBlocks }, exercise).blocks;
+  }
+  const autoMaterial = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+  if (!sessionDraftMeta.material || sessionDraftMeta.material === sessionDraftMeta._autoMaterial) {
+    sessionDraftMeta.material = autoMaterial;
+    sessionDraftMeta._autoMaterial = autoMaterial;
   }
   renderSessionDraft();
   $('#session-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2272,16 +2283,22 @@ async function saveAddToSession(event) {
   } catch {
     time = '';
   }
+  const pitch = values.pitch?.trim() || '';
   $('#add-session-dialog').close();
-  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), time, name: values.name });
+  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), time, pitch, name: values.name });
 }
 
 async function saveTrainingSession(event) {
   const form = event.target.closest('form');
   syncSessionDraft();
   const existing = sessionDraftMeta.id ? state.trainingSessions.find(({ id }) => id === sessionDraftMeta.id) : null;
+  const autoMaterial = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+  if (!sessionDraftMeta.material?.trim()) {
+    sessionDraftMeta.material = autoMaterial;
+  }
   const session = buildFlexibleTrainingSession({ ...sessionDraftMeta, blocks: sessionDraftBlocks }, {
     id: existing?.id ?? uid(), availableExerciseIds: state.exercises.map(({ id }) => id),
+    exercises: state.exercises,
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
   });
   await put('settings', session);
@@ -2289,7 +2306,6 @@ async function saveTrainingSession(event) {
   await refresh();
   showView('sesiones');
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
-  toast(status.exact ? `Sesión guardada con ${session.targetDuration} minutos exactos.` : `Sesión guardada. ${status.message}`);
 }
 
 function videosForExercise(exerciseId) {
@@ -2357,13 +2373,15 @@ function showExerciseDetail(exerciseId) {
 
 function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions);
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `
+  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
+    const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
+    return `
     <article class="panel session-card" data-session-id="${session.id}">
       <div class="section-head">
         <div>
           <span class="pill accent">${session.totalDuration} min</span>
           <h3><button type="button" class="view-session link-button" data-id="${session.id}" aria-label="Ver sesión ${escapeHtml(session.name)}">${escapeHtml(session.name)}</button></h3>
-          <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.blocks.length} bloques</p>
+          <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ⏱️ ${session.totalDuration} min · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
         </div>
         <div class="button-row">
           <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
@@ -2380,11 +2398,13 @@ function renderTrainingSessions() {
         <ol class="session-plan">
           ${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}
         </ol>
-        ${session.material ? `<p class="session-meta-line"><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}
+        ${session.pitch ? `<p class="session-meta-line"><strong>Campo de entrenamiento:</strong> 🏟️ ${escapeHtml(session.pitch)}</p>` : ''}
+        ${materialText ? `<p class="session-meta-line"><strong>Material:</strong> ${escapeHtml(materialText)}</p>` : ''}
         ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
       </div>
     </article>
-  `).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
+  `;
+  }).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
 }
 
 function showSessionDetail(sessionId) {
@@ -2392,8 +2412,9 @@ function showSessionDetail(sessionId) {
   if (!session) return toast('La sesión ya no está disponible.');
   $('#session-detail-title').textContent = session.name || 'Sesión de entrenamiento';
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
+  const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
   $('#session-detail-body').innerHTML = `
-    <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.blocks.length} bloques · ${status.total} / ${session.targetDuration || 60} min</p>
+    <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ⏱️ ${status.total} / ${session.targetDuration || 60} min · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
     <div class="session-detail-blocks-list">
       ${session.blocks.map((block) => {
         const validated = findValidatedExercise(block.exerciseId);
@@ -2421,7 +2442,8 @@ function showSessionDetail(sessionId) {
         </article>`;
       }).join('')}
     </div>
-    ${session.material ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(session.material)}</p>` : ''}
+    ${session.pitch ? `<p class="session-meta-line"><strong>Campo de entrenamiento:</strong> 🏟️ ${escapeHtml(session.pitch)}</p>` : ''}
+    ${materialText ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(materialText)}</p>` : ''}
     ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
     <p class="meta">Pulsa en «Ver ejercicio con MP4» para abrir la animación interactiva, lupa por zonas y reproductor.</p>`;
   $('#session-detail-dialog').showModal();
@@ -3673,6 +3695,13 @@ function wireEvents() {
         row.querySelector('[name="blockType"]').value = exercise.category === 'Calentamiento' ? 'warmup' : exercise.category === 'Partido condicionado / Small-sided games' ? 'final' : 'main';
         row.querySelector('.pill').textContent = sessionBlockLabel(row.querySelector('[name="blockType"]').value);
       }
+      syncSessionDraft();
+      const newAuto = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+      if (!sessionDraftMeta.material || sessionDraftMeta.material === sessionDraftMeta._autoMaterial) {
+        sessionDraftMeta.material = newAuto;
+        sessionDraftMeta._autoMaterial = newAuto;
+        if (sessionForm.elements.material) sessionForm.elements.material.value = newAuto;
+      }
       return;
     }
     if (sessionForm && event.target.name === 'warmupId') {
@@ -3768,7 +3797,17 @@ function wireEvents() {
     if (target.matches('.add-exercise-to-session')) {
       if (!$('#session-builder').classList.contains('hidden')) {
         const exercise = state.exercises.find(({ id }) => id === target.dataset.id);
-        if (exercise) { syncSessionDraft(); sessionDraftBlocks = addExerciseToSession({ blocks: sessionDraftBlocks }, exercise).blocks; renderSessionDraft(); toast(`${exercise.name} añadido a la sesión.`); }
+        if (exercise) {
+          syncSessionDraft();
+          sessionDraftBlocks = addExerciseToSession({ blocks: sessionDraftBlocks }, exercise).blocks;
+          const newAuto = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+          if (!sessionDraftMeta.material || sessionDraftMeta.material === sessionDraftMeta._autoMaterial) {
+            sessionDraftMeta.material = newAuto;
+            sessionDraftMeta._autoMaterial = newAuto;
+          }
+          renderSessionDraft();
+          toast(`${exercise.name} añadido a la sesión.`);
+        }
       } else openAddToSession(target.dataset.id);
     }
     if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
@@ -3803,7 +3842,16 @@ function wireEvents() {
       if (parentDialog) { parentDialog.close(); return; }
     }
     if (target.matches('.move-session-block')) { syncSessionDraft(); sessionDraftBlocks = moveSessionBlock(sessionDraftBlocks, Number(target.dataset.index), Number(target.dataset.direction)); renderSessionDraft(); }
-    if (target.matches('.remove-session-block')) { syncSessionDraft(); sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index)); renderSessionDraft(); }
+    if (target.matches('.remove-session-block')) {
+      syncSessionDraft();
+      sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index));
+      const newAuto = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
+      if (!sessionDraftMeta.material || sessionDraftMeta.material === sessionDraftMeta._autoMaterial) {
+        sessionDraftMeta.material = newAuto;
+        sessionDraftMeta._autoMaterial = newAuto;
+      }
+      renderSessionDraft();
+    }
     if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();

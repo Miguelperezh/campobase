@@ -389,6 +389,8 @@ export function buildTrainingSession(values, metadata = {}) {
     id: metadata.id,
     recordType: 'trainingSession',
     date,
+    time: clean(values.time),
+    pitch: clean(values.pitch),
     name: clean(values.name) || 'Sesión de entrenamiento',
     material: clean(values.material),
     notes: clean(values.notes),

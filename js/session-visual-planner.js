@@ -3,7 +3,7 @@ import { EXERCISE_CATEGORIES } from './training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { renderVideoSectionHTML, videoPublicUrl } from './ejercicio-videos.js';
-import { completeExercise, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { calculateSessionTotalMaterial, completeExercise, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -273,13 +273,15 @@ async function renderSessionDetail(sessionId) {
   if (!session || !dialog.open) return;
   const exercisesById = new Map(snapshot.exercises.map((item) => [item.id, item]));
   const status = sessionDurationStatus(session.blocks || [], session.targetDuration);
+  const materialText = session.material || calculateSessionTotalMaterial(session.blocks, snapshot.exercises);
 
   body.innerHTML = `
     <div class="session-visual-detail" data-session-id="${esc(session.id)}">
       <div class="session-detail-summary panel">
-        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
+        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}${session.pitch ? ` · 🏟️ ${esc(session.pitch)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ⏱️ ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
         <button type="button" class="edit-session secondary" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
       </div>
+      ${session.pitch ? `<div class="panel"><strong>Campo de entrenamiento</strong><p>🏟️ ${esc(session.pitch)}</p></div>` : ''}
       <div class="session-detail-exercises">
         ${(session.blocks || []).map((block, index) => {
           const exercise = exercisesById.get(block.exerciseId);
@@ -295,7 +297,7 @@ async function renderSessionDetail(sessionId) {
           </section>`;
         }).join('')}
       </div>
-      ${session.material ? `<div class="panel"><strong>Material total</strong><p>${esc(session.material)}</p></div>` : ''}
+      ${materialText ? `<div class="panel"><strong>Material total</strong><p>${esc(materialText)}</p></div>` : ''}
       ${session.notes ? `<div class="panel"><strong>Observaciones generales</strong><p>${esc(session.notes)}</p></div>` : ''}
       <div class="button-row"><button type="button" class="edit-session primary" data-id="${esc(session.id)}">Editar sesión y tiempos</button></div>
     </div>`;

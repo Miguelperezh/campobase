@@ -66,3 +66,39 @@ test('el detalle de sesión muestra cada ejercicio con miniatura, datos limpios 
   assert.match(appSource, /🎬 Ver ejercicio con MP4/);
   assert.match(appSource, /showExerciseDetail/);
 });
+
+test('buildFlexibleTrainingSession guarda el campo de entrenamiento (pitch) y calcula material automáticamente', () => {
+  const session = buildFlexibleTrainingSession({
+    date: '2026-09-15',
+    time: '17:00',
+    pitch: 'Campo Pepe Gonçalvez',
+    name: 'Sesión en Pepe Gonçalvez',
+    targetDuration: 60,
+    blocks: [
+      { type: 'warmup', exerciseId: 'ex-1', duration: 15 },
+      { type: 'main', exerciseId: 'ex-2', duration: 30 },
+    ],
+  }, {
+    id: 'session-pitch-test',
+    availableExerciseIds: ['ex-1', 'ex-2'],
+    exercises: [
+      { id: 'ex-1', name: 'Calentamiento con conos', materiales: [{ nombre: 'cono', cantidad: 6 }] },
+      { id: 'ex-2', name: 'Rondo con balón', materiales: [{ nombre: 'balón de fútbol', cantidad: 2 }, { nombre: 'cono', cantidad: 4 }] },
+    ],
+  });
+
+  assert.equal(session.pitch, 'Campo Pepe Gonçalvez');
+  assert.equal(session.material, '2 balones de fútbol, 10 conos');
+});
+
+test('el formulario de sesión y el diálogo de añadir ejercicio permiten introducir el campo de entrenamiento', () => {
+  assert.match(appSource, /name="pitch"/);
+  assert.match(indexSource, /name="pitch"/);
+  assert.match(stylesSource, /\.session-details-row/);
+});
+
+test('las tarjetas de sesión muestran el campo y la duración claramente en la línea meta', () => {
+  assert.match(appSource, /session\.pitch \? ` · 🏟️ \$\{escapeHtml\(session\.pitch\)\}` : ''/);
+  assert.match(appSource, /⏱️ \$\{session\.totalDuration\} min/);
+  assert.match(appSource, /Material total \(calculado automáticamente/);
+});
