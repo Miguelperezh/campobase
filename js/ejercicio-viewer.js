@@ -609,19 +609,36 @@ export function initValidatedExerciseViewer(root) {
     }
   }
 
+  function updatePlayState(isPlaying) {
+    if (btnPlay) btnPlay.textContent = isPlaying ? '⏸' : '▶';
+    if (overlayPlay) {
+      overlayPlay.classList.toggle('is-playing', isPlaying);
+      overlayPlay.classList.toggle('hidden', isPlaying);
+      overlayPlay.toggleAttribute('hidden', isPlaying);
+      overlayPlay.style.setProperty('display', isPlaying ? 'none' : 'flex', 'important');
+    }
+    if (stage) stage.classList.toggle('is-playing', isPlaying);
+    const wrap = root.querySelector('.exercise-video-wrap');
+    if (wrap) wrap.classList.toggle('is-playing', isPlaying);
+  }
+
   async function togglePlay() {
-    await ensureVideoLoaded(video);
     const src = video.dataset.src;
     if (!video.getAttribute('src')) video.src = src;
+
     if (video.paused) {
-      video.play().then(() => {
-        if (btnPlay) btnPlay.textContent = '⏸';
-        if (overlayPlay) overlayPlay.style.display = 'none';
-      }).catch(console.warn);
+      // Ocultar de inmediato el botón para respuesta instantánea sin latencia
+      updatePlayState(true);
+      try {
+        await ensureVideoLoaded(video);
+        await video.play();
+      } catch (err) {
+        console.warn('Error al reproducir vídeo:', err);
+        if (video.paused) updatePlayState(false);
+      }
     } else {
       video.pause();
-      if (btnPlay) btnPlay.textContent = '▶';
-      if (overlayPlay) overlayPlay.style.display = 'flex';
+      updatePlayState(false);
     }
   }
 
@@ -629,12 +646,14 @@ export function initValidatedExerciseViewer(root) {
   if (overlayPlay) overlayPlay.addEventListener('click', togglePlay);
   if (video) video.addEventListener('click', togglePlay);
 
+  video.addEventListener('play', () => updatePlayState(true));
+  video.addEventListener('playing', () => updatePlayState(true));
+  video.addEventListener('pause', () => updatePlayState(false));
   video.addEventListener('timeupdate', updateTime);
   video.addEventListener('loadedmetadata', updateTime);
   video.addEventListener('ended', () => {
     if (!video.loop) {
-      if (btnPlay) btnPlay.textContent = '▶';
-      if (overlayPlay) overlayPlay.style.display = 'flex';
+      updatePlayState(false);
     }
   });
 

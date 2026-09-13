@@ -3768,6 +3768,20 @@ div:has(> .date-24) {
   background: rgba(0, 0, 0, 0.35) !important;
   cursor: pointer !important;
   z-index: 10 !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease !important;
+}
+
+/* Ocultar INMEDIATAMENTE y de forma definitiva el botón de play cuando el video se reproduce */
+.video-overlay-play.hidden,
+.video-overlay-play.is-playing,
+.video-overlay-play[hidden],
+.video-overlay-play[style*="display: none"],
+.video-stage.is-playing .video-overlay-play,
+.exercise-video-wrap.is-playing .video-overlay-play {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .overlay-play-icon {
