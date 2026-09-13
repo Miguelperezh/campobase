@@ -1,7 +1,7 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
-import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { CANONICAL_V2_CATEGORIES, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
@@ -209,20 +209,36 @@ function isUserInteracting() {
 
 async function deduplicatePlayers() {
   const currentPlayers = await getAll('players');
-  if (!currentPlayers || currentPlayers.length <= 1) return;
+  if (!currentPlayers || !currentPlayers.length) return;
   const canonicalMap = new Map();
   const toDelete = [];
 
   for (const player of currentPlayers) {
+    // Purgar cualquier jugador demo filtrado a la base real
+    if (player.id && player.id.startsWith('demo-p') && player.id !== 'demo-p08') {
+      toDelete.push(player.id);
+      continue;
+    }
+    // Si demo-p08 sigue presente localmente pero ya existe p05, descartar demo-p08
+    if (player.id === 'demo-p08') {
+      const hasP05 = currentPlayers.some((p) => p.id === 'p05');
+      if (hasP05) {
+        toDelete.push(player.id);
+        continue;
+      }
+    }
+
     const rawName = String(player.name || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const isRamiro = rawName === 'ramiro' || rawName === 'ramiro casati';
-    const key = isRamiro ? 'ramiro_casati' : rawName;
+    const isNicolas = rawName === 'nicolas diaz-saavedra' || rawName === 'nicolas diaz saavedra';
+    const key = isRamiro ? 'ramiro_casati' : (isNicolas ? 'nicolas_diaz_saavedra' : rawName);
     if (!canonicalMap.has(key)) {
       canonicalMap.set(key, player);
     } else {
       const existing = canonicalMap.get(key);
-      const preferCurrent = (player.id === 'p12') ||
+      const preferCurrent = (player.id === 'p12') || (player.id === 'p05') ||
         (player.number && !existing.number) ||
+        (player.positions?.length && !existing.positions?.length) ||
         (player.positions?.includes('Portero') && !existing.positions?.includes('Portero')) ||
         ((player.totalMinutes || 0) > (existing.totalMinutes || 0));
       const canonical = preferCurrent ? player : existing;
@@ -243,16 +259,11 @@ async function refresh() {
   await deduplicatePlayers();
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
-  const customExercises = settingRecords.filter(({ id, recordType, example }) => 
-    recordType === 'exercise' && example !== true && !id.startsWith('coord-') && !id.startsWith('tech-') && !id.startsWith('tact-') && !id.startsWith('ssg-') && !id.startsWith('keeper-') && !id.startsWith('physical-') && !id.startsWith('warmup-')
-  );
-  state.exercises = [
-    ...customExercises,
-    ...EJERCICIOS_VALIDADOS.map(toCampoBaseExercise),
-  ];
+  state.exercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
+  state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
@@ -2111,11 +2122,11 @@ function renderExercises() {
   };
   const exercises = filterExercises(state.exercises, filters)
     .sort((a, b) => {
-      // Los ejercicios validados van primero, en orden inverso (los últimos añadidos arriba).
+      // Los ejercicios validados van primero, en orden canónico (comenzando por los interactivos y con vídeo).
       const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
       const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
       const aValid = aIdx !== -1, bValid = bIdx !== -1;
-      if (aValid && bValid) return bIdx - aIdx;
+      if (aValid && bValid) return aIdx - bIdx;
       if (aValid) return -1;
       if (bValid) return 1;
       return Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es');
@@ -2635,12 +2646,12 @@ async function ensureSlideshareSeeded() {
   await putBatch({ settings: [...additions, { id: 'slideshare-seeded', recordType: 'migration', version: 6, createdAt: Date.now() }] });
 }
 
-// Elimina de la base todos los ejercicios precargados antiguos (example:true). Los ejercicios
-// validados (formato nuevo) viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
+// Elimina de la base todos los ejercicios de la app original. Los 248 ejercicios
+// validados oficiales viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
 async function ensureLegacyExercisesNotPresent() {
   const current = await getAll('settings');
   const toRemove = current.filter(({ id, recordType, example }) => 
-    recordType === 'exercise' && (example === true || id.startsWith('coord-') || id.startsWith('tech-') || id.startsWith('tact-') || id.startsWith('ssg-') || id.startsWith('keeper-') || id.startsWith('physical-') || id.startsWith('warmup-'))
+    recordType === 'exercise' && (example === true || (!id.startsWith('pdf150-') && !id.startsWith('pdf98-')))
   );
   for (const record of toRemove) await remove('settings', record.id);
   await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 10, createdAt: Date.now() });
@@ -3806,7 +3817,7 @@ async function init() {
   addSessionForm.elements.dateDay.innerHTML = dayOptions();
   addSessionForm.elements.dateMonth.innerHTML = monthOptions();
   addSessionForm.elements.dateYear.innerHTML = yearOptions();
-  const categoryOptions = EXERCISE_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
+  const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
   $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
   wireEvents(); networkStatus();
@@ -3857,7 +3868,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, renderAll, showView, get state() { return state; } };
+  window.__campobase = { refresh, renderAll, showView, showMatchDetail, get state() { return state; } };
 }
 
 init().catch(handleError);

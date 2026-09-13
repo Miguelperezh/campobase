@@ -1,7 +1,21 @@
+export const CANONICAL_V2_CATEGORIES = Object.freeze([
+  'Calentamiento / activación',
+  'Coordinación y agilidad',
+  'Defensa y duelos',
+  'Finalización',
+  'Físico con balón',
+  'Juego reducido',
+  'Pase y posesión',
+  'Porteros',
+  'Transiciones',
+  'Táctica',
+  'Técnico-táctico',
+]);
+
 export const EXERCISE_CATEGORIES = Object.freeze([
-  'Calentamiento/activación', 'Tecnificación', 'Técnico-táctico', 'Táctica',
-  'Posesión', 'Juego reducido', 'Finalización', 'Transición',
-  'Coordinación/motricidad', 'Preparación física integrada', 'Porteros',
+  ...CANONICAL_V2_CATEGORIES,
+  'Calentamiento/activación', 'Tecnificación', 'Posesión', 'Transición',
+  'Coordinación/motricidad', 'Preparación física integrada',
 ]);
 
 export const EXERCISE_DIFFICULTIES = Object.freeze(['Baja', 'Media', 'Alta']);

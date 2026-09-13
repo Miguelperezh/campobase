@@ -873,19 +873,24 @@ body.cb-redesign-active .player-head .avatar {
   flex-shrink: 0;
 }
 
+body.cb-redesign-active .card-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(310px, 100%), 1fr)) !important;
+  gap: 1.1rem !important;
+}
+
 body.cb-redesign-active .player-name {
   flex: 1;
   min-width: 0;
 }
 
 body.cb-redesign-active .player-name h3 {
-  font-size: 1.08rem;
+  font-size: clamp(0.98rem, 2.5vw, 1.15rem) !important;
   font-weight: 800;
   color: var(--cb-slate-900);
   margin: 0 0 0.15rem 0;
   letter-spacing: -0.015em;
   white-space: normal !important;
-  overflow-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
   word-break: break-word !important;
   line-height: 1.25 !important;
 }
@@ -1251,18 +1256,36 @@ body.cb-redesign-active .collapse-stats-btn:hover {
    PARTIDO EN VIVO REDISEÑADO
    ========================================================================== */
 body.cb-redesign-active .stadium-score {
-  background: linear-gradient(135deg, var(--cb-pitch-950) 0%, var(--cb-pitch-850) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--cb-radius-xl);
-  box-shadow: 0 8px 24px rgba(5, 24, 17, 0.25);
-  padding: 1.4rem;
+  background: linear-gradient(135deg, #0f2d20 0%, #051811 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: var(--cb-radius-xl) !important;
+  box-shadow: 0 8px 24px rgba(5, 24, 17, 0.35) !important;
+  padding: 1.4rem !important;
 }
 
-body.cb-redesign-active .score-team>strong {
-  font-size: clamp(3rem, 11vw, 5.5rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+body.cb-redesign-active .stadium-score .score-team > span {
+  color: #a7f3d0 !important;
+  font-size: clamp(0.95rem, 2.5vw, 1.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+body.cb-redesign-active .stadium-score .score-team > strong {
+  color: #ffffff !important;
+  font-size: clamp(3rem, 11vw, 5.5rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7) !important;
+  line-height: 1 !important;
+}
+
+body.cb-redesign-active .stadium-score .score-separator {
+  color: #facc15 !important;
+  font-size: clamp(2rem, 6vw, 3.5rem) !important;
+  font-weight: 900 !important;
+  opacity: 0.95 !important;
 }
 
 body.cb-redesign-active .score-team button {
@@ -1271,6 +1294,9 @@ body.cb-redesign-active .score-team button {
   font-size: 1.4rem;
   border-radius: var(--cb-radius-md);
   font-weight: 900;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 body.cb-redesign-active .score-step.primary {
@@ -2599,6 +2625,57 @@ body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-
   color: var(--cb-font-custom-color) !important;
 }
 
+/* El marcador de estadio siempre tiene fondo oscuro y texto de alto contraste (blanco, menta y oro) */
+body.cb-redesign-active .stadium-score,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score,
+body.cb-redesign-active[data-has-custom-font-color="true"] #match-detail-dialog .stadium-score {
+  background: linear-gradient(135deg, #0f2d20 0%, #051811 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: var(--cb-radius-xl) !important;
+  box-shadow: 0 8px 24px rgba(5, 24, 17, 0.35) !important;
+  padding: 1.4rem !important;
+}
+
+body.cb-redesign-active .stadium-score .score-team > span,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-team > span,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-team span,
+body.cb-redesign-active[data-has-custom-font-color="true"] #match-detail-dialog .stadium-score .score-team span {
+  color: #a7f3d0 !important;
+  font-size: clamp(0.95rem, 2.5vw, 1.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+body.cb-redesign-active .stadium-score .score-team > strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-team > strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-team strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] #match-detail-dialog .stadium-score .score-team strong {
+  color: #ffffff !important;
+  font-size: clamp(3rem, 11vw, 5.5rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7) !important;
+  line-height: 1 !important;
+}
+
+body.cb-redesign-active .stadium-score .score-separator,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-separator,
+body.cb-redesign-active[data-has-custom-font-color="true"] #match-detail-dialog .stadium-score .score-separator {
+  color: #facc15 !important;
+  font-size: clamp(2rem, 6vw, 3.5rem) !important;
+  font-weight: 900 !important;
+  opacity: 0.95 !important;
+}
+
+body.cb-redesign-active .stadium-score .score-team button,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score-team button {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
 .font-color-swatch-btn.active {
   box-shadow: 0 0 0 3px var(--cb-pitch-700, #10b981), 0 0 0 5px rgba(255, 255, 255, 0.8) !important;
   transform: scale(1.15);
@@ -2965,10 +3042,10 @@ body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-
   font-size: 0.88rem;
   font-weight: 800;
   color: var(--cb-slate-900);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
 }
 
 .plantilla-staff-actions {
