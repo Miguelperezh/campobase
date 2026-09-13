@@ -61,7 +61,13 @@ export function renderTacticaGuiaHTML(tactica) {
           <button type="button" class="secondary" data-tg-restart title="Reiniciar">↺</button>
           <button type="button" class="secondary" data-tg-full title="Pantalla completa">⛶</button>
           <div class="tg-speed" data-tg-speed><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
+          <div class="v-zoom-group" title="Zoom táctico">
+            <button type="button" class="v-btn v-btn-zoom-out" data-tg-zoom-out title="Alejar zoom">🔍−</button>
+            <button type="button" class="v-btn v-btn-zoom-reset" data-tg-zoom-reset title="Restablecer zoom">100%</button>
+            <button type="button" class="v-btn v-btn-zoom-in" data-tg-zoom-in title="Acercar zoom">🔍+</button>
+          </div>
         </div>
+        <button type="button" class="sheet-top-close-btn tg-player-top-close" data-tg-player-close-top title="Cerrar">✕</button>
         <button type="button" class="tg-close-full" data-tg-player-close>Cerrar animación</button>
       </div>
       <div class="tg-coach">
@@ -166,20 +172,106 @@ export function initTacticaGuia(root, tactica) {
   $('[data-tg-speed]').addEventListener('click', (e) => { const b = e.target.closest('button[data-s]'); if (b) setSpeed(Number(b.dataset.s)); });
 
   const playerShell = $('[data-tg-player-shell]');
-  // iOS Safari no soporta requestFullscreen() sobre elementos que no sean vídeo,
-  // así que usamos un fullscreen CSS propio como respaldo universal.
+  const stage = $('[data-tg-stage]');
+  const frameImg = $('[data-tg-frame]');
+
+  // Zoom táctico con clamping
+  let zoomLevel = 1;
+  let panX = 0;
+  let panY = 0;
+
+  function updateTransform() {
+    if (!frameImg || !stage) return;
+    if (zoomLevel <= 1) {
+      panX = 0;
+      panY = 0;
+      frameImg.style.transform = '';
+      frameImg.style.cursor = '';
+    } else {
+      const maxPanX = Math.max(0, (stage.clientWidth * (zoomLevel - 1)) / 2);
+      const maxPanY = Math.max(0, (stage.clientHeight * (zoomLevel - 1)) / 2);
+      panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+      panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+      frameImg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+      frameImg.style.cursor = 'grab';
+    }
+  }
+
+  function setZoom(lvl) {
+    zoomLevel = Math.max(1, Math.min(3, Number(lvl.toFixed(2))));
+    updateTransform();
+  }
+
+  $('[data-tg-zoom-in]')?.addEventListener('click', (e) => { e.stopPropagation(); setZoom(zoomLevel + 0.25); });
+  $('[data-tg-zoom-out]')?.addEventListener('click', (e) => { e.stopPropagation(); setZoom(zoomLevel - 0.25); });
+  $('[data-tg-zoom-reset]')?.addEventListener('click', (e) => { e.stopPropagation(); setZoom(1); });
+
+  // Arrastre con fijación de límites (clamping)
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let initPanX = 0;
+  let initPanY = 0;
+
+  stage.addEventListener('pointerdown', (e) => {
+    if (zoomLevel <= 1) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    initPanX = panX;
+    initPanY = panY;
+    frameImg.style.cursor = 'grabbing';
+    stage.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    panX = initPanX + (e.clientX - startX);
+    panY = initPanY + (e.clientY - startY);
+    updateTransform();
+  });
+
+  const stopDrag = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    if (frameImg) frameImg.style.cursor = zoomLevel > 1 ? 'grab' : '';
+    if (e?.pointerId) {
+      try { stage.releasePointerCapture?.(e.pointerId); } catch {}
+    }
+  };
+  stage.addEventListener('pointerup', stopDrag);
+  stage.addEventListener('pointercancel', stopDrag);
+
+  // Pantalla completa y botones de cierre
   const supportsFs = typeof playerShell.requestFullscreen === 'function';
   const openFull = () => {
-    if (supportsFs) { playerShell.requestFullscreen?.(); return; }
     playerShell.classList.add('tg-fullscreen');
+    if (supportsFs && !document.fullscreenElement) {
+      playerShell.requestFullscreen?.().catch(() => {});
+    }
   };
   const closePlayerFull = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     playerShell.classList.remove('tg-fullscreen');
+    setZoom(1);
   };
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && playerShell.classList.contains('tg-fullscreen')) {
+      playerShell.classList.remove('tg-fullscreen');
+      setZoom(1);
+    }
+  });
+
   $('[data-tg-full]').addEventListener('click', openFull);
-  $('[data-tg-stage]').addEventListener('click', openFull);
+  $('[data-tg-stage]').addEventListener('click', (e) => {
+    if (zoomLevel <= 1 && !playerShell.classList.contains('tg-fullscreen')) {
+      openFull();
+    }
+  });
   $('[data-tg-player-close]').addEventListener('click', closePlayerFull);
+  $('[data-tg-player-close-top]')?.addEventListener('click', closePlayerFull);
 
   $('[data-tg-errors-toggle]').addEventListener('click', () => {
     const open = $('[data-tg-errors]').classList.toggle('open');

@@ -7,6 +7,8 @@ import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
 const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 function mp4Path(item) {
+  const media = item.media || {};
+  if (media.video || media.mp4) return media.video || media.mp4;
   const anim = item.animacion || {};
   return anim.mp4 || String(anim.gif || '').replace(/\.gif$/i, '.mp4');
 }
@@ -17,6 +19,9 @@ test('todas las demostraciones validadas tienen un MP4 disponible', async () => 
     const path = mp4Path(item);
     if (!path) {
       missing.push(`${item.id}: sin ruta MP4`);
+      continue;
+    }
+    if (path.startsWith('http://') || path.startsWith('https://')) {
       continue;
     }
     try {

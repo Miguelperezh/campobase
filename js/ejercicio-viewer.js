@@ -1,117 +1,32 @@
-// Renderizador y reproductor de la ficha de ejercicio validado.
-// Biblioteca completa en datos, pero vídeo, listeners pesados y detalle bajo demanda.
+// Renderizador y reproductor oficial V2 de fichas de ejercicios validados.
+// Implementa las 17 secciones completas, controles interactivos, zoom táctico con clamping,
+// leyenda visual bajo el vídeo y botones accesibles de cierre (superior con safe-area e inferior fijo).
 
 import { renderVideoSectionHTML } from './ejercicio-videos.js';
 import { attachMediaLightbox } from './media-lightbox.js';
+import { findValidatedExercise } from './ejercicios-validados.js';
 
-const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
-const list = (values) => `<ul class="plain-list">${(values || []).map((v) => `<li>${esc(v)}</li>`).join('')}</ul>`;
-const itemRegistry = new Map();
+export function attachLightbox(root) {
+  if (root) attachMediaLightbox(root);
+}
+
 const viewerTargets = new Set();
 let viewerObserver = null;
 
-function detailHTML(item) {
-  const det = item?.detalle || {};
-  return [
-    ['Objetivos', det.objetivos],
-    ['Claves del entrenador', det.claves_entrenador],
-    ['Montaje', det.montaje],
-    ['Desarrollo paso a paso', det.desarrollo],
-    ['Qué buscamos', det.que_buscamos],
-    ['Qué observar', det.que_observar],
-    ['Correcciones', det.correcciones],
-    ['Reglas', det.reglas],
-    ['Si sale mal', det.si_sale_mal],
-    ['Si sale bien', det.si_sale_bien],
-    ['Variantes', det.variantes],
-  ].filter(([, values]) => Array.isArray(values) && values.length)
-    .map(([title, values]) => `<h3>${esc(title)}</h3>${list(values)}`).join('');
+export function pruneDisconnectedViewerTargets() {
+  for (const target of viewerTargets) {
+    if (!target.isConnected) {
+      viewerTargets.delete(target);
+      if (viewerObserver) viewerObserver.unobserve(target);
+    }
+  }
 }
 
-export function renderValidatedExerciseHTML(item, options = {}) {
-  const vr = item.vista_rapida || {};
-  const anim = item.animacion || {};
-  const videoSrc = anim.mp4 || (anim.gif || '').replace(/\.gif$/i, '.mp4');
-  const realVideo = item.video || '';
-  const tiempo = parseDuration(vr.tiempo_estimado_15);
-  const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: item.id });
-  const pillsTrabaja = (vr.que_se_trabaja || []).map((t) => `<span class="pill trabaja">${esc(t)}</span>`).join('');
-
-  itemRegistry.set(String(item.id), item);
-
-  const seriesList = vr.series || [];
-  const normalizar = (text) => (text || '').trim().replace(/la misma\s+/gi, 'la ');
-  const nucleo = (text) => normalizar(text).split('.')[0].trim();
-  const nucleos = seriesList.map((serie) => nucleo(serie.instruccion));
-  const todasIguales = seriesList.length > 1 && nucleos.every((value) => value === nucleos[0]);
-  const series = todasIguales
-    ? `<div class="serie"><span class="n">${seriesList.length}×</span><div class="t">${esc(seriesList[0].instruccion)}</div></div>`
-    : seriesList.map((serie, index) => `<div class="serie"><span class="n">${index + 1}</span><div class="t">${esc(serie.instruccion)}</div></div>`).join('');
-
-  const placeholder = videoSrc
-    ? '<div class="video-placeholder" style="display:flex;position:absolute;inset:0;z-index:2;align-items:center;justify-content:center;padding:1rem;text-align:center;background:#0c3b2e;color:#fff">Cargando vista previa…</div>'
-    : '<div class="video-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:180px;padding:1rem;text-align:center;background:#0c3b2e;color:#fff">Demostración no disponible</div>';
-
-  return `
-  <div class="ejercicio-validado" data-id="${esc(item.id)}" data-video="${esc(videoSrc)}" style="content-visibility:auto;contain-intrinsic-size:auto 900px">
-    <div class="pills"><span class="pill tipo">${esc(vr.tipo_principal)}</span>${pillsTrabaja}</div>
-    <h2 class="nombre">${esc(item.nombre)}</h2>
-
-    <div class="datos">
-      <div class="dato"><small>Tiempo estimado (15 jug.)</small><strong>${esc(vr.tiempo_estimado_15)}</strong><input type="number" class="tiempo-ejercicio" value="${tiempo}" min="1" max="120" step="1"><small class="editable">editable</small></div>
-      <div class="dato"><small>Jugadores</small><strong>${esc(vr.jugadores?.total ?? '')}</strong><span class="sub">${esc(vr.jugadores?.organizacion ?? '')}</span></div>
-      <div class="dato"><small>Material</small><strong>${esc(vr.material)}</strong></div>
-    </div>
-
-    <div class="series">${series}</div>
-    <div class="explicacion">${esc(vr.explicacion_breve)}</div>
-
-    <div class="player">
-      <div class="stage" style="position:relative">${placeholder}<video class="frame-video" data-src="${esc(videoSrc)}" playsinline muted loop preload="none" style="display:block"></video></div>
-      <div class="controls">
-        <button type="button" class="btn-prev" title="Paso anterior">⏮</button>
-        <button type="button" class="btn-play primary" title="Reproducir / Pausar">▶</button>
-        <button type="button" class="btn-next" title="Paso siguiente">⏭</button>
-        <button type="button" class="btn-restart" title="Reiniciar">↺</button>
-        <button type="button" class="btn-full" title="Pantalla completa">⛶</button>
-        <div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div>
-      </div>
-    </div>
-
-    <div class="leyenda"><strong>Leyenda:</strong> ${esc(vr.leyenda)}</div>
-
-    ${realVideo ? `
-    <div class="videos real-video">
-      <h3>Vídeo real</h3>
-      <div class="video-item">
-        <video class="real-video-el" controls preload="none" playsinline data-src="${esc(realVideo)}"></video>
-        <div class="video-meta"><span class="video-name">Demostración en vídeo</span><button type="button" class="real-video-full" title="Ampliar">⛶ Ampliar</button></div>
-      </div>
-    </div>` : ''}
-
-    ${videosHTML}
-
-    <div class="acciones"><button type="button" class="add-exercise-to-session primary" data-id="${esc(item.id)}">+ Añadir a sesión</button><button type="button" class="btn-detalle">Ver detalles</button></div>
-    <div class="detalle" data-lazy-detail="1"></div>
-
-    <div class="lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-prev" title="Paso anterior">⏮</button><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><button type="button" class="lb-next" title="Paso siguiente">⏭</button><button type="button" class="lb-restart" title="Reiniciar">↺</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button></div></div><span class="hint">Rueda/pellizco: zoom · arrastra solo el vídeo</span><button type="button" class="tg-close-full" title="Cerrar animación">Cerrar animación</button></div>
-    ${realVideo ? `<div class="lightbox real-video-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1.5×</button><button type="button" data-s="2">2×</button></div></div><span class="hint">Rueda/pellizco: zoom · arrastra solo el vídeo</span><button type="button" class="tg-close-full" title="Cerrar vídeo">Cerrar vídeo</button></div>` : ''}
-  </div>`;
+export function activateValidatedExerciseViewer(root) {
+  initValidatedExerciseViewer(root);
 }
 
-function parseDuration(text) {
-  const match = String(text ?? '').match(/(\d+)\s*-\s*(\d+)/);
-  if (match) return Math.round((Number(match[1]) + Number(match[2])) / 2);
-  const single = String(text ?? '').match(/(\d+)/);
-  return single ? Number(single[1]) : 15;
-}
-
-function validatedRoot(root) {
-  if (!root) return null;
-  return root.matches?.('.ejercicio-validado') ? root : root.querySelector?.('.ejercicio-validado');
-}
-
-function ensureVideoLoaded(video, placeholder, previewOnly = false) {
+export function ensureVideoLoaded(video, placeholder, previewOnly = false) {
   if (!video) return Promise.resolve(false);
   const src = video.dataset.src;
   if (!src) return Promise.resolve(false);
@@ -120,37 +35,15 @@ function ensureVideoLoaded(video, placeholder, previewOnly = false) {
     return Promise.resolve(true);
   }
   if (video._loadPromise) return video._loadPromise;
-
-  if (placeholder) {
-    placeholder.textContent = previewOnly ? 'Cargando vista previa…' : 'Cargando demostración…';
-    placeholder.style.display = 'flex';
-  }
   if (!video.getAttribute('src')) video.src = src;
   video.preload = previewOnly ? 'metadata' : 'auto';
   video.load();
-
   video._loadPromise = new Promise((resolve) => {
+    const ready = () => { cleanup(); resolve(true); };
+    const failed = () => { cleanup(); resolve(false); };
     const cleanup = () => {
       video.removeEventListener('loadeddata', ready);
       video.removeEventListener('error', failed);
-    };
-    const ready = () => {
-      cleanup();
-      video.pause();
-      try { video.currentTime = 0; } catch {}
-      if (placeholder) placeholder.style.display = 'none';
-      resolve(true);
-    };
-    const failed = () => {
-      cleanup();
-      if (placeholder) {
-        placeholder.textContent = 'No se pudo cargar la demostración. Comprueba la conexión y vuelve a intentarlo.';
-        placeholder.style.display = 'flex';
-      }
-      video.removeAttribute('src');
-      video.load();
-      video._loadPromise = null;
-      resolve(false);
     };
     if (video.readyState >= 2) return ready();
     video.addEventListener('loadeddata', ready, { once: true });
@@ -159,184 +52,710 @@ function ensureVideoLoaded(video, placeholder, previewOnly = false) {
   return video._loadPromise;
 }
 
-function initLazyStandaloneVideo(video) {
-  if (!video?.dataset.src || video.dataset._lazyStandalone) return;
-  video.dataset._lazyStandalone = '1';
-  const load = (preload = 'metadata') => {
-    if (!video.getAttribute('src')) {
-      video.src = video.dataset.src;
-      video.preload = preload;
-      video.load();
-    } else if (preload === 'auto') video.preload = 'auto';
-  };
-  video.addEventListener('pointerdown', () => load('auto'), { once: true });
-  video.addEventListener('play', () => load('auto'));
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect();
-      load('metadata');
-    }, { rootMargin: '300px 0px' });
-    observer.observe(video);
-  }
-}
-
-function activateValidatedExerciseViewer(root) {
-  if (!root || root.dataset._viewerInit === '1') return;
-  root.dataset._viewerInit = '1';
-  root.dataset._viewerScheduled = '1';
-
-  const video = root.querySelector('.frame-video');
-  const placeholder = root.querySelector('.video-placeholder');
-  const btnPlay = root.querySelector('.btn-play');
-  const lb = root.querySelector(':scope > .lightbox:not(.real-video-lightbox)');
-  const lbPlay = lb?.querySelector('.lb-play');
-  let speed = 1;
-  let countedPlaying = false;
-
-  const setSpeed = (value) => {
-    speed = value;
-    if (video) video.playbackRate = value;
-    root.querySelectorAll(':scope > .player .speed button, :scope > .lightbox:not(.real-video-lightbox) .speed button').forEach((button) => button.classList.toggle('on', parseFloat(button.dataset.s) === value));
-  };
-
-  const markPlaying = (playing) => {
-    if (playing && !countedPlaying) {
-      window.__viewersPlaying = (window.__viewersPlaying || 0) + 1;
-      countedPlaying = true;
-    } else if (!playing && countedPlaying) {
-      window.__viewersPlaying = Math.max(0, (window.__viewersPlaying || 0) - 1);
-      countedPlaying = false;
-    }
-  };
-
-  const play = async () => {
-    if (!video || !await ensureVideoLoaded(video, placeholder, false)) return;
-    try {
-      video.playbackRate = speed;
-      await video.play();
-      if (btnPlay) btnPlay.textContent = '⏸';
-      if (lbPlay) lbPlay.textContent = '⏸';
-      markPlaying(true);
-    } catch {
-      if (placeholder) {
-        placeholder.textContent = 'Pulsa ▶ de nuevo para reproducir la demostración.';
-        placeholder.style.display = 'flex';
-      }
-    }
-  };
-  const pause = () => {
-    if (!video) return;
-    video.pause();
-    if (btnPlay) btnPlay.textContent = '▶';
-    if (lbPlay) lbPlay.textContent = '▶';
-    markPlaying(false);
-  };
-  const toggle = () => (video?.paused ? play() : pause());
-  const step = async (delta) => {
-    if (!video || !await ensureVideoLoaded(video, placeholder, false)) return;
-    pause();
-    video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta));
-  };
-
-  btnPlay?.addEventListener('click', toggle);
-  lbPlay?.addEventListener('click', toggle);
-  root.querySelector('.btn-prev')?.addEventListener('click', () => step(-0.125));
-  root.querySelector('.btn-next')?.addEventListener('click', () => step(0.125));
-  root.querySelector('.btn-restart')?.addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded(video, placeholder, false)) video.currentTime = 0; });
-  lb?.querySelector('.lb-prev')?.addEventListener('click', () => step(-0.125));
-  lb?.querySelector('.lb-next')?.addEventListener('click', () => step(0.125));
-  lb?.querySelector('.lb-restart')?.addEventListener('click', async () => { pause(); if (video && await ensureVideoLoaded(video, placeholder, false)) video.currentTime = 0; });
-  root.querySelectorAll(':scope > .player .speed button, :scope > .lightbox:not(.real-video-lightbox) .speed button').forEach((button) => button.addEventListener('click', () => setSpeed(parseFloat(button.dataset.s))));
-
-  const detail = root.querySelector(':scope > .detalle');
-  const detailButton = root.querySelector(':scope > .acciones .btn-detalle');
-  detailButton?.addEventListener('click', () => {
-    if (detail?.dataset.lazyDetail === '1') {
-      detail.innerHTML = detailHTML(itemRegistry.get(String(root.dataset.id)));
-      detail.dataset.lazyDetail = '0';
-    }
-    detail?.classList.toggle('open');
-    detailButton.textContent = detail?.classList.contains('open') ? 'Ocultar detalles' : 'Ver detalles';
-  });
-
-  const stage = root.querySelector(':scope > .player .stage');
-  const controller = lb && stage ? attachMediaLightbox({ box: lb, stage, mediaSelector: '.frame-video' }) : null;
-  root.querySelector('.btn-full')?.addEventListener('click', async () => {
-    if (!video || !await ensureVideoLoaded(video, placeholder, false)) return;
-    controller?.open();
-  });
-
-  const realVideo = root.querySelector('.real-video-el');
-  const realLb = root.querySelector(':scope > .real-video-lightbox');
-  const realStage = realVideo?.parentElement;
-  if (realVideo) initLazyStandaloneVideo(realVideo);
-  if (realVideo && realLb && realStage) {
-    const realController = attachMediaLightbox({ box: realLb, stage: realStage, mediaSelector: '.real-video-el' });
-    root.querySelector('.real-video-full')?.addEventListener('click', () => {
-      if (!realVideo.getAttribute('src') && realVideo.dataset.src) {
-        realVideo.src = realVideo.dataset.src;
-        realVideo.preload = 'auto';
-        realVideo.load();
-      }
-      realController?.open();
-    });
-    const realPlay = realLb.querySelector('.lb-play');
-    realPlay?.addEventListener('click', () => {
-      if (realVideo.paused) realVideo.play().then(() => { realPlay.textContent = '⏸'; }).catch(() => {});
-      else { realVideo.pause(); realPlay.textContent = '▶'; }
-    });
-    realLb.querySelectorAll('.speed button').forEach((button) => button.addEventListener('click', () => {
-      const next = parseFloat(button.dataset.s);
-      realVideo.playbackRate = next;
-      realLb.querySelectorAll('.speed button').forEach((candidate) => candidate.classList.toggle('on', candidate === button));
-    }));
-  }
-
-  if (video?.dataset.src) ensureVideoLoaded(video, placeholder, true);
-  setSpeed(speed);
-}
-
-function pruneDisconnectedViewerTargets() {
-  if (!viewerObserver || viewerTargets.size === 0) return;
-  for (const target of viewerTargets) {
-    if (target.isConnected) continue;
-    viewerObserver.unobserve(target);
-    viewerTargets.delete(target);
-  }
-}
-
-function getViewerObserver() {
-  if (!viewerObserver && typeof IntersectionObserver !== 'undefined') {
-    viewerObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        viewerObserver.unobserve(entry.target);
-        viewerTargets.delete(entry.target);
+if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+  viewerObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
         activateValidatedExerciseViewer(entry.target);
       }
-    }, { rootMargin: '350px 0px' });
+    }
+  }, { rootMargin: '350px 0px' });
+}
+
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
+
+/**
+ * Renderiza la ficha completa V2 (17 secciones) para el visor modal o detalle.
+ */
+export function renderValidatedExerciseHTML(ex, options = {}) {
+  const media = ex.media || {};
+  const videoSrc = media.video || media.mp4 || (ex.animacion?.mp4) || '';
+  const previewSrc = media.preview || (ex.animacion?.preview) || '';
+  const realVideo = ex.video || '';
+  const dr = ex.datos_rapidos || {};
+  const org = ex.organizacion || {};
+
+  // Tags en cabecera
+  const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean);
+  const tagsHtml = tags.map(t => `<span class="brand-badge">${esc(t)}</span>`).join('');
+
+  // 1. Qué se trabaja
+  let queTrabajaHtml = '';
+  if (ex.que_se_trabaja && ex.que_se_trabaja.length) {
+    queTrabajaHtml = `
+      <div id="section-que-se-trabaja" class="section-block">
+        <h3>🎯 Qué se trabaja</h3>
+        <div class="concept-chips">
+          ${ex.que_se_trabaja.map(c => `<span class="concept-pill">${esc(c)}</span>`).join('')}
+        </div>
+      </div>`;
   }
-  return viewerObserver;
+
+  // 2. Objetivos
+  let objHtml = '';
+  if (ex.objetivo_principal || (ex.objetivos_secundarios && ex.objetivos_secundarios.length)) {
+    objHtml = `
+      <div id="section-objetivo" class="section-block">
+        <h3>🏆 Objetivo del ejercicio</h3>
+        ${ex.objetivo_principal ? `<div class="main-objective-box">${esc(ex.objetivo_principal)}</div>` : ''}
+        ${ex.objetivos_secundarios && ex.objetivos_secundarios.length ? `
+          <div style="margin-top:0.75rem">
+            <div class="sub-label">Objetivos complementarios:</div>
+            <ul class="plain-list bullet-list">
+              ${ex.objetivos_secundarios.map(o => `<li>${esc(o)}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+      </div>`;
+  }
+
+  // 3. Datos rápidos
+  const rapItems = [];
+  if (dr.jugadores) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">👥 Jugadores</span><span class="fact-value">${esc(dr.jugadores)}</span></div>`);
+  if (dr.duracion) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${esc(dr.duracion)}</span></div>`);
+  if (dr.espacio) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📐 Espacio</span><span class="fact-value">${esc(dr.espacio)}</span></div>`);
+  if (dr.material) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📦 Material</span><span class="fact-value">${esc(dr.material)}</span></div>`);
+  let datosRapidosHtml = '';
+  if (rapItems.length) {
+    datosRapidosHtml = `
+      <div id="section-datos-rapidos" class="section-block">
+        <div class="quick-facts-grid">${rapItems.join('')}</div>
+      </div>`;
+  }
+
+  // 4. Montaje
+  let montajeHtml = '';
+  if (ex.montaje && (ex.montaje.dimensiones || ex.montaje.espacio_tipo || ex.montaje.explicacion)) {
+    const badges = [];
+    if (ex.montaje.dimensiones) badges.push(`<span class="chip-metric">📏 ${esc(ex.montaje.dimensiones)}</span>`);
+    if (ex.montaje.espacio_tipo) badges.push(`<span class="chip-metric">📍 ${esc(ex.montaje.espacio_tipo)}</span>`);
+    montajeHtml = `
+      <div id="section-montaje" class="section-block">
+        <h3>📐 Montaje y dimensiones</h3>
+        ${badges.length ? `<div class="chips-row">${badges.join('')}</div>` : ''}
+        ${ex.montaje.explicacion ? `<p class="section-text">${esc(ex.montaje.explicacion).replace(/\n/g, '<br>')}</p>` : ''}
+      </div>`;
+  }
+
+  // 5. Material operativo
+  let materialHtml = '';
+  if (ex.materiales && ex.materiales.length) {
+    materialHtml = `
+      <div id="section-material" class="section-block">
+        <h3>📦 Material necesario</h3>
+        <ul class="plain-list material-list">
+          ${ex.materiales.map(m => `
+            <li>
+              <strong>${m.icono ? m.icono + ' ' : ''}${esc(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}:</strong>
+              ${esc(m.funcion || 'Material de la tarea')}
+            </li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  // 6. Cómo se hace (Paso a paso)
+  let comoSeHaceHtml = '';
+  if (ex.como_se_hace && ex.como_se_hace.length) {
+    comoSeHaceHtml = `
+      <div id="section-como-se-hace" class="section-block">
+        <h3>⚙️ Cómo se hace (Paso a paso)</h3>
+        <div class="numbered-steps">
+          ${ex.como_se_hace.map((step, idx) => `
+            <div class="step-item">
+              <span class="step-num">${idx + 1}</span>
+              <div class="step-text">${esc(step)}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // 7. Fases
+  let fasesHtml = '';
+  if (ex.fases && ex.fases.length) {
+    fasesHtml = `
+      <div id="section-fases" class="section-block">
+        <h3>🔄 Fases de la tarea</h3>
+        <div class="phases-list">
+          ${ex.fases.map(f => `
+            <div class="phase-card">
+              <div class="phase-title">
+                <span>${esc(f.titulo || `Fase ${f.orden || ''}`)}</span>
+                ${f.poseedor_balon ? `<span class="phase-ball">⚽ Balón: <strong>${esc(f.poseedor_balon)}</strong></span>` : ''}
+              </div>
+              <div class="phase-desc">${esc(f.descripcion || '')}</div>
+              ${f.que_ocurre_despues ? `<div class="phase-meta">👉 <em>Siguiente:</em> ${esc(f.que_ocurre_despues)}</div>` : ''}
+              ${f.condicion_final && f.condicion_final !== f.descripcion ? `<div class="phase-meta">🏁 <em>Cierre:</em> ${esc(f.condicion_final)}</div>` : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // 8. Series y carga
+  let cargaHtml = '';
+  const cargaItems = [];
+  if (ex.carga?.duracion) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${esc(ex.carga.duracion)}</span></div>`);
+  if (ex.carga?.series) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🔁 Series</span><span class="fact-value">${esc(ex.carga.series)}</span></div>`);
+  if (ex.carga?.repeticiones) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🔄 Repeticiones</span><span class="fact-value">${esc(ex.carga.repeticiones)}</span></div>`);
+  if (ex.carga?.descanso) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🛑 Descanso</span><span class="fact-value">${esc(ex.carga.descanso)}</span></div>`);
+  if (cargaItems.length || ex.carga?.ciclo_repeticion) {
+    cargaHtml = `
+      <div id="section-carga" class="section-block">
+        <h3>⏱ Series, repeticiones y descansos</h3>
+        ${cargaItems.length ? `<div class="quick-facts-grid">${cargaItems.join('')}</div>` : ''}
+        ${ex.carga?.ciclo_repeticion ? `<div class="carga-cycle"><strong>Dinámica del ciclo:</strong> ${esc(ex.carga.ciclo_repeticion)}</div>` : ''}
+      </div>`;
+  }
+
+  // 9. Rotación
+  let rotacionHtml = '';
+  const hasRot = ex.rotacion && (ex.rotacion.explicacion || (ex.rotacion.detalles && ex.rotacion.detalles.length) || (ex.rotacion.reglas && ex.rotacion.reglas.length));
+  if (hasRot) {
+    rotacionHtml = `
+      <div id="section-rotacion" class="section-block">
+        <h3>🔁 Rotación de jugadores</h3>
+        ${ex.rotacion.explicacion ? `<p class="section-text">${esc(ex.rotacion.explicacion)}</p>` : ''}
+        ${ex.rotacion.detalles && ex.rotacion.detalles.length ? `
+          <ul class="plain-list bullet-list">
+            ${ex.rotacion.detalles.map(d => `<li>${esc(d)}</li>`).join('')}
+          </ul>` : ''}
+        ${ex.rotacion.reglas && ex.rotacion.reglas.length ? `
+          <div class="rot-rules">
+            <strong>Reglas de cambio:</strong>
+            <ul class="plain-list bullet-list">
+              ${ex.rotacion.reglas.map(r => `<li>${esc(r)}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+      </div>`;
+  }
+
+  // 10. Qué observar
+  let queObservarHtml = '';
+  if (ex.que_observar && ex.que_observar.length) {
+    queObservarHtml = `
+      <div id="section-que-observar" class="section-block">
+        <h3>👀 Qué debe observar el entrenador</h3>
+        <ul class="plain-list bullet-list">
+          ${ex.que_observar.map(item => `<li>${esc(item)}</li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  // 11. Consignas del entrenador
+  let consignasHtml = '';
+  if (ex.consignas && ex.consignas.length) {
+    consignasHtml = `
+      <div id="section-consignas" class="section-block">
+        <h3>🗣️ Consignas del entrenador</h3>
+        <div class="consignas-list">
+          ${ex.consignas.map(c => `
+            <div class="consigna-quote">
+              <span class="quote-icon">📢</span>
+              <div class="quote-body">"${esc(c)}"</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // 12. Errores y correcciones (DEDUPLICADOS para evitar repeticiones)
+  let erroresHtml = '';
+  if (ex.errores_correcciones && ex.errores_correcciones.length) {
+    const seen = new Set();
+    const unique = [];
+    for (const ec of ex.errores_correcciones) {
+      const err = (ec.error || '').trim();
+      const corr = (ec.correccion || '').trim();
+      if (!err && !corr) continue;
+      const key = `${err.toLowerCase()}___${corr.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push({ error: err, correccion: corr });
+    }
+    if (unique.length) {
+      erroresHtml = `
+        <div id="section-errores-correcciones" class="section-block">
+          <h3>⚠️ Errores habituales y correcciones</h3>
+          <div class="error-corr-grid">
+            ${unique.map(ec => `
+              <div class="error-corr-card">
+                ${ec.error ? `
+                  <div class="err-row">
+                    <span class="err-tag">Error habitual</span>
+                    <span class="err-text">${esc(ec.error)}</span>
+                  </div>` : ''}
+                ${ec.correccion ? `
+                  <div class="corr-row">
+                    <span class="corr-tag">Corrección clave</span>
+                    <span class="corr-text">${esc(ec.correccion)}</span>
+                  </div>` : ''}
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+  }
+
+  // 13. Variantes
+  let variantesHtml = '';
+  if (ex.variantes && ex.variantes.length) {
+    variantesHtml = `
+      <div id="section-variantes" class="section-block">
+        <h3>🔀 Variantes progresivas</h3>
+        <ul class="plain-list bullet-list">
+          ${ex.variantes.map(v => {
+            if (typeof v === 'string') return `<li>${esc(v)}</li>`;
+            const name = v.variante || v.nombre || 'Variante';
+            const desc = v.variacion || v.descripcion || '';
+            const obj = v.objetivo ? `<em class="var-objective">(${esc(v.objetivo)})</em>` : '';
+            return `<li><strong>${esc(name)}:</strong> ${esc(desc)} ${obj}</li>`;
+          }).join('')}
+        </ul>
+      </div>`;
+  }
+
+  // 14. Leyenda visual (DIRECTAMENTE BAJO EL VÍDEO)
+  let leyendaHtml = '';
+  const ley = ex.leyenda_visual;
+  const hasJugadores = ley?.jugadores && ley.jugadores.length;
+  const hasMateriales = ley?.materiales && ley.materiales.length;
+  const hasAcciones = ley?.acciones && ley.acciones.length;
+  const hasZonas = ley?.zonas && ley.zonas.length;
+
+  if (hasJugadores || hasMateriales || hasAcciones || hasZonas) {
+    let subBlocks = '';
+    if (hasJugadores) {
+      subBlocks += `
+        <div class="legend-category">
+          <div class="legend-subtitle">Jugadores y roles</div>
+          <div class="legend-items-grid">
+            ${ley.jugadores.map(j => `
+              <div class="legend-card">
+                <div class="legend-player-token" style="background:${j.color || '#3477DB'};">${esc(j.letra || 'J')}</div>
+                <div class="legend-info">
+                  <div class="legend-title">${esc(j.rol)}</div>
+                  ${j.funcion ? `<div class="legend-detail">${esc(j.funcion)}</div>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+    if (hasMateriales) {
+      subBlocks += `
+        <div class="legend-category">
+          <div class="legend-subtitle">Materiales en diagrama</div>
+          <div class="legend-items-grid">
+            ${ley.materiales.map(m => `
+              <div class="legend-card">
+                <div class="legend-mat-icon">${m.icono || '📦'}</div>
+                <div class="legend-info">
+                  <div class="legend-title">${esc(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}</div>
+                  ${m.funcion ? `<div class="legend-detail">${esc(m.funcion)}</div>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+    if (hasAcciones) {
+      subBlocks += `
+        <div class="legend-category">
+          <div class="legend-subtitle">Acciones y desplazamientos</div>
+          <div class="legend-items-grid">
+            ${ley.acciones.map(a => `
+              <div class="legend-card">
+                <span class="legend-action-visual">${esc(a.trazo || '──────▶')}</span>
+                <div class="legend-info">
+                  <div class="legend-title">${esc(a.nombre || a.tipo)}</div>
+                  ${a.significado ? `<div class="legend-detail">${esc(a.significado)}</div>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+    if (hasZonas) {
+      subBlocks += `
+        <div class="legend-category">
+          <div class="legend-subtitle">Zonas del campo</div>
+          <div class="legend-items-grid">
+            ${ley.zonas.map(z => `
+              <div class="legend-card">
+                <span class="legend-zone-visual">${esc(z.id || 'ZONA')}</span>
+                <div class="legend-info">
+                  <div class="legend-title">${esc(z.id || 'Zona')}</div>
+                  ${z.detalle ? `<div class="legend-detail">${esc(z.detalle)}</div>` : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+    leyendaHtml = `
+      <div id="section-leyenda" class="section-block section-leyenda-subvideo">
+        <div class="section-head-mini">
+          <h3>🗺️ Leyenda del ejercicio</h3>
+          <span class="pill-legend-info">Guía visual de la animación</span>
+        </div>
+        <div class="modal-leyenda-content">${subBlocks}</div>
+      </div>`;
+  }
+
+  const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: ex.id });
+
+  return `
+  <div class="ejercicio-v2-sheet ejercicio-validado" data-id="${esc(ex.id)}" data-video="${esc(videoSrc)}" style="content-visibility:auto;contain-intrinsic-size:auto 900px" data-lazy-detail="1">
+    <!-- Cabecera de la ficha con botón superior accesible -->
+    <div class="sheet-head">
+      <div class="sheet-title-group">
+        <div class="sheet-tags">${tagsHtml}</div>
+        <h2 class="sheet-title">${esc(ex.nombre)}</h2>
+      </div>
+      <button type="button" class="sheet-top-close-btn" data-close aria-label="Cerrar ejercicio">✕</button>
+    </div>
+
+    <!-- Reproductor de animación con controles y zoom integrado -->
+    <div class="exercise-video-wrap">
+      <div class="video-stage" style="position:relative">
+        <video class="frame-video" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" playsinline muted loop preload="none"></video>
+        <div class="video-overlay-play" title="Reproducir animación">
+          <span class="overlay-play-icon">▶</span>
+        </div>
+      </div>
+
+      <!-- Barra de progreso / seek -->
+      <div class="v-progress-container">
+        <input type="range" class="v-seek-bar" min="0" max="100" step="0.1" value="0" aria-label="Línea de tiempo de la animación">
+      </div>
+
+      <!-- Controles tácticos: Play, 5s back/fwd, Loop, Velocidad, Zoom y Fullscreen -->
+      <div class="v-controls-bar">
+        <div class="v-controls-left">
+          <button type="button" class="v-btn v-btn-play primary" title="Reproducir / Pausar">▶</button>
+          <button type="button" class="v-btn v-btn-rewind" title="Retroceder 5 segundos">⏪ 5s</button>
+          <button type="button" class="v-btn v-btn-forward" title="Adelantar 5 segundos">5s ⏩</button>
+          <span class="v-time-display">00:00 / 00:00</span>
+        </div>
+
+        <div class="v-controls-right">
+          <!-- Selector de velocidad -->
+          <div class="v-speed-group" title="Velocidad de reproducción">
+            <button type="button" class="v-btn-speed" data-speed="0.5">0.5×</button>
+            <button type="button" class="v-btn-speed active" data-speed="1.0">1×</button>
+            <button type="button" class="v-btn-speed" data-speed="1.5">1.5×</button>
+          </div>
+
+          <!-- Controles de zoom táctico con clamping -->
+          <div class="v-zoom-group" title="Zoom táctico">
+            <button type="button" class="v-btn v-btn-zoom-out" title="Alejar zoom" aria-label="Alejar zoom">🔍−</button>
+            <button type="button" class="v-btn v-btn-zoom-reset" title="Restablecer zoom al 100%" aria-label="Restablecer zoom">100%</button>
+            <button type="button" class="v-btn v-btn-zoom-in" title="Acercar zoom" aria-label="Acercar zoom">🔍+</button>
+          </div>
+
+          <button type="button" class="v-btn v-btn-loop active" title="Bucle continuo (repetir)" aria-label="Repetir en bucle">🔁</button>
+          <button type="button" class="v-btn v-btn-fullscreen" title="Ampliar a pantalla completa" aria-label="Ampliar a pantalla completa">⛶ <span class="v-btn-text">Ampliar</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leyenda visual (inmediatamente después del vídeo) -->
+    ${leyendaHtml}
+
+    <!-- Secciones operativas del ejercicio -->
+    <div class="sheet-sections-body">
+      ${queTrabajaHtml}
+      ${objHtml}
+      ${datosRapidosHtml}
+      ${montajeHtml}
+      ${materialHtml}
+      ${comoSeHaceHtml}
+      ${fasesHtml}
+      ${cargaHtml}
+      ${rotacionHtml}
+      ${queObservarHtml}
+      ${consignasHtml}
+      ${erroresHtml}
+      ${variantesHtml}
+      ${realVideo ? `
+        <div class="section-block real-video-block">
+          <h3>🎥 Demostración real en vídeo</h3>
+          <div class="video-item">
+            <video class="real-video-el" controls preload="none" playsinline src="${esc(realVideo)}"></video>
+          </div>
+        </div>` : ''}
+      ${videosHTML}
+    </div>
+
+    <!-- Barra de acciones: Añadir a sesión + botón de cierre inferior fijo -->
+    <div class="sheet-bottom-bar">
+      <button type="button" class="add-exercise-to-session primary btn-add-session" data-id="${esc(ex.id)}">
+        + Añadir a sesión
+      </button>
+      <button type="button" class="modal-bottom-close-btn" data-close>
+        ✕ Cerrar Ejercicio
+      </button>
+    </div>
+  </div>`;
 }
 
+/**
+ * Renderiza la tarjeta compacta para la cuadrícula de la biblioteca (#exercises-list).
+ */
+export function renderExerciseGridCard(ex) {
+  const media = ex.media || {};
+  const preview = media.preview || ex.preview || '';
+  const dr = ex.datos_rapidos || {};
+  const tags = [ex.categoria, ...(ex.etiquetas || [])].slice(0, 2);
+
+  return `
+  <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
+    <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
+      ${preview ? `<img src="${esc(preview)}" alt="${esc(ex.nombre)}" class="card-preview-img" loading="lazy">` : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
+      <span class="card-play-badge">▶</span>
+      ${dr.duracion ? `<span class="card-duration-badge">${esc(dr.duracion)}</span>` : ''}
+    </div>
+
+    <div class="card-content">
+      <div class="card-head-line">
+        <div class="card-tags">${tags.map(t => `<span class="pill">${esc(t)}</span>`).join('')}</div>
+        <button type="button" class="favorite-exercise ${ex.favorite ? 'active' : ''}" data-id="${esc(ex.id)}" aria-label="Favorito">
+          ${ex.favorite ? '★' : '☆'}
+        </button>
+      </div>
+
+      <h3 class="card-title view-exercise" data-exercise-id="${esc(ex.id)}">${esc(ex.nombre)}</h3>
+
+      <div class="card-meta-facts">
+        ${dr.jugadores ? `<span>👥 ${esc(dr.jugadores)}</span>` : ''}
+        ${dr.material ? `<span>📦 ${esc(dr.material)}</span>` : ''}
+      </div>
+
+      <div class="button-row card-actions">
+        <button type="button" class="view-exercise primary" data-exercise-id="${esc(ex.id)}">
+          Ver ejercicio
+        </button>
+        <button type="button" class="add-exercise-to-session secondary" data-id="${esc(ex.id)}">
+          + Sesión
+        </button>
+      </div>
+    </div>
+  </article>`;
+}
+
+/**
+ * Inicializa el reproductor interactivo y controles de zoom táctico con clamping
+ */
 export function initValidatedExerciseViewer(root) {
-  const target = validatedRoot(root);
-  if (!target || target.dataset._viewerScheduled === '1' || target.dataset._viewerInit === '1') return;
-  target.dataset._viewerScheduled = '1';
-  const observer = getViewerObserver();
-  if (observer) {
-    pruneDisconnectedViewerTargets();
-    viewerTargets.add(target);
-    observer.observe(target);
-  } else activateValidatedExerciseViewer(target);
-}
+  if (!root || root.dataset._viewerInit) return;
+  root.dataset._viewerInit = '1';
 
-// Compatibilidad con las llamadas existentes de app.js y Sesiones. La preparación
-// real del lightbox se hace cuando la ficha se acerca al viewport.
-export function attachLightbox(root) {
-  const target = validatedRoot(root);
-  if (!target) return;
-  target.dataset._lightboxRequested = '1';
-  initValidatedExerciseViewer(target);
+  const video = root.querySelector('.frame-video');
+  const stage = root.querySelector('.video-stage');
+  const btnPlay = root.querySelector('.v-btn-play');
+  const overlayPlay = root.querySelector('.video-overlay-play');
+  const seekBar = root.querySelector('.v-seek-bar');
+  const timeDisplay = root.querySelector('.v-time-display');
+  const btnLoop = root.querySelector('.v-btn-loop');
+  const btnFullscreen = root.querySelector('.v-btn-fullscreen');
+  const speedButtons = root.querySelectorAll('.v-btn-speed');
+  const btnZoomIn = root.querySelector('.v-btn-zoom-in');
+  const btnZoomOut = root.querySelector('.v-btn-zoom-out');
+  const btnZoomReset = root.querySelector('.v-btn-zoom-reset');
+  const btnRewind = root.querySelector('.v-btn-rewind');
+  const btnForward = root.querySelector('.v-btn-forward');
+
+  if (!video) return;
+
+  // Estado del reproductor y zoom
+  let zoom = 1.0;
+  let panX = 0;
+  let panY = 0;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  function formatTime(sec) {
+    if (!sec || isNaN(sec) || !isFinite(sec)) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function updateTime() {
+    if (!video.duration) return;
+    const current = video.currentTime;
+    const duration = video.duration;
+    if (seekBar && !seekBar.matches(':active')) {
+      seekBar.value = (current / duration) * 100;
+    }
+    if (timeDisplay) {
+      timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+    }
+  }
+
+  async function togglePlay() {
+    await ensureVideoLoaded(video);
+    const src = video.dataset.src;
+    if (!video.getAttribute('src')) video.src = src;
+    if (video.paused) {
+      video.play().then(() => {
+        if (btnPlay) btnPlay.textContent = '⏸';
+        if (overlayPlay) overlayPlay.style.display = 'none';
+      }).catch(console.warn);
+    } else {
+      video.pause();
+      if (btnPlay) btnPlay.textContent = '▶';
+      if (overlayPlay) overlayPlay.style.display = 'flex';
+    }
+  }
+
+  if (btnPlay) btnPlay.addEventListener('click', togglePlay);
+  if (overlayPlay) overlayPlay.addEventListener('click', togglePlay);
+  if (video) video.addEventListener('click', togglePlay);
+
+  video.addEventListener('timeupdate', updateTime);
+  video.addEventListener('loadedmetadata', updateTime);
+  video.addEventListener('ended', () => {
+    if (!video.loop) {
+      if (btnPlay) btnPlay.textContent = '▶';
+      if (overlayPlay) overlayPlay.style.display = 'flex';
+    }
+  });
+
+  if (seekBar) {
+    seekBar.addEventListener('input', () => {
+      if (video.duration) {
+        video.currentTime = (seekBar.value / 100) * video.duration;
+      }
+    });
+  }
+
+  if (btnRewind) {
+    btnRewind.addEventListener('click', () => {
+      video.currentTime = Math.max(0, video.currentTime - 5);
+    });
+  }
+
+  if (btnForward) {
+    btnForward.addEventListener('click', () => {
+      if (video.duration) video.currentTime = Math.min(video.duration, video.currentTime + 5);
+    });
+  }
+
+  if (btnLoop) {
+    btnLoop.addEventListener('click', () => {
+      video.loop = !video.loop;
+      btnLoop.classList.toggle('active', video.loop);
+    });
+  }
+
+  speedButtons.forEach((b) => {
+    b.addEventListener('click', () => {
+      const spd = parseFloat(b.dataset.speed) || 1.0;
+      video.playbackRate = spd;
+      speedButtons.forEach(btn => btn.classList.toggle('active', btn === b));
+    });
+  });
+
+  // ZOOM Y PAN TÁCTICO CON CLAMPING
+  function clampPan() {
+    if (zoom <= 1.0) {
+      panX = 0;
+      panY = 0;
+      return;
+    }
+    const rect = stage ? stage.getBoundingClientRect() : { width: 360, height: 240 };
+    const maxPanX = (rect.width * (zoom - 1)) / 2;
+    const maxPanY = (rect.height * (zoom - 1)) / 2;
+    panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+    panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+  }
+
+  function updateTransform() {
+    clampPan();
+    video.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    if (btnZoomReset) btnZoomReset.textContent = `${Math.round(zoom * 100)}%`;
+    if (stage) stage.classList.toggle('is-zoomed', zoom > 1.0);
+  }
+
+  function applyZoom(newZoom) {
+    zoom = Math.max(1.0, Math.min(3.0, Math.round(newZoom * 10) / 10));
+    if (zoom === 1.0) {
+      panX = 0;
+      panY = 0;
+    }
+    updateTransform();
+  }
+
+  if (btnZoomIn) btnZoomIn.addEventListener('click', () => applyZoom(zoom + 0.25));
+  if (btnZoomOut) btnZoomOut.addEventListener('click', () => applyZoom(zoom - 0.25));
+  if (btnZoomReset) btnZoomReset.addEventListener('click', () => applyZoom(1.0));
+
+  // Panning al arrastrar cuando hay zoom
+  if (stage) {
+    stage.addEventListener('mousedown', (e) => {
+      if (zoom <= 1.0) return;
+      isDragging = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+      stage.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (stage) stage.style.cursor = zoom > 1.0 ? 'grab' : 'default';
+    });
+
+    // Soporte táctil móvil (pinch-to-zoom y pan)
+    let initialPinchDist = 0;
+    let initialZoom = 1.0;
+
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoom = zoom;
+      } else if (e.touches.length === 1 && zoom > 1.0) {
+        isDragging = true;
+        startX = e.touches[0].clientX - panX;
+        startY = e.touches[0].clientY - panY;
+      }
+    }, { passive: true });
+
+    stage.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist > 0) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / initialPinchDist;
+        applyZoom(initialZoom * factor);
+      } else if (e.touches.length === 1 && isDragging) {
+        panX = e.touches[0].clientX - startX;
+        panY = e.touches[0].clientY - startY;
+        updateTransform();
+      }
+    }, { passive: true });
+
+    stage.addEventListener('touchend', () => {
+      isDragging = false;
+      initialPinchDist = 0;
+    });
+  }
+
+  // Modo Teatro / Ampliar a pantalla completa
+  if (btnFullscreen) {
+    btnFullscreen.addEventListener('click', () => {
+      const wrap = root.querySelector('.exercise-video-wrap');
+      if (!wrap) return;
+      const isFull = wrap.classList.toggle('theater-fullscreen');
+      btnFullscreen.classList.toggle('active', isFull);
+      btnFullscreen.innerHTML = isFull ? '✕ <span class="v-btn-text">Reducir</span>' : '⛶ <span class="v-btn-text">Ampliar</span>';
+      applyZoom(1.0);
+    });
+  }
 }

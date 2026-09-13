@@ -5,7 +5,7 @@ import { EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXE
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
@@ -206,14 +206,48 @@ function isUserInteracting() {
   return false;
 }
 
+
+async function deduplicatePlayers() {
+  const currentPlayers = await getAll('players');
+  if (!currentPlayers || currentPlayers.length <= 1) return;
+  const canonicalMap = new Map();
+  const toDelete = [];
+
+  for (const player of currentPlayers) {
+    const rawName = String(player.name || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isRamiro = rawName === 'ramiro' || rawName === 'ramiro casati';
+    const key = isRamiro ? 'ramiro_casati' : rawName;
+    if (!canonicalMap.has(key)) {
+      canonicalMap.set(key, player);
+    } else {
+      const existing = canonicalMap.get(key);
+      const preferCurrent = (player.id === 'p12') ||
+        (player.number && !existing.number) ||
+        (player.positions?.includes('Portero') && !existing.positions?.includes('Portero')) ||
+        ((player.totalMinutes || 0) > (existing.totalMinutes || 0));
+      const canonical = preferCurrent ? player : existing;
+      const duplicate = preferCurrent ? existing : player;
+      canonicalMap.set(key, canonical);
+      toDelete.push(duplicate.id);
+    }
+  }
+
+  for (const removeId of toDelete) {
+    await remove('players', removeId);
+    state.players = state.players.filter((p) => p.id !== removeId);
+  }
+}
+
 async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
+  await deduplicatePlayers();
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
-  state.exercises = settingRecords.filter(({ recordType }) => recordType === 'exercise');
-  // Los ejercicios validados (formato nuevo) viven en JS y sustituyen a los precargados antiguos.
+  const customExercises = settingRecords.filter(({ id, recordType, example }) => 
+    recordType === 'exercise' && example !== true && !id.startsWith('coord-') && !id.startsWith('tech-') && !id.startsWith('tact-') && !id.startsWith('ssg-') && !id.startsWith('keeper-') && !id.startsWith('physical-') && !id.startsWith('warmup-')
+  );
   state.exercises = [
-    ...state.exercises.filter((item) => item.example !== true),
+    ...customExercises,
     ...EJERCICIOS_VALIDADOS.map(toCampoBaseExercise),
   ];
   state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
@@ -452,7 +486,7 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
   const options = state.matches.filter((match) => match.status !== 'finished' || match.id === selectedMatchId).sort((a,b)=>a.date.localeCompare(b.date)).map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`).join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><div class="form-row"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label></div><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><div class="form-row"><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2006,7 +2040,7 @@ function attendanceBuilder(matchId = '', recordId = '') {
     return `<div class="check-row attendance-row"><strong>${escapeHtml(player.name)}</strong><select name="status-${player.id}" aria-label="Estado de ${escapeHtml(player.name)}"><option value="present" ${entry.status === 'present' ? 'selected' : ''}>Presente</option><option value="late" ${entry.status === 'late' ? 'selected' : ''}>Tarde</option><option value="absent" ${entry.status === 'absent' ? 'selected' : ''}>Ausente</option></select><div class="arrival-time ${entry.status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span>${time24Markup(`arrivalTime-${player.id}`, entry.arrivalTime, `Hora de llegada de ${player.name}`)}</div><input name="note-${player.id}" value="${escapeHtml(entry.note)}" maxlength="200" placeholder="Incidencia o comentario" aria-label="Nota de ${escapeHtml(player.name)}"></div>`;
   }).join('');
   root.classList.remove('hidden');
-  root.innerHTML = `<form id="training-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><div class="form-row"><label>Tipo de registro<select name="kind"><option value="training" ${kind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match" ${kind === 'match' ? 'selected' : ''}>Partido</option></select></label><label>Fecha${dateMarkup('date', existing?.date ?? match?.date.slice(0, 10) ?? today, 'Fecha del registro')}</label></div><label class="${kind === 'match' ? '' : 'hidden'}">Partido<select name="matchId" ${kind === 'match' ? 'required' : ''}><option value="">Selecciona…</option>${matchOptions}</select></label>${kind === 'match' && !callup ? '<p class="warning panel">Selecciona un partido con convocatoria.</p>' : `<div class="check-list">${rows}</div>`}<label>Notas del registro<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="training-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><div class="form-row"><label>Tipo de registro<select name="kind"><option value="training" ${kind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match" ${kind === 'match' ? 'selected' : ''}>Partido</option></select></label></div><label class="date-field-full">Fecha${dateMarkup('date', existing?.date ?? match?.date.slice(0, 10) ?? today, 'Fecha del registro')}</label><label class="${kind === 'match' ? '' : 'hidden'}">Partido<select name="matchId" ${kind === 'match' ? 'required' : ''}><option value="">Selecciona…</option>${matchOptions}</select></label>${kind === 'match' && !callup ? '<p class="warning panel">Selecciona un partido con convocatoria.</p>' : `<div class="check-list">${rows}</div>`}<label>Notas del registro<textarea name="notes" maxlength="1000">${escapeHtml(existing?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div></form>`;
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -2089,22 +2123,9 @@ function renderExercises() {
   const list = $('#exercises-list');
   list.innerHTML = exercises.length ? exercises.map((rawItem) => {
     const validated = findValidatedExercise(rawItem.id);
-    if (validated) return renderValidatedExerciseHTML(validated, { videos: videosForExercise(rawItem.id), role: state.role });
+    if (validated) return renderExerciseGridCard(validated);
     return exerciseCardHTML(rawItem);
   }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
-  // Inicializa reproductores y visores de las fichas validadas.
-  list.querySelectorAll('.ejercicio-validado').forEach((root) => {
-    initValidatedExerciseViewer(root);
-    attachLightbox(root);
-    initVideoSection(root.querySelector('.videos'), { onUpload: handleVideoUpload, onDelete: handleVideoDelete });
-    const tiempoInput = root.querySelector('.tiempo-ejercicio');
-    if (tiempoInput) {
-      tiempoInput.addEventListener('input', () => {
-        const ex = state.exercises.find(({ id }) => id === root.dataset.id);
-        if (ex) ex.duration = Number(tiempoInput.value) || 15;
-      });
-    }
-  });
 }
 
 function editExercise(id) {
@@ -2179,7 +2200,7 @@ function renderSessionDraft() {
     const item = completeExercise(rawItem);
     return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row"><label>Fecha${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label></div><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><div class="form-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
@@ -2291,25 +2312,22 @@ function showExerciseDetail(exerciseId) {
     $('#exercise-detail-title').textContent = validated.nombre;
     const body = $('#exercise-detail-body');
     body.innerHTML = renderValidatedExerciseHTML(validated, { videos: videosForExercise(exerciseId), role: state.role });
-    initValidatedExerciseViewer(body.querySelector('.ejercicio-validado'));
+    const sheet = body.querySelector('.ejercicio-v2-sheet') || body;
+    initValidatedExerciseViewer(sheet);
     attachLightbox(body);
     initVideoSection(body.querySelector('.videos'), { onUpload: handleVideoUpload, onDelete: handleVideoDelete });
-    // Tiempo editable: actualiza el duration del ejercicio en state para que descuente de la sesión.
-    const tiempoInput = body.querySelector('.tiempo-ejercicio');
-    if (tiempoInput) {
-      tiempoInput.addEventListener('input', () => {
-        const ex = state.exercises.find(({ id }) => id === exerciseId);
-        if (ex) ex.duration = Number(tiempoInput.value) || 15;
-      });
-    }
-    $('#exercise-detail-dialog').showModal();
+    const dialog = $('#exercise-detail-dialog');
+    dialog.showModal();
+    dialog.scrollTop = 0;
     return;
   }
   const item = state.exercises.find(({ id }) => id === exerciseId);
   if (!item) return toast('El ejercicio ya no está disponible.');
   $('#exercise-detail-title').textContent = item.name;
   $('#exercise-detail-body').innerHTML = exerciseCardHTML(item);
-  $('#exercise-detail-dialog').showModal();
+  const dialog = $('#exercise-detail-dialog');
+  dialog.showModal();
+  dialog.scrollTop = 0;
 }
 
 function renderTrainingSessions() {
@@ -2582,9 +2600,11 @@ async function ensurePhase2Seeded() {
 }
 
 async function ensureSquadSeeded() {
+  await deduplicatePlayers();
   if (await getOne('settings', 'squad-26-27-seeded')) return;
   const currentPlayers = await getAll('players');
   await putBatch(planSquadSeed(currentPlayers));
+  await deduplicatePlayers();
 }
 
 async function ensurePhase2V2Seeded() {
@@ -2618,11 +2638,12 @@ async function ensureSlideshareSeeded() {
 // Elimina de la base todos los ejercicios precargados antiguos (example:true). Los ejercicios
 // validados (formato nuevo) viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
 async function ensureLegacyExercisesNotPresent() {
-  if (await getOne('settings', 'legacy-exercises-not-present-v2')) return;
   const current = await getAll('settings');
-  const toRemove = current.filter(({ recordType, example }) => recordType === 'exercise' && example === true);
+  const toRemove = current.filter(({ id, recordType, example }) => 
+    recordType === 'exercise' && (example === true || id.startsWith('coord-') || id.startsWith('tech-') || id.startsWith('tact-') || id.startsWith('ssg-') || id.startsWith('keeper-') || id.startsWith('physical-') || id.startsWith('warmup-'))
+  );
   for (const record of toRemove) await remove('settings', record.id);
-  await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 8, createdAt: Date.now() });
+  await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 10, createdAt: Date.now() });
 }
 
 async function exportData() {
@@ -3676,7 +3697,16 @@ function wireEvents() {
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
     if (target.matches('.view-session')) showSessionDetail(target.dataset.id);
-    if (target.matches('.session-exercise-link, .view-exercise')) showExerciseDetail(target.dataset.exerciseId);
+    const viewExBtn = target.closest('.session-exercise-link, .view-exercise');
+    if (viewExBtn && viewExBtn.dataset.exerciseId) {
+      showExerciseDetail(viewExBtn.dataset.exerciseId);
+      return;
+    }
+    const closeBtn = target.closest('[data-close]');
+    if (closeBtn) {
+      const parentDialog = closeBtn.closest('dialog');
+      if (parentDialog) { parentDialog.close(); return; }
+    }
     if (target.matches('.move-session-block')) { syncSessionDraft(); sessionDraftBlocks = moveSessionBlock(sessionDraftBlocks, Number(target.dataset.index), Number(target.dataset.direction)); renderSessionDraft(); }
     if (target.matches('.remove-session-block')) { syncSessionDraft(); sessionDraftBlocks = removeSessionBlock(sessionDraftBlocks, Number(target.dataset.index)); renderSessionDraft(); }
     if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
@@ -3808,11 +3838,6 @@ async function init() {
   }
   await synchronizeCloud();
   await ensureSquadSeeded();
-  await ensurePhase2Seeded();
-  await ensurePhase2V2Seeded();
-  await ensurePhase2V3Seeded();
-  await ensureRealExercisesSeeded();
-  await ensureSlideshareSeeded();
   await ensureLegacyExercisesNotPresent();
   await refresh();
   const live = await getOne('settings', 'live');
