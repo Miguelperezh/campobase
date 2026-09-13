@@ -58,6 +58,38 @@ test('js/app.js aplica variables directas y delegación global para reactividad 
 });
 
 test('sw.js renueva CACHE con versión themev para actualizar PWA móvil', () => {
-  assert.match(sw, /themev[34]/);
+  assert.match(sw, /themev[3-9]/);
   assert.match(sw, /exerciseboard-2475/);
+  assert.match(sw, /image-crop-utils\.js/);
+});
+
+test('Ajustes permite cambiar el color de fuentes con swatches y selector nativo', () => {
+  assert.match(html, /id="theme-font-color-swatches"/);
+  assert.match(html, /id="theme-font-color-picker"/);
+  assert.match(html, /font-color-swatch-btn/);
+  assert.match(css, /\.font-color-swatch-btn/);
+  assert.match(app, /theme\.fontColor/);
+});
+
+test('Plantilla incluye contenedor superior para el cuerpo técnico', () => {
+  assert.match(html, /id="plantilla-staff-top"/);
+  assert.match(css, /\.plantilla-staff-top/);
+  assert.match(css, /\.plantilla-staff-bar/);
+  assert.match(css, /\.plantilla-staff-card/);
+});
+
+test('La ficha de jugador da protagonismo a la media de liga y separa acciones', () => {
+  assert.match(css, /\.player-rating-badge/);
+  assert.match(css, /\.rating-tier-top/);
+  assert.match(css, /\.player-card-actions-bar/);
+  assert.match(app, /player-rating-badge/);
+  assert.match(app, /player-card-actions-bar/);
+});
+
+test('Los diálogos de jugador y técnico integran controles de encuadre y avatar acotado', () => {
+  assert.match(html, /id="player-photo-preview"/);
+  assert.match(html, /id="staff-photo-preview"/);
+  assert.match(html, /photo-adjust-controls/);
+  assert.match(css, /\.avatar-preview-img/);
+  assert.match(css, /\.photo-preview-wrapper/);
 });

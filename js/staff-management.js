@@ -6,6 +6,7 @@
 // ==========================================================================
 
 import { getAll, getOne, put, remove } from './db.js';
+import { compressAndCropImage, wirePhotoCropperField } from './image-crop-utils.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -232,17 +233,83 @@ async function confirmStaffAction(title, message) {
   });
 }
 
+export function renderPlantillaStaffTop(members, container) {
+  if (!container) return;
+
+  if (!members || members.length === 0) {
+    container.innerHTML = '';
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  container.innerHTML = `
+    <div class="plantilla-staff-bar">
+      <div class="plantilla-staff-head">
+        <div class="plantilla-staff-title-wrap">
+          <span class="plantilla-staff-icon">📋</span>
+          <h3 class="plantilla-staff-title">Cuerpo Técnico</h3>
+          <span class="plantilla-staff-count-pill">${members.length}</span>
+        </div>
+        <button type="button" class="secondary compact" id="plantilla-staff-add-btn">+ Añadir técnico</button>
+      </div>
+      <div class="plantilla-staff-scroll">
+        ${members.map((member) => {
+          const phoneClean = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
+          const waUrl = phoneClean ? `https://wa.me/${encodeURIComponent(phoneClean)}` : '';
+          const telUrl = member.phone ? `tel:${escapeHtml(member.phone)}` : '';
+
+          return `
+            <div class="plantilla-staff-card" data-staff-id="${member.id}">
+              <div class="plantilla-staff-avatar-box">
+                ${staffAvatarHtml(member)}
+              </div>
+              <div class="plantilla-staff-info">
+                <span class="plantilla-staff-role-badge staff-role-${member.color || 'zinc'}">
+                  ${escapeHtml(member.badgeText || member.roleTitle)}
+                </span>
+                <strong class="plantilla-staff-name">${escapeHtml(member.name)}</strong>
+              </div>
+              <div class="plantilla-staff-actions">
+                ${waUrl ? `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="staff-quick-btn wa" title="WhatsApp a ${escapeHtml(member.name)}">💬</a>` : ''}
+                ${telUrl ? `<a href="${telUrl}" class="staff-quick-btn tel" title="Llamar a ${escapeHtml(member.name)}">📞</a>` : ''}
+                <button type="button" class="staff-quick-btn edit plantilla-staff-edit-btn" data-id="${member.id}" title="Editar perfil">✏️</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  container.querySelector('#plantilla-staff-add-btn')?.addEventListener('click', () => openStaffDialog());
+  container.querySelectorAll('.plantilla-staff-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => openStaffDialog(btn.dataset.id));
+  });
+}
+
+export async function refreshPlantillaStaff() {
+  const container = $('#plantilla-staff-top');
+  if (!container) return;
+  const members = await getStaffMembers();
+  renderPlantillaStaffTop(members, container);
+}
+
 export async function refreshStaffView() {
   const container = $('#staff-list-container');
   const countBadge = $('#staff-total-count');
-  if (!container) return;
 
   const members = await getStaffMembers();
   if (countBadge) {
     countBadge.textContent = `${members.length} ${members.length === 1 ? 'miembro' : 'miembros'}`;
   }
-  renderStaffList(members, container);
+  if (container) {
+    renderStaffList(members, container);
+  }
+  await refreshPlantillaStaff();
 }
+
+let staffCropper = null;
 
 export async function openStaffDialog(staffId = null) {
   const dialog = $('#staff-dialog');
@@ -277,6 +344,7 @@ export async function openStaffDialog(staffId = null) {
           preview.classList.remove('hidden');
         }
       }
+      staffCropper?.setExistingPhoto(member.photo || '');
       if (customRoleGroup) {
         customRoleGroup.classList.toggle('hidden', member.role !== 'other');
         form.querySelector('[name="customRole"]').value = member.role === 'other' ? (member.roleTitle || '') : '';
@@ -284,6 +352,7 @@ export async function openStaffDialog(staffId = null) {
     }
   } else {
     if (idInput) idInput.value = '';
+    staffCropper?.setExistingPhoto('');
     if (customRoleGroup) customRoleGroup.classList.add('hidden');
   }
 
@@ -313,40 +382,23 @@ export function initStaffManagement() {
 
   const fileInput = form.querySelector('[name="photoFile"]');
   const preview = $('#staff-photo-preview');
+  const placeholder = $('#staff-photo-placeholder');
   const removePhotoBtn = $('#staff-remove-photo-btn');
   const photoHidden = form.querySelector('[name="existingPhoto"]');
+  const controlsGroup = $('#staff-photo-controls');
+  const cropUpBtn = $('#staff-crop-up-btn');
+  const cropDownBtn = $('#staff-crop-down-btn');
 
-  if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-        alert('La imagen no debe superar 2 MB.');
-        fileInput.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (photoHidden) photoHidden.value = reader.result;
-        if (preview) {
-          preview.src = reader.result;
-          preview.classList.remove('hidden');
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  if (removePhotoBtn) {
-    removePhotoBtn.addEventListener('click', () => {
-      if (photoHidden) photoHidden.value = '';
-      if (fileInput) fileInput.value = '';
-      if (preview) {
-        preview.src = '';
-        preview.classList.add('hidden');
-      }
-    });
-  }
+  staffCropper = wirePhotoCropperField({
+    fileInput,
+    previewImg: preview,
+    placeholder,
+    existingInput: photoHidden,
+    controlsGroup,
+    cropUpBtn,
+    cropDownBtn,
+    removeBtn: removePhotoBtn,
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -365,6 +417,7 @@ export function initStaffManagement() {
       await saveStaffMember(data);
       dialog.close();
       form.reset();
+      staffCropper?.setExistingPhoto('');
       await refreshStaffView();
     } catch (err) {
       alert(err.message || 'Error al guardar el perfil.');

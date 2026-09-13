@@ -835,18 +835,18 @@ body.cb-redesign-active .player:hover {
 }
 
 body.cb-redesign-active .player-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
 }
 
 body.cb-redesign-active .player-identity {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex: 1 1 200px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 body.cb-redesign-active .player-head .avatar {
@@ -1103,40 +1103,31 @@ body.cb-redesign-active .player-performance[open] .player-performance-summary {
   color: #ffffff;
 }
 
-/* Contenedor encapsulado con scroll interno suave y estética premium */
+/* Contenedor sin scroll clipping interno para ver estadísticas a golpe de vista */
 body.cb-redesign-active .player-stats-expanded {
   margin-top: 0.75rem;
-  padding: 1rem;
-  background: #ffffff;
+  padding: 0.9rem;
+  background: var(--cb-surface-card, #ffffff);
   border: 1px solid var(--cb-slate-200);
   border-radius: var(--cb-radius-lg);
-  box-shadow: inset 0 2px 6px rgba(15, 23, 42, 0.04);
-  max-height: 420px;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  max-height: none !important;
+  overflow: visible !important;
 }
 
-body.cb-redesign-active .player-stats-expanded::-webkit-scrollbar {
-  width: 6px;
-}
-body.cb-redesign-active .player-stats-expanded::-webkit-scrollbar-thumb {
-  background: var(--cb-slate-300);
-  border-radius: 999px;
-}
-
-/* Métricas numéricas estilo tarjeta de rendimiento */
+/* Métricas numéricas estilo tarjeta KPI 3x3 a golpe de vista */
 body.cb-redesign-active .player-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-  gap: 0.45rem;
-  margin: 0.6rem 0 0.85rem 0;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.4rem !important;
+  margin: 0.6rem 0 0.85rem 0 !important;
 }
 
 body.cb-redesign-active .player-summary span {
-  background: var(--cb-slate-50);
+  background: var(--cb-surface-input, #f8fafc);
   border: 1px solid var(--cb-slate-200);
   border-radius: var(--cb-radius-sm);
-  padding: 0.5rem 0.35rem;
+  padding: 0.45rem 0.3rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--cb-slate-600);
@@ -1149,7 +1140,7 @@ body.cb-redesign-active .player-summary span {
 
 body.cb-redesign-active .player-summary strong {
   color: var(--cb-pitch-900);
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 900;
   line-height: 1.1;
   margin-bottom: 0.15rem;
@@ -2823,5 +2814,416 @@ body[data-theme-font="pure-white"] strong {
   flex-direction: column;
   gap: 0.35rem;
 }
+
+/* ==========================================================================
+   CUERPO TÉCNICO EN CABECERA DE PLANTILLA (#plantilla-staff-top)
+   ========================================================================== */
+.plantilla-staff-top {
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.plantilla-staff-bar {
+  background: var(--cb-surface-card, #ffffff);
+  border: 1px solid var(--cb-slate-200);
+  border-radius: var(--cb-radius-xl, 16px);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--cb-shadow-card, 0 2px 8px rgba(0, 0, 0, 0.05));
+}
+
+.plantilla-staff-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px dashed var(--cb-slate-200);
+}
+
+.plantilla-staff-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.plantilla-staff-icon {
+  font-size: 1.15rem;
+}
+
+.plantilla-staff-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--cb-slate-800);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plantilla-staff-count-pill {
+  background: var(--cb-pitch-100, #dcfce7);
+  color: var(--cb-pitch-800, #166534);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.plantilla-staff-scroll {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.plantilla-staff-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--cb-surface-input, #f8fafc);
+  border: 1px solid var(--cb-slate-200);
+  border-radius: 12px;
+  padding: 0.55rem 0.85rem;
+  min-width: 250px;
+  max-width: 320px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.plantilla-staff-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.plantilla-staff-avatar-box {
+  flex-shrink: 0;
+}
+
+.plantilla-staff-avatar-box .staff-avatar-img,
+.plantilla-staff-avatar-box .staff-avatar-initials {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1rem;
+}
+
+.plantilla-staff-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.plantilla-staff-role-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.2rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plantilla-staff-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--cb-slate-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.plantilla-staff-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.staff-quick-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  border: 1px solid var(--cb-slate-200);
+  background: #ffffff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.staff-quick-btn:hover {
+  transform: scale(1.08);
+}
+
+.staff-quick-btn.wa {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.staff-quick-btn.tel {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.staff-quick-btn.edit {
+  background: #f1f5f9;
+}
+
+/* ==========================================================================
+   CAMPO DE FOTO Y PREVISUALIZACIÓN OPTIMIZADA (Recorte y Enfoque Rostro)
+   ========================================================================== */
+.photo-cropper-field {
+  width: 100%;
+  margin-bottom: 0.85rem;
+}
+
+.photo-preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--cb-surface-input, #f8fafc);
+  border: 1px solid var(--cb-slate-200);
+  border-radius: var(--cb-radius-lg, 12px);
+}
+
+.avatar-preview-img {
+  width: 80px !important;
+  height: 80px !important;
+  min-width: 80px !important;
+  min-height: 80px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 3px solid var(--cb-pitch-600, #10b981) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14) !important;
+  flex-shrink: 0 !important;
+  background: #ffffff;
+}
+
+.avatar-preview-placeholder {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  border-radius: 50%;
+  background: var(--cb-slate-100, #f1f5f9);
+  border: 2px dashed var(--cb-slate-300, #cbd5e1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  color: var(--cb-slate-400);
+  flex-shrink: 0;
+}
+
+.photo-adjust-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.photo-adjust-controls button {
+  padding: 0.35rem 0.65rem !important;
+  font-size: 0.78rem !important;
+  min-height: 32px !important;
+}
+
+/* ==========================================================================
+   PROTAGONISMO DE LA MEDIA DE LIGA EN LA FICHA DE JUGADOR
+   ========================================================================== */
+body.cb-redesign-active .player-subhead-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--cb-slate-500);
+  background: var(--cb-surface-input, #f1f5f9);
+  padding: 1px 7px;
+  border-radius: 6px;
+  margin-top: 0.2rem;
+}
+
+body.cb-redesign-active .player-rating-badge {
+  min-width: 68px !important;
+  height: 64px !important;
+  border-radius: var(--cb-radius-lg, 14px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 5px 8px !important;
+  position: relative !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease !important;
+  cursor: default;
+}
+
+body.cb-redesign-active .player-rating-badge:hover {
+  transform: scale(1.06);
+}
+
+body.cb-redesign-active .player-rating-badge .rating-star {
+  font-size: 0.78rem;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+body.cb-redesign-active .player-rating-badge .valor {
+  font-size: 1.45rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.02em;
+}
+
+body.cb-redesign-active .player-rating-badge .etiqueta {
+  font-size: 0.56rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+}
+
+/* Tier: Top (Media >= 4.0 - Oro Deportivo) */
+body.cb-redesign-active .player-rating-badge.rating-tier-top {
+  background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 40%, #f59e0b 100%) !important;
+  border: 2px solid #d97706 !important;
+  color: #78350f !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35), inset 0 1px 1px #ffffff !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-top .rating-star {
+  color: #d97706;
+  text-shadow: 0 1px 3px rgba(245, 158, 11, 0.6);
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-top .valor {
+  color: #78350f !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-top .etiqueta {
+  color: #92400e !important;
+}
+
+/* Tier: Good (Media >= 3.0 - Verde Césped) */
+body.cb-redesign-active .player-rating-badge.rating-tier-good {
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 40%, #10b981 100%) !important;
+  border: 2px solid #059669 !important;
+  color: #064e3b !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28), inset 0 1px 1px #ffffff !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-good .rating-star {
+  color: #059669;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-good .valor {
+  color: #064e3b !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-good .etiqueta {
+  color: #047857 !important;
+}
+
+/* Tier: Fair (Media > 0 - Azul Táctico) */
+body.cb-redesign-active .player-rating-badge.rating-tier-fair {
+  background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 40%, #0284c7 100%) !important;
+  border: 2px solid #0284c7 !important;
+  color: #0c4a6e !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.22), inset 0 1px 1px #ffffff !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-fair .rating-star {
+  color: #0284c7;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-fair .valor {
+  color: #0c4a6e !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-fair .etiqueta {
+  color: #0369a1 !important;
+}
+
+/* Tier: None (Sin partidos puntuados) */
+body.cb-redesign-active .player-rating-badge.rating-tier-none {
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #64748b !important;
+}
+body.cb-redesign-active .player-rating-badge.rating-tier-none .rating-star {
+  color: #94a3b8;
+}
+
+/* Barra de acciones inferior de la tarjeta de jugador */
+body.cb-redesign-active .player-card-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--cb-slate-200);
+}
+
+body.cb-redesign-active .player-card-actions-bar .icon-button {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: var(--cb-radius-md, 8px);
+  min-height: 34px;
+}
+
+/* ==========================================================================
+   COLOR DE FUENTES EN AJUSTES (Swatches y Selector)
+   ========================================================================== */
+body.cb-redesign-active .font-color-swatch-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  border-radius: 12px !important;
+  border: 2px solid #ffffff !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+body.cb-redesign-active .font-color-swatch-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+body.cb-redesign-active .font-color-swatch-btn.active {
+  transform: scale(1.14);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--cb-pitch-700), 0 6px 14px rgba(0, 0, 0, 0.24) !important;
+}
+
+body.cb-redesign-active .font-color-swatch-btn.active::after {
+  content: "✓";
+  color: #10b981;
+  font-size: 1rem;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+body.cb-redesign-active .font-color-swatch-btn[data-color="#0f172a"].active::after,
+body.cb-redesign-active .font-color-swatch-btn[data-color="#000000"].active::after,
+body.cb-redesign-active .font-color-swatch-btn[data-color="#1e293b"].active::after {
+  color: #ffffff;
+}
+
 
 
