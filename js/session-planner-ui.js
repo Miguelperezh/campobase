@@ -477,20 +477,26 @@ function buildControl(form) {
       renderLibrary(form);
     };
 
-    $('#session-plan-target', control).oninput = (event) => {
+    const syncDurationTarget = (event) => {
       const source = form.elements.targetDuration;
       if (source) {
         source.value = event.target.value;
         source.dispatchEvent(new Event('input', { bubbles: true }));
+        source.dispatchEvent(new Event('change', { bubbles: true }));
       }
       $('#session-plan-proposal', control).innerHTML = proposalOptions();
       renderPlan(form);
     };
+    $('#session-plan-target', control).oninput = syncDurationTarget;
+    $('#session-plan-target', control).onchange = syncDurationTarget;
+    $('#session-plan-target', control).onblur = syncDurationTarget;
   }
 
   const target = $('#session-plan-target', control);
   const source = form.elements.targetDuration;
-  if (target && source && document.activeElement !== target) target.value = source.value || 60;
+  if (target && source && document.activeElement !== target) {
+    target.value = source.value || ((form.elements.pitch?.value?.toLowerCase().includes('pilar')) ? 75 : 60);
+  }
   if (!format) format = defaultFormat();
   $('#session-plan-format', control).value = format;
   $('#session-plan-proposal', control).innerHTML = proposalOptions();

@@ -272,7 +272,7 @@ async function renderSessionDetail(sessionId) {
   const session = snapshot.sessions.find((item) => item.id === sessionId);
   if (!session || !dialog.open) return;
   const exercisesById = new Map(snapshot.exercises.map((item) => [item.id, item]));
-  const durationInfo = formatSessionDurationInfo(session.blocks || [], session.targetDuration);
+  const durationInfo = formatSessionDurationInfo(session.blocks || [], session.targetDuration, session.pitch);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, snapshot.exercises);
 
   body.innerHTML = `

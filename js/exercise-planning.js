@@ -175,25 +175,14 @@ export function sessionDurationStatus(blocks = [], target = 60) {
   return { total, difference, exact, message };
 }
 
-export function formatSessionDurationInfo(totalOrBlocks, targetDuration) {
-  const target = Number(targetDuration) > 0 ? Number(targetDuration) : 0;
+export function formatSessionDurationInfo(totalOrBlocks, targetDuration, pitch = '') {
+  let target = Number(targetDuration) > 0 ? Number(targetDuration) : 0;
+  if (!target) {
+    target = (pitch && String(pitch).toLowerCase().includes('pilar')) ? 75 : 60;
+  }
   const total = Array.isArray(totalOrBlocks)
     ? totalOrBlocks.reduce((sum, block) => sum + (Number(block?.duration) || 0), 0)
     : (Number(totalOrBlocks) || 0);
-
-  if (!target) {
-    const minText = `${total} min`;
-    return {
-      total,
-      target: total,
-      diff: 0,
-      metaText: `⏱️ ${minText}`,
-      pillText: minText,
-      badgeText: '',
-      planText: `⏱️ ${minText}`,
-      status: 'none',
-    };
-  }
 
   const diff = target - total;
   if (diff === 0) {

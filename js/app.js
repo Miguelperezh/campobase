@@ -260,7 +260,15 @@ async function refresh() {
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
   state.exercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
-  state.trainingSessions = settingRecords.filter(({ recordType }) => recordType === 'trainingSession');
+  state.trainingSessions = settingRecords
+    .filter(({ recordType }) => recordType === 'trainingSession')
+    .map((session) => {
+      let target = Number(session.targetDuration);
+      if (!target || target <= 0) {
+        target = (session.pitch && session.pitch.toLowerCase().includes('pilar')) ? 75 : 60;
+      }
+      return { ...session, targetDuration: target };
+    });
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
@@ -2184,7 +2192,21 @@ function syncSessionDraft() {
   } catch {
     values.time = '';
   }
-  values.pitch = form.elements.pitch?.value?.trim() || '';
+  const pitchInput = form.elements.pitch?.value?.trim() || '';
+  values.pitch = pitchInput;
+  const planTarget = form.querySelector('#session-plan-target') || document.querySelector('#session-plan-target');
+  let targetVal = Number(planTarget?.value);
+  if (!targetVal || targetVal <= 0) {
+    targetVal = Number(form.elements.targetDuration?.value);
+  }
+  if ((!targetVal || targetVal === 60) && pitchInput.toLowerCase().includes('pilar')) {
+    targetVal = 75;
+  }
+  if (targetVal > 0) {
+    values.targetDuration = targetVal;
+    if (form.elements.targetDuration) form.elements.targetDuration.value = targetVal;
+    if (planTarget && document.activeElement !== planTarget) planTarget.value = targetVal;
+  }
   sessionDraftMeta = { ...sessionDraftMeta, ...values };
   sessionDraftBlocks = $$('.session-block', form).map((row) => ({
     type: row.querySelector('[name="blockType"]').value,
@@ -2228,8 +2250,10 @@ function renderSessionDraft() {
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const existing = state.trainingSessions.find(({ id }) => id === editId);
-  const today = new Date().toISOString().slice(0, 10);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
+  const defaultTarget = Number(seedMeta.targetDuration) > 0
+    ? Number(seedMeta.targetDuration)
+    : ((seedMeta.pitch && seedMeta.pitch.toLowerCase().includes('pilar')) ? 75 : 60);
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: defaultTarget, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
@@ -2284,8 +2308,9 @@ async function saveAddToSession(event) {
     time = '';
   }
   const pitch = values.pitch?.trim() || '';
+  const targetDuration = Number(values.targetDuration) > 0 ? Number(values.targetDuration) : (pitch.toLowerCase().includes('pilar') ? 75 : 60);
   $('#add-session-dialog').close();
-  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), time, pitch, name: values.name });
+  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), time, pitch, name: values.name, targetDuration });
 }
 
 async function saveTrainingSession(event) {
@@ -2375,7 +2400,7 @@ function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions);
   $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
-    const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration);
+    const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);
     const badgeExtra = durationInfo.badgeText
       ? `<span class="pill ${durationInfo.status === 'remaining' || durationInfo.status === 'exceeded' ? 'warning' : 'ok'}">${escapeHtml(durationInfo.badgeText)}</span>`
       : '';
@@ -2417,7 +2442,7 @@ function showSessionDetail(sessionId) {
   const session = state.trainingSessions.find(({ id }) => id === sessionId);
   if (!session) return toast('La sesión ya no está disponible.');
   $('#session-detail-title').textContent = session.name || 'Sesión de entrenamiento';
-  const durationInfo = formatSessionDurationInfo(session.blocks, session.targetDuration);
+  const durationInfo = formatSessionDurationInfo(session.blocks, session.targetDuration, session.pitch);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
   $('#session-detail-body').innerHTML = `
     <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>

@@ -135,3 +135,17 @@ test('formatSessionDurationInfo calcula minutos creados, programados y restantes
   assert.equal(infoBlocks.metaText, '⏱️ 45 / 60 min (quedan 15 min)');
 });
 
+test('sesiones existentes sin targetDuration asignan 75 min para Pilar y 60 min por defecto', () => {
+  assert.match(appSource, /includes\('pilar'\)\)\s*\?\s*75\s*:\s*60/);
+});
+
+test('formatSessionDurationInfo con pitch Pilar y sin targetDuration usa 75 min y calcula minutos restantes', () => {
+  const infoPilar = formatSessionDurationInfo(15, null, 'Campo del Pilar');
+  assert.equal(infoPilar.total, 15);
+  assert.equal(infoPilar.target, 75);
+  assert.equal(infoPilar.diff, 60);
+  assert.equal(infoPilar.metaText, '⏱️ 15 / 75 min (quedan 60 min)');
+  assert.equal(infoPilar.pillText, '15 / 75 min');
+  assert.equal(infoPilar.badgeText, 'Quedan 60 min');
+});
+

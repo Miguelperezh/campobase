@@ -170,7 +170,7 @@ function sessionCard(session, trainings, today) {
   const isToday = dateOnly(session.date) === today;
   const blocks = Array.isArray(session.blocks) ? session.blocks.length : 0;
   const total = sessionMinutes(session);
-  const target = Number(session?.targetDuration) || 0;
+  const target = Number(session?.targetDuration) || ((session?.pitch && String(session.pitch).toLowerCase().includes('pilar')) ? 75 : 60);
   let durationStr = `${total} min`;
   let remainingBadge = '';
   if (target > 0) {
