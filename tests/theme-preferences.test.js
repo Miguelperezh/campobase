@@ -125,5 +125,8 @@ test('El formulario de jugador permite eliminar fotos permanentemente con photoR
   assert.match(app, /const photoRemoved = form\.elements\.photoRemoved\?\.value === '1'/, 'savePlayer debe verificar si la foto fue eliminada');
   assert.match(app, /onPhotoChanged:\s*\(val\)\s*=>/, 'playerCropper debe incluir callback onPhotoChanged');
 });
-
-
+test('No expone textos técnicos ni menciones a Supabase en la interfaz visible para clientes', () => {
+  assert.doesNotMatch(app, /Supabase sincronizado/, 'No debe mostrar Supabase sincronizado');
+  assert.doesNotMatch(app, /Supabase pendiente/, 'No debe mostrar Supabase pendiente');
+  assert.doesNotMatch(html, /Supabase sincroniza/, 'No debe mencionar Supabase en el panel de copia de seguridad');
+});

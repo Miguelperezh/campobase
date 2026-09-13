@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2482">
-  <link rel="stylesheet" href="styles-redesign.css?v=2482">
+  <link rel="stylesheet" href="styles.css?v=2483">
+  <link rel="stylesheet" href="styles-redesign.css?v=2483">
   <script>
     try {
       const t = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -57,7 +57,7 @@
 <body class="auth-locked">
   <header class="topbar">
     <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
-    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label">Local</span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
+    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label"></span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
   </header>
   <div class="search-bar"><input id="global-search" type="search" placeholder="Buscar por nombre o palabra…" aria-label="Buscar en la pestaña actual" autocomplete="off"></div>
 
@@ -274,7 +274,7 @@
           </form>
         </article>
         <article class="panel"><h3>Equipo y modalidad</h3><form id="team-settings-form"><label>Nombre de mi equipo<input name="teamName" maxlength="100" required placeholder="Ej. Unión Viera Alevín D"></label><label>Formato<select id="format" name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo</button></form><p class="meta">F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p></article>
-        <article class="panel"><h3>Copia de seguridad</h3><p>Supabase sincroniza los dispositivos e IndexedDB conserva una caché para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
+        <article class="panel"><h3>Copia de seguridad</h3><p>La sincronización en la nube conecta tus dispositivos y la aplicación conserva una copia local para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
         <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
       </div>
@@ -385,7 +385,7 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script type="module" src="js/app.js?v=2482"></script>
-  <script type="module" src="js/redesign-nav.js?v=2482"></script>
+  <script type="module" src="js/app.js?v=2483"></script>
+  <script type="module" src="js/redesign-nav.js?v=2483"></script>
 </body>
 </html>

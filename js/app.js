@@ -2259,7 +2259,7 @@ async function handleVideoUpload(exerciseId, file) {
     await uploadVideo(path, file);
   } catch (error) {
     console.warn('Subida de vídeo fallida:', error.message);
-    return toast('No se pudo subir el vídeo. Revisa que el bucket `ejercicio-videos` esté creado en Supabase.');
+    return toast('No se pudo subir el vídeo. Comprueba la conexión o el almacenamiento.');
   }
   const record = buildVideoRecord(
     { exerciseId, nombre: file.name, path, mime: file.type, size: file.size, orden: videosForExercise(exerciseId).length },
@@ -3729,14 +3729,16 @@ function networkStatus() {
   if (isDemoDatabase()) {
     document.body.classList.remove('offline');
     $('#network-label').textContent = `Demo temporal · máximo ${DEMO_DURATION_MS / 3_600_000} h`;
-    $('#network-label').title = 'Datos aislados: no se envían a Supabase.';
+    $('#network-label').title = 'Datos aislados: sesión de demostración temporal.';
     return;
   }
   document.body.classList.toggle('offline', !navigator.onLine);
   $('#network-label').textContent = !navigator.onLine
-    ? 'Sin conexión · caché local'
-    : state.cloudConnected ? 'Supabase sincronizado' : 'Supabase pendiente';
-  $('#network-label').title = state.cloudError;
+    ? 'Sin conexión'
+    : '';
+  $('#network-label').title = !navigator.onLine
+    ? 'Sin conexión: cambios guardados localmente'
+    : (state.cloudConnected ? 'En línea' : 'Sincronización pendiente');
 }
 
 async function synchronizeCloud() {
@@ -3752,8 +3754,8 @@ async function synchronizeCloud() {
     await refresh();
   } catch (error) {
     state.cloudConnected = false;
-    state.cloudError = error.message || 'No se pudo sincronizar con Supabase.';
-    console.warn('Sincronización Supabase no disponible:', error.message);
+    state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
+    console.warn('Sincronización en la nube no disponible:', error.message);
   }
   networkStatus();
 }
