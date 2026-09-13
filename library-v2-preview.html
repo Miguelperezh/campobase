@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Biblioteca V2 · Prueba Aislada (248 Ejercicios)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,11 +43,11 @@
       position: sticky;
       top: 0;
       z-index: 40;
-      background: rgba(9, 26, 20, 0.88);
+      background: rgba(9, 26, 20, 0.94);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1.25rem;
+      padding: max(0.85rem, calc(env(safe-area-inset-top, 0px) + 0.45rem)) max(1.25rem, env(safe-area-inset-right, 0px)) 0.85rem max(1.25rem, env(safe-area-inset-left, 0px));
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -407,16 +407,18 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      z-index: 100;
-      background: rgba(4, 13, 9, 0.85);
-      backdrop-filter: blur(10px);
+      z-index: 1000;
+      background: rgba(4, 13, 9, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
+      padding: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 1.2rem)) max(1rem, env(safe-area-inset-right, 0px)) max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.2rem)) max(1rem, env(safe-area-inset-left, 0px));
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
+      touch-action: pan-y;
     }
     .modal-backdrop.open {
       opacity: 1;
@@ -426,26 +428,32 @@
       background: #0f261e;
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      max-width: 900px;
+      max-width: 920px;
       width: 100%;
       max-height: 92vh;
       overflow-y: auto;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     .modal-header {
       position: sticky;
       top: 0;
-      z-index: 10;
-      background: rgba(15, 38, 30, 0.95);
-      backdrop-filter: blur(12px);
-      padding: 1.25rem;
+      z-index: 20;
+      background: rgba(15, 38, 30, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) 1.25rem 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 1rem;
+    }
+    .modal-title-group {
+      min-width: 0;
+      flex: 1;
     }
     .modal-title-group h2 {
       font-size: 1.35rem;
@@ -454,23 +462,28 @@
       margin-top: 0.25rem;
     }
     .modal-close-btn {
-      background: #193d2f;
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 1.5rem;
+      background: #1c4535;
+      border: 2px solid rgba(74, 222, 128, 0.45);
+      color: #ffffff;
+      font-size: 1.7rem;
       line-height: 1;
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
       border-radius: 50%;
       display: grid;
       place-items: center;
       cursor: pointer;
       transition: all 0.15s ease;
       flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      touch-action: manipulation;
     }
     .modal-close-btn:hover {
       background: #255945;
-      color: #fff;
+      border-color: var(--brand);
+      transform: scale(1.05);
     }
     .modal-body {
       padding: 1.25rem;
@@ -478,20 +491,312 @@
       flex-direction: column;
       gap: 1.5rem;
     }
-    /* Reproductor de vídeo */
-    .video-container {
-      position: relative;
-      aspect-ratio: 16 / 9;
-      background: #000;
+    .modal-footer-sticky {
+      display: none;
+    }
+
+    /* Reproductor de vídeo avanzado */
+    .video-player-container {
+      background: #081611;
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
       overflow: hidden;
-      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      position: relative;
+      flex-shrink: 0;
+      width: 100%;
     }
-    .video-container video {
+    .video-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 200px;
+      flex-shrink: 0;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: pan-y;
+      user-select: none;
+    }
+    .video-stage.is-zoomed {
+      cursor: grab;
+      touch-action: none;
+    }
+    .video-stage.is-zoomed:active {
+      cursor: grabbing;
+    }
+    .video-stage video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
+      transform-origin: center center;
+      transition: transform 0.15s ease-out;
+      pointer-events: none;
+    }
+    .video-overlay-play {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s ease, background 0.2s ease;
+      z-index: 5;
+    }
+    .video-overlay-play.playing {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .video-overlay-play:hover {
+      background: rgba(0, 0, 0, 0.45);
+    }
+    .overlay-play-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #04140e;
+      display: grid;
+      place-items: center;
+      font-size: 1.8rem;
+      padding-left: 4px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      transition: transform 0.15s ease;
+    }
+    .video-overlay-play:active .overlay-play-icon {
+      transform: scale(0.92);
+    }
+    .zoom-indicator-float {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 6;
+      background: rgba(4, 20, 14, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-focus);
+      color: #86efac;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .zoom-indicator-float.visible {
+      opacity: 1;
+    }
+
+    /* Línea de tiempo / Seekbar */
+    .video-timeline-wrap {
+      position: relative;
+      height: 14px;
+      background: #091a14;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .video-progress-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      overflow: hidden;
+    }
+    .video-progress-buffered {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: rgba(255,255,255,0.25);
+      transition: width 0.2s linear;
+    }
+    .video-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--brand);
+    }
+    .video-seek-slider {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      margin: 0;
+      z-index: 4;
+    }
+
+    /* Barra de controles */
+    .video-controls-bar {
+      background: #0d221a;
+      border-top: 1px solid var(--border);
+      padding: 0.6rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      user-select: none;
+    }
+    .v-control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .v-control-right {
+      margin-left: auto;
+    }
+    .v-btn {
+      background: #153328;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.45rem 0.65rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .v-btn:hover {
+      background: #1c4535;
+      border-color: var(--border-focus);
+    }
+    .v-btn:active {
+      transform: scale(0.96);
+    }
+    .v-btn-play {
+      background: var(--brand);
+      color: #04140e;
+      font-size: 1rem;
+      padding: 0.45rem 0.85rem;
+      font-weight: 900;
+    }
+    .v-btn-play:hover {
+      background: #4ade80;
+    }
+    .v-btn-loop.active {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border-color: var(--brand);
+    }
+    .video-time-text {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      margin-left: 0.25rem;
+    }
+
+    /* Control de velocidad táctil */
+    .v-speed-control {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .v-speed-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .v-speed-pills {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #091a14;
+      padding: 0.2rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .speed-pill {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .speed-pill:hover {
+      color: var(--text);
+    }
+    .speed-pill.active {
+      background: var(--brand);
+      color: #04140e;
+      font-weight: 800;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Control de Zoom */
+    .v-zoom-cluster {
+      display: flex;
+      align-items: center;
+      background: #091a14;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .v-btn-zoom {
+      border: none;
+      background: transparent;
+      border-radius: 0;
+      padding: 0.4rem 0.55rem;
+    }
+    .v-btn-zoom-val {
+      border: none;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: transparent;
+      border-radius: 0;
+      font-size: 0.75rem;
+      padding: 0.4rem 0.5rem;
+      color: var(--brand);
+      font-variant-numeric: tabular-nums;
+      min-width: 46px;
+    }
+
+    /* Modo Teatro / Pantalla completa personalizada */
+    .video-player-container.theater-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #000;
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: max(0.85rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.85rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+    }
+    .video-player-container.theater-fullscreen .video-stage {
+      flex: 1;
+      aspect-ratio: auto;
+      min-height: 0;
     }
     /* Secciones de la ficha */
     .section-block {
@@ -856,6 +1161,135 @@
       line-height: 1.35;
     }
 
+    /* Media queries móvil y tablet con protección de status bar / cobertura */
+    @media (max-width: 768px) {
+      .modal-backdrop {
+        padding: 0;
+        align-items: stretch;
+      }
+      .modal-dialog {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
+        border: none;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: rgba(15, 38, 30, 0.98);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        /* Espacio de seguridad generoso para no tocar la barra de cobertura / notch de iOS */
+        padding-top: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 1.2rem));
+        padding-bottom: 0.9rem;
+        padding-left: max(1rem, env(safe-area-inset-left, 0px));
+        padding-right: max(1rem, env(safe-area-inset-right, 0px));
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .modal-title-group h2 {
+        font-size: 1.15rem;
+        line-height: 1.35;
+      }
+      .modal-close-btn {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: #1c4535;
+        color: #ffffff;
+        border: 2px solid rgba(74, 222, 128, 0.55);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        touch-action: manipulation;
+      }
+      .modal-body {
+        padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 6.5rem max(1rem, env(safe-area-inset-left, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .modal-footer-sticky {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 30;
+        background: rgba(9, 26, 20, 0.96);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        padding: 0.75rem 1rem max(0.85rem, env(safe-area-inset-bottom, 0px));
+        display: flex;
+        justify-content: center;
+      }
+      .modal-bottom-close-btn {
+        width: 100%;
+        max-width: 340px;
+        padding: 0.85rem 1.25rem;
+        background: #193d2f;
+        border: 1px solid var(--border-focus);
+        color: #f0fdf4;
+        font-size: 0.95rem;
+        font-weight: 800;
+        border-radius: 999px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        touch-action: manipulation;
+      }
+      .video-controls-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.6rem 0.75rem;
+      }
+      .v-speed-control {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 0.45rem;
+      }
+      .v-speed-pills {
+        flex: 1;
+        justify-content: flex-end;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .modal-backdrop {
+        padding: max(2rem, calc(env(safe-area-inset-top, 0px) + 1.25rem)) 1.5rem max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
+      }
+      .modal-dialog {
+        max-height: 92vh;
+      }
+      .modal-header {
+        padding-top: max(1.2rem, calc(env(safe-area-inset-top, 0px) + 0.6rem));
+      }
+      .modal-close-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 1.6rem;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -931,9 +1365,70 @@
       </div>
 
       <div class="modal-body">
-        <!-- 3. Vídeo / preview MP4 real -->
-        <div class="video-container" id="video-wrapper">
-          <video id="modal-video" controls preload="none" playsinline></video>
+        <!-- 3. Vídeo / reproductor avanzado con controles de entrenador y zoom táctico -->
+        <div class="video-player-container" id="video-player-wrapper">
+          <div class="video-stage" id="video-stage">
+            <video id="modal-video" preload="none" playsinline webkit-playsinline></video>
+            <button type="button" class="video-overlay-play" id="video-overlay-play" aria-label="Reproducir o pausar">
+              <span class="overlay-play-icon" id="overlay-play-icon">▶</span>
+            </button>
+            <div class="zoom-indicator-float" id="zoom-float-badge">100%</div>
+          </div>
+
+          <!-- Barra de progreso táctil -->
+          <div class="video-timeline-wrap">
+            <div class="video-progress-track" id="video-progress-track">
+              <div class="video-progress-buffered" id="video-progress-buffered"></div>
+              <div class="video-progress-bar" id="video-progress-bar"></div>
+            </div>
+            <input type="range" id="video-seek" class="video-seek-slider" min="0" max="100" value="0" step="0.1" aria-label="Línea de tiempo del vídeo">
+          </div>
+
+          <!-- Barra de herramientas de control -->
+          <div class="video-controls-bar">
+            <!-- Bloque 1: Reproducción y tiempo -->
+            <div class="v-control-group">
+              <button type="button" id="btn-play-pause" class="v-btn v-btn-play" aria-label="Reproducir">
+                <span id="play-icon-text">▶</span>
+              </button>
+              <button type="button" id="btn-rewind" class="v-btn" title="Retroceder 5 segundos" aria-label="Retroceder 5 segundos">
+                ⏪ 5s
+              </button>
+              <button type="button" id="btn-forward" class="v-btn" title="Avanzar 5 segundos" aria-label="Avanzar 5 segundos">
+                5s ⏩
+              </button>
+              <span class="video-time-text" id="video-time-display">00:00 / 00:00</span>
+            </div>
+
+            <!-- Bloque 2: Selector de velocidad táctil -->
+            <div class="v-speed-control">
+              <span class="v-speed-label">Velocidad:</span>
+              <div class="v-speed-pills" id="speed-selector">
+                <button type="button" class="speed-pill" data-speed="0.5">0.5x</button>
+                <button type="button" class="speed-pill" data-speed="0.75">0.75x</button>
+                <button type="button" class="speed-pill active" data-speed="1.0">1.0x</button>
+                <button type="button" class="speed-pill" data-speed="1.25">1.25x</button>
+                <button type="button" class="speed-pill" data-speed="1.5">1.5x</button>
+              </div>
+            </div>
+
+            <!-- Bloque 3: Zoom táctico, Bucle y Pantalla Completa -->
+            <div class="v-control-group v-control-right">
+              <div class="v-zoom-cluster">
+                <button type="button" id="btn-zoom-out" class="v-btn v-btn-zoom" title="Alejar zoom" aria-label="Alejar">🔍−</button>
+                <button type="button" id="btn-zoom-reset" class="v-btn v-btn-zoom-val" title="Restablecer zoom">100%</button>
+                <button type="button" id="btn-zoom-in" class="v-btn v-btn-zoom" title="Acercar zoom" aria-label="Acercar">🔍+</button>
+              </div>
+
+              <button type="button" id="btn-loop" class="v-btn v-btn-loop active" title="Bucle continuo (repetir)" aria-label="Repetir en bucle">
+                🔁
+              </button>
+
+              <button type="button" id="btn-fullscreen" class="v-btn" title="Pantalla completa" aria-label="Pantalla completa">
+                ⛶
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 4. Qué se trabaja -->
@@ -1019,6 +1514,13 @@
           <div id="modal-leyenda-content"></div>
         </div>
       </div>
+
+      <!-- Barra inferior adhesiva para cerrar ficha fácilmente en móvil con el pulgar -->
+      <div class="modal-footer-sticky">
+        <button id="modal-close-bottom" class="modal-bottom-close-btn" type="button">
+          ✕ Cerrar Ficha
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1064,7 +1566,34 @@
 
       const modalEl = $('#exercise-modal');
       const modalCloseBtn = $('#modal-close');
+      const modalCloseBottomBtn = $('#modal-close-bottom');
       const modalVideo = $('#modal-video');
+
+      // Elementos del reproductor avanzado
+      const videoPlayerWrapper = $('#video-player-wrapper');
+      const videoStage = $('#video-stage');
+      const videoOverlayPlay = $('#video-overlay-play');
+      const overlayPlayIcon = $('#overlay-play-icon');
+      const btnPlayPause = $('#btn-play-pause');
+      const playIconText = $('#play-icon-text');
+      const btnRewind = $('#btn-rewind');
+      const btnForward = $('#btn-forward');
+      const videoSeek = $('#video-seek');
+      const videoProgressBar = $('#video-progress-bar');
+      const videoProgressBuffered = $('#video-progress-buffered');
+      const videoTimeDisplay = $('#video-time-display');
+      const speedButtons = $$('.speed-pill', $('#speed-selector'));
+      const btnZoomIn = $('#btn-zoom-in');
+      const btnZoomOut = $('#btn-zoom-out');
+      const btnZoomReset = $('#btn-zoom-reset');
+      const zoomFloatBadge = $('#zoom-float-badge');
+      const btnLoop = $('#btn-loop');
+      const btnFullscreen = $('#btn-fullscreen');
+
+      let currentZoom = 1.0;
+      let panX = 0;
+      let panY = 0;
+      let isSeeking = false;
 
       const sessionBar = $('#session-bar');
       const sessionBadge = $('#session-badge');
@@ -1290,6 +1819,17 @@
         modalVideo.poster = ex.media.preview;
         modalVideo.src = ex.media.video;
         modalVideo.load();
+        applyZoom(1.0);
+        modalVideo.playbackRate = 1.0;
+        speedButtons.forEach(b => b.classList.toggle('active', b.dataset.speed === '1.0'));
+        videoSeek.value = 0;
+        videoProgressBar.style.width = '0%';
+        videoProgressBuffered.style.width = '0%';
+        videoTimeDisplay.textContent = '00:00 / 00:00';
+        modalVideo.loop = true;
+        btnLoop.classList.add('active');
+        playIconText.textContent = '▶';
+        videoOverlayPlay.classList.remove('playing');
 
         // 4. Qué se trabaja
         const queTrabajaBlock = $('#section-que-se-trabaja');
@@ -1663,17 +2203,241 @@
         document.body.style.overflow = 'hidden';
       }
 
+      // Funciones y lógica del Reproductor Avanzado
+      function formatTime(sec) {
+        if (!sec || isNaN(sec) || !isFinite(sec)) return '00:00';
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }
+
+      function updateVideoTime() {
+        const cur = modalVideo.currentTime || 0;
+        const dur = modalVideo.duration || 0;
+        videoTimeDisplay.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+        if (!isSeeking && dur > 0) {
+          const pct = (cur / dur) * 100;
+          videoSeek.value = pct;
+          videoProgressBar.style.width = pct + '%';
+        }
+        if (modalVideo.buffered.length > 0 && dur > 0) {
+          const bufferedEnd = modalVideo.buffered.end(modalVideo.buffered.length - 1);
+          videoProgressBuffered.style.width = ((bufferedEnd / dur) * 100) + '%';
+        }
+      }
+
+      function togglePlay() {
+        if (modalVideo.paused || modalVideo.ended) {
+          modalVideo.play().catch(() => {});
+        } else {
+          modalVideo.pause();
+        }
+      }
+
+      modalVideo.addEventListener('play', () => {
+        playIconText.textContent = '⏸';
+        videoOverlayPlay.classList.add('playing');
+      });
+
+      modalVideo.addEventListener('pause', () => {
+        playIconText.textContent = '▶';
+        videoOverlayPlay.classList.remove('playing');
+      });
+
+      modalVideo.addEventListener('timeupdate', updateVideoTime);
+      modalVideo.addEventListener('loadedmetadata', updateVideoTime);
+
+      videoOverlayPlay.addEventListener('click', togglePlay);
+      btnPlayPause.addEventListener('click', togglePlay);
+
+      btnRewind.addEventListener('click', () => {
+        modalVideo.currentTime = Math.max(0, modalVideo.currentTime - 5);
+      });
+      btnForward.addEventListener('click', () => {
+        modalVideo.currentTime = Math.min(modalVideo.duration || 0, modalVideo.currentTime + 5);
+      });
+
+      videoSeek.addEventListener('input', () => {
+        isSeeking = true;
+        videoProgressBar.style.width = videoSeek.value + '%';
+        if (modalVideo.duration) {
+          const previewTime = (parseFloat(videoSeek.value) / 100) * modalVideo.duration;
+          videoTimeDisplay.textContent = `${formatTime(previewTime)} / ${formatTime(modalVideo.duration)}`;
+        }
+      });
+
+      videoSeek.addEventListener('change', () => {
+        if (modalVideo.duration) {
+          modalVideo.currentTime = (parseFloat(videoSeek.value) / 100) * modalVideo.duration;
+        }
+        isSeeking = false;
+      });
+
+      // Selector de velocidad
+      speedButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const speed = parseFloat(btn.dataset.speed);
+          modalVideo.playbackRate = speed;
+          speedButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      // Repetición en bucle
+      modalVideo.loop = true;
+      btnLoop.addEventListener('click', () => {
+        modalVideo.loop = !modalVideo.loop;
+        btnLoop.classList.toggle('active', modalVideo.loop);
+      });
+
+      // Zoom y Pan del Entrenador
+      function applyZoom(newZoom) {
+        currentZoom = Math.max(1.0, Math.min(2.5, Math.round(newZoom * 100) / 100));
+        if (currentZoom === 1.0) {
+          panX = 0;
+          panY = 0;
+        }
+        clampPan();
+        modalVideo.style.transform = `scale(${currentZoom}) translate(${panX}px, ${panY}px)`;
+        btnZoomReset.textContent = Math.round(currentZoom * 100) + '%';
+        if (currentZoom > 1.0) {
+          zoomFloatBadge.textContent = `${Math.round(currentZoom * 100)}% (Arrastra para mover)`;
+          zoomFloatBadge.classList.add('visible');
+          videoStage.classList.add('is-zoomed');
+        } else {
+          zoomFloatBadge.classList.remove('visible');
+          videoStage.classList.remove('is-zoomed');
+        }
+      }
+
+      function clampPan() {
+        if (currentZoom <= 1.0) {
+          panX = 0;
+          panY = 0;
+          return;
+        }
+        const maxPanX = (videoStage.clientWidth * (currentZoom - 1)) / (2 * currentZoom);
+        const maxPanY = (videoStage.clientHeight * (currentZoom - 1)) / (2 * currentZoom);
+        panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+        panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+      }
+
+      btnZoomIn.addEventListener('click', () => applyZoom(currentZoom + 0.25));
+      btnZoomOut.addEventListener('click', () => applyZoom(currentZoom - 0.25));
+      btnZoomReset.addEventListener('click', () => applyZoom(1.0));
+
+      // Arrastre con dedo/ratón en el vídeo cuando hay zoom
+      let isDraggingPan = false;
+      let startMouseX = 0;
+      let startMouseY = 0;
+      let startPanX = 0;
+      let startPanY = 0;
+
+      videoStage.addEventListener('pointerdown', e => {
+        if (currentZoom <= 1.0) return;
+        isDraggingPan = true;
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        startPanX = panX;
+        startPanY = panY;
+        videoStage.setPointerCapture(e.pointerId);
+      });
+
+      videoStage.addEventListener('pointermove', e => {
+        if (!isDraggingPan || currentZoom <= 1.0) return;
+        const dx = (e.clientX - startMouseX) / currentZoom;
+        const dy = (e.clientY - startMouseY) / currentZoom;
+        panX = startPanX + dx;
+        panY = startPanY + dy;
+        clampPan();
+        modalVideo.style.transform = `scale(${currentZoom}) translate(${panX}px, ${panY}px)`;
+      });
+
+      videoStage.addEventListener('pointerup', e => {
+        if (isDraggingPan) {
+          isDraggingPan = false;
+          try { videoStage.releasePointerCapture(e.pointerId); } catch {}
+        }
+      });
+      videoStage.addEventListener('pointercancel', () => { isDraggingPan = false; });
+
+      // Gesto táctil de pellizco (Pinch to zoom) en el reproductor
+      let initialPinchDist = null;
+      let initialPinchZoom = 1.0;
+      videoStage.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          initialPinchDist = dist;
+          initialPinchZoom = currentZoom;
+        }
+      }, { passive: false });
+
+      videoStage.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && initialPinchDist) {
+          e.preventDefault();
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const ratio = dist / initialPinchDist;
+          applyZoom(initialPinchZoom * ratio);
+        }
+      }, { passive: false });
+
+      videoStage.addEventListener('touchend', e => {
+        if (e.touches.length < 2) {
+          initialPinchDist = null;
+        }
+      });
+
+      // Modo Pantalla Completa / Modo Teatro
+      function toggleFullscreen() {
+        const isFs = videoPlayerWrapper.classList.contains('theater-fullscreen');
+        if (isFs) {
+          videoPlayerWrapper.classList.remove('theater-fullscreen');
+          if (document.fullscreenElement) {
+            document.exitFullscreen?.().catch(() => {});
+          }
+        } else {
+          if (/iPhone|iPod/.test(navigator.userAgent) && modalVideo.webkitEnterFullscreen && window.innerWidth <= 640) {
+            modalVideo.webkitEnterFullscreen();
+          } else {
+            videoPlayerWrapper.classList.add('theater-fullscreen');
+            if (videoPlayerWrapper.requestFullscreen && !document.fullscreenElement) {
+              videoPlayerWrapper.requestFullscreen().catch(() => {});
+            }
+          }
+        }
+      }
+
+      btnFullscreen.addEventListener('click', toggleFullscreen);
+
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          videoPlayerWrapper.classList.remove('theater-fullscreen');
+        }
+      });
+
       function closeModal() {
         modalEl.classList.remove('open');
         modalEl.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
+        videoPlayerWrapper.classList.remove('theater-fullscreen');
+        applyZoom(1.0);
         // Liberar el vídeo inmediatamente para no consumir ancho de banda ni memoria
         modalVideo.pause();
         modalVideo.removeAttribute('src');
         modalVideo.load();
+        playIconText.textContent = '▶';
+        videoOverlayPlay.classList.remove('playing');
       }
 
       modalCloseBtn.addEventListener('click', closeModal);
+      if (modalCloseBottomBtn) modalCloseBottomBtn.addEventListener('click', closeModal);
       modalEl.addEventListener('click', e => {
         if (e.target === modalEl) closeModal();
       });
