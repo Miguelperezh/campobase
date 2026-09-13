@@ -2771,6 +2771,21 @@ const FONT_FAMILY_MAP = {
   classic: '"Merriweather", "Charter", "Georgia", "Cambria", "Times New Roman", serif'
 };
 
+const TEXT_COLOR_MAP = {
+  'dark-slate': '#0f172a',
+  'pure-black': '#000000',
+  'high-contrast': '#000000',
+  'navy': '#0a1c36',
+  'pure-white': '#ffffff',
+};
+
+const COLOR_TO_TEXT_MAP = {
+  '#0f172a': 'dark-slate',
+  '#000000': 'pure-black',
+  '#0a1c36': 'navy',
+  '#ffffff': 'pure-white',
+};
+
 function applyCustomTheme(themeInput) {
   let localTheme = {};
   try {
@@ -2892,22 +2907,65 @@ function applyCustomTheme(themeInput) {
   }
 
   // 7. Color de fuente personalizado (fontColor)
-  const fontColor = theme.fontColor || (textColor === 'pure-black' ? '#000000' : (textColor === 'pure-white' ? '#ffffff' : (textColor === 'navy' ? '#0a1c36' : null)));
+  let fontColor = theme.fontColor;
+  if (!fontColor && textColor && TEXT_COLOR_MAP[textColor]) {
+    fontColor = TEXT_COLOR_MAP[textColor];
+  }
+  if (!fontColor && textColor === 'pure-black') fontColor = '#000000';
+  if (!fontColor && textColor === 'pure-white') fontColor = '#ffffff';
+  if (!fontColor && textColor === 'navy') fontColor = '#0a1c36';
+
   if (fontColor) {
     root.setAttribute('data-has-custom-font-color', 'true');
     body.setAttribute('data-has-custom-font-color', 'true');
     root.style.setProperty('--cb-font-custom-color', fontColor);
     body.style.setProperty('--cb-font-custom-color', fontColor);
     root.style.setProperty('--ink', fontColor);
+    root.style.setProperty('--cb-slate-950', fontColor);
     root.style.setProperty('--cb-slate-900', fontColor);
+    root.style.setProperty('--cb-slate-800', fontColor);
+    root.style.setProperty('--cb-slate-700', fontColor);
+    root.style.setProperty('--cb-slate-600', fontColor);
+    root.style.setProperty('--cb-pitch-950', fontColor);
+    root.style.setProperty('--cb-pitch-900', fontColor);
+    root.style.setProperty('--cb-pitch-800', fontColor);
+    root.style.setProperty('--cb-pitch-700', fontColor);
     body.style.setProperty('--ink', fontColor);
+    body.style.setProperty('--cb-slate-950', fontColor);
     body.style.setProperty('--cb-slate-900', fontColor);
+    body.style.setProperty('--cb-slate-800', fontColor);
+    body.style.setProperty('--cb-slate-700', fontColor);
+    body.style.setProperty('--cb-slate-600', fontColor);
+    body.style.setProperty('--cb-pitch-950', fontColor);
+    body.style.setProperty('--cb-pitch-900', fontColor);
+    body.style.setProperty('--cb-pitch-800', fontColor);
+    body.style.setProperty('--cb-pitch-700', fontColor);
     body.style.color = fontColor;
   } else {
     root.removeAttribute('data-has-custom-font-color');
     body.removeAttribute('data-has-custom-font-color');
     root.style.removeProperty('--cb-font-custom-color');
     body.style.removeProperty('--cb-font-custom-color');
+    root.style.removeProperty('--ink');
+    root.style.removeProperty('--cb-slate-950');
+    root.style.removeProperty('--cb-slate-900');
+    root.style.removeProperty('--cb-slate-800');
+    root.style.removeProperty('--cb-slate-700');
+    root.style.removeProperty('--cb-slate-600');
+    root.style.removeProperty('--cb-pitch-950');
+    root.style.removeProperty('--cb-pitch-900');
+    root.style.removeProperty('--cb-pitch-800');
+    root.style.removeProperty('--cb-pitch-700');
+    body.style.removeProperty('--ink');
+    body.style.removeProperty('--cb-slate-950');
+    body.style.removeProperty('--cb-slate-900');
+    body.style.removeProperty('--cb-slate-800');
+    body.style.removeProperty('--cb-slate-700');
+    body.style.removeProperty('--cb-slate-600');
+    body.style.removeProperty('--cb-pitch-950');
+    body.style.removeProperty('--cb-pitch-900');
+    body.style.removeProperty('--cb-pitch-800');
+    body.style.removeProperty('--cb-pitch-700');
     body.style.removeProperty('color');
   }
 
@@ -2920,9 +2978,9 @@ function applyCustomTheme(themeInput) {
     if (themeForm.elements.fontFamily && theme.fontFamily) themeForm.elements.fontFamily.value = theme.fontFamily;
     if (themeForm.elements.fontScale && theme.fontScale) themeForm.elements.fontScale.value = theme.fontScale;
     if (themeForm.elements.fontWeight && theme.fontWeight) themeForm.elements.fontWeight.value = theme.fontWeight;
-    if (themeForm.elements.textColor && theme.textColor) themeForm.elements.textColor.value = theme.textColor;
-    if (themeForm.elements.fontColor && theme.fontColor) themeForm.elements.fontColor.value = theme.fontColor;
-    if (themeForm.elements.fontColorPicker && theme.fontColor) themeForm.elements.fontColorPicker.value = theme.fontColor;
+    if (themeForm.elements.textColor && textColor) themeForm.elements.textColor.value = textColor;
+    if (themeForm.elements.fontColor && fontColor) themeForm.elements.fontColor.value = fontColor;
+    if (themeForm.elements.fontColorPicker && fontColor) themeForm.elements.fontColorPicker.value = fontColor;
 
     // Actualizar clase activa en chips de fondo
     $$('.theme-bg-btn').forEach((btn) => {
@@ -2936,7 +2994,7 @@ function applyCustomTheme(themeInput) {
 
     // Actualizar clase activa en swatches de color de fuente
     $$('.font-color-swatch-btn').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.color === theme.fontColor);
+      btn.classList.toggle('active', btn.dataset.color?.toLowerCase() === fontColor?.toLowerCase());
     });
   }
 }
@@ -2960,6 +3018,15 @@ async function saveThemeSettings(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const values = formObject(form);
+  let fontColor = values.fontColor || values.fontColorPicker || null;
+  let textColor = values.textColor || 'dark-slate';
+
+  if (values.textColor && values.textColor !== 'dark-slate' && (!fontColor || fontColor === '#0f172a')) {
+    if (TEXT_COLOR_MAP[values.textColor]) {
+      fontColor = TEXT_COLOR_MAP[values.textColor];
+    }
+  }
+
   const theme = {
     themeBg: values.themeBg || 'default',
     accentPreset: values.accentPreset || 'emerald',
@@ -2967,8 +3034,8 @@ async function saveThemeSettings(event) {
     fontFamily: values.fontFamily || 'system',
     fontScale: values.fontScale || 'normal',
     fontWeight: values.fontWeight || 'bold',
-    textColor: values.textColor || 'dark-slate',
-    fontColor: values.fontColor || values.fontColorPicker || null,
+    textColor: textColor,
+    fontColor: fontColor,
   };
   try {
     localStorage.setItem('campobase.theme', JSON.stringify(theme));
@@ -3077,9 +3144,14 @@ function initCustomizationListeners() {
       const color = fontSwatchBtn.dataset.color;
       const picker = $('#theme-font-color-picker');
       const hidden = $('#theme-font-color');
+      const textColorSelect = $('#theme-text-color');
       if (picker) picker.value = color;
       if (hidden) hidden.value = color;
-      updateThemeProperty('fontColor', color);
+      const mappedTextColor = COLOR_TO_TEXT_MAP[color.toLowerCase()] || 'custom';
+      if (textColorSelect && COLOR_TO_TEXT_MAP[color.toLowerCase()]) {
+        textColorSelect.value = mappedTextColor;
+      }
+      updateThemeProperty('fontColor', color, { textColor: mappedTextColor });
       return;
     }
   });
@@ -3089,9 +3161,15 @@ function initCustomizationListeners() {
     if (e.target.id === 'theme-accent-color') {
       updateThemeProperty('accentColor', e.target.value, { accentPreset: 'custom' });
     } else if (e.target.id === 'theme-font-color-picker') {
+      const color = e.target.value;
       const hidden = $('#theme-font-color');
-      if (hidden) hidden.value = e.target.value;
-      updateThemeProperty('fontColor', e.target.value);
+      const textColorSelect = $('#theme-text-color');
+      if (hidden) hidden.value = color;
+      const mappedTextColor = COLOR_TO_TEXT_MAP[color.toLowerCase()] || 'custom';
+      if (textColorSelect && COLOR_TO_TEXT_MAP[color.toLowerCase()]) {
+        textColorSelect.value = mappedTextColor;
+      }
+      updateThemeProperty('fontColor', color, { textColor: mappedTextColor });
     }
   });
 
@@ -3103,7 +3181,13 @@ function initCustomizationListeners() {
     } else if (e.target.id === 'theme-font-weight') {
       updateThemeProperty('fontWeight', e.target.value);
     } else if (e.target.id === 'theme-text-color') {
-      updateThemeProperty('textColor', e.target.value);
+      const textColorVal = e.target.value;
+      const mappedColor = TEXT_COLOR_MAP[textColorVal] || '#0f172a';
+      const picker = $('#theme-font-color-picker');
+      const hidden = $('#theme-font-color');
+      if (picker) picker.value = mappedColor;
+      if (hidden) hidden.value = mappedColor;
+      updateThemeProperty('fontColor', mappedColor, { textColor: textColorVal });
     }
   });
 

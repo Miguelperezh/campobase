@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles-redesign.css">
+  <link rel="stylesheet" href="styles.css?v=2480">
+  <link rel="stylesheet" href="styles-redesign.css?v=2480">
   <script>
     try {
       const t = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -30,6 +30,22 @@
       }
       if (t.fontWeight && t.fontWeight !== 'normal') r.setAttribute('data-font-weight', t.fontWeight);
       if (t.textColor && t.textColor !== 'dark-slate') r.setAttribute('data-theme-font', t.textColor);
+      const textMap = { 'dark-slate': '#0f172a', 'pure-black': '#000000', 'high-contrast': '#000000', 'navy': '#0a1c36', 'pure-white': '#ffffff' };
+      const effectiveFontColor = t.fontColor || (t.textColor && textMap[t.textColor] ? textMap[t.textColor] : null);
+      if (effectiveFontColor) {
+        r.setAttribute('data-has-custom-font-color', 'true');
+        r.style.setProperty('--cb-font-custom-color', effectiveFontColor);
+        r.style.setProperty('--ink', effectiveFontColor);
+        r.style.setProperty('--cb-slate-950', effectiveFontColor);
+        r.style.setProperty('--cb-slate-900', effectiveFontColor);
+        r.style.setProperty('--cb-slate-800', effectiveFontColor);
+        r.style.setProperty('--cb-slate-700', effectiveFontColor);
+        r.style.setProperty('--cb-slate-600', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-950', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-900', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-800', effectiveFontColor);
+        r.style.setProperty('--cb-pitch-700', effectiveFontColor);
+      }
       if (t.accentColor) {
         r.style.setProperty('--cb-pitch-600', t.accentColor);
         r.style.setProperty('--cb-pitch-700', t.accentColor);
@@ -369,7 +385,7 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script type="module" src="js/app.js"></script>
-  <script type="module" src="js/redesign-nav.js"></script>
+  <script type="module" src="js/app.js?v=2480"></script>
+  <script type="module" src="js/redesign-nav.js?v=2480"></script>
 </body>
 </html>

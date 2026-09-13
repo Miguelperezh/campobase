@@ -2529,32 +2529,59 @@ body[data-font-weight="ultra-bold"] strong {
 }
 
 /* ==========================================================================
-   COLOR DE FUENTE PERSONALIZADO (fontColor)
+   COLOR DE FUENTE PERSONALIZADO (fontColor & textColor)
    ========================================================================== */
 html[data-has-custom-font-color="true"],
-body[data-has-custom-font-color="true"] {
+body[data-has-custom-font-color="true"],
+body.cb-redesign-active[data-has-custom-font-color="true"] {
   color: var(--cb-font-custom-color) !important;
   --ink: var(--cb-font-custom-color) !important;
+  --cb-slate-950: var(--cb-font-custom-color) !important;
   --cb-slate-900: var(--cb-font-custom-color) !important;
   --cb-slate-800: var(--cb-font-custom-color) !important;
   --cb-slate-700: var(--cb-font-custom-color) !important;
+  --cb-slate-600: var(--cb-font-custom-color) !important;
+  --cb-slate-500: var(--cb-font-custom-color) !important;
+  --cb-pitch-950: var(--cb-font-custom-color) !important;
+  --cb-pitch-900: var(--cb-font-custom-color) !important;
+  --cb-pitch-800: var(--cb-font-custom-color) !important;
+  --cb-pitch-700: var(--cb-font-custom-color) !important;
 }
 
-body[data-has-custom-font-color="true"] h1,
-body[data-has-custom-font-color="true"] h2,
-body[data-has-custom-font-color="true"] h3,
-body[data-has-custom-font-color="true"] h4,
-body[data-has-custom-font-color="true"] h5,
-body[data-has-custom-font-color="true"] h6,
-body[data-has-custom-font-color="true"] p,
-body[data-has-custom-font-color="true"] label,
-body[data-has-custom-font-color="true"] .player-name h3,
-body[data-has-custom-font-color="true"] .staff-name,
-body[data-has-custom-font-color="true"] .section-head h2,
-body[data-has-custom-font-color="true"] .topbar-brand h1,
-body[data-has-custom-font-color="true"] .card,
-body[data-has-custom-font-color="true"] .panel,
-body[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text) {
+html[data-theme-font="pure-black"], body[data-theme-font="pure-black"] { --cb-font-custom-color: #000000; }
+html[data-theme-font="pure-white"], body[data-theme-font="pure-white"] { --cb-font-custom-color: #ffffff; }
+html[data-theme-font="navy"], body[data-theme-font="navy"] { --cb-font-custom-color: #0a1c36; }
+html[data-theme-font="high-contrast"], body[data-theme-font="high-contrast"] { --cb-font-custom-color: #000000; }
+
+body.cb-redesign-active[data-has-custom-font-color="true"] h1,
+body.cb-redesign-active[data-has-custom-font-color="true"] h2,
+body.cb-redesign-active[data-has-custom-font-color="true"] h3,
+body.cb-redesign-active[data-has-custom-font-color="true"] h4,
+body.cb-redesign-active[data-has-custom-font-color="true"] h5,
+body.cb-redesign-active[data-has-custom-font-color="true"] h6,
+body.cb-redesign-active[data-has-custom-font-color="true"] p,
+body.cb-redesign-active[data-has-custom-font-color="true"] label,
+body.cb-redesign-active[data-has-custom-font-color="true"] select,
+body.cb-redesign-active[data-has-custom-font-color="true"] summary,
+body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.cb-redesign-active[data-has-custom-font-color="true"] textarea,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-name h3,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-name p,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-data strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-data small,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-summary span,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-summary strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] .player-performance-summary,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stat strong,
+body.cb-redesign-active[data-has-custom-font-color="true"] .stat span,
+body.cb-redesign-active[data-has-custom-font-color="true"] .staff-name,
+body.cb-redesign-active[data-has-custom-font-color="true"] .section-head h2,
+body.cb-redesign-active[data-has-custom-font-color="true"] .topbar-brand h1,
+body.cb-redesign-active[data-has-custom-font-color="true"] .card,
+body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
+body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
+body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text):not(.cb-preview-badge),
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor) {
   color: var(--cb-font-custom-color) !important;
 }
 

@@ -113,3 +113,9 @@ test('attendance-linked-sources.js vincula asistencia por id o fecha y no ejecut
   assert.match(attendanceJs, /dateOnly\(record\?\.date\)\s*===\s*dateOnly\(sessionDate\)/, 'attendanceForSession debe enlazar por fecha como respaldo');
 });
 
+test('Sincronización bidireccional entre textColor y fontColor y bootstrap en el head', () => {
+  assert.match(html, /effectiveFontColor/, 'index.html head debe calcular effectiveFontColor al arrancar');
+  assert.match(app, /TEXT_COLOR_MAP/, 'app.js debe definir TEXT_COLOR_MAP para mapear select a hex');
+  assert.match(app, /COLOR_TO_TEXT_MAP/, 'app.js debe definir COLOR_TO_TEXT_MAP para mapear hex a select');
+});
+
