@@ -3475,6 +3475,7 @@ function showAuth() {
   $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado o el PIN temporal de demo.';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
   $('#login-pin-field').classList.toggle('hidden', initial);
+  if ($('#auth-reset-btn')) $('#auth-reset-btn').classList.toggle('hidden', initial);
   const form = $('#auth-form');
   form.elements.newOwnerPin.required = initial;
   form.elements.newDelegatePin.required = initial;
@@ -3493,13 +3494,18 @@ async function submitAuth(event) {
       await savePins(form.elements.newOwnerPin.value, form.elements.newDelegatePin.value);
       applyRole('owner');
     } else {
-      const pin = form.elements.pin.value;
-      if (await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) applyRole('owner');
-      else if (await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) applyRole('delegate');
-      else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
+      const pin = String(form.elements.pin.value || '').trim();
+      if (pin.toLowerCase() === 'demo') {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
+      } else if (await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
+        applyRole('owner');
+      } else if (await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
+        applyRole('delegate');
+      } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
+        await startDemoSession(createDemoSession(crypto.randomUUID()));
+      } else {
+        throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
       }
-      else throw new TypeError('PIN incorrecto.');
     }
     $('#auth-dialog').close();
   } catch (error) {
@@ -3606,7 +3612,71 @@ function wireEvents() {
 
   $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#player-stats-form').addEventListener('submit', (event) => savePlayerStats(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
-  $('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
+  $('#auth-dialog').addEventListener('cancel', (event) => {
+    if (state.role) return;
+    event.preventDefault();
+  });
+  $('#auth-demo-btn')?.addEventListener('click', async () => {
+    try {
+      $('#auth-error').textContent = 'Iniciando modo demo…';
+      await startDemoSession(createDemoSession(crypto.randomUUID()));
+      $('#auth-dialog').close();
+    } catch (err) {
+      $('#auth-error').textContent = err.message;
+    }
+  });
+  $('#auth-reload-btn')?.addEventListener('click', async () => {
+    try {
+      sessionStorage.removeItem(SESSION_ROLE_KEY);
+      sessionStorage.removeItem(DEMO_SESSION_KEY);
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.update()));
+      }
+    } catch {}
+    window.location.reload();
+  });
+  let authResetConfirming = false;
+  $('#auth-reset-btn')?.addEventListener('click', () => {
+    if (!authResetConfirming) {
+      authResetConfirming = true;
+      $('#auth-error').innerHTML = `
+        <span style="display:block;margin-bottom:0.4rem;color:var(--danger,#dc2626);font-weight:600;">
+          ¿Restablecer PIN? Podrás crear uno nuevo sin perder datos.
+        </span>
+        <div style="display:flex;gap:0.4rem;justify-content:center;">
+          <button type="button" id="auth-confirm-reset-btn" class="danger compact" style="font-size:0.8rem;">Sí, restablecer</button>
+          <button type="button" id="auth-cancel-reset-btn" class="secondary compact" style="font-size:0.8rem;">Cancelar</button>
+        </div>
+      `;
+      $('#auth-confirm-reset-btn')?.addEventListener('click', async () => {
+        authResetConfirming = false;
+        delete state.settings.ownerPinHash;
+        delete state.settings.delegatePinHash;
+        delete state.settings.pinSalt;
+        await put('settings', state.settings);
+        showAuth();
+        $('#auth-help').textContent = 'Acceso restablecido. Configura tu nuevo PIN de Migue y del delegado para continuar.';
+      }, { once: true });
+      $('#auth-cancel-reset-btn')?.addEventListener('click', () => {
+        authResetConfirming = false;
+        $('#auth-error').textContent = '';
+      }, { once: true });
+    }
+  });
+  $('#settings-logout')?.addEventListener('click', async () => {
+    if (state.role === 'demo') await endDemoSession();
+    else showAuth();
+  });
+  $('#settings-reload')?.addEventListener('click', async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.update()));
+      }
+    } catch {}
+    window.location.reload();
+  });
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));

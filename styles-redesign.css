@@ -4709,3 +4709,37 @@ div:has(> .date-24) {
   color: var(--green, #173f35) !important;
 }
 
+/* Diálogo de acceso y recuperación */
+.auth-dialog {
+  border-radius: var(--cb-radius-lg, 16px) !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  border: none !important;
+  padding: 1.5rem !important;
+  background: #ffffff !important;
+  max-width: 400px !important;
+  width: calc(100% - 2rem) !important;
+}
+
+.auth-dialog::backdrop {
+  background: rgba(10, 37, 27, 0.88) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.auth-dialog .auth-button-stack {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 0.6rem !important;
+  margin-top: 0.4rem !important;
+}
+
+.auth-dialog .auth-footer-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 0.85rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid var(--cb-slate-200, #e2e8f0) !important;
+  gap: 0.5rem !important;
+}
+
