@@ -370,13 +370,13 @@ async function savePlayer(event) {
   const values = formObject(form);
   const existing = values.id ? await getOne('players', values.id) : null;
   const photoRemoved = form.elements.photoRemoved?.value === '1';
-  let photo = form.elements.existingPhoto?.value || '';
-  if (photoRemoved) {
-    photo = '';
-  } else if (form.elements.photo?.files?.[0]) {
-    photo = await photoToDataUrl(form.elements.photo.files[0]);
-  } else if (!photo && existing?.photo) {
-    photo = existing.photo;
+  let photo = '';
+  if (!photoRemoved) {
+    if (form.elements.photo?.files?.[0]) {
+      photo = await photoToDataUrl(form.elements.photo.files[0]);
+    } else {
+      photo = form.elements.existingPhoto?.value || '';
+    }
   }
   const positions = checkedValues('positions', form);
   await put('players', buildPlayerRecord({ ...values, id: values.id || uid() }, positions, existing, photo));
@@ -385,6 +385,7 @@ async function savePlayer(event) {
   if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
   playerCropper?.setExistingPhoto('');
   await refresh();
+  renderPlayers();
   toast('Jugador guardado.');
 }
 
@@ -3778,7 +3779,10 @@ async function init() {
   // En desarrollo local (localhost) NO usamos el service worker: cachea el código
   // y hace que los cambios no se vean. Desregistramos el que ya esté activo y, en
   // producción (GitHub Pages), sí se registra para el modo offline.
-  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(location.hostname)
+    || location.hostname.endsWith('.local')
+    || location.hostname.startsWith('192.168.')
+    || location.hostname.startsWith('10.');
   if ('serviceWorker' in navigator) {
     if (isLocal) {
       const reloadKey = 'campobase.localServiceWorkerReloaded';

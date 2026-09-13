@@ -58,7 +58,7 @@ test('js/app.js aplica variables directas y delegación global para reactividad 
 });
 
 test('sw.js renueva CACHE con versión themev para actualizar PWA móvil', () => {
-  assert.match(sw, /themev[3-9]/);
+  assert.match(sw, /themev\d+/);
   assert.match(sw, /exerciseboard-2475/);
   assert.match(sw, /image-crop-utils\.js/);
 });

@@ -109,6 +109,29 @@ function patchPlayerCard(card, player, matches, trainings, callups) {
   const league = applyPlayerStatAdjustments(leagueAutomatic, player.statAdjustments?.league);
   const preseason = applyPlayerStatAdjustments(preseasonAutomatic, player.statAdjustments?.preseason);
 
+  const identity = $('.player-identity', card);
+  if (identity) {
+    const avatarEl = $('.avatar', identity);
+    const hasPhoto = typeof player.photo === 'string' && player.photo.startsWith('data:image/');
+    if (hasPhoto) {
+      if (!avatarEl || avatarEl.tagName !== 'IMG' || avatarEl.src !== player.photo) {
+        avatarEl?.remove();
+        const img = document.createElement('img');
+        img.className = 'avatar';
+        img.src = player.photo;
+        img.alt = `Foto de ${player.name}`;
+        identity.prepend(img);
+      }
+    } else if (!avatarEl || avatarEl.tagName !== 'DIV') {
+      avatarEl?.remove();
+      const div = document.createElement('div');
+      div.className = 'avatar';
+      div.setAttribute('aria-hidden', 'true');
+      div.textContent = (player.name || '').slice(0, 2).toUpperCase();
+      identity.prepend(div);
+    }
+  }
+
   const performance = $('.player-performance', card);
   const summaries = $$('.player-summary', performance);
   patchSummary(summaries[0], league);
