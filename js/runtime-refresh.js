@@ -33,7 +33,19 @@ function buttonMarkup() {
 
 async function refreshNow(button) {
   if (button) { button.disabled = true; button.textContent = 'Actualizando…'; }
-  try { await syncFromCloud().catch(() => null); } finally { window.location.reload(); }
+  try {
+    if (typeof caches !== 'undefined') {
+      const keys = await caches.keys().catch(() => []);
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
+      await Promise.all(regs.map((reg) => reg.update().catch(() => null)));
+    }
+    await syncFromCloud().catch(() => null);
+  } finally {
+    window.location.reload();
+  }
 }
 
 export function installRuntimeRefresh() {

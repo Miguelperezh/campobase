@@ -3726,19 +3726,24 @@ function wireEvents() {
 
 function handleError(error) { console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
 function networkStatus() {
+  const label = $('#network-label');
   if (isDemoDatabase()) {
     document.body.classList.remove('offline');
-    $('#network-label').textContent = `Demo temporal · máximo ${DEMO_DURATION_MS / 3_600_000} h`;
-    $('#network-label').title = 'Datos aislados: sesión de demostración temporal.';
+    if (label) {
+      label.textContent = `Demo temporal · máximo ${DEMO_DURATION_MS / 3_600_000} h`;
+      label.title = 'Datos aislados: sesión de demostración temporal.';
+      label.style.display = 'inline';
+    }
     return;
   }
   document.body.classList.toggle('offline', !navigator.onLine);
-  $('#network-label').textContent = !navigator.onLine
-    ? 'Sin conexión'
-    : '';
-  $('#network-label').title = !navigator.onLine
-    ? 'Sin conexión: cambios guardados localmente'
-    : (state.cloudConnected ? 'En línea' : 'Sincronización pendiente');
+  if (label) {
+    label.textContent = !navigator.onLine ? 'Sin conexión' : '';
+    label.title = !navigator.onLine
+      ? 'Sin conexión: cambios guardados localmente'
+      : (state.cloudConnected ? 'En línea' : 'Sincronización pendiente');
+    label.style.display = !navigator.onLine ? 'inline' : 'none';
+  }
 }
 
 async function synchronizeCloud() {

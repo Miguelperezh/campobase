@@ -13,8 +13,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2483">
-  <link rel="stylesheet" href="styles-redesign.css?v=2483">
+  <link rel="stylesheet" href="styles.css?v=2484">
+  <link rel="stylesheet" href="styles-redesign.css?v=2484">
+  <style>
+    #network-label { display: none !important; }
+    body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
+  </style>
   <script>
     try {
       const t = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -52,6 +56,28 @@
         r.style.setProperty('--cb-brand', t.accentColor);
       }
     } catch (e) {}
+    (function() {
+      function sanitizeNetworkLabel() {
+        const el = document.getElementById('network-label');
+        if (!el) return;
+        if (el.textContent.includes('Supabase') || (!document.body.classList.contains('offline') && !document.body.classList.contains('demo-mode'))) {
+          el.textContent = '';
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', sanitizeNetworkLabel);
+      } else {
+        sanitizeNetworkLabel();
+      }
+      try {
+        new MutationObserver(sanitizeNetworkLabel).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+      } catch (e) {}
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(function(reg) {
+          if (reg) reg.update();
+        }).catch(function() {});
+      }
+    })();
   </script>
 </head>
 <body class="auth-locked">
@@ -385,7 +411,7 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script type="module" src="js/app.js?v=2483"></script>
-  <script type="module" src="js/redesign-nav.js?v=2483"></script>
+  <script type="module" src="js/app.js?v=2484"></script>
+  <script type="module" src="js/redesign-nav.js?v=2484"></script>
 </body>
 </html>

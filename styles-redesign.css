@@ -240,6 +240,15 @@ body.cb-preview-mode #demo-team-panel {
   display: none !important;
 }
 
+/* Ocultar etiquetas técnicas de conexión al cliente salvo cuando no hay red o es demo */
+#network-label {
+  display: none !important;
+}
+body.offline #network-label,
+body.demo-mode #network-label {
+  display: inline !important;
+}
+
 /* Buscador global moderno integrado (sin botón tosco) */
 /* Buscador global moderno integrado (solo en vistas con colecciones amplias) */
 body.cb-redesign-active .search-bar {

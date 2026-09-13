@@ -129,4 +129,6 @@ test('No expone textos técnicos ni menciones a Supabase en la interfaz visible 
   assert.doesNotMatch(app, /Supabase sincronizado/, 'No debe mostrar Supabase sincronizado');
   assert.doesNotMatch(app, /Supabase pendiente/, 'No debe mostrar Supabase pendiente');
   assert.doesNotMatch(html, /Supabase sincroniza/, 'No debe mencionar Supabase en el panel de copia de seguridad');
+  assert.match(css, /#network-label\s*\{\s*display:\s*none\s*!important;?\s*\}/, 'CSS debe ocultar network-label cuando está online');
 });
+
