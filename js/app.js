@@ -2612,19 +2612,156 @@ function applyTeamIdentity(settings = state.settings) {
   }
 }
 
-function applyCustomTheme(theme = state.settings?.theme) {
-  if (!theme) {
-    try {
-      theme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
-    } catch {
-      theme = {};
-    }
+const THEME_PRESETS = {
+  'default': {
+    bg: '#071711',
+    card: '#0e261d',
+    nav: 'rgba(10, 31, 23, 0.96)',
+    input: '#091c15',
+    text: '#f8fafc',
+    border: '#1b4d3a',
+  },
+  'dark': {
+    bg: '#040806',
+    card: '#0a140e',
+    nav: 'rgba(8, 18, 13, 0.96)',
+    input: '#060e0a',
+    text: '#f8fafc',
+    border: '#153023',
+  },
+  'pitch-vivid': {
+    bg: '#021e12',
+    card: '#06331f',
+    nav: 'rgba(4, 38, 23, 0.96)',
+    input: '#032516',
+    text: '#f0fdf4',
+    border: '#125435',
+  },
+  'navy': {
+    bg: '#061021',
+    card: '#0c1b33',
+    nav: 'rgba(10, 24, 46, 0.96)',
+    input: '#081427',
+    text: '#f8fafc',
+    border: '#183359',
+  },
+  'ocean': {
+    bg: '#03141f',
+    card: '#072436',
+    nav: 'rgba(5, 27, 41, 0.96)',
+    input: '#041c2b',
+    text: '#f0f9ff',
+    border: '#0e4161',
+  },
+  'charcoal': {
+    bg: '#0f1113',
+    card: '#181b1e',
+    nav: 'rgba(19, 22, 25, 0.96)',
+    input: '#121417',
+    text: '#f8fafc',
+    border: '#282d33',
+  },
+  'steel': {
+    bg: '#171d24',
+    card: '#222a34',
+    nav: 'rgba(28, 36, 46, 0.96)',
+    input: '#1a222a',
+    text: '#f8fafc',
+    border: '#33404f',
+  },
+  'burgundy': {
+    bg: '#170408',
+    card: '#260810',
+    nav: 'rgba(29, 6, 12, 0.96)',
+    input: '#1d050a',
+    text: '#fff1f2',
+    border: '#45101d',
+  },
+  'purple': {
+    bg: '#110722',
+    card: '#1d0e38',
+    nav: 'rgba(23, 10, 44, 0.96)',
+    input: '#16092b',
+    text: '#faf5ff',
+    border: '#381c6b',
+  },
+  'light': {
+    bg: '#ffffff',
+    card: '#ffffff',
+    nav: 'rgba(255, 255, 255, 0.96)',
+    input: '#f8fafc',
+    text: '#0f172a',
+    border: '#e2e8f0',
+  },
+  'warm': {
+    bg: '#f6f3eb',
+    card: '#ffffff',
+    nav: 'rgba(246, 243, 235, 0.96)',
+    input: '#fbf9f4',
+    text: '#292524',
+    border: '#e5dfd3',
+  },
+  'sepia': {
+    bg: '#eee6d8',
+    card: '#faf6ee',
+    nav: 'rgba(238, 230, 216, 0.96)',
+    input: '#f4ede1',
+    text: '#2d241e',
+    border: '#d7cbb6',
+  },
+  'high-vis': {
+    bg: '#000000',
+    card: '#080808',
+    nav: 'rgba(0, 0, 0, 0.98)',
+    input: '#000000',
+    text: '#ffffff',
+    border: '#facc15',
   }
+};
+
+const FONT_SCALE_MAP = {
+  compact: '14.5px',
+  normal: '16px',
+  large: '19.2px',
+  xlarge: '22.4px',
+  huge: '25.6px',
+  enormous: '28.8px',
+  ultra: '32px'
+};
+
+const FONT_FAMILY_MAP = {
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  sport: '"Barlow Condensed", "Oswald", "DIN Alternate", "Impact", -apple-system, sans-serif',
+  readable: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  modern: '"Outfit", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif',
+  technical: '"JetBrains Mono", "SF Mono", "Menlo", "Monaco", "Consolas", monospace',
+  classic: '"Merriweather", "Charter", "Georgia", "Cambria", "Times New Roman", serif'
+};
+
+function applyCustomTheme(themeInput) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+
+  const theme = {
+    themeBg: 'default',
+    accentPreset: 'emerald',
+    accentColor: '#10b981',
+    fontFamily: 'system',
+    fontScale: 'normal',
+    fontWeight: 'bold',
+    textColor: 'dark-slate',
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+    ...(themeInput || {})
+  };
+
   const root = document.documentElement;
   const body = document.body;
-  if (!body) return;
+  if (!root || !body) return;
 
-  // 1. Tono de fondo (data-theme-bg)
+  // 1. Tono de fondo (data-theme-bg y variables CSS)
   const bg = theme.themeBg || 'default';
   if (bg && bg !== 'default') {
     root.setAttribute('data-theme-bg', bg);
@@ -2632,6 +2769,31 @@ function applyCustomTheme(theme = state.settings?.theme) {
   } else {
     root.removeAttribute('data-theme-bg');
     body.removeAttribute('data-theme-bg');
+  }
+
+  const preset = THEME_PRESETS[bg] || THEME_PRESETS['default'];
+  if (preset) {
+    root.style.setProperty('--cb-surface-bg', preset.bg);
+    root.style.setProperty('--cb-surface-card', preset.card);
+    root.style.setProperty('--cb-surface-nav', preset.nav);
+    root.style.setProperty('--cb-surface-input', preset.input);
+    root.style.setProperty('--cb-slate-900', preset.text);
+    root.style.setProperty('--cb-slate-200', preset.border);
+    root.style.setProperty('--paper', preset.bg);
+    root.style.setProperty('--card', preset.card);
+    root.style.setProperty('--ink', preset.text);
+    root.style.setProperty('--line', preset.border);
+
+    body.style.setProperty('--cb-surface-bg', preset.bg);
+    body.style.setProperty('--cb-surface-card', preset.card);
+    body.style.setProperty('--cb-surface-nav', preset.nav);
+    body.style.setProperty('--cb-surface-input', preset.input);
+    body.style.setProperty('--cb-slate-900', preset.text);
+    body.style.setProperty('--cb-slate-200', preset.border);
+    body.style.setProperty('--paper', preset.bg);
+    body.style.setProperty('--card', preset.card);
+    body.style.setProperty('--ink', preset.text);
+    body.style.setProperty('--line', preset.border);
   }
 
   // 2. Color de acento del club
@@ -2651,7 +2813,7 @@ function applyCustomTheme(theme = state.settings?.theme) {
     body.style.removeProperty('--cb-brand');
   }
 
-  // 3. Familia tipográfica (data-theme-family)
+  // 3. Familia tipográfica (data-theme-family y variable CSS)
   const family = theme.fontFamily || 'system';
   if (family && family !== 'system') {
     root.setAttribute('data-theme-family', family);
@@ -2660,8 +2822,11 @@ function applyCustomTheme(theme = state.settings?.theme) {
     root.removeAttribute('data-theme-family');
     body.removeAttribute('data-theme-family');
   }
+  const fontFamVal = FONT_FAMILY_MAP[family] || FONT_FAMILY_MAP['system'];
+  root.style.setProperty('--cb-font-family', fontFamVal);
+  body.style.setProperty('--cb-font-family', fontFamVal);
 
-  // 4. Tamaño / Escala de fuentes (data-font-scale)
+  // 4. Tamaño / Escala de fuentes (data-font-scale y rem base en html)
   const scale = theme.fontScale || 'normal';
   if (scale && scale !== 'normal') {
     root.setAttribute('data-font-scale', scale);
@@ -2670,6 +2835,8 @@ function applyCustomTheme(theme = state.settings?.theme) {
     root.removeAttribute('data-font-scale');
     body.removeAttribute('data-font-scale');
   }
+  const fontSizePx = FONT_SCALE_MAP[scale] || '16px';
+  root.style.fontSize = fontSizePx;
 
   // 5. Grosor / Negritas (data-font-weight)
   const weight = theme.fontWeight || 'bold';
@@ -2691,7 +2858,7 @@ function applyCustomTheme(theme = state.settings?.theme) {
     body.removeAttribute('data-theme-font');
   }
 
-  // Sincronizar controles en el formulario si está renderizado
+  // Sincronizar controles en el formulario si está en el DOM
   const themeForm = $('#theme-settings-form');
   if (themeForm) {
     if (themeForm.elements.themeBg) themeForm.elements.themeBg.value = bg;
@@ -2731,7 +2898,6 @@ async function saveTeamSettings(event) {
 
 async function saveThemeSettings(event) {
   event.preventDefault();
-  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede cambiar las preferencias visuales.');
   const form = event.currentTarget;
   const values = formObject(form);
   const theme = {
@@ -2743,13 +2909,41 @@ async function saveThemeSettings(event) {
     fontWeight: values.fontWeight || 'bold',
     textColor: values.textColor || 'dark-slate',
   };
-  state.settings = { ...state.settings, id: 'main', theme };
-  await put('settings', state.settings);
   try {
     localStorage.setItem('campobase.theme', JSON.stringify(theme));
   } catch {}
   applyCustomTheme(theme);
+
+  if (roleCanUseOwnerFeatures(state.role)) {
+    state.settings = { ...state.settings, id: 'main', theme };
+    await put('settings', state.settings).catch((err) => console.warn('No se pudo sincronizar el tema con el servidor:', err));
+  }
   toast('Preferencias visuales y tema guardados.');
+}
+
+function updateThemeProperty(prop, val, extra = {}) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    themeBg: 'default',
+    accentPreset: 'emerald',
+    accentColor: '#10b981',
+    fontFamily: 'system',
+    fontScale: 'normal',
+    fontWeight: 'bold',
+    textColor: 'dark-slate',
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+    [prop]: val,
+    ...extra,
+  };
+  if (state.settings) state.settings.theme = currentTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
 }
 
 function initCustomizationListeners() {
@@ -2792,100 +2986,51 @@ function initCustomizationListeners() {
   const themeForm = $('#theme-settings-form');
   if (themeForm) {
     themeForm.addEventListener('submit', (e) => saveThemeSettings(e).catch(handleError));
-    const accentPreset = $('#theme-accent-preset');
-    const accentColorInput = $('#theme-accent-color');
-    const PRESETS = {
-      emerald: '#10b981',
-      blue: '#2563eb',
-      red: '#e02444',
-      gold: '#f59e0b',
-      orange: '#ea580c',
-      purple: '#7c3aed',
-      cyan: '#0284c7',
-      black: '#18181b',
-    };
-
-    const updateThemeProperty = (prop, val) => {
-      const currentTheme = {
-        themeBg: 'default',
-        accentPreset: 'emerald',
-        accentColor: '#10b981',
-        fontFamily: 'system',
-        fontScale: 'normal',
-        fontWeight: 'bold',
-        textColor: 'dark-slate',
-        ...state.settings?.theme,
-        [prop]: val,
-      };
-      if (state.settings) state.settings.theme = currentTheme;
-      try {
-        localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
-      } catch {}
-      applyCustomTheme(currentTheme);
-    };
-
-    // Chips de fondo de la app (reactivo al instante)
-    $$('.theme-bg-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const bgVal = btn.dataset.bg;
-        const hiddenInput = $('#theme-bg-select');
-        if (hiddenInput) hiddenInput.value = bgVal;
-        updateThemeProperty('themeBg', bgVal);
-      });
-    });
-
-    // Swatches de color de acento
-    $$('.color-swatch-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const color = btn.dataset.color;
-        const preset = btn.dataset.preset;
-        const presetInput = $('#theme-accent-preset');
-        const colorInput = $('#theme-accent-color');
-        if (presetInput) presetInput.value = preset;
-        if (colorInput) colorInput.value = color;
-        const currentTheme = {
-          ...state.settings?.theme,
-          accentColor: color,
-          accentPreset: preset,
-        };
-        if (state.settings) state.settings.theme = currentTheme;
-        try {
-          localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
-        } catch {}
-        applyCustomTheme(currentTheme);
-      });
-    });
-
-    accentColorInput?.addEventListener('input', () => {
-      const color = accentColorInput.value;
-      const currentTheme = {
-        ...state.settings?.theme,
-        accentColor: color,
-        accentPreset: 'custom',
-      };
-      if (state.settings) state.settings.theme = currentTheme;
-      try {
-        localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
-      } catch {}
-      applyCustomTheme(currentTheme);
-    });
-
-    $('#theme-font-family')?.addEventListener('change', (e) => {
-      updateThemeProperty('fontFamily', e.target.value);
-    });
-
-    $('#theme-font-scale')?.addEventListener('change', (e) => {
-      updateThemeProperty('fontScale', e.target.value);
-    });
-
-    $('#theme-font-weight')?.addEventListener('change', (e) => {
-      updateThemeProperty('fontWeight', e.target.value);
-    });
-
-    $('#theme-text-color')?.addEventListener('change', (e) => {
-      updateThemeProperty('textColor', e.target.value);
-    });
   }
+
+  // Delegación global para botones de tono de fondo (chips)
+  document.addEventListener('click', (e) => {
+    const bgBtn = e.target.closest('.theme-bg-btn');
+    if (bgBtn) {
+      const bgVal = bgBtn.dataset.bg;
+      const hiddenInput = $('#theme-bg-select');
+      if (hiddenInput) hiddenInput.value = bgVal;
+      updateThemeProperty('themeBg', bgVal);
+      return;
+    }
+
+    const swatchBtn = e.target.closest('.color-swatch-btn');
+    if (swatchBtn) {
+      const color = swatchBtn.dataset.color;
+      const preset = swatchBtn.dataset.preset;
+      const presetInput = $('#theme-accent-preset');
+      const colorInput = $('#theme-accent-color');
+      if (presetInput) presetInput.value = preset;
+      if (colorInput) colorInput.value = color;
+      updateThemeProperty('accentColor', color, { accentPreset: preset });
+      return;
+    }
+  });
+
+  // Delegación global para inputs y selects del formulario de tema
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'theme-accent-color') {
+      updateThemeProperty('accentColor', e.target.value, { accentPreset: 'custom' });
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'theme-font-family') {
+      updateThemeProperty('fontFamily', e.target.value);
+    } else if (e.target.id === 'theme-font-scale') {
+      updateThemeProperty('fontScale', e.target.value);
+    } else if (e.target.id === 'theme-font-weight') {
+      updateThemeProperty('fontWeight', e.target.value);
+    } else if (e.target.id === 'theme-text-color') {
+      updateThemeProperty('textColor', e.target.value);
+    }
+  });
+}
 
   // Delegación para replegar estadísticas con el botón al final del desplegable
   document.addEventListener('click', (e) => {

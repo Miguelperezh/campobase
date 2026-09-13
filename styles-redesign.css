@@ -1986,22 +1986,54 @@ body.cb-redesign-active main {
 }
 
 /* ==========================================================================
-   PALETA DE 8 FONDOS DE LA APLICACIÓN (Reactividad total en toda la UI)
+   PALETA DE 13 FONDOS DE LA APLICACIÓN (Reactividad total en toda la UI)
    ========================================================================== */
+
+/* Variables y reglas comunes para componentes */
+body.cb-redesign-active .topbar,
+body.cb-redesign-active #cb-sub-nav,
+body.cb-redesign-active #cb-bottom-nav {
+  background: var(--cb-surface-nav, rgba(255, 255, 255, 0.95)) !important;
+  border-color: var(--cb-slate-200, #e2e8f0) !important;
+}
+
+body.cb-redesign-active .card,
+body.cb-redesign-active .panel {
+  background: var(--cb-surface-card, #ffffff) !important;
+  border-color: var(--cb-slate-200, #e2e8f0) !important;
+  color: var(--cb-slate-900, inherit);
+}
+
+body.cb-redesign-active input,
+body.cb-redesign-active select,
+body.cb-redesign-active textarea {
+  background: var(--cb-surface-input, #ffffff) !important;
+  border-color: var(--cb-slate-200, #cbd5e1) !important;
+  color: var(--cb-slate-900, inherit) !important;
+}
 
 /* 1. Modo Luz Solar / Blanco Puro */
 html[data-theme-bg="light"],
-html:has(body.cb-redesign-active[data-theme-bg="light"]),
-body.cb-redesign-active[data-theme-bg="light"],
-body.cb-redesign-active[data-theme-bg="clean-white"] {
+body[data-theme-bg="light"] {
   background: #ffffff !important;
+  color: #0f172a !important;
   --cb-surface-bg: #ffffff;
   --cb-surface-card: #ffffff;
+  --cb-surface-nav: rgba(255, 255, 255, 0.96);
+  --cb-surface-input: #f8fafc;
+  --cb-slate-900: #0f172a;
+  --cb-slate-800: #1e293b;
+  --cb-slate-700: #334155;
+  --cb-slate-600: #475569;
+  --cb-slate-200: #e2e8f0;
+  --cb-slate-100: #f1f5f9;
+  --paper: #ffffff;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --line: #e2e8f0;
 }
-body.cb-redesign-active[data-theme-bg="light"] .card,
-body.cb-redesign-active[data-theme-bg="light"] .panel,
-body.cb-redesign-active[data-theme-bg="clean-white"] .card,
-body.cb-redesign-active[data-theme-bg="clean-white"] .panel {
+body[data-theme-bg="light"] .card,
+body[data-theme-bg="light"] .panel {
   background: #ffffff !important;
   border-color: #e2e8f0 !important;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
@@ -2009,432 +2041,544 @@ body.cb-redesign-active[data-theme-bg="clean-white"] .panel {
 
 /* 2. Modo Noche OLED Profundo */
 html[data-theme-bg="dark"],
-html:has(body.cb-redesign-active[data-theme-bg="dark"]),
-body.cb-redesign-active[data-theme-bg="dark"],
-body.cb-redesign-active[data-theme-bg="pitch-dark"] {
-  background: #060c08 !important;
+body[data-theme-bg="dark"] {
+  background: #040806 !important;
   color: #f8fafc !important;
-  --cb-surface-bg: #060c08;
-  --cb-surface-card: #0c1811;
+  --cb-surface-bg: #040806;
+  --cb-surface-card: #0a140e;
+  --cb-surface-nav: rgba(8, 18, 13, 0.96);
+  --cb-surface-input: #060e0a;
   --cb-slate-900: #f8fafc;
   --cb-slate-800: #f1f5f9;
   --cb-slate-700: #e2e8f0;
   --cb-slate-600: #cbd5e1;
   --cb-slate-500: #94a3b8;
-  --cb-slate-200: #1b382b;
-  --cb-slate-100: #132a20;
-  --cb-slate-50:  #0a1c15;
+  --cb-slate-200: #153023;
+  --cb-slate-100: #0d2118;
+  --cb-slate-50:  #07140e;
+  --paper: #040806;
+  --card: #0a140e;
+  --ink: #f8fafc;
+  --line: #153023;
 }
-body.cb-redesign-active[data-theme-bg="dark"] .topbar,
-body.cb-redesign-active[data-theme-bg="dark"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="dark"] #cb-bottom-nav,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] .topbar,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] #cb-bottom-nav {
-  background: rgba(10, 24, 17, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+body[data-theme-bg="dark"] .card,
+body[data-theme-bg="dark"] .panel {
+  background: #0a140e !important;
+  border-color: #153023 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
 }
-body.cb-redesign-active[data-theme-bg="dark"] .card,
-body.cb-redesign-active[data-theme-bg="dark"] .panel,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] .card,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] .panel {
-  background: #0c1811 !important;
-  border-color: #1b382b !important;
+
+/* 3. Césped Intenso */
+html[data-theme-bg="pitch-vivid"],
+body[data-theme-bg="pitch-vivid"] {
+  background: #021e12 !important;
+  color: #f0fdf4 !important;
+  --cb-surface-bg: #021e12;
+  --cb-surface-card: #06331f;
+  --cb-surface-nav: rgba(4, 38, 23, 0.96);
+  --cb-surface-input: #032516;
+  --cb-slate-900: #f0fdf4;
+  --cb-slate-800: #dcfce7;
+  --cb-slate-700: #bbf7d0;
+  --cb-slate-200: #125435;
+  --paper: #021e12;
+  --card: #06331f;
+  --ink: #f0fdf4;
+  --line: #125435;
+}
+body[data-theme-bg="pitch-vivid"] .card,
+body[data-theme-bg="pitch-vivid"] .panel {
+  background: #06331f !important;
+  border-color: #125435 !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
-body.cb-redesign-active[data-theme-bg="dark"] input,
-body.cb-redesign-active[data-theme-bg="dark"] select,
-body.cb-redesign-active[data-theme-bg="dark"] textarea,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] input,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] select,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] textarea {
-  background: #08120d !important;
-  border-color: #1b382b !important;
+
+/* 4. Pizarra Azul Marino */
+html[data-theme-bg="navy"],
+body[data-theme-bg="navy"] {
+  background: #061021 !important;
   color: #f8fafc !important;
+  --cb-surface-bg: #061021;
+  --cb-surface-card: #0c1b33;
+  --cb-surface-nav: rgba(10, 24, 46, 0.96);
+  --cb-surface-input: #081427;
+  --cb-slate-900: #f8fafc;
+  --cb-slate-800: #e2e8f0;
+  --cb-slate-700: #cbd5e1;
+  --cb-slate-600: #94a3b8;
+  --cb-slate-200: #183359;
+  --cb-slate-100: #12243d;
+  --cb-slate-50:  #0b1626;
+  --paper: #061021;
+  --card: #0c1b33;
+  --ink: #f8fafc;
+  --line: #183359;
 }
-body.cb-redesign-active[data-theme-bg="dark"] .player-data span,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] .player-data span {
-  background: #09140e !important;
-  border-color: #1b382b !important;
-}
-body.cb-redesign-active[data-theme-bg="dark"] .player-data strong,
-body.cb-redesign-active[data-theme-bg="pitch-dark"] .player-data strong {
-  color: #f8fafc !important;
+body[data-theme-bg="navy"] .card,
+body[data-theme-bg="navy"] .panel {
+  background: #0c1b33 !important;
+  border-color: #183359 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Reglas de alto contraste en temas oscuros */
-body.cb-redesign-active[data-theme-bg="dark"] .player-data span:nth-child(2) small,
-body.cb-redesign-active[data-theme-bg="navy"] .player-data span:nth-child(2) small,
-body.cb-redesign-active[data-theme-bg="charcoal"] .player-data span:nth-child(2) small,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .player-data span:nth-child(2) small,
-body.cb-redesign-active[data-theme-bg="high-vis"] .player-data span:nth-child(2) small {
-  color: #86efac !important;
+/* 5. Azul Océano Profundo */
+html[data-theme-bg="ocean"],
+body[data-theme-bg="ocean"] {
+  background: #03141f !important;
+  color: #f0f9ff !important;
+  --cb-surface-bg: #03141f;
+  --cb-surface-card: #072436;
+  --cb-surface-nav: rgba(5, 27, 41, 0.96);
+  --cb-surface-input: #041c2b;
+  --cb-slate-900: #f0f9ff;
+  --cb-slate-800: #e0f2fe;
+  --cb-slate-700: #bae6fd;
+  --cb-slate-200: #0e4161;
+  --paper: #03141f;
+  --card: #072436;
+  --ink: #f0f9ff;
+  --line: #0e4161;
+}
+body[data-theme-bg="ocean"] .card,
+body[data-theme-bg="ocean"] .panel {
+  background: #072436 !important;
+  border-color: #0e4161 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
-body.cb-redesign-active[data-theme-bg="dark"] .player-data small,
-body.cb-redesign-active[data-theme-bg="navy"] .player-data small,
-body.cb-redesign-active[data-theme-bg="charcoal"] .player-data small,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .player-data small,
-body.cb-redesign-active[data-theme-bg="high-vis"] .player-data small {
+/* 6. Gris Carbón Pro */
+html[data-theme-bg="charcoal"],
+body[data-theme-bg="charcoal"] {
+  background: #0f1113 !important;
+  color: #f8fafc !important;
+  --cb-surface-bg: #0f1113;
+  --cb-surface-card: #181b1e;
+  --cb-surface-nav: rgba(19, 22, 25, 0.96);
+  --cb-surface-input: #121417;
+  --cb-slate-900: #f8fafc;
+  --cb-slate-800: #e2e8f0;
+  --cb-slate-700: #cbd5e1;
+  --cb-slate-600: #94a3b8;
+  --cb-slate-200: #282d33;
+  --paper: #0f1113;
+  --card: #181b1e;
+  --ink: #f8fafc;
+  --line: #282d33;
+}
+body[data-theme-bg="charcoal"] .card,
+body[data-theme-bg="charcoal"] .panel {
+  background: #181b1e !important;
+  border-color: #282d33 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 7. Gris Acero Deportivo */
+html[data-theme-bg="steel"],
+body[data-theme-bg="steel"] {
+  background: #171d24 !important;
+  color: #f8fafc !important;
+  --cb-surface-bg: #171d24;
+  --cb-surface-card: #222a34;
+  --cb-surface-nav: rgba(28, 36, 46, 0.96);
+  --cb-surface-input: #1a222a;
+  --cb-slate-900: #f8fafc;
+  --cb-slate-800: #e2e8f0;
+  --cb-slate-700: #cbd5e1;
+  --cb-slate-200: #33404f;
+  --paper: #171d24;
+  --card: #222a34;
+  --ink: #f8fafc;
+  --line: #33404f;
+}
+body[data-theme-bg="steel"] .card,
+body[data-theme-bg="steel"] .panel {
+  background: #222a34 !important;
+  border-color: #33404f !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 8. Rojo Burdeos */
+html[data-theme-bg="burgundy"],
+body[data-theme-bg="burgundy"] {
+  background: #170408 !important;
+  color: #fff1f2 !important;
+  --cb-surface-bg: #170408;
+  --cb-surface-card: #260810;
+  --cb-surface-nav: rgba(29, 6, 12, 0.96);
+  --cb-surface-input: #1d050a;
+  --cb-slate-900: #fff1f2;
+  --cb-slate-800: #ffe4e6;
+  --cb-slate-700: #fecdd3;
+  --cb-slate-200: #45101d;
+  --paper: #170408;
+  --card: #260810;
+  --ink: #fff1f2;
+  --line: #45101d;
+}
+body[data-theme-bg="burgundy"] .card,
+body[data-theme-bg="burgundy"] .panel {
+  background: #260810 !important;
+  border-color: #45101d !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 9. Púrpura Táctico */
+html[data-theme-bg="purple"],
+body[data-theme-bg="purple"] {
+  background: #110722 !important;
+  color: #faf5ff !important;
+  --cb-surface-bg: #110722;
+  --cb-surface-card: #1d0e38;
+  --cb-surface-nav: rgba(23, 10, 44, 0.96);
+  --cb-surface-input: #16092b;
+  --cb-slate-900: #faf5ff;
+  --cb-slate-800: #f3e8ff;
+  --cb-slate-700: #e9d5ff;
+  --cb-slate-200: #381c6b;
+  --paper: #110722;
+  --card: #1d0e38;
+  --ink: #faf5ff;
+  --line: #381c6b;
+}
+body[data-theme-bg="purple"] .card,
+body[data-theme-bg="purple"] .panel {
+  background: #1d0e38 !important;
+  border-color: #381c6b !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 10. Arena Marfil Cálida */
+html[data-theme-bg="warm"],
+body[data-theme-bg="warm"] {
+  background: #f6f3eb !important;
+  color: #292524 !important;
+  --cb-surface-bg: #f6f3eb;
+  --cb-surface-card: #ffffff;
+  --cb-surface-nav: rgba(246, 243, 235, 0.96);
+  --cb-surface-input: #fbf9f4;
+  --cb-slate-900: #292524;
+  --cb-slate-800: #44403c;
+  --cb-slate-700: #57534e;
+  --cb-slate-200: #e5dfd3;
+  --paper: #f6f3eb;
+  --card: #ffffff;
+  --ink: #292524;
+  --line: #e5dfd3;
+}
+body[data-theme-bg="warm"] .card,
+body[data-theme-bg="warm"] .panel {
+  background: #ffffff !important;
+  border-color: #e5dfd3 !important;
+  box-shadow: 0 3px 12px rgba(41, 37, 36, 0.05);
+}
+
+/* 11. Papiro / Sepia Táctico */
+html[data-theme-bg="sepia"],
+body[data-theme-bg="sepia"] {
+  background: #eee6d8 !important;
+  color: #2d241e !important;
+  --cb-surface-bg: #eee6d8;
+  --cb-surface-card: #faf6ee;
+  --cb-surface-nav: rgba(238, 230, 216, 0.96);
+  --cb-surface-input: #f4ede1;
+  --cb-slate-900: #2d241e;
+  --cb-slate-800: #45382f;
+  --cb-slate-700: #5c4e42;
+  --cb-slate-200: #d7cbb6;
+  --paper: #eee6d8;
+  --card: #faf6ee;
+  --ink: #2d241e;
+  --line: #d7cbb6;
+}
+body[data-theme-bg="sepia"] .card,
+body[data-theme-bg="sepia"] .panel {
+  background: #faf6ee !important;
+  border-color: #d7cbb6 !important;
+  box-shadow: 0 3px 12px rgba(45, 36, 30, 0.06);
+}
+
+/* 12. Negro Contraste Sol (Alta visibilidad) */
+html[data-theme-bg="high-vis"],
+body[data-theme-bg="high-vis"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  --cb-surface-bg: #000000;
+  --cb-surface-card: #080808;
+  --cb-surface-nav: rgba(0, 0, 0, 0.98);
+  --cb-surface-input: #000000;
+  --cb-slate-900: #ffffff;
+  --cb-slate-800: #ffffff;
+  --cb-slate-700: #f4f4f5;
+  --cb-slate-200: #facc15;
+  --paper: #000000;
+  --card: #080808;
+  --ink: #ffffff;
+  --line: #facc15;
+}
+body[data-theme-bg="high-vis"] .card,
+body[data-theme-bg="high-vis"] .panel {
+  background: #080808 !important;
+  border: 2px solid #facc15 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Estilos de elementos en temas oscuros */
+body[data-theme-bg="dark"] .player-data span,
+body[data-theme-bg="navy"] .player-data span,
+body[data-theme-bg="charcoal"] .player-data span,
+body[data-theme-bg="pitch-vivid"] .player-data span,
+body[data-theme-bg="ocean"] .player-data span,
+body[data-theme-bg="steel"] .player-data span,
+body[data-theme-bg="burgundy"] .player-data span,
+body[data-theme-bg="purple"] .player-data span,
+body[data-theme-bg="high-vis"] .player-data span {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--cb-slate-200) !important;
+}
+
+body[data-theme-bg="dark"] .player-data strong,
+body[data-theme-bg="navy"] .player-data strong,
+body[data-theme-bg="charcoal"] .player-data strong,
+body[data-theme-bg="pitch-vivid"] .player-data strong,
+body[data-theme-bg="ocean"] .player-data strong,
+body[data-theme-bg="steel"] .player-data strong,
+body[data-theme-bg="burgundy"] .player-data strong,
+body[data-theme-bg="purple"] .player-data strong,
+body[data-theme-bg="high-vis"] .player-data strong {
+  color: var(--cb-slate-900) !important;
+}
+
+body[data-theme-bg="dark"] .player-data small,
+body[data-theme-bg="navy"] .player-data small,
+body[data-theme-bg="charcoal"] .player-data small,
+body[data-theme-bg="pitch-vivid"] .player-data small,
+body[data-theme-bg="ocean"] .player-data small,
+body[data-theme-bg="steel"] .player-data small,
+body[data-theme-bg="burgundy"] .player-data small,
+body[data-theme-bg="purple"] .player-data small,
+body[data-theme-bg="high-vis"] .player-data small {
   color: #94a3b8 !important;
 }
 
-body.cb-redesign-active[data-theme-bg="dark"] .theme-bg-btn,
-body.cb-redesign-active[data-theme-bg="navy"] .theme-bg-btn,
-body.cb-redesign-active[data-theme-bg="charcoal"] .theme-bg-btn,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .theme-bg-btn,
-body.cb-redesign-active[data-theme-bg="high-vis"] .theme-bg-btn {
+body[data-theme-bg="dark"] .theme-bg-btn,
+body[data-theme-bg="navy"] .theme-bg-btn,
+body[data-theme-bg="charcoal"] .theme-bg-btn,
+body[data-theme-bg="pitch-vivid"] .theme-bg-btn,
+body[data-theme-bg="ocean"] .theme-bg-btn,
+body[data-theme-bg="steel"] .theme-bg-btn,
+body[data-theme-bg="burgundy"] .theme-bg-btn,
+body[data-theme-bg="purple"] .theme-bg-btn,
+body[data-theme-bg="high-vis"] .theme-bg-btn {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.16) !important;
   color: #f1f5f9 !important;
 }
 
-body.cb-redesign-active[data-theme-bg="dark"] .theme-bg-btn.active,
-body.cb-redesign-active[data-theme-bg="navy"] .theme-bg-btn.active,
-body.cb-redesign-active[data-theme-bg="charcoal"] .theme-bg-btn.active,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .theme-bg-btn.active,
-body.cb-redesign-active[data-theme-bg="high-vis"] .theme-bg-btn.active {
+body[data-theme-bg="dark"] .theme-bg-btn.active,
+body[data-theme-bg="navy"] .theme-bg-btn.active,
+body[data-theme-bg="charcoal"] .theme-bg-btn.active,
+body[data-theme-bg="pitch-vivid"] .theme-bg-btn.active,
+body[data-theme-bg="ocean"] .theme-bg-btn.active,
+body[data-theme-bg="steel"] .theme-bg-btn.active,
+body[data-theme-bg="burgundy"] .theme-bg-btn.active,
+body[data-theme-bg="purple"] .theme-bg-btn.active,
+body[data-theme-bg="high-vis"] .theme-bg-btn.active {
   background: var(--cb-pitch-700) !important;
   border-color: #22c55e !important;
   color: #ffffff !important;
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4) !important;
 }
 
-body.cb-redesign-active[data-theme-bg="dark"] .player-performance summary,
-body.cb-redesign-active[data-theme-bg="navy"] .player-performance summary,
-body.cb-redesign-active[data-theme-bg="charcoal"] .player-performance summary,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .player-performance summary,
-body.cb-redesign-active[data-theme-bg="high-vis"] .player-performance summary {
-  color: #f1f5f9 !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-body.cb-redesign-active[data-theme-bg="dark"] #theme-settings-form select,
-body.cb-redesign-active[data-theme-bg="navy"] #theme-settings-form select,
-body.cb-redesign-active[data-theme-bg="charcoal"] #theme-settings-form select,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] #theme-settings-form select,
-body.cb-redesign-active[data-theme-bg="high-vis"] #theme-settings-form select {
-  background: rgba(0, 0, 0, 0.35) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  color: #ffffff !important;
-}
-
-/* 3. Pizarra Azul Marino */
-html[data-theme-bg="navy"],
-html:has(body.cb-redesign-active[data-theme-bg="navy"]),
-body.cb-redesign-active[data-theme-bg="navy"],
-html[data-theme-bg="slate"],
-html:has(body.cb-redesign-active[data-theme-bg="slate"]),
-body.cb-redesign-active[data-theme-bg="slate"] {
-  background: #081326 !important;
-  color: #f1f5f9 !important;
-  --cb-surface-bg: #081326;
-  --cb-surface-card: #0f213d;
-  --cb-slate-900: #f8fafc;
-  --cb-slate-800: #e2e8f0;
-  --cb-slate-700: #cbd5e1;
-  --cb-slate-600: #94a3b8;
-  --cb-slate-200: #1e3a5f;
-  --cb-slate-100: #162c47;
-  --cb-slate-50:  #0e1c2e;
-}
-body.cb-redesign-active[data-theme-bg="navy"] .topbar,
-body.cb-redesign-active[data-theme-bg="navy"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="navy"] #cb-bottom-nav,
-body.cb-redesign-active[data-theme-bg="slate"] .topbar,
-body.cb-redesign-active[data-theme-bg="slate"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="slate"] #cb-bottom-nav {
-  background: rgba(10, 24, 46, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.09) !important;
-}
-body.cb-redesign-active[data-theme-bg="navy"] .card,
-body.cb-redesign-active[data-theme-bg="navy"] .panel,
-body.cb-redesign-active[data-theme-bg="slate"] .card,
-body.cb-redesign-active[data-theme-bg="slate"] .panel {
-  background: #0f213d !important;
-  border-color: #1e3a5f !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
-}
-body.cb-redesign-active[data-theme-bg="navy"] input,
-body.cb-redesign-active[data-theme-bg="navy"] select,
-body.cb-redesign-active[data-theme-bg="navy"] textarea,
-body.cb-redesign-active[data-theme-bg="slate"] input,
-body.cb-redesign-active[data-theme-bg="slate"] select,
-body.cb-redesign-active[data-theme-bg="slate"] textarea {
-  background: #0a172c !important;
-  border-color: #1e3a5f !important;
-  color: #f8fafc !important;
-}
-
-/* 4. Gris Carbón Pro */
-html[data-theme-bg="charcoal"],
-html:has(body.cb-redesign-active[data-theme-bg="charcoal"]),
-body.cb-redesign-active[data-theme-bg="charcoal"] {
-  background: #111315 !important;
-  color: #f8fafc !important;
-  --cb-surface-bg: #111315;
-  --cb-surface-card: #191c20;
-  --cb-slate-900: #f8fafc;
-  --cb-slate-800: #e2e8f0;
-  --cb-slate-700: #cbd5e1;
-  --cb-slate-600: #94a3b8;
-  --cb-slate-200: #2c323b;
-}
-body.cb-redesign-active[data-theme-bg="charcoal"] .topbar,
-body.cb-redesign-active[data-theme-bg="charcoal"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="charcoal"] #cb-bottom-nav {
-  background: rgba(20, 23, 27, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-body.cb-redesign-active[data-theme-bg="charcoal"] .card,
-body.cb-redesign-active[data-theme-bg="charcoal"] .panel {
-  background: #191c20 !important;
-  border-color: #2c323b !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
-}
-body.cb-redesign-active[data-theme-bg="charcoal"] input,
-body.cb-redesign-active[data-theme-bg="charcoal"] select,
-body.cb-redesign-active[data-theme-bg="charcoal"] textarea {
-  background: #141619 !important;
-  border-color: #2c323b !important;
-  color: #f8fafc !important;
-}
-
-/* 5. Arena Marfil Cálida */
-html[data-theme-bg="warm"],
-html:has(body.cb-redesign-active[data-theme-bg="warm"]),
-body.cb-redesign-active[data-theme-bg="warm"] {
-  background: #f6f3eb !important;
-  color: #292524 !important;
-  --cb-surface-bg: #f6f3eb;
-  --cb-surface-card: #ffffff;
-  --cb-slate-900: #292524;
-  --cb-slate-800: #44403c;
-  --cb-slate-700: #57534e;
-  --cb-slate-200: #e7e2d7;
-}
-body.cb-redesign-active[data-theme-bg="warm"] .card,
-body.cb-redesign-active[data-theme-bg="warm"] .panel {
-  background: #ffffff !important;
-  border-color: #e5dfd3 !important;
-  box-shadow: 0 3px 12px rgba(41, 37, 36, 0.05);
-}
-
-/* 6. Césped Intenso */
-html[data-theme-bg="pitch-vivid"],
-html:has(body.cb-redesign-active[data-theme-bg="pitch-vivid"]),
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] {
-  background: #032115 !important;
-  color: #f0fdf4 !important;
-  --cb-surface-bg: #032115;
-  --cb-surface-card: #083824;
-  --cb-slate-900: #f0fdf4;
-  --cb-slate-800: #dcfce7;
-  --cb-slate-700: #bbf7d0;
-  --cb-slate-200: #165a3c;
-}
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .topbar,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] #cb-sub-nav,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] #cb-bottom-nav {
-  background: rgba(4, 39, 25, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .card,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] .panel {
-  background: #083824 !important;
-  border-color: #165a3c !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-}
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] input,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] select,
-body.cb-redesign-active[data-theme-bg="pitch-vivid"] textarea {
-  background: #052a1b !important;
-  border-color: #165a3c !important;
-  color: #f0fdf4 !important;
-}
-
-/* 7. Negro Contraste Sol (Alta visibilidad) */
-html[data-theme-bg="high-vis"],
-html:has(body.cb-redesign-active[data-theme-bg="high-vis"]),
-body.cb-redesign-active[data-theme-bg="high-vis"] {
-  background: #000000 !important;
-  color: #ffffff !important;
-  --cb-surface-bg: #000000;
-  --cb-surface-card: #0c0c0c;
-  --cb-slate-900: #ffffff;
-  --cb-slate-800: #ffffff;
-  --cb-slate-700: #f4f4f5;
-  --cb-slate-200: #facc15;
-}
-body.cb-redesign-active[data-theme-bg="high-vis"] .card,
-body.cb-redesign-active[data-theme-bg="high-vis"] .panel {
-  background: #0c0c0c !important;
-  border: 2px solid #facc15 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8) !important;
-}
-body.cb-redesign-active[data-theme-bg="high-vis"] input,
-body.cb-redesign-active[data-theme-bg="high-vis"] select,
-body.cb-redesign-active[data-theme-bg="high-vis"] textarea {
-  background: #000000 !important;
-  border: 2px solid #facc15 !important;
-  color: #ffffff !important;
-}
-
 /* ==========================================================================
    FAMILIAS TIPOGRÁFICAS (data-theme-family)
    ========================================================================== */
-html[data-theme-family="system"], body.cb-redesign-active[data-theme-family="system"] {
+[data-theme-family="system"],
+[data-theme-family="system"] * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-html[data-theme-family="sport"], body.cb-redesign-active[data-theme-family="sport"] {
-  font-family: "DIN Alternate", "Oswald", "Impact", "Barlow Condensed", -apple-system, sans-serif !important;
+[data-theme-family="sport"],
+[data-theme-family="sport"] * {
+  font-family: "Barlow Condensed", "Oswald", "DIN Alternate", "Impact", -apple-system, sans-serif !important;
   letter-spacing: 0.02em;
 }
 
-html[data-theme-family="readable"], body.cb-redesign-active[data-theme-family="readable"] {
+[data-theme-family="readable"],
+[data-theme-family="readable"] * {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  letter-spacing: 0.025em;
-  line-height: 1.55;
+  letter-spacing: 0.015em;
+  line-height: 1.5;
 }
 
-html[data-theme-family="technical"], body.cb-redesign-active[data-theme-family="technical"] {
-  font-family: "SF Mono", "Menlo", "Monaco", "Consolas", "Courier New", monospace !important;
+[data-theme-family="modern"],
+[data-theme-family="modern"] * {
+  font-family: "Outfit", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif !important;
+  letter-spacing: 0.01em;
+}
+
+[data-theme-family="technical"],
+[data-theme-family="technical"] * {
+  font-family: "JetBrains Mono", "SF Mono", "Menlo", "Monaco", "Consolas", monospace !important;
   letter-spacing: -0.01em;
 }
 
-html[data-theme-family="classic"], body.cb-redesign-active[data-theme-family="classic"] {
-  font-family: "Charter", "Georgia", "Cambria", "Times New Roman", serif !important;
+[data-theme-family="classic"],
+[data-theme-family="classic"] * {
+  font-family: "Merriweather", "Charter", "Georgia", "Cambria", "Times New Roman", serif !important;
 }
 
 /* ==========================================================================
    ESCALAS DE FUENTE AMPLIADAS Y GIGANTES (data-font-scale)
    ========================================================================== */
-html[data-font-scale="compact"], body.cb-redesign-active[data-font-scale="compact"] {
+html[data-font-scale="compact"] {
   font-size: 14.5px !important;
 }
 
-html[data-font-scale="large"], body.cb-redesign-active[data-font-scale="large"] {
-  font-size: 18.5px !important;
-}
-body.cb-redesign-active[data-font-scale="large"] .player-data strong {
-  font-size: 1.05rem !important;
+html[data-font-scale="normal"] {
+  font-size: 16px !important;
 }
 
-html[data-font-scale="xlarge"], body.cb-redesign-active[data-font-scale="xlarge"] {
-  font-size: 21px !important;
-}
-body.cb-redesign-active[data-font-scale="xlarge"] .player-data strong {
-  font-size: 1.18rem !important;
+html[data-font-scale="large"] {
+  font-size: 19.2px !important;
 }
 
-html[data-font-scale="huge"], body.cb-redesign-active[data-font-scale="huge"] {
-  font-size: 24px !important;
-}
-body.cb-redesign-active[data-font-scale="huge"] .player-data strong {
-  font-size: 1.35rem !important;
+html[data-font-scale="xlarge"] {
+  font-size: 22.4px !important;
 }
 
-html[data-font-scale="ultra"], body.cb-redesign-active[data-font-scale="ultra"] {
-  font-size: 28px !important;
+html[data-font-scale="huge"] {
+  font-size: 25.6px !important;
 }
-body.cb-redesign-active[data-font-scale="ultra"] .player-data strong {
-  font-size: 1.55rem !important;
+
+html[data-font-scale="enormous"] {
+  font-size: 28.8px !important;
+}
+
+html[data-font-scale="ultra"] {
+  font-size: 32px !important;
 }
 
 /* ==========================================================================
    GROSORES Y NEGRITAS DE ALTO IMPACTO (data-font-weight)
    ========================================================================== */
-body.cb-redesign-active[data-font-weight="semibold"],
-body.cb-redesign-active[data-font-weight="semibold"] p,
-body.cb-redesign-active[data-font-weight="semibold"] span,
-body.cb-redesign-active[data-font-weight="semibold"] label,
-body.cb-redesign-active[data-font-weight="semibold"] button,
-body.cb-redesign-active[data-font-weight="semibold"] select,
-body.cb-redesign-active[data-font-weight="semibold"] input {
+body[data-font-weight="normal"],
+body[data-font-weight="normal"] p,
+body[data-font-weight="normal"] span,
+body[data-font-weight="normal"] label,
+body[data-font-weight="normal"] button,
+body[data-font-weight="normal"] select,
+body[data-font-weight="normal"] input {
+  font-weight: 400 !important;
+}
+
+body[data-font-weight="semibold"],
+body[data-font-weight="semibold"] p,
+body[data-font-weight="semibold"] span,
+body[data-font-weight="semibold"] label,
+body[data-font-weight="semibold"] button,
+body[data-font-weight="semibold"] select,
+body[data-font-weight="semibold"] input {
   font-weight: 600 !important;
 }
-body.cb-redesign-active[data-font-weight="semibold"] h1,
-body.cb-redesign-active[data-font-weight="semibold"] h2,
-body.cb-redesign-active[data-font-weight="semibold"] h3,
-body.cb-redesign-active[data-font-weight="semibold"] strong {
-  font-weight: 800 !important;
+body[data-font-weight="semibold"] h1,
+body[data-font-weight="semibold"] h2,
+body[data-font-weight="semibold"] h3,
+body[data-font-weight="semibold"] strong {
+  font-weight: 750 !important;
 }
 
-body.cb-redesign-active[data-font-weight="bold"],
-body.cb-redesign-active[data-font-weight="bold"] p,
-body.cb-redesign-active[data-font-weight="bold"] span,
-body.cb-redesign-active[data-font-weight="bold"] label,
-body.cb-redesign-active[data-font-weight="bold"] button,
-body.cb-redesign-active[data-font-weight="bold"] select,
-body.cb-redesign-active[data-font-weight="bold"] input {
+body[data-font-weight="bold"],
+body[data-font-weight="bold"] p,
+body[data-font-weight="bold"] span,
+body[data-font-weight="bold"] label,
+body[data-font-weight="bold"] button,
+body[data-font-weight="bold"] select,
+body[data-font-weight="bold"] input {
   font-weight: 700 !important;
 }
-body.cb-redesign-active[data-font-weight="bold"] h1,
-body.cb-redesign-active[data-font-weight="bold"] h2,
-body.cb-redesign-active[data-font-weight="bold"] h3,
-body.cb-redesign-active[data-font-weight="bold"] strong {
+body[data-font-weight="bold"] h1,
+body[data-font-weight="bold"] h2,
+body[data-font-weight="bold"] h3,
+body[data-font-weight="bold"] strong {
+  font-weight: 850 !important;
+}
+
+body[data-font-weight="extrabold"],
+body[data-font-weight="extrabold"] p,
+body[data-font-weight="extrabold"] span,
+body[data-font-weight="extrabold"] label,
+body[data-font-weight="extrabold"] button,
+body[data-font-weight="extrabold"] select,
+body[data-font-weight="extrabold"] input {
+  font-weight: 800 !important;
+}
+body[data-font-weight="extrabold"] h1,
+body[data-font-weight="extrabold"] h2,
+body[data-font-weight="extrabold"] h3,
+body[data-font-weight="extrabold"] strong {
   font-weight: 900 !important;
 }
 
-body.cb-redesign-active[data-font-weight="ultra-bold"],
-body.cb-redesign-active[data-font-weight="ultra-bold"] p,
-body.cb-redesign-active[data-font-weight="ultra-bold"] span,
-body.cb-redesign-active[data-font-weight="ultra-bold"] label,
-body.cb-redesign-active[data-font-weight="ultra-bold"] button,
-body.cb-redesign-active[data-font-weight="ultra-bold"] select,
-body.cb-redesign-active[data-font-weight="ultra-bold"] input,
-body.cb-redesign-active[data-font-weight="ultra-bold"] h1,
-body.cb-redesign-active[data-font-weight="ultra-bold"] h2,
-body.cb-redesign-active[data-font-weight="ultra-bold"] h3,
-body.cb-redesign-active[data-font-weight="ultra-bold"] strong {
+body[data-font-weight="ultra-bold"],
+body[data-font-weight="ultra-bold"] p,
+body[data-font-weight="ultra-bold"] span,
+body[data-font-weight="ultra-bold"] label,
+body[data-font-weight="ultra-bold"] button,
+body[data-font-weight="ultra-bold"] select,
+body[data-font-weight="ultra-bold"] input {
   font-weight: 900 !important;
   -webkit-text-stroke: 0.35px currentColor;
+}
+body[data-font-weight="ultra-bold"] h1,
+body[data-font-weight="ultra-bold"] h2,
+body[data-font-weight="ultra-bold"] h3,
+body[data-font-weight="ultra-bold"] strong {
+  font-weight: 900 !important;
+  -webkit-text-stroke: 0.5px currentColor;
 }
 
 /* ==========================================================================
    COLOR Y CONTRASTE DE FUENTES (data-theme-font)
    ========================================================================== */
-body.cb-redesign-active[data-theme-font="pure-black"] {
+body[data-theme-font="pure-black"] {
   color: #000000 !important;
   --cb-slate-900: #000000 !important;
   --cb-slate-800: #000000 !important;
   --cb-slate-700: #000000 !important;
 }
-body.cb-redesign-active[data-theme-font="pure-black"] h1,
-body.cb-redesign-active[data-theme-font="pure-black"] h2,
-body.cb-redesign-active[data-theme-font="pure-black"] h3,
-body.cb-redesign-active[data-theme-font="pure-black"] strong {
+body[data-theme-font="pure-black"] h1,
+body[data-theme-font="pure-black"] h2,
+body[data-theme-font="pure-black"] h3,
+body[data-theme-font="pure-black"] strong {
   color: #000000 !important;
 }
 
-body.cb-redesign-active[data-theme-font="high-contrast"] {
+body[data-theme-font="high-contrast"] {
   color: #000000 !important;
   --cb-slate-900: #000000 !important;
   --cb-slate-800: #000000 !important;
   --cb-slate-700: #000000 !important;
 }
-body.cb-redesign-active[data-theme-font="high-contrast"] * {
+body[data-theme-font="high-contrast"] * {
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
-body.cb-redesign-active[data-theme-font="navy"] {
+body[data-theme-font="navy"] {
   color: #0a1c36 !important;
   --cb-slate-900: #0a1c36 !important;
   --cb-slate-800: #102a4e !important;
 }
 
-body.cb-redesign-active[data-theme-font="pure-white"] {
+body[data-theme-font="pure-white"] {
   color: #ffffff !important;
   --cb-slate-900: #ffffff !important;
   --cb-slate-800: #f8fafc !important;
   --cb-slate-700: #f1f5f9 !important;
 }
-body.cb-redesign-active[data-theme-font="pure-white"] h1,
-body.cb-redesign-active[data-theme-font="pure-white"] h2,
-body.cb-redesign-active[data-theme-font="pure-white"] h3,
-body.cb-redesign-active[data-theme-font="pure-white"] strong {
+body[data-theme-font="pure-white"] h1,
+body[data-theme-font="pure-white"] h2,
+body[data-theme-font="pure-white"] h3,
+body[data-theme-font="pure-white"] strong {
   color: #ffffff !important;
 }
 
