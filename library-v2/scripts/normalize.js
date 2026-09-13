@@ -278,6 +278,16 @@ function normalizeExercise(record) {
   } else if (Array.isArray(raw.fases) && raw.fases.length) {
     pasos = raw.fases.map((f) => f.descripcion || f.accion_principal).filter(Boolean);
   }
+  const pasosUnicos = [];
+  const pasosSet = new Set();
+  for (const p of pasos) {
+    const text = typeof p === 'string' ? p.trim() : String(p).trim();
+    if (text.length > 2 && !pasosSet.has(text.toLowerCase())) {
+      pasosSet.add(text.toLowerCase());
+      pasosUnicos.push(text);
+    }
+  }
+  pasos = pasosUnicos;
 
   // 9. Fases (Sección 10: solo si son múltiples y estructuradas)
   let fases = [];
@@ -331,50 +341,107 @@ function normalizeExercise(record) {
   }
 
   // 12. Qué debo observar (Sección 13)
-  const queObservar = (Array.isArray(raw.que_debemos_observar) ? raw.que_debemos_observar : [])
-    .filter((s) => typeof s === 'string' && s.trim().length > 3);
+  const queObservarSet = new Set();
+  const queObservar = [];
+  (Array.isArray(raw.que_debemos_observar) ? raw.que_debemos_observar : []).forEach((s) => {
+    if (typeof s === 'string' && s.trim().length > 3) {
+      const trimmed = s.trim();
+      const norm = trimmed.toLowerCase();
+      if (!queObservarSet.has(norm)) {
+        queObservarSet.add(norm);
+        queObservar.push(trimmed);
+      }
+    }
+  });
 
   // 13. Consignas (Sección 14: frases directas del entrenador)
   const consignasSet = new Set();
-  const rawCorrecciones = [
-    ...(Array.isArray(raw.correcciones_fuente) ? raw.correcciones_fuente : []),
-    ...(Array.isArray(raw.correcciones?.fuente) ? raw.correcciones.fuente : []),
+  const consignas = [];
+  const rawConsignas = [
+    ...(Array.isArray(raw.consignas) ? raw.consignas : []),
+    ...(Array.isArray(raw.consignas_fuente) ? raw.consignas_fuente : []),
   ];
-  for (const c of rawCorrecciones) {
-    if (typeof c === 'string' && c.length > 10 && !queObservar.includes(c)) {
-      consignasSet.add(c.trim());
+  for (const c of rawConsignas) {
+    if (typeof c === 'string' && c.trim().length > 3) {
+      const trimmed = c.trim();
+      const norm = trimmed.toLowerCase();
+      if (!queObservarSet.has(norm) && !consignasSet.has(norm)) {
+        consignasSet.add(norm);
+        consignas.push(trimmed);
+      }
     }
   }
-  const consignas = [...consignasSet];
 
   // 14. Errores y Correcciones (Sección 15)
+  // Deduplicación estricta de fuentes de corrección
+  const rawCorreccionesSet = new Set();
+  const rawCorrecciones = [];
+  const candidatesCorr = [
+    ...(Array.isArray(raw.correcciones_fuente) ? raw.correcciones_fuente : []),
+    ...(Array.isArray(raw.correcciones?.fuente) ? raw.correcciones.fuente : []),
+    ...(Array.isArray(raw.correcciones) ? raw.correcciones : []),
+  ];
+  for (const c of candidatesCorr) {
+    if (typeof c === 'string' && c.trim().length > 3) {
+      const trimmed = c.trim();
+      const norm = trimmed.toLowerCase();
+      if (!rawCorreccionesSet.has(norm)) {
+        rawCorreccionesSet.add(norm);
+        rawCorrecciones.push(trimmed);
+      }
+    }
+  }
+
   const erroresCorrecciones = [];
-  if (Array.isArray(raw.errores) && raw.errores.length) {
+  const seenEC = new Set();
+
+  if (Array.isArray(raw.errores) && raw.errores.length > 0) {
     raw.errores.forEach((err, idx) => {
-      const corr = rawCorrecciones[idx] || null;
-      erroresCorrecciones.push({
-        error: typeof err === 'string' ? err : err.descripcion,
-        correccion: typeof corr === 'string' ? corr : corr?.descripcion || null,
-      });
+      const errText = typeof err === 'string' ? err.trim() : (err?.descripcion?.trim() || null);
+      const corrCandidate = rawCorrecciones[idx] || null;
+      const corrText = typeof corrCandidate === 'string' ? corrCandidate.trim() : (corrCandidate?.descripcion?.trim() || null);
+      if (errText || corrText) {
+        const key = `${(errText || '').toLowerCase()}___${(corrText || '').toLowerCase()}`;
+        if (!seenEC.has(key)) {
+          seenEC.add(key);
+          erroresCorrecciones.push({
+            error: errText,
+            correccion: corrText,
+          });
+        }
+      }
     });
-  } else if (rawCorrecciones.length > 0 && consignas.length === 0) {
+  } else if (rawCorrecciones.length > 0) {
+    // Si no hay errores catalogados explícitamente, solo incluir correcciones que NO repitan lo ya dicho en que_observar o consignas
     rawCorrecciones.forEach((c) => {
-      if (typeof c === 'string') {
-        erroresCorrecciones.push({ error: null, correccion: c.trim() });
+      const norm = c.toLowerCase();
+      if (!queObservarSet.has(norm) && !consignasSet.has(norm)) {
+        const key = `null___${norm}`;
+        if (!seenEC.has(key)) {
+          seenEC.add(key);
+          erroresCorrecciones.push({ error: null, correccion: c });
+        }
       }
     });
   }
 
   // 15. Variantes (Sección 16)
-  const variantes = (Array.isArray(raw.variantes_fuente) ? raw.variantes_fuente : [])
+  const variantesSet = new Set();
+  const variantes = [];
+  (Array.isArray(raw.variantes_fuente) ? raw.variantes_fuente : [])
     .filter((v) => typeof v === 'string' && v.trim().length > 3)
-    .map((v) => {
-      const parts = v.split(/\.\s*|\:\s*/);
-      return {
-        texto: v.trim(),
-        cambio: parts[0]?.trim() || v.trim(),
-        proposito: parts.slice(1).join('. ').trim() || null,
-      };
+    .forEach((v) => {
+      const trimmed = v.trim();
+      const norm = trimmed.toLowerCase();
+      if (!variantesSet.has(norm)) {
+        variantesSet.add(norm);
+        const parts = trimmed.split(/\.\s*|\:\s*/);
+        variantes.push({
+          texto: trimmed,
+          cambio: parts[0]?.trim() || trimmed,
+          proposito: parts.slice(1).join('. ').trim() || null,
+        });
+      }
     });
 
   // 16. Leyenda Visual Real (Secciones 17 a 21)

@@ -778,6 +778,23 @@
       font-variant-numeric: tabular-nums;
       min-width: 46px;
     }
+    .v-btn-fullscreen {
+      background: #193e2f;
+      border: 1px solid var(--border-focus);
+      color: #86efac;
+      font-weight: 800;
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .v-btn-fullscreen:hover {
+      background: var(--brand);
+      color: #04140e;
+    }
 
     /* Modo Teatro / Pantalla completa personalizada */
     .video-player-container.theater-fullscreen {
@@ -791,13 +808,78 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: max(0.85rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(0.85rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+      padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+    }
+    .theater-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.6rem 1rem;
+      background: rgba(12, 33, 25, 0.96);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .video-player-container.theater-fullscreen .theater-topbar {
+      display: flex;
+    }
+    .theater-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .theater-badge {
+      background: var(--brand);
+      color: #04140e;
+      font-size: 0.68rem;
+      font-weight: 850;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+    }
+    .theater-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .theater-close-btn {
+      background: #1c4535;
+      color: #ffffff;
+      border: 1.5px solid rgba(74, 222, 128, 0.6);
+      border-radius: 999px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      touch-action: manipulation;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .theater-close-btn:hover {
+      background: #235843;
     }
     .video-player-container.theater-fullscreen .video-stage {
       flex: 1;
       aspect-ratio: auto;
       min-height: 0;
     }
+    .video-player-container.theater-fullscreen .video-controls-bar {
+      background: rgba(8, 22, 17, 0.96);
+      border-top: 1px solid var(--border);
+      z-index: 10;
+    }
+
     /* Secciones de la ficha */
     .section-block {
       display: flex;
@@ -807,6 +889,11 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       padding: 1.1rem;
+    }
+    .section-leyenda-subvideo {
+      background: #112a20;
+      border: 1.5px solid rgba(74, 222, 128, 0.25);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
     .section-block h3 {
       font-size: 0.95rem;
@@ -1367,6 +1454,17 @@
       <div class="modal-body">
         <!-- 3. Vídeo / reproductor avanzado con controles de entrenador y zoom táctico -->
         <div class="video-player-container" id="video-player-wrapper">
+          <!-- Barra superior visible en pantalla completa (Modo Teatro) -->
+          <div class="theater-topbar" id="theater-topbar">
+            <div class="theater-title-wrap">
+              <span class="theater-badge">PANTALLA COMPLETA</span>
+              <span class="theater-title" id="theater-title">Animación táctica</span>
+            </div>
+            <button type="button" id="btn-theater-close" class="theater-close-btn" aria-label="Cerrar pantalla completa">
+              ✕ Salir de pantalla completa
+            </button>
+          </div>
+
           <div class="video-stage" id="video-stage">
             <video id="modal-video" preload="none" playsinline webkit-playsinline></video>
             <button type="button" class="video-overlay-play" id="video-overlay-play" aria-label="Reproducir o pausar">
@@ -1424,14 +1522,23 @@
                 🔁
               </button>
 
-              <button type="button" id="btn-fullscreen" class="v-btn" title="Pantalla completa" aria-label="Pantalla completa">
-                ⛶
+              <button type="button" id="btn-fullscreen" class="v-btn v-btn-fullscreen" title="Ampliar a pantalla completa" aria-label="Ampliar a pantalla completa">
+                ⛶ <span class="v-btn-text">Ampliar</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- 4. Qué se trabaja -->
+        <!-- 4. Leyenda visual (justo debajo del vídeo) -->
+        <div id="section-leyenda" class="section-block section-leyenda-subvideo">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+            <h3 style="margin:0;">🗺️ Leyenda del ejercicio</h3>
+            <span style="font-size:0.75rem; color:var(--text-dim); background:#0c221a; padding:0.25rem 0.6rem; border-radius:999px; border:1px solid var(--border);">Guía visual de la animación</span>
+          </div>
+          <div id="modal-leyenda-content"></div>
+        </div>
+
+        <!-- 5. Qué se trabaja -->
         <div id="section-que-se-trabaja" class="section-block">
           <h3>🎯 Qué se trabaja</h3>
           <div id="modal-que-se-trabaja-content" class="concept-chips"></div>
@@ -1506,12 +1613,6 @@
         <div id="section-variantes" class="section-block">
           <h3>🔀 Variantes</h3>
           <div id="modal-variantes-content"></div>
-        </div>
-
-        <!-- 17. Leyenda visual -->
-        <div id="section-leyenda" class="section-block">
-          <h3>🗺️ Leyenda visual</h3>
-          <div id="modal-leyenda-content"></div>
         </div>
       </div>
 
@@ -2055,27 +2156,43 @@
         const errBlock = $('#section-errores-correcciones');
         const errContent = $('#modal-errores-correcciones-content');
         if (ex.errores_correcciones && ex.errores_correcciones.length) {
-          errBlock.style.display = 'flex';
-          errContent.innerHTML = `
-            <div class="error-corr-grid">
-              ${ex.errores_correcciones.map(ec => `
-                <div class="error-corr-card">
-                  ${ec.error ? `
-                    <div class="err-row">
-                      <span class="err-tag">Error habitual</span>
-                      <span>${escapeHtml(ec.error)}</span>
-                    </div>
-                  ` : ''}
-                  ${ec.correccion ? `
-                    <div class="corr-row">
-                      <span class="corr-tag">Corrección clave</span>
-                      <span>${escapeHtml(ec.correccion)}</span>
-                    </div>
-                  ` : ''}
-                </div>
-              `).join('')}
-            </div>
-          `;
+          const seenEC = new Set();
+          const uniqueEC = [];
+          for (const ec of ex.errores_correcciones) {
+            const err = ec.error ? ec.error.trim() : null;
+            const corr = ec.correccion ? ec.correccion.trim() : null;
+            if (!err && !corr) continue;
+            const key = `${(err || '').toLowerCase()}___${(corr || '').toLowerCase()}`;
+            if (seenEC.has(key)) continue;
+            seenEC.add(key);
+            uniqueEC.push({ error: err, correccion: corr });
+          }
+
+          if (uniqueEC.length > 0) {
+            errBlock.style.display = 'flex';
+            errContent.innerHTML = `
+              <div class="error-corr-grid">
+                ${uniqueEC.map(ec => `
+                  <div class="error-corr-card">
+                    ${ec.error ? `
+                      <div class="err-row">
+                        <span class="err-tag">Error habitual</span>
+                        <span>${escapeHtml(ec.error)}</span>
+                      </div>
+                    ` : ''}
+                    ${ec.correccion ? `
+                      <div class="corr-row">
+                        <span class="corr-tag">Corrección clave</span>
+                        <span>${escapeHtml(ec.correccion)}</span>
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          } else {
+            errBlock.style.display = 'none';
+          }
         } else {
           errBlock.style.display = 'none';
         }
@@ -2399,26 +2516,32 @@
         const isFs = videoPlayerWrapper.classList.contains('theater-fullscreen');
         if (isFs) {
           videoPlayerWrapper.classList.remove('theater-fullscreen');
+          btnFullscreen.innerHTML = '⛶ <span class="v-btn-text">Ampliar</span>';
           if (document.fullscreenElement) {
             document.exitFullscreen?.().catch(() => {});
           }
         } else {
-          if (/iPhone|iPod/.test(navigator.userAgent) && modalVideo.webkitEnterFullscreen && window.innerWidth <= 640) {
-            modalVideo.webkitEnterFullscreen();
-          } else {
-            videoPlayerWrapper.classList.add('theater-fullscreen');
-            if (videoPlayerWrapper.requestFullscreen && !document.fullscreenElement) {
-              videoPlayerWrapper.requestFullscreen().catch(() => {});
-            }
+          videoPlayerWrapper.classList.add('theater-fullscreen');
+          btnFullscreen.innerHTML = '✕ <span class="v-btn-text">Reducir</span>';
+          const titleText = $('#modal-title').textContent || 'Animación táctica';
+          const theaterTitle = $('#theater-title');
+          if (theaterTitle) theaterTitle.textContent = titleText;
+          if (videoPlayerWrapper.requestFullscreen && !document.fullscreenElement) {
+            videoPlayerWrapper.requestFullscreen().catch(() => {});
           }
         }
       }
 
       btnFullscreen.addEventListener('click', toggleFullscreen);
+      const btnTheaterClose = $('#btn-theater-close');
+      if (btnTheaterClose) {
+        btnTheaterClose.addEventListener('click', toggleFullscreen);
+      }
 
       document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement) {
           videoPlayerWrapper.classList.remove('theater-fullscreen');
+          btnFullscreen.innerHTML = '⛶ <span class="v-btn-text">Ampliar</span>';
         }
       });
 
@@ -2427,6 +2550,7 @@
         modalEl.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
         videoPlayerWrapper.classList.remove('theater-fullscreen');
+        btnFullscreen.innerHTML = '⛶ <span class="v-btn-text">Ampliar</span>';
         applyZoom(1.0);
         // Liberar el vídeo inmediatamente para no consumir ancho de banda ni memoria
         modalVideo.pause();

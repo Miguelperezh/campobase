@@ -3252,5 +3252,89 @@ body.cb-redesign-active .font-color-swatch-btn[data-color="#1e293b"].active::aft
   color: #ffffff;
 }
 
+/* ==========================================================================
+   SELECTORES DE FECHA Y HORA 24H (Calendario, Sesiones, Convocatorias)
+   Garantiza visibilidad completa de Día, Mes, Año, Hora y Minuto en cualquier escala y dispositivo
+   ========================================================================== */
+.datetime-field {
+  margin: 0 0 0.85rem 0 !important;
+  padding: 0.75rem 0.9rem !important;
+  border: 1px solid var(--line, #cbd5e1) !important;
+  border-radius: 14px !important;
+  background: var(--cb-surface-card, #f8fafc) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+}
+
+.datetime-field legend {
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  color: var(--muted, #64748b) !important;
+  padding: 0 0.4rem !important;
+  text-transform: none !important;
+}
+
+.date-24 {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr auto 1.35fr !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  margin-top: 0.35rem !important;
+  width: 100% !important;
+}
+
+.time-24 {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  margin-top: 0.55rem !important;
+  width: 100% !important;
+}
+
+.date-24 span,
+.time-24 span {
+  font-weight: 800 !important;
+  color: var(--muted, #64748b) !important;
+  text-align: center !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+.date-24 select,
+.time-24 select {
+  min-height: 42px !important;
+  font-size: 15px !important;
+  padding: 6px 4px !important;
+  text-align: center !important;
+  text-align-last: center !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  background-color: #ffffff !important;
+  border: 1px solid var(--line, #cbd5e1) !important;
+  border-radius: 10px !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  box-sizing: border-box !important;
+  line-height: 1.2 !important;
+}
+
+body[data-theme-bg="dark"] .datetime-field,
+body[data-theme-bg="deep-black"] .datetime-field {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body[data-theme-bg="dark"] .date-24 select,
+body[data-theme-bg="dark"] .time-24 select,
+body[data-theme-bg="deep-black"] .date-24 select,
+body[data-theme-bg="deep-black"] .time-24 select {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+
 
 
