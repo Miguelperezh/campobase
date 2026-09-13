@@ -231,7 +231,7 @@ function renderMarkup(summary, data) {
   const pendingCount = summary.callupPending.length + summary.attendancePending.length;
   return `
     <section class="panel today-hero">
-      <div><p class="eyebrow">Tu equipo de un vistazo</p><h3>${esc(formatLongToday())}</h3><p class="meta">Lo importante para hoy y lo siguiente, sin entrar pestaña por pestaña.</p></div>
+      <div><p class="eyebrow">Tu equipo de un vistazo</p><h3>${esc(formatLongToday())}</h3></div>
       <div class="today-hero-counts"><div class="today-count"><strong>${summary.todaySessions.length}</strong><span>sesiones hoy</span></div><div class="today-count"><strong>${summary.todayMatches.length}</strong><span>partidos hoy</span></div><div class="today-count"><strong>${pendingCount}</strong><span>pendientes</span></div></div>
     </section>
     <div class="today-layout">

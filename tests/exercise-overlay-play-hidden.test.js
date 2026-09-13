@@ -39,11 +39,11 @@ test('los visores standalone library-v2 ocultan el botón overlay con display no
   }
 });
 
-test('versión de caché en sw.js e index.html están sincronizadas a v=2496', () => {
+test('versión de caché en sw.js e index.html están sincronizadas a v=2497', () => {
   const sw = fs.readFileSync('sw.js', 'utf8');
   const html = fs.readFileSync('index.html', 'utf8');
 
-  assert.match(sw, /2496/, 'sw.js debe contener la versión 2496');
-  assert.match(html, /styles-redesign\.css\?v=2496/, 'index.html debe cargar styles-redesign.css con v=2496');
-  assert.match(html, /js\/app\.js\?v=2496/, 'index.html debe cargar js/app.js con v=2496');
+  assert.match(sw, /2497/, 'sw.js debe contener la versión 2497');
+  assert.match(html, /styles-redesign\.css\?v=2497/, 'index.html debe cargar styles-redesign.css con v=2497');
+  assert.match(html, /js\/app\.js\?v=2497/, 'index.html debe cargar js/app.js con v=2497');
 });
