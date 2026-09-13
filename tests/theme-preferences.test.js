@@ -93,3 +93,23 @@ test('Los diálogos de jugador y técnico integran controles de encuadre y avata
   assert.match(css, /\.avatar-preview-img/);
   assert.match(css, /\.photo-preview-wrapper/);
 });
+
+test('Pestaña Hoy no contiene el botón secundario duplicado de Actualizar', () => {
+  assert.doesNotMatch(html, /today-refresh/, 'index.html no debe incluir el botón duplicado today-refresh en Hoy');
+  const todayJs = fs.readFileSync('js/today-dashboard.js', 'utf8');
+  assert.doesNotMatch(todayJs, /class="secondary today-refresh"/, 'today-dashboard.js no debe inyectar el botón today-refresh');
+});
+
+test('Color de fuentes aplica data-has-custom-font-color y --cb-font-custom-color con alta especificidad', () => {
+  assert.match(css, /\[data-has-custom-font-color="true"\]/, 'CSS debe tener reglas para data-has-custom-font-color');
+  assert.match(css, /var\(--cb-font-custom-color\)\s*!important/, 'CSS debe usar var(--cb-font-custom-color) con !important');
+  assert.match(app, /data-has-custom-font-color/, 'app.js debe establecer el atributo data-has-custom-font-color');
+  assert.match(app, /--cb-font-custom-color/, 'app.js debe establecer la variable --cb-font-custom-color');
+});
+
+test('attendance-linked-sources.js vincula asistencia por id o fecha y no ejecuta borrado destructivo en arranque', () => {
+  const attendanceJs = fs.readFileSync('js/attendance-linked-sources.js', 'utf8');
+  assert.doesNotMatch(attendanceJs, /function install\(\)\s*\{[^}]*scheduleCleanup\(\);/s, 'install() no debe llamar a scheduleCleanup() automáticamente');
+  assert.match(attendanceJs, /dateOnly\(record\?\.date\)\s*===\s*dateOnly\(sessionDate\)/, 'attendanceForSession debe enlazar por fecha como respaldo');
+});
+

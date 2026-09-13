@@ -2894,10 +2894,21 @@ function applyCustomTheme(themeInput) {
   // 7. Color de fuente personalizado (fontColor)
   const fontColor = theme.fontColor || (textColor === 'pure-black' ? '#000000' : (textColor === 'pure-white' ? '#ffffff' : (textColor === 'navy' ? '#0a1c36' : null)));
   if (fontColor) {
+    root.setAttribute('data-has-custom-font-color', 'true');
+    body.setAttribute('data-has-custom-font-color', 'true');
+    root.style.setProperty('--cb-font-custom-color', fontColor);
+    body.style.setProperty('--cb-font-custom-color', fontColor);
     root.style.setProperty('--ink', fontColor);
     root.style.setProperty('--cb-slate-900', fontColor);
     body.style.setProperty('--ink', fontColor);
     body.style.setProperty('--cb-slate-900', fontColor);
+    body.style.color = fontColor;
+  } else {
+    root.removeAttribute('data-has-custom-font-color');
+    body.removeAttribute('data-has-custom-font-color');
+    root.style.removeProperty('--cb-font-custom-color');
+    body.style.removeProperty('--cb-font-custom-color');
+    body.style.removeProperty('color');
   }
 
   // Sincronizar controles en el formulario si está en el DOM

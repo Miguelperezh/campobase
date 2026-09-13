@@ -107,7 +107,6 @@ function ensureShell() {
     section.innerHTML = `
       <div class="section-head today-section-head">
         <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
-        <button type="button" class="secondary today-refresh">Actualizar</button>
       </div>
       <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>`;
     main.insertBefore(section, plantilla);
@@ -262,9 +261,8 @@ function bind() {
   if (!section) return;
 
   document.addEventListener('click', (event) => {
-    const target = event.target.closest('[data-today-view], .today-refresh');
+    const target = event.target.closest('[data-today-view]');
     if (!target) return;
-    if (target.matches('.today-refresh')) return void scheduleRender();
     const view = target.dataset.todayView;
     document.querySelector(`.bottom-nav button[data-view="${view}"]`)?.click();
   });

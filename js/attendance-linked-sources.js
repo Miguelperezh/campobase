@@ -64,8 +64,14 @@ function attendanceForMatch(trainings, matchId) {
   return trainings.find((record) => record?.kind === 'match' && record.matchId === matchId);
 }
 
-function attendanceForSession(trainings, sessionId) {
-  return trainings.find((record) => record?.sessionId === sessionId);
+function attendanceForSession(trainings, session) {
+  const sessionId = typeof session === 'string' ? session : session?.id;
+  const sessionDate = typeof session === 'object' ? session?.date : null;
+  return trainings.find((record) => {
+    if (sessionId && record?.sessionId === sessionId) return true;
+    if (sessionDate && record?.kind === 'training' && dateOnly(record?.date) === dateOnly(sessionDate)) return true;
+    return false;
+  });
 }
 
 export function summarizeAttendance(records = []) {
@@ -88,7 +94,7 @@ export function buildAttendanceActivities({ sessions = [], matches = [], trainin
     ...sessions.map((session) => ({
       source: 'session', id: session.id, date: activityDate(session), title: sessionName(session),
       subtitle: `${session.blocks?.length || 0} ejercicios · ${Number(session.totalDuration) || 0} min`,
-      attendance: attendanceForSession(trainings, session.id), ready: true,
+      attendance: attendanceForSession(trainings, session), ready: true,
     })),
     ...matches.map((match) => ({
       source: 'match', id: match.id, date: activityDate(match), title: String(match.opponent || 'Partido'),
@@ -161,7 +167,9 @@ function scheduleRender() {
 
 async function cleanupOrphanSessionAttendance() {
   const [settings, trainings] = await Promise.all([getAll('settings'), getAll('trainings')]);
-  const sessionIds = new Set(settings.filter((item) => item?.recordType === 'trainingSession').map((item) => item.id));
+  const sessions = settings.filter((item) => item?.recordType === 'trainingSession');
+  if (!sessions.length) return 0; // Evita borrar si settings aún no ha sincronizado del servidor
+  const sessionIds = new Set(sessions.map((item) => item.id));
   const orphans = trainings.filter((record) => record?.sessionId && !sessionIds.has(record.sessionId));
   for (const record of orphans) await remove('trainings', record.id);
   if (orphans.length) scheduleRender();
@@ -230,7 +238,7 @@ async function openActivityAttendance(source, sourceId) {
   const callup = match ? data.callups.find((item) => item.id === match.callupId || item.matchId === match.id) : null;
   if (match && !callup?.availableIds?.length) throw new Error('Este partido necesita una convocatoria antes de pasar asistencia.');
   const players = match ? data.players.filter((player) => callup.availableIds.includes(player.id)) : data.players;
-  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session.id);
+  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session);
   const byPlayer = new Map((existing?.attendance || []).map((entry) => [entry.playerId, entry]));
   const root = $('#training-builder');
   if (!root) return;
@@ -265,7 +273,7 @@ async function saveVisualAttendance(form) {
   const callup = match ? data.callups.find((item) => item.id === match.callupId || item.matchId === match.id) : null;
   if (match && !callup?.availableIds?.length) throw new Error('El partido ya no tiene una convocatoria válida.');
   const players = match ? data.players.filter((player) => callup.availableIds.includes(player.id)) : data.players;
-  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session.id);
+  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session);
   const attendance = players.map((player) => {
     const status = form.elements[`status-${player.id}`]?.value || 'present';
     if (!['present', 'late', 'absent'].includes(status)) throw new Error(`Estado no válido para ${player.name}.`);
@@ -298,11 +306,15 @@ async function saveVisualAttendance(form) {
 }
 
 async function openAttendanceRecord(button) {
-  const records = await getAll('trainings');
-  const record = records.find((item) => item.id === button.dataset.id);
+  const [trainings, settings] = await Promise.all([getAll('trainings'), getAll('settings')]);
+  const record = trainings.find((item) => item.id === button.dataset.id);
   if (!record) throw new Error('El registro de asistencia ya no existe.');
   if (record.sessionId) return openActivityAttendance('session', record.sessionId);
   if (record.matchId) return openActivityAttendance('match', record.matchId);
+  if (record.kind === 'training' && record.date) {
+    const session = settings.find((item) => item?.recordType === 'trainingSession' && dateOnly(item.date) === dateOnly(record.date));
+    if (session) return openActivityAttendance('session', session.id);
+  }
   // Registro histórico sin vínculo: conserva el editor antiguo en lugar de perderlo.
   button.dataset.visualFallback = '1';
   button.click();
@@ -335,7 +347,6 @@ function install() {
   installStyles();
   sourcePanel();
   scheduleRender();
-  scheduleCleanup();
 
   document.addEventListener('click', (event) => {
     const filter = event.target.closest('[data-attendance-filter]');

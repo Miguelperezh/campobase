@@ -2529,49 +2529,40 @@ body[data-font-weight="ultra-bold"] strong {
 }
 
 /* ==========================================================================
-   COLOR Y CONTRASTE DE FUENTES (data-theme-font)
+   COLOR DE FUENTE PERSONALIZADO (fontColor)
    ========================================================================== */
-body[data-theme-font="pure-black"] {
-  color: #000000 !important;
-  --cb-slate-900: #000000 !important;
-  --cb-slate-800: #000000 !important;
-  --cb-slate-700: #000000 !important;
-}
-body[data-theme-font="pure-black"] h1,
-body[data-theme-font="pure-black"] h2,
-body[data-theme-font="pure-black"] h3,
-body[data-theme-font="pure-black"] strong {
-  color: #000000 !important;
+html[data-has-custom-font-color="true"],
+body[data-has-custom-font-color="true"] {
+  color: var(--cb-font-custom-color) !important;
+  --ink: var(--cb-font-custom-color) !important;
+  --cb-slate-900: var(--cb-font-custom-color) !important;
+  --cb-slate-800: var(--cb-font-custom-color) !important;
+  --cb-slate-700: var(--cb-font-custom-color) !important;
 }
 
-body[data-theme-font="high-contrast"] {
-  color: #000000 !important;
-  --cb-slate-900: #000000 !important;
-  --cb-slate-800: #000000 !important;
-  --cb-slate-700: #000000 !important;
-}
-body[data-theme-font="high-contrast"] * {
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
+body[data-has-custom-font-color="true"] h1,
+body[data-has-custom-font-color="true"] h2,
+body[data-has-custom-font-color="true"] h3,
+body[data-has-custom-font-color="true"] h4,
+body[data-has-custom-font-color="true"] h5,
+body[data-has-custom-font-color="true"] h6,
+body[data-has-custom-font-color="true"] p,
+body[data-has-custom-font-color="true"] label,
+body[data-has-custom-font-color="true"] .player-name h3,
+body[data-has-custom-font-color="true"] .staff-name,
+body[data-has-custom-font-color="true"] .section-head h2,
+body[data-has-custom-font-color="true"] .topbar-brand h1,
+body[data-has-custom-font-color="true"] .card,
+body[data-has-custom-font-color="true"] .panel,
+body[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text) {
+  color: var(--cb-font-custom-color) !important;
 }
 
-body[data-theme-font="navy"] {
-  color: #0a1c36 !important;
-  --cb-slate-900: #0a1c36 !important;
-  --cb-slate-800: #102a4e !important;
+.font-color-swatch-btn.active {
+  box-shadow: 0 0 0 3px var(--cb-pitch-700, #10b981), 0 0 0 5px rgba(255, 255, 255, 0.8) !important;
+  transform: scale(1.15);
 }
 
-body[data-theme-font="pure-white"] {
-  color: #ffffff !important;
-  --cb-slate-900: #ffffff !important;
-  --cb-slate-800: #f8fafc !important;
-  --cb-slate-700: #f1f5f9 !important;
-}
-body[data-theme-font="pure-white"] h1,
-body[data-theme-font="pure-white"] h2,
-body[data-theme-font="pure-white"] h3,
-body[data-theme-font="pure-white"] strong {
-  color: #ffffff !important;
-}
 
 
 /* ==========================================================================
