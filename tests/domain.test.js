@@ -56,6 +56,44 @@ test('ordena la plantilla por dorsal y deja al final los jugadores que aún no l
   assert.deepEqual(players.map(({ id }) => id), ['sin-2', '12', '1', 'sin-1'], 'no debe mutar la lista original');
 });
 
+test('permite eliminar la foto de un jugador pasando cadena vacía y preservarla si no se especifica', () => {
+  const existingWithPhoto = {
+    id: 'p1',
+    name: 'Aitor Navarro',
+    number: 10,
+    positions: ['Central'],
+    foot: 'Derecha',
+    notes: '',
+    photo: 'data:image/jpeg;base64,/9j/fakephoto',
+  };
+
+  // 1. Al pasar photo = '' se debe eliminar la foto existente
+  const playerRemoved = buildPlayerRecord(
+    { id: 'p1', name: 'Aitor Navarro', number: 10, foot: 'Derecha', notes: '' },
+    ['Central'],
+    existingWithPhoto,
+    '',
+  );
+  assert.equal(playerRemoved.photo, '', 'la foto debe haberse eliminado');
+
+  // 2. Al omitir el argumento photo se debe conservar la foto existente
+  const playerPreserved = buildPlayerRecord(
+    { id: 'p1', name: 'Aitor Navarro', number: 10, foot: 'Derecha', notes: '' },
+    ['Central'],
+    existingWithPhoto,
+  );
+  assert.equal(playerPreserved.photo, existingWithPhoto.photo, 'la foto existente debe conservarse');
+
+  // 3. Al pasar una nueva foto debe actualizarse
+  const playerNewPhoto = buildPlayerRecord(
+    { id: 'p1', name: 'Aitor Navarro', number: 10, foot: 'Derecha', notes: '' },
+    ['Central'],
+    existingWithPhoto,
+    'data:image/jpeg;base64,/9j/newphoto',
+  );
+  assert.equal(playerNewPhoto.photo, 'data:image/jpeg;base64,/9j/newphoto', 'la nueva foto debe guardarse');
+});
+
 test('guarda la pierna dominante aunque el jugador todavía no tenga posición', () => {
   const player = buildPlayerRecord({
     id: 'p1',

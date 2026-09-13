@@ -23,13 +23,14 @@ export function sortPlayersByName(players) {
   }));
 }
 
-export function buildPlayerRecord(values, positions, existing = null, photo = '', createdAt = Date.now()) {
+export function buildPlayerRecord(values, positions, existing = null, photo = undefined, createdAt = Date.now()) {
   if (!values || typeof values !== 'object') throw new TypeError('Los datos del jugador no son válidos.');
   if (!Array.isArray(positions)) throw new TypeError('Las posiciones deben ser una lista.');
   const name = String(values.name ?? '').trim();
   if (!name) throw new TypeError('El nombre del jugador es obligatorio.');
   const foot = String(values.foot ?? '');
   if (!['', 'Derecha', 'Izquierda', 'Ambas'].includes(foot)) throw new TypeError('La pierna dominante no es válida.');
+  const resolvedPhoto = photo !== undefined ? (photo || '') : (existing?.photo || '');
   return {
     ...existing,
     id: values.id,
@@ -38,7 +39,7 @@ export function buildPlayerRecord(values, positions, existing = null, photo = ''
     positions: [...positions],
     foot,
     notes: String(values.notes ?? '').trim(),
-    photo: photo || existing?.photo || '',
+    photo: resolvedPhoto,
     outsideCount: existing?.outsideCount ?? 0,
     lastExcludedAt: existing?.lastExcludedAt ?? null,
     totalMinutes: existing?.totalMinutes ?? 0,

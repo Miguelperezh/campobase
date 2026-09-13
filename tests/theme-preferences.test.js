@@ -119,3 +119,11 @@ test('Sincronización bidireccional entre textColor y fontColor y bootstrap en e
   assert.match(app, /COLOR_TO_TEXT_MAP/, 'app.js debe definir COLOR_TO_TEXT_MAP para mapear hex a select');
 });
 
+test('El formulario de jugador permite eliminar fotos permanentemente con photoRemoved', () => {
+  assert.match(html, /<input name="photoRemoved" type="hidden" value="0">/, 'player-form debe incluir el campo hidden photoRemoved');
+  assert.match(html, /id="player-remove-photo-btn"/, 'player-form debe incluir el botón Eliminar foto');
+  assert.match(app, /const photoRemoved = form\.elements\.photoRemoved\?\.value === '1'/, 'savePlayer debe verificar si la foto fue eliminada');
+  assert.match(app, /onPhotoChanged:\s*\(val\)\s*=>/, 'playerCropper debe incluir callback onPhotoChanged');
+});
+
+

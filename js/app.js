@@ -369,8 +369,11 @@ async function savePlayer(event) {
   const form = event.currentTarget;
   const values = formObject(form);
   const existing = values.id ? await getOne('players', values.id) : null;
+  const photoRemoved = form.elements.photoRemoved?.value === '1';
   let photo = form.elements.existingPhoto?.value || '';
-  if (form.elements.photo?.files?.[0]) {
+  if (photoRemoved) {
+    photo = '';
+  } else if (form.elements.photo?.files?.[0]) {
     photo = await photoToDataUrl(form.elements.photo.files[0]);
   } else if (!photo && existing?.photo) {
     photo = existing.photo;
@@ -379,6 +382,7 @@ async function savePlayer(event) {
   await put('players', buildPlayerRecord({ ...values, id: values.id || uid() }, positions, existing, photo));
   form.closest('dialog').close();
   form.reset();
+  if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
   playerCropper?.setExistingPhoto('');
   await refresh();
   toast('Jugador guardado.');
@@ -389,6 +393,7 @@ function editPlayer(id) {
   const form = $('#player-form');
   for (const key of ['id', 'name', 'number', 'foot', 'notes']) form.elements[key].value = player[key] ?? '';
   if (form.elements.existingPhoto) form.elements.existingPhoto.value = player.photo || '';
+  if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
   playerCropper?.setExistingPhoto(player.photo || '');
   const positions = new Set(normalizePositions(player));
   $$('input[name="positions"]', form).forEach((input) => { input.checked = positions.has(input.value); });
@@ -3414,6 +3419,7 @@ function wireEvents() {
     const form = $(`#${button.dataset.dialog} form`);
     form?.reset();
     if (form?.elements.id) form.elements.id.value = '';
+    if (form?.elements.photoRemoved) form.elements.photoRemoved.value = '0';
     if (button.dataset.dialog === 'player-dialog') playerCropper?.setExistingPhoto('');
     $(`#${button.dataset.dialog}`).showModal();
   }));
@@ -3428,6 +3434,10 @@ function wireEvents() {
     cropUpBtn: $('#player-crop-up-btn'),
     cropDownBtn: $('#player-crop-down-btn'),
     removeBtn: $('#player-remove-photo-btn'),
+    onPhotoChanged: (val) => {
+      const removedInput = $('#player-form [name="photoRemoved"]');
+      if (removedInput) removedInput.value = val === '' ? '1' : '0';
+    },
   });
 
   // Comportamiento de acordión: solo un jugador desplegado a la vez y encuadre visual suave
