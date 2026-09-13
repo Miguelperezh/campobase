@@ -116,13 +116,15 @@ test('SECCIÓN 25: QA de Contenido - 3 ejercicios de PDF150 y 3 de PDF98 verific
     // Regla de fidelidad: datos conservados exactamente
     assert.ok(ex.categoria && ex.categoria.length > 0, `Ejercicio ${id} debe tener categoría`);
     const hasDesarrollo = Boolean(
-      ex.desarrollo && (
+      (ex.como_se_hace && ex.como_se_hace.length > 0) ||
+      (ex.fases && ex.fases.length > 0) ||
+      (ex.desarrollo && (
         ex.desarrollo.explicacion ||
         (ex.desarrollo.pasos && ex.desarrollo.pasos.length > 0) ||
         (ex.desarrollo.fases && ex.desarrollo.fases.length > 0)
-      )
+      ))
     );
-    assert.ok(hasDesarrollo, `Ejercicio ${id} debe tener desarrollo estructurado (explicación, pasos o fases)`);
+    assert.ok(hasDesarrollo, `Ejercicio ${id} debe tener desarrollo estructurado (como_se_hace o fases)`);
   }
 });
 
@@ -136,3 +138,81 @@ test('SECCIÓN 24 & 27: Conectividad real - Muestreo de MP4s en Supabase Storage
     assert.ok(contentType && contentType.includes('video/mp4'), `Vídeo para ${ex.id} debe tener content-type video/mp4`);
   }
 });
+
+test('SECCIÓN 3: Mapeo Canónico de Categorías (11 estándar, 0 vacías, 0 etiquetas de PDF)', () => {
+  const validCategories = new Set([
+    'Coordinación y agilidad',
+    'Finalización',
+    'Pase y posesión',
+    'Calentamiento / activación',
+    'Físico con balón',
+    'Defensa y duelos',
+    'Porteros',
+    'Juego reducido',
+    'Transiciones',
+    'Táctica',
+    'Técnico-táctico'
+  ]);
+
+  for (const ex of catalog) {
+    assert.ok(ex.categoria, `Ejercicio ${ex.id} debe tener categoría`);
+    assert.ok(validCategories.has(ex.categoria), `Categoría "${ex.categoria}" en ${ex.id} debe pertenecer a las 11 estándar`);
+    assert.ok(!ex.categoria.toLowerCase().includes('pdf'), `Categoría en ${ex.id} no debe contener la palabra PDF`);
+  }
+});
+
+test('SECCIONES 4 a 17: Cobertura y estructura canónica de la Ficha de Ejercicio', () => {
+  for (const ex of catalog) {
+    // 4. Qué se trabaja
+    assert.ok(Array.isArray(ex.que_se_trabaja) && ex.que_se_trabaja.length > 0, `Ejercicio ${ex.id} debe tener 'que_se_trabaja' no vacío`);
+    // 5. Objetivo principal
+    assert.ok(typeof ex.objetivo_principal === 'string' && ex.objetivo_principal.trim().length > 0, `Ejercicio ${ex.id} debe tener 'objetivo_principal'`);
+    // 6. Datos rápidos
+    assert.ok(ex.datos_rapidos && (ex.datos_rapidos.jugadores || ex.datos_rapidos.espacio || ex.datos_rapidos.material), `Ejercicio ${ex.id} debe tener 'datos_rapidos'`);
+    // 7. Montaje
+    assert.ok(ex.montaje && (ex.montaje.explicacion || ex.montaje.dimensiones), `Ejercicio ${ex.id} debe tener 'montaje'`);
+    // 9. Cómo se hace
+    assert.ok(Array.isArray(ex.como_se_hace) && ex.como_se_hace.length > 0, `Ejercicio ${ex.id} debe tener pasos en 'como_se_hace'`);
+    // 13. Qué observar
+    assert.ok(Array.isArray(ex.que_observar) && ex.que_observar.length > 0, `Ejercicio ${ex.id} debe tener 'que_observar'`);
+    // 17. Leyenda visual
+    assert.ok(ex.leyenda_visual, `Ejercicio ${ex.id} debe tener 'leyenda_visual'`);
+    assert.ok(Array.isArray(ex.leyenda_visual.jugadores) && ex.leyenda_visual.jugadores.length > 0, `Ejercicio ${ex.id} debe tener jugadores en 'leyenda_visual'`);
+    
+    for (const j of ex.leyenda_visual.jugadores) {
+      assert.match(j.color, /^#[0-9A-Fa-f]{6}$/, `Color de jugador ${j.rol} en ${ex.id} debe ser un hex code válido`);
+      assert.ok(j.letra && j.letra.length === 1, `Letra de jugador en ${ex.id} debe ser un único carácter`);
+    }
+
+    if (ex.leyenda_visual.acciones && ex.leyenda_visual.acciones.length) {
+      for (const a of ex.leyenda_visual.acciones) {
+        assert.ok(a.trazo && a.trazo.length > 0, `Acción ${a.tipo} en ${ex.id} debe tener representación de trazo`);
+      }
+    }
+  }
+});
+
+test('SECCIÓN 23: Todos los contenedores de las 17 secciones existen en library-v2-preview.html', () => {
+  const html = fs.readFileSync(PREVIEW_HTML_PATH, 'utf8');
+  const requiredSectionIds = [
+    'section-que-se-trabaja',
+    'section-objetivo',
+    'section-datos-rapidos',
+    'section-montaje',
+    'section-material',
+    'section-como-se-hace',
+    'section-fases',
+    'section-carga',
+    'section-rotacion',
+    'section-que-observar',
+    'section-consignas',
+    'section-errores-correcciones',
+    'section-variantes',
+    'section-leyenda'
+  ];
+
+  for (const sId of requiredSectionIds) {
+    assert.ok(html.includes(`id="${sId}"`), `HTML debe contener contenedor con id="${sId}"`);
+  }
+});
+

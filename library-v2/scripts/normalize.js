@@ -13,7 +13,7 @@ if (!fs.existsSync(AUDIT_FILE)) {
 
 const auditRecords = JSON.parse(fs.readFileSync(AUDIT_FILE, 'utf8'));
 
-console.log(`=== NORMALIZACIÓN CANÓNICA DE ${auditRecords.length} EJERCICIOS ===\n`);
+console.log(`=== NORMALIZACIÓN CANÓNICA ENRIQUECIDA DE ${auditRecords.length} EJERCICIOS ===\n`);
 
 const GENERIC_TITLES = new Set([
   'EJERCICIO',
@@ -22,6 +22,60 @@ const GENERIC_TITLES = new Set([
 ]);
 
 const SUPABASE_STORAGE_BASE = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview';
+
+// Taxonomía canónica preferente (Sección 3)
+const CATEGORY_MAP = {
+  'Agilidad y Coordinación': 'Coordinación y agilidad',
+  'Definición y Finalización': 'Finalización',
+  'Finalización': 'Finalización',
+  'Pase, Técnica y Posesión': 'Pase y posesión',
+  'Posesión': 'Pase y posesión',
+  'Resistencia y Preparación Física': 'Físico con balón',
+  'Defensa y Duelos 1v1': 'Defensa y duelos',
+  'Portería': 'Porteros',
+  'Transición': 'Transiciones',
+  'Táctica': 'Táctica',
+  'Técnico-táctico': 'Técnico-táctico',
+  'Juego reducido': 'Juego reducido',
+};
+
+// Mapeo de pictogramas / iconos para materiales (Sección 19)
+const MATERIAL_ICONS = {
+  'balón': '⚽',
+  'balón de fútbol': '⚽',
+  'balon': '⚽',
+  'pelota de tenis': '🎾',
+  'balon_medicinal': '🏐',
+  'cono': '🔺',
+  'conos': '🔺',
+  'portería': '🥅',
+  'porteria': '🥅',
+  'miniportería': '🥅',
+  'miniporteria': '🥅',
+  'escalera': '🪜',
+  'valla': '🚧',
+  'aro': '⭕',
+  'aros': '⭕',
+  'pica': '📍',
+  'picas': '📍',
+  'colchoneta': '🟦',
+  'cronometro': '⏱️',
+  'cronómetro': '⏱️',
+  'goma_elastica': '➰',
+  'banda elástica corta': '➰',
+  'step': '⏹️',
+  'pared': '🧱',
+  'marca': '▫️',
+  'planilla': '📋',
+};
+
+function getMaterialIcon(name = '') {
+  const lower = name.toLowerCase().trim();
+  for (const [key, icon] of Object.entries(MATERIAL_ICONS)) {
+    if (lower.includes(key)) return icon;
+  }
+  return '📦';
+}
 
 function deriveVisibleTitle(raw, collection) {
   const original = (raw.nombre || '').trim();
@@ -51,167 +105,406 @@ function normalizeExercise(record) {
     titulo_original_fuente: originalTitle,
   };
 
-  // 2. Clasificación
-  const categoria = raw.clasificacion?.categoria_fuente
+  // 2. Categoría canónica (Sección 3)
+  const rawCat = raw.clasificacion?.categoria_fuente
     || raw.clasificacion?.categoria_principal
-    || null;
-  const subcategoria = raw.clasificacion?.subcategoria || null;
-  const etiquetas = Array.isArray(raw.clasificacion?.etiquetas)
-    ? [...new Set(raw.clasificacion.etiquetas.filter(Boolean))]
-    : [];
+    || '';
+  let categoria = CATEGORY_MAP[rawCat] || rawCat || 'Técnico-táctico';
+  if (categoria === 'Físico con balón') {
+    const hasBall = (raw.materiales || []).some((m) => (m.tipo || m.nombre_es || '').toLowerCase().includes('balón'));
+    if (!hasBall) categoria = 'Calentamiento / activación';
+  }
 
-  // 3. Qué se trabaja
-  const ambitos = Array.isArray(raw.clasificacion?.contenidos_trabajados)
-    ? raw.clasificacion.contenidos_trabajados
-    : [];
-  let contenidos = [];
+  const subcategoria = raw.clasificacion?.subcategoria || null;
+  const rawTags = Array.isArray(raw.clasificacion?.etiquetas) ? raw.clasificacion.etiquetas : [];
+  const etiquetas = [...new Set(rawTags.filter((t) => t && t !== 'PDF150' && t !== 'PDF98' && t !== rawCat))];
+
+  // 3. Qué se trabaja (Sección 4: 3-6 conceptos futbolísticos prioritarios)
+  const conceptSet = new Set();
+  if (Array.isArray(raw.que_se_busca)) {
+    raw.que_se_busca.forEach((s) => { if (typeof s === 'string' && s.trim()) conceptSet.add(s.trim()); });
+  }
   if (Array.isArray(raw.que_se_trabaja)) {
     for (const item of raw.que_se_trabaja) {
-      if (typeof item === 'string') contenidos.push(item);
-      else if (item && typeof item.contenido === 'string') contenidos.push(item.contenido);
-    }
-  }
-  for (const amb of ambitos) {
-    if (Array.isArray(amb.contenidos)) {
-      for (const c of amb.contenidos) {
-        if (typeof c === 'string') contenidos.push(c);
+      if (typeof item === 'string' && item.trim()) conceptSet.add(item.trim());
+      else if (item && Array.isArray(item.contenidos)) {
+        item.contenidos.forEach((c) => { if (typeof c === 'string' && c.trim()) conceptSet.add(c.trim()); });
       }
     }
   }
-  contenidos = [...new Set(contenidos.filter((s) => typeof s === 'string' && s.trim()))];
+  if (raw.objetivos) {
+    ['tecnicos', 'tecnicos_ofensivos', 'tecnicos_defensivos', 'tacticos', 'coordinativos', 'fisicos'].forEach((k) => {
+      (raw.objetivos[k] || []).forEach((o) => { if (typeof o === 'string' && o.trim()) conceptSet.add(o.trim()); });
+    });
+  }
+  const allConcepts = [...conceptSet];
+  // Priorizar entre 3 y 6 conceptos sin redundancias
+  const queSeTrabaja = allConcepts.slice(0, 6);
 
-  // 4. Objetivos
-  const objGeneral = Array.isArray(raw.objetivos?.general)
-    ? raw.objetivos.general
-    : (Array.isArray(raw.objetivos?.generales) ? raw.objetivos.generales : []);
-  const objSecundarios = Array.isArray(raw.objetivos?.secundarios) ? raw.objetivos.secundarios : [];
-  const objTacticos = Array.isArray(raw.objetivos?.tacticos) ? raw.objetivos.tacticos : [];
-  const objTecnicos = [
-    ...(Array.isArray(raw.objetivos?.tecnicos) ? raw.objetivos.tecnicos : []),
-    ...(Array.isArray(raw.objetivos?.tecnicos_ofensivos) ? raw.objetivos.tecnicos_ofensivos : []),
-    ...(Array.isArray(raw.objetivos?.tecnicos_defensivos) ? raw.objetivos.tecnicos_defensivos : []),
-  ];
-  const objCoordinativos = Array.isArray(raw.objetivos?.coordinativos) ? raw.objetivos.coordinativos : [];
-  const objFisicos = Array.isArray(raw.objetivos?.fisicos) ? raw.objetivos.fisicos : [];
-  const objOtros = [
-    ...(Array.isArray(raw.objetivos?.cognitivos) ? raw.objetivos.cognitivos : []),
-    ...(Array.isArray(raw.objetivos?.socio_afectivos) ? raw.objetivos.socio_afectivos : []),
-    ...(Array.isArray(raw.objetivos?.volitivos) ? raw.objetivos.volitivos : []),
-  ];
+  // 4. Objetivos (Sección 5: Principal + Secundarios deduplicados)
+  const rawObjGeneral = (raw.objetivos?.general && raw.objetivos.general[0])
+    || (raw.objetivos?.generales && raw.objetivos.generales[0])
+    || (raw.que_se_busca && raw.que_se_busca[0])
+    || (raw.explicacion?.breve)
+    || visibleTitle;
+  const objetivoPrincipal = String(rawObjGeneral).trim();
 
-  // 5. Organización
-  const jugadoresRaw = raw.organizacion?.numero_total_jugadores
+  const secundariosSet = new Set();
+  const subKeys = ['tacticos', 'tecnicos', 'tecnicos_ofensivos', 'tecnicos_defensivos', 'coordinativos', 'fisicos'];
+  for (const k of subKeys) {
+    const list = raw.objetivos?.[k] || [];
+    for (const item of list) {
+      if (typeof item === 'string') {
+        const trimmed = item.trim();
+        if (trimmed && trimmed.toLowerCase() !== objetivoPrincipal.toLowerCase() && trimmed.toLowerCase() !== visibleTitle.toLowerCase()) {
+          secundariosSet.add(trimmed);
+        }
+      }
+    }
+  }
+  const objetivosSecundarios = [...secundariosSet].slice(0, 4);
+
+  // 5. Jugadores y Roles (Sección 6)
+  const numTotal = raw.organizacion?.numero_total_jugadores
+    ?? raw.organizacion?.participantes_totales
     ?? raw.organizacion?.numero_representado
-    ?? raw.organizacion?.descripcion_fuente
+    ?? (raw.roles && raw.roles.length)
     ?? null;
   const porteros = raw.organizacion?.porteros_representados
     ?? (typeof raw.organizacion?.porteros === 'number' ? raw.organizacion.porteros : null);
-  const atacantes = raw.organizacion?.atacantes_representados ?? 0;
-  const defensores = raw.organizacion?.defensores_representados ?? 0;
-  const neutros = raw.organizacion?.neutros_representados ?? 0;
-  const jugadoresDeCampo = (atacantes + defensores + neutros) > 0
-    ? (atacantes + defensores + neutros)
-    : null;
-  const entrenadores = raw.organizacion?.entrenadores_representados ?? null;
-  const rawRoles = Array.isArray(raw.organizacion?.roles_iniciales)
-    ? raw.organizacion.roles_iniciales
-    : (Array.isArray(raw.roles) ? raw.roles : []);
-  const roles = rawRoles.map((r) => ({
-    id: r.id || null,
-    rol: r.rol || r.nombre || null,
-    funcion: r.funcion || r.cometido || null,
-    descripcion: r.descripcion || null,
-    grupo: r.grupo || null,
-  })).filter((r) => r.rol || r.funcion || r.id);
+  const atacantes = raw.organizacion?.atacantes_representados ?? null;
+  const defensores = raw.organizacion?.defensores_representados ?? null;
+  const neutros = raw.organizacion?.neutros_representados ?? null;
+  const entrenadores = raw.organizacion?.entrenadores_representados
+    ?? ((raw.roles || []).filter((r) => (r.rol || '').toLowerCase().includes('entrenador')).length || null);
 
-  const grupos = Array.isArray(raw.organizacion?.grupos) ? raw.organizacion.grupos : [];
-  const equipos = Array.isArray(raw.organizacion?.equipos) ? raw.organizacion.equipos : [];
+  let jugadoresTexto = '';
+  if (numTotal) {
+    if (porteros && porteros > 0) {
+      const deCampo = numTotal - porteros - (entrenadores || 0);
+      jugadoresTexto = `${deCampo > 0 ? `${deCampo} de campo` : `${numTotal} jugadores`} + ${porteros} portero${porteros > 1 ? 's' : ''}`;
+    } else {
+      jugadoresTexto = `${numTotal} jugadores`;
+    }
+  } else if (raw.organizacion?.descripcion_fuente) {
+    jugadoresTexto = raw.organizacion.descripcion_fuente;
+  }
 
-  // 6. Material
-  const materiales = Array.isArray(raw.materiales)
-    ? raw.materiales.map((m) => ({
-        nombre: m.tipo || m.nombre || 'Material',
-        cantidad: m.cantidad ?? m.cantidad_representada ?? null,
-        funcion: m.funcion || null,
-        detalle: m.origen || m.detalle || null,
-      })).filter((m) => m.nombre)
-    : [];
-
-  // 7. Espacio
-  const espacio = {
-    zona: raw.espacio?.zona_utilizada || raw.espacio?.tipo || null,
-    forma: raw.espacio?.forma || null,
-    dimensiones: raw.espacio?.dimensiones || raw.espacio?.dimensiones_fuente || null,
-    organizacion: raw.espacio?.orientacion || null,
+  // Roles estructurados con colores exactos del render
+  const rawRoles = Array.isArray(raw.roles) ? raw.roles : (raw.organizacion?.roles_iniciales || []);
+  const roleColors = {
+    atacante: '#3477DB',
+    defensor: '#CC272D',
+    portero: '#7957B5',
+    entrenador: '#657078',
+    apoyo: '#E5C449',
+    neutral: '#159A91',
   };
 
-  // 8. Desarrollo
-  const explicacion = raw.explicacion?.completa
-    || raw.explicacion?.breve
-    || (typeof raw.explicacion === 'string' ? raw.explicacion : null);
-  const pasos = Array.isArray(raw.explicacion?.desarrollo_paso_a_paso)
-    ? raw.explicacion.desarrollo_paso_a_paso
-    : [];
-  const fases = Array.isArray(raw.fases)
-    ? raw.fases.map((f, idx) => ({
-        orden: f.orden ?? idx + 1,
-        descripcion: f.descripcion || f.accion_principal || null,
-        accion_principal: f.accion_principal || null,
-        resultado: f.resultado || null,
-        que_ocurre_despues: f.que_ocurre_despues || null,
-      })).filter((f) => f.descripcion || f.accion_principal)
-    : [];
+  const roles = rawRoles.map((r) => {
+    const rolName = r.rol || r.nombre || 'Jugador';
+    const lower = rolName.toLowerCase();
+    let color = r.color_token || r.color;
+    if (!color) {
+      if (lower.includes('atacante')) color = roleColors.atacante;
+      else if (lower.includes('defensor') || lower.includes('oposicion') || lower.includes('oposición')) color = roleColors.defensor;
+      else if (lower.includes('portero')) color = roleColors.portero;
+      else if (lower.includes('entrenador') || lower.includes('evaluador')) color = roleColors.entrenador;
+      else if (lower.includes('apoyo')) color = roleColors.apoyo;
+      else color = '#3477DB';
+    }
 
-  // 9. Rotaciones
-  const rotaciones = {
-    reglas: Array.isArray(raw.reglas) ? raw.reglas : [],
-    cambio_de_rol: raw.rotaciones?.cambio_rol || null,
-    fin_de_repeticion: raw.rotaciones?.fin_repeticion || null,
-  };
+    let posicionText = null;
+    if (r.posicion_inicial?.descripcion) {
+      posicionText = r.posicion_inicial.descripcion;
+    } else if (r.posicion_inicial?.x !== undefined && r.posicion_inicial?.y !== undefined) {
+      const x = r.posicion_inicial.x;
+      const y = r.posicion_inicial.y;
+      const horiz = x < 0.35 ? 'banda izquierda' : (x > 0.65 ? 'banda derecha' : 'carril central');
+      const vert = y < 0.35 ? 'zona inicial/defensiva' : (y > 0.65 ? 'zona de finalización' : 'medio campo');
+      posicionText = `${horiz}, ${vert}`;
+    }
 
-  // 10. Carga
+    return {
+      id: r.id || null,
+      rol: rolName,
+      color,
+      funcion: r.funcion || r.cometido || null,
+      posicion: posicionText,
+      grupo: r.grupo || null,
+    };
+  });
+
+  // 6. Montaje (Sección 7)
+  const espacioDims = raw.espacio?.dimensiones
+    || raw.espacio?.dimensiones_fuente
+    || (raw.espacio?.zona_utilizada && !raw.espacio.zona_utilizada.includes('Se juega') ? raw.espacio.zona_utilizada : null);
+  const espacioTipo = raw.espacio?.tipo || raw.espacio?.zona_utilizada || null;
+
+  let montajeTexto = raw.montaje?.descripcion;
+  if (!montajeTexto) {
+    if (espacioDims) {
+      montajeTexto = `Delimitar un espacio de ${espacioDims} según el esquema indicado.`;
+    } else if (espacioTipo) {
+      montajeTexto = `Montaje sobre ${espacioTipo}.`;
+    }
+  }
+
+  // 7. Material Operativo (Sección 8)
+  const rawMats = Array.isArray(raw.materiales) ? raw.materiales : [];
+  const matsMap = new Map();
+  for (const m of rawMats) {
+    const name = m.nombre_es || m.tipo || m.nombre || 'Material';
+    const icon = getMaterialIcon(name);
+    const cant = m.cantidad ?? m.cantidad_observada_diagrama ?? m.cantidad_representada ?? null;
+    const func = m.funcion || null;
+    const key = name.toLowerCase().trim();
+    if (!matsMap.has(key)) {
+      matsMap.set(key, { nombre: name, cantidad: cant, funcion: func, icono: icon });
+    } else if (cant && !matsMap.get(key).cantidad) {
+      matsMap.get(key).cantidad = cant;
+    }
+  }
+  const materiales = [...matsMap.values()];
+
+  // 8. Cómo se hace (Desarrollo paso a paso numerado) (Sección 9)
+  let pasos = [];
+  if (Array.isArray(raw.explicacion?.desarrollo_paso_a_paso) && raw.explicacion.desarrollo_paso_a_paso.length) {
+    pasos = raw.explicacion.desarrollo_paso_a_paso;
+  } else if (Array.isArray(raw.reglas) && raw.reglas.length) {
+    pasos = raw.reglas;
+  } else if (typeof raw.explicacion?.completa === 'string') {
+    pasos = raw.explicacion.completa.split('\n').map((s) => s.trim()).filter((s) => s.length > 5);
+  } else if (Array.isArray(raw.fases) && raw.fases.length) {
+    pasos = raw.fases.map((f) => f.descripcion || f.accion_principal).filter(Boolean);
+  }
+
+  // 9. Fases (Sección 10: solo si son múltiples y estructuradas)
+  let fases = [];
+  if (Array.isArray(raw.fases) && raw.fases.length > 1) {
+    fases = raw.fases.map((f, idx) => ({
+      orden: f.orden ?? idx + 1,
+      titulo: f.fase_id ? `Fase ${idx + 1}` : (f.nombre || `Paso ${idx + 1}`),
+      descripcion: f.descripcion || f.accion_principal || f.accion || '',
+      poseedor_balon: f.poseedor_inicial || null,
+      que_ocurre_despues: f.que_ocurre_despues || null,
+      condicion_final: f.condicion_final || null,
+    })).filter((f) => f.descripcion);
+  }
+
+  // 10. Carga y Ciclo de Repetición (Sección 11)
   const duracion = raw.tiempos_fuente?.duracion_total
     || raw.tiempos_fuente?.duracion_bloque
     || raw.tiempos_recomendados_editoriales?.duracion_bloque
     || null;
-  const series = raw.series || null;
-  const repeticiones = raw.repeticiones || null;
-  const descansos = raw.tiempos_fuente?.descanso
+  const series = raw.series ? (typeof raw.series === 'object' ? `${raw.series.cantidad || ''} ${raw.series.detalle || ''}`.trim() : String(raw.series)) : null;
+  const repeticiones = raw.repeticiones ? (typeof raw.repeticiones === 'object' ? `${raw.repeticiones.cantidad || ''} ${raw.repeticiones.detalle || ''}`.trim() : String(raw.repeticiones)) : null;
+  const descanso = raw.tiempos_fuente?.descanso
     || raw.tiempos_recomendados_editoriales?.pausa_repeticion
     || null;
-  const intensidad = raw.intensidad || null; // NUNCA inventada
+  const restartLogic = raw.animation?.restart_logic || null;
 
-  // 11. Coaching
-  const puntosEntrenador = Array.isArray(raw.que_debemos_observar) ? raw.que_debemos_observar : [];
-  const consignas = Array.isArray(raw.que_se_busca) ? raw.que_se_busca : [];
-  const errores = Array.isArray(raw.errores) ? raw.errores : [];
-  const correcciones = [
-    ...(Array.isArray(raw.correcciones) ? raw.correcciones : []),
-    ...(Array.isArray(raw.correcciones_fuente) ? raw.correcciones_fuente : []),
-    ...(Array.isArray(raw.correcciones_editoriales) ? raw.correcciones_editoriales : []),
-  ];
-
-  // 12. Variantes
-  const variantes = Array.isArray(raw.variantes_fuente) ? raw.variantes_fuente : [];
-
-  // 13. Leyenda
-  let leyenda = null;
-  if (raw.leyenda && typeof raw.leyenda === 'object') {
-    leyenda = {
-      jugadores: raw.leyenda.jugadores || raw.leyenda.jugadores_y_roles || null,
-      materiales: raw.leyenda.materiales || null,
-      zonas: raw.leyenda.zonas || null,
-      acciones: raw.leyenda.acciones || raw.leyenda.acciones_graficas || null,
+  // 11. Rotación (Sección 12: Bloque independiente)
+  let rotacionInfo = null;
+  const rotRaw = raw.rotaciones;
+  if (rotRaw) {
+    const hayRot = rotRaw.hay_rotacion !== false && (Boolean(rotRaw.hay_rotacion) || Boolean(rotRaw.descripcion?.length) || Boolean(rotRaw.cambios_de_posicion?.length) || Boolean(rotRaw.cambio_rol));
+    const descripciones = [
+      ...(Array.isArray(rotRaw.descripcion) ? rotRaw.descripcion : (rotRaw.descripcion ? [rotRaw.descripcion] : [])),
+      ...(Array.isArray(rotRaw.cambios_de_posicion) ? rotRaw.cambios_de_posicion : []),
+    ];
+    if (hayRot || descripciones.length > 0) {
+      rotacionInfo = {
+        hay_rotacion: true,
+        explicacion: descripciones[0] || 'Intercambio de roles o posiciones al terminar la acción.',
+        detalles: descripciones.slice(1),
+      };
+    }
+  }
+  // Si no había objeto explícito, buscar menciones de rotación en pasos o restart logic
+  if (!rotacionInfo && restartLogic && /cambio de rol|rotan|intercambio|vuelve caminando/i.test(restartLogic)) {
+    rotacionInfo = {
+      hay_rotacion: true,
+      explicacion: restartLogic,
+      detalles: [],
     };
   }
 
-  // 14. Media
+  // 12. Qué debo observar (Sección 13)
+  const queObservar = (Array.isArray(raw.que_debemos_observar) ? raw.que_debemos_observar : [])
+    .filter((s) => typeof s === 'string' && s.trim().length > 3);
+
+  // 13. Consignas (Sección 14: frases directas del entrenador)
+  const consignasSet = new Set();
+  const rawCorrecciones = [
+    ...(Array.isArray(raw.correcciones_fuente) ? raw.correcciones_fuente : []),
+    ...(Array.isArray(raw.correcciones?.fuente) ? raw.correcciones.fuente : []),
+  ];
+  for (const c of rawCorrecciones) {
+    if (typeof c === 'string' && c.length > 10 && !queObservar.includes(c)) {
+      consignasSet.add(c.trim());
+    }
+  }
+  const consignas = [...consignasSet];
+
+  // 14. Errores y Correcciones (Sección 15)
+  const erroresCorrecciones = [];
+  if (Array.isArray(raw.errores) && raw.errores.length) {
+    raw.errores.forEach((err, idx) => {
+      const corr = rawCorrecciones[idx] || null;
+      erroresCorrecciones.push({
+        error: typeof err === 'string' ? err : err.descripcion,
+        correccion: typeof corr === 'string' ? corr : corr?.descripcion || null,
+      });
+    });
+  } else if (rawCorrecciones.length > 0 && consignas.length === 0) {
+    rawCorrecciones.forEach((c) => {
+      if (typeof c === 'string') {
+        erroresCorrecciones.push({ error: null, correccion: c.trim() });
+      }
+    });
+  }
+
+  // 15. Variantes (Sección 16)
+  const variantes = (Array.isArray(raw.variantes_fuente) ? raw.variantes_fuente : [])
+    .filter((v) => typeof v === 'string' && v.trim().length > 3)
+    .map((v) => {
+      const parts = v.split(/\.\s*|\:\s*/);
+      return {
+        texto: v.trim(),
+        cambio: parts[0]?.trim() || v.trim(),
+        proposito: parts.slice(1).join('. ').trim() || null,
+      };
+    });
+
+  // 16. Leyenda Visual Real (Secciones 17 a 21)
+  const leyRaw = raw.leyenda || {};
+
+  // Jugadores en la leyenda
+  const leyJugadores = [];
+  const seenPlayerRoles = new Set();
+  const rawLeyPlayers = leyRaw.jugadores_y_roles || leyRaw.jugadores || [];
+  for (const p of rawLeyPlayers) {
+    const rol = p.rol || p.significado || p.tipo || 'Jugador';
+    const key = rol.toLowerCase().trim();
+    if (!seenPlayerRoles.has(key)) {
+      seenPlayerRoles.add(key);
+      let color = p.color_token || p.color;
+      const SPANISH_COLOR_TO_HEX = {
+        'azul': '#3477DB',
+        'rojo': '#CC272D',
+        'amarillo': '#E5C449',
+        'morado': '#7957B5',
+        'gris': '#657078',
+        'verde': '#22C55E',
+        'naranja': '#F97316',
+        'negro': '#1F2937',
+        'blanco': '#FFFFFF',
+      };
+      if (color && SPANISH_COLOR_TO_HEX[color.toLowerCase()]) {
+        color = SPANISH_COLOR_TO_HEX[color.toLowerCase()];
+      }
+      if (!color) {
+        if (key.includes('atacante')) color = '#3477DB';
+        else if (key.includes('defensor') || key.includes('oposición') || key.includes('oposicion')) color = '#CC272D';
+        else if (key.includes('portero')) color = '#7957B5';
+        else if (key.includes('entrenador') || key.includes('evaluador')) color = '#657078';
+        else if (key.includes('apoyo')) color = '#E5C449';
+        else color = '#3477DB';
+      }
+
+      let letra = 'J';
+      if (key.includes('atacante')) letra = 'A';
+      else if (key.includes('defensor') || key.includes('oposición') || key.includes('oposicion')) letra = 'D';
+      else if (key.includes('portero')) letra = 'P';
+      else if (key.includes('entrenador') || key.includes('evaluador')) letra = 'E';
+      else if (key.includes('apoyo') || key.includes('comodín')) letra = 'C';
+
+      leyJugadores.push({
+        rol,
+        color,
+        letra,
+        funcion: p.funcion_en_el_ejercicio || p.significado || null,
+      });
+    }
+  }
+
+  // Materiales en la leyenda
+  const leyMateriales = materiales.map((m) => ({
+    nombre: m.nombre,
+    icono: m.icono,
+    cantidad: m.cantidad,
+    funcion: m.funcion,
+  }));
+
+  // Acciones en la leyenda (Trazos gráficos reales)
+  const leyAcciones = [];
+  const rawActions = leyRaw.acciones_graficas || leyRaw.acciones || [];
+  const seenActions = new Set();
+  for (const a of rawActions) {
+    const tipo = a.tipo || a.nombre_es || 'acción';
+    const key = tipo.toLowerCase().trim();
+    if (!seenActions.has(key)) {
+      seenActions.add(key);
+      let estilo = a.estilo_linea || 'continua';
+      let trazo = '──────▶';
+      let nombre = a.nombre_es || tipo;
+      let color = a.color || '#FFFFFF';
+
+      if (key.includes('carrera') || key.includes('desplazamiento') || key.includes('discontinua')) {
+        estilo = 'discontinua';
+        trazo = '- - - - ▶';
+        nombre = 'Desplazamiento / carrera';
+        color = '#3477DB';
+      } else if (key.includes('conduccion') || key.includes('conducción')) {
+        estilo = 'ondulada';
+        trazo = '~~~~~~▶';
+        nombre = 'Conducción con balón';
+        color = '#3477DB';
+      } else if (key.includes('pase') || key.includes('remate') || key.includes('centro') || key.includes('blanca')) {
+        estilo = 'continua';
+        trazo = '──────▶';
+        nombre = 'Pase / remate';
+        color = '#FFFFFF';
+      }
+
+      leyAcciones.push({
+        tipo,
+        nombre,
+        estilo,
+        trazo,
+        color,
+        significado: a.significado || nombre,
+      });
+    }
+  }
+
+  // Zonas en la leyenda (solo si existen de verdad)
+  let leyZonas = null;
+  const rawZonas = leyRaw.zonas || raw.montaje?.zonas || raw.espacio?.zonas_funcionales || [];
+  if (Array.isArray(rawZonas) && rawZonas.length > 0) {
+    leyZonas = rawZonas.map((z, idx) => ({
+      id: z.id || `Z${idx + 1}`,
+      detalle: z.detalle || z.nombre || 'Zona de trabajo delimitada',
+      estilo: 'contorno discontinuo',
+    }));
+  }
+
+  // Datos Rápidos (Sección 24)
+  const datosRapidos = {
+    jugadores: jugadoresTexto || (numTotal ? `${numTotal} jugadores` : null),
+    duracion: duracion || (raw.tiempos_recomendados_editoriales?.duracion_bloque ? `${raw.tiempos_recomendados_editoriales.duracion_bloque}` : null),
+    espacio: espacioDims || espacioTipo || null,
+    material: materiales.length ? `${materiales.slice(0, 3).map((m) => (m.cantidad ? `${m.cantidad} ${m.nombre}` : m.nombre)).join(' + ')}` : null,
+  };
+
+  // 17. Media
   const media = {
     preview: `library-v2/assets/previews/${id}.png`,
     video: `${SUPABASE_STORAGE_BASE}/${id}/ejercicio.mp4`,
   };
 
-  // 15. Trazabilidad interna QA
+  // 18. Trazabilidad interna QA
   const qaInterna = {
     source_zip: record.source_zip,
     source_folder: record.source_folder,
@@ -226,50 +519,46 @@ function normalizeExercise(record) {
     categoria,
     subcategoria,
     etiquetas,
-    ambitos,
-    contenidos,
-    objetivos: {
-      general: objGeneral,
-      secundarios: objSecundarios,
-      tacticos: objTacticos,
-      tecnicos: objTecnicos,
-      coordinativos: objCoordinativos,
-      fisicos: objFisicos,
-      otros: objOtros,
-    },
+    que_se_trabaja: queSeTrabaja,
+    objetivo_principal: objetivoPrincipal,
+    objetivos_secundarios: objetivosSecundarios,
+    datos_rapidos: datosRapidos,
     organizacion: {
-      jugadores: jugadoresRaw,
-      jugadores_de_campo: jugadoresDeCampo,
+      resumen_jugadores: jugadoresTexto,
+      participantes_totales: numTotal,
       porteros,
       entrenadores,
       roles,
-      grupos,
-      equipos,
+      grupos: raw.organizacion?.grupos || null,
+      equipos: raw.organizacion?.equipos || null,
       oposicion: raw.organizacion?.oposicion || null,
     },
-    materiales,
-    espacio,
-    desarrollo: {
-      explicacion,
-      pasos,
-      fases,
+    montaje: {
+      explicacion: montajeTexto,
+      dimensiones: espacioDims,
+      espacio_tipo: espacioTipo,
     },
-    rotaciones,
+    materiales,
+    como_se_hace: pasos,
+    fases,
     carga: {
       duracion,
       series,
       repeticiones,
-      descansos,
-      intensidad,
+      descanso,
+      ciclo_repeticion: restartLogic,
     },
-    coaching: {
-      puntos_entrenador: puntosEntrenador,
-      consignas,
-      errores,
-      correcciones,
-    },
+    rotacion: rotacionInfo,
+    que_observar: queObservar,
+    consignas,
+    errores_correcciones: erroresCorrecciones,
     variantes,
-    leyenda,
+    leyenda_visual: {
+      jugadores: leyJugadores,
+      materiales: leyMateriales,
+      acciones: leyAcciones,
+      zonas: leyZonas,
+    },
     media,
     _qa: qaInterna,
   };

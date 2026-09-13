@@ -571,6 +571,291 @@
       color: var(--text-muted);
       font-size: 1.1rem;
     }
+  
+    /* Fila de Datos Rápidos */
+    .quick-facts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.25rem;
+    }
+    .quick-fact-card {
+      background: #112820;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .quick-fact-card .fact-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .quick-fact-card .fact-value {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* Píldoras de qué se trabaja */
+    .concept-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .concept-pill {
+      background: rgba(34, 197, 94, 0.14);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    /* Objetivo principal destacado */
+    .main-objective-box {
+      background: #112820;
+      border-left: 4px solid var(--brand);
+      padding: 0.85rem 1rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f0fdf4;
+      line-height: 1.5;
+    }
+
+    /* Pasos numerados de cómo se hace */
+    .numbered-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: #112820;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.85rem;
+    }
+    .step-num {
+      background: var(--brand);
+      color: #04140e;
+      font-weight: 800;
+      font-size: 0.85rem;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .step-text {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text);
+      flex: 1;
+    }
+
+    /* Fases */
+    .phases-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .phase-card {
+      background: #112820;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--brand);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .phase-title {
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .phase-desc {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .phase-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* Consignas */
+    .consignas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .consigna-quote {
+      background: rgba(34, 197, 94, 0.08);
+      border-left: 3px solid var(--brand);
+      padding: 0.6rem 0.85rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      font-style: italic;
+      color: #bbf7d0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Errores y Correcciones */
+    .error-corr-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .error-corr-card {
+      background: #112820;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .err-row, .corr-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .err-tag {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .corr-tag {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Leyenda visual (Secciones 17 a 21) */
+    .legend-category {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .legend-subtitle {
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 0.1rem;
+    }
+    .legend-items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.55rem;
+    }
+    .legend-card {
+      background: #102920;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .legend-player-token {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+    .legend-mat-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+      width: 32px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .legend-action-visual {
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: #091a14;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .legend-zone-visual {
+      border: 2px dashed #4ade80;
+      background: rgba(74, 222, 128, 0.12);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #4ade80;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .legend-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+    .legend-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .legend-detail {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
   </style>
 </head>
 <body>
@@ -646,54 +931,91 @@
       </div>
 
       <div class="modal-body">
-        <!-- Reproductor de Vídeo MP4 -->
+        <!-- 3. Vídeo / preview MP4 real -->
         <div class="video-container" id="video-wrapper">
           <video id="modal-video" controls preload="none" playsinline></video>
         </div>
 
-        <!-- Secciones dinámicas: solo se muestran si existen datos -->
-        <div id="section-objetivos" class="section-block">
-          <h3>🎯 Qué se trabaja y Objetivos</h3>
-          <div id="modal-objetivos-content"></div>
+        <!-- 4. Qué se trabaja -->
+        <div id="section-que-se-trabaja" class="section-block">
+          <h3>🎯 Qué se trabaja</h3>
+          <div id="modal-que-se-trabaja-content" class="concept-chips"></div>
         </div>
 
-        <div id="section-organizacion" class="section-block">
-          <h3>👥 Organización y Roles</h3>
-          <div id="modal-organizacion-content"></div>
+        <!-- 5. Objetivo del ejercicio -->
+        <div id="section-objetivo" class="section-block">
+          <h3>🏆 Objetivo del ejercicio</h3>
+          <div id="modal-objetivo-content"></div>
         </div>
 
-        <div id="section-espacio" class="section-block">
-          <h3>📐 Espacio y Dimensiones</h3>
-          <div id="modal-espacio-content"></div>
+        <!-- 6. Datos rápidos (Fila compacta) -->
+        <div id="section-datos-rapidos" class="section-block" style="background: transparent; border: none; padding: 0;">
+          <div id="modal-datos-rapidos-content" class="quick-facts-grid"></div>
         </div>
 
+        <!-- 7. Montaje -->
+        <div id="section-montaje" class="section-block">
+          <h3>📐 Montaje del ejercicio</h3>
+          <div id="modal-montaje-content"></div>
+        </div>
+
+        <!-- 8. Material operativo -->
         <div id="section-material" class="section-block">
           <h3>📦 Material necesario</h3>
           <div id="modal-material-content"></div>
         </div>
 
-        <div id="section-desarrollo" class="section-block">
-          <h3>⚡ Desarrollo de la tarea</h3>
-          <div id="modal-desarrollo-content"></div>
+        <!-- 9. Cómo se hace (Desarrollo paso a paso) -->
+        <div id="section-como-se-hace" class="section-block">
+          <h3>⚡ Cómo se hace</h3>
+          <div id="modal-como-se-hace-content"></div>
         </div>
 
-        <div id="section-coaching" class="section-block">
-          <h3>📋 Consignas y Correcciones del Entrenador</h3>
-          <div id="modal-coaching-content"></div>
+        <!-- 10. Fases, si existen -->
+        <div id="section-fases" class="section-block">
+          <h3>🔄 Fases de la tarea</h3>
+          <div id="modal-fases-content"></div>
         </div>
 
+        <!-- 11. Series, repeticiones y carga -->
         <div id="section-carga" class="section-block">
-          <h3>⏱ Carga y Tiempos</h3>
+          <h3>⏱ Series, repeticiones y carga</h3>
           <div id="modal-carga-content"></div>
         </div>
 
+        <!-- 12. Rotación -->
+        <div id="section-rotacion" class="section-block">
+          <h3>🔁 Rotación</h3>
+          <div id="modal-rotacion-content"></div>
+        </div>
+
+        <!-- 13. Qué debo observar -->
+        <div id="section-que-observar" class="section-block">
+          <h3>👀 Qué debo observar</h3>
+          <div id="modal-que-observar-content"></div>
+        </div>
+
+        <!-- 14. Consignas del entrenador -->
+        <div id="section-consignas" class="section-block">
+          <h3>🗣️ Consignas del entrenador</h3>
+          <div id="modal-consignas-content"></div>
+        </div>
+
+        <!-- 15. Errores y correcciones -->
+        <div id="section-errores-correcciones" class="section-block">
+          <h3>⚠️ Errores y correcciones</h3>
+          <div id="modal-errores-correcciones-content"></div>
+        </div>
+
+        <!-- 16. Variantes -->
         <div id="section-variantes" class="section-block">
-          <h3>🔄 Variantes y Reglas</h3>
+          <h3>🔀 Variantes</h3>
           <div id="modal-variantes-content"></div>
         </div>
 
+        <!-- 17. Leyenda visual -->
         <div id="section-leyenda" class="section-block">
-          <h3>🗺 Leyenda</h3>
+          <h3>🗺️ Leyenda visual</h3>
           <div id="modal-leyenda-content"></div>
         </div>
       </div>
@@ -881,9 +1203,9 @@
 
         gridEl.innerHTML = filtered.map(ex => {
           const isStaged = state.stagedSession.has(ex.id);
-          const chips = (ex.contenidos || []).slice(0, 3);
-          const players = ex.organizacion?.jugadores || (ex.organizacion?.jugadores_de_campo ? `${ex.organizacion.jugadores_de_campo} jugadores` : null);
-          const duration = ex.carga?.duracion;
+          const chips = (ex.que_se_trabaja || ex.contenidos || []).slice(0, 3);
+          const players = ex.datos_rapidos?.jugadores || ex.organizacion?.jugadores || (ex.organizacion?.jugadores_de_campo ? `${ex.organizacion.jugadores_de_campo} jugadores` : null);
+          const duration = ex.datos_rapidos?.duracion || ex.carga?.duracion;
           const materialsCount = ex.materiales?.length ? `${ex.materiales.length} materiales` : null;
 
           return `
@@ -916,20 +1238,16 @@
         }).join('');
       }
 
-      // Manejo de eventos en la parrilla
+      // Manejo de eventos en la parrilla (clic en cualquier parte de la tarjeta abre ficha, salvo botón de sesión)
       gridEl.addEventListener('click', e => {
-        const target = e.target.closest('[data-action]');
-        if (!target) return;
-        const card = target.closest('.card');
+        const toggleBtn = e.target.closest('[data-action="toggle-session"]');
+        const card = e.target.closest('.card');
         if (!card) return;
         const id = card.dataset.id;
         const exercise = state.catalog.find(ex => ex.id === id);
         if (!exercise) return;
 
-        const action = target.dataset.action;
-        if (action === 'view') {
-          openModal(exercise);
-        } else if (action === 'toggle-session') {
+        if (toggleBtn) {
           if (state.stagedSession.has(id)) {
             state.stagedSession.delete(id);
           } else {
@@ -937,6 +1255,8 @@
           }
           updateSessionBar();
           renderGrid();
+        } else {
+          openModal(exercise);
         }
       });
 
@@ -958,203 +1278,382 @@
 
       // Apertura de ficha completa con vídeo lazy
       function openModal(ex) {
+        // 1. Título
         $('#modal-title').textContent = ex.nombre;
         
-        // Tags en cabecera
+        // 2. Tags en cabecera
         const tagsContainer = $('#modal-tags');
         const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean);
         tagsContainer.innerHTML = tags.map(t => `<span class="brand-badge">${escapeHtml(t)}</span>`).join('');
 
-        // Vídeo con asignación lazy (solo se carga al abrir la ficha)
+        // 3. Vídeo con asignación lazy (solo se carga al abrir la ficha)
         modalVideo.poster = ex.media.preview;
         modalVideo.src = ex.media.video;
         modalVideo.load();
 
-        // 1. Objetivos
-        const objBlock = $('#section-objetivos');
-        const objContent = $('#modal-objetivos-content');
-        const allObj = [
-          ...(ex.objetivos?.general ? ex.objetivos.general.map(o => `<li><strong>General:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.tacticos ? ex.objetivos.tacticos.map(o => `<li><strong>Táctico:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.tecnicos ? ex.objetivos.tecnicos.map(o => `<li><strong>Técnico:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.coordinativos ? ex.objetivos.coordinativos.map(o => `<li><strong>Coordinativo:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.fisicos ? ex.objetivos.fisicos.map(o => `<li><strong>Físico:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.secundarios ? ex.objetivos.secundarios.map(o => `<li><strong>Secundario:</strong> ${escapeHtml(o)}</li>`) : []),
-          ...(ex.objetivos?.otros ? ex.objetivos.otros.map(o => `<li>${escapeHtml(o)}</li>`) : [])
-        ];
-        if (allObj.length || (ex.contenidos && ex.contenidos.length)) {
-          objBlock.style.display = 'flex';
-          objContent.innerHTML = `
-            ${ex.contenidos?.length ? `<div class="pill-grid" style="margin-bottom: 0.75rem;">${ex.contenidos.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
-            ${allObj.length ? `<ul>${allObj.join('')}</ul>` : ''}
+        // 4. Qué se trabaja
+        const queTrabajaBlock = $('#section-que-se-trabaja');
+        const queTrabajaContent = $('#modal-que-se-trabaja-content');
+        if (ex.que_se_trabaja && ex.que_se_trabaja.length) {
+          queTrabajaBlock.style.display = 'flex';
+          queTrabajaContent.innerHTML = ex.que_se_trabaja.map(c => `<span class="concept-pill">${escapeHtml(c)}</span>`).join('');
+        } else {
+          queTrabajaBlock.style.display = 'none';
+        }
+
+        // 5. Objetivo del ejercicio
+        const objBlock = $('#section-objetivo');
+        const objContent = $('#modal-objetivo-content');
+        let objHtml = '';
+        if (ex.objetivo_principal) {
+          objHtml += `<div class="main-objective-box">${escapeHtml(ex.objetivo_principal)}</div>`;
+        }
+        if (ex.objetivos_secundarios && ex.objetivos_secundarios.length) {
+          objHtml += `
+            <div style="margin-top: 0.75rem;">
+              <div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:0.35rem;">Objetivos complementarios:</div>
+              <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem;">
+                ${ex.objetivos_secundarios.map(o => `<li>${escapeHtml(o)}</li>`).join('')}
+              </ul>
+            </div>
           `;
+        }
+        if (objHtml) {
+          objBlock.style.display = 'flex';
+          objContent.innerHTML = objHtml;
         } else {
           objBlock.style.display = 'none';
         }
 
-        // 2. Organización
-        const orgBlock = $('#section-organizacion');
-        const orgContent = $('#modal-organizacion-content');
-        const orgItems = [];
-        if (ex.organizacion?.jugadores) orgItems.push(`<div class="pill-item"><strong>Jugadores:</strong> ${escapeHtml(ex.organizacion.jugadores)}</div>`);
-        if (ex.organizacion?.jugadores_de_campo) orgItems.push(`<div class="pill-item"><strong>De campo:</strong> ${ex.organizacion.jugadores_de_campo}</div>`);
-        if (ex.organizacion?.porteros !== null && ex.organizacion?.porteros !== undefined) orgItems.push(`<div class="pill-item"><strong>Porteros:</strong> ${ex.organizacion.porteros}</div>`);
-        if (ex.organizacion?.entrenadores) orgItems.push(`<div class="pill-item"><strong>Entrenadores:</strong> ${ex.organizacion.entrenadores}</div>`);
-        if (ex.organizacion?.oposicion) orgItems.push(`<div class="pill-item"><strong>Oposición:</strong> ${escapeHtml(ex.organizacion.oposicion)}</div>`);
-        
-        const rolesList = (ex.organizacion?.roles || []).map(r => `<li><strong>${escapeHtml(r.rol || r.id)}:</strong> ${escapeHtml(r.funcion || r.descripcion || 'Posición en campo')}</li>`).join('');
-
-        if (orgItems.length || rolesList) {
-          orgBlock.style.display = 'flex';
-          orgContent.innerHTML = `
-            ${orgItems.length ? `<div class="pill-grid" style="margin-bottom: 0.75rem;">${orgItems.join('')}</div>` : ''}
-            ${rolesList ? `<ul>${rolesList}</ul>` : ''}
-          `;
+        // 6. Datos rápidos (Fila compacta)
+        const rapBlock = $('#section-datos-rapidos');
+        const rapContent = $('#modal-datos-rapidos-content');
+        const rapItems = [];
+        if (ex.datos_rapidos?.jugadores) {
+          rapItems.push(`<div class="quick-fact-card"><span class="fact-label">👥 Jugadores</span><span class="fact-value">${escapeHtml(ex.datos_rapidos.jugadores)}</span></div>`);
+        }
+        if (ex.datos_rapidos?.duracion) {
+          rapItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${escapeHtml(ex.datos_rapidos.duracion)}</span></div>`);
+        }
+        if (ex.datos_rapidos?.espacio) {
+          rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📐 Espacio</span><span class="fact-value">${escapeHtml(ex.datos_rapidos.espacio)}</span></div>`);
+        }
+        if (ex.datos_rapidos?.material) {
+          rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📦 Material</span><span class="fact-value">${escapeHtml(ex.datos_rapidos.material)}</span></div>`);
+        }
+        if (rapItems.length) {
+          rapBlock.style.display = 'block';
+          rapContent.innerHTML = rapItems.join('');
         } else {
-          orgBlock.style.display = 'none';
+          rapBlock.style.display = 'none';
         }
 
-        // 3. Espacio
-        const espBlock = $('#section-espacio');
-        const espContent = $('#modal-espacio-content');
-        const espItems = [];
-        if (ex.espacio?.dimensiones) espItems.push(`<p><strong>Dimensiones:</strong> ${escapeHtml(ex.espacio.dimensiones)}</p>`);
-        if (ex.espacio?.zona) espItems.push(`<p><strong>Zona utilizada:</strong> ${escapeHtml(ex.espacio.zona)}</p>`);
-        if (ex.espacio?.forma) espItems.push(`<p><strong>Forma:</strong> ${escapeHtml(ex.espacio.forma)}</p>`);
-        if (ex.espacio?.organizacion) espItems.push(`<p><strong>Orientación:</strong> ${escapeHtml(ex.espacio.organizacion)}</p>`);
-        if (espItems.length) {
-          espBlock.style.display = 'flex';
-          espContent.innerHTML = espItems.join('');
+        // 7. Montaje del ejercicio
+        const montBlock = $('#section-montaje');
+        const montContent = $('#modal-montaje-content');
+        let montHtml = '';
+        const montBadges = [];
+        if (ex.montaje?.dimensiones) montBadges.push(`<span class="chip" style="background:#0e2a20; border-color:var(--border);">📏 ${escapeHtml(ex.montaje.dimensiones)}</span>`);
+        if (ex.montaje?.espacio_tipo) montBadges.push(`<span class="chip" style="background:#0e2a20; border-color:var(--border);">📍 ${escapeHtml(ex.montaje.espacio_tipo)}</span>`);
+        if (montBadges.length) {
+          montHtml += `<div style="display:flex; gap:0.45rem; flex-wrap:wrap; margin-bottom:0.6rem;">${montBadges.join('')}</div>`;
+        }
+        if (ex.montaje?.explicacion) {
+          montHtml += `<p style="line-height:1.55; color:var(--text);">${escapeHtml(ex.montaje.explicacion).replace(/\n/g, '<br>')}</p>`;
+        }
+        if (montHtml) {
+          montBlock.style.display = 'flex';
+          montContent.innerHTML = montHtml;
         } else {
-          espBlock.style.display = 'none';
+          montBlock.style.display = 'none';
         }
 
-        // 4. Material
+        // 8. Material operativo
         const matBlock = $('#section-material');
         const matContent = $('#modal-material-content');
-        const matList = (ex.materiales || []).map(m => `
-          <li>
-            <strong>${escapeHtml(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}:</strong>
-            ${m.funcion ? escapeHtml(m.funcion) : ''}
-            ${m.detalle ? `<span style="opacity:0.7;"> — ${escapeHtml(m.detalle)}</span>` : ''}
-          </li>
-        `).join('');
-        if (matList) {
+        if (ex.materiales && ex.materiales.length) {
           matBlock.style.display = 'flex';
-          matContent.innerHTML = `<ul>${matList}</ul>`;
+          matContent.innerHTML = `
+            <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.4rem;">
+              ${ex.materiales.map(m => `
+                <li>
+                  <strong>${m.icono ? m.icono + ' ' : ''}${escapeHtml(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}:</strong>
+                  ${escapeHtml(m.funcion || 'Material de la tarea')}
+                </li>
+              `).join('')}
+            </ul>
+          `;
         } else {
           matBlock.style.display = 'none';
         }
 
-        // 5. Desarrollo
-        const desBlock = $('#section-desarrollo');
-        const desContent = $('#modal-desarrollo-content');
-        let desHtml = '';
-        if (ex.desarrollo?.explicacion) {
-          desHtml += `<p style="margin-bottom: 0.75rem;">${escapeHtml(ex.desarrollo.explicacion).replace(/\n/g, '<br>')}</p>`;
-        }
-        if (ex.desarrollo?.pasos && ex.desarrollo.pasos.length) {
-          desHtml += `
-            <div class="step-list">
-              ${ex.desarrollo.pasos.map((p, idx) => `
+        // 9. Cómo se hace (Desarrollo paso a paso)
+        const comoBlock = $('#section-como-se-hace');
+        const comoContent = $('#modal-como-se-hace-content');
+        if (ex.como_se_hace && ex.como_se_hace.length) {
+          comoBlock.style.display = 'flex';
+          comoContent.innerHTML = `
+            <div class="numbered-steps">
+              ${ex.como_se_hace.map((step, idx) => `
                 <div class="step-item">
                   <span class="step-num">${idx + 1}</span>
-                  <div>${escapeHtml(p)}</div>
+                  <div class="step-text">${escapeHtml(step)}</div>
                 </div>
               `).join('')}
             </div>
           `;
-        } else if (ex.desarrollo?.fases && ex.desarrollo.fases.length) {
-          desHtml += `
-            <div class="step-list">
-              ${ex.desarrollo.fases.map(f => `
-                <div class="step-item">
-                  <span class="step-num">${f.orden}</span>
-                  <div>
-                    <strong>${escapeHtml(f.descripcion || f.accion_principal)}</strong>
-                    ${f.que_ocurre_despues ? `<p style="margin-top:0.25rem; opacity:0.85;">${escapeHtml(f.que_ocurre_despues)}</p>` : ''}
+        } else {
+          comoBlock.style.display = 'none';
+        }
+
+        // 10. Fases
+        const fasesBlock = $('#section-fases');
+        const fasesContent = $('#modal-fases-content');
+        if (ex.fases && ex.fases.length) {
+          fasesBlock.style.display = 'flex';
+          fasesContent.innerHTML = `
+            <div class="phases-list">
+              ${ex.fases.map(f => `
+                <div class="phase-card">
+                  <div class="phase-title">
+                    <span>${escapeHtml(f.titulo || `Fase ${f.orden}`)}</span>
+                    ${f.poseedor_balon ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">⚽ Con balón: <strong>${escapeHtml(f.poseedor_balon)}</strong></span>` : ''}
                   </div>
+                  <div class="phase-desc">${escapeHtml(f.descripcion || '')}</div>
+                  ${f.que_ocurre_despues ? `<div class="phase-meta">👉 <em>Siguiente:</em> ${escapeHtml(f.que_ocurre_despues)}</div>` : ''}
+                  ${f.condicion_final && f.condicion_final !== f.descripcion ? `<div class="phase-meta">🏁 <em>Cierre:</em> ${escapeHtml(f.condicion_final)}</div>` : ''}
                 </div>
               `).join('')}
             </div>
           `;
-        }
-        if (desHtml) {
-          desBlock.style.display = 'flex';
-          desContent.innerHTML = desHtml;
         } else {
-          desBlock.style.display = 'none';
+          fasesBlock.style.display = 'none';
         }
 
-        // 6. Coaching
-        const coachBlock = $('#section-coaching');
-        const coachContent = $('#modal-coaching-content');
-        const coachItems = [];
-        if (ex.coaching?.puntos_entrenador?.length) {
-          coachItems.push(`<div><strong>Puntos de observación:</strong><ul>${ex.coaching.puntos_entrenador.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul></div>`);
-        }
-        if (ex.coaching?.correcciones?.length) {
-          coachItems.push(`<div><strong>Correcciones clave:</strong><ul>${ex.coaching.correcciones.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div>`);
-        }
-        if (ex.coaching?.consignas?.length) {
-          coachItems.push(`<div><strong>Consignas:</strong><ul>${ex.coaching.consignas.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul></div>`);
-        }
-        if (coachItems.length) {
-          coachBlock.style.display = 'flex';
-          coachContent.innerHTML = coachItems.join('<div style="height:0.5rem"></div>');
-        } else {
-          coachBlock.style.display = 'none';
-        }
-
-        // 7. Carga y Tiempos
+        // 11. Series, repeticiones y carga
         const cargaBlock = $('#section-carga');
         const cargaContent = $('#modal-carga-content');
         const cargaItems = [];
-        if (ex.carga?.duracion) cargaItems.push(`<div class="pill-item"><strong>Duración:</strong> ${escapeHtml(ex.carga.duracion)}</div>`);
-        if (ex.carga?.series) cargaItems.push(`<div class="pill-item"><strong>Series:</strong> ${escapeHtml(ex.carga.series)}</div>`);
-        if (ex.carga?.repeticiones) cargaItems.push(`<div class="pill-item"><strong>Repeticiones:</strong> ${escapeHtml(ex.carga.repeticiones)}</div>`);
-        if (ex.carga?.descansos) cargaItems.push(`<div class="pill-item"><strong>Descansos:</strong> ${escapeHtml(ex.carga.descansos)}</div>`);
-        if (ex.carga?.intensidad) cargaItems.push(`<div class="pill-item"><strong>Intensidad:</strong> ${escapeHtml(ex.carga.intensidad)}</div>`);
-        if (cargaItems.length) {
+        if (ex.carga?.duracion) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${escapeHtml(ex.carga.duracion)}</span></div>`);
+        if (ex.carga?.series) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🔁 Series</span><span class="fact-value">${escapeHtml(ex.carga.series)}</span></div>`);
+        if (ex.carga?.repeticiones) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🔄 Repeticiones</span><span class="fact-value">${escapeHtml(ex.carga.repeticiones)}</span></div>`);
+        if (ex.carga?.descanso) cargaItems.push(`<div class="quick-fact-card"><span class="fact-label">🛑 Descanso</span><span class="fact-value">${escapeHtml(ex.carga.descanso)}</span></div>`);
+        if (cargaItems.length || ex.carga?.ciclo_repeticion) {
           cargaBlock.style.display = 'flex';
-          cargaContent.innerHTML = `<div class="pill-grid">${cargaItems.join('')}</div>`;
+          let cargaHtml = '';
+          if (cargaItems.length) cargaHtml += `<div class="quick-facts-grid">${cargaItems.join('')}</div>`;
+          if (ex.carga?.ciclo_repeticion) {
+            cargaHtml += `<div style="margin-top:0.6rem; font-size:0.86rem; color:var(--text-muted);"><strong style="color:var(--text);">Dinámica del ciclo:</strong> ${escapeHtml(ex.carga.ciclo_repeticion)}</div>`;
+          }
+          cargaContent.innerHTML = cargaHtml;
         } else {
           cargaBlock.style.display = 'none';
         }
 
-        // 8. Variantes y Reglas
+        // 12. Rotación
+        const rotBlock = $('#section-rotacion');
+        const rotContent = $('#modal-rotacion-content');
+        const hasRot = ex.rotacion && (ex.rotacion.explicacion || (ex.rotacion.detalles && ex.rotacion.detalles.length) || (ex.rotacion.reglas && ex.rotacion.reglas.length));
+        if (hasRot) {
+          rotBlock.style.display = 'flex';
+          let rotHtml = '';
+          if (ex.rotacion.explicacion) {
+            rotHtml += `<p style="line-height:1.55; color:var(--text); margin-bottom:0.5rem;">${escapeHtml(ex.rotacion.explicacion)}</p>`;
+          }
+          if (ex.rotacion.detalles && ex.rotacion.detalles.length) {
+            rotHtml += `<ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.5rem;">${ex.rotacion.detalles.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>`;
+          }
+          if (ex.rotacion.reglas && ex.rotacion.reglas.length) {
+            rotHtml += `
+              <div style="font-size:0.86rem; color:var(--text-muted);">
+                <strong style="color:var(--text);">Reglas de cambio:</strong>
+                <ul style="padding-left:1.2rem; margin-top:0.25rem; display:flex; flex-direction:column; gap:0.2rem;">
+                  ${ex.rotacion.reglas.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                </ul>
+              </div>
+            `;
+          }
+          rotContent.innerHTML = rotHtml;
+        } else {
+          rotBlock.style.display = 'none';
+        }
+
+        // 13. Qué debo observar
+        const obsBlock = $('#section-que-observar');
+        const obsContent = $('#modal-que-observar-content');
+        if (ex.que_observar && ex.que_observar.length) {
+          obsBlock.style.display = 'flex';
+          obsContent.innerHTML = `
+            <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.4rem; line-height:1.5;">
+              ${ex.que_observar.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          `;
+        } else {
+          obsBlock.style.display = 'none';
+        }
+
+        // 14. Consignas del entrenador
+        const consBlock = $('#section-consignas');
+        const consContent = $('#modal-consignas-content');
+        if (ex.consignas && ex.consignas.length) {
+          consBlock.style.display = 'flex';
+          consContent.innerHTML = `
+            <div class="consignas-list">
+              ${ex.consignas.map(c => `
+                <div class="consigna-quote">
+                  <span>📢</span>
+                  <div>"${escapeHtml(c)}"</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          consBlock.style.display = 'none';
+        }
+
+        // 15. Errores y correcciones
+        const errBlock = $('#section-errores-correcciones');
+        const errContent = $('#modal-errores-correcciones-content');
+        if (ex.errores_correcciones && ex.errores_correcciones.length) {
+          errBlock.style.display = 'flex';
+          errContent.innerHTML = `
+            <div class="error-corr-grid">
+              ${ex.errores_correcciones.map(ec => `
+                <div class="error-corr-card">
+                  ${ec.error ? `
+                    <div class="err-row">
+                      <span class="err-tag">Error habitual</span>
+                      <span>${escapeHtml(ec.error)}</span>
+                    </div>
+                  ` : ''}
+                  ${ec.correccion ? `
+                    <div class="corr-row">
+                      <span class="corr-tag">Corrección clave</span>
+                      <span>${escapeHtml(ec.correccion)}</span>
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          errBlock.style.display = 'none';
+        }
+
+        // 16. Variantes
         const varBlock = $('#section-variantes');
         const varContent = $('#modal-variantes-content');
-        const varItems = [];
-        if (ex.variantes?.length) {
-          varItems.push(`<div><strong>Variantes:</strong><ul>${ex.variantes.map(v => `<li>${escapeHtml(v)}</li>`).join('')}</ul></div>`);
-        }
-        if (ex.rotaciones?.reglas?.length) {
-          varItems.push(`<div><strong>Reglas adicionales:</strong><ul>${ex.rotaciones.reglas.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul></div>`);
-        }
-        if (varItems.length) {
+        if (ex.variantes && ex.variantes.length) {
           varBlock.style.display = 'flex';
-          varContent.innerHTML = varItems.join('<div style="height:0.5rem"></div>');
+          varContent.innerHTML = `
+            <ul style="padding-left:1.2rem; display:flex; flex-direction:column; gap:0.4rem; line-height:1.5;">
+              ${ex.variantes.map(v => {
+                if (typeof v === 'string') return `<li>${escapeHtml(v)}</li>`;
+                const name = v.variante || v.nombre || 'Variante';
+                const desc = v.variacion || v.descripcion || '';
+                const obj = v.objetivo ? `<em style="color:var(--brand);">(${escapeHtml(v.objetivo)})</em>` : '';
+                return `<li><strong>${escapeHtml(name)}:</strong> ${escapeHtml(desc)} ${obj}</li>`;
+              }).join('')}
+            </ul>
+          `;
         } else {
           varBlock.style.display = 'none';
         }
 
-        // 9. Leyenda
+        // 17. Leyenda visual
         const leyBlock = $('#section-leyenda');
         const leyContent = $('#modal-leyenda-content');
-        if (ex.leyenda && typeof ex.leyenda === 'object') {
-          const leyEntries = [];
-          for (const [k, v] of Object.entries(ex.leyenda)) {
-            if (v && Array.isArray(v) && v.length) {
-              leyEntries.push(`<div><strong>${escapeHtml(k)}:</strong> ${v.map(i => typeof i === 'string' ? escapeHtml(i) : (i.label || i.nombre || i.tipo || '')).filter(Boolean).join(', ')}</div>`);
-            }
+        const ley = ex.leyenda_visual;
+        const hasJugadores = ley?.jugadores && ley.jugadores.length;
+        const hasMateriales = ley?.materiales && ley.materiales.length;
+        const hasAcciones = ley?.acciones && ley.acciones.length;
+        const hasZonas = ley?.zonas && ley.zonas.length;
+
+        if (hasJugadores || hasMateriales || hasAcciones || hasZonas) {
+          leyBlock.style.display = 'flex';
+          let leyHtml = '';
+
+          // Jugadores
+          if (hasJugadores) {
+            leyHtml += `
+              <div class="legend-category">
+                <div class="legend-subtitle">Jugadores y roles</div>
+                <div class="legend-items-grid">
+                  ${ley.jugadores.map(j => `
+                    <div class="legend-card">
+                      <div class="legend-player-token" style="background:${j.color || '#3477DB'};">${escapeHtml(j.letra || 'J')}</div>
+                      <div class="legend-info">
+                        <div class="legend-title">${escapeHtml(j.rol)}</div>
+                        ${j.funcion ? `<div class="legend-detail">${escapeHtml(j.funcion)}</div>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
           }
-          if (leyEntries.length) {
-            leyBlock.style.display = 'flex';
-            leyContent.innerHTML = leyEntries.join('');
-          } else {
-            leyBlock.style.display = 'none';
+
+          // Materiales
+          if (hasMateriales) {
+            leyHtml += `
+              <div class="legend-category">
+                <div class="legend-subtitle">Materiales en diagrama</div>
+                <div class="legend-items-grid">
+                  ${ley.materiales.map(m => `
+                    <div class="legend-card">
+                      <div class="legend-mat-icon">${m.icono || '📦'}</div>
+                      <div class="legend-info">
+                        <div class="legend-title">${escapeHtml(m.nombre)}${m.cantidad ? ` (x${m.cantidad})` : ''}</div>
+                        ${m.funcion ? `<div class="legend-detail">${escapeHtml(m.funcion)}</div>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
           }
+
+          // Acciones y trazos
+          if (hasAcciones) {
+            leyHtml += `
+              <div class="legend-category">
+                <div class="legend-subtitle">Acciones y desplazamientos</div>
+                <div class="legend-items-grid">
+                  ${ley.acciones.map(a => `
+                    <div class="legend-card">
+                      <span class="legend-action-visual">${escapeHtml(a.trazo || '──────▶')}</span>
+                      <div class="legend-info">
+                        <div class="legend-title">${escapeHtml(a.nombre || a.tipo)}</div>
+                        ${a.significado ? `<div class="legend-detail">${escapeHtml(a.significado)}</div>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          // Zonas delimitadas (solo si existen)
+          if (hasZonas) {
+            leyHtml += `
+              <div class="legend-category">
+                <div class="legend-subtitle">Zonas del campo</div>
+                <div class="legend-items-grid">
+                  ${ley.zonas.map(z => `
+                    <div class="legend-card">
+                      <span class="legend-zone-visual">${escapeHtml(z.id || 'ZONA')}</span>
+                      <div class="legend-info">
+                        <div class="legend-title">${escapeHtml(z.id || 'Zona')}</div>
+                        ${z.detalle ? `<div class="legend-detail">${escapeHtml(z.detalle)}</div>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          leyContent.innerHTML = leyHtml;
         } else {
           leyBlock.style.display = 'none';
         }
