@@ -77,9 +77,11 @@ test('filtrado por formato: Todos, No especificado y Fútbol 7 en catálogo actu
   const noSpecFiltered = filterExercises(currentExercises, { formato_juego: 'no_especificado' });
   assert.equal(noSpecFiltered.length, currentExercises.length);
 
-  // 3. "futbol_7" muestra 0 ejercicios en el catálogo base actual
+  // 3. "futbol_7" muestra exactamente 0 ejercicios en el catálogo base actual (filtro limpio para futuros zips)
   const f7Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_7' });
-  assert.equal(f7Filtered.length, 0);
+  assert.equal(f7Filtered.length, 0, 'El filtro Fútbol 7 debe estar limpio y vacío (0 ejercicios)');
+  const f7ByFormatKey = filterExercises(currentExercises, { format: 'futbol_7' });
+  assert.equal(f7ByFormatKey.length, 0, 'El filtro format: futbol_7 debe estar igualmente vacío');
 
   // 4. "futbol_11" muestra 0 ejercicios en el catálogo base actual
   const f11Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_11' });

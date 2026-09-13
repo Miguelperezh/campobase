@@ -367,7 +367,7 @@ export function filterExercises(exercises, filters = {}) {
         } else if (targetNorm === 'futbol_7' || targetNorm === 'futbol_11') {
           if (item.formato_juego || item.formato) {
             if (itemFormato !== targetNorm) return false;
-          } else if (filters.formato_juego !== undefined) {
+          } else if (filters.formato_juego !== undefined || formatVal === 'futbol_7' || formatVal === 'futbol_11') {
             // Bajo el nuevo filtro canónico, los ejercicios sin formato asignado son "no_especificado", no coinciden
             return false;
           } else {
