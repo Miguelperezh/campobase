@@ -90,6 +90,31 @@ function deriveVisibleTitle(raw, collection) {
   return original || 'Ejercicio';
 }
 
+function normalizeFormatoJuego(val) {
+  if (!val) return 'no_especificado';
+  const cleanStr = String(val)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const stripped = cleanStr.replace(/[\s_\-]+/g, '');
+
+  if (stripped === 'todos') {
+    return 'todos';
+  }
+  if (stripped === 'f7' || stripped === 'futbol7' || stripped === 'futbolsiete') {
+    return 'futbol_7';
+  }
+  if (stripped === 'f11' || stripped === 'futbol11' || stripped === 'futbolonce') {
+    return 'futbol_11';
+  }
+  if (stripped === 'noespecificado' || stripped === 'ninguno' || stripped === 'ambos') {
+    return 'no_especificado';
+  }
+  return 'no_especificado';
+}
+
 function normalizeExercise(record) {
   const raw = record.raw_json;
   const collection = record.collection;
@@ -105,7 +130,16 @@ function normalizeExercise(record) {
     titulo_original_fuente: originalTitle,
   };
 
-  // 2. Categoría canónica (Sección 3)
+  // 2. Formato de juego canónico
+  const rawFormato = raw.clasificacion?.formato_juego
+    || raw.formato_juego
+    || raw.clasificacion?.formato
+    || raw.formato
+    || raw.format
+    || '';
+  const formato_juego = normalizeFormatoJuego(rawFormato);
+
+  // 3. Categoría canónica (Sección 3)
   const rawCat = raw.clasificacion?.categoria_fuente
     || raw.clasificacion?.categoria_principal
     || '';
@@ -584,6 +618,7 @@ function normalizeExercise(record) {
   return {
     ...identidad,
     categoria,
+    formato_juego,
     subcategoria,
     etiquetas,
     que_se_trabaja: queSeTrabaja,

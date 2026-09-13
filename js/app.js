@@ -1,7 +1,7 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
-import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
+import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
@@ -2121,7 +2121,7 @@ function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
   const filters = {
-    format: form.elements.format?.value || '',
+    formato_juego: form.elements.formato_juego?.value || form.elements.format?.value || 'todos',
     category: form.elements.category.value,
     players: form.elements.players.value,
     material: form.elements.material.value,
@@ -2145,14 +2145,14 @@ function renderExercises() {
     const validated = findValidatedExercise(rawItem.id);
     if (validated) return renderExerciseGridCard(validated);
     return exerciseCardHTML(rawItem);
-  }).join('') : empty('No hay ejercicios que coincidan con los filtros.');
+  }).join('') : empty('No hay ejercicios que coincidan con estos filtros.');
 }
 
 function editExercise(id) {
   const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
   if (!item) return;
   const form = $('#exercise-form');
-  for (const key of ['id', 'name', 'category', 'format', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
+  for (const key of ['id', 'name', 'category', 'formato_juego', 'format', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
     if (form.elements[key]) form.elements[key].value = item[key] ?? '';
   }
   $('#exercise-dialog').showModal();
@@ -3986,7 +3986,10 @@ async function init() {
 
   const exFilters = $('#exercise-filters');
   if (exFilters) {
-    if (exFilters.elements.format) {
+    if (exFilters.elements.formato_juego) {
+      exFilters.elements.formato_juego.innerHTML = FORMATO_JUEGO_OPTIONS.map((f) => `<option value="${f.id}">${f.label}</option>`).join('');
+      exFilters.elements.formato_juego.value = 'todos';
+    } else if (exFilters.elements.format) {
       exFilters.elements.format.insertAdjacentHTML('beforeend', FORMAT_OPTIONS.map((f) => `<option value="${f.id}">${f.label}</option>`).join(''));
     }
     if (exFilters.elements.players) {

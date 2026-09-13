@@ -109,17 +109,17 @@ test('formatSessionDurationInfo calcula minutos creados, programados y restantes
   assert.equal(infoRemaining.total, 15);
   assert.equal(infoRemaining.target, 75);
   assert.equal(infoRemaining.diff, 60);
-  assert.equal(infoRemaining.metaText, '⏱️ 15 / 75 min (quedan 60 min)');
+  assert.equal(infoRemaining.metaText, '⏱️ 15 / 75 min (quedan 60 min para completar entreno)');
   assert.equal(infoRemaining.pillText, '15 / 75 min');
   assert.equal(infoRemaining.badgeText, 'Quedan 60 min');
-  assert.equal(infoRemaining.planText, '⏱️ 15 de 75 min programados (quedan 60 min por planificar)');
+  assert.equal(infoRemaining.planText, '⏱️ 15 de 75 min programados (quedan 60 min para completar entreno)');
   assert.equal(infoRemaining.status, 'remaining');
 
   // Caso completa: 60 min creados de 60 min programados
   const infoComplete = formatSessionDurationInfo(60, 60);
-  assert.equal(infoComplete.metaText, '⏱️ 60 min completos');
-  assert.equal(infoComplete.pillText, '60 min');
-  assert.equal(infoComplete.badgeText, 'Completa');
+  assert.equal(infoComplete.metaText, '⏱️ 60 / 60 min (sesión lista para empezar)');
+  assert.equal(infoComplete.pillText, '60 / 60 min');
+  assert.equal(infoComplete.badgeText, 'Sesión lista para empezar');
   assert.equal(infoComplete.status, 'complete');
 
   // Caso sobrante: 70 min creados de 60 min programados
@@ -132,7 +132,7 @@ test('formatSessionDurationInfo calcula minutos creados, programados y restantes
   // Con lista de bloques
   const infoBlocks = formatSessionDurationInfo([{ duration: 15 }, { duration: 30 }], 60);
   assert.equal(infoBlocks.total, 45);
-  assert.equal(infoBlocks.metaText, '⏱️ 45 / 60 min (quedan 15 min)');
+  assert.equal(infoBlocks.metaText, '⏱️ 45 / 60 min (quedan 15 min para completar entreno)');
 });
 
 test('sesiones existentes sin targetDuration asignan 75 min para Pilar y 60 min por defecto', () => {
@@ -144,7 +144,7 @@ test('formatSessionDurationInfo con pitch Pilar y sin targetDuration usa 75 min 
   assert.equal(infoPilar.total, 15);
   assert.equal(infoPilar.target, 75);
   assert.equal(infoPilar.diff, 60);
-  assert.equal(infoPilar.metaText, '⏱️ 15 / 75 min (quedan 60 min)');
+  assert.equal(infoPilar.metaText, '⏱️ 15 / 75 min (quedan 60 min para completar entreno)');
   assert.equal(infoPilar.pillText, '15 / 75 min');
   assert.equal(infoPilar.badgeText, 'Quedan 60 min');
 });

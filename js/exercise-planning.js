@@ -190,10 +190,10 @@ export function formatSessionDurationInfo(totalOrBlocks, targetDuration, pitch =
       total,
       target,
       diff: 0,
-      metaText: `⏱️ ${total} min completos`,
-      pillText: `${total} min`,
-      badgeText: 'Completa',
-      planText: `⏱️ ${total} min programados (completada)`,
+      metaText: `⏱️ ${total} / ${target} min (sesión lista para empezar)`,
+      pillText: `${total} / ${target} min`,
+      badgeText: 'Sesión lista para empezar',
+      planText: `⏱️ ${total} / ${target} min programados (sesión lista para empezar)`,
       status: 'complete',
     };
   }
@@ -202,10 +202,10 @@ export function formatSessionDurationInfo(totalOrBlocks, targetDuration, pitch =
       total,
       target,
       diff,
-      metaText: `⏱️ ${total} / ${target} min (quedan ${diff} min)`,
+      metaText: `⏱️ ${total} / ${target} min (quedan ${diff} min para completar entreno)`,
       pillText: `${total} / ${target} min`,
       badgeText: `Quedan ${diff} min`,
-      planText: `⏱️ ${total} de ${target} min programados (quedan ${diff} min por planificar)`,
+      planText: `⏱️ ${total} de ${target} min programados (quedan ${diff} min para completar entreno)`,
       status: 'remaining',
     };
   }

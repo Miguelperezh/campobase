@@ -47,6 +47,38 @@ export const PLAYER_COUNT_OPTIONS = Object.freeze([
   { id: '15+', label: '15+ jugadores (Fútbol 11 / Grupos amplios)', min: 15, max: 99 },
 ]);
 
+export const FORMATO_JUEGO_OPTIONS = Object.freeze([
+  { id: 'todos', label: 'Todos' },
+  { id: 'futbol_7', label: 'Fútbol 7' },
+  { id: 'futbol_11', label: 'Fútbol 11' },
+  { id: 'no_especificado', label: 'No especificado' },
+]);
+
+export function normalizeFormatoJuego(val) {
+  if (!val) return 'no_especificado';
+  const cleanStr = String(val)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const stripped = cleanStr.replace(/[\s_\-]+/g, '');
+
+  if (stripped === 'todos') {
+    return 'todos';
+  }
+  if (stripped === 'f7' || stripped === 'futbol7' || stripped === 'futbolsiete') {
+    return 'futbol_7';
+  }
+  if (stripped === 'f11' || stripped === 'futbol11' || stripped === 'futbolonce') {
+    return 'futbol_11';
+  }
+  if (stripped === 'noespecificado' || stripped === 'ninguno' || stripped === 'ambos') {
+    return 'no_especificado';
+  }
+  return 'no_especificado';
+}
+
 export const FORMAT_OPTIONS = Object.freeze([
   { id: 'F7', label: 'Fútbol 7 (F7)' },
   { id: 'F11', label: 'Fútbol 11 (F11)' },
@@ -285,10 +317,12 @@ export function buildExercise(values, metadata = {}) {
   if (!Number.isInteger(duration) || duration < 1 || duration > 240) throw new RangeError('La duración debe estar entre 1 y 240 minutos.');
   const difficulty = clean(values.difficulty) || 'Media';
   if (!EXERCISE_DIFFICULTIES.includes(difficulty)) throw new TypeError('Selecciona una dificultad válida.');
+  const formato_juego = normalizeFormatoJuego(values.formato_juego ?? values.format ?? metadata.formato_juego ?? metadata.format);
   return {
     id: metadata.id,
     name,
     category,
+    formato_juego,
     players: clean(values.players),
     material: clean(values.material),
     duration,
@@ -307,7 +341,8 @@ export function filterExercises(exercises, filters = {}) {
   if (!Array.isArray(exercises)) throw new TypeError('Los ejercicios deben ser una lista.');
   const material = clean(filters.material).toLocaleLowerCase('es');
   const players = clean(filters.players).toLocaleLowerCase('es');
-  const format = clean(filters.format).toUpperCase();
+  const formatVal = filters.formato_juego !== undefined ? filters.formato_juego : filters.format;
+  const queryText = clean(filters.text || filters.search || filters.query).toLocaleLowerCase('es');
 
   return exercises.filter((item) => {
     if (filters.category && item.category !== filters.category) return false;
@@ -315,17 +350,40 @@ export function filterExercises(exercises, filters = {}) {
     if (filters.favorites && !item.favorite) return false;
     if (filters.video && !item.video) return false;
 
-    // Filtro por formato F7 / F11
-    if (format) {
-      const text = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.space || ''}`.toLowerCase();
-      const numMatch = String(item.players || '').match(/\d+/);
-      const count = numMatch ? parseInt(numMatch[0], 10) : 8;
-      if (format === 'F7') {
-        const isF11Exclusive = count >= 16 && (text.includes('11x11') || text.includes('11v11') || text.includes('fútbol 11') || text.includes('f11'));
-        if (isF11Exclusive) return false;
-      } else if (format === 'F11') {
-        const isF7Exclusive = count <= 2 && (text.includes('parejas') || text.includes('sombreado') || text.includes('individual'));
-        if (isF7Exclusive) return false;
+    // Filtro por texto si se especifica
+    if (queryText) {
+      const haystack = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.material || ''} ${item.space || ''}`.toLocaleLowerCase('es');
+      if (!haystack.includes(queryText)) return false;
+    }
+
+    // Filtro por formato (Fútbol 7, Fútbol 11, No especificado, Todos)
+    if (formatVal !== undefined && formatVal !== '' && formatVal !== 'todos' && formatVal !== 'Todos') {
+      const targetNorm = normalizeFormatoJuego(formatVal);
+      if (targetNorm !== 'todos') {
+        const itemFormato = normalizeFormatoJuego(item.formato_juego || item.formato);
+        if (targetNorm === 'no_especificado') {
+          // Solo ejercicios sin formato explícito asignado
+          if (itemFormato !== 'no_especificado') return false;
+        } else if (targetNorm === 'futbol_7' || targetNorm === 'futbol_11') {
+          if (item.formato_juego || item.formato) {
+            if (itemFormato !== targetNorm) return false;
+          } else if (filters.formato_juego !== undefined) {
+            // Bajo el nuevo filtro canónico, los ejercicios sin formato asignado son "no_especificado", no coinciden
+            return false;
+          } else {
+            // Retrocompatibilidad heurística SOLO para llamadas legacy de tests antiguas sin formato_juego
+            const text = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.space || ''}`.toLowerCase();
+            const numMatch = String(item.players || '').match(/\d+/);
+            const count = numMatch ? parseInt(numMatch[0], 10) : 8;
+            if (String(formatVal).toUpperCase() === 'F7') {
+              const isF11Exclusive = count >= 16 && (text.includes('11x11') || text.includes('11v11') || text.includes('fútbol 11') || text.includes('f11'));
+              if (isF11Exclusive) return false;
+            } else if (String(formatVal).toUpperCase() === 'F11') {
+              const isF7Exclusive = count <= 2 && (text.includes('parejas') || text.includes('sombreado') || text.includes('individual'));
+              if (isF7Exclusive) return false;
+            }
+          }
+        }
       }
     }
 

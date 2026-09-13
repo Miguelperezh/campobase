@@ -2,6 +2,8 @@
 // Generado automáticamente desde la Biblioteca V2 normalizada.
 // Fuente de verdad: 248 ejercicios canónicos con vídeos MP4, previews, 17 secciones y leyenda visual.
 
+import { normalizeFormatoJuego } from './training-domain.js';
+
 export const EJERCICIOS_VALIDADOS = Object.freeze(
 [
   {
@@ -64435,11 +64437,16 @@ export function toCampoBaseExercise(item) {
     materialStr = item.materiales.map(m => (m.cantidad ? m.cantidad + ' ' : '') + m.nombre).join(', ');
   }
 
+  const rawFormato = item.formato_juego || item.clasificacion?.formato_juego || item.formato || item.format;
+  const formato_juego = normalizeFormatoJuego(rawFormato);
+
   return {
     id: item.id,
     recordType: 'exercise',
     name: item.nombre,
     category: item.categoria || 'Técnico-táctico',
+    formato_juego,
+    format: formato_juego === 'futbol_7' ? 'F7' : (formato_juego === 'futbol_11' ? 'F11' : 'Ambos'),
     players: playersStr,
     material: materialStr,
     duration: parseDuration(dr.duracion),
