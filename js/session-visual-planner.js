@@ -226,7 +226,7 @@ function genericDetailCard(exercise, videos = []) {
   const item = completeExercise(exercise);
   const list = (items) => `<ul class="plain-list">${asTextList(items).map((value) => `<li>${esc(value)}</li>`).join('')}</ul>`;
   return `<article class="panel exercise-card session-generic-detail">
-    <div class="exercise-card-head"><div><span class="pill">${esc(item.category)}</span>${item.code ? `<span class="pill accent">${esc(item.code)}</span>` : ''}<h2>${esc(item.name)}</h2></div></div>
+    <div class="exercise-card-head"><div><span class="pill">${esc(item.category)}</span><h2>${esc(item.name)}</h2></div></div>
     <div class="exercise-highlights"><span>${esc(item.players)}</span><span class="pill accent">${Number(item.duration) || 0} min</span><span class="meta">${esc(item.space)}</span></div>
     ${renderBoardDiagrams(item)}
     ${videos.length ? renderVideoSectionHTML(videos, { exerciseId: exercise.id }) : ''}
@@ -277,7 +277,7 @@ async function renderSessionDetail(sessionId) {
   body.innerHTML = `
     <div class="session-visual-detail" data-session-id="${esc(session.id)}">
       <div class="session-detail-summary panel">
-        <div><strong>${esc(formatDate(session.date))}</strong><span>${session.blocks?.length || 0} ejercicios · ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
+        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
         <button type="button" class="edit-session secondary" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
       </div>
       <div class="session-detail-exercises">

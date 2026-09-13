@@ -44,12 +44,13 @@ function duration(text, fallback = 10) {
 
 function cover(item) {
   const frames = String(item?.animacion?.frames || '');
-  return frames ? `${frames}000.jpg` : '';
+  if (frames) return `${frames}000.jpg`;
+  return item?.media?.preview || item?.preview || item?.validated?.media?.preview || '';
 }
 
 function animationVideo(item) {
   const animation = item?.animacion || {};
-  return String(animation.mp4 || (animation.gif || '').replace(/\.gif$/i, '.mp4') || '');
+  return String(item?.media?.video || animation.mp4 || (animation.gif || '').replace(/\.gif$/i, '.mp4') || '');
 }
 
 function validatedText(item) {
@@ -57,6 +58,13 @@ function validatedText(item) {
   const detail = item?.detalle || {};
   return [
     item?.nombre,
+    item?.categoria,
+    item?.objetivo_principal,
+    ...(Array.isArray(item?.que_se_trabaja) ? item.que_se_trabaja : [item?.que_se_trabaja]),
+    ...(Array.isArray(item?.objetivos_secundarios) ? item.objetivos_secundarios : []),
+    item?.consignas,
+    item?.variantes,
+    item?.materiales,
     quick.tipo_principal,
     ...(quick.que_se_trabaja || []),
     quick.explicacion_breve,
@@ -82,11 +90,11 @@ function itemFromCard(card) {
   return {
     id,
     name: validated?.nombre || name,
-    type: quick.tipo_principal || pills[0] || 'Otros',
-    duration: duration(quick.tiempo_estimado_15 || durationText),
-    durationText: quick.tiempo_estimado_15 || durationText || '—',
-    works: quick.que_se_trabaja || [],
-    brief: quick.explicacion_breve || card.textContent?.trim() || name,
+    type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
+    duration: duration(quick.tiempo_estimado_15 || validated?.duracion_min || durationText),
+    durationText: quick.tiempo_estimado_15 || (validated?.duracion_min ? `${validated.duracion_min} min` : durationText) || '—',
+    works: quick.que_se_trabaja || (validated?.que_se_trabaja ? (Array.isArray(validated.que_se_trabaja) ? validated.que_se_trabaja : [validated.que_se_trabaja]) : []),
+    brief: quick.explicacion_breve || validated?.objetivo_principal || card.textContent?.trim() || name,
     search: norm(validated ? validatedText(validated) : card.textContent || name),
     cover: cover(validated),
     animationVideo: animationVideo(validated),

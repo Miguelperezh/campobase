@@ -2179,6 +2179,11 @@ function syncSessionDraft() {
   if (values.dateDay && values.dateMonth && values.dateYear) {
     values.date = composeDate(values.dateDay, values.dateMonth, values.dateYear);
   }
+  try {
+    values.time = composeTime24(form.elements.timeHour?.value, form.elements.timeMinute?.value, false);
+  } catch {
+    values.time = '';
+  }
   sessionDraftMeta = { ...sessionDraftMeta, ...values };
   sessionDraftBlocks = $$('.session-block', form).map((row) => ({
     type: row.querySelector('[name="blockType"]').value,
@@ -2210,15 +2215,15 @@ function renderSessionDraft() {
   root.classList.remove('hidden');
   const picker = `<div class="session-exercise-picker"><h3>Añadir ejercicios</h3><p class="meta">Pulsa <strong>+ Añadir</strong> en cada ejercicio. Entra como calentamiento, parte principal o juego final según su categoría.</p><div class="exercise-grid">${state.exercises.map((rawItem) => {
     const item = completeExercise(rawItem);
-    return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
+    return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><div class="form-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const existing = state.trainingSessions.find(({ id }) => id === editId);
   const today = new Date().toISOString().slice(0, 10);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', name: seedMeta.name || '', targetDuration: 60, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
@@ -2236,8 +2241,10 @@ function openAddToSession(exerciseId) {
   form.elements.dateDay.value = String(today.getDate()).padStart(2, '0');
   form.elements.dateMonth.value = String(today.getMonth() + 1).padStart(2, '0');
   form.elements.dateYear.value = String(today.getFullYear());
+  if (form.elements.timeHour) form.elements.timeHour.innerHTML = selectOptions(24, 1, '', true);
+  if (form.elements.timeMinute) form.elements.timeMinute.innerHTML = selectOptions(60, 1, '', true);
   form.elements.existingSessionId.innerHTML = state.trainingSessions.length
-    ? sortTrainingSessions(state.trainingSessions).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))} · ${session.totalDuration} min</option>`).join('')
+    ? sortTrainingSessions(state.trainingSessions).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.totalDuration} min</option>`).join('')
     : '<option value="">No hay sesiones guardadas</option>';
   $('#add-session-dialog').showModal();
 }
@@ -2259,8 +2266,14 @@ async function saveAddToSession(event) {
     return;
   }
   if (!values.name.trim()) throw new TypeError('Escribe el nombre de la nueva sesión.');
+  let time = '';
+  try {
+    time = composeTime24(values.timeHour, values.timeMinute, false);
+  } catch {
+    time = '';
+  }
   $('#add-session-dialog').close();
-  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), name: values.name });
+  sessionBuilder('', exercise.id, { date: composeDate(values.dateDay, values.dateMonth, values.dateYear), time, name: values.name });
 }
 
 async function saveTrainingSession(event) {
@@ -2344,7 +2357,34 @@ function showExerciseDetail(exerciseId) {
 
 function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions);
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `<article class="panel"><div class="section-head"><div><span class="pill accent">${session.totalDuration} min</span><h3><button type="button" class="view-session link-button" data-id="${session.id}" aria-label="Ver sesión ${escapeHtml(session.name)}">${escapeHtml(session.name)}</button></h3><p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques</p></div><div class="button-row"><button type="button" class="view-session secondary" data-id="${session.id}">Ver</button><button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button><button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button></div></div><ol class="session-plan">${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}</ol>${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}</article>`).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
+  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => `
+    <article class="panel session-card" data-session-id="${session.id}">
+      <div class="section-head">
+        <div>
+          <span class="pill accent">${session.totalDuration} min</span>
+          <h3><button type="button" class="view-session link-button" data-id="${session.id}" aria-label="Ver sesión ${escapeHtml(session.name)}">${escapeHtml(session.name)}</button></h3>
+          <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.blocks.length} bloques</p>
+        </div>
+        <div class="button-row">
+          <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
+          <button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button>
+          <button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button>
+        </div>
+      </div>
+      <div class="session-collapsible-header">
+        <button type="button" class="toggle-session-blocks secondary compact" data-session-id="${session.id}" aria-expanded="false">
+          <span class="toggle-icon">▼</span> <span class="toggle-text">Desplegar ejercicios (${session.blocks.length})</span>
+        </button>
+      </div>
+      <div class="session-plan-collapsible is-collapsed" id="session-plan-${session.id}">
+        <ol class="session-plan">
+          ${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}
+        </ol>
+        ${session.material ? `<p class="session-meta-line"><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}
+        ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
+      </div>
+    </article>
+  `).join('') : empty('Todavía no hay sesiones de entrenamiento guardadas.');
 }
 
 function showSessionDetail(sessionId) {
@@ -2353,11 +2393,37 @@ function showSessionDetail(sessionId) {
   $('#session-detail-title').textContent = session.name || 'Sesión de entrenamiento';
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
   $('#session-detail-body').innerHTML = `
-    <p class="meta">${escapeHtml(localDate(session.date))} · ${session.blocks.length} bloques · ${status.total} / ${session.targetDuration || 60} min</p>
-    <ol class="session-plan">${session.blocks.map((block) => `<li><div class="session-exercise-row"><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button><button type="button" class="view-exercise secondary compact" data-exercise-id="${block.exerciseId}">Ver</button></div></li>`).join('')}</ol>
-    ${session.material ? `<p><strong>Material:</strong> ${escapeHtml(session.material)}</p>` : ''}
-    ${session.notes ? `<p><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
-    <p class="meta">Pulsa en un ejercicio o en «Ver» para verlo completo con su explicación.</p>`;
+    <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.blocks.length} bloques · ${status.total} / ${session.targetDuration || 60} min</p>
+    <div class="session-detail-blocks-list">
+      ${session.blocks.map((block) => {
+        const validated = findValidatedExercise(block.exerciseId);
+        const name = validated?.nombre || exerciseName(block.exerciseId);
+        const previewImg = validated?.media?.preview || '';
+        const videoSrc = validated?.media?.video || validated?.video || '';
+        const category = validated?.categoria || (block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final');
+        return `<article class="session-block-card">
+          <div class="session-block-card-main">
+            ${previewImg ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>` : ''}
+            <div class="session-block-card-info">
+              <div class="session-block-card-tags">
+                <span class="pill">${sessionBlockLabel(block.type)}</span>
+                <span class="pill accent">${block.duration} min</span>
+                ${videoSrc ? '<span class="pill pill-video">🎬 Vídeo MP4</span>' : ''}
+              </div>
+              <h4 class="session-block-card-title">${escapeHtml(name)}</h4>
+              <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
+              ${block.notes ? `<p class="session-block-notes"><strong>Consignas:</strong> ${escapeHtml(block.notes)}</p>` : ''}
+            </div>
+          </div>
+          <div class="session-block-card-action">
+            <button type="button" class="view-exercise primary compact" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(name)} con animación y vídeo MP4">🎬 Ver ejercicio con MP4</button>
+          </div>
+        </article>`;
+      }).join('')}
+    </div>
+    ${session.material ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(session.material)}</p>` : ''}
+    ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
+    <p class="meta">Pulsa en «Ver ejercicio con MP4» para abrir la animación interactiva, lupa por zonas y reproductor.</p>`;
   $('#session-detail-dialog').showModal();
 }
 
@@ -3709,6 +3775,23 @@ function wireEvents() {
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
     if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
     if (target.matches('.view-session')) showSessionDetail(target.dataset.id);
+    const toggleBtn = target.closest('.toggle-session-blocks');
+    if (toggleBtn) {
+      const sessionId = toggleBtn.dataset.sessionId;
+      const content = document.getElementById(`session-plan-${sessionId}`);
+      if (content) {
+        const isCollapsed = content.classList.contains('is-collapsed');
+        content.classList.toggle('is-collapsed', !isCollapsed);
+        toggleBtn.setAttribute('aria-expanded', String(isCollapsed));
+        const icon = toggleBtn.querySelector('.toggle-icon');
+        const text = toggleBtn.querySelector('.toggle-text');
+        const session = state.trainingSessions.find((s) => s.id === sessionId);
+        const count = session?.blocks?.length || 0;
+        if (icon) icon.textContent = isCollapsed ? '▲' : '▼';
+        if (text) text.textContent = isCollapsed ? `Replegar ejercicios (${count})` : `Desplegar ejercicios (${count})`;
+      }
+      return;
+    }
     const viewExBtn = target.closest('.session-exercise-link, .view-exercise');
     if (viewExBtn && viewExBtn.dataset.exerciseId) {
       showExerciseDetail(viewExBtn.dataset.exerciseId);
