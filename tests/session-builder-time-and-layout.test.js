@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { buildFlexibleTrainingSession } from '../js/exercise-planning.js';
+import { buildFlexibleTrainingSession, formatSessionDurationInfo } from '../js/exercise-planning.js';
 
 const appSource = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const plannerSource = fs.readFileSync(new URL('../js/session-planner-ui.js', import.meta.url), 'utf8');
@@ -97,8 +97,41 @@ test('el formulario de sesión y el diálogo de añadir ejercicio permiten intro
   assert.match(stylesSource, /\.session-details-row/);
 });
 
-test('las tarjetas de sesión muestran el campo y la duración claramente en la línea meta', () => {
+test('las tarjetas de sesión muestran el campo y la duración claramente en la línea meta con tiempo programado y restante', () => {
   assert.match(appSource, /session\.pitch \? ` · 🏟️ \$\{escapeHtml\(session\.pitch\)\}` : ''/);
-  assert.match(appSource, /⏱️ \$\{session\.totalDuration\} min/);
+  assert.match(appSource, /durationInfo\.metaText/);
   assert.match(appSource, /Material total \(calculado automáticamente/);
 });
+
+test('formatSessionDurationInfo calcula minutos creados, programados y restantes', () => {
+  // Caso exacto del usuario: 75 min programados, 15 min creados -> quedan 60 min
+  const infoRemaining = formatSessionDurationInfo(15, 75);
+  assert.equal(infoRemaining.total, 15);
+  assert.equal(infoRemaining.target, 75);
+  assert.equal(infoRemaining.diff, 60);
+  assert.equal(infoRemaining.metaText, '⏱️ 15 / 75 min (quedan 60 min)');
+  assert.equal(infoRemaining.pillText, '15 / 75 min');
+  assert.equal(infoRemaining.badgeText, 'Quedan 60 min');
+  assert.equal(infoRemaining.planText, '⏱️ 15 de 75 min programados (quedan 60 min por planificar)');
+  assert.equal(infoRemaining.status, 'remaining');
+
+  // Caso completa: 60 min creados de 60 min programados
+  const infoComplete = formatSessionDurationInfo(60, 60);
+  assert.equal(infoComplete.metaText, '⏱️ 60 min completos');
+  assert.equal(infoComplete.pillText, '60 min');
+  assert.equal(infoComplete.badgeText, 'Completa');
+  assert.equal(infoComplete.status, 'complete');
+
+  // Caso sobrante: 70 min creados de 60 min programados
+  const infoExceeded = formatSessionDurationInfo(70, 60);
+  assert.equal(infoExceeded.metaText, '⏱️ 70 / 60 min (sobran 10 min)');
+  assert.equal(infoExceeded.pillText, '70 / 60 min');
+  assert.equal(infoExceeded.badgeText, 'Sobran 10 min');
+  assert.equal(infoExceeded.status, 'exceeded');
+
+  // Con lista de bloques
+  const infoBlocks = formatSessionDurationInfo([{ duration: 15 }, { duration: 30 }], 60);
+  assert.equal(infoBlocks.total, 45);
+  assert.equal(infoBlocks.metaText, '⏱️ 45 / 60 min (quedan 15 min)');
+});
+

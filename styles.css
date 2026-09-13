@@ -33,6 +33,7 @@
 #player-stats-dialog{width:min(620px,calc(100% - 2rem))}.stats-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin:1rem 0}.edit-player-stats{width:100%;margin-bottom:.35rem}@media(max-width:520px){.stats-edit-grid{grid-template-columns:1fr}}
 /* ===== Preparación de partido ===== */
 .pill.ok{background:#e6f4ea;color:var(--green,#173f35)}
+.pill.warning{background:#fff0d8;color:#704600}
 /* ===== Media de liga en la ficha de plantilla ===== */
 .liga-media{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;height:58px;border-radius:16px;background:var(--brand);color:#fff;font-weight:800;line-height:1}.liga-media .valor{font-size:1.15rem}.liga-media .etiqueta{font-size:.55rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:.15rem}
 /* ===== Guía táctica del manual (ficha completa por bloques) ===== */

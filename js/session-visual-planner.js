@@ -3,7 +3,7 @@ import { EXERCISE_CATEGORIES } from './training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { renderVideoSectionHTML, videoPublicUrl } from './ejercicio-videos.js';
-import { calculateSessionTotalMaterial, completeExercise, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -272,13 +272,13 @@ async function renderSessionDetail(sessionId) {
   const session = snapshot.sessions.find((item) => item.id === sessionId);
   if (!session || !dialog.open) return;
   const exercisesById = new Map(snapshot.exercises.map((item) => [item.id, item]));
-  const status = sessionDurationStatus(session.blocks || [], session.targetDuration);
+  const durationInfo = formatSessionDurationInfo(session.blocks || [], session.targetDuration);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, snapshot.exercises);
 
   body.innerHTML = `
     <div class="session-visual-detail" data-session-id="${esc(session.id)}">
       <div class="session-detail-summary panel">
-        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}${session.pitch ? ` · 🏟️ ${esc(session.pitch)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ⏱️ ${status.total} / ${Number(session.targetDuration) || 60} min</span></div>
+        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}${session.pitch ? ` · 🏟️ ${esc(session.pitch)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ${durationInfo.metaText}</span></div>
         <button type="button" class="edit-session secondary" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
       </div>
       ${session.pitch ? `<div class="panel"><strong>Campo de entrenamiento</strong><p>🏟️ ${esc(session.pitch)}</p></div>` : ''}

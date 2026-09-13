@@ -4699,3 +4699,13 @@ div:has(> .date-24) {
   }
 }
 
+.pill.warning {
+  background: #fff0d8 !important;
+  color: #704600 !important;
+}
+
+.pill.ok {
+  background: #e6f4ea !important;
+  color: var(--green, #173f35) !important;
+}
+

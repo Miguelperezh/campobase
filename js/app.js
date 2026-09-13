@@ -3,7 +3,7 @@ import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
-import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
@@ -2375,13 +2375,18 @@ function renderTrainingSessions() {
   const sessions = sortTrainingSessions(state.trainingSessions);
   $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
+    const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration);
+    const badgeExtra = durationInfo.badgeText
+      ? `<span class="pill ${durationInfo.status === 'remaining' || durationInfo.status === 'exceeded' ? 'warning' : 'ok'}">${escapeHtml(durationInfo.badgeText)}</span>`
+      : '';
     return `
     <article class="panel session-card" data-session-id="${session.id}">
       <div class="section-head">
         <div>
-          <span class="pill accent">${session.totalDuration} min</span>
+          <span class="pill accent">${durationInfo.pillText}</span>
+          ${badgeExtra}
           <h3><button type="button" class="view-session link-button" data-id="${session.id}" aria-label="Ver sesión ${escapeHtml(session.name)}">${escapeHtml(session.name)}</button></h3>
-          <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ⏱️ ${session.totalDuration} min · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
+          <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
         </div>
         <div class="button-row">
           <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
@@ -2398,6 +2403,7 @@ function renderTrainingSessions() {
         <ol class="session-plan">
           ${session.blocks.map((block) => `<li><button type="button" class="session-exercise-link" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(exerciseName(block.exerciseId))}"><strong>${block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final'} · ${block.duration} min</strong><span>${escapeHtml(exerciseName(block.exerciseId))}</span>${block.notes ? `<small>${escapeHtml(block.notes)}</small>` : ''}</button></li>`).join('')}
         </ol>
+        <p class="session-meta-line"><strong>Duración:</strong> ${escapeHtml(durationInfo.planText)}</p>
         ${session.pitch ? `<p class="session-meta-line"><strong>Campo de entrenamiento:</strong> 🏟️ ${escapeHtml(session.pitch)}</p>` : ''}
         ${materialText ? `<p class="session-meta-line"><strong>Material:</strong> ${escapeHtml(materialText)}</p>` : ''}
         ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
@@ -2411,10 +2417,10 @@ function showSessionDetail(sessionId) {
   const session = state.trainingSessions.find(({ id }) => id === sessionId);
   if (!session) return toast('La sesión ya no está disponible.');
   $('#session-detail-title').textContent = session.name || 'Sesión de entrenamiento';
-  const status = sessionDurationStatus(session.blocks, session.targetDuration);
+  const durationInfo = formatSessionDurationInfo(session.blocks, session.targetDuration);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
   $('#session-detail-body').innerHTML = `
-    <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ⏱️ ${status.total} / ${session.targetDuration || 60} min · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
+    <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
     <div class="session-detail-blocks-list">
       ${session.blocks.map((block) => {
         const validated = findValidatedExercise(block.exerciseId);

@@ -169,10 +169,28 @@ function sessionCard(session, trainings, today) {
   const attendance = attendanceForSession(trainings, session.id);
   const isToday = dateOnly(session.date) === today;
   const blocks = Array.isArray(session.blocks) ? session.blocks.length : 0;
+  const total = sessionMinutes(session);
+  const target = Number(session?.targetDuration) || 0;
+  let durationStr = `${total} min`;
+  let remainingBadge = '';
+  if (target > 0) {
+    const diff = target - total;
+    if (diff > 0) {
+      durationStr = `${total} / ${target} min (quedan ${diff} min)`;
+      remainingBadge = `<span class="pill today-warning">Quedan ${diff} min</span>`;
+    } else if (diff < 0) {
+      const surplus = Math.abs(diff);
+      durationStr = `${total} / ${target} min (sobran ${surplus} min)`;
+      remainingBadge = `<span class="pill today-warning">Sobran ${surplus} min</span>`;
+    } else {
+      durationStr = `${total} min completos`;
+      remainingBadge = `<span class="pill today-ok">Completa</span>`;
+    }
+  }
   return `<article class="panel today-event session">
-    <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(session.date))}</span><span class="pill">Entrenamiento</span>${attendance ? '<span class="pill today-ok">Asistencia hecha</span>' : '<span class="pill today-warning">Asistencia pendiente</span>'}</div>
+    <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(session.date))}</span><span class="pill">Entrenamiento</span>${remainingBadge}${attendance ? '<span class="pill today-ok">Asistencia hecha</span>' : '<span class="pill today-warning">Asistencia pendiente</span>'}</div>
     <h3>${esc(sessionTitle(session))}</h3>
-    <div class="today-event-meta"><span><strong>${sessionMinutes(session)} min</strong> · ${blocks} ${blocks === 1 ? 'ejercicio' : 'ejercicios'}</span>${session.material ? `<span>Material: ${esc(session.material)}</span>` : ''}</div>
+    <div class="today-event-meta">${session.time ? `<span>⏰ ${esc(session.time)}</span>` : ''}<span><strong>⏱️ ${esc(durationStr)}</strong> · ${blocks} ${blocks === 1 ? 'ejercicio' : 'ejercicios'}</span>${session.pitch ? `<span>🏟️ ${esc(session.pitch)}</span>` : ''}${session.material ? `<span>Material: ${esc(session.material)}</span>` : ''}</div>
     <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}</div>
   </article>`;
 }

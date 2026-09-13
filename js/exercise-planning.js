@@ -175,6 +175,65 @@ export function sessionDurationStatus(blocks = [], target = 60) {
   return { total, difference, exact, message };
 }
 
+export function formatSessionDurationInfo(totalOrBlocks, targetDuration) {
+  const target = Number(targetDuration) > 0 ? Number(targetDuration) : 0;
+  const total = Array.isArray(totalOrBlocks)
+    ? totalOrBlocks.reduce((sum, block) => sum + (Number(block?.duration) || 0), 0)
+    : (Number(totalOrBlocks) || 0);
+
+  if (!target) {
+    const minText = `${total} min`;
+    return {
+      total,
+      target: total,
+      diff: 0,
+      metaText: `⏱️ ${minText}`,
+      pillText: minText,
+      badgeText: '',
+      planText: `⏱️ ${minText}`,
+      status: 'none',
+    };
+  }
+
+  const diff = target - total;
+  if (diff === 0) {
+    return {
+      total,
+      target,
+      diff: 0,
+      metaText: `⏱️ ${total} min completos`,
+      pillText: `${total} min`,
+      badgeText: 'Completa',
+      planText: `⏱️ ${total} min programados (completada)`,
+      status: 'complete',
+    };
+  }
+  if (diff > 0) {
+    return {
+      total,
+      target,
+      diff,
+      metaText: `⏱️ ${total} / ${target} min (quedan ${diff} min)`,
+      pillText: `${total} / ${target} min`,
+      badgeText: `Quedan ${diff} min`,
+      planText: `⏱️ ${total} de ${target} min programados (quedan ${diff} min por planificar)`,
+      status: 'remaining',
+    };
+  }
+
+  const surplus = Math.abs(diff);
+  return {
+    total,
+    target,
+    diff,
+    metaText: `⏱️ ${total} / ${target} min (sobran ${surplus} min)`,
+    pillText: `${total} / ${target} min`,
+    badgeText: `Sobran ${surplus} min`,
+    planText: `⏱️ ${total} de ${target} min programados (sobran ${surplus} min)`,
+    status: 'exceeded',
+  };
+}
+
 export function normalizeMaterialKey(rawName) {
   let text = clean(rawName).toLowerCase();
   text = text.replace(/\s*\([^)]*\)/g, '').trim();
