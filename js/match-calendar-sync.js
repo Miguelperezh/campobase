@@ -159,6 +159,18 @@ export function initMatchCalendarSync() {
   scheduleEnhance();
 }
 
+export function partitionAndSortMatches(matches) {
+  if (!Array.isArray(matches)) throw new TypeError('Los partidos deben ser una lista.');
+  const isPlayed = (match) => match?.status === 'finished' || (Number.isFinite(match?.goalsFor) && Number.isFinite(match?.goalsAgainst));
+  const upcoming = matches
+    .filter((match) => !isPlayed(match))
+    .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
+  const played = matches
+    .filter(isPlayed)
+    .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
+  return { upcoming, played };
+}
+
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMatchCalendarSync, { once: true });
   else initMatchCalendarSync();

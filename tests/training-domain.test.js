@@ -130,8 +130,14 @@ test('crea una sesión con calentamiento, dos o tres ejercicios y juego final', 
   assert.throws(() => buildTrainingSession({ ...session, mainExerciseIds: ['e1'] }, { availableExerciseIds: ['e1'] }), /2 o 3/i);
 });
 
-test('lista sesiones por fecha descendente sin mutar la entrada', () => {
-  const sessions = [{ id: 'a', date: '2026-09-01' }, { id: 'b', date: '2026-09-03' }];
-  assert.deepEqual(sortTrainingSessions(sessions).map(({ id }) => id), ['b', 'a']);
-  assert.deepEqual(sessions.map(({ id }) => id), ['a', 'b']);
+test('lista sesiones con los próximos arriba por orden de fecha sin mutar la entrada', () => {
+  const sessions = [
+    { id: 'past', date: '2026-09-10' },
+    { id: 'today', date: '2026-09-14' },
+    { id: 'future', date: '2026-09-17' },
+    { id: 'tomorrow', date: '2026-09-15' },
+  ];
+  const sorted = sortTrainingSessions(sessions, '2026-09-14');
+  assert.deepEqual(sorted.map(({ id }) => id), ['today', 'tomorrow', 'future', 'past']);
+  assert.deepEqual(sessions.map(({ id }) => id), ['past', 'today', 'future', 'tomorrow']);
 });

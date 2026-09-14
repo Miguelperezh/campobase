@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { inferSubstitutionPositions, lineupForMatch } from '../js/match-calendar-sync.js';
+import { inferSubstitutionPositions, lineupForMatch, partitionAndSortMatches } from '../js/match-calendar-sync.js';
 
 test('Calendario recupera el siete inicial desde Preparación cuando el partido no tiene snapshot propio', () => {
   const match = { id: 'm1' };
@@ -47,4 +47,18 @@ test('las posiciones explícitas guardadas en Calendario tienen prioridad sobre 
   }], lineup);
   assert.deepEqual(event.outPositions, ['Central']);
   assert.deepEqual(event.inPositions, ['Pivote']);
+});
+
+test('partitionAndSortMatches separa próximos de jugados con los más próximos arriba en orden de fecha', () => {
+  const matches = [
+    { id: 'm-upcoming-2', date: '2026-09-26T10:00', status: 'planned' },
+    { id: 'm-played-1', date: '2026-09-05T09:00', status: 'finished', goalsFor: 1, goalsAgainst: 6 },
+    { id: 'm-upcoming-1', date: '2026-09-20T09:00', status: 'planned' },
+    { id: 'm-played-2', date: '2026-09-09T18:00', status: 'finished', goalsFor: 3, goalsAgainst: 5 },
+  ];
+  const { upcoming, played } = partitionAndSortMatches(matches);
+  assert.deepEqual(upcoming.map((m) => m.id), ['m-upcoming-1', 'm-upcoming-2']);
+  assert.deepEqual(played.map((m) => m.id), ['m-played-1', 'm-played-2']);
+  // Asegura inmutabilidad
+  assert.equal(matches[0].id, 'm-upcoming-2');
 });

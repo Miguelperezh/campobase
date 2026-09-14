@@ -4743,3 +4743,74 @@ div:has(> .date-24) {
   gap: 0.5rem !important;
 }
 
+/* Acordeón / Desplegable Partidos Jugados */
+.played-matches-accordion {
+  margin-top: 1.2rem !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  border-radius: 16px !important;
+  background: var(--card, #ffffff) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.played-matches-summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.95rem 1.15rem !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  background: var(--paper, #f8fafc) !important;
+  transition: background-color 0.2s ease !important;
+  list-style: none !important;
+}
+
+.played-matches-summary::-webkit-details-marker {
+  display: none !important;
+}
+
+.played-matches-summary:hover {
+  background: #f1f5f9 !important;
+}
+
+.played-matches-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+}
+
+.played-matches-title {
+  margin: 0 !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: var(--ink, #0f172a) !important;
+}
+
+.played-matches-count {
+  font-size: 0.88rem !important;
+  color: var(--muted, #64748b) !important;
+  font-weight: 600 !important;
+}
+
+.played-toggle-pill {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.75rem !important;
+}
+
+.played-matches-accordion .played-toggle-pill::after {
+  content: 'Desplegar';
+}
+
+.played-matches-accordion[open] .played-toggle-pill::after {
+  content: 'Plegar';
+}
+
+.played-matches-cards {
+  padding: 1rem !important;
+  gap: 0.85rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+

@@ -16,6 +16,7 @@ import { planSquadSeed } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
+import { partitionAndSortMatches } from './match-calendar-sync.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -1645,9 +1646,43 @@ async function saveMatch(event) {
   form.closest('dialog').close(); form.reset(); await refresh(); toast('Partido guardado.');
 }
 
+function renderMatchCard(match) {
+  const teams = matchTeams(match);
+  const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst;
+  const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst;
+  const hasScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst);
+  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
+}
+
 function renderMatches() {
-  const list = [...state.matches].sort((a,b)=>a.date.localeCompare(b.date));
-  $('#matches-list').innerHTML = list.length ? list.map((match) => { const teams = matchTeams(match); const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst; const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst; const hasScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst); return `<article class="panel"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`; }).join('') : empty('Añade el calendario de partidos manualmente.');
+  if (!state.matches.length) {
+    $('#matches-list').innerHTML = empty('Añade el calendario de partidos manualmente.');
+    return;
+  }
+  const { upcoming, played } = partitionAndSortMatches(state.matches);
+  const upcomingHtml = upcoming.map(renderMatchCard).join('');
+  const emptyUpcomingHtml = !upcoming.length && played.length
+    ? '<div class="panel empty-notice"><p class="meta">No hay próximos partidos programados.</p></div>'
+    : '';
+
+  const wasOpen = $('#played-matches-collapsible')?.open ?? false;
+  const playedHtml = played.length ? `
+    <details class="panel played-matches-accordion" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
+      <summary class="played-matches-summary">
+        <div class="played-matches-head">
+          <span class="pill accent">✓</span>
+          <h3 class="played-matches-title">Jugados</h3>
+          <span class="meta played-matches-count">(${played.length})</span>
+        </div>
+        <span class="pill secondary played-toggle-pill"></span>
+      </summary>
+      <div class="stack played-matches-cards">
+        ${played.map(renderMatchCard).join('')}
+      </div>
+    </details>
+  ` : '';
+
+  $('#matches-list').innerHTML = `${upcomingHtml}${emptyUpcomingHtml}${playedHtml}`;
 }
 
 function editMatch(id) {
@@ -2280,7 +2315,7 @@ function openAddToSession(exerciseId) {
   if (form.elements.timeHour) form.elements.timeHour.innerHTML = selectOptions(24, 1, '', true);
   if (form.elements.timeMinute) form.elements.timeMinute.innerHTML = selectOptions(60, 1, '', true);
   form.elements.existingSessionId.innerHTML = state.trainingSessions.length
-    ? sortTrainingSessions(state.trainingSessions).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.totalDuration} min</option>`).join('')
+    ? sortTrainingSessions(state.trainingSessions, localDateKey()).map((session) => `<option value="${session.id}">${escapeHtml(session.name)} · ${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''} · ${session.totalDuration} min</option>`).join('')
     : '<option value="">No hay sesiones guardadas</option>';
   $('#add-session-dialog').showModal();
 }
@@ -2398,7 +2433,7 @@ function showExerciseDetail(exerciseId) {
 }
 
 function renderTrainingSessions() {
-  const sessions = sortTrainingSessions(state.trainingSessions);
+  const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
   $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
     const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);

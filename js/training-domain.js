@@ -451,7 +451,37 @@ export function buildTrainingSession(values, metadata = {}) {
   };
 }
 
-export function sortTrainingSessions(sessions) {
+export function sortTrainingSessions(sessions, today = '') {
   if (!Array.isArray(sessions)) throw new TypeError('Las sesiones deben ser una lista.');
-  return [...sessions].sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  const todayKey = today || (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
+  return [...sessions].sort((a, b) => {
+    const dateA = String(a.date || '');
+    const dateB = String(b.date || '');
+    const isUpcomingA = Boolean(dateA && dateA >= todayKey);
+    const isUpcomingB = Boolean(dateB && dateB >= todayKey);
+
+    // Los próximos arriba
+    if (isUpcomingA && !isUpcomingB) return -1;
+    if (!isUpcomingA && isUpcomingB) return 1;
+
+    // Si ambos son próximos: de arriba abajo por orden de fecha (ascendente: hoy primero, luego mañana, etc.)
+    if (isUpcomingA && isUpcomingB) {
+      const cmp = dateA.localeCompare(dateB);
+      if (cmp !== 0) return cmp;
+      const timeCmp = String(a.time || '').localeCompare(String(b.time || ''));
+      if (timeCmp !== 0) return timeCmp;
+      return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+    }
+
+    // Si ambos son pasados: de arriba abajo por orden de fecha más reciente
+    const cmp = dateB.localeCompare(dateA);
+    if (cmp !== 0) return cmp;
+    const timeCmp = String(b.time || '').localeCompare(String(a.time || ''));
+    if (timeCmp !== 0) return timeCmp;
+    return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+  });
 }
