@@ -1,4 +1,5 @@
 import { getAll } from './db.js';
+import './completed-events-ui.js?v=2518';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
