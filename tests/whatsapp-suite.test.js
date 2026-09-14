@@ -90,7 +90,8 @@ test('buildWhatsAppMatchConvocatoria individual: NO convocado omite campo, hora 
   });
 
   assert.ok(msg.includes('Buenas tardes Carlos:'));
-  assert.ok(msg.includes('Thiago (Dorsal 4) NO está CONVOCADO'), 'Debe omitir el apellido para mensajes a padres');
+  assert.ok(msg.includes('*Thiago* *NO está CONVOCADO*'), 'Debe omitir apellido y dorsal para mensajes a padres y destacar con negrita');
+  assert.ok(!msg.includes('Dorsal'), 'No debe incluir dorsal en mensaje a padres');
   assert.ok(!msg.includes('Hora de citación:'), 'No convocado NO debe tener hora de citación');
   assert.ok(!msg.includes('Campo:'), 'No convocado NO debe tener campo');
   assert.ok(!msg.includes('espinilleras'), 'No convocado NO debe tener material');
@@ -119,7 +120,8 @@ test('buildWhatsAppMatchConvocatoria individual: SI convocado incluye citación,
   });
 
   assert.ok(msg.includes('Buenas noches Elena:'));
-  assert.ok(msg.includes('convocatoria para Thiago (Dorsal 4):'), 'Omite apellido en mensaje individual');
+  assert.ok(msg.includes('convocatoria para *Thiago*:'), 'Omite apellido y dorsal en mensaje individual');
+  assert.ok(!msg.includes('Dorsal 4'), 'No debe incluir dorsal para los padres');
   assert.ok(msg.includes('Hora de citación:'));
   assert.ok(msg.includes('Alfonso Silva'));
   assert.ok(msg.includes('espinilleras'));
@@ -176,7 +178,7 @@ test('buildWhatsAppMatchConvocatoria individual a Padre y Madre (ambos) usa prim
   });
 
   assert.ok(msgCanary.includes('Buenos días Carlos y Elena:'), 'Debe saludar a padre y madre juntos');
-  assert.ok(msgCanary.includes('Les comparto la información de la convocatoria para Thiago (Dorsal 4):'), '1.ª persona singular en canario con nombre de pila');
+  assert.ok(msgCanary.includes('Les comparto la información de la convocatoria para *Thiago*:'), '1.ª persona singular en canario con nombre de pila y sin dorsal');
   assert.ok(!msgCanary.includes('compartimos'), 'Nunca debe usar primera persona del plural (compartimos)');
   assert.ok(msgCanary.includes('espinilleras'));
   assert.ok(msgCanary.includes('¡Muchas gracias!'), 'Cierre individual sin a todos/as');
@@ -194,7 +196,7 @@ test('buildWhatsAppMatchConvocatoria individual a Padre y Madre (ambos) usa prim
     tone: 'peninsular',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgPeninsular.includes('Os comparto la información de la convocatoria para Thiago (Dorsal 4):'), '1.ª persona singular en peninsular con nombre de pila');
+  assert.ok(msgPeninsular.includes('Os comparto la información de la convocatoria para *Thiago*:'), '1.ª persona singular en peninsular con nombre de pila');
   assert.ok(!msgPeninsular.includes('compartimos'), 'Nunca debe usar primera persona del plural (compartimos)');
 
   // Individual a un solo progenitor (Te comparto)
@@ -209,7 +211,7 @@ test('buildWhatsAppMatchConvocatoria individual a Padre y Madre (ambos) usa prim
     tone: 'canary',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgSoloPadre.includes('Te comparto la información de la convocatoria para Thiago (Dorsal 4):'));
+  assert.ok(msgSoloPadre.includes('Te comparto la información de la convocatoria para *Thiago*:'));
 
   // Individual formal (Le comparto)
   const msgFormal = buildWhatsAppMatchConvocatoria({
@@ -223,7 +225,7 @@ test('buildWhatsAppMatchConvocatoria individual a Padre y Madre (ambos) usa prim
     tone: 'formal',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgFormal.includes('Le comparto la información de la convocatoria para Thiago (Dorsal 4):'));
+  assert.ok(msgFormal.includes('Le comparto la información de la convocatoria para *Thiago*:'));
 });
 
 test('buildWhatsAppMatchConvocatoria forzado a NO Convocado incluye motivo (rotación por defecto)', () => {
@@ -246,8 +248,9 @@ test('buildWhatsAppMatchConvocatoria forzado a NO Convocado incluye motivo (rota
   });
 
   assert.ok(msg.includes('Buenos días Carlos y Elena:'));
-  assert.ok(msg.includes('Les comunico que Thiago (Dorsal 4) NO está CONVOCADO'));
-  assert.ok(msg.includes('por rotación'), 'Debe incluir por rotación');
+  assert.ok(msg.includes('Les comunico que *Thiago* *NO está CONVOCADO*'));
+  assert.ok(!msg.includes('Dorsal 4'), 'No debe incluir dorsal');
+  assert.ok(msg.includes('por *rotación*'), 'Debe incluir por *rotación*');
   assert.ok(!msg.includes('comunicamos'), 'Nunca debe decir comunicamos');
   assert.ok(!msg.includes('Hora de citación:'));
   assert.ok(!msg.includes('espinilleras'));
@@ -271,8 +274,8 @@ test('buildWhatsAppMatchConvocatoria incluye motivos específicos: tarjetas, les
     exclusionReason: 'cards',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgCards.includes('Te comunico que Thiago (Dorsal 4) NO está CONVOCADO'));
-  assert.ok(msgCards.includes('por sanción de tarjetas'));
+  assert.ok(msgCards.includes('Te comunico que *Thiago* *NO está CONVOCADO*'));
+  assert.ok(msgCards.includes('por *sanción de tarjetas*'));
 
   // 2. Por lesión (con nota opcional)
   const msgInjured = buildWhatsAppMatchConvocatoria({
@@ -286,7 +289,7 @@ test('buildWhatsAppMatchConvocatoria incluye motivos específicos: tarjetas, les
     exclusionNote: 'esguince de tobillo',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgInjured.includes('por lesión (esguince de tobillo)'));
+  assert.ok(msgInjured.includes('por *lesión* (esguince de tobillo)'));
   assert.ok(msgInjured.includes('pronta recuperación'));
 
   // 3. Por no haber venido a entrenar
@@ -300,7 +303,7 @@ test('buildWhatsAppMatchConvocatoria incluye motivos específicos: tarjetas, les
     exclusionReason: 'training',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgTraining.includes('por no haber venido a entrenar'));
+  assert.ok(msgTraining.includes('por *no haber venido a entrenar*'));
   assert.ok(msgTraining.includes('próximas sesiones de entrenamiento'));
 
   // 4. Por decisión técnica
@@ -314,7 +317,7 @@ test('buildWhatsAppMatchConvocatoria incluye motivos específicos: tarjetas, les
     exclusionReason: 'coach_decision',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgCoach.includes('por decisión técnica'));
+  assert.ok(msgCoach.includes('por *decisión técnica*'));
 
   // 5. Motivo personalizado
   const msgCustom = buildWhatsAppMatchConvocatoria({
@@ -328,7 +331,7 @@ test('buildWhatsAppMatchConvocatoria incluye motivos específicos: tarjetas, les
     exclusionNote: 'viaje familiar',
     now: new Date('2026-09-20T10:00:00'),
   });
-  assert.ok(msgCustom.includes('por viaje familiar'));
+  assert.ok(msgCustom.includes('por *viaje familiar*') || msgCustom.includes('*viaje familiar*'));
 });
 
 test('getToneVerbs y formatExclusionReasonText cubren todas las combinaciones', () => {
@@ -353,17 +356,16 @@ test('getToneVerbs y formatExclusionReasonText cubren todas las combinaciones', 
   assert.equal(formalSingle.comunico, 'Le comunico');
   assert.equal(formalSingle.recuerdo, 'Le recuerdo');
 
-  // Formatos de motivos
-  assert.equal(formatExclusionReasonText('rotation'), 'por rotación');
-  assert.equal(formatExclusionReasonText('injured'), 'por lesión');
-  assert.equal(formatExclusionReasonText('cards'), 'por sanción de tarjetas');
-  assert.equal(formatExclusionReasonText('suspended'), 'por sanción de tarjetas');
-  assert.equal(formatExclusionReasonText('training'), 'por no haber venido a entrenar');
-  assert.equal(formatExclusionReasonText('missed_training'), 'por no haber venido a entrenar');
-  assert.equal(formatExclusionReasonText('sick'), 'por encontrarse indispuesto/a');
-  assert.equal(formatExclusionReasonText('coach_decision'), 'por decisión técnica');
-  assert.equal(formatExclusionReasonText('personal'), 'por motivos personales');
-  assert.equal(formatExclusionReasonText('custom', 'compromiso escolar'), 'por compromiso escolar');
+  // Formatos de motivos con negritas
+  assert.equal(formatExclusionReasonText('rotation'), 'por *rotación*');
+  assert.equal(formatExclusionReasonText('injured'), 'por *lesión*');
+  assert.equal(formatExclusionReasonText('cards'), 'por *sanción de tarjetas*');
+  assert.equal(formatExclusionReasonText('suspended'), 'por *sanción de tarjetas*');
+  assert.equal(formatExclusionReasonText('training'), 'por *no haber venido a entrenar*');
+  assert.equal(formatExclusionReasonText('missed_training'), 'por *no haber venido a entrenar*');
+  assert.equal(formatExclusionReasonText('sick'), 'por *encontrarse indispuesto/a*');
+  assert.equal(formatExclusionReasonText('coach_decision'), 'por *decisión técnica*');
+  assert.equal(formatExclusionReasonText('personal'), 'por *motivos personales*');
   assert.equal(formatExclusionReasonText('none'), '');
 });
 
@@ -445,7 +447,7 @@ test('getWeekDateRange calcula lunes a domingo de forma precisa', () => {
   assert.equal(rangeMonday.end, '2026-09-20');
 });
 
-test('tono peninsular_plural usa Os comunicamos / Os compartimos y omite apellidos', () => {
+test('tono peninsular_plural usa Os comunicamos / Os compartimos y omite apellidos y dorsal', () => {
   const match = { opponent: 'Gran Canaria Alevín', date: '2026-09-20' };
   const players = [
     { id: 'p1', name: 'Aitor Navarro', number: '11', fatherName: 'Carlos', motherName: 'Elena' },
@@ -463,15 +465,67 @@ test('tono peninsular_plural usa Os comunicamos / Os compartimos y omite apellid
     now: new Date('2026-09-20T10:00:00'),
   });
 
-  assert.ok(msgExcluded.includes('Os comunicamos que Aitor (Dorsal 11) NO está CONVOCADO'));
+  assert.ok(msgExcluded.includes('Os comunicamos que *Aitor* *NO está CONVOCADO*'));
   assert.ok(!msgExcluded.includes('Navarro'), 'No debe contener el apellido del jugador');
-  assert.ok(msgExcluded.includes('por rotación'));
+  assert.ok(!msgExcluded.includes('Dorsal 11'), 'No debe contener el dorsal');
+  assert.ok(msgExcluded.includes('por *rotación*'));
   assert.ok(msgExcluded.includes('¡Muchas gracias!'));
 
   const verbs = getToneVerbs({ tone: 'peninsular_plural', recipientType: 'group' });
   assert.equal(verbs.comunico, 'Os comunicamos');
   assert.equal(verbs.comparto, 'Os compartimos');
   assert.equal(verbs.recuerdo, 'Os recordamos');
+});
+
+test('saludo individual usa a la familia de [Jugador] si no hay nombre de progenitor (nunca Buenos días: a secas)', () => {
+  const match = { opponent: 'Guiniguada', date: '2026-09-20' };
+  const players = [
+    { id: 'p1', name: 'Aitor Navarro', number: '11' }, // Sin fatherName ni motherName
+  ];
+
+  const msgFather = buildWhatsAppMatchConvocatoria({
+    match,
+    players,
+    targetPlayerId: 'p1',
+    recipientType: 'parent',
+    parentType: 'father',
+    callupStatus: 'excluded',
+    exclusionReason: 'cards',
+    now: new Date('2026-09-20T10:00:00'),
+  });
+
+  assert.ok(msgFather.includes('Buenos días a la familia de Aitor:'), 'Debe saludar a la familia si no hay nombre');
+  assert.ok(!msgFather.startsWith('Buenos días:\n\n'), 'Nunca debe dejar Buenos días: a secas');
+  assert.ok(msgFather.includes('por *sanción de tarjetas*'));
+});
+
+test('exclusionNote vacío NO resucita notas anteriores como (No vino)', () => {
+  const match = { opponent: 'Gran Canaria Alevín', date: '2026-09-20' };
+  const players = [
+    { id: 'p1', name: 'Aitor Navarro', number: '11', fatherName: 'Carlos' },
+  ];
+  // Convocatoria con nota antigua "No vino" en la base de datos
+  const callup = {
+    availableIds: [],
+    excludedIds: ['p1'],
+    exclusions: [{ playerId: 'p1', reason: 'training', note: 'No vino' }],
+  };
+
+  const msg = buildWhatsAppMatchConvocatoria({
+    match,
+    callup,
+    players,
+    targetPlayerId: 'p1',
+    recipientType: 'parent',
+    parentType: 'father',
+    callupStatus: 'excluded',
+    exclusionReason: 'cards',
+    exclusionNote: '', // El usuario vació la aclaración
+    now: new Date('2026-09-20T10:00:00'),
+  });
+
+  assert.ok(!msg.includes('No vino'), 'No debe resucitar la nota antigua No vino');
+  assert.ok(msg.includes('por *sanción de tarjetas*'));
 });
 
 test('buildWhatsAppTrainingWeek formatea duraciones como 60 min o 75 min (nunca 15 min)', () => {
@@ -488,6 +542,6 @@ test('buildWhatsAppTrainingWeek formatea duraciones como 60 min o 75 min (nunca 
   });
 
   assert.ok(!msg.includes('(15 min)'), 'No debe mostrar 15 min');
-  assert.ok(msg.includes('(75 min)') || msg.includes('(60 min)'), 'Debe mostrar 75 min o 60 min');
+  assert.ok(msg.includes('*(75 min)*') || msg.includes('*(60 min)*'), 'Debe mostrar 75 min o 60 min con negrita');
 });
 

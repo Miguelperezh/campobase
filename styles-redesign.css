@@ -5125,16 +5125,35 @@ body.cb-redesign-active .whatsapp-dialog textarea:focus,
   color: #64748b !important;
 }
 
-@keyframes whistlePulse {
-  0% { transform: scale(1); filter: brightness(1); }
-  25% { transform: scale(1.03) translate(-2px, 2px); filter: brightness(1.25); }
-  50% { transform: scale(0.98) translate(2px, -1px); filter: brightness(1.1); }
-  75% { transform: scale(1.02) translate(-1px, -1px); filter: brightness(1.2); }
-  100% { transform: scale(1); filter: brightness(1); }
+@keyframes whistleShakeTriple {
+  0% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  /* Toque 1 */
+  4% { transform: translate(-4px, 3px) scale(1.02); filter: brightness(1.25); }
+  8% { transform: translate(4px, -3px) scale(1.03); filter: brightness(1.3); }
+  12% { transform: translate(-3px, -2px) scale(1.01); filter: brightness(1.2); }
+  16% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  /* Pausa breve */
+  22% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  /* Toque 2 */
+  26% { transform: translate(-4px, 2px) scale(1.02); filter: brightness(1.25); }
+  30% { transform: translate(4px, -2px) scale(1.03); filter: brightness(1.3); }
+  34% { transform: translate(-2px, 3px) scale(1.01); filter: brightness(1.2); }
+  38% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  /* Pausa breve */
+  46% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  /* Toque 3 (más largo y potente) */
+  50% { transform: translate(-5px, 3px) scale(1.04); filter: brightness(1.35); box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); }
+  56% { transform: translate(5px, -4px) scale(1.04); filter: brightness(1.4); }
+  62% { transform: translate(-4px, 4px) scale(1.03); filter: brightness(1.35); }
+  68% { transform: translate(4px, -3px) scale(1.02); filter: brightness(1.25); }
+  76% { transform: translate(-2px, 2px) scale(1.01); filter: brightness(1.15); }
+  85% { transform: translate(1px, -1px) scale(1.005); filter: brightness(1.05); }
+  100% { transform: translate(0, 0) scale(1); filter: brightness(1); }
 }
 
+.whistle-vibrating,
 .whistle-timer-hero.whistle-vibrating {
-  animation: whistlePulse 0.4s ease-in-out;
+  animation: whistleShakeTriple 1.1s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
 }
 
 

@@ -89,16 +89,16 @@ export function formatExclusionReasonText(reason = '', note = '') {
   const n = String(note || '').trim();
 
   if (!r || r === 'none') return '';
-  if (r === 'rotation') return 'por rotación';
-  if (r === 'injured') return n ? `por lesión (${n})` : 'por lesión';
-  if (r === 'cards' || r === 'suspended') return n ? `por sanción de tarjetas (${n})` : 'por sanción de tarjetas';
-  if (r === 'training' || r === 'missed_training') return 'por no haber venido a entrenar';
-  if (r === 'sick') return n ? `por enfermedad (${n})` : 'por encontrarse indispuesto/a';
-  if (r === 'coach_decision' || r === 'technical') return n ? `por decisión técnica (${n})` : 'por decisión técnica';
-  if (r === 'discipline') return n ? `por motivos disciplinarios (${n})` : 'por motivos disciplinarios';
-  if (r === 'personal') return n ? `por motivos personales (${n})` : 'por motivos personales';
-  if (r === 'custom' || r === 'other') return n ? (n.toLowerCase().startsWith('por ') ? n : `por ${n}`) : '';
-  return r.startsWith('por ') ? r : `por ${r}`;
+  if (r === 'rotation') return 'por *rotación*';
+  if (r === 'injured') return n ? `por *lesión* (${n})` : 'por *lesión*';
+  if (r === 'cards' || r === 'suspended') return n ? `por *sanción de tarjetas* (${n})` : 'por *sanción de tarjetas*';
+  if (r === 'training' || r === 'missed_training') return 'por *no haber venido a entrenar*';
+  if (r === 'sick') return n ? `por *enfermedad* (${n})` : 'por *encontrarse indispuesto/a*';
+  if (r === 'coach_decision' || r === 'technical') return n ? `por *decisión técnica* (${n})` : 'por *decisión técnica*';
+  if (r === 'discipline') return n ? `por *motivos disciplinarios* (${n})` : 'por *motivos disciplinarios*';
+  if (r === 'personal') return n ? `por *motivos personales* (${n})` : 'por *motivos personales*';
+  if (r === 'custom' || r === 'other') return n ? (n.toLowerCase().startsWith('por ') ? `*${n}*` : `por *${n}*`) : '';
+  return r.startsWith('por ') ? `*${r}*` : `por *${r}*`;
 }
 
 export function getExclusionEncouragement(reason = '') {
@@ -219,9 +219,9 @@ export function buildWhatsAppMatchConvocatoria({
 
       let salutation = '';
       if (parentType === 'mother') {
-        salutation = mother ? `${greeting} ${mother}:` : `${greeting}:`;
+        salutation = mother ? `${greeting} ${mother}:` : `${greeting} a la familia de ${playerName}:`;
       } else if (parentType === 'father') {
-        salutation = father ? `${greeting} ${father}:` : `${greeting}:`;
+        salutation = father ? `${greeting} ${father}:` : `${greeting} a la familia de ${playerName}:`;
       } else {
         // 'both': Padre y Madre
         if (father && mother) {
@@ -235,21 +235,26 @@ export function buildWhatsAppMatchConvocatoria({
         }
       }
 
-      const numStr = cleanPlayerNumber(targetPlayer.number);
-      const dorsalText = numStr ? `(Dorsal ${numStr})` : '';
+      // NO es necesario poner el dorsal del jugador a sus propios padres
+      const dorsalText = '';
 
       // SI ESTÁ MARCADO COMO NO CONVOCADO:
       if (isExcluded) {
         const autoEx = exclusionMap.get(targetPlayer.id);
         const resolvedReason = exclusionReason || autoEx?.reason || 'rotation';
-        const resolvedNote = exclusionNote || autoEx?.note || '';
+        let resolvedNote = '';
+        if (typeof exclusionNote === 'string') {
+          resolvedNote = exclusionNote.trim();
+        } else if (!exclusionReason && autoEx?.note) {
+          resolvedNote = autoEx.note.trim();
+        }
         const reasonPhrase = formatExclusionReasonText(resolvedReason, resolvedNote);
         const reasonSuffix = reasonPhrase ? ` ${reasonPhrase}` : '';
         const encouragement = getExclusionEncouragement(resolvedReason);
 
         return `${salutation}
 
-${verbs.comunico} que ${playerName} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}${reasonSuffix}.
+${verbs.comunico} que *${playerName}* *NO está CONVOCADO* para el partido *${competition} (vs ${opponent})* del *${dateFormatted}*${reasonSuffix}.
 
 ${encouragement}
 
@@ -259,19 +264,19 @@ ${closing}`.trim();
       // SI SÍ ESTÁ CONVOCADO:
       return `${salutation}
 
-${verbs.comparto} la información de la convocatoria para ${playerName} ${dorsalText}:
+${verbs.comparto} la información de la convocatoria para *${playerName}*:
 
-🏆 *Competición:* ${competition} (vs ${opponent})
-📅 *Fecha:* ${dateFormatted}
-⏰ *Hora de citación:* ${callTime} h
-⏱️ *Inicio de partido:* ${gameTime} h
-🏟️ *Campo:* ${fieldName}
+🏆 *Competición:* *${competition} (vs ${opponent})*
+📅 *Fecha:* *${dateFormatted}*
+⏰ *Hora de citación:* *${callTime} h*
+⏱️ *Inicio de partido:* *${gameTime} h*
+🏟️ *Campo:* *${fieldName}*
 📍 *Ubicación en Google Maps:* ${resolvedMapsUrl}
-👕 *Equipación:* ${kit}
-🛡️ *Obligatorio:* Botella de agua individual y espinilleras${includeBibs ? `\n🎽 *Petos:* Se llevarán petos (${bibsConfig})` : ''}
-${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
-• Rogamos puntualidad en la hora de citación para realizar un calentamiento óptimo.
-• Ante cualquier molestia o imprevisto, avisad con antelación.
+👕 *Equipación:* *${kit}*
+🛡️ *Obligatorio:* *Botella de agua individual y espinilleras*${includeBibs ? `\n🎽 *Petos:* *${bibsConfig}*` : ''}
+${customNote ? `\n⚠️ *Nota:* *${customNote}*` : ''}
+• *Rogamos máxima puntualidad* en la hora de citación para realizar un buen calentamiento.
+• Ante cualquier contratiempo o molestia física, por favor avisad con antelación.
 
 ${closing}`.trim();
     }
@@ -342,9 +347,9 @@ export function buildWhatsAppTrainingDay({
     const father = (targetPlayer.fatherName || '').trim();
     const mother = (targetPlayer.motherName || '').trim();
     if (parentType === 'mother') {
-      salutation = mother ? `${greeting} ${mother}:` : `${greeting}:`;
+      salutation = mother ? `${greeting} ${mother}:` : `${greeting} a la familia de ${playerName}:`;
     } else if (parentType === 'father') {
-      salutation = father ? `${greeting} ${father}:` : `${greeting}:`;
+      salutation = father ? `${greeting} ${father}:` : `${greeting} a la familia de ${playerName}:`;
     } else {
       // 'both'
       if (father && mother) {
@@ -365,17 +370,17 @@ ${salutation}
 
 ${verbs.recuerdo} los detalles de la sesión de entrenamiento:
 
-📅 *Fecha:* ${dateFormatted}
-⏰ *Hora:* ${timeStr} h (duración: ${durationMin} min)
-🏟️ *Campo:* ${fieldName}
+📅 *Fecha:* *${dateFormatted}*
+⏰ *Hora:* *${timeStr} h* *(duración: ${durationMin} min)*
+🏟️ *Campo:* *${fieldName}*
 📍 *Ubicación:* ${resolvedMapsUrl}
 
 🎒 *Material necesario:*
-• 👕 *Equipación:* ${kitTraining}
+• 👕 *Equipación:* *${kitTraining}*
 • 💧 *Botella de agua individual* con su nombre
 • ⚽ *Balón de fútbol T4* con la presión adecuada
-${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
-Rogamos puntualidad para comenzar la sesión a la hora prevista.
+${customNote ? `\n⚠️ *Nota:* *${customNote}*` : ''}
+• *Rogamos puntualidad* para comenzar la sesión a la hora prevista.
 
 ${closing}`.trim();
 }
@@ -413,17 +418,17 @@ export function buildWhatsAppTrainingWeek({
       const rawDur = Number(s.duration) || 0;
       let durStr = '';
       if (rawDur >= 65) {
-        durStr = ' (75 min)';
+        durStr = ' *(75 min)*';
       } else if (rawDur >= 45) {
-        durStr = ' (60 min)';
+        durStr = ' *(60 min)*';
       } else if (rawDur > 0) {
         // En fútbol base infantil/alevin los entrenamientos son de 60 o 75 min (nunca 15 min de un ejercicio individual)
-        durStr = ' (75 min)';
+        durStr = ' *(75 min)*';
       }
-      return `• *${d}:* ${t} h · ${f}${durStr}`;
+      return `• *${d}:* *${t} h* · ${f}${durStr}`;
     }).join('\n');
   } else {
-    scheduleLines = '• Lunes y Martes 16:30 h · Alfonso Silva (75 min)\n• Jueves 16:30 h · Campo del Pilar (75 min)';
+    scheduleLines = '• *Lunes y Martes 16:30 h* · Alfonso Silva *(75 min)*\n• *Jueves 16:30 h* · Campo del Pilar *(75 min)*';
   }
 
   let matchLine = '';
@@ -439,7 +444,7 @@ export function buildWhatsAppTrainingWeek({
     }
     const mt = match.time || '09:00';
     const mf = match.field || (match.venue === 'away' ? 'Campo rival' : 'Alfonso Silva');
-    matchLine = `\n• *${dayUpper}:* ${mt} h · PARTIDO vs ${match.opponent || 'Rival'} (${mf})`;
+    matchLine = `\n• *${dayUpper}:* *${mt} h* · *PARTIDO* vs *${match.opponent || 'Rival'}* (${mf})`;
   }
 
   return `📅 *PLANIFICACIÓN SEMANAL (${weekRangeLabel.toUpperCase()}) — ${teamName.toUpperCase()}* ⚽
