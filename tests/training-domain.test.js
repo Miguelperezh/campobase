@@ -84,7 +84,7 @@ test('construye ejercicios editables, conserva favoritos y valida campos obligat
     duration: '8', description: 'Conservar el balón.', variants: 'Dos toques', difficulty: 'Media', space: '12x12 m',
   }, { id: 'e1', favorite: true, createdAt: 10, now: 20 });
   assert.deepEqual(exercise, {
-    id: 'e1', name: 'Rondo corto', category: 'Táctica', formato_juego: 'no_especificado', players: '5', material: 'Balones, conos',
+    id: 'e1', name: 'Rondo corto', category: 'Táctica', formato_juego: 'futbol_11', players: '5', material: 'Balones, conos',
     duration: 8, description: 'Conservar el balón.', variants: 'Dos toques', difficulty: 'Media', space: '12x12 m',
     diagram: { type: 'rondo', players: 5, cones: 4, goals: 0 }, favorite: true, createdAt: 10, updatedAt: 20,
   });

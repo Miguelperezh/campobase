@@ -64446,7 +64446,7 @@ export function toCampoBaseExercise(item) {
     name: item.nombre,
     category: item.categoria || 'Técnico-táctico',
     formato_juego,
-    format: formato_juego === 'futbol_7' ? 'F7' : (formato_juego === 'futbol_11' ? 'F11' : 'Ambos'),
+    format: formato_juego === 'futbol_7' ? 'F7' : 'F11',
     players: playersStr,
     material: materialStr,
     duration: parseDuration(dr.duracion),

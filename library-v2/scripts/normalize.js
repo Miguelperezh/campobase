@@ -90,8 +90,8 @@ function deriveVisibleTitle(raw, collection) {
   return original || 'Ejercicio';
 }
 
-function normalizeFormatoJuego(val) {
-  if (!val) return 'no_especificado';
+function normalizeFormatoJuego(val, defaultVal = 'futbol_11') {
+  if (!val) return defaultVal;
   const cleanStr = String(val)
     .trim()
     .toLowerCase()
@@ -109,10 +109,7 @@ function normalizeFormatoJuego(val) {
   if (stripped === 'f11' || stripped === 'futbol11' || stripped === 'futbolonce') {
     return 'futbol_11';
   }
-  if (stripped === 'noespecificado' || stripped === 'ninguno' || stripped === 'ambos') {
-    return 'no_especificado';
-  }
-  return 'no_especificado';
+  return defaultVal;
 }
 
 function normalizeExercise(record) {

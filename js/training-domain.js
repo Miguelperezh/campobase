@@ -51,11 +51,10 @@ export const FORMATO_JUEGO_OPTIONS = Object.freeze([
   { id: 'todos', label: 'Todos' },
   { id: 'futbol_7', label: 'Fútbol 7' },
   { id: 'futbol_11', label: 'Fútbol 11' },
-  { id: 'no_especificado', label: 'No especificado' },
 ]);
 
-export function normalizeFormatoJuego(val) {
-  if (!val) return 'no_especificado';
+export function normalizeFormatoJuego(val, defaultVal = 'futbol_11') {
+  if (!val) return defaultVal;
   const cleanStr = String(val)
     .trim()
     .toLowerCase()
@@ -73,10 +72,7 @@ export function normalizeFormatoJuego(val) {
   if (stripped === 'f11' || stripped === 'futbol11' || stripped === 'futbolonce') {
     return 'futbol_11';
   }
-  if (stripped === 'noespecificado' || stripped === 'ninguno' || stripped === 'ambos') {
-    return 'no_especificado';
-  }
-  return 'no_especificado';
+  return defaultVal;
 }
 
 export const FORMAT_OPTIONS = Object.freeze([
@@ -356,20 +352,16 @@ export function filterExercises(exercises, filters = {}) {
       if (!haystack.includes(queryText)) return false;
     }
 
-    // Filtro por formato (Fútbol 7, Fútbol 11, No especificado, Todos)
+    // Filtro por formato (Fútbol 7, Fútbol 11, Todos)
     if (formatVal !== undefined && formatVal !== '' && formatVal !== 'todos' && formatVal !== 'Todos') {
-      const targetNorm = normalizeFormatoJuego(formatVal);
+      const targetNorm = normalizeFormatoJuego(formatVal, 'futbol_11');
       if (targetNorm !== 'todos') {
-        const itemFormato = normalizeFormatoJuego(item.formato_juego || item.formato);
-        if (targetNorm === 'no_especificado') {
-          // Solo ejercicios sin formato explícito asignado
-          if (itemFormato !== 'no_especificado') return false;
-        } else if (targetNorm === 'futbol_7' || targetNorm === 'futbol_11') {
+        const itemFormato = normalizeFormatoJuego(item.formato_juego || item.formato, 'futbol_11');
+        if (targetNorm === 'futbol_7' || targetNorm === 'futbol_11') {
           if (item.formato_juego || item.formato) {
             if (itemFormato !== targetNorm) return false;
           } else if (filters.formato_juego !== undefined || formatVal === 'futbol_7' || formatVal === 'futbol_11') {
-            // Bajo el nuevo filtro canónico, los ejercicios sin formato asignado son "no_especificado", no coinciden
-            return false;
+            if (itemFormato !== targetNorm) return false;
           } else {
             // Retrocompatibilidad heurística SOLO para llamadas legacy de tests antiguas sin formato_juego
             const text = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.space || ''}`.toLowerCase();
