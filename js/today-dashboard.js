@@ -153,11 +153,17 @@ async function snapshot() {
   const [matches, trainings, settings, callups] = await Promise.all([
     getAll('matches'), getAll('trainings'), getAll('settings'), getAll('callups'),
   ]);
+  const stateSessions = (typeof window !== 'undefined' && window.__campobase?.state?.trainingSessions) || [];
+  const settingsSessions = settings.filter((item) => item?.recordType === 'trainingSession');
+  const sessionMap = new Map();
+  for (const s of settingsSessions) if (s?.id) sessionMap.set(s.id, s);
+  for (const s of stateSessions) if (s?.id) sessionMap.set(s.id, s);
+
   return {
     matches,
     trainings,
     callups,
-    sessions: settings.filter((item) => item?.recordType === 'trainingSession'),
+    sessions: [...sessionMap.values()],
   };
 }
 
@@ -290,8 +296,10 @@ function bind() {
   });
   observer.observe(section, { attributes: true, attributeFilter: ['class'] });
 
+  window.addEventListener('campobase:data-changed', () => scheduleRender());
   window.addEventListener('load', () => scheduleRender(), { once: true });
   window.setTimeout(() => scheduleRender(), 250);
+  window.setTimeout(() => scheduleRender(), 1000);
   window.setInterval(() => {
     if (section.classList.contains('active') && !document.querySelector('dialog[open]')) scheduleRender();
   }, 30000);

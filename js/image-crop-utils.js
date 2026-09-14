@@ -176,3 +176,88 @@ export function wirePhotoCropperField({
     getCurrentPhoto: () => existingInput?.value || '',
   };
 }
+
+/**
+ * Procesa y optimiza el escudo del club.
+ * Preserva la transparencia (PNG/WebP) y la relación de aspecto original,
+ * reduciendo el tamaño a un máximo de 320x320 px y un peso ligero (~30-80 KB)
+ * para que no sature IndexedDB ni la sincronización con Supabase.
+ * Soporta fotos y archivos de cualquier peso (hasta 15 MB) sin rechazar por tamaño.
+ * @param {File|Blob|string} source - Archivo o dataURL
+ * @param {Object} [options]
+ * @param {number} [options.maxSize=320] - Límite máximo de ancho/alto en px
+ * @returns {Promise<string>} dataURL de la imagen optimizada
+ */
+export async function optimizeCrestImage(source, { maxSize = 320 } = {}) {
+  if (typeof document === 'undefined' || typeof Image === 'undefined') {
+    return typeof source === 'string' ? source : '';
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    const handleLoad = () => {
+      try {
+        const origWidth = img.naturalWidth || img.width;
+        const origHeight = img.naturalHeight || img.height;
+        if (!origWidth || !origHeight) {
+          reject(new Error('Dimensiones de imagen no válidas.'));
+          return;
+        }
+
+        const scale = Math.min(1, maxSize / Math.max(origWidth, origHeight));
+        const targetWidth = Math.max(1, Math.round(origWidth * scale));
+        const targetHeight = Math.max(1, Math.round(origHeight * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('No se pudo inicializar el contexto de canvas.'));
+          return;
+        }
+
+        let mimeType = 'image/png';
+        if (source instanceof Blob && source.type) {
+          if (source.type === 'image/jpeg' || source.type === 'image/jpg') {
+            mimeType = 'image/jpeg';
+          } else if (source.type === 'image/webp') {
+            mimeType = 'image/webp';
+          }
+        } else if (typeof source === 'string' && source.startsWith('data:image/jpeg')) {
+          mimeType = 'image/jpeg';
+        }
+
+        if (mimeType === 'image/jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetWidth, targetHeight);
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
+        } else {
+          ctx.clearRect(0, 0, targetWidth, targetHeight);
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          resolve(canvas.toDataURL(mimeType));
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    img.onload = handleLoad;
+    img.onerror = () => reject(new Error('No se pudo cargar el escudo para su procesamiento.'));
+
+    if (typeof source === 'string') {
+      img.src = source;
+    } else if (source instanceof Blob) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(source);
+    } else {
+      reject(new TypeError('Fuente de imagen no válida.'));
+    }
+  });
+}

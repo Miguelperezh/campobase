@@ -15,7 +15,7 @@ import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js
 import { planSquadSeed } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
-import { compressAndCropImage, wirePhotoCropperField } from './image-crop-utils.js';
+import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -2796,7 +2796,7 @@ function applyTeamIdentity(settings = state.settings) {
   if (crestImg) crestImg.src = crestSrc;
   if (previewThumb) previewThumb.src = crestSrc;
   const crestHidden = $('#club-crest-value');
-  if (crestHidden && settings?.clubCrest) crestHidden.value = settings.clubCrest;
+  if (crestHidden) crestHidden.value = crestSrc;
   if (settings?.teamName) {
     if (teamHeading) teamHeading.textContent = settings.teamName;
     const formInput = $('#team-settings-form')?.elements.teamName;
@@ -3236,37 +3236,58 @@ function updateThemeProperty(prop, val, extra = {}) {
 function initCustomizationListeners() {
   const uploadBtn = $('#upload-crest-btn');
   const fileInput = $('#crest-file-input');
+  const saveCrestBtn = $('#save-crest-btn');
   const resetBtn = $('#reset-crest-btn');
   const crestHidden = $('#club-crest-value');
   const previewThumb = $('#preview-crest-thumb');
   const topbarCrest = $('#topbar-club-crest');
 
+  const persistCrest = async (crestDataUrl, successMessage) => {
+    if (state.role && !roleCanUseOwnerFeatures(state.role)) {
+      return toast('Solo Migue puede cambiar el escudo del equipo.');
+    }
+    const cleanCrest = crestDataUrl || 'icons/escudo.png';
+    if (crestHidden) crestHidden.value = cleanCrest;
+    if (previewThumb) previewThumb.src = cleanCrest;
+    if (topbarCrest) topbarCrest.src = cleanCrest;
+
+    state.settings = { ...state.settings, id: 'main', clubCrest: cleanCrest };
+    try {
+      await put('settings', state.settings);
+    } catch (err) {
+      console.warn('Error guardando escudo en configuración:', err);
+    }
+    applyTeamIdentity(state.settings);
+    toast(successMessage);
+  };
+
   if (uploadBtn && fileInput) {
     uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-        return toast('La imagen no debe superar 2 MB.');
+      try {
+        const optimized = await optimizeCrestImage(file);
+        await persistCrest(optimized, 'Escudo actualizado y guardado con éxito.');
+      } catch (err) {
+        console.error('Error procesando el escudo:', err);
+        toast('No se pudo procesar la imagen del escudo.');
+      } finally {
+        fileInput.value = '';
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result;
-        if (crestHidden) crestHidden.value = dataUrl;
-        if (previewThumb) previewThumb.src = dataUrl;
-        if (topbarCrest) topbarCrest.src = dataUrl;
-        toast('Escudo cargado. Pulsa "Guardar identidad" para confirmarlo.');
-      };
-      reader.readAsDataURL(file);
+    });
+  }
+
+  if (saveCrestBtn) {
+    saveCrestBtn.addEventListener('click', async () => {
+      const currentVal = crestHidden?.value || state.settings?.clubCrest || 'icons/escudo.png';
+      await persistCrest(currentVal, 'Escudo guardado con éxito.');
     });
   }
 
   if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      if (crestHidden) crestHidden.value = 'icons/escudo.png';
-      if (previewThumb) previewThumb.src = 'icons/escudo.png';
-      if (topbarCrest) topbarCrest.src = 'icons/escudo.png';
-      toast('Escudo restaurado por defecto.');
+    resetBtn.addEventListener('click', async () => {
+      await persistCrest('icons/escudo.png', 'Escudo restaurado por defecto.');
     });
   }
 
