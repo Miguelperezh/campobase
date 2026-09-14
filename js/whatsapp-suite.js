@@ -97,8 +97,7 @@ Os comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el
 
 ¡Mucho ánimo y a seguir trabajando duro en los entrenamientos!
 
-¡Muchas gracias a todos/as!
-🔴⚫ ¡Aúpa Viera!`.trim();
+¡Muchas gracias a todos/as!`.trim();
       }
 
       // SI SÍ ESTÁ CONVOCADO:
@@ -118,8 +117,7 @@ ${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
 • Rogamos puntualidad en la hora de citación para realizar un calentamiento óptimo.
 • Ante cualquier molestia o imprevisto, avisad con antelación.
 
-¡Muchas gracias a todos/as!
-🔴⚫ ¡Aúpa Viera!`.trim();
+¡Muchas gracias a todos/as!`.trim();
     }
   }
 
@@ -155,8 +153,7 @@ ${customNote ? `\n⚠️ *Nota importante:* ${customNote}` : ''}
 • Rogamos puntualidad en la hora de citación para realizar un buen calentamiento.
 • Ante cualquier contratiempo o molestia física, por favor avisad con antelación.
 
-¡Gracias a todos/as!
-🔴⚫ ¡Aúpa Viera!`.trim();
+¡Muchas gracias a todos/as!`.trim();
 }
 
 export function buildWhatsAppTrainingDay({
@@ -203,8 +200,7 @@ Os recordamos los detalles de la sesión de entrenamiento:
 ${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
 Rogamos puntualidad para comenzar la sesión a la hora prevista.
 
-¡Gracias a todos/as!
-🔴⚫ ¡Aúpa Viera!`.trim();
+¡Muchas gracias a todos/as!`.trim();
 }
 
 export function buildWhatsAppTrainingWeek({
@@ -254,8 +250,5 @@ ${goalBlock}${scheduleLines}${matchLine}
 🎒 *Recordatorio para todos los entrenamientos:*
 Llevar camiseta oficial de entreno, botella de agua individual y balón reglamentario T4.
 
-¡Muchas gracias por vuestro compromiso y puntualidad!
-
-¡Gracias a todos/as!
-🔴⚫ ¡Aúpa Viera!`.trim();
+¡Muchas gracias a todos/as!`.trim();
 }

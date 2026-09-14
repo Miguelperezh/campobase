@@ -61,7 +61,8 @@ test('buildWhatsAppMatchConvocatoria para grupo: sin firma personal, con espinil
   assert.ok(msg.includes('Mateo González'));
   assert.ok(!msg.includes('#4'), 'No debe tener almohadilla en los dorsales');
   assert.ok(msg.includes('espinilleras'), 'Los partidos obligan a llevar espinilleras');
-  assert.ok(msg.includes('¡Aúpa Viera!'));
+  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('¡Muchas gracias a todos/as!'), 'Debe incluir agradecimiento limpio');
   assert.ok(!msg.includes('Miguel'), 'No debe incluir firma de Miguel');
   assert.ok(!msg.includes('un saludo cordial'), 'No debe incluir un saludo cordial');
 });
@@ -89,7 +90,8 @@ test('buildWhatsAppMatchConvocatoria individual: NO convocado omite campo, hora 
   assert.ok(!msg.includes('Campo:'), 'No convocado NO debe tener campo');
   assert.ok(!msg.includes('espinilleras'), 'No convocado NO debe tener material');
   assert.ok(msg.includes('¡Mucho ánimo'));
-  assert.ok(msg.includes('¡Aúpa Viera!'));
+  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
 });
 
 test('buildWhatsAppMatchConvocatoria individual: SI convocado incluye citación, campo y espinilleras', () => {
@@ -115,7 +117,8 @@ test('buildWhatsAppMatchConvocatoria individual: SI convocado incluye citación,
   assert.ok(msg.includes('Hora de citación:'));
   assert.ok(msg.includes('Alfonso Silva'));
   assert.ok(msg.includes('espinilleras'));
-  assert.ok(msg.includes('¡Aúpa Viera!'));
+  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
 });
 
 test('buildWhatsAppTrainingDay: NO requiere espinilleras, incluye balón y agua', () => {
@@ -133,7 +136,8 @@ test('buildWhatsAppTrainingDay: NO requiere espinilleras, incluye balón y agua'
   assert.ok(msg.includes('Balón de fútbol T4'));
   assert.ok(!msg.includes('espinilleras'), 'En entrenamientos NO es necesario espinilleras');
   assert.ok(!msg.includes('Miguel'));
-  assert.ok(msg.includes('¡Aúpa Viera!'));
+  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
 });
 
 test('buildWhatsAppTrainingWeek: resume la semana de entrenos y partido', () => {
@@ -156,5 +160,6 @@ test('buildWhatsAppTrainingWeek: resume la semana de entrenos y partido', () => 
   assert.ok(msg.includes('Campo del Pilar'));
   assert.ok(msg.includes('Huracán'));
   assert.ok(!msg.includes('espinilleras'));
-  assert.ok(msg.includes('¡Aúpa Viera!'));
+  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
 });
