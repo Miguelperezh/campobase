@@ -4,10 +4,22 @@
 // Funciones puras y desacopladas para pruebas unitarias e integración en UI.
 // ==========================================================================
 
-export function cleanPlayerNumber(number) {
-  if (number === null || number === undefined) return '';
-  const str = String(number).trim();
-  return str.replace(/^#\s*/, '');
+export function cleanPlayerNumber(num) {
+  if (num === null || num === undefined) return '';
+  return String(num).replace(/[#\s]/g, '').trim();
+}
+
+/**
+ * Normaliza y añade prefijo internacional a teléfonos de España (9 dígitos que empiezan por 6 o 7).
+ */
+export function formatWhatsAppPhone(phone) {
+  if (!phone) return '';
+  const digits = String(phone).replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.length === 9 && (digits.startsWith('6') || digits.startsWith('7'))) {
+    return `34${digits}`;
+  }
+  return digits;
 }
 
 export function getGreetingByHour(dateOrHour = new Date()) {
@@ -45,29 +57,36 @@ export function buildWhatsAppMatchConvocatoria({
   match = {},
   callup = null,
   players = [],
-  kit = 'Oficial (Roja y Negra)',
-  competition = 'Liga Oficial',
+  kit = '1.ª Oficial (Roja y Negra)',
+  competition = 'Liga',
   callTime = '08:15',
   gameTime = '09:00',
   fieldName = 'Campo Alfonso Silva (La Ballena)',
   mapsUrl = '',
   includeBibs = false,
-  bibsConfig = '7 verdes y 7 amarillos',
-  targetPlayerId = null,
-  recipientType = 'group',
-  parentType = 'father',
+  bibsConfig = 'Verdes y Amarillos',
   customNote = '',
+  targetPlayerId = null,
+  recipientType = 'group', // 'group' | 'parent'
+  parentType = 'both', // 'both' | 'father' | 'mother'
+  callupStatus = 'auto', // 'auto' | 'called' | 'excluded'
   now = new Date(),
 } = {}) {
   const greeting = getGreetingByHour(now);
   const opponent = match.opponent || 'Rival';
-  const rawDate = match.date || '';
+  const rawDate = match.date || callup?.date || '';
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
   const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
 
   // Determinar convocados y excluidos
   const availableSet = new Set(callup?.availableIds || []);
   const excludedSet = new Set(callup?.excludedIds || []);
+  if (callup?.exclusions && Array.isArray(callup.exclusions)) {
+    callup.exclusions.forEach(e => {
+      const pid = typeof e === 'object' && e ? (e.playerId || e.id) : e;
+      if (pid) excludedSet.add(pid);
+    });
+  }
   
   // Si no hay callup específico, todos los jugadores recibidos se asumen convocados
   const calledPlayers = callup
@@ -78,32 +97,68 @@ export function buildWhatsAppMatchConvocatoria({
   if (recipientType === 'parent' && targetPlayerId) {
     const targetPlayer = players.find(p => p.id === targetPlayerId);
     if (targetPlayer) {
-      const isExcluded = callup ? excludedSet.has(targetPlayer.id) : false;
-      let parentName = '';
-      if (parentType === 'mother') {
-        parentName = (targetPlayer.motherName || '').trim();
-      } else if (parentType === 'father') {
-        parentName = (targetPlayer.fatherName || '').trim();
+      // Determinar si está convocado o no
+      let isExcluded = false;
+      if (callupStatus === 'excluded') {
+        isExcluded = true;
+      } else if (callupStatus === 'called') {
+        isExcluded = false;
+      } else if (callup) {
+        if (excludedSet.has(targetPlayer.id)) {
+          isExcluded = true;
+        } else if (availableSet.has(targetPlayer.id)) {
+          isExcluded = false;
+        } else if (availableSet.size > 0) {
+          // Si hay convocados oficiales y el jugador no está entre ellos, NO está convocado
+          isExcluded = true;
+        }
       }
-      const salutation = parentName ? `${greeting} ${parentName}:` : `${greeting}, familia de ${targetPlayer.name}:`;
+
+      const father = (targetPlayer.fatherName || '').trim();
+      const mother = (targetPlayer.motherName || '').trim();
+      let salutation = '';
+      if (parentType === 'mother') {
+        salutation = mother ? `${greeting} ${mother}:` : `${greeting} (madre de ${targetPlayer.name}):`;
+      } else if (parentType === 'father') {
+        salutation = father ? `${greeting} ${father}:` : `${greeting} (padre de ${targetPlayer.name}):`;
+      } else {
+        // 'both': Padre y Madre
+        if (father && mother) {
+          salutation = `${greeting} ${father} y ${mother}:`;
+        } else if (father) {
+          salutation = `${greeting} ${father}:`;
+        } else if (mother) {
+          salutation = `${greeting} ${mother}:`;
+        } else {
+          salutation = `${greeting} a la familia de ${targetPlayer.name}:`;
+        }
+      }
+
       const numStr = cleanPlayerNumber(targetPlayer.number);
       const dorsalText = numStr ? `(Dorsal ${numStr})` : '';
+      const introExcluded = (parentType === 'mother' || parentType === 'father')
+        ? `Te comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}.`
+        : `Os comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}.`;
 
       // SI ESTÁ MARCADO COMO NO CONVOCADO:
       if (isExcluded) {
         return `${salutation}
 
-Os comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}.
+${introExcluded}
 
 ¡Mucho ánimo y a seguir trabajando duro en los entrenamientos!
 
 ¡Muchas gracias a todos/as!`.trim();
       }
 
+      const introCalled = (parentType === 'mother' || parentType === 'father')
+        ? `Te compartimos la información de la convocatoria para ${targetPlayer.name} ${dorsalText}:`
+        : `Os compartimos la información de la convocatoria para ${targetPlayer.name} ${dorsalText}:`;
+
       // SI SÍ ESTÁ CONVOCADO:
       return `${salutation}
 
-Os compartimos la información de la convocatoria para ${targetPlayer.name} ${dorsalText}:
+${introCalled}
 
 🏆 *Competición:* ${competition} (vs ${opponent})
 📅 *Fecha:* ${dateFormatted}
@@ -176,17 +231,35 @@ export function buildWhatsAppTrainingDay({
 
   let salutation = `${greeting} a todos/as,`;
   if (targetPlayer) {
-    let parentName = '';
-    if (parentType === 'mother') parentName = (targetPlayer.motherName || '').trim();
-    else if (parentType === 'father') parentName = (targetPlayer.fatherName || '').trim();
-    salutation = parentName ? `${greeting} ${parentName}:` : `${greeting}, familia de ${targetPlayer.name}:`;
+    const father = (targetPlayer.fatherName || '').trim();
+    const mother = (targetPlayer.motherName || '').trim();
+    if (parentType === 'mother') {
+      salutation = mother ? `${greeting} ${mother}:` : `${greeting} (madre de ${targetPlayer.name}):`;
+    } else if (parentType === 'father') {
+      salutation = father ? `${greeting} ${father}:` : `${greeting} (padre de ${targetPlayer.name}):`;
+    } else {
+      // 'both'
+      if (father && mother) {
+        salutation = `${greeting} ${father} y ${mother}:`;
+      } else if (father) {
+        salutation = `${greeting} ${father}:`;
+      } else if (mother) {
+        salutation = `${greeting} ${mother}:`;
+      } else {
+        salutation = `${greeting} a la familia de ${targetPlayer.name}:`;
+      }
+    }
   }
+
+  const intro = (targetPlayer && (parentType === 'mother' || parentType === 'father'))
+    ? 'Te recordamos los detalles de la sesión de entrenamiento:'
+    : 'Os recordamos los detalles de la sesión de entrenamiento:';
 
   return `⚽ *SESIÓN DE ENTRENAMIENTO — ${teamName.toUpperCase()}* ⚽
 
 ${salutation}
 
-Os recordamos los detalles de la sesión de entrenamiento:
+${intro}
 
 📅 *Fecha:* ${dateFormatted}
 ⏰ *Hora:* ${timeStr} h (duración: ${duration} min)
@@ -218,9 +291,16 @@ export function buildWhatsAppTrainingWeek({
     goalBlock = `🎯 *Objetivo formativo de la semana:*\n"${tacticalGoal.trim()}"\n\n`;
   }
 
+  // Ordenar de más próximos a más lejanos (arriba los más próximos)
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const cmp = String(a.date || '').localeCompare(String(b.date || ''));
+    if (cmp !== 0) return cmp;
+    return String(a.time || '').localeCompare(String(b.time || ''));
+  });
+
   let scheduleLines = '';
-  if (sessions.length) {
-    scheduleLines = sessions.map(s => {
+  if (sortedSessions.length) {
+    scheduleLines = sortedSessions.map(s => {
       const d = formatLongDate(s.date) || s.date;
       const f = s.field || s.venue || 'Campo habitual';
       const t = s.time || '16:30';

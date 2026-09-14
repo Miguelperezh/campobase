@@ -488,7 +488,24 @@
         <label>Destinatario
           <select id="wa-recipient-select">
             <option value="group">👥 Grupo general de familias</option>
-            <optgroup label="Mensaje privado a progenitores" id="wa-parents-group"></optgroup>
+            <optgroup label="Mensaje privado por jugador" id="wa-parents-group"></optgroup>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-parent-selection-row">
+        <label style="flex:1.2;">Enviar mensaje a:
+          <select id="wa-parent-type-select">
+            <option value="both">👨‍👩‍👦 Padre y Madre (ambos)</option>
+            <option value="father">👨 Solo Padre</option>
+            <option value="mother">👩 Solo Madre</option>
+          </select>
+        </label>
+        <label id="wa-callup-status-col" style="flex:1.2;">Estado en convocatoria:
+          <select id="wa-callup-status-select">
+            <option value="auto">⚡ Automático (según lista oficial)</option>
+            <option value="called">✅ Convocado (enviar citación y campo)</option>
+            <option value="excluded">❌ NO Convocado (comunicar baja)</option>
           </select>
         </label>
       </div>
@@ -537,9 +554,11 @@
         <textarea id="whatsapp-preview-text" rows="11" spellcheck="false" style="font-family:monospace;font-size:0.9rem;line-height:1.45;"></textarea>
       </label>
 
-      <div class="button-row" style="margin-top:1rem;">
+      <div class="button-row" style="margin-top:1rem;" id="wa-button-row">
         <button type="button" id="whatsapp-copy-btn" class="secondary">📋 Copiar mensaje</button>
-        <button type="button" id="whatsapp-open-btn" class="primary" style="background:#25D366;border-color:#25D366;color:#fff;">📱 Abrir WhatsApp</button>
+        <div id="wa-dynamic-open-buttons" style="display:inline-flex;gap:0.5rem;flex-wrap:wrap;">
+          <button type="button" id="whatsapp-open-btn" class="primary wa-open-action-btn" style="background:#25D366;border-color:#25D366;color:#fff;">📱 Abrir WhatsApp</button>
+        </div>
         <button type="button" class="secondary" data-close>Cerrar</button>
       </div>
     </form>

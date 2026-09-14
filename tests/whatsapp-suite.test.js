@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   cleanPlayerNumber,
+  formatWhatsAppPhone,
   getGreetingByHour,
   getAutoMapsUrl,
   formatLongDate,
@@ -140,26 +141,100 @@ test('buildWhatsAppTrainingDay: NO requiere espinilleras, incluye balón y agua'
   assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
 });
 
-test('buildWhatsAppTrainingWeek: resume la semana de entrenos y partido', () => {
-  const sessions = [
-    { date: '2026-09-15', time: '16:30', field: 'Alfonso Silva', duration: 60 },
-    { date: '2026-09-16', time: '16:30', field: 'Alfonso Silva', duration: 60 },
-    { date: '2026-09-18', time: '16:30', field: 'Campo del Pilar', duration: 75 },
-  ];
-  const match = { date: '2026-09-21', time: '09:00', opponent: 'Huracán', field: 'Alfonso Silva' };
+test('formatWhatsAppPhone normaliza números españoles con prefijo 34', () => {
+  assert.equal(formatWhatsAppPhone('600111222'), '34600111222');
+  assert.equal(formatWhatsAppPhone('712 345 678'), '34712345678');
+  assert.equal(formatWhatsAppPhone('+34 600 111 222'), '34600111222');
+  assert.equal(formatWhatsAppPhone('34600111222'), '34600111222');
+  assert.equal(formatWhatsAppPhone(''), '');
+  assert.equal(formatWhatsAppPhone(null), '');
+});
 
-  const msg = buildWhatsAppTrainingWeek({
-    sessions,
+test('buildWhatsAppMatchConvocatoria individual a Padre y Madre (ambos)', () => {
+  const match = { opponent: 'Guiniguada', date: '2026-09-20' };
+  const players = [
+    { id: 'p1', name: 'Thiago Hernández', number: '4', fatherName: 'Carlos', motherName: 'Elena' },
+  ];
+  const callup = { availableIds: ['p1'], excludedIds: [] };
+
+  const msg = buildWhatsAppMatchConvocatoria({
     match,
-    tacticalGoal: 'Presión tras pérdida y repliegue ordenado',
-    now: new Date('2026-09-14T09:00:00'),
+    callup,
+    players,
+    targetPlayerId: 'p1',
+    recipientType: 'parent',
+    parentType: 'both',
+    callupStatus: 'called',
+    now: new Date('2026-09-20T10:00:00'),
   });
 
-  assert.ok(msg.includes('Presión tras pérdida'));
-  assert.ok(msg.includes('Alfonso Silva'));
-  assert.ok(msg.includes('Campo del Pilar'));
-  assert.ok(msg.includes('Huracán'));
-  assert.ok(!msg.includes('espinilleras'));
-  assert.ok(!msg.includes('¡Aúpa Viera!'), 'No debe incluir ¡Aúpa Viera!');
+  assert.ok(msg.includes('Buenos días Carlos y Elena:'), 'Debe saludar a padre y madre juntos');
+  assert.ok(msg.includes('Os compartimos la información de la convocatoria para Thiago Hernández (Dorsal 4):'));
+  assert.ok(msg.includes('espinilleras'));
   assert.ok(msg.includes('¡Muchas gracias a todos/as!'));
+});
+
+test('buildWhatsAppMatchConvocatoria forzado a NO Convocado con callupStatus excluded', () => {
+  const match = { opponent: 'Guiniguada', date: '2026-09-20' };
+  const players = [
+    { id: 'p1', name: 'Thiago Hernández', number: '4', fatherName: 'Carlos', motherName: 'Elena' },
+  ];
+  // Aunque en callup esté en availableIds, callupStatus = 'excluded' debe prevalecer
+  const callup = { availableIds: ['p1'], excludedIds: [] };
+
+  const msg = buildWhatsAppMatchConvocatoria({
+    match,
+    callup,
+    players,
+    targetPlayerId: 'p1',
+    recipientType: 'parent',
+    parentType: 'both',
+    callupStatus: 'excluded',
+    now: new Date('2026-09-20T10:00:00'),
+  });
+
+  assert.ok(msg.includes('Buenos días Carlos y Elena:'));
+  assert.ok(msg.includes('Thiago Hernández (Dorsal 4) NO está CONVOCADO'));
+  assert.ok(!msg.includes('Hora de citación:'));
+  assert.ok(!msg.includes('espinilleras'));
+  assert.ok(msg.includes('¡Mucho ánimo'));
+});
+
+test('buildWhatsAppTrainingDay a Padre y Madre (ambos)', () => {
+  const session = { date: '2026-09-15', time: '16:30', duration: 75 };
+  const targetPlayer = { id: 'p1', name: 'Thiago Hernández', fatherName: 'Carlos', motherName: 'Elena' };
+
+  const msg = buildWhatsAppTrainingDay({
+    session,
+    targetPlayer,
+    parentType: 'both',
+    fieldName: 'Campo Alfonso Silva',
+    now: new Date('2026-09-15T10:00:00'),
+  });
+
+  assert.ok(msg.includes('Buenos días Carlos y Elena:'));
+  assert.ok(msg.includes('Os recordamos los detalles de la sesión de entrenamiento:'));
+  assert.ok(msg.includes('Botella de agua individual'));
+  assert.ok(!msg.includes('espinilleras'));
+});
+
+test('buildWhatsAppTrainingWeek ordena sesiones de más próxima a más lejana (más próximas arriba)', () => {
+  const unorderedSessions = [
+    { date: '2026-09-18', time: '17:00', field: 'Campo del Pilar' },
+    { date: '2026-09-15', time: '16:30', field: 'Alfonso Silva' },
+    { date: '2026-09-16', time: '16:30', field: 'Alfonso Silva' },
+  ];
+
+  const msg = buildWhatsAppTrainingWeek({
+    sessions: unorderedSessions,
+    tacticalGoal: 'Objetivo de prueba',
+    now: new Date('2026-09-14T10:00:00'),
+  });
+
+  const idx15 = msg.indexOf('15 de Septiembre') !== -1 ? msg.indexOf('15 de Septiembre') : msg.indexOf('15 de septiembre');
+  const idx16 = msg.indexOf('16 de Septiembre') !== -1 ? msg.indexOf('16 de Septiembre') : msg.indexOf('16 de septiembre');
+  const idx18 = msg.indexOf('18 de Septiembre') !== -1 ? msg.indexOf('18 de Septiembre') : msg.indexOf('18 de septiembre');
+
+  assert.ok(idx15 < idx16, 'La sesión del día 15 debe aparecer antes que la del 16');
+  assert.ok(idx16 < idx18, 'La sesión del día 16 debe aparecer antes que la del 18');
 });

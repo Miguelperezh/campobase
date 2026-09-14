@@ -19,6 +19,7 @@ import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from 
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
   cleanPlayerNumber,
+  formatWhatsAppPhone,
   getGreetingByHour,
   getAutoMapsUrl,
   formatLongDate,
@@ -374,11 +375,11 @@ function renderPlayers() {
       <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(cleanPlayerNumber(player.number) || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
       ${(player.fatherPhone || player.motherPhone || player.fatherName || player.motherName) ? `
       <div class="player-family-contacts">
-        ${player.fatherPhone ? `<a href="https://wa.me/${player.fatherPhone.replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Padre">👨 ${escapeHtml(player.fatherName || 'Padre')}: ${escapeHtml(player.fatherPhone)}</a>` : (player.fatherName ? `<span class="contact-pill meta">👨 Padre: ${escapeHtml(player.fatherName)}</span>` : '')}
-        ${player.motherPhone ? `<a href="https://wa.me/${player.motherPhone.replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
+        ${player.fatherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.fatherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Padre">👨 ${escapeHtml(player.fatherName || 'Padre')}: ${escapeHtml(player.fatherPhone)}</a>` : (player.fatherName ? `<span class="contact-pill meta">👨 Padre: ${escapeHtml(player.fatherName)}</span>` : '')}
+        ${player.motherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.motherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
       </div>` : ''}
       <div class="player-card-actions-bar">
-        ${(player.fatherPhone || player.motherPhone) ? `<button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">📱 WhatsApp</button>` : ''}
+        <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">📱 WhatsApp</button>
         <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
         <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
       </div>
@@ -3694,15 +3695,25 @@ async function saveKitSettings(event) {
 // ==========================================================================
 let waCurrentMode = 'callup'; // 'callup' | 'training' | 'week'
 let waTargetPlayerId = '';
-let waParentType = 'father'; // 'father' | 'mother'
+let waParentType = 'both'; // 'both' | 'father' | 'mother'
+let waCallupStatus = 'auto'; // 'auto' | 'called' | 'excluded'
 
-function openWhatsAppDialog({ mode = 'callup', matchId = null, callupId = null, sessionId = null, playerId = null, parentType = 'father' } = {}) {
+function openWhatsAppDialog({
+  mode = 'callup',
+  matchId = null,
+  callupId = null,
+  sessionId = null,
+  playerId = null,
+  parentType = 'both',
+  callupStatus = 'auto',
+} = {}) {
   const dialog = $('#whatsapp-dialog');
   if (!dialog) return;
 
   waCurrentMode = mode;
   waTargetPlayerId = playerId || '';
-  waParentType = parentType || 'father';
+  waParentType = parentType || 'both';
+  waCallupStatus = callupStatus || 'auto';
 
   // Sincronizar pestañas
   $$('.whatsapp-type-tabs .tab-btn').forEach((btn) => {
@@ -3718,7 +3729,10 @@ function openWhatsAppDialog({ mode = 'callup', matchId = null, callupId = null, 
   // Llenar selector de eventos
   populateWhatsAppEvents(matchId, callupId, sessionId);
   // Llenar selector de destinatarios
-  populateWhatsAppRecipients(playerId, parentType);
+  populateWhatsAppRecipients(playerId);
+
+  if ($('#wa-parent-type-select')) $('#wa-parent-type-select').value = waParentType;
+  if ($('#wa-callup-status-select')) $('#wa-callup-status-select').value = waCallupStatus;
 
   updateWhatsAppPreview();
   dialog.showModal();
@@ -3733,16 +3747,28 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
   if (waCurrentMode === 'callup') {
     if (label) label.firstChild.textContent = 'Partido / Convocatoria ';
     const matches = [...state.matches].sort((a, b) => b.date.localeCompare(a.date));
+    const processedCallupIds = new Set();
     matches.forEach((m) => {
       const opt = document.createElement('option');
-      opt.value = m.id;
+      opt.value = `match:${m.id}`;
       const callup = state.callups.find((c) => c.id === m.callupId || c.matchId === m.id);
+      if (callup) processedCallupIds.add(callup.id);
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
       opt.textContent = `${localDate(m.date)} · vs ${m.opponent}${callup ? ' (Convocatoria lista)' : ''}`;
       if (isSelected) opt.selected = true;
       select.appendChild(opt);
     });
-    if (!matches.length) {
+    // Convocatorias sin partido formal
+    state.callups.forEach((c) => {
+      if (!processedCallupIds.has(c.id)) {
+        const opt = document.createElement('option');
+        opt.value = `callup:${c.id}`;
+        opt.textContent = `${localDate(c.date)} · Convocatoria vs ${c.opponent}`;
+        if (callupId && c.id === callupId) opt.selected = true;
+        select.appendChild(opt);
+      }
+    });
+    if (!matches.length && !state.callups.length) {
       select.innerHTML = '<option value="">No hay partidos creados</option>';
     }
   } else if (waCurrentMode === 'training') {
@@ -3768,7 +3794,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
   }
 }
 
-function populateWhatsAppRecipients(preselectedPlayerId = '', preselectedParentType = 'father') {
+function populateWhatsAppRecipients(preselectedPlayerId = '') {
   const select = $('#wa-recipient-select');
   const parentsGroup = $('#wa-parents-group');
   if (!select || !parentsGroup) return;
@@ -3778,25 +3804,82 @@ function populateWhatsAppRecipients(preselectedPlayerId = '', preselectedParentT
   let preselectVal = 'group';
 
   sortedPlayers.forEach((p) => {
-    if (p.fatherPhone || p.fatherName) {
-      const opt = document.createElement('option');
-      opt.value = `parent:${p.id}:father`;
-      const phoneInfo = p.fatherPhone ? ` (${p.fatherPhone})` : ' (Sin tel)';
-      opt.textContent = `👨 ${p.fatherName ? `${p.fatherName} (Padre de ${p.name})` : `Padre de ${p.name}`}${phoneInfo}`;
-      if (preselectedPlayerId === p.id && preselectedParentType === 'father') preselectVal = opt.value;
-      parentsGroup.appendChild(opt);
+    const opt = document.createElement('option');
+    opt.value = `player:${p.id}`;
+    const num = cleanPlayerNumber(p.number);
+    const numLabel = num ? `#${num} ` : '';
+    const contacts = [];
+    if (p.fatherName) contacts.push(`👨 ${p.fatherName}`);
+    else if (p.fatherPhone) contacts.push('👨 Padre');
+    if (p.motherName) contacts.push(`👩 ${p.motherName}`);
+    else if (p.motherPhone) contacts.push('👩 Madre');
+    const contactStr = contacts.length ? ` (${contacts.join(' · ')})` : '';
+
+    opt.textContent = `${numLabel}${p.name}${contactStr}`;
+    if (preselectedPlayerId === p.id) {
+      preselectVal = opt.value;
     }
-    if (p.motherPhone || p.motherName) {
-      const opt = document.createElement('option');
-      opt.value = `parent:${p.id}:mother`;
-      const phoneInfo = p.motherPhone ? ` (${p.motherPhone})` : ' (Sin tel)';
-      opt.textContent = `👩 ${p.motherName ? `${p.motherName} (Madre de ${p.name})` : `Madre de ${p.name}`}${phoneInfo}`;
-      if (preselectedPlayerId === p.id && preselectedParentType === 'mother') preselectVal = opt.value;
-      parentsGroup.appendChild(opt);
-    }
+    parentsGroup.appendChild(opt);
   });
 
   select.value = preselectVal;
+}
+
+function updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType }) {
+  const container = $('#wa-dynamic-open-buttons');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (recipientType === 'group' || !targetPlayer) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'whatsapp-open-btn';
+    btn.className = 'primary wa-open-action-btn';
+    btn.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
+    btn.textContent = '📱 Abrir WhatsApp (Grupo)';
+    btn.dataset.phone = '';
+    container.appendChild(btn);
+    return;
+  }
+
+  const fPhone = formatWhatsAppPhone(targetPlayer.fatherPhone);
+  const mPhone = formatWhatsAppPhone(targetPlayer.motherPhone);
+  const fName = targetPlayer.fatherName?.trim() || 'Padre';
+  const mName = targetPlayer.motherName?.trim() || 'Madre';
+
+  if (parentType === 'both') {
+    const btnF = document.createElement('button');
+    btnF.type = 'button';
+    btnF.className = 'primary wa-open-action-btn';
+    btnF.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
+    btnF.textContent = `📱 WhatsApp ${fName}${targetPlayer.fatherPhone ? ` (${targetPlayer.fatherPhone})` : ''}`;
+    btnF.dataset.phone = fPhone;
+    container.appendChild(btnF);
+
+    const btnM = document.createElement('button');
+    btnM.type = 'button';
+    btnM.className = 'primary wa-open-action-btn';
+    btnM.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
+    btnM.textContent = `📱 WhatsApp ${mName}${targetPlayer.motherPhone ? ` (${targetPlayer.motherPhone})` : ''}`;
+    btnM.dataset.phone = mPhone;
+    container.appendChild(btnM);
+  } else if (parentType === 'father') {
+    const btnF = document.createElement('button');
+    btnF.type = 'button';
+    btnF.className = 'primary wa-open-action-btn';
+    btnF.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
+    btnF.textContent = `📱 WhatsApp ${fName}${targetPlayer.fatherPhone ? ` (${targetPlayer.fatherPhone})` : ''}`;
+    btnF.dataset.phone = fPhone;
+    container.appendChild(btnF);
+  } else if (parentType === 'mother') {
+    const btnM = document.createElement('button');
+    btnM.type = 'button';
+    btnM.className = 'primary wa-open-action-btn';
+    btnM.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
+    btnM.textContent = `📱 WhatsApp ${mName}${targetPlayer.motherPhone ? ` (${targetPlayer.motherPhone})` : ''}`;
+    btnM.dataset.phone = mPhone;
+    container.appendChild(btnM);
+  }
 }
 
 function updateWhatsAppPreview() {
@@ -3808,20 +3891,75 @@ function updateWhatsAppPreview() {
   const recipientVal = $('#wa-recipient-select')?.value || 'group';
 
   let recipientType = 'group';
-  let targetPlayerId = null;
-  let parentType = 'father';
+  let targetPlayer = null;
 
-  if (recipientVal.startsWith('parent:')) {
-    const parts = recipientVal.split(':');
+  if (recipientVal.startsWith('player:')) {
     recipientType = 'parent';
-    targetPlayerId = parts[1];
-    parentType = parts[2] || 'father';
+    const pId = recipientVal.replace('player:', '');
+    targetPlayer = state.players.find((p) => p.id === pId) || null;
+  }
+
+  // Sincronizar visibilidad de controles de destinatario individual
+  const parentSelectionRow = $('#wa-parent-selection-row');
+  const callupStatusCol = $('#wa-callup-status-col');
+  if (parentSelectionRow) {
+    parentSelectionRow.classList.toggle('hidden', recipientType === 'group' || !targetPlayer);
+  }
+  if (callupStatusCol) {
+    callupStatusCol.classList.toggle('hidden', waCurrentMode !== 'callup');
+  }
+
+  const parentType = $('#wa-parent-type-select')?.value || 'both';
+  const callupStatus = $('#wa-callup-status-select')?.value || 'auto';
+
+  // Actualizar textos dinámicos de los progenitores en el select
+  if (targetPlayer && $('#wa-parent-type-select')) {
+    const opts = $('#wa-parent-type-select').options;
+    if (opts && opts.length >= 3) {
+      const fName = targetPlayer.fatherName?.trim() || '';
+      const mName = targetPlayer.motherName?.trim() || '';
+      const fPhone = targetPlayer.fatherPhone?.trim() || '';
+      const mPhone = targetPlayer.motherPhone?.trim() || '';
+
+      opts[0].textContent = `👨‍👩‍👦 Padre y Madre (ambos)${fName && mName ? ` — ${fName} y ${mName}` : ''}`;
+      opts[1].textContent = `👨 Solo Padre${fName ? ` — ${fName}` : ''}${fPhone ? ` (${fPhone})` : ' (Sin tel)'}`;
+      opts[2].textContent = `👩 Solo Madre${mName ? ` — ${mName}` : ''}${mPhone ? ` (${mPhone})` : ' (Sin tel)'}`;
+    }
   }
 
   if (waCurrentMode === 'callup') {
-    const matchId = $('#wa-event-select')?.value;
-    const match = state.matches.find((m) => m.id === matchId) || state.matches[0] || {};
-    const callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
+    const eventVal = $('#wa-event-select')?.value || '';
+    let match = null;
+    let callup = null;
+
+    if (eventVal.startsWith('callup:')) {
+      const cId = eventVal.replace('callup:', '');
+      callup = state.callups.find((c) => c.id === cId) || null;
+      match = state.matches.find((m) => m.callupId === cId || m.id === callup?.matchId) || {
+        opponent: callup?.opponent || 'Rival',
+        date: callup?.date || '',
+        location: 'Campo Alfonso Silva (La Ballena)',
+        type: callup?.matchType || 'league',
+      };
+    } else {
+      const mId = eventVal.startsWith('match:') ? eventVal.replace('match:', '') : eventVal;
+      match = state.matches.find((m) => m.id === mId) || state.matches[0] || {};
+      callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
+    }
+
+    // Determinar si el jugador está marcado como NO convocado
+    const isExcluded = recipientType === 'parent' && targetPlayer && (
+      callupStatus === 'excluded' ||
+      (callupStatus === 'auto' && callup && (
+        (new Set(callup.excludedIds || [])).has(targetPlayer.id) ||
+        (Array.isArray(callup.availableIds) && callup.availableIds.length > 0 && !callup.availableIds.includes(targetPlayer.id))
+      ))
+    );
+
+    // Ocultar detalles de partido si NO va convocado (para máxima claridad visual)
+    $('#wa-match-details-row')?.classList.toggle('hidden', Boolean(isExcluded));
+    $('#wa-location-row')?.classList.toggle('hidden', Boolean(isExcluded));
+    $('#wa-times-row')?.classList.toggle('hidden', Boolean(isExcluded));
 
     const kitOption = $('#wa-kit-select')?.value || 'primary';
     let kitText = kitConfig.primaryKit;
@@ -3832,7 +3970,7 @@ function updateWhatsAppPreview() {
     const fieldInput = $('#wa-field-name');
     let fieldName = fieldInput?.value?.trim();
     if (!fieldName) {
-      fieldName = match.location || 'Campo Alfonso Silva (La Ballena)';
+      fieldName = match?.location || 'Campo Alfonso Silva (La Ballena)';
       if (fieldInput) fieldInput.value = fieldName;
     }
 
@@ -3844,8 +3982,8 @@ function updateWhatsAppPreview() {
     }
 
     const callTime = $('#wa-call-time')?.value || '08:15';
-    const gameTime = $('#wa-game-time')?.value || (match.date && match.date.includes('T') ? match.date.split('T')[1].slice(0, 5) : '09:00');
-    const competition = matchTypeLabel(match.type || 'league');
+    const gameTime = $('#wa-game-time')?.value || (match?.date && match.date.includes('T') ? match.date.split('T')[1].slice(0, 5) : '09:00');
+    const competition = matchTypeLabel(match?.type || 'league');
 
     const text = buildWhatsAppMatchConvocatoria({
       teamName,
@@ -3860,9 +3998,10 @@ function updateWhatsAppPreview() {
       mapsUrl,
       includeBibs,
       bibsConfig: kitConfig.bibsConfig,
-      targetPlayerId,
+      targetPlayerId: targetPlayer?.id || null,
       recipientType,
       parentType,
+      callupStatus,
     });
     preview.value = text;
   } else if (waCurrentMode === 'training') {
@@ -3883,7 +4022,6 @@ function updateWhatsAppPreview() {
       if (mapsInput) mapsInput.value = mapsUrl;
     }
 
-    const targetPlayer = targetPlayerId ? state.players.find((p) => p.id === targetPlayerId) : null;
     const text = buildWhatsAppTrainingDay({
       teamName,
       session: {
@@ -3900,7 +4038,12 @@ function updateWhatsAppPreview() {
     preview.value = text;
   } else if (waCurrentMode === 'week') {
     const tacticalGoal = $('#wa-week-tactical')?.value || '';
-    const sessions = state.trainingSessions.map((s) => ({
+    const today = localDateKey();
+    // Priorizar sesiones próximas/actuales de la semana
+    const candidateSessions = state.trainingSessions.filter((s) => s.date && s.date >= today);
+    const sessionsToUse = candidateSessions.length ? candidateSessions : state.trainingSessions;
+    const sorted = sortTrainingSessions(sessionsToUse, today);
+    const sessions = sorted.map((s) => ({
       date: s.date,
       time: s.time || '16:30',
       field: s.pitch || 'Alfonso Silva',
@@ -3922,6 +4065,8 @@ function updateWhatsAppPreview() {
     });
     preview.value = text;
   }
+
+  updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType });
 }
 
 // ==========================================================================
@@ -4215,7 +4360,15 @@ function wireEvents() {
     updateWhatsAppPreview();
   });
 
-  $('#wa-recipient-select')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-recipient-select')?.addEventListener('change', () => {
+    const recipientVal = $('#wa-recipient-select')?.value || 'group';
+    if (recipientVal.startsWith('player:') && $('#wa-callup-status-select')) {
+      $('#wa-callup-status-select').value = 'auto';
+    }
+    updateWhatsAppPreview();
+  });
+  $('#wa-parent-type-select')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-callup-status-select')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-kit-select')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-include-bibs')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-call-time')?.addEventListener('input', updateWhatsAppPreview);
@@ -4252,21 +4405,21 @@ function wireEvents() {
     }
   });
 
+  // Enviar a WhatsApp mediante botones dinámicos (Padre / Madre / Ambos / Grupo)
+  $('#wa-dynamic-open-buttons')?.addEventListener('click', (event) => {
+    const btn = event.target.closest('.wa-open-action-btn');
+    if (!btn) return;
+    const text = $('#whatsapp-preview-text')?.value ?? '';
+    const phone = btn.dataset.phone || '';
+    const waUrl = phone
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  });
+
   $('#whatsapp-open-btn')?.addEventListener('click', () => {
     const text = $('#whatsapp-preview-text')?.value ?? '';
-    const recipientVal = $('#wa-recipient-select')?.value || 'group';
-    let phone = '';
-    if (recipientVal.startsWith('parent:')) {
-      const parts = recipientVal.split(':');
-      const player = state.players.find((p) => p.id === parts[1]);
-      if (player) {
-        phone = (parts[2] === 'mother' ? player.motherPhone : player.fatherPhone) || '';
-      }
-    }
-    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
-    const waUrl = cleanPhone
-      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   });
 

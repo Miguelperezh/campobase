@@ -4820,6 +4820,8 @@ div:has(> .date-24) {
 .whatsapp-dialog, .whistle-dialog {
   max-width: 680px;
   width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
   border-radius: 16px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
   border: 1px solid var(--cb-slate-200, #cbd5e1);
@@ -4926,6 +4928,27 @@ body.cb-redesign-active .whatsapp-dialog textarea:focus,
   background: var(--cb-pitch-700, #10b981);
   color: #ffffff;
   border-color: var(--cb-pitch-700, #10b981);
+}
+
+#wa-parent-selection-row {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px dashed rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+#wa-dynamic-open-buttons button {
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+#wa-dynamic-open-buttons button:hover {
+  filter: brightness(1.08);
 }
 
 .player-family-group {
