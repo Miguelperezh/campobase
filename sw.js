@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2516-close-refresh';
+const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2517-exercise-interactions-refresh';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -12,6 +12,18 @@ const ASSETS = [
   ...BOARD_PARTS,
   './vendor/supabase.js',
   './icons/icon-192.svg', './icons/icon-512.svg', './icons/escudo.png',
+];
+
+const REVALIDATE_PATHS = [
+  '/js/app.js',
+  '/js/ejercicio-viewer.js',
+  '/js/session-visual-planner.js',
+  '/js/session-planner-ui.js',
+  '/js/session-picker-compat.js',
+  '/js/exercise-viewer-controls.js',
+  '/js/exercise-viewer-layout.js',
+  '/js/redesign-nav.js',
+  '/styles-redesign.css',
 ];
 
 self.addEventListener('install', (event) => {
@@ -59,9 +71,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Esta capa cambia con frecuencia durante los ajustes visuales. Se fuerza
-  // revalidación de red para que una versión antigua no quede retenida por la PWA.
-  if (url.pathname.endsWith('/js/redesign-nav.js')) {
+  // Los módulos de interacción de ejercicios/sesiones se modifican con frecuencia.
+  // Se fuerza revalidación de red para evitar que una versión anterior deje botones
+  // sin respuesta en la PWA, manteniendo la copia offline como respaldo.
+  if (REVALIDATE_PATHS.some((path) => url.pathname.endsWith(path))) {
     event.respondWith(
       fetch(event.request, { cache: 'reload' })
         .then((response) => {
@@ -71,7 +84,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('./js/redesign-nav.js')))
+        .catch(() => caches.match(event.request))
     );
     return;
   }
