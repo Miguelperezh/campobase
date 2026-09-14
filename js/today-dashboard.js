@@ -197,7 +197,7 @@ function sessionCard(session, trainings, today) {
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(session.date))}</span><span class="pill">Entrenamiento</span>${remainingBadge}${attendance ? '<span class="pill today-ok">Asistencia hecha</span>' : '<span class="pill today-warning">Asistencia pendiente</span>'}</div>
     <h3>${esc(sessionTitle(session))}</h3>
     <div class="today-event-meta">${session.time ? `<span>⏰ ${esc(session.time)}</span>` : ''}<span><strong>⏱️ ${esc(durationStr)}</strong> · ${blocks} ${blocks === 1 ? 'ejercicio' : 'ejercicios'}</span>${session.pitch ? `<span>🏟️ ${esc(session.pitch)}</span>` : ''}${session.material ? `<span>Material: ${esc(session.material)}</span>` : ''}</div>
-    <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}</div>
+    <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}<button type="button" class="accent open-whistle-session" data-id="${esc(session.id)}">⏱️ Silbato</button><button type="button" class="accent open-whatsapp-session" data-id="${esc(session.id)}">📱 WhatsApp</button></div>
   </article>`;
 }
 
@@ -211,7 +211,7 @@ function matchCard(match, trainings, callups, today) {
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(match.date))}</span><span class="pill type-${esc(match.type || 'league')}">${esc(matchType(match))}</span>${callup ? '<span class="pill today-ok">Convocatoria lista</span>' : '<span class="pill today-warning">Falta convocatoria</span>'}</div>
     <h3>${esc(match.opponent || 'Partido')}</h3>
     <div class="today-event-meta"><span><strong>${time || 'Hora pendiente'}</strong> · ${venue}</span>${match.location ? `<span>${esc(match.location)}</span>` : ''}${attendance ? '<span>Asistencia registrada</span>' : '<span>Asistencia pendiente</span>'}</div>
-    <div class="button-row">${goButton('calendario', 'Ver partido', true)}${callup ? goButton('convocatorias', 'Ver convocatoria') : goButton('convocatorias', 'Crear convocatoria')}</div>
+    <div class="button-row">${goButton('calendario', 'Ver partido', true)}${callup ? goButton('convocatorias', 'Ver convocatoria') : goButton('convocatorias', 'Crear convocatoria')}${callup ? `<button type="button" class="accent open-whatsapp-callup" data-id="${esc(callup.id)}">📱 WhatsApp</button>` : `<button type="button" class="accent open-whatsapp-match" data-id="${esc(match.id)}">📱 WhatsApp</button>`}</div>
   </article>`;
 }
 

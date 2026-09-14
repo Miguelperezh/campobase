@@ -17,6 +17,15 @@ import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwn
 import { refreshPlantillaStaff } from './staff-management.js';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
+import {
+  cleanPlayerNumber,
+  getGreetingByHour,
+  getAutoMapsUrl,
+  formatLongDate,
+  buildWhatsAppMatchConvocatoria,
+  buildWhatsAppTrainingDay,
+  buildWhatsAppTrainingWeek,
+} from './whatsapp-suite.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -346,7 +355,7 @@ function renderPlayers() {
         ${playerCardPhoto(player)}
         <div class="player-name">
           <h3>${escapeHtml(player.name)}</h3>
-          <span class="player-subhead-pill">Dorsal #${escapeHtml(player.number || '—')}</span>
+          <span class="player-subhead-pill">Dorsal ${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span>
         </div>
       </div>
       <div class="player-head-right">
@@ -362,8 +371,14 @@ function renderPlayers() {
         <div class="player-minute-meta"><span>Minutos disputados</span><span>${playerTotalMinutes} min (${minutePercent}%)</span></div>
         <div class="player-minute-track"><div class="player-minute-fill" style="width:${minutePercent}%"></div></div>
       </div>
-      <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(player.number || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
+      <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(cleanPlayerNumber(player.number) || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
+      ${(player.fatherPhone || player.motherPhone || player.fatherName || player.motherName) ? `
+      <div class="player-family-contacts">
+        ${player.fatherPhone ? `<a href="https://wa.me/${player.fatherPhone.replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Padre">👨 ${escapeHtml(player.fatherName || 'Padre')}: ${escapeHtml(player.fatherPhone)}</a>` : (player.fatherName ? `<span class="contact-pill meta">👨 Padre: ${escapeHtml(player.fatherName)}</span>` : '')}
+        ${player.motherPhone ? `<a href="https://wa.me/${player.motherPhone.replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
+      </div>` : ''}
       <div class="player-card-actions-bar">
+        ${(player.fatherPhone || player.motherPhone) ? `<button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">📱 WhatsApp</button>` : ''}
         <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
         <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
       </div>
@@ -447,7 +462,9 @@ async function savePlayer(event) {
 function editPlayer(id) {
   const player = state.players.find((item) => item.id === id); if (!player) return;
   const form = $('#player-form');
-  for (const key of ['id', 'name', 'number', 'foot', 'notes']) form.elements[key].value = player[key] ?? '';
+  for (const key of ['id', 'name', 'number', 'foot', 'notes', 'fatherName', 'fatherPhone', 'motherName', 'motherPhone']) {
+    if (form.elements[key]) form.elements[key].value = player[key] ?? '';
+  }
   if (form.elements.existingPhoto) form.elements.existingPhoto.value = player.photo || '';
   if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
   playerCropper?.setExistingPhoto(player.photo || '');
@@ -497,7 +514,7 @@ function exclusionReasonLabel({ reason, note }) {
 function callupPlayerCard(player, existing) {
   const manualExclusion = existing?.exclusions?.find((item) => item.playerId === player.id && !item.automatic);
   const selected = existing?.selectedIds?.includes(player.id);
-  return `<article class="selection-card" data-player-id="${player.id}">${playerCardPhoto(player)}<div class="selection-card-body"><h4>${escapeHtml(player.name)} <span class="pill">#${escapeHtml(player.number || '—')}</span></h4><p class="meta">${escapeHtml(playerPositions(player))}</p><div class="selection-actions"><label><input type="checkbox" name="selected" value="${player.id}" ${selected ? 'checked' : ''}> Convocar manualmente</label><label><input type="checkbox" name="manualExcluded" value="${player.id}" ${manualExclusion ? 'checked' : ''}> Dejar fuera</label><select name="reason-${player.id}" aria-label="Motivo de exclusión de ${escapeHtml(player.name)}" ${manualExclusion ? '' : 'disabled'}><option value="">Motivo…</option>${Object.entries(EXCLUSION_REASONS).filter(([key]) => key !== 'rotation').map(([key, label]) => `<option value="${key}" ${manualExclusion?.reason === key ? 'selected' : ''}>${label}</option>`).join('')}</select><label class="exclusion-other-note ${manualExclusion?.reason === 'other' ? '' : 'hidden'}">Explica el otro motivo<input name="reasonNote-${player.id}" maxlength="200" value="${escapeHtml(manualExclusion?.note ?? '')}" ${manualExclusion?.reason === 'other' ? 'required' : ''} aria-label="Explicación del motivo de exclusión de ${escapeHtml(player.name)}"></label></div></div></article>`;
+  return `<article class="selection-card" data-player-id="${player.id}">${playerCardPhoto(player)}<div class="selection-card-body"><h4>${escapeHtml(player.name)} <span class="pill">${escapeHtml(player.number ? `Dorsal ${cleanPlayerNumber(player.number)}` : '—')}</span></h4><p class="meta">${escapeHtml(playerPositions(player))}</p><div class="selection-actions"><label><input type="checkbox" name="selected" value="${player.id}" ${selected ? 'checked' : ''}> Convocar manualmente</label><label><input type="checkbox" name="manualExcluded" value="${player.id}" ${manualExclusion ? 'checked' : ''}> Dejar fuera</label><select name="reason-${player.id}" aria-label="Motivo de exclusión de ${escapeHtml(player.name)}" ${manualExclusion ? '' : 'disabled'}><option value="">Motivo…</option>${Object.entries(EXCLUSION_REASONS).filter(([key]) => key !== 'rotation').map(([key, label]) => `<option value="${key}" ${manualExclusion?.reason === key ? 'selected' : ''}>${label}</option>`).join('')}</select><label class="exclusion-other-note ${manualExclusion?.reason === 'other' ? '' : 'hidden'}">Explica el otro motivo<input name="reasonNote-${player.id}" maxlength="200" value="${escapeHtml(manualExclusion?.note ?? '')}" ${manualExclusion?.reason === 'other' ? 'required' : ''} aria-label="Explicación del motivo de exclusión de ${escapeHtml(player.name)}"></label></div></div></article>`;
 }
 
 function callupBuilder(preselectedMatchId = '', editId = '') {
@@ -642,7 +659,7 @@ function renderCallups() {
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? callup.excludedIds.map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="open-whatsapp-callup icon-button accent" data-id="${callup.id}">📱 WhatsApp</button><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
   }).join('') : empty('Todavía no hay convocatorias.');
 }
 
@@ -1651,7 +1668,7 @@ function renderMatchCard(match) {
   const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst;
   const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst;
   const hasScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst);
-  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
+  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
 }
 
 function renderMatches() {
@@ -2450,6 +2467,8 @@ function renderTrainingSessions() {
           <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
         </div>
         <div class="button-row">
+          <button type="button" class="open-whistle-session icon-button accent" data-id="${session.id}">⏱️ Silbato</button>
+          <button type="button" class="open-whatsapp-session icon-button accent" data-id="${session.id}">📱 WhatsApp</button>
           <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
           <button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button>
           <button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button>
@@ -2512,6 +2531,10 @@ function showSessionDetail(sessionId) {
     ${session.pitch ? `<p class="session-meta-line"><strong>Campo de entrenamiento:</strong> 🏟️ ${escapeHtml(session.pitch)}</p>` : ''}
     ${materialText ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(materialText)}</p>` : ''}
     ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
+    <div class="button-row" style="margin-top:1rem;">
+      <button type="button" class="open-whistle-session primary" data-id="${session.id}">⏱️ Iniciar cronómetro / Silbato</button>
+      <button type="button" class="open-whatsapp-session secondary" data-id="${session.id}">📱 Compartir por WhatsApp</button>
+    </div>
     <p class="meta">Pulsa en «Ver ejercicio con MP4» para abrir la animación interactiva, lupa por zonas y reproductor.</p>`;
   $('#session-detail-dialog').showModal();
 }
@@ -2837,6 +2860,7 @@ function applyTeamIdentity(settings = state.settings) {
     const formInput = $('#team-settings-form')?.elements.teamName;
     if (formInput && formInput.value !== settings.teamName) formInput.value = settings.teamName;
   }
+  populateKitSettingsForm(settings);
 }
 
 const THEME_PRESETS = {
@@ -3628,6 +3652,493 @@ async function pollLiveState() {
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
 
+// ==========================================================================
+// CONFIGURACIÓN DE EQUIPACIONES Y PETOS
+// ==========================================================================
+function getKitConfig() {
+  return state.settings?.kitConfig || {
+    primaryKit: '1.ª Oficial (Roja y Negra)',
+    secondaryKit: '2.ª Alternativa (Blanca y Negra)',
+    trainingKit: 'Equipación oficial de entrenamiento',
+    bibsConfig: 'Petos verdes y amarillos',
+  };
+}
+
+function populateKitSettingsForm(settings = state.settings) {
+  const form = $('#kit-settings-form');
+  if (!form) return;
+  const kitConfig = settings?.kitConfig || getKitConfig();
+  if (form.elements.primaryKit) form.elements.primaryKit.value = kitConfig.primaryKit || '1.ª Oficial (Roja y Negra)';
+  if (form.elements.secondaryKit) form.elements.secondaryKit.value = kitConfig.secondaryKit || '2.ª Alternativa (Blanca y Negra)';
+  if (form.elements.trainingKit) form.elements.trainingKit.value = kitConfig.trainingKit || 'Equipación oficial de entrenamiento';
+  if (form.elements.bibsConfig) form.elements.bibsConfig.value = kitConfig.bibsConfig || 'Petos verdes y amarillos';
+}
+
+async function saveKitSettings(event) {
+  event.preventDefault();
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede cambiar los ajustes de equipación.');
+  const values = formObject(event.currentTarget);
+  const kitConfig = {
+    primaryKit: values.primaryKit?.trim() || '1.ª Oficial (Roja y Negra)',
+    secondaryKit: values.secondaryKit?.trim() || '2.ª Alternativa (Blanca y Negra)',
+    trainingKit: values.trainingKit?.trim() || 'Equipación oficial de entrenamiento',
+    bibsConfig: values.bibsConfig?.trim() || 'Petos verdes y amarillos',
+  };
+  state.settings = { ...state.settings, id: 'main', kitConfig };
+  await put('settings', state.settings);
+  toast('Equipaciones y petos guardados.');
+}
+
+// ==========================================================================
+// WHATSAPP DIALOG CONTROLLER
+// ==========================================================================
+let waCurrentMode = 'callup'; // 'callup' | 'training' | 'week'
+let waTargetPlayerId = '';
+let waParentType = 'father'; // 'father' | 'mother'
+
+function openWhatsAppDialog({ mode = 'callup', matchId = null, callupId = null, sessionId = null, playerId = null, parentType = 'father' } = {}) {
+  const dialog = $('#whatsapp-dialog');
+  if (!dialog) return;
+
+  waCurrentMode = mode;
+  waTargetPlayerId = playerId || '';
+  waParentType = parentType || 'father';
+
+  // Sincronizar pestañas
+  $$('.whatsapp-type-tabs .tab-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.waType === waCurrentMode);
+  });
+
+  // Mostrar / ocultar filas según modo
+  $('#wa-match-details-row')?.classList.toggle('hidden', waCurrentMode !== 'callup');
+  $('#wa-location-row')?.classList.toggle('hidden', waCurrentMode === 'week');
+  $('#wa-times-row')?.classList.toggle('hidden', waCurrentMode === 'week');
+  $('#wa-week-tactical-row')?.classList.toggle('hidden', waCurrentMode !== 'week');
+
+  // Llenar selector de eventos
+  populateWhatsAppEvents(matchId, callupId, sessionId);
+  // Llenar selector de destinatarios
+  populateWhatsAppRecipients(playerId, parentType);
+
+  updateWhatsAppPreview();
+  dialog.showModal();
+}
+
+function populateWhatsAppEvents(matchId, callupId, sessionId) {
+  const select = $('#wa-event-select');
+  const label = $('#wa-event-selector-label');
+  if (!select) return;
+  select.innerHTML = '';
+
+  if (waCurrentMode === 'callup') {
+    if (label) label.firstChild.textContent = 'Partido / Convocatoria ';
+    const matches = [...state.matches].sort((a, b) => b.date.localeCompare(a.date));
+    matches.forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      const callup = state.callups.find((c) => c.id === m.callupId || c.matchId === m.id);
+      const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
+      opt.textContent = `${localDate(m.date)} · vs ${m.opponent}${callup ? ' (Convocatoria lista)' : ''}`;
+      if (isSelected) opt.selected = true;
+      select.appendChild(opt);
+    });
+    if (!matches.length) {
+      select.innerHTML = '<option value="">No hay partidos creados</option>';
+    }
+  } else if (waCurrentMode === 'training') {
+    if (label) label.firstChild.textContent = 'Sesión de entrenamiento ';
+    const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+    sessions.forEach((s) => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      if (sessionId && s.id === sessionId) opt.selected = true;
+      opt.textContent = `${localDate(s.date)}${s.time ? ` · ⏰ ${s.time}` : ''} · ${s.name || 'Sesión'}${s.pitch ? ` (${s.pitch})` : ''}`;
+      select.appendChild(opt);
+    });
+    if (!sessions.length) {
+      select.innerHTML = '<option value="">No hay sesiones creadas</option>';
+    }
+  } else if (waCurrentMode === 'week') {
+    if (label) label.firstChild.textContent = 'Semana de planificación ';
+    const opt = document.createElement('option');
+    opt.value = 'current_week';
+    opt.textContent = 'Semana actual en curso';
+    opt.selected = true;
+    select.appendChild(opt);
+  }
+}
+
+function populateWhatsAppRecipients(preselectedPlayerId = '', preselectedParentType = 'father') {
+  const select = $('#wa-recipient-select');
+  const parentsGroup = $('#wa-parents-group');
+  if (!select || !parentsGroup) return;
+  parentsGroup.innerHTML = '';
+
+  const sortedPlayers = sortPlayersByName(state.players);
+  let preselectVal = 'group';
+
+  sortedPlayers.forEach((p) => {
+    if (p.fatherPhone || p.fatherName) {
+      const opt = document.createElement('option');
+      opt.value = `parent:${p.id}:father`;
+      const phoneInfo = p.fatherPhone ? ` (${p.fatherPhone})` : ' (Sin tel)';
+      opt.textContent = `👨 ${p.fatherName ? `${p.fatherName} (Padre de ${p.name})` : `Padre de ${p.name}`}${phoneInfo}`;
+      if (preselectedPlayerId === p.id && preselectedParentType === 'father') preselectVal = opt.value;
+      parentsGroup.appendChild(opt);
+    }
+    if (p.motherPhone || p.motherName) {
+      const opt = document.createElement('option');
+      opt.value = `parent:${p.id}:mother`;
+      const phoneInfo = p.motherPhone ? ` (${p.motherPhone})` : ' (Sin tel)';
+      opt.textContent = `👩 ${p.motherName ? `${p.motherName} (Madre de ${p.name})` : `Madre de ${p.name}`}${phoneInfo}`;
+      if (preselectedPlayerId === p.id && preselectedParentType === 'mother') preselectVal = opt.value;
+      parentsGroup.appendChild(opt);
+    }
+  });
+
+  select.value = preselectVal;
+}
+
+function updateWhatsAppPreview() {
+  const preview = $('#whatsapp-preview-text');
+  if (!preview) return;
+
+  const kitConfig = getKitConfig();
+  const teamName = state.settings?.teamName || 'C.F. Unión Viera Alevín D';
+  const recipientVal = $('#wa-recipient-select')?.value || 'group';
+
+  let recipientType = 'group';
+  let targetPlayerId = null;
+  let parentType = 'father';
+
+  if (recipientVal.startsWith('parent:')) {
+    const parts = recipientVal.split(':');
+    recipientType = 'parent';
+    targetPlayerId = parts[1];
+    parentType = parts[2] || 'father';
+  }
+
+  if (waCurrentMode === 'callup') {
+    const matchId = $('#wa-event-select')?.value;
+    const match = state.matches.find((m) => m.id === matchId) || state.matches[0] || {};
+    const callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
+
+    const kitOption = $('#wa-kit-select')?.value || 'primary';
+    let kitText = kitConfig.primaryKit;
+    if (kitOption === 'secondary') kitText = kitConfig.secondaryKit;
+    else if (kitOption === 'training') kitText = kitConfig.trainingKit;
+
+    const includeBibs = $('#wa-include-bibs')?.checked || false;
+    const fieldInput = $('#wa-field-name');
+    let fieldName = fieldInput?.value?.trim();
+    if (!fieldName) {
+      fieldName = match.location || 'Campo Alfonso Silva (La Ballena)';
+      if (fieldInput) fieldInput.value = fieldName;
+    }
+
+    const mapsInput = $('#wa-maps-url');
+    let mapsUrl = mapsInput?.value?.trim();
+    if (!mapsUrl && fieldName) {
+      mapsUrl = getAutoMapsUrl(fieldName);
+      if (mapsInput) mapsInput.value = mapsUrl;
+    }
+
+    const callTime = $('#wa-call-time')?.value || '08:15';
+    const gameTime = $('#wa-game-time')?.value || (match.date && match.date.includes('T') ? match.date.split('T')[1].slice(0, 5) : '09:00');
+    const competition = matchTypeLabel(match.type || 'league');
+
+    const text = buildWhatsAppMatchConvocatoria({
+      teamName,
+      match,
+      callup,
+      players: state.players,
+      kit: kitText,
+      competition,
+      callTime,
+      gameTime,
+      fieldName,
+      mapsUrl,
+      includeBibs,
+      bibsConfig: kitConfig.bibsConfig,
+      targetPlayerId,
+      recipientType,
+      parentType,
+    });
+    preview.value = text;
+  } else if (waCurrentMode === 'training') {
+    const sessionId = $('#wa-event-select')?.value;
+    const session = state.trainingSessions.find((s) => s.id === sessionId) || state.trainingSessions[0] || {};
+
+    const fieldInput = $('#wa-field-name');
+    let fieldName = fieldInput?.value?.trim();
+    if (!fieldName) {
+      fieldName = session.pitch || 'Campo Alfonso Silva (La Ballena)';
+      if (fieldInput) fieldInput.value = fieldName;
+    }
+
+    const mapsInput = $('#wa-maps-url');
+    let mapsUrl = mapsInput?.value?.trim();
+    if (!mapsUrl && fieldName) {
+      mapsUrl = getAutoMapsUrl(fieldName);
+      if (mapsInput) mapsInput.value = mapsUrl;
+    }
+
+    const targetPlayer = targetPlayerId ? state.players.find((p) => p.id === targetPlayerId) : null;
+    const text = buildWhatsAppTrainingDay({
+      teamName,
+      session: {
+        date: session.date,
+        time: session.time || '16:30',
+        duration: session.totalDuration || session.targetDuration || 60,
+      },
+      fieldName,
+      mapsUrl,
+      kitTraining: kitConfig.trainingKit,
+      targetPlayer,
+      parentType,
+    });
+    preview.value = text;
+  } else if (waCurrentMode === 'week') {
+    const tacticalGoal = $('#wa-week-tactical')?.value || '';
+    const sessions = state.trainingSessions.map((s) => ({
+      date: s.date,
+      time: s.time || '16:30',
+      field: s.pitch || 'Alfonso Silva',
+      duration: s.totalDuration || s.targetDuration || 60,
+    }));
+    const upcomingMatch = state.matches.find((m) => m.status !== 'finished') || null;
+
+    const text = buildWhatsAppTrainingWeek({
+      teamName,
+      sessions,
+      match: upcomingMatch ? {
+        date: upcomingMatch.date,
+        time: upcomingMatch.date && upcomingMatch.date.includes('T') ? upcomingMatch.date.split('T')[1].slice(0, 5) : '09:00',
+        opponent: upcomingMatch.opponent,
+        field: upcomingMatch.location || (upcomingMatch.venue === 'away' ? 'Campo rival' : 'Alfonso Silva'),
+      } : null,
+      tacticalGoal,
+      includeTacticalGoal: Boolean(tacticalGoal),
+    });
+    preview.value = text;
+  }
+}
+
+// ==========================================================================
+// MODO SILBATO & CRONÓMETRO DE CAMPO (WEB AUDIO FOX 40 + VIBRACIÓN)
+// ==========================================================================
+let whistleAudioCtx = null;
+let whistleSoundEnabled = true;
+let whistleVibrateEnabled = true;
+let whistleActiveSession = null;
+let whistleBlocks = [];
+let whistleCurrentIndex = 0;
+let whistleRemainingSeconds = 0;
+let whistleTotalBlockSeconds = 0;
+let whistleIntervalId = null;
+let whistleIsRunning = false;
+
+function getWhistleAudioContext() {
+  if (!whistleAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) whistleAudioCtx = new AudioContextClass();
+  }
+  if (whistleAudioCtx && whistleAudioCtx.state === 'suspended') {
+    whistleAudioCtx.resume().catch(() => {});
+  }
+  return whistleAudioCtx;
+}
+
+function playFox40Whistle(type = 'short') {
+  if (whistleSoundEnabled) {
+    try {
+      const ctx = getWhistleAudioContext();
+      if (ctx) {
+        const now = ctx.currentTime;
+        const duration = type === 'long' ? 0.9 : 0.35;
+
+        // Frecuencias duales clásicas del Fox 40 Classic: 2920 Hz y 3120 Hz
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        osc1.type = 'triangle';
+        osc2.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(2920, now);
+        osc2.frequency.setValueAtTime(3120, now);
+
+        // Modulador de frecuencia para emular el flujo de aire caótico sin bola (~36 Hz)
+        const mod = ctx.createOscillator();
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(36, now);
+        const modGain = ctx.createGain();
+        modGain.gain.setValueAtTime(130, now);
+        mod.connect(modGain);
+        modGain.connect(osc1.frequency);
+        modGain.connect(osc2.frequency);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.3, now + 0.03);
+        gain.gain.setValueAtTime(0.3, now + duration - 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        mod.start(now);
+        osc1.start(now);
+        osc2.start(now);
+
+        mod.stop(now + duration);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+      }
+    } catch (e) {
+      console.warn('Silbato Web Audio no disponible:', e);
+    }
+  }
+
+  if (whistleVibrateEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'long') {
+        navigator.vibrate([250, 100, 350]);
+      } else {
+        navigator.vibrate([180, 80, 180]);
+      }
+    } catch (e) {}
+  }
+}
+
+function openWhistleDialog(sessionId) {
+  const dialog = $('#whistle-dialog');
+  if (!dialog) return;
+
+  const session = state.trainingSessions.find((s) => s.id === sessionId);
+  whistleActiveSession = session || null;
+
+  if (session && Array.isArray(session.blocks) && session.blocks.length) {
+    whistleBlocks = session.blocks.map((b, idx) => ({
+      index: idx,
+      name: exerciseName(b.exerciseId) || `Bloque ${idx + 1}`,
+      durationMin: Number(b.duration) || 15,
+      type: b.type || 'main',
+      notes: b.notes || '',
+      completed: false,
+    }));
+  } else {
+    // Bloques predeterminados de sesión
+    whistleBlocks = [
+      { index: 0, name: 'Calentamiento dinámico y movilidad', durationMin: 15, type: 'warmup', notes: '', completed: false },
+      { index: 1, name: 'Parte Principal: Tarea técnica/táctica', durationMin: 25, type: 'main', notes: '', completed: false },
+      { index: 2, name: 'Juego de aplicación / Partido reducido', durationMin: 20, type: 'scrimmage', notes: '', completed: false },
+    ];
+  }
+
+  whistleCurrentIndex = 0;
+  setupWhistleBlock(0);
+  renderWhistleBlocksList();
+  dialog.showModal();
+}
+
+function setupWhistleBlock(index) {
+  if (index < 0 || index >= whistleBlocks.length) return;
+  pauseWhistleTimer();
+  whistleCurrentIndex = index;
+  const block = whistleBlocks[index];
+  whistleTotalBlockSeconds = block.durationMin * 60;
+  whistleRemainingSeconds = whistleTotalBlockSeconds;
+  updateWhistleDisplay();
+}
+
+function updateWhistleDisplay() {
+  const block = whistleBlocks[whistleCurrentIndex];
+  const minutes = Math.floor(whistleRemainingSeconds / 60);
+  const seconds = whistleRemainingSeconds % 60;
+  const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  const display = $('#whistle-time-display');
+  if (display) display.textContent = timeStr;
+
+  const title = $('#whistle-block-title');
+  if (title) title.textContent = block ? `${block.index + 1}. ${block.name}` : 'Entrenamiento';
+
+  const meta = $('#whistle-block-meta');
+  if (meta) meta.textContent = block ? `Fase: ${sessionBlockLabel(block.type)} · Duración programada: ${block.durationMin} min${block.notes ? ` · Consigna: ${block.notes}` : ''}` : '';
+
+  const fill = $('#whistle-progress-fill');
+  if (fill) {
+    const elapsed = whistleTotalBlockSeconds - whistleRemainingSeconds;
+    const pct = whistleTotalBlockSeconds > 0 ? Math.min(100, Math.round((elapsed / whistleTotalBlockSeconds) * 100)) : 0;
+    fill.style.width = `${pct}%`;
+  }
+
+  const toggleBtn = $('#whistle-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.textContent = whistleIsRunning ? '⏸️ Pausar' : '▶️ Iniciar';
+  }
+}
+
+function renderWhistleBlocksList() {
+  const list = $('#whistle-blocks-list');
+  if (!list) return;
+  list.innerHTML = whistleBlocks.map((b, idx) => `
+    <li class="whistle-block-item ${idx === whistleCurrentIndex ? 'current' : ''} ${b.completed ? 'completed' : ''}" data-block-idx="${idx}">
+      <span style="display:flex;align-items:center;gap:0.45rem;">
+        <input type="checkbox" class="whistle-block-check" data-block-idx="${idx}" ${b.completed ? 'checked' : ''}>
+        <strong>${idx + 1}. ${escapeHtml(b.name)}</strong>
+      </span>
+      <span class="pill compact ${idx === whistleCurrentIndex ? 'accent' : ''}">${b.durationMin} min</span>
+    </li>
+  `).join('');
+}
+
+function startWhistleTimer() {
+  if (whistleIsRunning) return;
+  whistleIsRunning = true;
+  playFox40Whistle('short');
+  updateWhistleDisplay();
+
+  whistleIntervalId = window.setInterval(() => {
+    if (whistleRemainingSeconds > 0) {
+      whistleRemainingSeconds--;
+      updateWhistleDisplay();
+    } else {
+      // Fin del bloque: pitar largo
+      pauseWhistleTimer();
+      playFox40Whistle('long');
+      toast(`¡Tiempo cumplido! Bloque "${whistleBlocks[whistleCurrentIndex]?.name}" finalizado.`);
+      if (whistleBlocks[whistleCurrentIndex]) {
+        whistleBlocks[whistleCurrentIndex].completed = true;
+      }
+      renderWhistleBlocksList();
+
+      // Pasar automáticamente al siguiente si existe
+      if (whistleCurrentIndex + 1 < whistleBlocks.length) {
+        setupWhistleBlock(whistleCurrentIndex + 1);
+        renderWhistleBlocksList();
+      }
+    }
+  }, 1000);
+}
+
+function pauseWhistleTimer() {
+  whistleIsRunning = false;
+  if (whistleIntervalId) {
+    clearInterval(whistleIntervalId);
+    whistleIntervalId = null;
+  }
+  updateWhistleDisplay();
+}
+
+function toggleWhistleTimer() {
+  if (whistleIsRunning) {
+    pauseWhistleTimer();
+    playFox40Whistle('short');
+  } else {
+    startWhistleTimer();
+  }
+}
+
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
@@ -3667,7 +4178,163 @@ function wireEvents() {
     }
   }, true);
 
-  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError)); $('#player-stats-form').addEventListener('submit', (event) => savePlayerStats(event).catch(handleError)); $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
+  $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError));
+  $('#player-stats-form').addEventListener('submit', (event) => savePlayerStats(event).catch(handleError));
+  $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
+  $('#kit-settings-form')?.addEventListener('submit', (event) => saveKitSettings(event).catch(handleError));
+
+  // Pestañas del comunicador WhatsApp
+  $$('.whatsapp-type-tabs .tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      waCurrentMode = btn.dataset.waType;
+      $$('.whatsapp-type-tabs .tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      $('#wa-match-details-row')?.classList.toggle('hidden', waCurrentMode !== 'callup');
+      $('#wa-location-row')?.classList.toggle('hidden', waCurrentMode === 'week');
+      $('#wa-times-row')?.classList.toggle('hidden', waCurrentMode === 'week');
+      $('#wa-week-tactical-row')?.classList.toggle('hidden', waCurrentMode !== 'week');
+      populateWhatsAppEvents();
+      updateWhatsAppPreview();
+    });
+  });
+
+  // Modificación de campos en el comunicador WhatsApp
+  $('#wa-event-select')?.addEventListener('change', () => {
+    if (waCurrentMode === 'callup') {
+      const match = state.matches.find((m) => m.id === $('#wa-event-select').value);
+      if (match) {
+        if ($('#wa-field-name')) $('#wa-field-name').value = match.location || 'Campo Alfonso Silva (La Ballena)';
+        if ($('#wa-maps-url')) $('#wa-maps-url').value = getAutoMapsUrl($('#wa-field-name').value);
+      }
+    } else if (waCurrentMode === 'training') {
+      const session = state.trainingSessions.find((s) => s.id === $('#wa-event-select').value);
+      if (session) {
+        if ($('#wa-field-name')) $('#wa-field-name').value = session.pitch || 'Campo Alfonso Silva (La Ballena)';
+        if ($('#wa-maps-url')) $('#wa-maps-url').value = getAutoMapsUrl($('#wa-field-name').value);
+      }
+    }
+    updateWhatsAppPreview();
+  });
+
+  $('#wa-recipient-select')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-kit-select')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-include-bibs')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-call-time')?.addEventListener('input', updateWhatsAppPreview);
+  $('#wa-game-time')?.addEventListener('input', updateWhatsAppPreview);
+  $('#wa-week-tactical')?.addEventListener('input', updateWhatsAppPreview);
+  $('#wa-field-name')?.addEventListener('input', () => {
+    const val = $('#wa-field-name').value.trim();
+    if (val && $('#wa-maps-url')) {
+      $('#wa-maps-url').value = getAutoMapsUrl(val);
+    }
+    updateWhatsAppPreview();
+  });
+  $('#wa-maps-url')?.addEventListener('input', updateWhatsAppPreview);
+
+  // Botón probar Google Maps
+  $('#wa-test-maps-btn')?.addEventListener('click', () => {
+    const url = $('#wa-maps-url')?.value?.trim() || getAutoMapsUrl($('#wa-field-name')?.value?.trim());
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  });
+
+  // Copiar y Enviar WhatsApp
+  $('#whatsapp-copy-btn')?.addEventListener('click', async () => {
+    const text = $('#whatsapp-preview-text')?.value ?? '';
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        $('#whatsapp-preview-text').select();
+        document.execCommand('copy');
+      }
+      toast('Mensaje copiado al portapapeles.');
+    } catch {
+      toast('Mensaje copiado.');
+    }
+  });
+
+  $('#whatsapp-open-btn')?.addEventListener('click', () => {
+    const text = $('#whatsapp-preview-text')?.value ?? '';
+    const recipientVal = $('#wa-recipient-select')?.value || 'group';
+    let phone = '';
+    if (recipientVal.startsWith('parent:')) {
+      const parts = recipientVal.split(':');
+      const player = state.players.find((p) => p.id === parts[1]);
+      if (player) {
+        phone = (parts[2] === 'mother' ? player.motherPhone : player.fatherPhone) || '';
+      }
+    }
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  });
+
+  // Controles de Modo Silbato & Cronómetro
+  $('#whistle-toggle-btn')?.addEventListener('click', toggleWhistleTimer);
+  $('#whistle-prev-btn')?.addEventListener('click', () => {
+    if (whistleCurrentIndex > 0) {
+      setupWhistleBlock(whistleCurrentIndex - 1);
+      renderWhistleBlocksList();
+      playFox40Whistle('short');
+    }
+  });
+  $('#whistle-next-btn')?.addEventListener('click', () => {
+    if (whistleCurrentIndex + 1 < whistleBlocks.length) {
+      setupWhistleBlock(whistleCurrentIndex + 1);
+      renderWhistleBlocksList();
+      playFox40Whistle('short');
+    }
+  });
+  $('#whistle-complete-btn')?.addEventListener('click', () => {
+    if (whistleBlocks[whistleCurrentIndex]) {
+      whistleBlocks[whistleCurrentIndex].completed = true;
+    }
+    renderWhistleBlocksList();
+    if (whistleCurrentIndex + 1 < whistleBlocks.length) {
+      setupWhistleBlock(whistleCurrentIndex + 1);
+      renderWhistleBlocksList();
+      playFox40Whistle('short');
+    } else {
+      pauseWhistleTimer();
+      toast('¡Sesión completada!');
+    }
+  });
+  $('#whistle-sound-btn')?.addEventListener('click', () => {
+    whistleSoundEnabled = !whistleSoundEnabled;
+    const btn = $('#whistle-sound-btn');
+    btn?.classList.toggle('active', whistleSoundEnabled);
+    if (btn) btn.textContent = whistleSoundEnabled ? '🔊 Silbato Fox 40: Activado' : '🔇 Silbato Fox 40: Silenciado';
+  });
+  $('#whistle-vibrate-btn')?.addEventListener('click', () => {
+    whistleVibrateEnabled = !whistleVibrateEnabled;
+    const btn = $('#whistle-vibrate-btn');
+    btn?.classList.toggle('active', whistleVibrateEnabled);
+    if (btn) btn.textContent = whistleVibrateEnabled ? '📳 Vibración: Activada' : '📴 Vibración: Desactivada';
+  });
+  $('#whistle-blow-btn')?.addEventListener('click', () => {
+    playFox40Whistle('short');
+  });
+  $('#whistle-dialog')?.addEventListener('close', () => {
+    pauseWhistleTimer();
+  });
+  $('#whistle-blocks-list')?.addEventListener('click', (e) => {
+    const check = e.target.closest('.whistle-block-check');
+    if (check) {
+      const idx = Number(check.dataset.blockIdx);
+      if (whistleBlocks[idx]) {
+        whistleBlocks[idx].completed = check.checked;
+        renderWhistleBlocksList();
+      }
+      return;
+    }
+    const item = e.target.closest('.whistle-block-item');
+    if (item && item.dataset.blockIdx !== undefined) {
+      setupWhistleBlock(Number(item.dataset.blockIdx));
+      renderWhistleBlocksList();
+    }
+  });
+
   $('#auth-form').addEventListener('submit', (event) => submitAuth(event).catch(handleError));
   $('#auth-dialog').addEventListener('cancel', (event) => {
     if (state.role) return;
@@ -3915,9 +4582,15 @@ function wireEvents() {
     else if (formId === 'session-form') saveTrainingSession(event).catch(handleError);
     else if (formId === 'add-session-form') saveAddToSession(event).catch(handleError);
     else if (formId === 'tactic-form') saveTactic(event).catch(handleError);
+    else if (formId === 'kit-settings-form') saveKitSettings(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
     const target = event.target;
+    if (target.matches('.open-whatsapp-callup')) openWhatsAppDialog({ mode: 'callup', callupId: target.dataset.id });
+    if (target.matches('.open-whatsapp-match')) openWhatsAppDialog({ mode: 'callup', matchId: target.dataset.id });
+    if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
+    if (target.matches('.open-whatsapp-player')) openWhatsAppDialog({ mode: 'callup', playerId: target.dataset.id });
+    if (target.matches('.open-whistle-session')) openWhistleDialog(target.dataset.id);
     if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');

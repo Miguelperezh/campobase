@@ -304,6 +304,29 @@
           </form>
         </article>
         <article class="panel"><h3>Equipo y modalidad</h3><form id="team-settings-form"><label>Nombre de mi equipo<input name="teamName" maxlength="100" required placeholder="Ej. Unión Viera Alevín D"></label><label>Formato<select id="format" name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo</button></form><p class="meta">F7 usa 7 jugadores y 70 minutos. F11 usa 11 y 90 minutos.</p></article>
+        <article class="panel">
+          <h3>Equipaciones y Petos de Juego</h3>
+          <p class="meta">Configura los colores de tu club para las convocatorias de partidos y avisos de entrenamiento.</p>
+          <form id="kit-settings-form">
+            <div class="form-row">
+              <label>1.ª Equipación (Local / Principal)
+                <input name="primaryKit" maxlength="80" placeholder="Ej. Roja y Negra (Oficial)" value="1.ª Oficial (Roja y Negra)">
+              </label>
+              <label>2.ª Equipación (Visitante / Alternativa)
+                <input name="secondaryKit" maxlength="80" placeholder="Ej. Blanca y Negra" value="2.ª Alternativa (Blanca y Negra)">
+              </label>
+            </div>
+            <div class="form-row">
+              <label>Equipación de entrenamiento
+                <input name="trainingKit" maxlength="100" placeholder="Ej. Oficial de entrenamiento" value="Equipación oficial de entrenamiento">
+              </label>
+              <label>Petos para partidos y entreno
+                <input name="bibsConfig" maxlength="100" placeholder="Ej. 7 verdes y 7 amarillos" value="Petos verdes y amarillos">
+              </label>
+            </div>
+            <button class="primary" type="submit">Guardar equipaciones</button>
+          </form>
+        </article>
         <article class="panel"><h3>Copia de seguridad</h3><p>La sincronización en la nube conecta tus dispositivos y la aplicación conserva una copia local para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
         <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
@@ -323,7 +346,7 @@
     <button data-view="plantilla" class="active">Plantilla</button><button data-view="asistencia">Asistencia</button><button data-view="sesiones">Sesiones</button><button data-view="ejercicios">Ejercicios</button><button data-view="tacticas">Tácticas</button><button data-view="calendario">Calendario</button><button data-view="convocatorias">Convocatoria</button><button data-view="preparacion">Preparación de partido</button><button data-view="partido">Partido en vivo</button><button data-view="ajustes" id="settings-nav">Ajustes</button>
   </nav>
 
-  <dialog id="player-dialog"><form id="player-form"><div class="dialog-head"><h2>Ficha de jugador</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><input name="existingPhoto" type="hidden"><input name="photoRemoved" type="hidden" value="0"><div class="form-row"><div class="photo-cropper-field"><label>Foto (cámara o galería)<input name="photo" type="file" accept="image/*" capture="environment"></label><div class="photo-preview-wrapper"><img id="player-photo-preview" src="" alt="Vista previa" class="avatar-preview-img hidden"><div id="player-photo-placeholder" class="avatar-preview-placeholder">👤</div><div class="photo-adjust-controls hidden" id="player-photo-controls"><button type="button" class="secondary compact" id="player-crop-up-btn" title="Subir encuadre al rostro">▲ Rostro</button><button type="button" class="secondary compact" id="player-crop-down-btn" title="Bajar encuadre">▼ Bajar</button><button type="button" class="ghost-danger compact" id="player-remove-photo-btn">Eliminar foto</button></div></div></div></div><label>Nombre<input name="name" required maxlength="80" autocomplete="off"></label><div class="form-row"><label>Dorsal<input name="number" type="number" min="0" max="99"></label><label>Pierna dominante<select name="foot"><option>Derecha</option><option>Izquierda</option><option>Ambas</option></select></label></div><fieldset class="positions"><legend>Posiciones (puedes marcar varias)</legend><div class="position-groups"><div><strong>Portero</strong><label><input type="checkbox" name="positions" value="Portero"> Portero</label></div><div><strong>Defensa</strong><label><input type="checkbox" name="positions" value="Central"> Central</label><label><input type="checkbox" name="positions" value="Lateral derecho"> Lateral derecho</label><label><input type="checkbox" name="positions" value="Lateral izquierdo"> Lateral izquierdo</label><label><input type="checkbox" name="positions" value="Carrilero"> Carrilero</label></div><div><strong>Centrocampista</strong><label><input type="checkbox" name="positions" value="Pivote/Mediocentro defensivo"> Pivote/Mediocentro defensivo</label><label><input type="checkbox" name="positions" value="Interior"> Interior</label><label><input type="checkbox" name="positions" value="Mediapunta"> Mediapunta</label><label><input type="checkbox" name="positions" value="Extremo"> Extremo</label></div><div><strong>Delantero</strong><label><input type="checkbox" name="positions" value="Delantero centro"> Delantero centro</label><label><input type="checkbox" name="positions" value="Segundo delantero"> Segundo delantero</label></div></div></fieldset><label>Notas internas<textarea name="notes" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar jugador</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
+  <dialog id="player-dialog"><form id="player-form"><div class="dialog-head"><h2>Ficha de jugador</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="id" type="hidden"><input name="existingPhoto" type="hidden"><input name="photoRemoved" type="hidden" value="0"><div class="form-row"><div class="photo-cropper-field"><label>Foto (cámara o galería)<input name="photo" type="file" accept="image/*" capture="environment"></label><div class="photo-preview-wrapper"><img id="player-photo-preview" src="" alt="Vista previa" class="avatar-preview-img hidden"><div id="player-photo-placeholder" class="avatar-preview-placeholder">👤</div><div class="photo-adjust-controls hidden" id="player-photo-controls"><button type="button" class="secondary compact" id="player-crop-up-btn" title="Subir encuadre al rostro">▲ Rostro</button><button type="button" class="secondary compact" id="player-crop-down-btn" title="Bajar encuadre">▼ Bajar</button><button type="button" class="ghost-danger compact" id="player-remove-photo-btn">Eliminar foto</button></div></div></div></div><label>Nombre<input name="name" required maxlength="80" autocomplete="off"></label><div class="form-row"><label>Dorsal<input name="number" type="number" min="0" max="99"></label><label>Pierna dominante<select name="foot"><option>Derecha</option><option>Izquierda</option><option>Ambas</option></select></label></div><fieldset class="positions"><legend>Posiciones (puedes marcar varias)</legend><div class="position-groups"><div><strong>Portero</strong><label><input type="checkbox" name="positions" value="Portero"> Portero</label></div><div><strong>Defensa</strong><label><input type="checkbox" name="positions" value="Central"> Central</label><label><input type="checkbox" name="positions" value="Lateral derecho"> Lateral derecho</label><label><input type="checkbox" name="positions" value="Lateral izquierdo"> Lateral izquierdo</label><label><input type="checkbox" name="positions" value="Carrilero"> Carrilero</label></div><div><strong>Centrocampista</strong><label><input type="checkbox" name="positions" value="Pivote/Mediocentro defensivo"> Pivote/Mediocentro defensivo</label><label><input type="checkbox" name="positions" value="Interior"> Interior</label><label><input type="checkbox" name="positions" value="Mediapunta"> Mediapunta</label><label><input type="checkbox" name="positions" value="Extremo"> Extremo</label></div><div><strong>Delantero</strong><label><input type="checkbox" name="positions" value="Delantero centro"> Delantero centro</label><label><input type="checkbox" name="positions" value="Segundo delantero"> Segundo delantero</label></div></div></fieldset><fieldset class="player-family-group"><legend>Contacto de progenitores (WhatsApp para convocatorias)</legend><div class="form-row"><label>Padre (Nombre)<input name="fatherName" maxlength="80" placeholder="Ej. Carlos Hernández" autocomplete="off"></label><label>Teléfono Padre (WhatsApp)<input name="fatherPhone" type="tel" maxlength="30" placeholder="Ej. 600111222" autocomplete="tel"></label></div><div class="form-row"><label>Madre (Nombre)<input name="motherName" maxlength="80" placeholder="Ej. Elena Santana" autocomplete="off"></label><label>Teléfono Madre (WhatsApp)<input name="motherPhone" type="tel" maxlength="30" placeholder="Ej. 600333444" autocomplete="tel"></label></div></fieldset><label>Notas internas<textarea name="notes" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar jugador</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
 
   <dialog id="player-stats-dialog"><form id="player-stats-form"><div class="dialog-head"><h2 id="player-stats-title">Editar estadísticas</h2><button type="button" data-close aria-label="Cerrar">×</button></div><input name="playerId" type="hidden"><input name="scope" type="hidden"><p id="player-stats-help" class="meta"></p><div class="stats-edit-grid"><label>Goles<input name="goals" type="number" min="0" step="1" required></label><label>Amarillas<input name="yellowCards" type="number" min="0" step="1" required></label><label>Rojas<input name="redCards" type="number" min="0" step="1" required></label><label>Lesiones<input name="injuries" type="number" min="0" step="1" required></label><label>Incidencias<input name="incidents" type="number" min="0" step="1" required></label><label>Convocatorias<input name="callups" type="number" min="0" step="1" required></label><label>Rotaciones<input name="rotations" type="number" min="0" step="1" required></label><label>Tarde<input name="late" type="number" min="0" step="1" required></label><label>Ausente<input name="absent" type="number" min="0" step="1" required></label><label>Minutos<input name="minutes" type="number" min="0" step="1" required></label><label>Media<input name="averageRating" type="number" min="0" max="5" step="0.1" required></label></div><p class="meta">Esta corrección cambia el total mostrado sin modificar los partidos, convocatorias ni asistencias originales.</p><div class="button-row"><button class="primary" type="submit">Guardar estadísticas</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
 
@@ -444,6 +467,123 @@
         <button type="button" class="secondary" data-close>Cancelar</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="whatsapp-dialog" class="whatsapp-dialog">
+    <div class="dialog-head">
+      <h2>📱 Comunicador WhatsApp</h2>
+      <button type="button" data-close aria-label="Cerrar">×</button>
+    </div>
+    <form id="whatsapp-form" onsubmit="event.preventDefault()">
+      <div class="whatsapp-type-tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-wa-type="callup">🏆 Convocatoria de Partido</button>
+        <button type="button" class="tab-btn" data-wa-type="training">⚽ Sesión de Entrenamiento</button>
+        <button type="button" class="tab-btn" data-wa-type="week">📅 Planificación Semanal</button>
+      </div>
+
+      <div class="form-row whatsapp-target-selectors">
+        <label id="wa-event-selector-label">Partido / Convocatoria
+          <select id="wa-event-select"></select>
+        </label>
+        <label>Destinatario
+          <select id="wa-recipient-select">
+            <option value="group">👥 Grupo general de familias</option>
+            <optgroup label="Mensaje privado a progenitores" id="wa-parents-group"></optgroup>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-match-details-row">
+        <label>Equipación de juego
+          <select id="wa-kit-select">
+            <option value="primary">1.ª Oficial (Roja y Negra)</option>
+            <option value="secondary">2.ª Alternativa (Blanca y Negra)</option>
+            <option value="training">Equipación de entrenamiento</option>
+          </select>
+        </label>
+        <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.6rem;">
+          <input type="checkbox" id="wa-include-bibs"> Llevar petos de juego
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-location-row">
+        <label style="flex:1.5;">Campo / Instalación
+          <input id="wa-field-name" maxlength="120" placeholder="Ej. Campo Alfonso Silva (La Ballena)">
+        </label>
+        <label style="flex:2;">Enlace Google Maps (automático y editable)
+          <div style="display:flex;gap:0.4rem;">
+            <input id="wa-maps-url" type="url" placeholder="https://maps.google.com/?q=..." style="flex:1;">
+            <button type="button" id="wa-test-maps-btn" class="secondary compact" title="Comprobar enlace en pestaña nueva">🗺️ Probar</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="form-row" id="wa-times-row">
+        <label>Hora de citación
+          <input id="wa-call-time" maxlength="5" placeholder="08:15" value="08:15">
+        </label>
+        <label>Hora de inicio
+          <input id="wa-game-time" maxlength="5" placeholder="09:00" value="09:00">
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-week-tactical-row">
+        <label>Objetivo formativo / táctico de la semana
+          <input id="wa-week-tactical" maxlength="200" placeholder="Ej. Presión tras pérdida y repliegue ordenado">
+        </label>
+      </div>
+
+      <label>Mensaje para WhatsApp (puedes editarlo libremente antes de enviar):
+        <textarea id="whatsapp-preview-text" rows="11" spellcheck="false" style="font-family:monospace;font-size:0.9rem;line-height:1.45;"></textarea>
+      </label>
+
+      <div class="button-row" style="margin-top:1rem;">
+        <button type="button" id="whatsapp-copy-btn" class="secondary">📋 Copiar mensaje</button>
+        <button type="button" id="whatsapp-open-btn" class="primary" style="background:#25D366;border-color:#25D366;color:#fff;">📱 Abrir WhatsApp</button>
+        <button type="button" class="secondary" data-close>Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="whistle-dialog" class="whistle-dialog">
+    <div class="dialog-head">
+      <h2 id="whistle-dialog-title">⏱️ Modo Silbato & Cronómetro de Campo</h2>
+      <button type="button" data-close aria-label="Cerrar">×</button>
+    </div>
+    <div class="whistle-body">
+      <div class="whistle-timer-hero">
+        <div class="whistle-time-display" id="whistle-time-display">00:00</div>
+        <div class="whistle-block-info">
+          <h3 id="whistle-block-title">Selecciona un bloque</h3>
+          <p class="meta" id="whistle-block-meta">Duración: -- min</p>
+        </div>
+        <div class="whistle-progress-bar">
+          <div class="whistle-progress-fill" id="whistle-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="whistle-controls-row">
+        <button type="button" id="whistle-prev-btn" class="secondary compact" title="Bloque anterior">⏮️ Anterior</button>
+        <button type="button" id="whistle-toggle-btn" class="primary" style="font-size:1.1rem;padding:0.6rem 1.4rem;">▶️ Iniciar</button>
+        <button type="button" id="whistle-next-btn" class="secondary compact" title="Siguiente bloque">Siguiente ⏭️</button>
+        <button type="button" id="whistle-complete-btn" class="secondary compact">✅ Completar bloque</button>
+      </div>
+
+      <div class="whistle-sound-row">
+        <button type="button" id="whistle-sound-btn" class="ghost-compact active">🔊 Silbato Fox 40: Activado</button>
+        <button type="button" id="whistle-vibrate-btn" class="ghost-compact active">📳 Vibración: Activada</button>
+        <button type="button" id="whistle-blow-btn" class="secondary compact" style="background:#e02444;color:#fff;border-color:#e02444;">📢 Pitar ahora</button>
+      </div>
+
+      <div class="whistle-blocks-list-container">
+        <h4 style="margin:0.75rem 0 0.4rem;">Tareas y bloques del entrenamiento:</h4>
+        <ul id="whistle-blocks-list" class="plain-list whistle-blocks-list"></ul>
+      </div>
+
+      <div class="button-row" style="margin-top:1rem;">
+        <button type="button" class="secondary" data-close>Cerrar cronómetro</button>
+      </div>
+    </div>
   </dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>

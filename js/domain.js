@@ -31,14 +31,22 @@ export function buildPlayerRecord(values, positions, existing = null, photo = un
   const foot = String(values.foot ?? '');
   if (!['', 'Derecha', 'Izquierda', 'Ambas'].includes(foot)) throw new TypeError('La pierna dominante no es válida.');
   const resolvedPhoto = photo !== undefined ? (photo || '') : (existing?.photo || '');
+  const rawNumber = values.number !== undefined ? values.number : (existing?.number ?? '');
+  const cleanNumber = rawNumber !== '' && rawNumber !== null && rawNumber !== undefined
+    ? String(rawNumber).trim().replace(/^#\s*/, '')
+    : '';
   return {
     ...existing,
     id: values.id,
     name,
-    number: values.number ?? '',
+    number: cleanNumber,
     positions: [...positions],
     foot,
     notes: String(values.notes ?? '').trim(),
+    fatherName: String(values.fatherName ?? existing?.fatherName ?? '').trim(),
+    fatherPhone: String(values.fatherPhone ?? existing?.fatherPhone ?? '').trim(),
+    motherName: String(values.motherName ?? existing?.motherName ?? '').trim(),
+    motherPhone: String(values.motherPhone ?? existing?.motherPhone ?? '').trim(),
     photo: resolvedPhoto,
     outsideCount: existing?.outsideCount ?? 0,
     lastExcludedAt: existing?.lastExcludedAt ?? null,
