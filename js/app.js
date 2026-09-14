@@ -12,7 +12,7 @@ import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, 
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { planSquadSeed } from './squad-seed.js';
+import { planSquadSeed, OFFICIAL_SQUAD_DATA } from './squad-seed.js';
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
@@ -270,6 +270,41 @@ async function deduplicatePlayers() {
 async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   await deduplicatePlayers();
+
+  // Limpiar cualquier '#' en los dorsales y completar dorsales y teléfonos de la plantilla si faltan
+  for (const p of state.players) {
+    const cleanNum = cleanPlayerNumber(p.number);
+    const official = OFFICIAL_SQUAD_DATA.find((o) => o.name.toLowerCase() === (p.name || '').trim().toLowerCase());
+    let changed = false;
+    if (p.number !== cleanNum) {
+      p.number = cleanNum;
+      changed = true;
+    }
+    if (!p.number && official?.number) {
+      p.number = cleanPlayerNumber(official.number);
+      changed = true;
+    }
+    if (!p.fatherPhone && official?.fatherPhone) {
+      p.fatherPhone = official.fatherPhone;
+      changed = true;
+    }
+    if (!p.motherPhone && official?.motherPhone) {
+      p.motherPhone = official.motherPhone;
+      changed = true;
+    }
+    if (!p.fatherName && official?.fatherName) {
+      p.fatherName = official.fatherName;
+      changed = true;
+    }
+    if (!p.motherName && official?.motherName) {
+      p.motherName = official.motherName;
+      changed = true;
+    }
+    if (changed) {
+      put('players', p).catch(() => {});
+    }
+  }
+
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
   state.exercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
@@ -3850,12 +3885,12 @@ function populateWhatsAppRecipients(preselectedPlayerId = '') {
     const opt = document.createElement('option');
     opt.value = `player:${p.id}`;
     const num = cleanPlayerNumber(p.number);
-    const numLabel = num ? `#${num} ` : '';
+    const numLabel = num ? `Dorsal ${num} · ` : '';
     const contacts = [];
     if (p.fatherName) contacts.push(`👨 ${p.fatherName}`);
-    else if (p.fatherPhone) contacts.push('👨 Padre');
+    else if (p.fatherPhone) contacts.push(`👨 ${p.fatherPhone}`);
     if (p.motherName) contacts.push(`👩 ${p.motherName}`);
-    else if (p.motherPhone) contacts.push('👩 Madre');
+    else if (p.motherPhone) contacts.push(`👩 ${p.motherPhone}`);
     const contactStr = contacts.length ? ` (${contacts.join(' · ')})` : '';
 
     opt.textContent = `${numLabel}${p.name}${contactStr}`;
@@ -3868,19 +3903,67 @@ function populateWhatsAppRecipients(preselectedPlayerId = '') {
   select.value = preselectVal;
 }
 
+function isDesktopDevice() {
+  if (typeof navigator === 'undefined') return false;
+  return !/Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent || '');
+}
+
+function getWhatsAppUrl(phone, text, forceWeb = false) {
+  const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
+  const enc = encodeURIComponent(text || '');
+  const useWeb = forceWeb || (isDesktopDevice() && forceWeb !== false);
+  if (useWeb) {
+    return cleanPhone
+      ? `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${enc}`
+      : `https://web.whatsapp.com/send?text=${enc}`;
+  }
+  return cleanPhone
+    ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${enc}`
+    : `https://api.whatsapp.com/send?text=${enc}`;
+}
+
 function updateWhatsAppDynamicButtons(targetPlayer, parentType = 'both') {
   const container = $('#wa-dynamic-open-buttons');
   if (!container) return;
   container.innerHTML = '';
+  const text = $('#whatsapp-preview-text')?.value ?? '';
+  const isDesktop = isDesktopDevice();
 
   if (!targetPlayer) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'primary wa-open-action-btn';
-    btn.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
-    btn.textContent = '📱 Abrir WhatsApp (Grupo)';
-    btn.dataset.phone = '';
-    container.appendChild(btn);
+    if (isDesktop) {
+      const webBtn = document.createElement('a');
+      webBtn.className = 'primary wa-open-action-btn';
+      webBtn.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+      webBtn.textContent = '💻 Abrir WhatsApp Web (Grupo)';
+      webBtn.href = getWhatsAppUrl('', text, true);
+      webBtn.target = '_blank';
+      webBtn.rel = 'noopener noreferrer';
+      webBtn.dataset.phone = '';
+      webBtn.dataset.forceWeb = 'true';
+      container.appendChild(webBtn);
+
+      const appBtn = document.createElement('a');
+      appBtn.className = 'secondary wa-open-action-btn';
+      appBtn.style.cssText = 'text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+      appBtn.textContent = '📱 Abrir en App';
+      appBtn.href = getWhatsAppUrl('', text, false);
+      appBtn.target = '_blank';
+      appBtn.rel = 'noopener noreferrer';
+      appBtn.dataset.phone = '';
+      appBtn.dataset.forceWeb = 'false';
+      container.appendChild(appBtn);
+    } else {
+      const btn = document.createElement('a');
+      btn.className = 'primary wa-open-action-btn';
+      btn.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+      btn.textContent = '📱 Abrir WhatsApp (Grupo)';
+      btn.href = getWhatsAppUrl('', text, false);
+      btn.target = '_blank';
+      btn.rel = 'noopener noreferrer';
+      btn.dataset.phone = '';
+      btn.dataset.forceWeb = 'false';
+      container.appendChild(btn);
+    }
     return;
   }
 
@@ -3889,32 +3972,49 @@ function updateWhatsAppDynamicButtons(targetPlayer, parentType = 'both') {
   const fName = targetPlayer.fatherName?.trim() || 'Padre';
   const mName = targetPlayer.motherName?.trim() || 'Madre';
 
-  const createParentBtn = (target, name, phone, rawPhone) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'primary wa-open-action-btn';
-    btn.dataset.parentTarget = target;
-    btn.dataset.parentName = name;
-    btn.dataset.phone = phone;
+  const createParentLink = (target, name, phone, rawPhone, isAppOption = false) => {
+    const link = document.createElement('a');
+    link.className = isAppOption ? 'secondary wa-open-action-btn' : 'primary wa-open-action-btn';
+    link.dataset.parentTarget = target;
+    link.dataset.parentName = name;
+    link.dataset.phone = phone;
+    link.dataset.forceWeb = isAppOption ? 'false' : (isDesktop ? 'true' : 'false');
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
 
     if (phone) {
-      btn.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
-      btn.textContent = `📱 WhatsApp ${name} (${rawPhone || phone})`;
+      const displayPhone = rawPhone || phone;
+      link.href = getWhatsAppUrl(phone, text, link.dataset.forceWeb === 'true');
+      if (isDesktop && !isAppOption) {
+        link.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+        link.textContent = `💻 WhatsApp Web ${name} (${displayPhone})`;
+      } else if (isDesktop && isAppOption) {
+        link.style.cssText = 'text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+        link.textContent = `📱 App ${name}`;
+      } else {
+        link.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;';
+        link.textContent = `📱 WhatsApp ${name} (${displayPhone})`;
+      }
     } else {
-      btn.style.cssText = 'background:#475569;border-color:#475569;color:#fff;';
-      btn.textContent = `⚠️ WhatsApp ${name} (Sin tel)`;
-      btn.title = `Escribe el teléfono de ${name} arriba para abrir su chat directo`;
+      link.href = '#';
+      link.style.cssText = 'background:#475569;border-color:#475569;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 0.8rem;border-radius:6px;font-weight:600;font-size:0.875rem;cursor:pointer;';
+      link.textContent = `⚠️ WhatsApp ${name} (Sin tel)`;
+      link.title = `Escribe el teléfono de ${name} arriba para abrir su chat directo`;
     }
-    return btn;
+    return link;
   };
 
-  if (parentType === 'both') {
-    container.appendChild(createParentBtn('father', fName, fPhone, targetPlayer.fatherPhone));
-    container.appendChild(createParentBtn('mother', mName, mPhone, targetPlayer.motherPhone));
-  } else if (parentType === 'father') {
-    container.appendChild(createParentBtn('father', fName, fPhone, targetPlayer.fatherPhone));
-  } else if (parentType === 'mother') {
-    container.appendChild(createParentBtn('mother', mName, mPhone, targetPlayer.motherPhone));
+  if (parentType === 'both' || parentType === 'father') {
+    container.appendChild(createParentLink('father', fName, fPhone, targetPlayer.fatherPhone, false));
+    if (isDesktop && fPhone) {
+      container.appendChild(createParentLink('father', fName, fPhone, targetPlayer.fatherPhone, true));
+    }
+  }
+  if (parentType === 'both' || parentType === 'mother') {
+    container.appendChild(createParentLink('mother', mName, mPhone, targetPlayer.motherPhone, false));
+    if (isDesktop && mPhone) {
+      container.appendChild(createParentLink('mother', mName, mPhone, targetPlayer.motherPhone, true));
+    }
   }
 }
 
@@ -4591,26 +4691,31 @@ function wireEvents() {
 
   function openWhatsAppLink(waUrl) {
     if (!waUrl) return;
-    toast('Abriendo WhatsApp...');
+    const isWeb = waUrl.includes('web.whatsapp.com');
+    toast(isWeb ? 'Abriendo WhatsApp Web...' : 'Abriendo WhatsApp...');
     try {
-      const link = document.createElement('a');
-      link.href = waUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => link.remove(), 300);
+      const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        const link = document.createElement('a');
+        link.href = waUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => link.remove(), 300);
+      }
     } catch {
       window.open(waUrl, '_blank', 'noopener,noreferrer');
     }
   }
 
-  // Enviar a WhatsApp mediante botones dinámicos (Padre / Madre / Ambos / Grupo)
+  // Enviar a WhatsApp mediante botones/enlaces dinámicos (Padre / Madre / Ambos / Grupo)
   $('#wa-dynamic-open-buttons')?.addEventListener('click', (event) => {
     const btn = event.target.closest('.wa-open-action-btn');
     if (!btn) return;
     const parentTarget = btn.dataset.parentTarget;
     const parentName = btn.dataset.parentName;
+    const forceWeb = btn.dataset.forceWeb === 'true';
     let phone = btn.dataset.phone || '';
 
     // Si no tiene teléfono en data-phone, intentar tomarlo de los inputs familiares en vivo
@@ -4625,6 +4730,7 @@ function wireEvents() {
     }
 
     if (parentTarget && !phone) {
+      event.preventDefault();
       toast(`⚠️ Indica el teléfono de ${parentName || 'contacto'} arriba para abrir su chat directo.`, 'warning');
       if (parentTarget === 'father') $('#wa-father-phone-input')?.focus();
       else if (parentTarget === 'mother') $('#wa-mother-phone-input')?.focus();
@@ -4639,11 +4745,9 @@ function wireEvents() {
       text = text.replace(/^(Buenos días|Buenas tardes|Buenas noches)\s+[^:\n]+:/m, `$1 ${parentName}:`);
     }
 
-    const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
-    const waUrl = cleanPhone
-      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-    openWhatsAppLink(waUrl);
+    const waUrl = getWhatsAppUrl(phone, text, forceWeb);
+    btn.href = waUrl;
+    toast(waUrl.includes('web.whatsapp.com') ? 'Abriendo WhatsApp Web...' : 'Abriendo WhatsApp...');
   });
 
   // Contactos familiares en vivo y guardado en ficha

@@ -64608,7 +64608,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-001.png",
-      "video": "library-v2/assets/videos/f7-001.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-001/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -64849,7 +64849,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-002.png",
-      "video": "library-v2/assets/videos/f7-002.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-002/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -65100,7 +65100,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-003.png",
-      "video": "library-v2/assets/videos/f7-003.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-003/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -65350,7 +65350,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-004.png",
-      "video": "library-v2/assets/videos/f7-004.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-004/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -65589,7 +65589,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-005.png",
-      "video": "library-v2/assets/videos/f7-005.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-005/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -65882,7 +65882,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-006.png",
-      "video": "library-v2/assets/videos/f7-006.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-006/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -66069,7 +66069,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-007.png",
-      "video": "library-v2/assets/videos/f7-007.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-007/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -66248,7 +66248,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-008.png",
-      "video": "library-v2/assets/videos/f7-008.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-008/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -66464,7 +66464,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-009.png",
-      "video": "library-v2/assets/videos/f7-009.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-009/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -66650,7 +66650,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-010.png",
-      "video": "library-v2/assets/videos/f7-010.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-010/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -66848,7 +66848,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-011.png",
-      "video": "library-v2/assets/videos/f7-011.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-011/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -67050,7 +67050,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-012.png",
-      "video": "library-v2/assets/videos/f7-012.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-012/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -67293,7 +67293,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-013.png",
-      "video": "library-v2/assets/videos/f7-013.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-013/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -67523,7 +67523,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-014.png",
-      "video": "library-v2/assets/videos/f7-014.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-014/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -67738,7 +67738,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-015.png",
-      "video": "library-v2/assets/videos/f7-015.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-015/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -67965,7 +67965,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-016.png",
-      "video": "library-v2/assets/videos/f7-016.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-016/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -68177,7 +68177,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-017.png",
-      "video": "library-v2/assets/videos/f7-017.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-017/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -68446,7 +68446,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-018.png",
-      "video": "library-v2/assets/videos/f7-018.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-018/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -68708,7 +68708,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-019.png",
-      "video": "library-v2/assets/videos/f7-019.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-019/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -68939,7 +68939,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-020.png",
-      "video": "library-v2/assets/videos/f7-020.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-020/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -69235,7 +69235,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-021.png",
-      "video": "library-v2/assets/videos/f7-021.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-021/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -69548,7 +69548,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-022.png",
-      "video": "library-v2/assets/videos/f7-022.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-022/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -69745,7 +69745,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-023.png",
-      "video": "library-v2/assets/videos/f7-023.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-023/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -69983,7 +69983,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-024.png",
-      "video": "library-v2/assets/videos/f7-024.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-024/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -70210,7 +70210,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-025.png",
-      "video": "library-v2/assets/videos/f7-025.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-025/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -70449,7 +70449,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-026.png",
-      "video": "library-v2/assets/videos/f7-026.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-026/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -70713,7 +70713,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-027.png",
-      "video": "library-v2/assets/videos/f7-027.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-027/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -70934,7 +70934,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-028.png",
-      "video": "library-v2/assets/videos/f7-028.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-028/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -71210,7 +71210,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-029.png",
-      "video": "library-v2/assets/videos/f7-029.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-029/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -71484,7 +71484,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-030.png",
-      "video": "library-v2/assets/videos/f7-030.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-030/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -71804,7 +71804,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-031.png",
-      "video": "library-v2/assets/videos/f7-031.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-031/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -72155,7 +72155,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-032.png",
-      "video": "library-v2/assets/videos/f7-032.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-032/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -72397,7 +72397,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-033.png",
-      "video": "library-v2/assets/videos/f7-033.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-033/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -72672,7 +72672,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-034.png",
-      "video": "library-v2/assets/videos/f7-034.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-034/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -72965,7 +72965,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-035.png",
-      "video": "library-v2/assets/videos/f7-035.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-035/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -73257,7 +73257,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-036.png",
-      "video": "library-v2/assets/videos/f7-036.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-036/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -73423,7 +73423,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-037.png",
-      "video": "library-v2/assets/videos/f7-037.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-037/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -73686,7 +73686,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-038.png",
-      "video": "library-v2/assets/videos/f7-038.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-038/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -73940,7 +73940,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-039.png",
-      "video": "library-v2/assets/videos/f7-039.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-039/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -74205,7 +74205,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-040.png",
-      "video": "library-v2/assets/videos/f7-040.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-040/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -74484,7 +74484,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-041.png",
-      "video": "library-v2/assets/videos/f7-041.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-041/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -74702,7 +74702,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-042.png",
-      "video": "library-v2/assets/videos/f7-042.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-042/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -74980,7 +74980,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-043.png",
-      "video": "library-v2/assets/videos/f7-043.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-043/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -75273,7 +75273,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-044.png",
-      "video": "library-v2/assets/videos/f7-044.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-044/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -75584,7 +75584,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-045.png",
-      "video": "library-v2/assets/videos/f7-045.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-045/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -75880,7 +75880,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-046.png",
-      "video": "library-v2/assets/videos/f7-046.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-046/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -76144,7 +76144,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-047.png",
-      "video": "library-v2/assets/videos/f7-047.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-047/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -76356,7 +76356,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-048.png",
-      "video": "library-v2/assets/videos/f7-048.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-048/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -76548,7 +76548,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-049.png",
-      "video": "library-v2/assets/videos/f7-049.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-049/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
@@ -76744,7 +76744,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     },
     "media": {
       "preview": "library-v2/assets/previews/f7-050.png",
-      "video": "library-v2/assets/videos/f7-050.mp4"
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-050/ejercicio.mp4"
     },
     "_qa": {
       "source_zip": "001-050.zip",
