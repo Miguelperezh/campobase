@@ -137,9 +137,7 @@ export function triggerStandardView(viewId) {
     window.__campobase.showView(viewId);
   } else {
     const button = $(`.bottom-nav button[data-view="${viewId}"]`);
-    if (button) {
-      button.click();
-    }
+    if (button) button.click();
   }
 
   $$('.view').forEach((v) => v.classList.toggle('active', v.id === viewId));
@@ -200,9 +198,7 @@ export function renderSubNav() {
   `;
 
   subNav.querySelectorAll('.cb-sub-pill').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      triggerStandardView(btn.dataset.targetView);
-    });
+    btn.addEventListener('click', () => triggerStandardView(btn.dataset.targetView));
   });
 }
 
@@ -224,9 +220,7 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
     document.body.append(sheet);
 
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('#cb-quick-sheet') && !e.target.closest('.cb-nav-tab')) {
-        closeQuickSheet();
-      }
+      if (!e.target.closest('#cb-quick-sheet') && !e.target.closest('.cb-nav-tab')) closeQuickSheet();
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeQuickSheet();
@@ -265,9 +259,7 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
 
   sheet.querySelector('.cb-quick-sheet-close').addEventListener('click', closeQuickSheet);
   sheet.querySelectorAll('.cb-quick-sheet-item').forEach((item) => {
-    item.addEventListener('click', () => {
-      triggerStandardView(item.dataset.targetView);
-    });
+    item.addEventListener('click', () => triggerStandardView(item.dataset.targetView));
   });
 
   if (triggerBtn) {
@@ -460,8 +452,6 @@ function ensureOverlayBottomClose(surface) {
 function closeFromBottom(button) {
   const dialog = button.closest('dialog');
   if (dialog) {
-    // El diálogo de confirmación debe resolver su promesa como cancelación,
-    // no cerrarse por fuera de su controlador.
     if (dialog.id === 'confirmation-dialog') {
       document.getElementById('confirmation-cancel')?.click();
       return;
@@ -494,13 +484,9 @@ function closeFromBottom(button) {
 
 function syncBottomCloseControls() {
   installBottomCloseStyles();
-
   document.querySelectorAll('dialog').forEach(ensureDialogBottomClose);
   document.querySelectorAll('.lightbox, .tactica-overlay, .theater-fullscreen').forEach(ensureOverlayBottomClose);
-
-  document.querySelectorAll('.theater-bottom-close-btn').forEach((button) => {
-    normalizeBottomCloseButton(button);
-  });
+  document.querySelectorAll('.theater-bottom-close-btn').forEach((button) => normalizeBottomCloseButton(button));
 }
 
 function queueBottomCloseSync() {
@@ -532,19 +518,47 @@ function initBottomCloseControls() {
   });
 }
 
+// Corrige únicamente el salto de 5 segundos hacia delante del visor.
+// El visor usa bucle por defecto; si se salta exactamente al final, el navegador
+// puede volver al inicio y parecer que el botón adelanta hacia atrás. Al llegar
+// al final se detiene en el último fotograma en vez de activar el bucle.
+function initForwardFiveSecondFix() {
+  if (document.documentElement.dataset.cbForwardFiveSecondFix === '1') return;
+  document.documentElement.dataset.cbForwardFiveSecondFix = '1';
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.v-btn-forward');
+    if (!button) return;
+
+    const root = button.closest('.ejercicio-v2-sheet, .ejercicio-validado');
+    const video = root?.querySelector('.frame-video');
+    if (!video || !Number.isFinite(video.duration) || video.duration <= 0) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const target = video.currentTime + 5;
+    if (target >= video.duration) {
+      video.pause();
+      video.currentTime = Math.max(0, video.duration - 0.02);
+      return;
+    }
+
+    video.currentTime = target;
+  }, true);
+}
+
 export function initRedesign() {
   document.body.classList.add('cb-redesign-active');
   renderBottomNav();
   renderSubNav();
   initStaffManagement();
   initBottomCloseControls();
+  initForwardFiveSecondFix();
 
-  // Escuchar mutaciones de vista para sincronizar automáticamente
   const main = $('#app');
   if (main) {
-    const observer = new MutationObserver(() => {
-      updateNavState();
-    });
+    const observer = new MutationObserver(() => updateNavState());
     observer.observe(main, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
