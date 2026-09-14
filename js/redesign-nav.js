@@ -371,6 +371,16 @@ function installBottomCloseStyles() {
       border-radius: 12px !important;
       font-weight: 800 !important;
       cursor: pointer !important;
+      background: var(--cb-brand, var(--cb-accent, var(--brand, #c8102e))) !important;
+      color: var(--cb-accent-text, #ffffff) !important;
+      border: 1px solid var(--cb-brand, var(--cb-accent, var(--brand, #c8102e))) !important;
+    }
+    .cb-global-close-button:hover,
+    .cb-global-close-button:focus-visible {
+      background: var(--cb-brand, var(--cb-accent, var(--brand, #c8102e))) !important;
+      color: var(--cb-accent-text, #ffffff) !important;
+      border-color: var(--cb-brand, var(--cb-accent, var(--brand, #c8102e))) !important;
+      filter: brightness(.92);
     }
     .lightbox .cb-global-close-footer,
     .tactica-overlay .cb-global-close-footer,
@@ -381,6 +391,12 @@ function installBottomCloseStyles() {
     }
     dialog[open]:not(#auth-dialog) {
       padding-bottom: max(5.25rem, calc(4.5rem + env(safe-area-inset-bottom, 0px))) !important;
+    }
+    #match-detail-body {
+      box-sizing: border-box !important;
+      padding-left: clamp(1rem, 2.4vw, 1.35rem) !important;
+      padding-right: clamp(1rem, 2.4vw, 1.35rem) !important;
+      padding-bottom: 1rem !important;
     }
   `;
   document.head.appendChild(style);
