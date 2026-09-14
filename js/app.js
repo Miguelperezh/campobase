@@ -4589,6 +4589,22 @@ function wireEvents() {
     }
   });
 
+  function openWhatsAppLink(waUrl) {
+    if (!waUrl) return;
+    toast('Abriendo WhatsApp...');
+    try {
+      const link = document.createElement('a');
+      link.href = waUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => link.remove(), 300);
+    } catch {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   // Enviar a WhatsApp mediante botones dinámicos (Padre / Madre / Ambos / Grupo)
   $('#wa-dynamic-open-buttons')?.addEventListener('click', (event) => {
     const btn = event.target.closest('.wa-open-action-btn');
@@ -4615,16 +4631,19 @@ function wireEvents() {
       return;
     }
 
+    let text = $('#whatsapp-preview-text')?.value ?? '';
+
     // Si se envía de forma individual a padre o madre cuando se tenían ambos seleccionados,
     // ajustar el saludo de la primera línea para que vaya dirigido solo a ese progenitor
     if (parentTarget && parentName && parentName !== 'Padre' && parentName !== 'Madre') {
       text = text.replace(/^(Buenos días|Buenas tardes|Buenas noches)\s+[^:\n]+:/m, `$1 ${parentName}:`);
     }
 
-    const waUrl = phone
-      ? `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(text)}`
-      : `https://api.whatsapp.com/send/?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank', 'noopener,noreferrer');
+    const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
+    const waUrl = cleanPhone
+      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    openWhatsAppLink(waUrl);
   });
 
   // Contactos familiares en vivo y guardado en ficha
@@ -4652,8 +4671,8 @@ function wireEvents() {
 
   $('#whatsapp-open-btn')?.addEventListener('click', () => {
     const text = $('#whatsapp-preview-text')?.value ?? '';
-    const waUrl = `https://api.whatsapp.com/send/?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank', 'noopener,noreferrer');
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    openWhatsAppLink(waUrl);
   });
 
   // Controles de Modo Silbato & Cronómetro
