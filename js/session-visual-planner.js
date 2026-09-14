@@ -244,6 +244,8 @@ function genericDetailCard(exercise, videos = []) {
 
 function prepareValidatedDetail(wrapper, block) {
   $('.add-exercise-to-session', wrapper)?.remove();
+  $('.sheet-head', wrapper)?.remove();
+  $('.sheet-bottom-bar', wrapper)?.remove();
   const timeInput = $('.tiempo-ejercicio', wrapper);
   if (timeInput) {
     timeInput.value = Number(block.duration) || 1;
@@ -335,6 +337,9 @@ async function renderSessionDetail(sessionId) {
             <div class="session-block-accordion-body">
               ${block.notes ? `<p class="session-block-notes"><strong>Consignas / Notas:</strong> ${esc(block.notes)}</p>` : ''}
               <div class="session-detail-exercise-card">${content}</div>
+              <div class="session-block-fold-bar" style="margin-top:0.75rem; text-align:center;">
+                <button type="button" class="collapse-exercise-block-btn secondary compact" style="width:100%; max-width:320px; min-height:40px;">▲ Plegar ejercicio / Cerrar</button>
+              </div>
             </div>
           </details>`;
         }).join('')}
@@ -353,6 +358,16 @@ async function renderSessionDetail(sessionId) {
         });
       }
     }, true);
+    body.addEventListener('click', (event) => {
+      const foldBtn = event.target.closest('.collapse-exercise-block-btn');
+      if (foldBtn) {
+        const det = foldBtn.closest('details');
+        if (det) {
+          det.removeAttribute('open');
+          det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
   }
 
   $$('.session-detail-block', body).forEach((wrapper, index) => {
@@ -406,17 +421,18 @@ function installStyles() {
     .session-detail-summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}
     .session-detail-summary>div{display:grid;gap:.2rem}
     .session-detail-summary span{font-size:.82rem;color:var(--muted)}
-    .session-detail-exercises{display:grid;gap:1.2rem}
-    .session-detail-block{border-top:1px solid var(--line);padding-top:1rem}
-    .session-detail-block:first-child{border-top:0;padding-top:0}
-    .session-detail-block-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;margin-bottom:.7rem}
-    .session-detail-block-head>div{display:flex;gap:.45rem;flex-wrap:wrap}
-    .session-detail-exercise-card>.ejercicio-validado,.session-detail-exercise-card>.exercise-card{margin:0}
-    #session-detail-dialog{width:min(900px,calc(100% - 1rem))}
+    .session-detail-exercises{display:flex;flex-direction:column;gap:0.75rem;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+    .session-detail-block{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+    .session-block-accordion{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden}
+    .session-block-accordion-body{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden}
+    .session-detail-exercise-card{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden}
+    .session-detail-exercise-card>.ejercicio-validado,.session-detail-exercise-card>.exercise-card{margin:0;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden;padding:0}
+    #session-detail-dialog{width:min(760px,calc(100% - 1rem));max-width:calc(100vw - 1rem);box-sizing:border-box;overflow-x:hidden}
     @media(max-width:650px){
       .session-picker-head,.session-detail-summary,.session-detail-block-head{align-items:stretch;flex-direction:column}
       .session-category-filter,.session-detail-summary button{width:100%}
       .session-picker-grid{grid-template-columns:1fr}
+      #session-detail-dialog{width:calc(100vw - 1rem);max-width:calc(100vw - 1rem);margin:auto;padding:0}
     }
   `;
   document.head.appendChild(style);

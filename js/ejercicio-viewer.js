@@ -520,6 +520,13 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
           </div>
         </div>
       </div>
+
+      <!-- Botón visible inferior para salir de pantalla completa -->
+      <div class="theater-bottom-bar hidden">
+        <button type="button" class="theater-bottom-close-btn" aria-label="Cerrar pantalla completa">
+          ✕ Cerrar pantalla completa
+        </button>
+      </div>
     </div>
 
     <!-- Leyenda visual (inmediatamente después del vídeo) -->
@@ -628,6 +635,8 @@ export function initValidatedExerciseViewer(root) {
   const btnZoomOut = root.querySelector('.v-btn-zoom-out');
   const btnZoomReset = root.querySelector('.v-btn-zoom-reset');
   const btnRewind = root.querySelector('.v-btn-rewind');
+  const btnForward = root.querySelector('.v-btn-forward');
+  const theaterBottomCloseBtn = root.querySelector('.theater-bottom-close-btn');
   // Modo de visualización: reducida vs completa
   const viewModeBar = root.querySelector('.exercise-view-mode-bar');
   if (viewModeBar) {
@@ -940,6 +949,9 @@ export function initValidatedExerciseViewer(root) {
       dialog.classList.toggle('is-theater-active', willBeFull);
     }
     if (theaterExitBtn) theaterExitBtn.classList.toggle('hidden', !willBeFull);
+    const bottomBar = root.querySelector('.theater-bottom-bar');
+    if (bottomBar) bottomBar.classList.toggle('hidden', !willBeFull);
+    if (theaterBottomCloseBtn) theaterBottomCloseBtn.classList.toggle('hidden', !willBeFull);
     if (btnFullscreen) {
       btnFullscreen.classList.toggle('active', willBeFull);
       btnFullscreen.innerHTML = willBeFull ? '✕ <span class="v-btn-text">Reducir</span>' : '⛶ <span class="v-btn-text">Ampliar</span>';
@@ -950,6 +962,7 @@ export function initValidatedExerciseViewer(root) {
 
   if (btnFullscreen) btnFullscreen.addEventListener('click', () => toggleTheater());
   if (theaterExitBtn) theaterExitBtn.addEventListener('click', () => toggleTheater(false));
+  if (theaterBottomCloseBtn) theaterBottomCloseBtn.addEventListener('click', () => toggleTheater(false));
 
   const parentDialog = root.closest('dialog');
   if (parentDialog) {
