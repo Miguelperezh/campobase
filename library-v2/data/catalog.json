@@ -44302,7 +44302,7 @@
   },
   {
     "id": "pdf98-043",
-    "nombre": "-- Temporización",
+    "nombre": "Temporización",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
     "formato_juego": "futbol_11",
@@ -44314,14 +44314,13 @@
       "Fuerza"
     ],
     "que_se_trabaja": [
-      "-- Temporización",
+      "Temporización",
       "Regate",
       "Tiro",
       "Entrada",
-      "--",
       "Adaptación a las situaciones creadas"
     ],
-    "objetivo_principal": "-- Temporización",
+    "objetivo_principal": "Temporización",
     "objetivos_secundarios": [
       "Regate",
       "Tiro",
@@ -48421,7 +48420,7 @@
   },
   {
     "id": "pdf98-054",
-    "nombre": "-- Temporización",
+    "nombre": "Temporización",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
     "formato_juego": "futbol_11",
@@ -48434,14 +48433,14 @@
       "Velocidad"
     ],
     "que_se_trabaja": [
-      "-- Temporización",
+      "Temporización",
       "Pase",
       "Control",
       "Tiro",
       "Regate",
       "Entrada"
     ],
-    "objetivo_principal": "-- Temporización",
+    "objetivo_principal": "Temporización",
     "objetivos_secundarios": [
       "Pase",
       "Control",
@@ -65375,10 +65374,7 @@
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "4 jugadores",
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "espacio": "Espacio delimitado con zona libre",
       "material": "1 Balón"
     },
@@ -65497,10 +65493,7 @@
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,
@@ -65625,10 +65618,7 @@
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "2 jugadores",
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "espacio": "Dos puertas en la misma línea",
       "material": "1 Balón, 4 Cono"
     },
@@ -65737,10 +65727,7 @@
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,
@@ -65866,10 +65853,7 @@
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "6 jugadores",
-      "duracion": {
-        "valor": 15,
-        "unidad": "minutos"
-      },
+      "duracion": "15 min",
       "espacio": "Dos espacios contiguos con franja intermedia",
       "material": "1 Balón"
     },
@@ -66013,10 +65997,7 @@
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 15,
-        "unidad": "minutos"
-      },
+      "duracion": "15 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,

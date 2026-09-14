@@ -3533,13 +3533,16 @@ div:has(> .date-24) {
 .card-duration-badge {
   position: absolute !important;
   inset: auto 10px 10px auto !important;
-  background: rgba(0, 0, 0, 0.75) !important;
-  color: #ffffff !important;
-  font-size: 0.72rem !important;
+  background: var(--accent, #f59e0b) !important;
+  color: var(--cb-accent-text, #0f172a) !important;
+  font-size: 0.74rem !important;
   font-weight: 800 !important;
-  padding: 0.2rem 0.5rem !important;
-  border-radius: 6px !important;
+  padding: 0.22rem 0.55rem !important;
+  border-radius: 7px !important;
   letter-spacing: 0.02em !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  z-index: 2 !important;
 }
 
 .card-content {
@@ -4125,43 +4128,77 @@ div:has(> .date-24) {
 
 .legend-items-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-  gap: 0.5rem !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)) !important;
+  gap: 0.75rem !important;
+  align-items: stretch !important;
 }
 
 .legend-card {
   display: flex !important;
-  align-items: center !important;
-  gap: 0.6rem !important;
-  padding: 0.45rem 0.65rem !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  padding: 0.8rem 0.95rem !important;
   background: var(--card, #ffffff) !important;
   border: 1px solid var(--line, #e2e8f0) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
+  min-height: auto !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  transition: box-shadow 0.15s ease !important;
 }
 
 .legend-player-token {
-  width: 28px !important;
-  height: 28px !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
   border-radius: 50% !important;
   color: #ffffff !important;
-  font-size: 0.8rem !important;
+  font-size: 0.85rem !important;
   font-weight: 900 !important;
   display: grid !important;
   place-items: center !important;
   flex-shrink: 0 !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  margin-top: 1px !important;
 }
 
 .legend-mat-icon {
-  font-size: 1.3rem !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  border-radius: 8px !important;
+  background: var(--surface, #f8fafc) !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 1.35rem !important;
   flex-shrink: 0 !important;
 }
 
 .legend-action-visual {
-  font-size: 1.1rem !important;
-  font-weight: 900 !important;
+  width: 58px !important;
+  min-width: 58px !important;
+  max-width: 58px !important;
+  height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--surface, #f8fafc) !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  border-radius: 8px !important;
   color: var(--brand, #10b981) !important;
   flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  margin-top: 1px !important;
+}
+
+.legend-action-svg {
+  display: block !important;
+  width: 52px !important;
+  height: 18px !important;
 }
 
 .legend-zone-visual {
@@ -4169,26 +4206,48 @@ div:has(> .date-24) {
   font-weight: 800 !important;
   background: #fef3c7 !important;
   color: #92400e !important;
-  padding: 0.15rem 0.4rem !important;
-  border-radius: 4px !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 6px !important;
   flex-shrink: 0 !important;
+  margin-top: 2px !important;
 }
 
 .legend-info {
+  flex: 1 1 auto !important;
   min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
 }
 
 .legend-title {
-  font-size: 0.84rem !important;
+  font-size: 0.92rem !important;
   font-weight: 800 !important;
   color: var(--ink, #0f172a) !important;
-  line-height: 1.2 !important;
+  line-height: 1.35 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
 }
 
 .legend-detail {
-  font-size: 0.72rem !important;
+  font-size: 0.8rem !important;
   color: var(--muted, #64748b) !important;
-  line-height: 1.2 !important;
+  line-height: 1.4 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Auto-expansión de recuadros al aumentar tamaño de fuente */
+html[data-font-scale="large"] .legend-items-grid,
+html[data-font-scale="xlarge"] .legend-items-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)) !important;
+}
+
+html[data-font-scale="huge"] .legend-items-grid,
+html[data-font-scale="enormous"] .legend-items-grid,
+html[data-font-scale="ultra"] .legend-items-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)) !important;
 }
 
 /* 6. Secciones operativas de la ficha */
@@ -4243,18 +4302,31 @@ div:has(> .date-24) {
 
 .quick-facts-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
-  gap: 0.6rem !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)) !important;
+  gap: 0.65rem !important;
 }
 
 .quick-fact-card {
-  padding: 0.65rem 0.8rem !important;
+  padding: 0.7rem 0.85rem !important;
   background: var(--surface, #f8fafc) !important;
   border: 1px solid var(--line, #e2e8f0) !important;
   border-radius: 12px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.2rem !important;
+  gap: 0.25rem !important;
+  min-height: auto !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+html[data-font-scale="large"] .quick-facts-grid,
+html[data-font-scale="xlarge"] .quick-facts-grid,
+html[data-font-scale="huge"] .quick-facts-grid,
+html[data-font-scale="enormous"] .quick-facts-grid,
+html[data-font-scale="ultra"] .quick-facts-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
 }
 
 .fact-label {
@@ -4268,6 +4340,9 @@ div:has(> .date-24) {
   font-size: 0.95rem !important;
   font-weight: 800 !important;
   color: var(--ink, #0f172a) !important;
+  line-height: 1.35 !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
 }
 
 .numbered-steps {

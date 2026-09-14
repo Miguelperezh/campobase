@@ -1,6 +1,6 @@
-// Biblioteca de ejercicios de Migue — Formato V2 Certificado (248 ejercicios)
+// Biblioteca de ejercicios de Migue — Formato V2 Certificado (298 ejercicios)
 // Generado automáticamente desde la Biblioteca V2 normalizada.
-// Fuente de verdad: 248 ejercicios canónicos con vídeos MP4, previews, 17 secciones y leyenda visual.
+// Fuente de verdad: 298 ejercicios canónicos con vídeos MP4, previews, 17 secciones y leyenda visual.
 
 import { normalizeFormatoJuego } from './training-domain.js';
 
@@ -11,6 +11,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Agilidad reactiva 1v1 sin balón (sombreado)",
     "titulo_original_fuente": "Agilidad reactiva 1v1 sin balón (sombreado)",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -203,6 +204,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cambio de dirección en cruz (4 conos)",
     "titulo_original_fuente": "Cambio de dirección en cruz (4 conos)",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -377,6 +379,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito coordinativo completo",
     "titulo_original_fuente": "Circuito coordinativo completo",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -599,6 +602,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito de coordinación motora general",
     "titulo_original_fuente": "Circuito de coordinación motora general",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -767,6 +771,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Coordinación cruzada rodilla-mano opuesta",
     "titulo_original_fuente": "Coordinación cruzada rodilla-mano opuesta",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -880,6 +885,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Coordinación en pareja — pase con cambio de dirección",
     "titulo_original_fuente": "Coordinación en pareja — pase con cambio de dirección",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1052,6 +1058,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ejercicio del semáforo",
     "titulo_original_fuente": "Ejercicio del semáforo",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1258,6 +1265,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Escalera básica frontal — un pie por cuadro",
     "titulo_original_fuente": "Escalera básica frontal — un pie por cuadro",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1406,6 +1414,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Escalera con salida explosiva a balón",
     "titulo_original_fuente": "Escalera con salida explosiva a balón",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1584,6 +1593,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Escalera dos pies por cuadro",
     "titulo_original_fuente": "Escalera dos pies por cuadro",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1728,6 +1738,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Escalera lateral — dentro/fuera",
     "titulo_original_fuente": "Escalera lateral — dentro/fuera",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -1872,6 +1883,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Espejo del compañero (mirroring)",
     "titulo_original_fuente": "Espejo del compañero (mirroring)",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2034,6 +2046,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Icky Shuffle en escalera",
     "titulo_original_fuente": "Icky Shuffle en escalera",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2178,6 +2191,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ocho invertido con conos (figura 8)",
     "titulo_original_fuente": "Ocho invertido con conos (figura 8)",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2314,6 +2328,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Reacción al balón caído",
     "titulo_original_fuente": "Reacción al balón caído",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2480,6 +2495,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Reacción con pelotas de tenis",
     "titulo_original_fuente": "Reacción con pelotas de tenis",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2638,6 +2654,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salto en profundidad + arranque",
     "titulo_original_fuente": "Salto en profundidad + arranque",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2782,6 +2799,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salto lateral sobre línea (skater jumps)",
     "titulo_original_fuente": "Salto lateral sobre línea (skater jumps)",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -2910,6 +2928,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Saltos sobre obstáculos bajos",
     "titulo_original_fuente": "Saltos sobre obstáculos bajos",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3054,6 +3073,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Skipping alto con progresión a sprint",
     "titulo_original_fuente": "Skipping alto con progresión a sprint",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3202,6 +3222,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Slalom frontal entre conos",
     "titulo_original_fuente": "Slalom frontal entre conos",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3358,6 +3379,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Slalom lateral defensivo",
     "titulo_original_fuente": "Slalom lateral defensivo",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3502,6 +3524,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Sprint - freno - reacción visual",
     "titulo_original_fuente": "Sprint - freno - reacción visual",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3660,6 +3683,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "T-drill de agilidad",
     "titulo_original_fuente": "T-drill de agilidad",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3812,6 +3836,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Talones al glúteo con sprint final",
     "titulo_original_fuente": "Talones al glúteo con sprint final",
     "categoria": "Coordinación y agilidad",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -3956,6 +3981,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 con portero desde el centro",
     "titulo_original_fuente": "1v1 con portero desde el centro",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -4182,6 +4208,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 con portero por banda",
     "titulo_original_fuente": "1v1 con portero por banda",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -4360,6 +4387,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cabeceo defensivo → ofensivo (cambio de rol)",
     "titulo_original_fuente": "Cabeceo defensivo → ofensivo (cambio de rol)",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -4552,6 +4580,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cabeceo estático + salto",
     "titulo_original_fuente": "Cabeceo estático + salto",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -4710,6 +4739,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cabeceo tras centro por banda",
     "titulo_original_fuente": "Cabeceo tras centro por banda",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -4902,6 +4932,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cara a cara — chip vs raso (decisión)",
     "titulo_original_fuente": "Cara a cara — chip vs raso (decisión)",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -5128,6 +5159,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito completo de finalización (5 estaciones)",
     "titulo_original_fuente": "Circuito completo de finalización (5 estaciones)",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -5380,6 +5412,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición con defensor activo (1v1 completo)",
     "titulo_original_fuente": "Definición con defensor activo (1v1 completo)",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -5580,6 +5613,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición con defensor pasivo",
     "titulo_original_fuente": "Definición con defensor pasivo",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -5780,6 +5814,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición estática — pie dominante",
     "titulo_original_fuente": "Definición estática — pie dominante",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -5952,6 +5987,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición estática — pie no dominante",
     "titulo_original_fuente": "Definición estática — pie no dominante",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -6124,6 +6160,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición primer toque tras pase aéreo",
     "titulo_original_fuente": "Definición primer toque tras pase aéreo",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -6310,6 +6347,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición primer toque tras pase raso",
     "titulo_original_fuente": "Definición primer toque tras pase raso",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -6496,6 +6534,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Definición tras conducción rápida",
     "titulo_original_fuente": "Definición tras conducción rápida",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -6672,6 +6711,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Estaciones rotativas de definición",
     "titulo_original_fuente": "Estaciones rotativas de definición",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -6880,6 +6920,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalización 2v1 al portero",
     "titulo_original_fuente": "Finalización 2v1 al portero",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -7082,6 +7123,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalización 3v2 con superioridad",
     "titulo_original_fuente": "Finalización 3v2 con superioridad",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -7306,6 +7348,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalización tras rebote de portero",
     "titulo_original_fuente": "Finalización tras rebote de portero",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -7500,6 +7543,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Media volea con superficie exterior",
     "titulo_original_fuente": "Media volea con superficie exterior",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -7694,6 +7738,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Remate de larga distancia con conducción",
     "titulo_original_fuente": "Remate de larga distancia con conducción",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -7858,6 +7903,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Remate de larga distancia estático",
     "titulo_original_fuente": "Remate de larga distancia estático",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8030,6 +8076,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Remate de primera desde borde de área",
     "titulo_original_fuente": "Remate de primera desde borde de área",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8200,6 +8247,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo terminando en gol",
     "titulo_original_fuente": "Rondo terminando en gol",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8432,6 +8480,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Vaselina/chip al portero adelantado",
     "titulo_original_fuente": "Vaselina/chip al portero adelantado",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8626,6 +8675,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Volea sobre pase alto",
     "titulo_original_fuente": "Volea sobre pase alto",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8812,6 +8862,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cambio de juego larga distancia",
     "titulo_original_fuente": "Cambio de juego larga distancia",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -8956,6 +9007,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circulación en triángulos ofensivos",
     "titulo_original_fuente": "Circulación en triángulos ofensivos",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9196,6 +9248,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control con pecho + descarga",
     "titulo_original_fuente": "Control con pecho + descarga",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9362,6 +9415,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control de balón alto con muslo",
     "titulo_original_fuente": "Control de balón alto con muslo",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9532,6 +9586,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control orientado con interior",
     "titulo_original_fuente": "Control orientado con interior",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9710,6 +9765,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Dominios alternando pies",
     "titulo_original_fuente": "Dominios alternando pies",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9846,6 +9902,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Dominios con muslo y cabeza",
     "titulo_original_fuente": "Dominios con muslo y cabeza",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -9973,6 +10030,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Dominios individuales — pie dominante",
     "titulo_original_fuente": "Dominios individuales — pie dominante",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -10124,6 +10182,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Dominios progresivos en circuito",
     "titulo_original_fuente": "Dominios progresivos en circuito",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -10276,6 +10335,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Juego posicional 5v5+3 en cuadrado",
     "titulo_original_fuente": "Juego posicional 5v5+3 en cuadrado",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -10574,6 +10634,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase corto alternando pies con presión",
     "titulo_original_fuente": "Pase corto alternando pies con presión",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -10784,6 +10845,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase corto contra pared",
     "titulo_original_fuente": "Pase corto contra pared",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -10932,6 +10994,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase corto en tríos (triángulos)",
     "titulo_original_fuente": "Pase corto en tríos (triángulos)",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11096,6 +11159,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase corto móvil en cuadrado",
     "titulo_original_fuente": "Pase corto móvil en cuadrado",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11276,6 +11340,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase entre líneas — romper con pase",
     "titulo_original_fuente": "Pase entre líneas — romper con pase",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11508,6 +11573,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase largo 25m con empeine",
     "titulo_original_fuente": "Pase largo 25m con empeine",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11652,6 +11718,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase medio 15m contra pared",
     "titulo_original_fuente": "Pase medio 15m contra pared",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11800,6 +11867,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase y va (dar y ir) — 2 jugadores",
     "titulo_original_fuente": "Pase y va (dar y ir) — 2 jugadores",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -11972,6 +12040,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recepción y giro con adversario a la espalda",
     "titulo_original_fuente": "Recepción y giro con adversario a la espalda",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -12172,6 +12241,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo 4v1 clásico",
     "titulo_original_fuente": "Rondo 4v1 clásico",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -12380,6 +12450,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo 4v2 con salidas",
     "titulo_original_fuente": "Rondo 4v2 con salidas",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -12618,6 +12689,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo 5v2 con presión activa",
     "titulo_original_fuente": "Rondo 5v2 con presión activa",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -12842,6 +12914,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo 6v3 con líneas",
     "titulo_original_fuente": "Rondo 6v3 con líneas",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -13082,6 +13155,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Rondo tridimensional con comodines",
     "titulo_original_fuente": "Rondo tridimensional con comodines",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -13312,6 +13386,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salida limpia desde defensa (4v2 en zona baja)",
     "titulo_original_fuente": "Salida limpia desde defensa (4v2 en zona baja)",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -13548,6 +13623,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Abdominales dinámicos variados",
     "titulo_original_fuente": "Abdominales dinámicos variados",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -13699,6 +13775,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Aceleración desde parado en distintas posiciones",
     "titulo_original_fuente": "Aceleración desde parado en distintas posiciones",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -13887,6 +13964,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Arrancada explosiva con estímulo",
     "titulo_original_fuente": "Arrancada explosiva con estímulo",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14045,6 +14123,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Burpees con progresión",
     "titulo_original_fuente": "Burpees con progresión",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14158,6 +14237,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cambio de dirección con carga",
     "titulo_original_fuente": "Cambio de dirección con carga",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14308,6 +14388,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Carrera continua con cambios de ritmo",
     "titulo_original_fuente": "Carrera continua con cambios de ritmo",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14444,6 +14525,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito CrossFit adaptado al fútbol",
     "titulo_original_fuente": "Circuito CrossFit adaptado al fútbol",
     "categoria": "Físico con balón",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14664,6 +14746,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito de fuerza con peso corporal",
     "titulo_original_fuente": "Circuito de fuerza con peso corporal",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -14832,6 +14915,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito integrado: fuerza + velocidad + agilidad",
     "titulo_original_fuente": "Circuito integrado: fuerza + velocidad + agilidad",
     "categoria": "Físico con balón",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15016,6 +15100,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Core aplicado al fútbol (con balón)",
     "titulo_original_fuente": "Core aplicado al fútbol (con balón)",
     "categoria": "Físico con balón",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15176,6 +15261,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Escalada vertical (mountain climbers)",
     "titulo_original_fuente": "Escalada vertical (mountain climbers)",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15303,6 +15389,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Estocadas alternadas + rotación",
     "titulo_original_fuente": "Estocadas alternadas + rotación",
     "categoria": "Físico con balón",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15430,6 +15517,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Fartlek — juego de velocidades",
     "titulo_original_fuente": "Fartlek — juego de velocidades",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15580,6 +15668,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Fuerza excéntrica isquiotibiales (Nordic curl)",
     "titulo_original_fuente": "Fuerza excéntrica isquiotibiales (Nordic curl)",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15721,6 +15810,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Fuerza explosiva con salto vertical + horizontal",
     "titulo_original_fuente": "Fuerza explosiva con salto vertical + horizontal",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -15865,6 +15955,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "HIIT jugado: 30s alto / 30s recuperación",
     "titulo_original_fuente": "HIIT jugado: 30s alto / 30s recuperación",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16001,6 +16092,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Plancha frontal y lateral (core estático)",
     "titulo_original_fuente": "Plancha frontal y lateral (core estático)",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16145,6 +16237,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Puentes de glúteos con progresión",
     "titulo_original_fuente": "Puentes de glúteos con progresión",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16280,6 +16373,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Sentadillas con saltos verticales",
     "titulo_original_fuente": "Sentadillas con saltos verticales",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16393,6 +16487,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Sprints con recuperación incompleta (RSA)",
     "titulo_original_fuente": "Sprints con recuperación incompleta (RSA)",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16565,6 +16660,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Sprints repetidos con recuperación completa",
     "titulo_original_fuente": "Sprints repetidos con recuperación completa",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16737,6 +16833,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Test físico completo — evaluación integral",
     "titulo_original_fuente": "Test físico completo — evaluación integral",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -16933,6 +17030,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Trabajo con bandas elásticas",
     "titulo_original_fuente": "Trabajo con bandas elásticas",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -17085,6 +17183,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Trabajo pliométrico con conos",
     "titulo_original_fuente": "Trabajo pliométrico con conos",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -17229,6 +17328,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Trote continuo aeróbico base",
     "titulo_original_fuente": "Trote continuo aeróbico base",
     "categoria": "Calentamiento / activación",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -17409,6 +17509,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 central encarado",
     "titulo_original_fuente": "1v1 central encarado",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -17617,6 +17718,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 defensivo con portería",
     "titulo_original_fuente": "1v1 defensivo con portería",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -17825,6 +17927,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 defensivo — recuperar balón sin gol",
     "titulo_original_fuente": "1v1 defensivo — recuperar balón sin gol",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -18009,6 +18112,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v1 lateral por banda",
     "titulo_original_fuente": "1v1 lateral por banda",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -18219,6 +18323,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "1v2 defensor solitario contra 2 atacantes",
     "titulo_original_fuente": "1v2 defensor solitario contra 2 atacantes",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -18411,6 +18516,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "2v2 con transiciones",
     "titulo_original_fuente": "2v2 con transiciones",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -18619,6 +18725,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Achicar espacios (defender profundidad)",
     "titulo_original_fuente": "Achicar espacios (defender profundidad)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -18843,6 +18950,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Anticipación al pase",
     "titulo_original_fuente": "Anticipación al pase",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -19041,6 +19149,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Basculación defensiva colectiva",
     "titulo_original_fuente": "Basculación defensiva colectiva",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -19265,6 +19374,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Bloqueo de remate",
     "titulo_original_fuente": "Bloqueo de remate",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -19473,6 +19583,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito defensivo integrado",
     "titulo_original_fuente": "Circuito defensivo integrado",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -19729,6 +19840,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cobertura defensiva (2 defensores triangulando)",
     "titulo_original_fuente": "Cobertura defensiva (2 defensores triangulando)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -19921,6 +20033,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Defensa del carril central (bloquear pase clave)",
     "titulo_original_fuente": "Defensa del carril central (bloquear pase clave)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -20158,6 +20271,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Defensor bajo presión de tiempo",
     "titulo_original_fuente": "Defensor bajo presión de tiempo",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -20392,6 +20506,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Duelo aéreo defensivo",
     "titulo_original_fuente": "Duelo aéreo defensivo",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -20580,6 +20695,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Duelo por segunda pelota",
     "titulo_original_fuente": "Duelo por segunda pelota",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -20776,6 +20892,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Marcaje en jugada de balón parado",
     "titulo_original_fuente": "Marcaje en jugada de balón parado",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -21014,6 +21131,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Marcaje individual — cuerpo entre balón y jugador",
     "titulo_original_fuente": "Marcaje individual — cuerpo entre balón y jugador",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -21212,6 +21330,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Postura defensiva básica (sombreado sin balón)",
     "titulo_original_fuente": "Postura defensiva básica (sombreado sin balón)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -21376,6 +21495,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Presión alta 3v3",
     "titulo_original_fuente": "Presión alta 3v3",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -21600,6 +21720,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recuperación tras pérdida (contrapresión)",
     "titulo_original_fuente": "Recuperación tras pérdida (contrapresión)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -21808,6 +21929,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Robo por interceptación",
     "titulo_original_fuente": "Robo por interceptación",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -22024,6 +22146,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salida ordenada tras robo (transición def→ataque)",
     "titulo_original_fuente": "Salida ordenada tras robo (transición def→ataque)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -22248,6 +22371,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Slide tackle correcto (entrada legal)",
     "titulo_original_fuente": "Slide tackle correcto (entrada legal)",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -22434,6 +22558,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Zona defensiva 4-4-2 conceptual",
     "titulo_original_fuente": "Zona defensiva 4-4-2 conceptual",
     "categoria": "Defensa y duelos",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -22730,6 +22855,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Achique al 1v1 — cara a cara",
     "titulo_original_fuente": "Achique al 1v1 — cara a cara",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -22908,6 +23034,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Blocaje aéreo con manos abiertas",
     "titulo_original_fuente": "Blocaje aéreo con manos abiertas",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -23094,6 +23221,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Blocaje aéreo con puños",
     "titulo_original_fuente": "Blocaje aéreo con puños",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -23280,6 +23408,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circuito integrado del portero",
     "titulo_original_fuente": "Circuito integrado del portero",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -23530,6 +23659,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Comunicación con defensa (dirigir barrera)",
     "titulo_original_fuente": "Comunicación con defensa (dirigir barrera)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -23746,6 +23876,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Coordinación óculo-manual con pelotas",
     "titulo_original_fuente": "Coordinación óculo-manual con pelotas",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -23904,6 +24035,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Desplazamientos laterales sin balón",
     "titulo_original_fuente": "Desplazamientos laterales sin balón",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24054,6 +24186,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Estirada alta al ángulo",
     "titulo_original_fuente": "Estirada alta al ángulo",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24240,6 +24373,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Estirada baja al palo",
     "titulo_original_fuente": "Estirada baja al palo",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24426,6 +24560,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Fortaleza mental — respuesta al gol recibido",
     "titulo_original_fuente": "Fortaleza mental — respuesta al gol recibido",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24620,6 +24755,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Juego con los pies bajo presión",
     "titulo_original_fuente": "Juego con los pies bajo presión",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24820,6 +24956,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Postura básica del portero",
     "titulo_original_fuente": "Postura básica del portero",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -24947,6 +25084,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Reacción a doble remate (segunda pelota)",
     "titulo_original_fuente": "Reacción a doble remate (segunda pelota)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -25133,6 +25271,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recepción de balón alto (salto)",
     "titulo_original_fuente": "Recepción de balón alto (salto)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -25319,6 +25458,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recepción de balón medio (a la cadera)",
     "titulo_original_fuente": "Recepción de balón medio (a la cadera)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -25505,6 +25645,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recepción de balón raso",
     "titulo_original_fuente": "Recepción de balón raso",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -25691,6 +25832,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recuperación tras estirada (levantarse rápido)",
     "titulo_original_fuente": "Recuperación tras estirada (levantarse rápido)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -25877,6 +26019,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salida con los pies fuera del área",
     "titulo_original_fuente": "Salida con los pies fuera del área",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -26075,6 +26218,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Salida en esquina — cortar centro",
     "titulo_original_fuente": "Salida en esquina — cortar centro",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -26291,6 +26435,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Saque con volea larga",
     "titulo_original_fuente": "Saque con volea larga",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -26473,6 +26618,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Saque de meta corto y largo",
     "titulo_original_fuente": "Saque de meta corto y largo",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -26651,6 +26797,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Saques con las manos (rolling)",
     "titulo_original_fuente": "Saques con las manos (rolling)",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -26825,6 +26972,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Test evaluación del portero",
     "titulo_original_fuente": "Test evaluación del portero",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -27051,6 +27199,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ángulo de remate desde banda",
     "titulo_original_fuente": "Ángulo de remate desde banda",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -27229,6 +27378,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ángulo de remate desde el centro",
     "titulo_original_fuente": "Ángulo de remate desde el centro",
     "categoria": "Porteros",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -27407,6 +27557,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejora de la entrada por carriles laterales",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -27789,6 +27940,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ganar las segundas jugadas en defensa/ataque Vigilancia",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -28236,6 +28388,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Generar Segundas Jugadas en Juego Directo",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -28678,6 +28831,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Terminar las acciones en zona de finalización",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -29100,6 +29254,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón y Finalizar los ataques con éxito",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -29516,6 +29671,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de Balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -29793,6 +29949,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservar el balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -30135,6 +30292,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejora del Ataque Organizado y Contraataque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -30606,6 +30764,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Velocidad en las transiciones",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -30929,6 +31088,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circulación de balón y Velocidad en las transiciones",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -31371,6 +31531,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalizar las acciones de ataque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases"
@@ -31821,6 +31982,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -32195,6 +32357,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Evitar la progresión del contrario",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -32586,6 +32749,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Atacar rápidamente la portería adversaria",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -32954,6 +33118,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Generar y aprovechar espacios en carriles laterales",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -33316,6 +33481,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mantener la distancia entre líneas",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Presión",
@@ -33746,6 +33912,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Recepción de interiores y mediapuntas en el lado débil de la basculación en fase ofensiva",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Desmarque"
@@ -34159,6 +34326,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Valorar posibilidades de progresión, iniciar en corto",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Tiro",
@@ -34518,6 +34686,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -34885,6 +35054,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Progresar en el campo",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -35239,6 +35409,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ataque de la portería rival",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -35590,6 +35761,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ataque de la portería rival en superioridad numérica Apoyos",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -35936,6 +36108,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Entrada por banda",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -36247,6 +36420,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ataque de la portería rival",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -36586,6 +36760,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ocupación racional de la zona de remate",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -36914,6 +37089,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ocupación racional de la zona de remate",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -37233,6 +37409,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ataque de la portería rival",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Control",
@@ -37589,6 +37766,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalización en igualdad numérica",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -37981,6 +38159,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservar el balón y Progresar en el juego",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -38335,6 +38514,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservar el balón y Progresar en el juego",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -38752,6 +38932,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar la máxima amplitud en ataque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -39184,6 +39365,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservar el balón Apoyos",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -39468,6 +39650,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -39781,6 +39964,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circulación rápida de balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -40142,6 +40326,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Velocidad en la transición ofensiva",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -40564,6 +40749,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Crear superioridad numérica en ataque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Presión",
@@ -40987,6 +41173,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejorar la salida del balón y la presión",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -41435,6 +41622,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Progresar en el campo",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -41801,6 +41989,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Progresar en el campo",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -42102,6 +42291,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Aprender las coberturas y permutas defensivas",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -42370,6 +42560,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Control",
@@ -42765,6 +42956,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Control",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Control",
@@ -43122,6 +43314,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Amplitud en ataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -43509,6 +43702,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conducción",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -43751,6 +43945,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar amplitud en ataque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -44114,9 +44309,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
   },
   {
     "id": "pdf98-043",
-    "nombre": "-- Temporización",
+    "nombre": "Temporización",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Regate",
@@ -44125,14 +44321,13 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "Fuerza"
     ],
     "que_se_trabaja": [
-      "-- Temporización",
+      "Temporización",
       "Regate",
       "Tiro",
       "Entrada",
-      "--",
       "Adaptación a las situaciones creadas"
     ],
-    "objetivo_principal": "-- Temporización",
+    "objetivo_principal": "Temporización",
     "objetivos_secundarios": [
       "Regate",
       "Tiro",
@@ -44516,6 +44711,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalizar cuando haya posibilidad",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -44880,6 +45076,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -45297,6 +45494,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Presionar en la zona cercana a la posición del balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -45692,6 +45890,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Amplitud en ataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -46072,6 +46271,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Romper la presión",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -46455,6 +46655,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Orientar la circulación de balón al lado menos ocupado Desmarque",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -46786,6 +46987,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalizar rápido situaciones de contraataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -47096,6 +47298,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar amplitud en ataque y entrada por banda",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -47491,6 +47694,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Progresar en el campo",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -47874,6 +48078,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Orientar la presión",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -48222,9 +48427,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
   },
   {
     "id": "pdf98-054",
-    "nombre": "-- Temporización",
+    "nombre": "Temporización",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -48234,14 +48440,14 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "Velocidad"
     ],
     "que_se_trabaja": [
-      "-- Temporización",
+      "Temporización",
       "Pase",
       "Control",
       "Tiro",
       "Regate",
       "Entrada"
     ],
-    "objetivo_principal": "-- Temporización",
+    "objetivo_principal": "Temporización",
     "objetivos_secundarios": [
       "Pase",
       "Control",
@@ -48540,6 +48746,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -48854,6 +49061,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejorar la coordinación y la velocidad de reacción; aplicar el trabajo al partido y a la estrategia.",
     "titulo_original_fuente": "SESIÓN DE ENTRENAMIENTO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -49655,6 +49863,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Preparar la movilidad y enlazar rondos, posesión y partido con apoyos.",
     "titulo_original_fuente": "SESIÓN DE ENTRENAMIENTO",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [],
     "que_se_trabaja": [
@@ -50492,6 +50701,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalizar las jugadas en superioridad numérica Apoyos",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -50858,6 +51068,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Crear superioridad numérica en ataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -51263,6 +51474,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circulación de balón de un lado a otro del campo",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -51632,6 +51844,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circular el balón de lado a lado",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -51991,6 +52204,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -52343,6 +52557,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Presión intensa al poseedor del balón tras pérdida",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -52727,6 +52942,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cambiar la orientación del juego",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -53097,6 +53313,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Ofrecer siempre línea de pase al poseedor del balón Apoyos",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -53495,6 +53712,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -53830,6 +54048,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Replegar tras pérdida",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -54173,6 +54392,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Velocidad en el contraataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Control",
@@ -54474,6 +54694,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Crear situaciones de finalización y Presión tras pérdida",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -54879,6 +55100,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Llegar lo más rápido posible a zona de finalización",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -55281,6 +55503,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circular el balón de lado a lado",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -55657,6 +55880,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar espacios adecuados entre líneas en ataque y defensa",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Desmarque"
@@ -56057,6 +56281,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar las bandas para atacar",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Remate",
@@ -56498,6 +56723,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Circular el balón de lado a lado",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Presión"
@@ -56900,6 +57126,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Descargar a banda tras el inicio directo Todos",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Control"
@@ -57304,6 +57531,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conducción",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -57644,6 +57872,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Orientar los despejes a banda",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Marcaje",
@@ -57935,6 +58164,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Finalización en espacios reducidos con rapidez",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -58290,6 +58520,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Cambiar la orientación del juego rápidamente Cambio orientación",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Finalización",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -58639,6 +58870,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejorar la incorporación de los centrocampistas a zona de finalización Apoyos",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -59075,6 +59307,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Inicio de la transición por banda",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Juego reducido",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -59497,6 +59730,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -59825,6 +60059,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -60202,6 +60437,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -60585,6 +60821,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Buscar la movilidad continua de los jugadores de línea media",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -60889,6 +61126,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Pase y posesión",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -61257,6 +61495,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -61626,6 +61865,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -62002,6 +62242,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Mejorar la fase de transición defensa-ataque",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -62380,6 +62621,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Conservación de balón",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -62733,6 +62975,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Transiciones ofensivas y defensivas Todos",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -63122,6 +63365,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Trabajo 1ª línea de presión",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Transiciones",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -63515,6 +63759,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Defensa de centros laterales al área",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Táctica",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -63831,6 +64076,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Progresar en el campo",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Conducción",
@@ -64078,6 +64324,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "nombre": "Pase",
     "titulo_original_fuente": "DESCRIPCIÓN DEL EJERCICIO Y REGLAS",
     "categoria": "Técnico-táctico",
+    "formato_juego": "futbol_11",
     "subcategoria": null,
     "etiquetas": [
       "Pases",
@@ -65134,10 +65381,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "4 jugadores",
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "espacio": "Espacio delimitado con zona libre",
       "material": "1 Balón"
     },
@@ -65256,10 +65500,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,
@@ -65384,10 +65625,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "2 jugadores",
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "espacio": "Dos puertas en la misma línea",
       "material": "1 Balón, 4 Cono"
     },
@@ -65496,10 +65734,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 10,
-        "unidad": "minutos"
-      },
+      "duracion": "10 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,
@@ -65625,10 +65860,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
     "objetivos_secundarios": [],
     "datos_rapidos": {
       "jugadores": "6 jugadores",
-      "duracion": {
-        "valor": 15,
-        "unidad": "minutos"
-      },
+      "duracion": "15 min",
       "espacio": "Dos espacios contiguos con franja intermedia",
       "material": "1 Balón"
     },
@@ -65772,10 +66004,7 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       }
     ],
     "carga": {
-      "duracion": {
-        "valor": 15,
-        "unidad": "minutos"
-      },
+      "duracion": "15 min",
       "series": "",
       "repeticiones": "",
       "descanso": null,
@@ -76755,7 +76984,8 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_mp4": "d09036378b65fcbc3900f9c509f8fc2ef8bdaeef48bbd2a9b4bb34e7b0677e03"
     }
   }
-]);
+]
+);
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
 export function toCampoBaseExercise(item) {

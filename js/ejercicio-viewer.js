@@ -64,6 +64,41 @@ if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
+export function formatExerciseDuration(dur) {
+  if (!dur) return '';
+  if (typeof dur === 'object') {
+    if (dur.valor) return `${dur.valor} min`;
+    if (dur.minutos) return `${dur.minutos} min`;
+    return '';
+  }
+  const s = String(dur).trim();
+  if (!s || s === 'null' || s === 'undefined') return '';
+  if (/^\d+$/.test(s)) return `${s} min`;
+  return s;
+}
+
+export function renderActionVisualSVG(trazo = '') {
+  const str = String(trazo || '');
+  const isWavy = str.includes('~');
+  const isDashed = str.includes('-');
+  if (isWavy) {
+    return `<svg class="legend-action-svg" viewBox="0 0 54 20" width="54" height="20" aria-hidden="true">
+      <path d="M 4 10 Q 9 4, 15 10 T 27 10 T 39 10 L 44 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="42,5 50,10 42,15" fill="currentColor"/>
+    </svg>`;
+  }
+  if (isDashed) {
+    return `<svg class="legend-action-svg" viewBox="0 0 54 20" width="54" height="20" aria-hidden="true">
+      <line x1="4" y1="10" x2="43" y2="10" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+      <polygon points="42,5 50,10 42,15" fill="currentColor"/>
+    </svg>`;
+  }
+  return `<svg class="legend-action-svg" viewBox="0 0 54 20" width="54" height="20" aria-hidden="true">
+    <line x1="4" y1="10" x2="43" y2="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <polygon points="42,5 50,10 42,15" fill="currentColor"/>
+  </svg>`;
+}
+
 /**
  * Renderiza la ficha completa V2 (17 secciones) para el visor modal o detalle.
  */
@@ -74,9 +109,10 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   const realVideo = ex.video || '';
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
+  const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
 
   // Tags en cabecera
-  const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean);
+  const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean).map(t => typeof t === 'string' ? t.replace(/^--\s*/, '').trim() : t).filter(t => t && t !== '--');
   const tagsHtml = tags.map(t => `<span class="brand-badge">${esc(t)}</span>`).join('');
 
   // 1. Qué se trabaja
@@ -84,25 +120,26 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   if (ex.que_se_trabaja && ex.que_se_trabaja.length) {
     queTrabajaHtml = `
       <div id="section-que-se-trabaja" class="section-block">
-        <h3>🎯 Qué se trabaja</h3>
-        <div class="concept-chips">
-          ${ex.que_se_trabaja.map(c => `<span class="concept-pill">${esc(c)}</span>`).join('')}
+        <h3>⚽ Qué se trabaja</h3>
+        <div class="pills-container">
+          ${ex.que_se_trabaja.filter(t => t && t !== '--').map(t => `<span class="pill-tag">${esc(typeof t === 'string' ? t.replace(/^--\s*/, '').trim() : t)}</span>`).join('')}
         </div>
       </div>`;
   }
 
   // 2. Objetivos
   let objHtml = '';
-  if (ex.objetivo_principal || (ex.objetivos_secundarios && ex.objetivos_secundarios.length)) {
+  const cleanObj = String(ex.objetivo_principal || '').replace(/^--\s*/, '').trim();
+  if (cleanObj || (ex.objetivos_secundarios && ex.objetivos_secundarios.length)) {
     objHtml = `
       <div id="section-objetivo" class="section-block">
         <h3>🏆 Objetivo del ejercicio</h3>
-        ${ex.objetivo_principal ? `<div class="main-objective-box">${esc(ex.objetivo_principal)}</div>` : ''}
+        ${cleanObj ? `<div class="main-objective-box">${esc(cleanObj)}</div>` : ''}
         ${ex.objetivos_secundarios && ex.objetivos_secundarios.length ? `
           <div style="margin-top:0.75rem">
             <div class="sub-label">Objetivos complementarios:</div>
             <ul class="plain-list bullet-list">
-              ${ex.objetivos_secundarios.map(o => `<li>${esc(o)}</li>`).join('')}
+              ${ex.objetivos_secundarios.map(o => `<li>${esc(typeof o === 'string' ? o.replace(/^--\s*/, '').trim() : o)}</li>`).join('')}
             </ul>
           </div>` : ''}
       </div>`;
@@ -111,7 +148,8 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   // 3. Datos rápidos
   const rapItems = [];
   if (dr.jugadores) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">👥 Jugadores</span><span class="fact-value">${esc(dr.jugadores)}</span></div>`);
-  if (dr.duracion) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${esc(dr.duracion)}</span></div>`);
+  const drDur = formatExerciseDuration(dr.duracion || ex.duracion || ex.duration || (ex.duracion_min ? `${ex.duracion_min} min` : ''));
+  if (drDur) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${esc(drDur)}</span></div>`);
   if (dr.espacio) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📐 Espacio</span><span class="fact-value">${esc(dr.espacio)}</span></div>`);
   if (dr.material) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📦 Material</span><span class="fact-value">${esc(dr.material)}</span></div>`);
   let datosRapidosHtml = '';
@@ -359,7 +397,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
           <div class="legend-items-grid">
             ${ley.acciones.map(a => `
               <div class="legend-card">
-                <span class="legend-action-visual">${esc(a.trazo || '──────▶')}</span>
+                <span class="legend-action-visual" title="${esc(a.nombre || a.tipo || 'Acción')}">${renderActionVisualSVG(a.trazo)}</span>
                 <div class="legend-info">
                   <div class="legend-title">${esc(a.nombre || a.tipo)}</div>
                   ${a.significado ? `<div class="legend-detail">${esc(a.significado)}</div>` : ''}
@@ -402,7 +440,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="sheet-head">
       <div class="sheet-title-group">
         <div class="sheet-tags">${tagsHtml}</div>
-        <h2 class="sheet-title">${esc(ex.nombre)}</h2>
+        <h2 class="sheet-title">${esc(cleanNombre)}</h2>
       </div>
       <button type="button" class="sheet-top-close-btn" data-close aria-label="Cerrar ejercicio">✕</button>
     </div>
@@ -522,13 +560,15 @@ export function renderExerciseGridCard(ex) {
   const preview = media.preview || ex.preview || '';
   const dr = ex.datos_rapidos || {};
   const tags = [ex.categoria, ...(ex.etiquetas || [])].slice(0, 2);
+  const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
+  const dur = formatExerciseDuration(dr.duracion || ex.duracion || ex.duration || (ex.duracion_min ? `${ex.duracion_min} min` : ''));
 
   return `
   <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
     <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
-      ${preview ? `<img src="${esc(preview)}" alt="${esc(ex.nombre)}" class="card-preview-img" loading="lazy">` : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
+      ${preview ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy">` : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
-      ${dr.duracion ? `<span class="card-duration-badge">${esc(dr.duracion)}</span>` : ''}
+      ${dur ? `<span class="card-duration-badge">${esc(dur)}</span>` : ''}
     </div>
 
     <div class="card-content">
@@ -539,7 +579,7 @@ export function renderExerciseGridCard(ex) {
         </button>
       </div>
 
-      <h3 class="card-title view-exercise" data-exercise-id="${esc(ex.id)}">${esc(ex.nombre)}</h3>
+      <h3 class="card-title view-exercise" data-exercise-id="${esc(ex.id)}">${esc(cleanNombre)}</h3>
 
       <div class="card-meta-facts">
         ${dr.jugadores ? `<span>👥 ${esc(dr.jugadores)}</span>` : ''}

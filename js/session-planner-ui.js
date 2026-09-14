@@ -27,6 +27,10 @@ let videos = new Set();
 let query = '';
 let category = '';
 let format = '';
+let formatVal = 'todos';
+let playersFilter = '';
+let materialFilter = '';
+let difficultyFilter = '';
 let onlyFav = false;
 let onlyVideo = false;
 let mode = 'all';
@@ -34,6 +38,19 @@ let proposal = '';
 let objective = '';
 let observer = null;
 let queued = false;
+
+function formatExerciseDuration(dur) {
+  if (!dur) return '';
+  if (typeof dur === 'object') {
+    if (dur.valor) return `${dur.valor} min`;
+    if (dur.minutos) return `${dur.minutos} min`;
+    return '';
+  }
+  const s = String(dur).trim();
+  if (!s || s === 'null' || s === 'undefined') return '';
+  if (/^\d+$/.test(s)) return `${s} min`;
+  return s;
+}
 
 function duration(text, fallback = 10) {
   const numbers = String(text || '').match(/\d+/g)?.map(Number) || [];
@@ -86,16 +103,39 @@ function itemFromCard(card) {
   const durationText = $('.exercise-highlights .pill.accent', card)?.textContent?.trim() || '';
   const validated = byId.get(id);
   const quick = validated?.vista_rapida || {};
+  const dr = validated?.datos_rapidos || {};
+
+  let formato_juego = 'futbol_11';
+  if (validated?.formato_juego) {
+    formato_juego = validated.formato_juego === 'futbol_7' ? 'futbol_7' : 'futbol_11';
+  } else if (id.startsWith('f7-')) {
+    formato_juego = 'futbol_7';
+  }
+
+  const rawPlayers = dr.jugadores || $('.exercise-highlights .player-count', card)?.textContent || '';
+  const numMatch = String(rawPlayers).match(/\d+/);
+  const playerCount = numMatch ? parseInt(numMatch[0], 10) : (validated?.organizacion?.participantes_totales || 8);
+  const playersText = rawPlayers ? rawPlayers.replace(/^👥\s*/, '') : `${playerCount} jugadores`;
+
+  const rawMat = dr.material || (validated?.materiales ? (Array.isArray(validated.materiales) ? validated.materiales.join(' ') : String(validated.materiales)) : '');
+  const difficulty = validated?.dificultad || validated?.nivel || '';
+  const cleanTitle = String(validated?.nombre || name).replace(/^--\s*/, '').trim();
 
   return {
     id,
-    name: validated?.nombre || name,
+    name: cleanTitle,
     type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
-    duration: duration(quick.tiempo_estimado_15 || validated?.duracion_min || durationText),
-    durationText: quick.tiempo_estimado_15 || (validated?.duracion_min ? `${validated.duracion_min} min` : durationText) || '—',
+    category: validated?.categoria || quick.tipo_principal || pills[0] || 'Otros',
+    formato_juego,
+    playerCount,
+    playersText,
+    materialText: rawMat,
+    difficulty,
+    duration: duration(dr.duracion || quick.tiempo_estimado_15 || validated?.duracion_min || durationText),
+    durationText: formatExerciseDuration(dr.duracion || quick.tiempo_estimado_15 || validated?.duracion_min || durationText) || '10 min',
     works: quick.que_se_trabaja || (validated?.que_se_trabaja ? (Array.isArray(validated.que_se_trabaja) ? validated.que_se_trabaja : [validated.que_se_trabaja]) : []),
-    brief: quick.explicacion_breve || validated?.objetivo_principal || card.textContent?.trim() || name,
-    search: norm(validated ? validatedText(validated) : card.textContent || name),
+    brief: quick.explicacion_breve || validated?.objetivo_principal || card.textContent?.trim() || cleanTitle,
+    search: norm(validated ? validatedText(validated) : card.textContent || cleanTitle),
     cover: cover(validated),
     animationVideo: animationVideo(validated),
     validated,
@@ -115,11 +155,10 @@ function defaultFormat() {
 }
 
 function allowed(item) {
-  const selectedFormat = format || defaultFormat();
-  const text = norm(`${item.name} ${item.type} ${item.brief} ${item.works.join(' ')}`);
-  return selectedFormat === 'F11'
-    ? !/(^|\s)(f7|futbol 7|7v7|7x7)(\s|$)/.test(text)
-    : !/(^|\s)(f11|futbol 11|11v11|11x11)(\s|$)/.test(text);
+  if (formatVal && formatVal !== 'todos') {
+    return item.formato_juego === formatVal;
+  }
+  return true;
 }
 
 function score(item, value) {
@@ -296,12 +335,16 @@ function card(item, recommended) {
         ${hasRealVideo ? '<span>▶ Vídeo</span>' : '<i></i>'}
         <button type="button" class="favorite-exercise sp-fav ${favorite ? 'active' : ''}" data-id="${esc(item.id)}">${favorite ? '★' : '☆'}</button>
       </div>
-      <div class="sp-name"><small>${esc(item.type)}</small><strong>${esc(item.name)}</strong></div>
+      <div class="sp-name"><small class="sp-category-tag">${esc(item.type)}</small></div>
     </div>
     <div class="sp-body">
-      <span class="pill accent">${esc(item.durationText)}</span>
+      <div class="sp-body-facts">
+        <span class="pill accent">${esc(item.durationText)}</span>
+        ${item.playersText ? `<span class="sp-players-badge">👥 ${esc(item.playersText)}</span>` : ''}
+      </div>
+      <h4 class="sp-title">${esc(item.name)}</h4>
       <p class="meta">${esc(item.brief)}</p>
-      <div>
+      <div class="sp-actions">
         <button type="button" class="view-exercise secondary compact" data-exercise-id="${esc(item.id)}">Ver todo</button>
         <button type="button" class="add-exercise-to-session primary compact" data-id="${esc(item.id)}">+ Añadir</button>
       </div>
@@ -310,34 +353,104 @@ function card(item, recommended) {
 }
 
 function renderLibrary(form) {
-  const root = $('.session-exercise-library', form);
+  const root = $('.session-exercise-library', form) || $('.session-exercise-picker', form);
   if (!root) return;
+  root.classList.add('session-exercise-library');
 
   const recommended = recIds();
-  const base = catalog.filter(allowed);
-  const categories = [...new Set(base.map((item) => item.type))].sort((a, b) => a.localeCompare(b, 'es'));
-  const list = base.filter((item) => (
-    (!query || item.search.includes(norm(query)))
-    && (!category || item.type === category)
-    && (!onlyFav || favorites.has(item.id))
-    && (!onlyVideo || videos.has(item.id) || Boolean(item.validated?.video))
-    && (mode !== 'recommended' || recommended.has(item.id))
-  ));
+  const base = catalog.filter((item) => {
+    if (formatVal && formatVal !== 'todos') {
+      if (item.formato_juego !== formatVal) return false;
+    }
+    return true;
+  });
+  const categories = [...new Set(catalog.map((item) => item.type || item.category))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
+  const list = base.filter((item) => {
+    if (query && !item.search.includes(norm(query))) return false;
+    if (category && item.type !== category && item.category !== category) return false;
+    if (playersFilter) {
+      const c = item.playerCount;
+      if (playersFilter === '1-4' && !(c >= 1 && c <= 4)) return false;
+      if (playersFilter === '5-8' && !(c >= 5 && c <= 8)) return false;
+      if (playersFilter === '9-14' && !(c >= 9 && c <= 14)) return false;
+      if (playersFilter === '15+' && !(c >= 15)) return false;
+    }
+    if (materialFilter) {
+      const mat = norm(item.materialText);
+      if (!mat.includes(norm(materialFilter))) return false;
+    }
+    if (difficultyFilter) {
+      if (norm(item.difficulty) !== norm(difficultyFilter)) return false;
+    }
+    if (onlyFav && !favorites.has(item.id)) return false;
+    if (onlyVideo && !(videos.has(item.id) || Boolean(item.validated?.video) || Boolean(item.animationVideo))) return false;
+    if (mode === 'recommended' && !recommended.has(item.id)) return false;
+    return true;
+  });
 
   root.innerHTML = `<div class="sp-library-head">
       <div><p class="eyebrow">Biblioteca</p><h3>Ejercicios</h3></div>
       <span class="pill accent">${list.length} de ${base.length}</span>
     </div>
-    <div class="sp-filters">
-      <input id="sp-search" type="search" placeholder="Buscar ejercicio" value="${esc(query)}">
-      <select id="sp-category">
-        <option value="">Todas las categorías</option>
-        ${categories.map((entry) => `<option ${category === entry ? 'selected' : ''}>${esc(entry)}</option>`).join('')}
-      </select>
-      <select id="sp-mode">
-        <option value="all" ${mode === 'all' ? 'selected' : ''}>Todos los ejercicios</option>
-        <option value="recommended" ${mode === 'recommended' ? 'selected' : ''}>Solo recomendados</option>
-      </select>
+    <div class="sp-filters-grid">
+      <label class="sp-filter-field">
+        <span>Buscar ejercicio</span>
+        <input id="sp-search" type="search" placeholder="Buscar ejercicio..." value="${esc(query)}">
+      </label>
+      <label class="sp-filter-field">
+        <span>Formato</span>
+        <select id="sp-format">
+          <option value="todos" ${formatVal === 'todos' ? 'selected' : ''}>Todos los formatos</option>
+          <option value="futbol_7" ${formatVal === 'futbol_7' ? 'selected' : ''}>Fútbol 7</option>
+          <option value="futbol_11" ${formatVal === 'futbol_11' ? 'selected' : ''}>Fútbol 11</option>
+        </select>
+      </label>
+      <label class="sp-filter-field">
+        <span>Categoría</span>
+        <select id="sp-category">
+          <option value="">Todas las categorías</option>
+          ${categories.map((entry) => `<option value="${esc(entry)}" ${category === entry ? 'selected' : ''}>${esc(entry)}</option>`).join('')}
+        </select>
+      </label>
+      <label class="sp-filter-field">
+        <span>N.º de jugadores</span>
+        <select id="sp-players">
+          <option value="">Cualquier número</option>
+          <option value="1-4" ${playersFilter === '1-4' ? 'selected' : ''}>1 a 4 jugadores</option>
+          <option value="5-8" ${playersFilter === '5-8' ? 'selected' : ''}>5 a 8 jugadores</option>
+          <option value="9-14" ${playersFilter === '9-14' ? 'selected' : ''}>9 a 14 jugadores</option>
+          <option value="15+" ${playersFilter === '15+' ? 'selected' : ''}>15 o más jugadores</option>
+        </select>
+      </label>
+      <label class="sp-filter-field">
+        <span>Material</span>
+        <select id="sp-material">
+          <option value="">Todos los materiales</option>
+          <option value="balon" ${materialFilter === 'balon' ? 'selected' : ''}>Balón</option>
+          <option value="cono" ${materialFilter === 'cono' ? 'selected' : ''}>Conos</option>
+          <option value="pica" ${materialFilter === 'pica' ? 'selected' : ''}>Picas</option>
+          <option value="valla" ${materialFilter === 'valla' ? 'selected' : ''}>Vallas</option>
+          <option value="porteria" ${materialFilter === 'porteria' ? 'selected' : ''}>Porterías</option>
+          <option value="escalera" ${materialFilter === 'escalera' ? 'selected' : ''}>Escalera</option>
+          <option value="peto" ${materialFilter === 'peto' ? 'selected' : ''}>Petos</option>
+        </select>
+      </label>
+      <label class="sp-filter-field">
+        <span>Dificultad</span>
+        <select id="sp-difficulty">
+          <option value="">Todas las dificultades</option>
+          <option value="Baja" ${difficultyFilter === 'Baja' ? 'selected' : ''}>Baja</option>
+          <option value="Media" ${difficultyFilter === 'Media' ? 'selected' : ''}>Media</option>
+          <option value="Alta" ${difficultyFilter === 'Alta' ? 'selected' : ''}>Alta</option>
+        </select>
+      </label>
+      <label class="sp-filter-field">
+        <span>Modo</span>
+        <select id="sp-mode">
+          <option value="all" ${mode === 'all' ? 'selected' : ''}>Todos los ejercicios</option>
+          <option value="recommended" ${mode === 'recommended' ? 'selected' : ''}>Solo recomendados</option>
+        </select>
+      </label>
     </div>
     <div class="sp-toggles">
       <label><input id="sp-video" type="checkbox" ${onlyVideo ? 'checked' : ''}> Solo con vídeo</label>
@@ -347,7 +460,11 @@ function renderLibrary(form) {
 
   bindCoverFallbacks(root);
   $('#sp-search', root).oninput = (event) => { query = event.target.value; renderLibrary(form); };
+  $('#sp-format', root).onchange = (event) => { formatVal = event.target.value; renderLibrary(form); };
   $('#sp-category', root).onchange = (event) => { category = event.target.value; renderLibrary(form); };
+  $('#sp-players', root).onchange = (event) => { playersFilter = event.target.value; renderLibrary(form); };
+  $('#sp-material', root).onchange = (event) => { materialFilter = event.target.value; renderLibrary(form); };
+  $('#sp-difficulty', root).onchange = (event) => { difficultyFilter = event.target.value; renderLibrary(form); };
   $('#sp-mode', root).onchange = (event) => { mode = event.target.value; renderLibrary(form); };
   $('#sp-video', root).onchange = (event) => { onlyVideo = event.target.checked; renderLibrary(form); };
   $('#sp-favorites', root).onchange = (event) => { onlyFav = event.target.checked; renderLibrary(form); };
@@ -563,39 +680,47 @@ function styles() {
 .sp-source-hidden{display:none!important}
 .sp-library-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:.7rem}
 .sp-library-head h3,.sp-library-head p{margin:0}
+.sp-filters-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem;margin:.55rem 0}
+.sp-filter-field{display:flex;flex-direction:column;gap:.2rem;font-size:.72rem;font-weight:700;color:var(--muted)}
+.sp-filter-field input,.sp-filter-field select{min-height:38px;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);padding:.4rem .6rem;font-size:.82rem;font-weight:600;color:var(--ink,#0f172a)}
 .sp-filters{display:grid;grid-template-columns:minmax(0,1fr) 210px 190px;gap:.55rem}
 .sp-toggles{display:flex;gap:.45rem;flex-wrap:wrap;margin:.55rem 0 .8rem}
 .sp-toggles label{display:flex;align-items:center;gap:.4rem;padding:.42rem .65rem;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:.72rem}
 .sp-toggles input{width:16px;height:16px;min-height:16px;margin:0;accent-color:var(--brand)}
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:.8rem}
-.sp-card{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 15px #0001}
+.sp-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 4px 15px #0001}
 .sp-card.recommended{outline:3px solid var(--accent)}
 .sp-cover{position:relative;aspect-ratio:16/9;overflow:hidden;background:#173f35}
 .sp-cover>img,.sp-cover>.sp-cover-canvas{width:100%;height:100%;display:block;object-fit:cover}
 .sp-fallback{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:1rem;color:#fff;background:linear-gradient(145deg,#173f35,#0d2e26)}
-.sp-top{position:absolute;top:.45rem;left:.45rem;right:.45rem;display:flex;justify-content:space-between}
+.sp-top{position:absolute;top:.45rem;left:.45rem;right:.45rem;display:flex;justify-content:space-between;z-index:3}
 .sp-top>span,.sp-rec{padding:.2rem .45rem;border-radius:999px;font-size:.62rem;font-weight:800}
 .sp-top>span{background:var(--brand);color:#fff}
 .sp-rec{position:absolute;left:.45rem;bottom:.45rem;background:var(--accent)}
 .sp-fav{width:34px;min-height:34px;padding:0;background:#fffffff0}
 .sp-fav.active{background:var(--accent)}
-.sp-name{position:absolute;left:0;right:0;bottom:0;padding:1.7rem .7rem .6rem;color:#fff;background:linear-gradient(transparent,#000c)}
+.sp-name{position:absolute;left:.45rem;bottom:.45rem;z-index:2;margin:0;padding:0;background:transparent}
+.sp-category-tag{display:inline-flex;padding:.2rem .55rem;border-radius:6px;background:rgba(0,0,0,.75);color:#fff!important;font-size:.72rem;font-weight:800;letter-spacing:.02em;backdrop-filter:blur(4px);box-shadow:0 1px 4px #0004}
 .sp-name small,.sp-name strong{display:block}
-.sp-name strong{text-shadow:0 1px 3px #0008}
-.sp-body{padding:.7rem}
-.sp-body p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;margin:.45rem 0}
-.sp-body>div{display:flex;gap:.4rem}
-.sp-body>div>*{flex:1}
+.sp-name strong{display:none!important}
+.sp-body{padding:.85rem;display:flex;flex-direction:column;flex:1}
+.sp-body-facts{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin-bottom:.35rem}
+.sp-body-facts .pill.accent{background:var(--accent,#f59e0b)!important;color:var(--cb-accent-text,#0f172a)!important;font-weight:800!important}
+.sp-players-badge{font-size:.74rem;font-weight:700;color:var(--muted)}
+.sp-title{margin:.25rem 0 .35rem;font-size:.92rem;font-weight:800;line-height:1.3;color:var(--ink,#0f172a);word-break:normal;overflow-wrap:break-word}
+.sp-body p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;margin:.45rem 0;font-size:.82rem;line-height:1.4;word-break:normal;overflow-wrap:break-word;flex:1}
+.sp-actions{display:flex;gap:.4rem;margin-top:auto}
+.sp-actions button{flex:1}
 @media(max-width:900px){
   .sp-controls{grid-template-columns:1fr 1fr}
-  .sp-filters{grid-template-columns:1fr 1fr}
+  .sp-filters-grid{grid-template-columns:1fr 1fr}
   #sp-search{grid-column:1/-1}
 }
 @media(max-width:650px){
   .search-bar{padding-left:.7rem;padding-right:.7rem}
   .search-bar:before{padding:0 .55rem;font-size:.7rem}
   .session-plan-control{padding:.65rem}
-  .sp-controls,.sp-filters{grid-template-columns:1fr}
+  .sp-controls,.sp-filters-grid{grid-template-columns:1fr}
   .sp-plan-head{align-items:flex-start;flex-direction:column}
   .sp-grid{grid-template-columns:1fr}
 }`;

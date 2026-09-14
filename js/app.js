@@ -2343,7 +2343,7 @@ function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const defaultTarget = Number(seedMeta.targetDuration) > 0
     ? Number(seedMeta.targetDuration)
     : ((seedMeta.pitch && seedMeta.pitch.toLowerCase().includes('pilar')) ? 75 : 60);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || today, time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: defaultTarget, sessionKind: 'training', material: '', notes: '' };
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || localDateKey(), time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: defaultTarget, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
@@ -3101,16 +3101,38 @@ function applyCustomTheme(themeInput) {
 
   // 2. Color de acento del club
   if (theme.accentColor) {
-    root.style.setProperty('--cb-pitch-600', theme.accentColor);
-    root.style.setProperty('--cb-pitch-700', theme.accentColor);
-    root.style.setProperty('--cb-brand', theme.accentColor);
-    body.style.setProperty('--cb-pitch-600', theme.accentColor);
-    body.style.setProperty('--cb-pitch-700', theme.accentColor);
-    body.style.setProperty('--cb-brand', theme.accentColor);
+    const accent = theme.accentColor;
+    const cleanHex = String(accent).replace('#', '');
+    let contrastText = '#0f172a';
+    if (cleanHex.length === 6) {
+      const r = parseInt(cleanHex.substring(0, 2), 16);
+      const g = parseInt(cleanHex.substring(2, 4), 16);
+      const b = parseInt(cleanHex.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      contrastText = yiq >= 135 ? '#0f172a' : '#ffffff';
+    }
+    root.style.setProperty('--accent', accent);
+    root.style.setProperty('--cb-accent', accent);
+    root.style.setProperty('--cb-accent-text', contrastText);
+    root.style.setProperty('--cb-pitch-600', accent);
+    root.style.setProperty('--cb-pitch-700', accent);
+    root.style.setProperty('--cb-brand', accent);
+    body.style.setProperty('--accent', accent);
+    body.style.setProperty('--cb-accent', accent);
+    body.style.setProperty('--cb-accent-text', contrastText);
+    body.style.setProperty('--cb-pitch-600', accent);
+    body.style.setProperty('--cb-pitch-700', accent);
+    body.style.setProperty('--cb-brand', accent);
   } else {
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--cb-accent');
+    root.style.removeProperty('--cb-accent-text');
     root.style.removeProperty('--cb-pitch-600');
     root.style.removeProperty('--cb-pitch-700');
     root.style.removeProperty('--cb-brand');
+    body.style.removeProperty('--accent');
+    body.style.removeProperty('--cb-accent');
+    body.style.removeProperty('--cb-accent-text');
     body.style.removeProperty('--cb-pitch-600');
     body.style.removeProperty('--cb-pitch-700');
     body.style.removeProperty('--cb-brand');
