@@ -333,11 +333,195 @@ export function updateNavState() {
   renderSubNav();
 }
 
+// Punto 1 validable: todas las ventanas/modales y pantallas completas de la app
+// tienen un botón inferior visible llamado exactamente «Cerrar».
+// Esta capa no lee ni escribe datos y no altera la lógica de negocio.
+const BOTTOM_CLOSE_STYLE_ID = 'cb-bottom-close-controls-style';
+const BOTTOM_CLOSE_EXCLUDED_DIALOGS = new Set(['auth-dialog']);
+let bottomCloseSyncQueued = false;
+
+function installBottomCloseStyles() {
+  if (document.getElementById(BOTTOM_CLOSE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = BOTTOM_CLOSE_STYLE_ID;
+  style.textContent = `
+    .cb-global-close-footer {
+      position: fixed !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
+      transform: translateX(-50%) !important;
+      width: min(calc(100vw - 20px), 520px) !important;
+      max-width: calc(100vw - 20px) !important;
+      box-sizing: border-box !important;
+      z-index: 2147483000 !important;
+      margin: 0 !important;
+      padding: 0.55rem !important;
+      border-radius: 14px !important;
+      background: var(--card, #ffffff) !important;
+      border: 1px solid var(--line, #e2e8f0) !important;
+      box-shadow: 0 -3px 18px rgba(0,0,0,.18) !important;
+    }
+    .cb-global-close-button {
+      width: 100% !important;
+      min-height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 12px !important;
+      font-weight: 800 !important;
+      cursor: pointer !important;
+    }
+    .lightbox .cb-global-close-footer,
+    .tactica-overlay .cb-global-close-footer,
+    .theater-fullscreen .cb-global-close-footer {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
+    dialog[open]:not(#auth-dialog) {
+      padding-bottom: max(5.25rem, calc(4.5rem + env(safe-area-inset-bottom, 0px))) !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function makeBottomCloseFooter() {
+  const footer = document.createElement('div');
+  footer.className = 'dialog-sticky-footer cb-global-close-footer';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'dialog-close-prominent-btn cb-global-close-button cb-managed-bottom-close';
+  button.textContent = 'Cerrar';
+  footer.appendChild(button);
+  return footer;
+}
+
+function normalizeBottomCloseButton(button) {
+  if (!button) return;
+  button.type = 'button';
+  button.classList.add('cb-global-close-button', 'cb-managed-bottom-close');
+  if (button.textContent.trim() !== 'Cerrar') button.textContent = 'Cerrar';
+}
+
+function ensureDialogBottomClose(dialog) {
+  if (!dialog || BOTTOM_CLOSE_EXCLUDED_DIALOGS.has(dialog.id)) return;
+  let footer = Array.from(dialog.children).find((child) => child.classList?.contains('dialog-sticky-footer') || child.classList?.contains('cb-global-close-footer'));
+  if (!footer) {
+    footer = makeBottomCloseFooter();
+    dialog.appendChild(footer);
+  } else {
+    footer.classList.add('cb-global-close-footer');
+  }
+
+  let button = footer.querySelector('.dialog-close-prominent-btn, [data-close], .cb-managed-bottom-close');
+  if (!button) {
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'dialog-close-prominent-btn';
+    footer.appendChild(button);
+  }
+  normalizeBottomCloseButton(button);
+}
+
+function ensureOverlayBottomClose(surface) {
+  if (!surface) return;
+
+  const theaterButton = surface.querySelector('.theater-bottom-close-btn');
+  if (theaterButton) {
+    normalizeBottomCloseButton(theaterButton);
+    return;
+  }
+
+  let footer = Array.from(surface.children).find((child) => child.classList?.contains('cb-global-close-footer'));
+  if (!footer) {
+    footer = makeBottomCloseFooter();
+    surface.appendChild(footer);
+  }
+  normalizeBottomCloseButton(footer.querySelector('.cb-managed-bottom-close'));
+}
+
+function closeFromBottom(button) {
+  const dialog = button.closest('dialog');
+  if (dialog) {
+    // El diálogo de confirmación debe resolver su promesa como cancelación,
+    // no cerrarse por fuera de su controlador.
+    if (dialog.id === 'confirmation-dialog') {
+      document.getElementById('confirmation-cancel')?.click();
+      return;
+    }
+    dialog.close();
+    return;
+  }
+
+  const surface = button.closest('.lightbox, .tactica-overlay, .theater-fullscreen');
+  if (!surface) return;
+
+  const existingClose = surface.querySelector(
+    '.lb-close, .lightbox-close, .theater-exit-btn, .sheet-top-close-btn, #tactica-interactiva-close, [data-lightbox-close], [aria-label="Cerrar"]'
+  );
+  if (existingClose && existingClose !== button) {
+    existingClose.click();
+    return;
+  }
+
+  const fullscreenToggle = surface.querySelector('.v-btn-fullscreen');
+  if (fullscreenToggle) {
+    fullscreenToggle.click();
+    return;
+  }
+
+  surface.querySelectorAll('video').forEach((video) => video.pause());
+  surface.classList.remove('open', 'theater-fullscreen');
+  if (surface.classList.contains('tactica-overlay')) surface.classList.add('hidden');
+}
+
+function syncBottomCloseControls() {
+  installBottomCloseStyles();
+
+  document.querySelectorAll('dialog').forEach(ensureDialogBottomClose);
+  document.querySelectorAll('.lightbox, .tactica-overlay, .theater-fullscreen').forEach(ensureOverlayBottomClose);
+
+  document.querySelectorAll('.theater-bottom-close-btn').forEach((button) => {
+    normalizeBottomCloseButton(button);
+  });
+}
+
+function queueBottomCloseSync() {
+  if (bottomCloseSyncQueued) return;
+  bottomCloseSyncQueued = true;
+  requestAnimationFrame(() => {
+    bottomCloseSyncQueued = false;
+    syncBottomCloseControls();
+  });
+}
+
+function initBottomCloseControls() {
+  syncBottomCloseControls();
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.cb-managed-bottom-close');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeFromBottom(button);
+  }, true);
+
+  const observer = new MutationObserver(queueBottomCloseSync);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open', 'class'],
+  });
+}
+
 export function initRedesign() {
   document.body.classList.add('cb-redesign-active');
   renderBottomNav();
   renderSubNav();
   initStaffManagement();
+  initBottomCloseControls();
 
   // Escuchar mutaciones de vista para sincronizar automáticamente
   const main = $('#app');
