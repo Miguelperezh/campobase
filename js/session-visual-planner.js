@@ -278,29 +278,82 @@ async function renderSessionDetail(sessionId) {
   body.innerHTML = `
     <div class="session-visual-detail" data-session-id="${esc(session.id)}">
       <div class="session-detail-summary panel">
-        <div><strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}${session.pitch ? ` · 🏟️ ${esc(session.pitch)}` : ''}</strong><span>${session.blocks?.length || 0} ejercicios · ${durationInfo.metaText}</span></div>
-        <button type="button" class="edit-session secondary" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
+        <div>
+          <strong>${esc(formatDate(session.date))}${session.time ? ` · ⏰ ${esc(session.time)}` : ''}${session.pitch ? ` · 🏟️ ${esc(session.pitch)}` : ''}</strong>
+          <span>${session.blocks?.length || 0} ejercicios · ${durationInfo.metaText}</span>
+        </div>
+        <div class="button-row" style="margin-top:0.4rem; flex-wrap: wrap;">
+          <button type="button" class="open-whistle-session primary compact" data-id="${esc(session.id)}">⏱️ Cronómetro / Silbato</button>
+          <button type="button" class="open-whatsapp-session secondary compact" data-id="${esc(session.id)}">📱 Compartir WhatsApp</button>
+          <button type="button" class="edit-session secondary compact" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
+        </div>
       </div>
-      ${session.pitch ? `<div class="panel"><strong>Campo de entrenamiento</strong><p>🏟️ ${esc(session.pitch)}</p></div>` : ''}
+      <p class="meta" style="margin: 0.5rem 0 0.35rem;">👇 Toca un ejercicio para desplegarlo (solo se abrirá el que elijas):</p>
       <div class="session-detail-exercises">
         ${(session.blocks || []).map((block, index) => {
           const exercise = exercisesById.get(block.exerciseId);
-          if (!exercise) return `<section class="session-detail-block panel"><div class="session-detail-block-head"><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min</span></div><p>Este ejercicio ya no está disponible.</p></section>`;
-          const exerciseVideos = snapshot.videosByExercise.get(exercise.id) || [];
-          const validated = findValidatedExercise(exercise.id);
+          const validated = findValidatedExercise(block.exerciseId) || (exercise ? findValidatedExercise(exercise.id) : null);
+          const exName = String(validated?.nombre || exercise?.name || 'Ejercicio').replace(/^--\s*/, '').trim();
+          if (!exercise && !validated) {
+            return `<details name="session-visual-accordion" class="session-detail-block session-block-accordion session-visual-accordion panel" data-session-block="${index}">
+              <summary class="session-block-accordion-summary">
+                <div class="session-block-summary-left">
+                  <span class="session-block-badge">${index + 1}</span>
+                  <div class="session-block-summary-info">
+                    <div class="session-block-summary-tags">
+                      <span class="pill compact ${block.type === 'warmup' ? 'warmup' : block.type === 'main' ? 'main' : 'accent'}">${blockLabel(block.type)}</span>
+                      <span class="pill accent compact">${Number(block.duration) || 0} min</span>
+                    </div>
+                    <h4 class="session-block-summary-name">Ejercicio no disponible</h4>
+                  </div>
+                </div>
+                <span class="toggle-icon">▶</span>
+              </summary>
+              <div class="session-block-accordion-body">
+                <p>Este ejercicio ya no está disponible.</p>
+              </div>
+            </details>`;
+          }
+          const exerciseVideos = exercise ? (snapshot.videosByExercise.get(exercise.id) || []) : [];
           const content = validated
             ? renderValidatedExerciseHTML(validated, { videos: exerciseVideos })
             : genericDetailCard(exercise, exerciseVideos);
-          return `<section class="session-detail-block" data-session-block="${index}">
-            <div class="session-detail-block-head"><div><span class="pill">${blockLabel(block.type)}</span><span class="pill accent">${Number(block.duration) || 0} min en esta sesión</span></div>${block.notes ? `<p class="meta">${esc(block.notes)}</p>` : ''}</div>
-            <div class="session-detail-exercise-card">${content}</div>
-          </section>`;
+          return `<details name="session-visual-accordion" class="session-detail-block session-block-accordion session-visual-accordion panel" data-session-block="${index}">
+            <summary class="session-block-accordion-summary">
+              <div class="session-block-summary-left">
+                <span class="session-block-badge">${index + 1}</span>
+                <div class="session-block-summary-info">
+                  <div class="session-block-summary-tags">
+                    <span class="pill compact ${block.type === 'warmup' ? 'warmup' : block.type === 'main' ? 'main' : 'accent'}">${blockLabel(block.type)}</span>
+                    <span class="pill accent compact">${Number(block.duration) || 0} min</span>
+                  </div>
+                  <h4 class="session-block-summary-name">${esc(exName)}</h4>
+                </div>
+              </div>
+              <span class="toggle-icon">▶</span>
+            </summary>
+            <div class="session-block-accordion-body">
+              ${block.notes ? `<p class="session-block-notes"><strong>Consignas / Notas:</strong> ${esc(block.notes)}</p>` : ''}
+              <div class="session-detail-exercise-card">${content}</div>
+            </div>
+          </details>`;
         }).join('')}
       </div>
-      ${materialText ? `<div class="panel"><strong>Material total</strong><p>${esc(materialText)}</p></div>` : ''}
+      ${materialText ? `<div class="panel" style="margin-top:0.75rem;"><strong>Material total necesario</strong><p>${esc(materialText)}</p></div>` : ''}
       ${session.notes ? `<div class="panel"><strong>Observaciones generales</strong><p>${esc(session.notes)}</p></div>` : ''}
-      <div class="button-row"><button type="button" class="edit-session primary" data-id="${esc(session.id)}">Editar sesión y tiempos</button></div>
+      <div class="button-row" style="margin-top:1rem;"><button type="button" class="edit-session primary" data-id="${esc(session.id)}">Editar sesión y tiempos</button></div>
     </div>`;
+
+  if (!body.__accordionBound) {
+    body.__accordionBound = true;
+    body.addEventListener('toggle', (event) => {
+      if (event.target.open && event.target.classList.contains('session-visual-accordion')) {
+        body.querySelectorAll('.session-visual-accordion[open]').forEach((det) => {
+          if (det !== event.target) det.removeAttribute('open');
+        });
+      }
+    }, true);
+  }
 
   $$('.session-detail-block', body).forEach((wrapper, index) => {
     const block = session.blocks[index];

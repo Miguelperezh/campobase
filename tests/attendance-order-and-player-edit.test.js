@@ -85,3 +85,12 @@ test('app.js no reinyecta datos oficiales sobreescribiendo las fichas de plantil
   assert.doesNotMatch(app, /!p.number && official?.number/);
   assert.match(app, /attendance-history-details/);
 });
+
+test('session-visual-planner.js renderiza los ejercicios de la sesión en acordeón cerrado que abre solo uno', async () => {
+  const code = await projectFile('js/session-visual-planner.js');
+  assert.match(code, /session-visual-accordion/);
+  assert.match(code, /session-block-accordion/);
+  assert.match(code, /session-block-accordion-summary/);
+  assert.match(code, /name="session-visual-accordion"/);
+});
+
