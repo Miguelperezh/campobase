@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2515';
+const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2516-close-refresh';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -56,6 +56,23 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname.endsWith('/assets/exercise-board.html.gz')) {
     event.respondWith(buildExerciseBoardResponse());
+    return;
+  }
+
+  // Esta capa cambia con frecuencia durante los ajustes visuales. Se fuerza
+  // revalidación de red para que una versión antigua no quede retenida por la PWA.
+  if (url.pathname.endsWith('/js/redesign-nav.js')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'reload' })
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match('./js/redesign-nav.js')))
+    );
     return;
   }
 
