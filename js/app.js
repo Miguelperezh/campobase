@@ -2527,30 +2527,40 @@ function showSessionDetail(sessionId) {
   $('#session-detail-body').innerHTML = `
     <p class="meta session-detail-meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
     <div class="session-detail-blocks-list">
-      ${session.blocks.map((block) => {
+      ${session.blocks.map((block, idx) => {
         const validated = findValidatedExercise(block.exerciseId);
         const name = validated?.nombre || exerciseName(block.exerciseId);
         const previewImg = validated?.media?.preview || '';
         const videoSrc = validated?.media?.video || validated?.video || '';
         const category = validated?.categoria || (block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final');
-        return `<article class="session-block-card">
-          <div class="session-block-card-main">
-            ${previewImg ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>` : ''}
-            <div class="session-block-card-info">
-              <div class="session-block-card-tags">
-                <span class="pill">${sessionBlockLabel(block.type)}</span>
-                <span class="pill accent">${block.duration} min</span>
-                ${videoSrc ? '<span class="pill pill-video">🎬 Vídeo MP4</span>' : ''}
+        return `<details name="session-detail-accordion" class="session-block-card session-block-accordion panel" data-block-index="${idx}">
+          <summary class="session-block-accordion-summary">
+            <div class="session-block-summary-left">
+              <span class="session-block-badge">${idx + 1}</span>
+              <div class="session-block-summary-info">
+                <div class="session-block-summary-tags">
+                  <span class="pill compact ${block.type === 'warmup' ? 'warmup' : block.type === 'main' ? 'main' : 'accent'}">${sessionBlockLabel(block.type)}</span>
+                  <span class="pill accent compact">${block.duration} min</span>
+                  ${videoSrc ? '<span class="pill pill-video compact">🎬 MP4</span>' : ''}
+                </div>
+                <h4 class="session-block-summary-name">${escapeHtml(name)}</h4>
               </div>
-              <h4 class="session-block-card-title">${escapeHtml(name)}</h4>
-              <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
-              ${block.notes ? `<p class="session-block-notes"><strong>Consignas:</strong> ${escapeHtml(block.notes)}</p>` : ''}
+            </div>
+            <span class="toggle-icon">▶</span>
+          </summary>
+          <div class="session-block-accordion-body">
+            <div class="session-block-card-main">
+              ${previewImg ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>` : ''}
+              <div class="session-block-card-info">
+                <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
+                ${block.notes ? `<p class="session-block-notes"><strong>Consignas:</strong> ${escapeHtml(block.notes)}</p>` : ''}
+              </div>
+            </div>
+            <div class="session-block-card-action">
+              <button type="button" class="view-exercise primary compact" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(name)} con animación y vídeo MP4">🎬 Ver ejercicio con MP4 / Pizarra</button>
             </div>
           </div>
-          <div class="session-block-card-action">
-            <button type="button" class="view-exercise primary compact" data-exercise-id="${block.exerciseId}" aria-label="Ver ejercicio ${escapeHtml(name)} con animación y vídeo MP4">🎬 Ver ejercicio con MP4</button>
-          </div>
-        </article>`;
+        </details>`;
       }).join('')}
     </div>
     ${session.pitch ? `<p class="session-meta-line"><strong>Campo de entrenamiento:</strong> 🏟️ ${escapeHtml(session.pitch)}</p>` : ''}
@@ -2560,7 +2570,7 @@ function showSessionDetail(sessionId) {
       <button type="button" class="open-whistle-session primary" data-id="${session.id}">⏱️ Iniciar cronómetro / Silbato</button>
       <button type="button" class="open-whatsapp-session secondary" data-id="${session.id}">📱 Compartir por WhatsApp</button>
     </div>
-    <p class="meta">Pulsa en «Ver ejercicio con MP4» para abrir la animación interactiva, lupa por zonas y reproductor.</p>`;
+    <p class="meta" style="margin-top:.6rem;">Toca cualquier ejercicio de la lista para desplegar solo el que quieras consultar.</p>`;
   $('#session-detail-dialog').showModal();
 }
 

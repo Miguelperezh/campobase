@@ -435,7 +435,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   const videosHTML = renderVideoSectionHTML(options.videos || [], { role: options.role, exerciseId: ex.id });
 
   return `
-  <div class="ejercicio-v2-sheet ejercicio-validado" data-id="${esc(ex.id)}" data-video="${esc(videoSrc)}" style="content-visibility:auto;contain-intrinsic-size:auto 900px" data-lazy-detail="1">
+  <div class="ejercicio-v2-sheet ejercicio-validado view-mode-reduced" data-id="${esc(ex.id)}" data-video="${esc(videoSrc)}" style="content-visibility:auto;contain-intrinsic-size:auto 900px" data-lazy-detail="1">
     <!-- Cabecera de la ficha con botón superior accesible -->
     <div class="sheet-head">
       <div class="sheet-title-group">
@@ -443,6 +443,16 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
         <h2 class="sheet-title">${esc(cleanNombre)}</h2>
       </div>
       <button type="button" class="sheet-top-close-btn" data-close aria-label="Cerrar ejercicio">✕</button>
+    </div>
+
+    <!-- Selector de modo de vista: reducida (pasos y series) vs completa -->
+    <div class="exercise-view-mode-bar" role="tablist" aria-label="Modo de visualización del ejercicio">
+      <button type="button" class="view-mode-chip active" data-view-mode="reduced" aria-selected="true" title="Vista rápida de campo: animación, series, repeticiones y pasos">
+        ⚡ Vista reducida (Pasos y Series)
+      </button>
+      <button type="button" class="view-mode-chip" data-view-mode="full" aria-selected="false" title="Vista completa: todo el manual táctico, teoría, variantes y correcciones">
+        📋 Vista completa (Todo el detalle)
+      </button>
     </div>
 
     <!-- Reproductor de animación con controles y zoom integrado -->
@@ -618,7 +628,30 @@ export function initValidatedExerciseViewer(root) {
   const btnZoomOut = root.querySelector('.v-btn-zoom-out');
   const btnZoomReset = root.querySelector('.v-btn-zoom-reset');
   const btnRewind = root.querySelector('.v-btn-rewind');
-  const btnForward = root.querySelector('.v-btn-forward');
+  // Modo de visualización: reducida vs completa
+  const viewModeBar = root.querySelector('.exercise-view-mode-bar');
+  if (viewModeBar) {
+    let savedMode = 'reduced';
+    try {
+      savedMode = localStorage.getItem('campobase.exerciseViewMode') || 'reduced';
+    } catch {}
+    const setMode = (mode) => {
+      root.classList.toggle('view-mode-reduced', mode === 'reduced');
+      root.classList.toggle('view-mode-full', mode === 'full');
+      viewModeBar.querySelectorAll('.view-mode-chip').forEach((btn) => {
+        const isActive = btn.dataset.viewMode === mode;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      try { localStorage.setItem('campobase.exerciseViewMode', mode); } catch {}
+    };
+    setMode(savedMode);
+    viewModeBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-view-mode]');
+      if (!btn) return;
+      setMode(btn.dataset.viewMode);
+    });
+  }
 
   if (!video) return;
 
