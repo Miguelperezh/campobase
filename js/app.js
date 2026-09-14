@@ -26,6 +26,7 @@ import {
   buildWhatsAppMatchConvocatoria,
   buildWhatsAppTrainingDay,
   buildWhatsAppTrainingWeek,
+  getWeekDateRange,
 } from './whatsapp-suite.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -3697,6 +3698,7 @@ let waCurrentMode = 'callup'; // 'callup' | 'training' | 'week'
 let waTargetPlayerId = '';
 let waParentType = 'both'; // 'both' | 'father' | 'mother'
 let waCallupStatus = 'auto'; // 'auto' | 'called' | 'excluded'
+let waLastExclusionPlayerId = null;
 
 function openWhatsAppDialog({
   mode = 'callup',
@@ -3710,6 +3712,7 @@ function openWhatsAppDialog({
   const dialog = $('#whatsapp-dialog');
   if (!dialog) return;
 
+  waLastExclusionPlayerId = null;
   waCurrentMode = mode;
   waTargetPlayerId = playerId || '';
   waParentType = parentType || 'both';
@@ -3785,12 +3788,50 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       select.innerHTML = '<option value="">No hay sesiones creadas</option>';
     }
   } else if (waCurrentMode === 'week') {
-    if (label) label.firstChild.textContent = 'Semana de planificación ';
-    const opt = document.createElement('option');
-    opt.value = 'current_week';
-    opt.textContent = 'Semana actual en curso';
-    opt.selected = true;
-    select.appendChild(opt);
+    if (label) label.firstChild.textContent = 'Partido fin de semana (opcional) ';
+    const today = localDateKey();
+    const weekRange = getWeekDateRange(today);
+
+    // Encontrar partidos programados estrictamente dentro de ESTA semana (lunes a domingo)
+    const matchesThisWeek = state.matches.filter((m) => {
+      const d = (m.date || '').slice(0, 10);
+      return d >= weekRange.start && d <= weekRange.end;
+    }).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Otros partidos futuros (semanas siguientes)
+    const otherMatches = state.matches.filter((m) => {
+      const d = (m.date || '').slice(0, 10);
+      return d > weekRange.end && m.status !== 'finished';
+    }).sort((a, b) => a.date.localeCompare(b.date));
+
+    const autoMatch = matchesThisWeek[0] || null;
+
+    const optAuto = document.createElement('option');
+    optAuto.value = 'auto';
+    optAuto.textContent = autoMatch
+      ? `⚡ Automático: ${localDate(autoMatch.date)} · vs ${autoMatch.opponent}`
+      : '⚡ Automático: Sin partido esta semana';
+    optAuto.selected = true;
+    select.appendChild(optAuto);
+
+    matchesThisWeek.forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = `match:${m.id}`;
+      opt.textContent = `📅 Esta semana: ${localDate(m.date)} · vs ${m.opponent}`;
+      select.appendChild(opt);
+    });
+
+    otherMatches.slice(0, 4).forEach((m) => {
+      const opt = document.createElement('option');
+      opt.value = `match:${m.id}`;
+      opt.textContent = `Próximo: ${localDate(m.date)} · vs ${m.opponent}`;
+      select.appendChild(opt);
+    });
+
+    const optNone = document.createElement('option');
+    optNone.value = 'none';
+    optNone.textContent = '❌ Sin partido este fin de semana';
+    select.appendChild(optNone);
   }
 }
 
@@ -3854,6 +3895,8 @@ function updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType 
     btnF.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
     btnF.textContent = `📱 WhatsApp ${fName}${targetPlayer.fatherPhone ? ` (${targetPlayer.fatherPhone})` : ''}`;
     btnF.dataset.phone = fPhone;
+    btnF.dataset.parentTarget = 'father';
+    btnF.dataset.parentName = fName;
     container.appendChild(btnF);
 
     const btnM = document.createElement('button');
@@ -3862,6 +3905,8 @@ function updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType 
     btnM.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
     btnM.textContent = `📱 WhatsApp ${mName}${targetPlayer.motherPhone ? ` (${targetPlayer.motherPhone})` : ''}`;
     btnM.dataset.phone = mPhone;
+    btnM.dataset.parentTarget = 'mother';
+    btnM.dataset.parentName = mName;
     container.appendChild(btnM);
   } else if (parentType === 'father') {
     const btnF = document.createElement('button');
@@ -3870,6 +3915,8 @@ function updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType 
     btnF.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
     btnF.textContent = `📱 WhatsApp ${fName}${targetPlayer.fatherPhone ? ` (${targetPlayer.fatherPhone})` : ''}`;
     btnF.dataset.phone = fPhone;
+    btnF.dataset.parentTarget = 'father';
+    btnF.dataset.parentName = fName;
     container.appendChild(btnF);
   } else if (parentType === 'mother') {
     const btnM = document.createElement('button');
@@ -3878,6 +3925,8 @@ function updateWhatsAppDynamicButtons({ recipientType, targetPlayer, parentType 
     btnM.style.cssText = 'background:#25D366;border-color:#25D366;color:#fff;';
     btnM.textContent = `📱 WhatsApp ${mName}${targetPlayer.motherPhone ? ` (${targetPlayer.motherPhone})` : ''}`;
     btnM.dataset.phone = mPhone;
+    btnM.dataset.parentTarget = 'mother';
+    btnM.dataset.parentName = mName;
     container.appendChild(btnM);
   }
 }
@@ -3889,6 +3938,7 @@ function updateWhatsAppPreview() {
   const kitConfig = getKitConfig();
   const teamName = state.settings?.teamName || 'C.F. Unión Viera Alevín D';
   const recipientVal = $('#wa-recipient-select')?.value || 'group';
+  const tone = $('#wa-tone-select')?.value || 'canary';
 
   let recipientType = 'group';
   let targetPlayer = null;
@@ -3952,6 +4002,7 @@ function updateWhatsAppPreview() {
       callupStatus === 'excluded' ||
       (callupStatus === 'auto' && callup && (
         (new Set(callup.excludedIds || [])).has(targetPlayer.id) ||
+        (Array.isArray(callup.exclusions) && callup.exclusions.some((e) => (typeof e === 'object' ? (e.playerId || e.id) : e) === targetPlayer.id)) ||
         (Array.isArray(callup.availableIds) && callup.availableIds.length > 0 && !callup.availableIds.includes(targetPlayer.id))
       ))
     );
@@ -3960,6 +4011,41 @@ function updateWhatsAppPreview() {
     $('#wa-match-details-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-location-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-times-row')?.classList.toggle('hidden', Boolean(isExcluded));
+    $('#wa-exclusion-reason-row')?.classList.toggle('hidden', !isExcluded);
+
+    let exclusionReason = 'rotation';
+    let exclusionNote = '';
+
+    if (isExcluded) {
+      if (waLastExclusionPlayerId !== targetPlayer.id) {
+        waLastExclusionPlayerId = targetPlayer.id;
+        const autoEx = Array.isArray(callup?.exclusions)
+          ? callup.exclusions.find((e) => (typeof e === 'object' ? (e.playerId || e.id) : e) === targetPlayer.id)
+          : null;
+
+        let detectedReason = 'rotation';
+        let detectedNote = '';
+        if (autoEx && typeof autoEx === 'object') {
+          const r = autoEx.reason;
+          if (r === 'suspended') detectedReason = 'cards';
+          else if (r === 'missed_training') detectedReason = 'training';
+          else if (['rotation', 'injured', 'cards', 'training', 'sick', 'coach_decision', 'personal'].includes(r)) detectedReason = r;
+          else if (r === 'other') detectedReason = 'custom';
+          detectedNote = autoEx.note || '';
+        }
+        if ($('#wa-exclusion-reason-select')) {
+          $('#wa-exclusion-reason-select').value = detectedReason;
+        }
+        if ($('#wa-exclusion-custom-note')) {
+          $('#wa-exclusion-custom-note').value = detectedNote;
+        }
+      }
+
+      exclusionReason = $('#wa-exclusion-reason-select')?.value || 'rotation';
+      const showNote = exclusionReason === 'custom' || ['injured', 'cards', 'sick', 'coach_decision', 'personal'].includes(exclusionReason);
+      $('#wa-exclusion-note-col')?.classList.toggle('hidden', !showNote);
+      exclusionNote = $('#wa-exclusion-custom-note')?.value?.trim() || '';
+    }
 
     const kitOption = $('#wa-kit-select')?.value || 'primary';
     let kitText = kitConfig.primaryKit;
@@ -4002,9 +4088,13 @@ function updateWhatsAppPreview() {
       recipientType,
       parentType,
       callupStatus,
+      exclusionReason,
+      exclusionNote,
+      tone,
     });
     preview.value = text;
   } else if (waCurrentMode === 'training') {
+    $('#wa-exclusion-reason-row')?.classList.add('hidden');
     const sessionId = $('#wa-event-select')?.value;
     const session = state.trainingSessions.find((s) => s.id === sessionId) || state.trainingSessions[0] || {};
 
@@ -4022,34 +4112,61 @@ function updateWhatsAppPreview() {
       if (mapsInput) mapsInput.value = mapsUrl;
     }
 
+    let dur = session.totalDuration || session.targetDuration || 75;
+    if (dur < 45) dur = 75;
+
     const text = buildWhatsAppTrainingDay({
       teamName,
       session: {
         date: session.date,
         time: session.time || '16:30',
-        duration: session.totalDuration || session.targetDuration || 60,
+        duration: dur,
       },
       fieldName,
       mapsUrl,
       kitTraining: kitConfig.trainingKit,
       targetPlayer,
       parentType,
+      tone,
     });
     preview.value = text;
   } else if (waCurrentMode === 'week') {
+    $('#wa-exclusion-reason-row')?.classList.add('hidden');
     const tacticalGoal = $('#wa-week-tactical')?.value || '';
     const today = localDateKey();
-    // Priorizar sesiones próximas/actuales de la semana
-    const candidateSessions = state.trainingSessions.filter((s) => s.date && s.date >= today);
+    const weekRange = getWeekDateRange(today);
+
+    // Priorizar sesiones de la semana actual
+    const thisWeekSessions = state.trainingSessions.filter((s) => s.date && s.date >= weekRange.start && s.date <= weekRange.end);
+    const candidateSessions = thisWeekSessions.length ? thisWeekSessions : state.trainingSessions.filter((s) => s.date && s.date >= today);
     const sessionsToUse = candidateSessions.length ? candidateSessions : state.trainingSessions;
     const sorted = sortTrainingSessions(sessionsToUse, today);
-    const sessions = sorted.map((s) => ({
-      date: s.date,
-      time: s.time || '16:30',
-      field: s.pitch || 'Alfonso Silva',
-      duration: s.totalDuration || s.targetDuration || 60,
-    }));
-    const upcomingMatch = state.matches.find((m) => m.status !== 'finished') || null;
+    const sessions = sorted.map((s) => {
+      let dur = s.totalDuration || s.targetDuration || 75;
+      if (dur < 45) dur = 75; // Duración completa de sesión (nunca bloques sueltos de 15 min)
+      return {
+        date: s.date,
+        time: s.time || '16:30',
+        field: s.pitch || 'Alfonso Silva',
+        duration: dur,
+      };
+    });
+
+    const eventVal = $('#wa-event-select')?.value || 'auto';
+    let upcomingMatch = null;
+    if (eventVal === 'none') {
+      upcomingMatch = null;
+    } else if (eventVal.startsWith('match:')) {
+      const mId = eventVal.replace('match:', '');
+      upcomingMatch = state.matches.find((m) => m.id === mId) || null;
+    } else {
+      // 'auto': Solo partido programado estrictamente dentro de ESTA semana (lunes a domingo)
+      const matchesThisWeek = state.matches.filter((m) => {
+        const d = (m.date || '').slice(0, 10);
+        return d >= weekRange.start && d <= weekRange.end;
+      }).sort((a, b) => a.date.localeCompare(b.date));
+      upcomingMatch = matchesThisWeek[0] || null;
+    }
 
     const text = buildWhatsAppTrainingWeek({
       teamName,
@@ -4062,6 +4179,7 @@ function updateWhatsAppPreview() {
       } : null,
       tacticalGoal,
       includeTacticalGoal: Boolean(tacticalGoal),
+      tone,
     });
     preview.value = text;
   }
@@ -4143,14 +4261,48 @@ function playFox40Whistle(type = 'short') {
     }
   }
 
-  if (whistleVibrateEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try {
-      if (type === 'long') {
-        navigator.vibrate([250, 100, 350]);
-      } else {
-        navigator.vibrate([180, 80, 180]);
+  if (whistleVibrateEnabled) {
+    // 1. Vibración física estándar en navegadores compatibles (Android/Chrome)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try {
+        const pattern = type === 'long' ? [350, 100, 450] : [200, 80, 200];
+        const ok = navigator.vibrate(pattern);
+        if (!ok) {
+          navigator.vibrate(type === 'long' ? 600 : 250);
+        }
+      } catch {
+        try {
+          navigator.vibrate(type === 'long' ? 500 : 200);
+        } catch (_) {}
       }
-    } catch (e) {}
+    }
+
+    // 2. Resonancia háptica acústica (pulso sub-grave 50 Hz en altavoz/chasis para iOS / Safari / móviles)
+    try {
+      const ctx = getWhistleAudioContext();
+      if (ctx) {
+        const now = ctx.currentTime;
+        const hapticOsc = ctx.createOscillator();
+        const hapticGain = ctx.createGain();
+        hapticOsc.type = 'sine';
+        hapticOsc.frequency.setValueAtTime(50, now);
+        hapticGain.gain.setValueAtTime(0.85, now);
+        hapticGain.gain.exponentialRampToValueAtTime(0.001, now + (type === 'long' ? 0.45 : 0.22));
+        hapticOsc.connect(hapticGain);
+        hapticGain.connect(ctx.destination);
+        hapticOsc.start(now);
+        hapticOsc.stop(now + (type === 'long' ? 0.5 : 0.25));
+      }
+    } catch (_) {}
+
+    // 3. Efecto háptico visual (parpadeo/sacudida) en el cronómetro
+    const hero = $('.whistle-timer-hero');
+    if (hero) {
+      hero.classList.remove('whistle-vibrating');
+      void hero.offsetWidth;
+      hero.classList.add('whistle-vibrating');
+      setTimeout(() => hero.classList.remove('whistle-vibrating'), 400);
+    }
   }
 }
 
@@ -4361,14 +4513,29 @@ function wireEvents() {
   });
 
   $('#wa-recipient-select')?.addEventListener('change', () => {
+    waLastExclusionPlayerId = null;
     const recipientVal = $('#wa-recipient-select')?.value || 'group';
     if (recipientVal.startsWith('player:') && $('#wa-callup-status-select')) {
       $('#wa-callup-status-select').value = 'auto';
     }
     updateWhatsAppPreview();
   });
+  $('#wa-tone-select')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-parent-type-select')?.addEventListener('change', updateWhatsAppPreview);
-  $('#wa-callup-status-select')?.addEventListener('change', updateWhatsAppPreview);
+  $('#wa-callup-status-select')?.addEventListener('change', () => {
+    waLastExclusionPlayerId = null;
+    updateWhatsAppPreview();
+  });
+  $('#wa-exclusion-reason-select')?.addEventListener('change', () => {
+    const reason = $('#wa-exclusion-reason-select')?.value;
+    const showNote = reason === 'custom' || ['injured', 'cards', 'sick', 'coach_decision', 'personal'].includes(reason);
+    $('#wa-exclusion-note-col')?.classList.toggle('hidden', !showNote);
+    if (reason === 'custom') {
+      $('#wa-exclusion-custom-note')?.focus();
+    }
+    updateWhatsAppPreview();
+  });
+  $('#wa-exclusion-custom-note')?.addEventListener('input', updateWhatsAppPreview);
   $('#wa-kit-select')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-include-bibs')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-call-time')?.addEventListener('input', updateWhatsAppPreview);
@@ -4409,8 +4576,17 @@ function wireEvents() {
   $('#wa-dynamic-open-buttons')?.addEventListener('click', (event) => {
     const btn = event.target.closest('.wa-open-action-btn');
     if (!btn) return;
-    const text = $('#whatsapp-preview-text')?.value ?? '';
+    let text = $('#whatsapp-preview-text')?.value ?? '';
     const phone = btn.dataset.phone || '';
+    const parentTarget = btn.dataset.parentTarget;
+    const parentName = btn.dataset.parentName;
+
+    // Si se envía de forma individual a padre o madre cuando se tenían ambos seleccionados,
+    // ajustar el saludo de la primera línea para que vaya dirigido solo a ese progenitor
+    if (parentTarget && parentName) {
+      text = text.replace(/^(Buenos días|Buenas tardes|Buenas noches)\s+[^:\n]+:/m, `$1 ${parentName}:`);
+    }
+
     const waUrl = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
       : `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -4464,6 +4640,16 @@ function wireEvents() {
     const btn = $('#whistle-vibrate-btn');
     btn?.classList.toggle('active', whistleVibrateEnabled);
     if (btn) btn.textContent = whistleVibrateEnabled ? '📳 Vibración: Activada' : '📴 Vibración: Desactivada';
+    if (whistleVibrateEnabled) {
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          navigator.vibrate([220, 90, 220]);
+        }
+      } catch (_) {}
+      toast('Vibración activada.');
+    } else {
+      toast('Vibración desactivada.');
+    }
   });
   $('#whistle-blow-btn')?.addEventListener('click', () => {
     playFox40Whistle('short');

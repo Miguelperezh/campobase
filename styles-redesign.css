@@ -5125,5 +5125,17 @@ body.cb-redesign-active .whatsapp-dialog textarea:focus,
   color: #64748b !important;
 }
 
+@keyframes whistlePulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.03) translate(-2px, 2px); filter: brightness(1.25); }
+  50% { transform: scale(0.98) translate(2px, -1px); filter: brightness(1.1); }
+  75% { transform: scale(1.02) translate(-1px, -1px); filter: brightness(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.whistle-timer-hero.whistle-vibrating {
+  animation: whistlePulse 0.4s ease-in-out;
+}
+
 
 

@@ -491,6 +491,15 @@
             <optgroup label="Mensaje privado por jugador" id="wa-parents-group"></optgroup>
           </select>
         </label>
+        <label id="wa-tone-col" style="flex:1;">Tratamiento (Entrenador)
+          <select id="wa-tone-select">
+            <option value="canary" selected>🇮🇨 Canario (Les / Te comunico)</option>
+            <option value="peninsular">🇪🇸 Peninsular singular (Os / Te comunico)</option>
+            <option value="peninsular_plural">🇪🇸 Peninsular plural (Os comunicamos)</option>
+            <option value="canary_plural">🇮🇨 Canario plural (Les comunicamos)</option>
+            <option value="formal">👔 Formal (Les / Le comunico)</option>
+          </select>
+        </label>
       </div>
 
       <div class="form-row hidden" id="wa-parent-selection-row">
@@ -507,6 +516,24 @@
             <option value="called">✅ Convocado (enviar citación y campo)</option>
             <option value="excluded">❌ NO Convocado (comunicar baja)</option>
           </select>
+        </label>
+      </div>
+
+      <div class="form-row hidden" id="wa-exclusion-reason-row" style="background:var(--cb-surface-soft, rgba(255,255,255,0.04));border-radius:8px;padding:0.6rem 0.8rem;border:1px dashed var(--cb-danger, #ef4444);gap:0.75rem;">
+        <label style="flex:1.4;">Motivo de no convocatoria:
+          <select id="wa-exclusion-reason-select">
+            <option value="rotation">🔄 Por rotación</option>
+            <option value="injured">🩹 Por lesión</option>
+            <option value="cards">🟨 Por tarjetas / sanción</option>
+            <option value="training">🏃 Por no haber venido a entrenar</option>
+            <option value="sick">🤒 Por enfermedad / indisposición</option>
+            <option value="coach_decision">📋 Por decisión técnica</option>
+            <option value="personal">🏠 Por motivos personales</option>
+            <option value="custom">✏️ Otro motivo personalizado...</option>
+          </select>
+        </label>
+        <label style="flex:1.6;" id="wa-exclusion-note-col" class="hidden">Aclaración / detalle del motivo:
+          <input id="wa-exclusion-custom-note" maxlength="150" placeholder="Ej. Esguince leve de tobillo">
         </label>
       </div>
 

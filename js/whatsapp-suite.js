@@ -22,6 +22,96 @@ export function formatWhatsAppPhone(phone) {
   return digits;
 }
 
+/**
+ * Fórmulas verbales en 1.ª persona del singular ("yo como único entrenador").
+ * Permite adaptar el tratamiento (Canarias: Les/Te, Peninsular: Os/Te, Formal: Les/Le).
+ */
+export function getToneVerbs({ tone = 'canary', parentType = 'both', recipientType = 'parent' } = {}) {
+  const isPlural = recipientType === 'group' || parentType === 'both';
+
+  if (isPlural) {
+    if (tone === 'peninsular_plural') {
+      return {
+        comparto: 'Os compartimos',
+        comunico: 'Os comunicamos',
+        recuerdo: 'Os recordamos',
+      };
+    }
+    if (tone === 'canary_plural') {
+      return {
+        comparto: 'Les compartimos',
+        comunico: 'Les comunicamos',
+        recuerdo: 'Les recordamos',
+      };
+    }
+    if (tone === 'peninsular') {
+      return {
+        comparto: 'Os comparto',
+        comunico: 'Os comunico',
+        recuerdo: 'Os recuerdo',
+      };
+    }
+    // 'canary' y 'formal' usan 'Les'
+    return {
+      comparto: 'Les comparto',
+      comunico: 'Les comunico',
+      recuerdo: 'Les recuerdo',
+    };
+  }
+
+  // Destinatario singular (padre o madre)
+  if (tone === 'formal') {
+    return {
+      comparto: 'Le comparto',
+      comunico: 'Le comunico',
+      recuerdo: 'Le recuerdo',
+    };
+  }
+  if (tone === 'peninsular_plural' || tone === 'canary_plural') {
+    return {
+      comparto: 'Te compartimos',
+      comunico: 'Te comunicamos',
+      recuerdo: 'Te recordamos',
+    };
+  }
+  return {
+    comparto: 'Te comparto',
+    comunico: 'Te comunico',
+    recuerdo: 'Te recuerdo',
+  };
+}
+
+/**
+ * Formatea el motivo de no convocatoria (rotación, lesión, tarjetas, no haber venido a entrenar, etc.).
+ */
+export function formatExclusionReasonText(reason = '', note = '') {
+  const r = String(reason || '').trim().toLowerCase();
+  const n = String(note || '').trim();
+
+  if (!r || r === 'none') return '';
+  if (r === 'rotation') return 'por rotación';
+  if (r === 'injured') return n ? `por lesión (${n})` : 'por lesión';
+  if (r === 'cards' || r === 'suspended') return n ? `por sanción de tarjetas (${n})` : 'por sanción de tarjetas';
+  if (r === 'training' || r === 'missed_training') return 'por no haber venido a entrenar';
+  if (r === 'sick') return n ? `por enfermedad (${n})` : 'por encontrarse indispuesto/a';
+  if (r === 'coach_decision' || r === 'technical') return n ? `por decisión técnica (${n})` : 'por decisión técnica';
+  if (r === 'discipline') return n ? `por motivos disciplinarios (${n})` : 'por motivos disciplinarios';
+  if (r === 'personal') return n ? `por motivos personales (${n})` : 'por motivos personales';
+  if (r === 'custom' || r === 'other') return n ? (n.toLowerCase().startsWith('por ') ? n : `por ${n}`) : '';
+  return r.startsWith('por ') ? r : `por ${r}`;
+}
+
+export function getExclusionEncouragement(reason = '') {
+  const r = String(reason || '').trim().toLowerCase();
+  if (r === 'injured' || r === 'sick') {
+    return '¡Mucho ánimo y pronta recuperación para volver a tope con el equipo!';
+  }
+  if (r === 'training' || r === 'missed_training') {
+    return '¡Mucho ánimo y a tope en las próximas sesiones de entrenamiento!';
+  }
+  return '¡Mucho ánimo y a seguir trabajando duro en los entrenamientos!';
+}
+
 export function getGreetingByHour(dateOrHour = new Date()) {
   let hour = 12;
   if (typeof dateOrHour === 'number') {
@@ -70,6 +160,9 @@ export function buildWhatsAppMatchConvocatoria({
   recipientType = 'group', // 'group' | 'parent'
   parentType = 'both', // 'both' | 'father' | 'mother'
   callupStatus = 'auto', // 'auto' | 'called' | 'excluded'
+  exclusionReason = '',
+  exclusionNote = '',
+  tone = 'canary', // 'canary' | 'peninsular' | 'formal'
   now = new Date(),
 } = {}) {
   const greeting = getGreetingByHour(now);
@@ -77,14 +170,19 @@ export function buildWhatsAppMatchConvocatoria({
   const rawDate = match.date || callup?.date || '';
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
   const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
+  const verbs = getToneVerbs({ tone, parentType, recipientType });
 
   // Determinar convocados y excluidos
   const availableSet = new Set(callup?.availableIds || []);
   const excludedSet = new Set(callup?.excludedIds || []);
+  const exclusionMap = new Map();
   if (callup?.exclusions && Array.isArray(callup.exclusions)) {
     callup.exclusions.forEach(e => {
       const pid = typeof e === 'object' && e ? (e.playerId || e.id) : e;
-      if (pid) excludedSet.add(pid);
+      if (pid) {
+        excludedSet.add(pid);
+        if (typeof e === 'object' && e) exclusionMap.set(pid, e);
+      }
     });
   }
   
@@ -116,11 +214,14 @@ export function buildWhatsAppMatchConvocatoria({
 
       const father = (targetPlayer.fatherName || '').trim();
       const mother = (targetPlayer.motherName || '').trim();
+      const playerName = (targetPlayer.name || '').trim().split(/\s+/)[0] || targetPlayer.name;
+      const closing = '¡Muchas gracias!';
+
       let salutation = '';
       if (parentType === 'mother') {
-        salutation = mother ? `${greeting} ${mother}:` : `${greeting} (madre de ${targetPlayer.name}):`;
+        salutation = mother ? `${greeting} ${mother}:` : `${greeting}:`;
       } else if (parentType === 'father') {
-        salutation = father ? `${greeting} ${father}:` : `${greeting} (padre de ${targetPlayer.name}):`;
+        salutation = father ? `${greeting} ${father}:` : `${greeting}:`;
       } else {
         // 'both': Padre y Madre
         if (father && mother) {
@@ -130,35 +231,35 @@ export function buildWhatsAppMatchConvocatoria({
         } else if (mother) {
           salutation = `${greeting} ${mother}:`;
         } else {
-          salutation = `${greeting} a la familia de ${targetPlayer.name}:`;
+          salutation = `${greeting} a la familia de ${playerName}:`;
         }
       }
 
       const numStr = cleanPlayerNumber(targetPlayer.number);
       const dorsalText = numStr ? `(Dorsal ${numStr})` : '';
-      const introExcluded = (parentType === 'mother' || parentType === 'father')
-        ? `Te comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}.`
-        : `Os comunicamos que ${targetPlayer.name} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}.`;
 
       // SI ESTÁ MARCADO COMO NO CONVOCADO:
       if (isExcluded) {
+        const autoEx = exclusionMap.get(targetPlayer.id);
+        const resolvedReason = exclusionReason || autoEx?.reason || 'rotation';
+        const resolvedNote = exclusionNote || autoEx?.note || '';
+        const reasonPhrase = formatExclusionReasonText(resolvedReason, resolvedNote);
+        const reasonSuffix = reasonPhrase ? ` ${reasonPhrase}` : '';
+        const encouragement = getExclusionEncouragement(resolvedReason);
+
         return `${salutation}
 
-${introExcluded}
+${verbs.comunico} que ${playerName} ${dorsalText} NO está CONVOCADO para el partido ${competition} (vs ${opponent}) del ${dateFormatted}${reasonSuffix}.
 
-¡Mucho ánimo y a seguir trabajando duro en los entrenamientos!
+${encouragement}
 
-¡Muchas gracias a todos/as!`.trim();
+${closing}`.trim();
       }
-
-      const introCalled = (parentType === 'mother' || parentType === 'father')
-        ? `Te compartimos la información de la convocatoria para ${targetPlayer.name} ${dorsalText}:`
-        : `Os compartimos la información de la convocatoria para ${targetPlayer.name} ${dorsalText}:`;
 
       // SI SÍ ESTÁ CONVOCADO:
       return `${salutation}
 
-${introCalled}
+${verbs.comparto} la información de la convocatoria para ${playerName} ${dorsalText}:
 
 🏆 *Competición:* ${competition} (vs ${opponent})
 📅 *Fecha:* ${dateFormatted}
@@ -172,7 +273,7 @@ ${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
 • Rogamos puntualidad en la hora de citación para realizar un calentamiento óptimo.
 • Ante cualquier molestia o imprevisto, avisad con antelación.
 
-¡Muchas gracias a todos/as!`.trim();
+${closing}`.trim();
     }
   }
 
@@ -190,7 +291,7 @@ ${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
 
 ${greeting} a todos/as,
 
-Os compartimos la convocatoria para el próximo encuentro:
+${verbs.comparto} la convocatoria para el próximo encuentro:
 
 🏆 *Competición:* ${competition} (vs ${opponent})
 📅 *Fecha:* ${dateFormatted}
@@ -220,6 +321,7 @@ export function buildWhatsAppTrainingDay({
   targetPlayer = null,
   parentType = 'father',
   customNote = '',
+  tone = 'canary',
   now = new Date(),
 } = {}) {
   const greeting = getGreetingByHour(now);
@@ -228,15 +330,21 @@ export function buildWhatsAppTrainingDay({
   const timeStr = session.time || '16:30';
   const duration = session.duration || 60;
   const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
+  const recipientType = targetPlayer ? 'parent' : 'group';
+  const verbs = getToneVerbs({ tone, parentType, recipientType });
+
+  const playerName = targetPlayer ? ((targetPlayer.name || '').trim().split(/\s+/)[0] || targetPlayer.name) : '';
+  const durationMin = Number(session.duration) >= 45 ? Number(session.duration) : 75;
+  const closing = targetPlayer ? '¡Muchas gracias!' : '¡Muchas gracias a todos/as!';
 
   let salutation = `${greeting} a todos/as,`;
   if (targetPlayer) {
     const father = (targetPlayer.fatherName || '').trim();
     const mother = (targetPlayer.motherName || '').trim();
     if (parentType === 'mother') {
-      salutation = mother ? `${greeting} ${mother}:` : `${greeting} (madre de ${targetPlayer.name}):`;
+      salutation = mother ? `${greeting} ${mother}:` : `${greeting}:`;
     } else if (parentType === 'father') {
-      salutation = father ? `${greeting} ${father}:` : `${greeting} (padre de ${targetPlayer.name}):`;
+      salutation = father ? `${greeting} ${father}:` : `${greeting}:`;
     } else {
       // 'both'
       if (father && mother) {
@@ -246,23 +354,19 @@ export function buildWhatsAppTrainingDay({
       } else if (mother) {
         salutation = `${greeting} ${mother}:`;
       } else {
-        salutation = `${greeting} a la familia de ${targetPlayer.name}:`;
+        salutation = `${greeting} a la familia de ${playerName}:`;
       }
     }
   }
-
-  const intro = (targetPlayer && (parentType === 'mother' || parentType === 'father'))
-    ? 'Te recordamos los detalles de la sesión de entrenamiento:'
-    : 'Os recordamos los detalles de la sesión de entrenamiento:';
 
   return `⚽ *SESIÓN DE ENTRENAMIENTO — ${teamName.toUpperCase()}* ⚽
 
 ${salutation}
 
-${intro}
+${verbs.recuerdo} los detalles de la sesión de entrenamiento:
 
 📅 *Fecha:* ${dateFormatted}
-⏰ *Hora:* ${timeStr} h (duración: ${duration} min)
+⏰ *Hora:* ${timeStr} h (duración: ${durationMin} min)
 🏟️ *Campo:* ${fieldName}
 📍 *Ubicación:* ${resolvedMapsUrl}
 
@@ -273,7 +377,7 @@ ${intro}
 ${customNote ? `\n⚠️ *Nota:* ${customNote}` : ''}
 Rogamos puntualidad para comenzar la sesión a la hora prevista.
 
-¡Muchas gracias a todos/as!`.trim();
+${closing}`.trim();
 }
 
 export function buildWhatsAppTrainingWeek({
@@ -283,9 +387,11 @@ export function buildWhatsAppTrainingWeek({
   tacticalGoal = '',
   includeTacticalGoal = true,
   weekRangeLabel = 'esta semana',
+  tone = 'canary',
   now = new Date(),
 } = {}) {
   const greeting = getGreetingByHour(now);
+  const verbs = getToneVerbs({ tone, recipientType: 'group' });
   let goalBlock = '';
   if (includeTacticalGoal && tacticalGoal) {
     goalBlock = `🎯 *Objetivo formativo de la semana:*\n"${tacticalGoal.trim()}"\n\n`;
@@ -304,26 +410,43 @@ export function buildWhatsAppTrainingWeek({
       const d = formatLongDate(s.date) || s.date;
       const f = s.field || s.venue || 'Campo habitual';
       const t = s.time || '16:30';
-      const dur = s.duration ? ` (${s.duration} min)` : '';
-      return `• *${d}:* ${t} h · ${f}${dur}`;
+      const rawDur = Number(s.duration) || 0;
+      let durStr = '';
+      if (rawDur >= 65) {
+        durStr = ' (75 min)';
+      } else if (rawDur >= 45) {
+        durStr = ' (60 min)';
+      } else if (rawDur > 0) {
+        // En fútbol base infantil/alevin los entrenamientos son de 60 o 75 min (nunca 15 min de un ejercicio individual)
+        durStr = ' (75 min)';
+      }
+      return `• *${d}:* ${t} h · ${f}${durStr}`;
     }).join('\n');
   } else {
-    scheduleLines = '• Lunes y Martes 16:30 h · Alfonso Silva\n• Jueves 16:30 h · Campo del Pilar';
+    scheduleLines = '• Lunes y Martes 16:30 h · Alfonso Silva (75 min)\n• Jueves 16:30 h · Campo del Pilar (75 min)';
   }
 
   let matchLine = '';
   if (match) {
-    const md = formatLongDate(match.date) || match.date;
+    const rawDate = match.date || '';
+    let dayUpper = 'DOMINGO';
+    if (rawDate) {
+      try {
+        const d = new Date(rawDate.slice(0, 10) + 'T12:00:00');
+        const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+        dayUpper = dayNames[d.getDay()] || 'DOMINGO';
+      } catch {}
+    }
     const mt = match.time || '09:00';
     const mf = match.field || (match.venue === 'away' ? 'Campo rival' : 'Alfonso Silva');
-    matchLine = `\n• *DOMINGO:* ${mt} h · PARTIDO vs ${match.opponent || 'Rival'} (${mf})`;
+    matchLine = `\n• *${dayUpper}:* ${mt} h · PARTIDO vs ${match.opponent || 'Rival'} (${mf})`;
   }
 
   return `📅 *PLANIFICACIÓN SEMANAL (${weekRangeLabel.toUpperCase()}) — ${teamName.toUpperCase()}* ⚽
 
 ${greeting} a todos/as,
 
-Os compartimos la planificación de entrenamientos para organizar la semana:
+${verbs.comparto} la planificación de entrenamientos para organizar la semana:
 
 ${goalBlock}${scheduleLines}${matchLine}
 
@@ -331,4 +454,23 @@ ${goalBlock}${scheduleLines}${matchLine}
 Llevar camiseta oficial de entreno, botella de agua individual y balón reglamentario T4.
 
 ¡Muchas gracias a todos/as!`.trim();
+}
+
+/**
+ * Calcula el rango de fechas (lunes a domingo) de la semana correspondiente a una fecha.
+ */
+export function getWeekDateRange(dateOrStr = new Date()) {
+  const d = new Date(typeof dateOrStr === 'string' && !dateOrStr.includes('T') ? `${dateOrStr}T12:00:00` : dateOrStr);
+  const day = d.getDay();
+  const diffToMonday = (day === 0 ? -6 : 1) - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diffToMonday);
+  mon.setHours(0, 0, 0, 0);
+
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  sun.setHours(23, 59, 59, 999);
+
+  const toKey = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  return { start: toKey(mon), end: toKey(sun) };
 }
