@@ -88,9 +88,39 @@ function recordCounts(record) {
   return summarizeAttendance(record ? [record] : []);
 }
 
-export function buildAttendanceActivities({ sessions = [], matches = [], trainings = [], callups = [] } = {}) {
+export function sortAttendanceActivities(activities, today = '') {
+  const todayKey = today || (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
+  return [...activities].sort((a, b) => {
+    const dateA = String(a.date || '');
+    const dateB = String(b.date || '');
+    const isUpcomingA = Boolean(dateA && dateA >= todayKey);
+    const isUpcomingB = Boolean(dateB && dateB >= todayKey);
+
+    // Los próximos arriba
+    if (isUpcomingA && !isUpcomingB) return -1;
+    if (!isUpcomingA && isUpcomingB) return 1;
+
+    // Si ambos son próximos: de arriba abajo por orden de fecha (ascendente: hoy primero, luego mañana, etc.)
+    if (isUpcomingA && isUpcomingB) {
+      const cmp = dateA.localeCompare(dateB);
+      if (cmp !== 0) return cmp;
+      return String(a.title || '').localeCompare(String(b.title || ''), 'es');
+    }
+
+    // Si ambos son pasados: de arriba abajo por orden de fecha más reciente (descendente)
+    const cmp = dateB.localeCompare(dateA);
+    if (cmp !== 0) return cmp;
+    return String(a.title || '').localeCompare(String(b.title || ''), 'es');
+  });
+}
+
+export function buildAttendanceActivities({ sessions = [], matches = [], trainings = [], callups = [] } = {}, today = '') {
   const callupIds = new Set(callups.map((item) => item.id));
-  return [
+  const list = [
     ...sessions.map((session) => ({
       source: 'session', id: session.id, date: activityDate(session), title: sessionName(session),
       subtitle: `${session.blocks?.length || 0} ejercicios · ${Number(session.totalDuration) || 0} min`,
@@ -101,7 +131,8 @@ export function buildAttendanceActivities({ sessions = [], matches = [], trainin
       subtitle: match.type === 'league' ? 'Liga' : match.type === 'friendly' ? 'Amistoso' : match.type === 'tournament' ? 'Torneo' : 'Partido',
       attendance: attendanceForMatch(trainings, match.id), ready: Boolean(match.callupId && callupIds.has(match.callupId)),
     })),
-  ].sort((a, b) => String(b.date).localeCompare(String(a.date)) || a.title.localeCompare(b.title, 'es'));
+  ];
+  return sortAttendanceActivities(list, today);
 }
 
 function visibleActivities(rows) {
@@ -135,11 +166,54 @@ async function renderSources() {
   try {
     const data = await snapshot();
     if (!panel.isConnected) return;
-    const rows = buildAttendanceActivities(data);
+    const todayKey = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+    const rows = buildAttendanceActivities(data, todayKey);
     const visible = visibleActivities(rows);
     const totals = summarizeAttendance(data.trainings);
     const registered = rows.filter((row) => row.attendance).length;
     const pending = rows.length - registered;
+
+    const isDone = (row) => Boolean(row.attendance) || (row.date && row.date < todayKey);
+
+    let contentHTML = '';
+    if (activeFilter === 'pending') {
+      contentHTML = `<div class="attendance-activity-list">${visible.length ? visible.map(activityCard).join('') : '<div class="panel empty">No hay actividades pendientes de asistencia.</div>'}</div>`;
+    } else {
+      const upcomingOrPending = visible.filter((row) => !isDone(row));
+      const completedOrDone = visible.filter((row) => isDone(row));
+
+      let pendingHTML = '';
+      if (upcomingOrPending.length) {
+        pendingHTML = `<div class="attendance-activity-list">${upcomingOrPending.map(activityCard).join('')}</div>`;
+      } else if (!completedOrDone.length) {
+        pendingHTML = '<div class="panel empty">No hay actividades en este filtro.</div>';
+      } else {
+        pendingHTML = '<div class="panel empty"><p>✅ Todas las actividades próximas tienen su asistencia registrada al día.</p></div>';
+      }
+
+      let completedHTML = '';
+      if (completedOrDone.length) {
+        completedHTML = `
+          <details class="attendance-completed-group panel">
+            <summary class="attendance-completed-summary">
+              <div class="attendance-completed-title">
+                <span class="toggle-icon">▶</span>
+                <strong>Asistencias registradas y finalizadas (${completedOrDone.length})</strong>
+              </div>
+              <span class="pill accent">Desplegar</span>
+            </summary>
+            <div class="attendance-activity-list attendance-completed-list">
+              ${completedOrDone.map(activityCard).join('')}
+            </div>
+          </details>
+        `;
+      }
+      contentHTML = `${pendingHTML}${completedHTML}`;
+    }
+
     panel.innerHTML = `
       <div class="attendance-overview panel">
         <div class="attendance-overview-head"><div><p class="eyebrow">Control rápido</p><h3>Asistencia de actividades</h3><p class="meta">Sesiones y partidos ya creados. Un solo registro alimenta también la ficha de cada jugador.</p></div></div>
@@ -148,7 +222,7 @@ async function renderSources() {
           ${filterButton('all', 'Todas', rows.length)}${filterButton('session', 'Sesiones', rows.filter((row) => row.source === 'session').length)}${filterButton('match', 'Partidos', rows.filter((row) => row.source === 'match').length)}${filterButton('pending', 'Pendientes', pending)}
         </div>
       </div>
-      <div class="attendance-activity-list">${visible.length ? visible.map(activityCard).join('') : '<div class="panel empty">No hay actividades en este filtro.</div>'}</div>`;
+      ${contentHTML}`;
   } catch (error) {
     panel.innerHTML = `<p class="error panel">No se pudieron cargar las actividades para asistencia: ${esc(error?.message || 'error desconocido')}</p>`;
   } finally {
@@ -337,6 +411,7 @@ function installStyles() {
     .attendance-source-panel{display:grid;gap:.9rem;margin-bottom:1rem}.attendance-overview{margin:0}.attendance-overview-head h3{margin:.1rem 0}.attendance-overview-stats,.attendance-editor-summary,.attendance-mini-counts{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.75rem}.attendance-overview-stats>span,.attendance-editor-summary>span,.attendance-mini-counts>span{display:inline-flex;align-items:center;gap:.3rem;padding:.42rem .65rem;border-radius:999px;background:var(--paper);border:1px solid var(--line);font-size:.78rem}.attendance-overview-stats .present,.attendance-editor-summary .present,.attendance-mini-counts .present{border-color:#a9d8bd;background:#edf8f1}.attendance-overview-stats .late,.attendance-editor-summary .late,.attendance-mini-counts .late{border-color:#e7cf82;background:#fff8dc}.attendance-overview-stats .absent,.attendance-editor-summary .absent,.attendance-mini-counts .absent{border-color:#e4abab;background:#fff0f0}.attendance-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.45rem;margin-top:.8rem}.attendance-filter{display:flex;justify-content:center;align-items:center;gap:.35rem;min-height:42px;background:var(--card);border:1px solid var(--line);color:var(--ink)}.attendance-filter.active{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.attendance-activity-list{display:grid;gap:.65rem}.attendance-activity-card{margin:0}.attendance-activity-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem}.attendance-activity-head h3{margin:.35rem 0 .15rem}.attendance-tags{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}.attendance-saved,.attendance-pending{font-size:.7rem;font-weight:800;padding:.25rem .45rem;border-radius:999px}.attendance-saved{background:#eaf7ef;color:#185b34}.attendance-pending{background:#f1f2f1;color:var(--muted)}
     #training-builder:has([data-visual-attendance="1"]){padding:0;background:transparent;border:0;box-shadow:none}#training-form[data-visual-attendance="1"]{display:grid;gap:.8rem}.attendance-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;padding:1rem;background:var(--card);border:1px solid var(--line);border-radius:14px}.attendance-editor-head h3{margin:.4rem 0 .15rem}.attendance-editor-summary{margin:0;padding:.1rem}.attendance-player-list{display:grid;gap:.55rem}.attendance-player-row{display:grid;grid-template-columns:minmax(150px,.8fr) minmax(270px,1.25fr) minmax(230px,1fr);gap:.8rem;align-items:center;margin:0;padding:.75rem}.attendance-player-ident{display:flex;align-items:center;gap:.6rem;min-width:0}.attendance-player-ident>div{display:grid;min-width:0}.attendance-player-ident strong{overflow-wrap:anywhere}.attendance-player-ident small{color:var(--muted)}.attendance-avatar{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--card);font-size:.72rem;font-weight:800}.attendance-status-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem}.attendance-choice{position:relative;display:grid;place-items:center;min-height:42px;padding:.4rem;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:.76rem;font-weight:750;cursor:pointer}.attendance-choice input{position:absolute;opacity:0;pointer-events:none}.attendance-choice.present.selected{background:#e5f5eb;border-color:#6eb98a;color:#174f2d}.attendance-choice.late.selected{background:#fff4c9;border-color:#d4ad2e;color:#6a5100}.attendance-choice.absent.selected{background:#ffe4e4;border-color:#cf7474;color:#7b2222}.attendance-row-extra{display:grid;gap:.45rem}.attendance-note{font-size:.72rem}.attendance-note input{margin-top:.2rem}.arrival-time{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted)}.arrival-time.hidden{display:none}.attendance-save-row{position:sticky;bottom:calc(58px + env(safe-area-inset-bottom));z-index:4;padding:.7rem;background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px)}
     #attendance-stats .attendance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.65rem}#attendance-stats .attendance-player{margin:0}#attendance-stats .mini-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}#attendance-stats .mini-stats>span{padding:.5rem;border-radius:9px;background:var(--paper);border:1px solid var(--line)}
+    .attendance-completed-group{margin-top:1rem;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:.85rem}.attendance-completed-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;cursor:pointer;list-style:none;user-select:none;font-size:.88rem;font-weight:700}.attendance-completed-summary::-webkit-details-marker{display:none}.attendance-completed-title{display:flex;align-items:center;gap:.5rem}.attendance-completed-title .toggle-icon{display:inline-block;transition:transform .2s ease;font-size:.75rem;color:var(--muted)}details[open].attendance-completed-group .toggle-icon{transform:rotate(90deg)}.attendance-completed-list{margin-top:.85rem;border-top:1px solid var(--line);padding-top:.85rem}
     @media(max-width:900px){.attendance-player-row{grid-template-columns:1fr 1.4fr}.attendance-row-extra{grid-column:1/-1;grid-template-columns:1fr 2fr}.attendance-filters{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:620px){.attendance-activity-head,.attendance-editor-head{align-items:stretch;flex-direction:column}.attendance-activity-head>button,.attendance-editor-head>button{width:100%}.attendance-player-row{grid-template-columns:1fr}.attendance-row-extra{grid-column:auto;grid-template-columns:1fr}.attendance-status-choices{gap:.25rem}.attendance-choice{min-height:46px;padding:.35rem .2rem}.attendance-save-row{display:grid;grid-template-columns:1fr 1fr}.attendance-save-row button{width:100%}}
   `;

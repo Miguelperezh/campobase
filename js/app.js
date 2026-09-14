@@ -271,36 +271,11 @@ async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   await deduplicatePlayers();
 
-  // Limpiar cualquier '#' en los dorsales y completar dorsales y teléfonos de la plantilla si faltan
+  // Limpiar cualquier '#' en los dorsales existentes sin sobreescribir datos del usuario
   for (const p of state.players) {
     const cleanNum = cleanPlayerNumber(p.number);
-    const official = OFFICIAL_SQUAD_DATA.find((o) => o.name.toLowerCase() === (p.name || '').trim().toLowerCase());
-    let changed = false;
     if (p.number !== cleanNum) {
       p.number = cleanNum;
-      changed = true;
-    }
-    if (!p.number && official?.number) {
-      p.number = cleanPlayerNumber(official.number);
-      changed = true;
-    }
-    if (!p.fatherPhone && official?.fatherPhone) {
-      p.fatherPhone = official.fatherPhone;
-      changed = true;
-    }
-    if (!p.motherPhone && official?.motherPhone) {
-      p.motherPhone = official.motherPhone;
-      changed = true;
-    }
-    if (!p.fatherName && official?.fatherName) {
-      p.fatherName = official.fatherName;
-      changed = true;
-    }
-    if (!p.motherName && official?.motherName) {
-      p.motherName = official.motherName;
-      changed = true;
-    }
-    if (changed) {
       put('players', p).catch(() => {});
     }
   }
@@ -2174,10 +2149,23 @@ function renderTrainings() {
     return `<article class="panel attendance-player"><h3>${escapeHtml(player.name)}</h3><div class="mini-stats"><span><strong>${item.totalAbsences}</strong> ausencias</span><span><strong>${item.currentTrainingAbsenceStreak}</strong> racha actual</span><span><strong>${item.longestTrainingAbsenceStreak}</strong> racha máxima</span><span class="${item.oftenLate ? 'alert' : ''}"><strong>${item.lateCount}</strong> tardanzas${item.oftenLate ? ' · frecuente' : ''}</span></div><details><summary>Historial (${item.totalRecords})</summary><table class="minute-table"><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr>${history.map(({ record, entry }) => `<tr><td>${escapeHtml(localDate(record.date))}</td><td>${record.kind === 'match' ? `Partido · ${escapeHtml(state.matches.find(({ id }) => id === record.matchId)?.opponent ?? 'eliminado')}` : 'Entrenamiento'}</td><td>${labels[entry.status]}${entry.arrivalTime ? ` · ${escapeHtml(entry.arrivalTime)}` : ''}${entry.note ? ` · ${escapeHtml(entry.note)}` : ''}</td></tr>`).join('')}</table></details></article>`;
   }).join('')}</div>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
   const list = sortAttendanceRecords(state.trainings);
-  $('#trainings-list').innerHTML = list.length ? `<h3 class="history-title">Base de datos de asistencia</h3>${list.map((record) => {
-    const match = state.matches.find(({ id }) => id === record.matchId);
-    return `<article class="panel"><div class="section-head"><div><span class="pill ${record.kind === 'match' ? 'accent' : ''}">${record.kind === 'match' ? 'Partido' : 'Entrenamiento'}</span><h3>${record.kind === 'match' ? escapeHtml(match?.opponent ?? 'Partido eliminado') : escapeHtml(localDate(record.date))}</h3><p class="meta">${escapeHtml(localDate(record.date))} · ${record.attendance.filter((item)=>item.status==='present').length} presentes · ${record.attendance.filter((item)=>item.status==='late').length} tarde · ${record.attendance.filter((item)=>item.status==='absent').length} ausentes</p></div><div class="button-row"><button class="edit-attendance secondary" data-id="${record.id}">Editar</button><button class="delete-training danger" data-id="${record.id}">Borrar</button></div></div><details><summary>Ver detalle</summary><table class="minute-table">${record.attendance.map((item) => `<tr><td>${escapeHtml(playerName(item.playerId))}</td><td>${labels[item.status]}${item.note ? ` · ${escapeHtml(item.note)}` : ''}</td></tr>`).join('')}</table>${record.notes ? `<p>${escapeHtml(record.notes)}</p>` : ''}</details></article>`;
-  }).join('')}` : empty('Todavía no hay registros de asistencia.');
+  $('#trainings-list').innerHTML = list.length ? `
+    <details class="panel attendance-history-details">
+      <summary class="history-summary">
+        <div class="attendance-completed-title">
+          <span class="toggle-icon">▶</span>
+          <strong>🗄️ Historial de registros de asistencia (${list.length})</strong>
+        </div>
+        <span class="pill accent">Desplegar</span>
+      </summary>
+      <div class="stack" style="margin-top: 1rem;">
+        ${list.map((record) => {
+          const match = state.matches.find(({ id }) => id === record.matchId);
+          return `<article class="panel"><div class="section-head"><div><span class="pill ${record.kind === 'match' ? 'accent' : ''}">${record.kind === 'match' ? 'Partido' : 'Entrenamiento'}</span><h3>${record.kind === 'match' ? escapeHtml(match?.opponent ?? 'Partido eliminado') : escapeHtml(localDate(record.date))}</h3><p class="meta">${escapeHtml(localDate(record.date))} · ${record.attendance.filter((item)=>item.status==='present').length} presentes · ${record.attendance.filter((item)=>item.status==='late').length} tarde · ${record.attendance.filter((item)=>item.status==='absent').length} ausentes</p></div><div class="button-row"><button class="edit-attendance secondary" data-id="${record.id}">Editar</button><button class="delete-training danger" data-id="${record.id}">Borrar</button></div></div><details><summary>Ver detalle</summary><table class="minute-table">${record.attendance.map((item) => `<tr><td>${escapeHtml(playerName(item.playerId))}</td><td>${labels[item.status]}${item.note ? ` · ${escapeHtml(item.note)}` : ''}</td></tr>`).join('')}</table>${record.notes ? `<p>${escapeHtml(record.notes)}</p>` : ''}</details></article>`;
+        }).join('')}
+      </div>
+    </details>
+  ` : empty('Todavía no hay registros de asistencia.');
 }
 
 function exerciseName(id) {
@@ -5134,7 +5122,8 @@ function wireEvents() {
     if (target.matches('.open-whatsapp-callup')) openWhatsAppDialog({ mode: 'callup', callupId: target.dataset.id });
     if (target.matches('.open-whatsapp-match')) openWhatsAppDialog({ mode: 'callup', matchId: target.dataset.id });
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
-    if (target.matches('.open-whatsapp-player')) openWhatsAppDialog({ mode: 'callup', playerId: target.dataset.id });
+    const waPlayerBtn = target.closest('.open-whatsapp-player');
+    if (waPlayerBtn) openWhatsAppDialog({ mode: 'callup', playerId: waPlayerBtn.dataset.id });
     if (target.matches('.open-whistle-session')) openWhistleDialog(target.dataset.id);
     if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
@@ -5151,9 +5140,12 @@ function wireEvents() {
     if (target.matches('#tactica-interactiva-close')) closeTacticaInteractiva();
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
     if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
-    if (target.matches('.edit-player')) editPlayer(target.dataset.id);
-    if (target.matches('.edit-player-stats')) editPlayerStats(target.dataset.playerId, target.dataset.scope);
-    if (target.matches('.delete-player') && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', target.dataset.id); await refresh(); }
+    const editPlayerBtn = target.closest('.edit-player');
+    if (editPlayerBtn) editPlayer(editPlayerBtn.dataset.id);
+    const editPlayerStatsBtn = target.closest('.edit-player-stats');
+    if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
+    const deletePlayerBtn = target.closest('.delete-player');
+    if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
