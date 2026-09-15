@@ -11,7 +11,8 @@
   <script type="importmap">
     {
       "imports": {
-        "./js/db.js": "./js/modo-campo-preview-db.js"
+        "./js/db.js": "./js/modo-campo-preview-db.js?v=5",
+        "https://miguelperezh.github.io/campobase/js/db.js": "./js/modo-campo-preview-db.js?v=5"
       }
     }
   </script>
@@ -27,7 +28,7 @@
         </div>
       </div>
       <div class="campo-top-actions">
-        <span id="campo-sync" class="campo-sync">Leyendo datos…</span>
+        <span id="campo-sync" class="campo-sync">Leyendo Supabase…</span>
         <a class="campo-exit" href="./index.html">Salir Modo Campo</a>
       </div>
     </header>
@@ -102,6 +103,6 @@
   <div id="campo-toast" class="campo-toast" role="status"></div>
 
   <script src="./vendor/supabase.js"></script>
-  <script type="module" src="./js/modo-campo-preview-loader.js?v=3"></script>
+  <script type="module" src="./js/modo-campo-preview-loader.js?v=5"></script>
 </body>
 </html>
