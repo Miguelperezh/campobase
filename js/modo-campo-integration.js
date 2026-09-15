@@ -1,3 +1,5 @@
+import './session-reorder-ui.js?v=1';
+
 // Integración oficial de Modo Campo con la aplicación estable.
 // No reimplementa lógica de negocio: solo añade acceso/retorno y abre las
 // funciones ya existentes de CampoBase cuando se llega desde Modo Campo.
