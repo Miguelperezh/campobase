@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
 
-test('Modo Campo directo no importa db.js ni usa almacenamiento local', async () => {
+test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local', async () => {
   const js = await read('js/modo-campo-directo.js');
   assert.doesNotMatch(js, /from\s+['\"].*db\.js|import\s*\(/);
   assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
@@ -15,11 +15,15 @@ test('Modo Campo directo no importa db.js ni usa almacenamiento local', async ()
   for (const table of ['jugadores','convocatorias','partidos','asistencias','configuracion']) assert.match(js, new RegExp(`readTable\\(client,'${table}'\\)`));
 });
 
-test('Modo Campo directo sigue siendo solo lectura de Supabase', async () => {
-  const js = await read('js/modo-campo-directo.js');
-  assert.doesNotMatch(js, /\.insert\(|\.update\(|\.upsert\(|\.delete\(/);
-  assert.match(js, /attendanceDrafts: new Map\(\)/);
-  assert.match(js, /Guardar prueba de asistencia/);
+test('la capa integrada guarda asistencia real y Realizado en Supabase', async () => {
+  const js = await read('js/modo-campo-actions.js');
+  assert.match(js, /from\('asistencias'\)/);
+  assert.match(js, /\.upsert\(/);
+  assert.match(js, /status: isMatch \? 'finished' : 'closed'/);
+  assert.match(js, /closedAt: now/);
+  assert.match(js, /Guardar asistencia/);
+  assert.match(js, /✓ Realizado/);
+  assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
 });
 
 test('asistencia de campo conserva estado, tardanza, hora y observaciones', async () => {
@@ -34,7 +38,7 @@ test('asistencia de campo conserva estado, tardanza, hora y observaciones', asyn
   assert.match(js, /Notas del registro/);
 });
 
-test('Modo Campo directo conserva archivado manual desde el 15/09/2026', async () => {
+test('Modo Campo conserva archivado manual desde el 15/09/2026', async () => {
   const js = await read('js/modo-campo-directo.js');
   assert.match(js, /LEGACY_SESSION_CUTOFF = '2026-09-15'/);
   assert.match(js, /status === 'closed'/);
@@ -52,13 +56,28 @@ test('la navegación de campo no incluye Plantilla y sí Delegado y En vivo', as
   assert.match(html, />En vivo</);
 });
 
-test('la página directa carga solo Supabase oficial y su script independiente', async () => {
+test('la página integrada carga Supabase y sus dos scripts de Modo Campo', async () => {
   const html = await read('modo-campo-directo.html');
   assert.match(html, /vendor\/supabase\.js/);
-  assert.match(html, /js\/modo-campo-directo\.js\?v=2/);
+  assert.match(html, /js\/modo-campo-directo\.js\?v=3/);
+  assert.match(html, /js\/modo-campo-actions\.js\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
 });
 
-test('script directo tiene sintaxis válida', () => {
-  execFileSync(process.execPath, ['--check', fileURLToPath(new URL('js/modo-campo-directo.js', root))], { stdio:'pipe' });
+test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', async () => {
+  const actions = await read('js/modo-campo-actions.js');
+  const integration = await read('js/modo-campo-integration.js');
+  assert.match(actions, /whatsapp-session/);
+  assert.match(actions, /whatsapp-match/);
+  assert.match(actions, /data-nav === 'vivo'/);
+  assert.match(actions, /data-nav === 'delegado'/);
+  assert.match(integration, /open-whatsapp-session/);
+  assert.match(integration, /open-whatsapp-match/);
+  assert.match(integration, /Volver a Modo Campo/);
+});
+
+test('scripts de Modo Campo tienen sintaxis válida', () => {
+  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js']) {
+    execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio:'pipe' });
+  }
 });
