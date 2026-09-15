@@ -112,11 +112,36 @@
 
   .field-howto h3 { font-size: 1.22rem !important; }
   .field-step { font-size: 1.02rem !important; line-height: 1.42 !important; }
+  .field-essential strong { font-size: 1.02rem !important; }
+
+  .field-bottom-actions button {
+    min-height: 60px !important;
+    font-size: .92rem !important;
+    padding: .5rem .4rem !important;
+  }
+
+  .field-match-actions button {
+    min-height: 64px !important;
+    font-size: 1rem !important;
+  }
 
   .campo-field-glance { grid-template-columns: 1fr 1fr; }
+
+  .campo-field-glance small { font-size: .72rem; }
+  .campo-field-glance strong { font-size: 1.02rem; }
 
   .field-bottom-close-bar {
     padding-left: .65rem;
     padding-right: .65rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .field-bottom-actions {
+    grid-template-columns: .9fr 1.2fr .9fr !important;
+  }
+
+  .field-bottom-actions button {
+    font-size: .88rem !important;
   }
 }
