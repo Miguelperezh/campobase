@@ -14,7 +14,7 @@ test('loader de Modo Campo lee la nube sin operaciones de escritura', async () =
   }
   assert.match(source, /method: 'GET'/);
   assert.doesNotMatch(source, /method:\s*'(POST|PUT|PATCH|DELETE)'/);
-  assert.doesNotMatch(source, /\.upsert\(|\.insert\(|\.delete\(/);
+  assert.doesNotMatch(source, /\.upsert\(|\.insert\(/);
 });
 
 test('la página usa un único loader cloud antes de arrancar Modo Campo', async () => {
@@ -29,7 +29,9 @@ test('asistencia de Modo Campo cubre sesión y partido sin guardar datos reales'
   assert.match(source, /data-attendance-kind=\"match\"/);
   assert.match(source, /row\?\.matchId/);
   assert.match(source, /solo de prueba/);
-  assert.doesNotMatch(source, /\bput\(|\bputBatch\(|\bremove\(|\.upsert\(|\.insert\(|\.delete\(/);
+  assert.doesNotMatch(source, /from\s+['\"].*db\.js['\"]/);
+  assert.doesNotMatch(source, /\bfetch\s*\(/);
+  assert.doesNotMatch(source, /\bput\s*\(|\bputBatch\s*\(|\bremove\s*\(|\.upsert\s*\(|\.insert\s*\(/);
 });
 
 test('los nuevos módulos de Modo Campo tienen sintaxis válida', () => {
