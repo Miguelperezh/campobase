@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a2d22">
+  <meta name="robots" content="noindex,nofollow">
+  <title>CampoBase · Modo Campo directo</title>
+  <link rel="stylesheet" href="./modo-campo-directo.css?v=1">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><div class="mark">CB</div><div><small>Prueba aislada · Supabase directo</small><h1>Modo Campo</h1></div></div>
+    <div class="top-actions"><span id="sync" class="sync">Leyendo Supabase…</span><a class="exit" href="./index.html">Salir Modo Campo</a></div>
+  </header>
+
+  <main class="shell">
+    <section id="hoy" class="view active"></section>
+    <section id="entrenos" class="view"></section>
+    <section id="partidos" class="view"></section>
+    <section id="plantilla" class="view"></section>
+  </main>
+
+  <nav class="bottom" aria-label="Modo Campo">
+    <button class="nav active" data-nav="hoy">⌂<br>Hoy</button>
+    <button class="nav" data-nav="entrenos">⚽<br>Entrenos</button>
+    <button class="nav" data-nav="partidos">🏟<br>Partidos</button>
+    <button class="nav" data-nav="plantilla">👥<br>Plantilla</button>
+  </nav>
+
+  <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-head"><strong>Modo Campo</strong><button class="btn secondary" data-close-overlay>Volver</button></div>
+    <div id="overlay-body" class="overlay-body"></div>
+    <button class="close-bottom" data-close-overlay>Cerrar</button>
+  </div>
+
+  <script src="./vendor/supabase.js"></script>
+  <script src="./js/modo-campo-directo.js?v=1"></script>
+</body>
+</html>
