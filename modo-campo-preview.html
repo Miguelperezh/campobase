@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a251b">
+  <meta name="robots" content="noindex,nofollow">
+  <title>CampoBase · Modo Campo · Prueba aislada</title>
+  <link rel="stylesheet" href="./modo-campo-preview.css?v=1">
+</head>
+<body>
+  <div id="campo-app" class="campo-app" aria-live="polite">
+    <header class="campo-topbar">
+      <div class="campo-brand">
+        <span class="campo-brand-mark" aria-hidden="true">CB</span>
+        <div>
+          <p class="campo-kicker">Prueba aislada</p>
+          <h1>Modo Campo</h1>
+        </div>
+      </div>
+      <div class="campo-top-actions">
+        <span id="campo-sync" class="campo-sync">Leyendo datos…</span>
+        <a class="campo-exit" href="./index.html">Salir Modo Campo</a>
+      </div>
+    </header>
+
+    <main id="campo-main" tabindex="-1">
+      <section id="view-hoy" class="campo-view active" data-view="hoy">
+        <div id="hoy-content"></div>
+      </section>
+
+      <section id="view-entrenos" class="campo-view" data-view="entrenos">
+        <div class="campo-view-head">
+          <div><p class="campo-kicker">Entrenos</p><h2>Preparar y entrenar sin perder tiempo</h2></div>
+          <button type="button" class="campo-btn secondary" id="open-session-wizard">+ Preparar sesión</button>
+        </div>
+        <div id="training-content"></div>
+      </section>
+
+      <section id="view-partidos" class="campo-view" data-view="partidos">
+        <div class="campo-view-head">
+          <div><p class="campo-kicker">Partidos</p><h2>Lo esencial a golpe de vista</h2></div>
+        </div>
+        <div id="matches-content"></div>
+      </section>
+
+      <section id="view-ejercicios" class="campo-view" data-view="ejercicios">
+        <div class="campo-view-head">
+          <div><p class="campo-kicker">Ejercicios</p><h2>Encuentra y abre rápido</h2></div>
+        </div>
+        <div class="campo-search-wrap">
+          <input id="exercise-search" class="campo-search" type="search" placeholder="Buscar ejercicio…" autocomplete="off">
+        </div>
+        <div id="exercise-filters" class="campo-filter-row" aria-label="Filtros rápidos"></div>
+        <div id="exercise-content"></div>
+      </section>
+    </main>
+
+    <nav class="campo-bottom-nav" aria-label="Navegación de Modo Campo">
+      <button type="button" class="campo-nav-btn active" data-target="hoy"><span>⌂</span><strong>Hoy</strong></button>
+      <button type="button" class="campo-nav-btn" data-target="entrenos"><span>⚽</span><strong>Entrenos</strong></button>
+      <button type="button" class="campo-nav-btn" data-target="partidos"><span>🏟</span><strong>Partidos</strong></button>
+      <button type="button" class="campo-nav-btn" data-target="ejercicios"><span>▦</span><strong>Ejercicios</strong></button>
+    </nav>
+  </div>
+
+  <dialog id="exercise-dialog" class="campo-dialog campo-exercise-dialog">
+    <div id="exercise-dialog-content"></div>
+    <div class="campo-dialog-footer"><button type="button" class="campo-btn close-dialog">Cerrar</button></div>
+  </dialog>
+
+  <dialog id="session-wizard-dialog" class="campo-dialog campo-wizard-dialog">
+    <div id="session-wizard-content"></div>
+    <div class="campo-dialog-footer"><button type="button" class="campo-btn close-dialog">Cerrar</button></div>
+  </dialog>
+
+  <dialog id="whatsapp-dialog" class="campo-dialog campo-confirm-dialog">
+    <div class="campo-dialog-body">
+      <p class="campo-kicker">WhatsApp validado</p>
+      <h2>Usar el WhatsApp actual</h2>
+      <p>No se ha copiado ni cambiado ningún mensaje. Se abrirá CampoBase normal en otra pestaña para que uses la función de WhatsApp exactamente como está validada.</p>
+      <div class="campo-action-row">
+        <button type="button" class="campo-btn primary" id="open-stable-whatsapp">Abrir CampoBase</button>
+        <button type="button" class="campo-btn secondary close-dialog">Cancelar</button>
+      </div>
+    </div>
+    <div class="campo-dialog-footer"><button type="button" class="campo-btn close-dialog">Cerrar</button></div>
+  </dialog>
+
+  <div id="field-overlay" class="field-overlay hidden" role="dialog" aria-modal="true" aria-label="Modo de campo">
+    <div id="field-content" class="field-content"></div>
+  </div>
+
+  <div id="campo-toast" class="campo-toast" role="status"></div>
+
+  <script type="module" src="./js/modo-campo-preview.js?v=1"></script>
+</body>
+</html>
