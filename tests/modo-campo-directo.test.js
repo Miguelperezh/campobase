@@ -77,8 +77,8 @@ test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', a
   const integration = await read('js/modo-campo-integration.js');
   assert.match(actions, /whatsapp-session/);
   assert.match(actions, /whatsapp-match/);
-  assert.match(actions, /data-nav === 'vivo'/);
-  assert.match(actions, /data-nav === 'delegado'/);
+  assert.match(actions, /nav\.dataset\.nav === 'vivo'/);
+  assert.match(actions, /nav\.dataset\.nav === 'delegado'/);
   assert.match(integration, /open-whatsapp-session/);
   assert.match(integration, /open-whatsapp-match/);
   assert.match(integration, /Volver a Modo Campo/);
