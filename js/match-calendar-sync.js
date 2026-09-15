@@ -1,5 +1,5 @@
 import { getAll } from './db.js';
-import './completed-events-ui.js?v=2518';
+import './completed-events-ui.js?v=2520';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -162,7 +162,7 @@ export function initMatchCalendarSync() {
 
 export function partitionAndSortMatches(matches) {
   if (!Array.isArray(matches)) throw new TypeError('Los partidos deben ser una lista.');
-  const isPlayed = (match) => match?.status === 'finished' || (Number.isFinite(match?.goalsFor) && Number.isFinite(match?.goalsAgainst));
+  const isPlayed = (match) => match?.status === 'finished' || match?.status === 'closed' || Boolean(match?.closedAt);
   const upcoming = matches
     .filter((match) => !isPlayed(match))
     .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
