@@ -1,4 +1,5 @@
 import { normalizeSpanishFootballText } from './exercise-content-quality.js';
+import './exercise-content-audit.js?v=1';
 
 const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
