@@ -32,14 +32,15 @@ function flatten(value, output = []) {
   return output;
 }
 
+// Fuente de verdad para «Qué se trabaja»: la mecánica real del ejercicio.
+// Se excluyen deliberadamente objetivo_principal y que_se_trabaja para evitar
+// que una redacción antigua o duplicada contamine la clasificación.
 function corpusForExercise(exercise = {}) {
   return norm(flatten({
     nombre: exercise.nombre,
     categoria: exercise.categoria,
     etiquetas: exercise.etiquetas,
-    objetivo: exercise.objetivo_principal,
     secundarios: exercise.objetivos_secundarios,
-    queTrabaja: exercise.que_se_trabaja,
     vistaRapida: exercise.vista_rapida,
     detalle: exercise.detalle,
     montaje: exercise.montaje,
@@ -59,80 +60,116 @@ function addUnique(items, label) {
 
 export function deriveTrainingFocus(exercise = {}) {
   const text = corpusForExercise(exercise);
+  const category = norm(exercise.categoria || exercise.vista_rapida?.tipo_principal || '');
   const items = [];
   const has = (pattern) => pattern.test(text);
 
   const oneVOne = has(/\b1\s*(?:v|x|contra)\s*1\b|\buno contra uno\b|\bduelo\b/);
-  const defensive = has(/defens|temporiz|replieg|cobertura|bascul|marcaje|intercept|orientar al atacante|cerrar.*centro|proteger.*zona/);
+  const defensive = has(/defens|temporiz|replieg|cobertura|bascul|marcaje|intercept|orientar al atacante|cerrar.*centro|proteger.*zona|sombreado/);
   const attacking = has(/atac|regate|desbord|superar al defensor|finaliz|remate|tiro|progres|profund|amplitud/);
 
-  if (oneVOne && defensive) {
-    addUnique(items, 'Táctica defensiva: 1v1, temporización y control de la distancia.');
-    if (has(/central|banda|orient|fuera|zona menos peligrosa/)) addUnique(items, 'Orientación defensiva: llevar al atacante hacia una zona menos peligrosa.');
-  } else if (oneVOne && attacking) {
-    addUnique(items, 'Técnica ofensiva: regate, protección y superación del defensor en 1v1.');
-  } else if (oneVOne) {
-    addUnique(items, 'Duelos 1v1: lectura del rival y elección del momento de actuar.');
+  // Coordinación y capacidades físicas específicas.
+  if (has(/reaccion|reacción|reactiv|estimulo|estímulo|señal|color|numero|número|voz del entrenador|psicocinet/)) {
+    addUnique(items, 'Percepción y reacción ante estímulos.');
   }
-
-  if (has(/pase|pared|triangul|circulacion|recepcion|recepción|control orientado|primer toque/)) {
-    addUnique(items, 'Técnica: pase, recepción y control orientado.');
+  if (has(/frenad|deceler|cambio de direccion|cambio de dirección|giro|reaceler|salida explosiva/)) {
+    addUnique(items, 'Frenada, cambio de dirección y reaceleración.');
   }
-  if (has(/regate|drib|conduccion|conducción|slalom|cambio de direccion|cambio de dirección/)) {
-    addUnique(items, 'Técnica individual: conducción, regate y cambios de dirección.');
-  }
-  if (has(/finaliz|remate|tiro|definicion|definición|golpear a porteria|golpear a portería/)) {
-    addUnique(items, 'Finalización: elección y ejecución del remate.');
-  }
-  if (has(/posesion|posesión|conservar|conservacion|conservación|lineas de pase|líneas de pase|apoyo|tercer hombre/)) {
-    addUnique(items, 'Táctica ofensiva: conservación, apoyos y creación de líneas de pase.');
-  }
-  if (has(/amplitud|profundidad|ocupacion de espacios|ocupación de espacios|juego posicional|fijar|progresion|progresión/)) {
-    addUnique(items, 'Táctica ofensiva: ocupación de espacios, amplitud y progresión.');
-  }
-  if (has(/presion|presión|robo|recuperacion|recuperación|cobertura|bascul|replieg|marcaje/)) {
-    addUnique(items, 'Táctica defensiva: presión, coberturas y recuperación del balón.');
-  }
-  if (has(/transicion|transición|tras perdida|tras pérdida|tras recuper|cambio de rol|contraataque/)) {
-    addUnique(items, 'Transiciones: reacción al cambio de posesión y cambio rápido de rol.');
-  }
-  if (has(/toma de decision|toma de decisión|decidir|decision|decisión|elegir|lectura del juego|leer.*juego/)) {
-    addUnique(items, 'Toma de decisiones: elegir la acción adecuada según rival, espacio y compañeros.');
-  }
-  if (has(/reaccion|reacción|reactiv|estimulo|estímulo|señal|psicocinet/)) {
-    addUnique(items, 'Percepción y reacción: responder con rapidez a estímulos y cambios de situación.');
-  }
-  if (has(/coordin|agilidad|escalera|apoyos.*pies|ritmo de pies|motric/)) {
-    addUnique(items, 'Coordinación y agilidad: apoyos, ritmo y cambios de dirección.');
+  if (has(/coordin|agilidad|escalera|apoyos.*pies|ritmo de pies|motric|multisalto|comba/)) {
+    addUnique(items, 'Coordinación, agilidad y calidad de apoyos.');
   }
   if (has(/velocidad|aceleracion|aceleración|sprint|explosiv/)) {
-    addUnique(items, 'Capacidad física: aceleración y velocidad aplicada a la acción de juego.');
+    addUnique(items, 'Aceleración y velocidad específica.');
+  }
+  if (has(/equilibr|estabil|propiocep|postur/)) {
+    addUnique(items, 'Equilibrio, estabilidad y control corporal.');
   }
   if (has(/resistencia|intermitente|aerob|anaerob/)) {
-    addUnique(items, 'Capacidad física: resistencia específica con acciones de fútbol.');
+    addUnique(items, 'Resistencia específica para acciones de fútbol.');
   }
   if (has(/fuerza|salto|potencia/)) {
-    addUnique(items, 'Capacidad física: fuerza y potencia aplicadas al gesto futbolístico.');
+    addUnique(items, 'Fuerza y potencia aplicadas al gesto futbolístico.');
   }
-  if (has(/portero|blocaje|estirada|salida.*porter|juego de pies.*porter/)) {
-    addUnique(items, 'Portero: colocación, intervención y toma de decisión ante la acción.');
+
+  // Duelos y comportamiento defensivo/ofensivo.
+  if (oneVOne && defensive) {
+    addUnique(items, 'Desplazamientos defensivos, temporización y control de distancia.');
+    if (has(/central|banda|orient|fuera|zona menos peligrosa|perfil/)) addUnique(items, 'Orientación corporal y dirección del atacante.');
+  } else if (oneVOne && attacking) {
+    addUnique(items, 'Regate, protección y superación del defensor en 1v1.');
+  } else if (oneVOne) {
+    addUnique(items, 'Lectura del rival y resolución del duelo 1v1.');
+  }
+
+  if (has(/entrada|intercept|anticip|marcaje|cobertura|permuta|bascul|replieg/)) {
+    addUnique(items, 'Marcaje, anticipación, cobertura y ayudas defensivas.');
+  }
+  if (has(/presion|presión|robo|recuperacion|recuperación/)) {
+    addUnique(items, 'Presión y recuperación del balón.');
+  }
+
+  // Técnica con balón.
+  if (has(/pase|pared|triangul|circulacion|circulación|recepcion|recepción|control orientado|primer toque/)) {
+    addUnique(items, 'Pase, recepción y control orientado.');
+  }
+  if (has(/regate|drib|conduccion|conducción|slalom/)) {
+    addUnique(items, 'Conducción, regate y dominio del balón.');
+  }
+  if (has(/finaliz|remate|tiro|definicion|definición|golpear a porteria|golpear a portería/)) {
+    addUnique(items, 'Finalización y ejecución del remate.');
   }
   if (has(/cabece|juego aereo|juego aéreo|balon aereo|balón aéreo/)) {
-    addUnique(items, 'Juego aéreo: orientación corporal, timing y contacto con el balón.');
+    addUnique(items, 'Juego aéreo, timing y contacto con el balón.');
   }
 
+  // Principios tácticos ofensivos.
+  if (has(/posesion|posesión|conservar|conservacion|conservación|lineas de pase|líneas de pase|apoyo|tercer hombre/)) {
+    addUnique(items, 'Conservación, apoyos y líneas de pase.');
+  }
+  if (has(/amplitud|profundidad|ocupacion de espacios|ocupación de espacios|juego posicional|fijar|progresion|progresión/)) {
+    addUnique(items, 'Ocupación de espacios, amplitud y progresión.');
+  }
+  if (has(/desmarque|ruptura|apoyo y ruptura|movilidad sin balon|movilidad sin balón/)) {
+    addUnique(items, 'Desmarques, movilidad y coordinación sin balón.');
+  }
+  if (has(/superioridad|inferioridad|hombre libre|jugador libre/)) {
+    addUnique(items, 'Identificación y aprovechamiento de superioridades.');
+  }
+
+  // Transiciones y decisión.
+  if (has(/transicion|transición|tras perdida|tras pérdida|tras recuper|cambio de rol|contraataque/)) {
+    addUnique(items, 'Transición y cambio rápido de rol.');
+  }
+  if (has(/toma de decision|toma de decisión|decidir|decision|decisión|elegir|lectura del juego|leer.*juego|escaneo|perfil corporal/)) {
+    addUnique(items, 'Percepción, lectura del juego y toma de decisiones.');
+  }
+
+  // Porteros: se concreta el gesto cuando la propia tarea lo indica.
+  if (has(/portero|blocaje|estirada|salida.*porter|juego de pies.*porter|achique/)) {
+    if (has(/blocaje|estirada|caida|caída|desvio|desvío/)) addUnique(items, 'Técnica de blocaje, caída y estirada del portero.');
+    if (has(/salida|achique|uno contra uno|1v1/)) addUnique(items, 'Colocación, salida y achique del portero.');
+    if (has(/juego de pies|pase|saque|distribucion|distribución/)) addUnique(items, 'Juego de pies y distribución del portero.');
+    if (!items.some((item) => /portero/i.test(item))) addUnique(items, 'Colocación e intervención específica del portero.');
+  }
+
+  // Fallback por categoría: solo se usa cuando la mecánica no aporta suficiente información.
   if (!items.length) {
-    const category = norm(exercise.categoria || exercise.vista_rapida?.tipo_principal || '');
-    if (/calent|activ/.test(category)) addUnique(items, 'Activación: movilidad, coordinación y preparación para la tarea principal.');
-    else if (/tactic/.test(category)) addUnique(items, 'Táctica: comprensión de la situación, ocupación del espacio y toma de decisiones.');
-    else if (/tecn/.test(category)) addUnique(items, 'Técnica: calidad de ejecución del gesto con balón.');
-    else if (/coord|agil/.test(category)) addUnique(items, 'Coordinación y agilidad aplicadas a movimientos propios del fútbol.');
-    else if (/fisic/.test(category)) addUnique(items, 'Capacidad física integrada con acciones específicas de fútbol.');
-    else addUnique(items, 'Comprensión y ejecución de la situación de juego propuesta.');
+    if (/calent|activ/.test(category)) addUnique(items, 'Movilidad, activación y preparación motriz.');
+    else if (/pase|posesion/.test(category)) addUnique(items, 'Pase, control y conservación del balón.');
+    else if (/finaliz/.test(category)) addUnique(items, 'Golpeo y finalización.');
+    else if (/defens|duelo/.test(category)) addUnique(items, 'Comportamientos defensivos y resolución de duelos.');
+    else if (/transicion/.test(category)) addUnique(items, 'Cambio de rol y respuesta tras cambio de posesión.');
+    else if (/portero/.test(category)) addUnique(items, 'Fundamentos técnicos y tácticos del portero.');
+    else if (/tactic/.test(category)) addUnique(items, 'Principios tácticos y ocupación racional del espacio.');
+    else if (/tecn/.test(category)) addUnique(items, 'Calidad de ejecución técnica con balón.');
+    else if (/coord|agil/.test(category)) addUnique(items, 'Coordinación, agilidad y control corporal.');
+    else if (/fisic/.test(category)) addUnique(items, 'Capacidad física integrada en acciones de fútbol.');
+    else addUnique(items, 'Ejecución técnica y comprensión de la situación de juego.');
   }
 
-  // En campo interesa poder leerlo de un vistazo: como máximo cuatro contenidos.
-  return items.slice(0, 4).map(normalizeSpanishFootballText);
+  const objective = norm(exerciseObjective(exercise));
+  const distinct = items.filter((item) => norm(item) !== objective);
+  return (distinct.length ? distinct : items).slice(0, 4).map(normalizeSpanishFootballText);
 }
 
 export function exerciseObjective(exercise = {}) {
