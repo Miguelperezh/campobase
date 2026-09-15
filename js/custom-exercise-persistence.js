@@ -1,3 +1,4 @@
+import './exercise-content-quality.js?v=1';
 import { getOne, put } from './db.js';
 import { buildExercise } from './training-domain.js';
 
