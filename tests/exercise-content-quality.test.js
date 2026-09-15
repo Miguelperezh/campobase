@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deriveTrainingFocus, exerciseObjective, normalizeSpanishFootballText } from '../js/exercise-content-quality.js';
+import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
+
+const norm = (value = '') => String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('es').replace(/\s+/g, ' ').trim();
 
 test('el vocabulario de ficha no muestra chip', () => {
   assert.equal(normalizeSpanishFootballText('Pase de chip por encima del rival'), 'Pase picado por encima del rival');
@@ -36,4 +39,18 @@ test('Qué se trabaja distingue reacción, decisión y técnica cuando correspon
   assert.ok(focus.some((item) => /Percepción y reacción/i.test(item)));
   assert.ok(focus.some((item) => /Técnica|Finalización/i.test(item)));
   assert.ok(focus.length <= 4);
+});
+
+test('todos los ejercicios validados obtienen contenidos legibles y distintos del objetivo', () => {
+  assert.ok(EJERCICIOS_VALIDADOS.length >= 200, 'Se esperaba auditar el catálogo completo de ejercicios validados.');
+  for (const exercise of EJERCICIOS_VALIDADOS) {
+    const focus = deriveTrainingFocus(exercise);
+    const objective = exerciseObjective(exercise);
+    assert.ok(focus.length >= 1 && focus.length <= 4, `${exercise.id}: debe tener entre 1 y 4 contenidos trabajados.`);
+    assert.ok(focus.every((item) => item.trim().length > 0), `${exercise.id}: no puede haber contenidos vacíos.`);
+    if (objective) {
+      assert.ok(focus.every((item) => norm(item) !== norm(objective)), `${exercise.id}: Qué se trabaja no puede repetir el objetivo.`);
+    }
+    assert.doesNotMatch(`${focus.join(' ')} ${objective}`, /\bchip\b/i, `${exercise.id}: no debe mostrarse chip.`);
+  }
 });
