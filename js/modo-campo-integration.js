@@ -13,12 +13,22 @@ function installTopbarActionLayout() {
   const style = document.createElement('style');
   style.id = 'cb-campo-topbar-layout';
   style.textContent = `
+    body.cb-redesign-active .plantilla-staff-info {
+      overflow: visible !important;
+    }
     body.cb-redesign-active .plantilla-staff-role-badge {
-      max-width: none !important;
-      width: max-content !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: fit-content !important;
+      max-width: 8rem !important;
       overflow: visible !important;
       text-overflow: clip !important;
-      white-space: nowrap !important;
+      white-space: normal !important;
+      overflow-wrap: normal !important;
+      word-break: normal !important;
+      line-height: 1.05 !important;
+      text-align: center !important;
     }
     @media (max-width: 650px) {
       body.cb-redesign-active .topbar {
