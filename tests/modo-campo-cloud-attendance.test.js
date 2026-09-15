@@ -17,6 +17,8 @@ test('loader de Modo Campo lee Supabase con el cliente oficial y sin fallback lo
   assert.match(source, /\.select\('id,payload,updated_at,deleted_at'\)/);
   assert.match(source, /__CAMPO_PREVIEW_SOURCE__ = 'cloud'/);
   assert.match(source, /__CAMPO_PREVIEW_SOURCE__ = 'cloud-error'/);
+  assert.match(source, /modo-campo-preview-db\.js\?v=5/);
+  assert.match(source, /modo-campo-preview\.js\?v=5/);
   assert.doesNotMatch(source, /local-fallback|cach[eé] local|indexedDB/i);
   assert.doesNotMatch(source, /\.upsert\(|\.insert\(|\.delete\(/);
 });
@@ -24,8 +26,9 @@ test('loader de Modo Campo lee Supabase con el cliente oficial y sin fallback lo
 test('la página carga Supabase oficial y sustituye db.js solo dentro de Modo Campo', async () => {
   const html = await read('modo-campo-preview.html');
   assert.match(html, /vendor\/supabase\.js/);
-  assert.match(html, /"\.\/js\/db\.js"\s*:\s*"\.\/js\/modo-campo-preview-db\.js"/);
-  assert.match(html, /modo-campo-preview-loader\.js\?v=3/);
+  assert.match(html, /"\.\/js\/db\.js"\s*:\s*"\.\/js\/modo-campo-preview-db\.js\?v=5"/);
+  assert.match(html, /"https:\/\/miguelperezh\.github\.io\/campobase\/js\/db\.js"\s*:\s*"\.\/js\/modo-campo-preview-db\.js\?v=5"/);
+  assert.match(html, /modo-campo-preview-loader\.js\?v=5/);
   assert.doesNotMatch(html, /<script[^>]+modo-campo-preview\.js\?v=1/);
 });
 
