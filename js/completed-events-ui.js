@@ -11,6 +11,19 @@ const MANUAL_CLOSE_FROM = '2026-09-15';
 let syncQueued = false;
 let completionBound = false;
 
+function installStaffRoleThemeParity() {
+  if (document.getElementById('cb-staff-role-theme-parity')) return;
+  const style = document.createElement('style');
+  style.id = 'cb-staff-role-theme-parity';
+  style.textContent = `
+    body.cb-redesign-active .staff-role-blue {
+      background: var(--cb-accent, var(--accent, #c8102e)) !important;
+      color: var(--cb-accent-text, #ffffff) !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function sessionIsArchived(session) {
   if (session?.status === 'closed' || session?.status === 'finished' || session?.closedAt || session?.archived === true) return true;
   const day = String(session?.date || '').slice(0, 10);
@@ -200,6 +213,7 @@ function bindManualCompletion() {
 }
 
 function install() {
+  installStaffRoleThemeParity();
   bindManualCompletion();
   syncCompletedEvents();
 
