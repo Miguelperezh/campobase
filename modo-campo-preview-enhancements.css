@@ -1,15 +1,31 @@
 /* Mejoras finales exclusivas de la prueba aislada Modo Campo. */
 .field-bottom-close-bar {
-  position: sticky;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
-  z-index: 90;
-  width: 100%;
+  z-index: 225;
+  width: min(980px, 100%);
   padding: .7rem max(.75rem, env(safe-area-inset-left)) max(.8rem, env(safe-area-inset-bottom));
   background: rgba(255,255,255,.97);
   border-top: 1px solid var(--campo-line, #d8e3dc);
   box-shadow: 0 -8px 24px rgba(10,37,27,.12);
   display: flex;
   justify-content: center;
+}
+
+/* En Entrenar ahora ya existe una barra fija con Anterior / Cronómetro / Siguiente.
+   El cierre queda inmediatamente encima y nunca tapado por esos controles. */
+.field-overlay:has(.field-bottom-actions) .field-bottom-close-bar {
+  bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+.field-overlay:has(.field-bottom-actions) .field-content {
+  padding-bottom: calc(12.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+.field-overlay:not(:has(.field-bottom-actions)) .field-content {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
 }
 
 .field-bottom-close-bar button {
