@@ -1,4 +1,6 @@
 import './session-reorder-ui.js?v=1';
+import './session-editor-usability.js?v=1';
+import './custom-exercise-persistence.js?v=1';
 
 // Integración oficial de Modo Campo con la aplicación estable.
 // No reimplementa lógica de negocio: solo añade acceso/retorno y abre las
