@@ -8,6 +8,13 @@
   <title>CampoBase · Modo Campo · Prueba aislada</title>
   <link rel="stylesheet" href="./modo-campo-preview.css?v=1">
   <link rel="stylesheet" href="./modo-campo-preview-enhancements.css?v=1">
+  <script type="importmap">
+    {
+      "imports": {
+        "./js/db.js": "./js/modo-campo-preview-db.js"
+      }
+    }
+  </script>
 </head>
 <body>
   <div id="campo-app" class="campo-app" aria-live="polite">
@@ -94,6 +101,7 @@
 
   <div id="campo-toast" class="campo-toast" role="status"></div>
 
-  <script type="module" src="./js/modo-campo-preview-loader.js?v=2"></script>
+  <script src="./vendor/supabase.js"></script>
+  <script type="module" src="./js/modo-campo-preview-loader.js?v=3"></script>
 </body>
 </html>
