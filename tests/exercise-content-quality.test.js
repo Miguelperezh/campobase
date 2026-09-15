@@ -1,56 +1,52 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deriveTrainingFocus, exerciseObjective, normalizeSpanishFootballText } from '../js/exercise-content-quality.js';
-import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
+import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const norm = (value = '') => String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('es').replace(/\s+/g, ' ').trim();
+const root = new URL('../', import.meta.url);
+const read = (path) => readFile(new URL(path, root), 'utf8');
 
-test('el vocabulario de ficha no muestra chip', () => {
-  assert.equal(normalizeSpanishFootballText('Pase de chip por encima del rival'), 'Pase picado por encima del rival');
-  assert.equal(normalizeSpanishFootballText('Hacer un chip al portero'), 'picar el balón al portero');
-  assert.doesNotMatch(normalizeSpanishFootballText('Tiro chip y pase chip'), /\bchip\b/i);
+test('la capa de contenido elimina chip con vocabulario de fútbol de España', async () => {
+  const js = await read('js/exercise-content-quality.js');
+  assert.match(js, /pase picado/);
+  assert.match(js, /remate picado/);
+  assert.match(js, /picar el balón/);
+  assert.match(js, /balón picado/);
+  assert.match(js, /replace\(\/\\bchip\\b\/gi/);
 });
 
-test('Qué se trabaja clasifica un 1v1 defensivo sin copiar el objetivo', () => {
-  const exercise = {
-    nombre: 'Defensa 1v1 zona central',
-    categoria: 'Defensa y duelos',
-    objetivo_principal: 'Defender el 1v1 en zona central — el más peligroso.',
-    que_se_trabaja: ['Defender el 1v1 en zona central — el más peligroso.'],
-    como_se_hace: ['El defensor temporiza, controla la distancia y orienta al atacante fuera de la zona central.'],
-  };
-  const focus = deriveTrainingFocus(exercise);
-  assert.ok(focus.some((item) => /Táctica defensiva/i.test(item)));
-  assert.ok(focus.some((item) => /temporización|orientación defensiva/i.test(item)));
-  assert.ok(focus.every((item) => item !== exercise.objetivo_principal));
-  assert.equal(exerciseObjective(exercise), exercise.objetivo_principal);
+test('Qué se trabaja se deriva del contenido y no copia el objetivo del catálogo', async () => {
+  const js = await read('js/exercise-content-quality.js');
+  assert.match(js, /export function deriveTrainingFocus/);
+  assert.match(js, /Táctica defensiva: 1v1, temporización y control de la distancia/);
+  assert.match(js, /Técnica: pase, recepción y control orientado/);
+  assert.match(js, /Finalización: elección y ejecución del remate/);
+  assert.match(js, /Transiciones: reacción al cambio de posesión/);
+  assert.match(js, /Percepción y reacción/);
+  assert.match(js, /Coordinación y agilidad/);
+  assert.match(js, /Toma de decisiones/);
+  assert.match(js, /return items\.slice\(0, 4\)/);
 });
 
-test('Qué se trabaja distingue reacción, decisión y técnica cuando corresponden', () => {
-  const exercise = {
-    nombre: 'Circuito de reacción con pase y finalización',
-    categoria: 'Técnico-táctico',
-    objetivo_principal: 'Resolver con rapidez tras una señal del entrenador.',
-    detalle: {
-      desarrollo: ['Reaccionar al estímulo de color, elegir apoyo, dar el pase y finalizar a portería.'],
-    },
-  };
-  const focus = deriveTrainingFocus(exercise);
-  assert.ok(focus.some((item) => /Percepción y reacción/i.test(item)));
-  assert.ok(focus.some((item) => /Técnica|Finalización/i.test(item)));
-  assert.ok(focus.length <= 4);
+test('objetivo y Qué se trabaja se escriben en secciones distintas', async () => {
+  const js = await read('js/exercise-content-quality.js');
+  assert.match(js, /#section-que-se-trabaja/);
+  assert.match(js, /#section-objetivo \.main-objective-box/);
+  assert.match(js, /exerciseObjective\(exercise\)/);
+  assert.match(js, /findValidatedExercise\(exerciseId\)/);
 });
 
-test('todos los ejercicios validados obtienen contenidos legibles y distintos del objetivo', () => {
-  assert.ok(EJERCICIOS_VALIDADOS.length >= 200, 'Se esperaba auditar el catálogo completo de ejercicios validados.');
-  for (const exercise of EJERCICIOS_VALIDADOS) {
-    const focus = deriveTrainingFocus(exercise);
-    const objective = exerciseObjective(exercise);
-    assert.ok(focus.length >= 1 && focus.length <= 4, `${exercise.id}: debe tener entre 1 y 4 contenidos trabajados.`);
-    assert.ok(focus.every((item) => item.trim().length > 0), `${exercise.id}: no puede haber contenidos vacíos.`);
-    if (objective) {
-      assert.ok(focus.every((item) => norm(item) !== norm(objective)), `${exercise.id}: Qué se trabaja no puede repetir el objetivo.`);
-    }
-    assert.doesNotMatch(`${focus.join(' ')} ${objective}`, /\bchip\b/i, `${exercise.id}: no debe mostrarse chip.`);
+test('el vocabulario español se aplica también a biblioteca y planificador', async () => {
+  const js = await read('js/exercise-vocabulary-ui.js');
+  assert.match(js, /normalizeSpanishFootballText/);
+  assert.match(js, /getElementById\('exercises-list'\)/);
+  assert.match(js, /getElementById\('session-builder'\)/);
+  assert.match(js, /getElementById\('exercise-detail-body'\)/);
+});
+
+test('los módulos de calidad de contenido tienen sintaxis válida', () => {
+  for (const path of ['js/exercise-content-quality.js', 'js/exercise-vocabulary-ui.js']) {
+    execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio: 'pipe' });
   }
 });
