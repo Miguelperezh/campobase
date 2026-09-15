@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a2d22">
   <meta name="robots" content="noindex,nofollow">
   <title>CampoBase · Modo Campo directo</title>
-  <link rel="stylesheet" href="./modo-campo-directo.css?v=1">
+  <link rel="stylesheet" href="./modo-campo-directo.css?v=2">
 </head>
 <body>
   <header class="top">
@@ -18,14 +18,16 @@
     <section id="hoy" class="view active"></section>
     <section id="entrenos" class="view"></section>
     <section id="partidos" class="view"></section>
-    <section id="plantilla" class="view"></section>
+    <section id="delegado" class="view"></section>
+    <section id="vivo" class="view"></section>
   </main>
 
   <nav class="bottom" aria-label="Modo Campo">
-    <button class="nav active" data-nav="hoy">⌂<br>Hoy</button>
-    <button class="nav" data-nav="entrenos">⚽<br>Entrenos</button>
-    <button class="nav" data-nav="partidos">🏟<br>Partidos</button>
-    <button class="nav" data-nav="plantilla">👥<br>Plantilla</button>
+    <button class="nav active" data-nav="hoy"><span>⌂</span><strong>Hoy</strong></button>
+    <button class="nav" data-nav="entrenos"><span>⚽</span><strong>Entrenos</strong></button>
+    <button class="nav" data-nav="partidos"><span>🏟</span><strong>Partidos</strong></button>
+    <button class="nav" data-nav="delegado"><span>👤</span><strong>Delegado</strong></button>
+    <button class="nav" data-nav="vivo"><span>⏱</span><strong>En vivo</strong></button>
   </nav>
 
   <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
@@ -34,7 +36,9 @@
     <button class="close-bottom" data-close-overlay>Cerrar</button>
   </div>
 
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <script src="./vendor/supabase.js"></script>
-  <script src="./js/modo-campo-directo.js?v=1"></script>
+  <script src="./js/modo-campo-directo.js?v=2"></script>
 </body>
 </html>
