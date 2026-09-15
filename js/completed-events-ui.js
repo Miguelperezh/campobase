@@ -2,18 +2,22 @@ import './exercise-view-mode-ui.js?v=2519';
 import { put } from './db.js';
 
 // Desde el 15/09/2026 las sesiones solo se archivan cuando el entrenador las
-// cierra de forma explícita. Las sesiones anteriores se conservan como legado
-// para no desmontar el historial ya validado.
+// marca como realizadas de forma explícita. Las sesiones anteriores se conservan
+// como legado para no desmontar el historial ya validado.
 const SESSION_GROUP_ID = 'completed-sessions-collapsible';
 const MATCH_GROUP_ID = 'played-matches-collapsible';
 const MANUAL_CLOSE_FROM = '2026-09-15';
 let syncQueued = false;
-let closeBound = false;
+let completionBound = false;
 
 function sessionIsArchived(session) {
   if (session?.status === 'closed' || session?.status === 'finished' || session?.closedAt || session?.archived === true) return true;
   const day = String(session?.date || '').slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(day) && day < MANUAL_CLOSE_FROM;
+}
+
+function matchIsArchived(match) {
+  return match?.status === 'finished' || match?.status === 'closed' || Boolean(match?.closedAt);
 }
 
 function makeAccordion({ id, title, count }) {
@@ -33,23 +37,41 @@ function makeAccordion({ id, title, count }) {
   return details;
 }
 
-function ensureManualCloseButtons() {
-  const root = document.getElementById('sessions-list');
+function ensureManualCompletionButtons() {
+  const sessionsRoot = document.getElementById('sessions-list');
   const sessions = window.__campobase?.state?.trainingSessions;
-  if (!root || !Array.isArray(sessions)) return;
-  const byId = new Map(sessions.map((session) => [String(session.id), session]));
+  if (sessionsRoot && Array.isArray(sessions)) {
+    const byId = new Map(sessions.map((session) => [String(session.id), session]));
+    for (const card of sessionsRoot.querySelectorAll('article.session-card[data-session-id]')) {
+      const session = byId.get(String(card.dataset.sessionId));
+      if (!session || sessionIsArchived(session)) continue;
+      const actions = card.querySelector('.button-row');
+      if (!actions || actions.querySelector('.mark-session-complete')) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mark-session-complete secondary';
+      button.dataset.id = session.id;
+      button.textContent = '✓ Realizado';
+      actions.appendChild(button);
+    }
+  }
 
-  for (const card of root.querySelectorAll('article.session-card[data-session-id]')) {
-    const session = byId.get(String(card.dataset.sessionId));
-    if (!session || sessionIsArchived(session)) continue;
-    const actions = card.querySelector('.button-row');
-    if (!actions || actions.querySelector('.close-session-manual')) continue;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'close-session-manual secondary';
-    button.dataset.id = session.id;
-    button.textContent = 'Cerrar sesión';
-    actions.appendChild(button);
+  const matchesRoot = document.getElementById('matches-list');
+  const matches = window.__campobase?.state?.matches;
+  if (matchesRoot && Array.isArray(matches)) {
+    const byId = new Map(matches.map((match) => [String(match.id), match]));
+    for (const card of matchesRoot.querySelectorAll('article.match-card[data-match-id]')) {
+      const match = byId.get(String(card.dataset.matchId));
+      if (!match || matchIsArchived(match)) continue;
+      const actions = card.querySelector('.button-row');
+      if (!actions || actions.querySelector('.mark-match-complete')) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mark-match-complete secondary';
+      button.dataset.id = match.id;
+      button.textContent = '✓ Realizado';
+      actions.appendChild(button);
+    }
   }
 }
 
@@ -87,9 +109,7 @@ function groupPlayedMatchesFallback() {
 
   if (root.querySelector(`#${MATCH_GROUP_ID}`)) return;
 
-  const playedIds = new Set(
-    matches.filter((match) => match?.status === 'finished' || match?.status === 'closed' || match?.closedAt).map((match) => String(match.id)),
-  );
+  const playedIds = new Set(matches.filter(matchIsArchived).map((match) => String(match.id)));
   if (!playedIds.size) return;
 
   const cards = [...root.children].filter((node) =>
@@ -97,14 +117,14 @@ function groupPlayedMatchesFallback() {
   );
   if (!cards.length) return;
 
-  const group = makeAccordion({ id: MATCH_GROUP_ID, title: 'Jugados', count: cards.length });
+  const group = makeAccordion({ id: MATCH_GROUP_ID, title: 'Partidos jugados', count: cards.length });
   const stack = group.querySelector('.completed-events-cards');
   cards.forEach((card) => stack.appendChild(card));
   root.appendChild(group);
 }
 
 function syncCompletedEvents() {
-  ensureManualCloseButtons();
+  ensureManualCompletionButtons();
   groupCompletedSessions();
   groupPlayedMatchesFallback();
 }
@@ -118,12 +138,12 @@ function scheduleSync() {
   });
 }
 
-async function closeSessionManually(sessionId, button) {
+async function completeSessionManually(sessionId, button) {
   const sessions = window.__campobase?.state?.trainingSessions;
   const session = Array.isArray(sessions) ? sessions.find((item) => String(item.id) === String(sessionId)) : null;
   if (!session || sessionIsArchived(session)) return;
 
-  const accepted = window.confirm('¿Cerrar esta sesión? Pasará a «Sesiones realizadas». Guardar asistencia por sí solo no la cerrará.');
+  const accepted = window.confirm('¿Marcar esta sesión como realizada? Pasará a «Sesiones realizadas». Guardar asistencia, editarla o pasar la hora no la archiva.');
   if (!accepted) return;
 
   button.disabled = true;
@@ -133,31 +153,59 @@ async function closeSessionManually(sessionId, button) {
     if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
     else window.location.reload();
   } catch (error) {
-    console.warn('No se pudo cerrar la sesión:', error);
+    console.warn('No se pudo marcar la sesión como realizada:', error);
     button.disabled = false;
   }
 }
 
-function bindManualClose() {
-  if (closeBound) return;
-  closeBound = true;
+async function completeMatchManually(matchId, button) {
+  const matches = window.__campobase?.state?.matches;
+  const match = Array.isArray(matches) ? matches.find((item) => String(item.id) === String(matchId)) : null;
+  if (!match || matchIsArchived(match)) return;
+
+  const accepted = window.confirm('¿Marcar este partido como realizado? Pasará a «Partidos jugados». Guardar asistencia, editar el partido o introducir un marcador no lo archiva.');
+  if (!accepted) return;
+
+  button.disabled = true;
+  try {
+    const now = Date.now();
+    await put('matches', { ...match, status: 'finished', closedAt: now, updatedAt: now });
+    if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
+    else window.location.reload();
+  } catch (error) {
+    console.warn('No se pudo marcar el partido como realizado:', error);
+    button.disabled = false;
+  }
+}
+
+function bindManualCompletion() {
+  if (completionBound) return;
+  completionBound = true;
   document.addEventListener('click', (event) => {
-    const button = event.target.closest('.close-session-manual');
-    if (!button) return;
-    event.preventDefault();
-    event.stopPropagation();
-    closeSessionManually(button.dataset.id, button);
+    const sessionButton = event.target.closest('.mark-session-complete');
+    if (sessionButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      completeSessionManually(sessionButton.dataset.id, sessionButton);
+      return;
+    }
+    const matchButton = event.target.closest('.mark-match-complete');
+    if (matchButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      completeMatchManually(matchButton.dataset.id, matchButton);
+    }
   });
 }
 
 function install() {
-  bindManualClose();
+  bindManualCompletion();
   syncCompletedEvents();
 
   const sessionsRoot = document.getElementById('sessions-list');
   const matchesRoot = document.getElementById('matches-list');
-  if (sessionsRoot) new MutationObserver(scheduleSync).observe(sessionsRoot, { childList: true });
-  if (matchesRoot) new MutationObserver(scheduleSync).observe(matchesRoot, { childList: true });
+  if (sessionsRoot) new MutationObserver(scheduleSync).observe(sessionsRoot, { childList: true, subtree: true });
+  if (matchesRoot) new MutationObserver(scheduleSync).observe(matchesRoot, { childList: true, subtree: true });
 }
 
 if (typeof document !== 'undefined') {
