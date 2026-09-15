@@ -14,7 +14,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: catalog-review-source
-          path: |
-            library-v2/data/catalog.json
-            assets/exercise-board/*.b64
+          path: library-v2/data/catalog.json
           retention-days: 1
