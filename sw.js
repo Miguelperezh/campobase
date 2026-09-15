@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2525-modo-campo-color-exacto';
+const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2526-session-editor-custom-exercises';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -9,7 +9,7 @@ const ASSETS = [
   './', './index.html', './styles.css', './styles.css?v=2502', './styles-redesign.css', './styles-redesign.css?v=2502', './manifest.webmanifest',
   './modo-campo-directo.html', './modo-campo-directo.css', './modo-campo-directo.css?v=4', './modo-campo-theme.css', './modo-campo-theme.css?v=3', './modo-campo-flow.css', './modo-campo-flow.css?v=1',
   './js/app.js', './js/app.js?v=2502', './js/db.js', './js/domain.js', './js/whatsapp-suite.js', './js/demo-session.js', './js/training-domain.js', './js/real-exercises.js', './js/exercise-planning.js', './js/ejercicios-validados.js', './js/ejercicio-viewer.js', './js/ejercicio-videos.js', './js/media-lightbox.js', './js/frame-durations.js', './js/tactics.js', './js/live-tactics.js', './js/tacticas-interactivas.js', './js/tactica-viewer.js', './js/tactica-frame-durations.js', './js/tactica-1231-frames.js', './js/tactica-1213-frames.js', './js/tactica-1321-frames.js', './js/tactica-1222-frames.js', './js/tactica-1132-frames.js', './js/tactica-133-frames.js', './js/tactica-1312-frames.js', './js/tactica-final-frames.js', './js/tactica-11311-frames.js', './js/tactica-1141-frames.js', './js/tactica-1411-frames.js', './js/tactica-12211-frames.js', './js/tactic-board-controller.js', './js/tactica-guia-viewer.js', './js/squad-seed.js', './js/sync-core.js', './js/supabase-client.js', './js/plantilla-stats-sync.js', './js/match-calendar-sync.js', './js/completed-events-ui.js', './js/exercise-view-mode-ui.js?v=2519', './js/match-postgame-editor.js', './js/calendar-substitutions-v2.js', './js/calendar-substitutions-entry.js', './js/session-visual-planner.js?v=2451', './js/session-materials.js?v=2452', './js/session-top-actions.js?v=2458', './js/session-picker-compat.js?v=2461', './js/session-planner-ui.js?v=2460', './js/attendance-linked-sources.js?v=2453', './js/player-data-sync.js?v=2453', './js/attendance-history-responsive.js?v=2455', './js/today-dashboard.js?v=2456', './js/exercise-board-persistence.js?v=2473', './js/runtime-refresh.js?v=2473', './js/exercise-viewer-controls.js?v=2475', './js/exercise-viewer-layout.js?v=2475', './js/staff-management.js', './js/image-crop-utils.js', './js/redesign-nav.js', './js/redesign-nav.js?v=2502',
-  './js/modo-campo-directo.js', './js/modo-campo-directo.js?v=4', './js/modo-campo-identity-exercises.js', './js/modo-campo-identity-exercises.js?v=2', './js/modo-campo-theme-parity.js', './js/modo-campo-theme-parity.js?v=1', './js/modo-campo-actions.js', './js/modo-campo-actions.js?v=2', './js/modo-campo-integration.js', './js/modo-campo-integration.js?v=1', './js/session-reorder-ui.js', './js/session-reorder-ui.js?v=1',
+  './js/modo-campo-directo.js', './js/modo-campo-directo.js?v=4', './js/modo-campo-identity-exercises.js', './js/modo-campo-identity-exercises.js?v=2', './js/modo-campo-theme-parity.js', './js/modo-campo-theme-parity.js?v=1', './js/modo-campo-actions.js', './js/modo-campo-actions.js?v=2', './js/modo-campo-integration.js', './js/modo-campo-integration.js?v=1', './js/session-reorder-ui.js', './js/session-reorder-ui.js?v=1', './js/session-editor-usability.js', './js/session-editor-usability.js?v=1', './js/custom-exercise-persistence.js', './js/custom-exercise-persistence.js?v=1',
   './library-v2/data/catalog.json', './library-v2/data/catalog-data.js',
   ...BOARD_PARTS,
   './vendor/supabase.js',
@@ -34,6 +34,8 @@ const REVALIDATE_PATHS = [
   '/js/modo-campo-actions.js',
   '/js/modo-campo-integration.js',
   '/js/session-reorder-ui.js',
+  '/js/session-editor-usability.js',
+  '/js/custom-exercise-persistence.js',
   '/modo-campo-directo.html',
   '/modo-campo-directo.css',
   '/modo-campo-theme.css',
