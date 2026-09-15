@@ -13,7 +13,8 @@
 html,body{background:var(--field-bg)!important;color:var(--field-text)!important;font-family:var(--field-font-family)!important}
 body,button,a,input,select,textarea{font-family:var(--field-font-family)!important}
 body,h1,h2,h3,h4,h5,h6,strong,b,button,.btn,.nav,.status,.pill,.kicker,.sync,.exit{font-weight:var(--field-font-weight)!important}
-.top,.overlay-head{background:var(--field-card)!important;border-color:var(--field-border)!important}
+.top{background:var(--field-nav)!important;border-color:var(--field-border)!important}
+.overlay-head{background:var(--field-card)!important;border-color:var(--field-border)!important}
 .campo-club-crest{width:56px;height:56px;object-fit:contain;border-radius:14px;background:#fff;border:1px solid var(--field-border);box-shadow:0 2px 8px rgba(0,0,0,.06);flex:0 0 auto}
 .brand small,.sync,.section-head span,.card p,.empty,.source-proof,.attendance-row-full label,.record-notes,.arrival-box{color:var(--field-text)!important;opacity:.72}
 .exit,.btn.primary,.btn.accent,.nav.active,.close-bottom,.status.today{background:var(--field-accent)!important;color:var(--field-accent-text)!important}
