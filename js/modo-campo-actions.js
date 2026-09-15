@@ -4,7 +4,7 @@
   const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
   const client = globalThis.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false },
   });
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -41,12 +41,7 @@
   async function upsertPayload(table, record) {
     assertClient();
     const updatedAt = Number(record.updatedAt) || Date.now();
-    const { error } = await client.from(table).upsert({
-      id: record.id,
-      payload: record,
-      updated_at: updatedAt,
-      deleted_at: null,
-    }, { onConflict: 'id' });
+    const { error } = await client.from(table).upsert({ id:record.id, payload:record, updated_at:updatedAt, deleted_at:null }, { onConflict:'id' });
     if (error) throw error;
   }
 
@@ -101,20 +96,13 @@
       ? '¿Marcar este partido como realizado? Pasará a «Partidos jugados». La asistencia o el marcador por sí solos no lo archivan.'
       : '¿Marcar esta sesión como realizada? Pasará a «Sesiones realizadas». La asistencia o el paso de la hora por sí solos no la archivan.');
     if (!accepted) return;
-
     button.disabled = true;
     try {
       const table = isMatch ? 'partidos' : 'configuracion';
       const current = await readPayload(table, id);
       if (!current) throw new Error(isMatch ? 'El partido ya no está disponible.' : 'La sesión ya no está disponible.');
       const now = Date.now();
-      const completed = {
-        ...current,
-        status: isMatch ? 'finished' : 'closed',
-        closedAt: now,
-        updatedAt: now,
-      };
-      await upsertPayload(table, completed);
+      await upsertPayload(table, { ...current, status:isMatch ? 'finished' : 'closed', closedAt:now, updatedAt:now });
       showToast(isMatch ? 'Partido marcado como realizado.' : 'Sesión marcada como realizada.');
       window.setTimeout(() => window.location.reload(), 450);
     } catch (error) {
@@ -155,16 +143,16 @@
   function enhanceCards() {
     for (const card of $$('article.card[data-session-id]')) {
       if (card.closest('.fold') || card.querySelector('.status.done')) continue;
-      const id = card.dataset.sessionId;
       const actions = $('.actions', card);
-      appendLink(actions, 'campo-whatsapp-session', '📱 WhatsApp', normalAppUrl({ view: 'sesiones', action: 'whatsapp-session', id }));
+      const id = card.dataset.sessionId;
+      appendLink(actions, 'campo-whatsapp-session', '📱 WhatsApp', normalAppUrl({ view:'sesiones', action:'whatsapp-session', id }));
       appendCompletedButton(actions, 'session', id);
     }
     for (const card of $$('article.card[data-match-id]')) {
       if (card.closest('.fold') || card.querySelector('.status.done')) continue;
-      const id = card.dataset.matchId;
       const actions = $('.actions', card);
-      appendLink(actions, 'campo-whatsapp-match', '📱 WhatsApp', normalAppUrl({ view: 'calendario', action: 'whatsapp-match', id }));
+      const id = card.dataset.matchId;
+      appendLink(actions, 'campo-whatsapp-match', '📱 WhatsApp', normalAppUrl({ view:'calendario', action:'whatsapp-match', id }));
       appendCompletedButton(actions, 'match', id);
     }
   }
@@ -186,6 +174,10 @@
   function enhance() {
     enhanceCards();
     normalizeIntegratedCopy();
+  }
+
+  function scheduleEnhance() {
+    [0, 120, 350, 800, 1600, 3000].forEach((delay) => window.setTimeout(enhance, delay));
   }
 
   document.addEventListener('submit', (event) => {
@@ -210,21 +202,27 @@
       return;
     }
 
+    if (event.target.closest('[data-attendance-session], [data-attendance-match]')) {
+      window.setTimeout(normalizeIntegratedCopy, 0);
+      window.setTimeout(normalizeIntegratedCopy, 120);
+    }
+
     const nav = event.target.closest('[data-nav]');
     if (!nav) return;
     if (nav.dataset.nav === 'vivo') {
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.location.href = normalAppUrl({ view: 'partido', action: 'live' });
+      window.location.href = normalAppUrl({ view:'partido', action:'live' });
     } else if (nav.dataset.nav === 'delegado') {
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.location.href = normalAppUrl({ view: 'delegado', action: 'delegate' });
+      window.location.href = normalAppUrl({ view:'delegado', action:'delegate' });
+    } else {
+      window.setTimeout(enhanceCards, 0);
     }
   }, true);
 
-  const observer = new MutationObserver(enhance);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enhance, { once: true });
-  else enhance();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleEnhance, { once:true });
+  else scheduleEnhance();
+  window.addEventListener('pageshow', scheduleEnhance);
 })();
