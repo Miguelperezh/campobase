@@ -36,16 +36,23 @@ async function loadCloudSnapshot() {
   const entries = await Promise.all(
     Object.keys(TABLES).map(async (store) => [store, await readStore(client, store)]),
   );
-  return Object.fromEntries(entries);
+  const snapshot = Object.fromEntries(entries);
+  const total = Object.values(snapshot).reduce((sum, records) => sum + (Array.isArray(records) ? records.length : 0), 0);
+  if (total === 0) throw new Error('Supabase respondió correctamente, pero no devolvió ningún registro de CampoBase.');
+  return snapshot;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
 function showCloudError(error) {
   const message = String(error?.message || error || 'Error desconocido');
   const sync = document.querySelector('#campo-sync');
-  if (sync) sync.textContent = 'Error al leer datos';
+  if (sync) sync.textContent = 'Error al leer Supabase';
   const target = document.querySelector('#hoy-content');
   if (target) {
-    target.innerHTML = `<div class="campo-card"><h3>No se pudieron cargar los datos de CampoBase</h3><p>Modo Campo está configurado para leer directamente desde Supabase y no usa datos locales. Error: ${message.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])}</p><div class="campo-card-actions"><button type="button" class="campo-btn primary" onclick="location.reload()">Reintentar</button><a class="campo-btn secondary" href="./index.html">Salir Modo Campo</a></div></div>`;
+    target.innerHTML = `<div class="campo-card"><h3>No se pudieron cargar los datos de CampoBase</h3><p>Modo Campo lee directamente desde Supabase y no usa datos locales. Error: ${escapeHtml(message)}</p><div class="campo-card-actions"><button type="button" class="campo-btn primary" onclick="location.reload()">Reintentar</button><a class="campo-btn secondary" href="./index.html">Salir Modo Campo</a></div></div>`;
   }
 }
 
@@ -57,6 +64,13 @@ try {
   await import('./modo-campo-preview.js?v=3');
   await import('./modo-campo-preview-enhancements.js?v=3');
   await import('./modo-campo-preview-attendance.js?v=2');
+
+  requestAnimationFrame(() => {
+    const visibleText = document.querySelector('#hoy-content')?.textContent || '';
+    if (/datos locales|abre primero campobase normal/i.test(visibleText)) {
+      showCloudError(new Error('La interfaz no pudo consumir el snapshot recibido desde Supabase.'));
+    }
+  });
 } catch (error) {
   console.error('[Modo Campo] Falló la lectura directa de Supabase.', error);
   window.__CAMPO_PREVIEW_CLOUD_ERROR__ = String(error?.message || error);
