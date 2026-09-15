@@ -30,6 +30,10 @@ function installTopbarActionLayout() {
       line-height: 1.05 !important;
       text-align: center !important;
     }
+    body.cb-redesign-active .player-performance[open] .player-performance-summary {
+      background: var(--cb-slate-100, #f1f5f9) !important;
+      color: var(--cb-slate-900, #0f172a) !important;
+    }
     @media (max-width: 650px) {
       body.cb-redesign-active .topbar {
         display: grid !important;
