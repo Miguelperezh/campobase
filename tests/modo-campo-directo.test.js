@@ -19,8 +19,8 @@ test('la capa integrada guarda asistencia real y Realizado en Supabase', async (
   const js = await read('js/modo-campo-actions.js');
   assert.match(js, /upsertPayload\('asistencias', record\)/);
   assert.match(js, /\.upsert\(/);
-  assert.match(js, /status: isMatch \? 'finished' : 'closed'/);
-  assert.match(js, /closedAt: now/);
+  assert.match(js, /status:isMatch \? 'finished' : 'closed'/);
+  assert.match(js, /closedAt:now/);
   assert.match(js, /Guardar asistencia/);
   assert.match(js, /✓ Realizado/);
   assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
@@ -56,7 +56,7 @@ test('la navegación de campo no incluye Plantilla y sí Delegado y En vivo', as
   assert.match(html, />En vivo</);
 });
 
-test('Modo Campo usa la identidad real del equipo y no el logo CB', async () => {
+test('Modo Campo usa identidad real y el mismo tema efectivo que Ajustes', async () => {
   const html = await read('modo-campo-directo.html');
   const identity = await read('js/modo-campo-identity-exercises.js');
   assert.match(html, /id="campo-club-crest"/);
@@ -65,40 +65,42 @@ test('Modo Campo usa la identidad real del equipo y no el logo CB', async () => 
   assert.doesNotMatch(html, /CampoBase · Uso en campo/);
   assert.match(identity, /main\.clubCrest/);
   assert.match(identity, /main\.teamName/);
-  assert.match(identity, /main\.theme/);
+  assert.match(identity, /\.\.\.\(main\.theme \|\| \{\}\)/);
+  assert.match(identity, /localStorage\.getItem\('campobase\.theme'\)/);
+  assert.match(identity, /\.\.\.localTheme/);
   assert.match(identity, /FONT_SCALE_MAP/);
   assert.match(identity, /FONT_FAMILY_MAP/);
 });
 
-test('Modo Campo aplica también el tema local usado por Ajustes sin guardar datos deportivos en local', async () => {
-  const html = await read('modo-campo-directo.html');
-  const localTheme = await read('js/modo-campo-local-theme.js');
-  assert.match(html, /js\/modo-campo-local-theme\.js\?v=1/);
-  assert.match(localTheme, /localStorage\.getItem\('campobase\.theme'\)/);
-  assert.match(localTheme, /--field-accent/);
-  assert.match(localTheme, /--field-font-family/);
-  assert.doesNotMatch(localTheme, /indexedDB|jugadores|partidos|asistencias|configuracion/);
-});
-
-test('Modo Campo resuelve los IDs PDF con el catálogo oficial y muestra la ejecución', async () => {
+test('Modo Campo no carga el catálogo pesado al entrar ni usa observadores globales continuos', async () => {
   const html = await read('modo-campo-directo.html');
   const identity = await read('js/modo-campo-identity-exercises.js');
-  assert.match(html, /library-v2\/data\/catalog-data\.js/);
-  assert.match(identity, /__CAMPOBASE_CATALOG__/);
-  assert.match(identity, /exercise\.como_se_hace/);
-  assert.match(identity, /campo-session-exercises/);
-  assert.match(identity, /campo-exercise-video/);
-  assert.match(identity, /Cómo hacerlo/);
+  const actions = await read('js/modo-campo-actions.js');
+  assert.doesNotMatch(html, /library-v2\/data\/catalog-data\.js/);
+  assert.doesNotMatch(html, /modo-campo-local-theme\.js/);
+  assert.doesNotMatch(identity, /MutationObserver/);
+  assert.doesNotMatch(actions, /MutationObserver/);
+  assert.match(identity, /fetch\('\.\/library-v2\/data\/catalog\.json'/);
 });
 
-test('la página integrada carga la capa visual compartida y scripts vigentes', async () => {
+test('Entrenar ahora muestra los ejercicios uno por uno con anterior y siguiente', async () => {
+  const identity = await read('js/modo-campo-identity-exercises.js');
+  assert.match(identity, /Ejercicio \$\{safeIndex \+ 1\} de \$\{blocks\.length\}/);
+  assert.match(identity, /data-campo-field-prev/);
+  assert.match(identity, /data-campo-field-next/);
+  assert.match(identity, /campo-exercise-video/);
+  assert.match(identity, /Cómo hacerlo/);
+  assert.match(identity, /data-attendance-session/);
+});
+
+test('la página integrada carga únicamente las capas vigentes', async () => {
   const html = await read('modo-campo-directo.html');
   assert.match(html, /vendor\/supabase\.js/);
   assert.match(html, /js\/modo-campo-directo\.js\?v=4/);
-  assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=1/);
-  assert.match(html, /js\/modo-campo-local-theme\.js\?v=1/);
-  assert.match(html, /js\/modo-campo-actions\.js\?v=1/);
-  assert.match(html, /modo-campo-theme\.css\?v=1/);
+  assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=2/);
+  assert.match(html, /js\/modo-campo-actions\.js\?v=2/);
+  assert.match(html, /modo-campo-theme\.css\?v=2/);
+  assert.match(html, /modo-campo-flow\.css\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
 });
 
@@ -119,6 +121,17 @@ test('la cabecera móvil coloca Modo Campo, Actualizar y Cerrar sesión en horiz
   assert.match(integration, /grid-template-columns: minmax\(0, 1fr\)/);
 });
 
+test('CampoBase normal hace visible la reordenación manual sin cambiar su motor', async () => {
+  const integration = await read('js/modo-campo-integration.js');
+  const reorder = await read('js/session-reorder-ui.js');
+  assert.match(integration, /session-reorder-ui\.js\?v=1/);
+  assert.match(reorder, /\.move-session-block/);
+  assert.match(reorder, /↑ Subir/);
+  assert.match(reorder, /↓ Bajar/);
+  assert.match(reorder, /Orden manual/);
+  assert.doesNotMatch(reorder, /put\(|upsert|Supabase|sessionDraftBlocks\s*=/);
+});
+
 test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', async () => {
   const actions = await read('js/modo-campo-actions.js');
   const integration = await read('js/modo-campo-integration.js');
@@ -131,8 +144,8 @@ test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', a
   assert.match(integration, /Volver a Modo Campo/);
 });
 
-test('scripts de Modo Campo tienen sintaxis válida', () => {
-  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js', 'js/modo-campo-local-theme.js']) {
+test('scripts nuevos tienen sintaxis válida', () => {
+  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js', 'js/session-reorder-ui.js']) {
     execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio:'pipe' });
   }
 });
