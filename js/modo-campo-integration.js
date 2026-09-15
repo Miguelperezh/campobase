@@ -13,6 +13,13 @@ function installTopbarActionLayout() {
   const style = document.createElement('style');
   style.id = 'cb-campo-topbar-layout';
   style.textContent = `
+    body.cb-redesign-active .plantilla-staff-role-badge {
+      max-width: none !important;
+      width: max-content !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      white-space: nowrap !important;
+    }
     @media (max-width: 650px) {
       body.cb-redesign-active .topbar {
         display: grid !important;
