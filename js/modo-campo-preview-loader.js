@@ -9,84 +9,57 @@ const TABLES = Object.freeze({
   settings: 'configuracion',
 });
 
-async function readStore(store) {
-  const table = TABLES[store];
-  const url = `${SUPABASE_URL}/rest/v1/${table}?select=id,payload,updated_at,deleted_at`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      Accept: 'application/json',
-    },
-    cache: 'no-store',
+function createReadOnlyClient() {
+  if (!globalThis.supabase?.createClient) {
+    throw new Error('No se ha podido cargar el cliente oficial de Supabase.');
+  }
+  return globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    realtime: { params: { eventsPerSecond: 1 } },
   });
+}
 
-  if (!response.ok) throw new Error(`No se pudo leer ${store} (${response.status}).`);
-  const rows = await response.json();
-  return (Array.isArray(rows) ? rows : [])
+async function readStore(client, store) {
+  const table = TABLES[store];
+  const { data, error } = await client
+    .from(table)
+    .select('id,payload,updated_at,deleted_at');
+
+  if (error) throw new Error(`No se pudo leer ${store}: ${error.message || error.code || 'error desconocido'}`);
+  return (Array.isArray(data) ? data : [])
     .filter((row) => !row.deleted_at && row.payload)
     .map((row) => structuredClone(row.payload));
 }
 
 async function loadCloudSnapshot() {
-  const entries = await Promise.all(Object.keys(TABLES).map(async (store) => [store, await readStore(store)]));
+  const client = createReadOnlyClient();
+  const entries = await Promise.all(
+    Object.keys(TABLES).map(async (store) => [store, await readStore(client, store)]),
+  );
   return Object.fromEntries(entries);
 }
 
-function makeAsyncRequest(result) {
-  const request = { result: structuredClone(result), error: null, onsuccess: null, onerror: null };
-  setTimeout(() => request.onsuccess?.({ target: request }), 0);
-  return request;
-}
-
-function installReadOnlyPreviewIndexedDb(snapshot) {
-  const factory = globalThis.indexedDB;
-  if (!factory?.open) throw new Error('IndexedDB no está disponible en este navegador.');
-  const originalOpen = factory.open.bind(factory);
-
-  const fakeDb = {
-    transaction(store) {
-      const storeName = Array.isArray(store) ? store[0] : store;
-      return {
-        objectStore(name = storeName) {
-          return {
-            getAll() {
-              return makeAsyncRequest(snapshot[name] || []);
-            },
-            get(id) {
-              const row = (snapshot[name] || []).find((item) => String(item?.id) === String(id));
-              return makeAsyncRequest(row || undefined);
-            },
-          };
-        },
-      };
-    },
-  };
-
-  Object.defineProperty(factory, 'open', {
-    configurable: true,
-    writable: true,
-    value(name, version) {
-      if (name !== 'campobase') return originalOpen(name, version);
-      const request = { result: fakeDb, error: null, onsuccess: null, onerror: null, onblocked: null, onupgradeneeded: null };
-      setTimeout(() => request.onsuccess?.({ target: request }), 0);
-      return request;
-    },
-  });
+function showCloudError(error) {
+  const message = String(error?.message || error || 'Error desconocido');
+  const sync = document.querySelector('#campo-sync');
+  if (sync) sync.textContent = 'Error al leer datos';
+  const target = document.querySelector('#hoy-content');
+  if (target) {
+    target.innerHTML = `<div class="campo-card"><h3>No se pudieron cargar los datos de CampoBase</h3><p>Modo Campo está configurado para leer directamente desde Supabase y no usa datos locales. Error: ${message.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])}</p><div class="campo-card-actions"><button type="button" class="campo-btn primary" onclick="location.reload()">Reintentar</button><a class="campo-btn secondary" href="./index.html">Salir Modo Campo</a></div></div>`;
+  }
 }
 
 try {
   const snapshot = await loadCloudSnapshot();
   window.__CAMPO_PREVIEW_CLOUD__ = snapshot;
-  installReadOnlyPreviewIndexedDb(snapshot);
   window.__CAMPO_PREVIEW_SOURCE__ = 'cloud';
-} catch (error) {
-  console.error('[Modo Campo] Falló la lectura cloud; se intentará la caché local.', error);
-  window.__CAMPO_PREVIEW_CLOUD_ERROR__ = String(error?.message || error);
-  window.__CAMPO_PREVIEW_SOURCE__ = 'local-fallback';
-}
 
-await import('./modo-campo-preview.js?v=2');
-await import('./modo-campo-preview-enhancements.js?v=2');
-await import('./modo-campo-preview-attendance.js?v=1');
+  await import('./modo-campo-preview.js?v=3');
+  await import('./modo-campo-preview-enhancements.js?v=3');
+  await import('./modo-campo-preview-attendance.js?v=2');
+} catch (error) {
+  console.error('[Modo Campo] Falló la lectura directa de Supabase.', error);
+  window.__CAMPO_PREVIEW_CLOUD_ERROR__ = String(error?.message || error);
+  window.__CAMPO_PREVIEW_SOURCE__ = 'cloud-error';
+  showCloudError(error);
+}
