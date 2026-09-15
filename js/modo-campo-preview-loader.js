@@ -41,6 +41,10 @@ function makeAsyncRequest(result) {
 }
 
 function installReadOnlyPreviewIndexedDb(snapshot) {
+  const factory = globalThis.indexedDB;
+  if (!factory?.open) throw new Error('IndexedDB no está disponible en este navegador.');
+  const originalOpen = factory.open.bind(factory);
+
   const fakeDb = {
     transaction(store) {
       const storeName = Array.isArray(store) ? store[0] : store;
@@ -60,13 +64,16 @@ function installReadOnlyPreviewIndexedDb(snapshot) {
     },
   };
 
-  globalThis.indexedDB = {
-    open() {
+  Object.defineProperty(factory, 'open', {
+    configurable: true,
+    writable: true,
+    value(name, version) {
+      if (name !== 'campobase') return originalOpen(name, version);
       const request = { result: fakeDb, error: null, onsuccess: null, onerror: null, onblocked: null, onupgradeneeded: null };
       setTimeout(() => request.onsuccess?.({ target: request }), 0);
       return request;
     },
-  };
+  });
 }
 
 try {
