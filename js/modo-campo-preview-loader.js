@@ -46,31 +46,49 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
+function snapshotCounts(snapshot) {
+  return Object.fromEntries(Object.entries(snapshot || {}).map(([key, rows]) => [key, Array.isArray(rows) ? rows.length : 0]));
+}
+
+function countsText(counts = {}) {
+  return `jugadores ${counts.players || 0} · convocatorias ${counts.callups || 0} · partidos ${counts.matches || 0} · asistencias ${counts.trainings || 0} · configuración ${counts.settings || 0}`;
+}
+
 function showCloudError(error) {
   const message = String(error?.message || error || 'Error desconocido');
+  const counts = window.__CAMPO_PREVIEW_COUNTS__ || {};
   const sync = document.querySelector('#campo-sync');
-  if (sync) sync.textContent = 'Error al leer Supabase';
+  if (sync) sync.textContent = 'Error de Modo Campo';
   const target = document.querySelector('#hoy-content');
   if (target) {
-    target.innerHTML = `<div class="campo-card"><h3>No se pudieron cargar los datos de CampoBase</h3><p>Modo Campo lee directamente desde Supabase y no usa datos locales. Error: ${escapeHtml(message)}</p><div class="campo-card-actions"><button type="button" class="campo-btn primary" onclick="location.reload()">Reintentar</button><a class="campo-btn secondary" href="./index.html">Salir Modo Campo</a></div></div>`;
+    target.innerHTML = `<div class="campo-card"><h3>No se pudieron mostrar los datos de CampoBase</h3><p>Modo Campo usa únicamente Supabase. Error: ${escapeHtml(message)}</p><p><strong>Snapshot recibido:</strong> ${escapeHtml(countsText(counts))}</p><div class="campo-card-actions"><button type="button" class="campo-btn primary" onclick="location.reload()">Reintentar</button><a class="campo-btn secondary" href="./index.html">Salir Modo Campo</a></div></div>`;
   }
 }
 
 try {
   const snapshot = await loadCloudSnapshot();
   window.__CAMPO_PREVIEW_CLOUD__ = snapshot;
+  window.__CAMPO_PREVIEW_COUNTS__ = snapshotCounts(snapshot);
   window.__CAMPO_PREVIEW_SOURCE__ = 'cloud';
 
-  await import('./modo-campo-preview.js?v=3');
-  await import('./modo-campo-preview-enhancements.js?v=3');
-  await import('./modo-campo-preview-attendance.js?v=2');
+  // Verificación explícita del adaptador exclusivo de la prueba antes de arrancar la interfaz.
+  const previewDb = await import('./modo-campo-preview-db.js?v=5');
+  const probe = await Promise.all(['players', 'callups', 'matches', 'settings'].map((store) => previewDb.getAll(store)));
+  if (!probe.some((rows) => rows.length)) {
+    throw new Error('El adaptador cloud no pudo leer el snapshot recibido.');
+  }
 
-  requestAnimationFrame(() => {
+  await import('./modo-campo-preview.js?v=5');
+  await import('./modo-campo-preview-enhancements.js?v=5');
+  await import('./modo-campo-preview-attendance.js?v=5');
+
+  setTimeout(() => {
     const visibleText = document.querySelector('#hoy-content')?.textContent || '';
-    if (/datos locales|abre primero campobase normal/i.test(visibleText)) {
-      showCloudError(new Error('La interfaz no pudo consumir el snapshot recibido desde Supabase.'));
+    const syncText = document.querySelector('#campo-sync')?.textContent || '';
+    if (/datos locales|abre primero campobase normal/i.test(`${visibleText} ${syncText}`)) {
+      showCloudError(new Error(`La interfaz cargó una ruta local antigua. Snapshot cloud correcto: ${countsText(window.__CAMPO_PREVIEW_COUNTS__)}`));
     }
-  });
+  }, 500);
 } catch (error) {
   console.error('[Modo Campo] Falló la lectura directa de Supabase.', error);
   window.__CAMPO_PREVIEW_CLOUD_ERROR__ = String(error?.message || error);
