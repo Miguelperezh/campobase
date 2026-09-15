@@ -16,17 +16,19 @@ test('la capa de contenido elimina chip con vocabulario de fútbol de España', 
   assert.match(js, /replace\(\/\\bchip\\b\/gi/);
 });
 
-test('Qué se trabaja se deriva del contenido y no copia el objetivo del catálogo', async () => {
+test('Qué se trabaja se deriva de la mecánica y no copia campos antiguos del objetivo', async () => {
   const js = await read('js/exercise-content-quality.js');
   assert.match(js, /export function deriveTrainingFocus/);
-  assert.match(js, /Táctica defensiva: 1v1, temporización y control de la distancia/);
-  assert.match(js, /Técnica: pase, recepción y control orientado/);
-  assert.match(js, /Finalización: elección y ejecución del remate/);
-  assert.match(js, /Transiciones: reacción al cambio de posesión/);
-  assert.match(js, /Percepción y reacción/);
-  assert.match(js, /Coordinación y agilidad/);
-  assert.match(js, /Toma de decisiones/);
-  assert.match(js, /return items\.slice\(0, 4\)/);
+  assert.doesNotMatch(js, /objetivo:\s*exercise\.objetivo_principal/);
+  assert.doesNotMatch(js, /queTrabaja:\s*exercise\.que_se_trabaja/);
+  assert.match(js, /Percepción y reacción ante estímulos/);
+  assert.match(js, /Frenada, cambio de dirección y reaceleración/);
+  assert.match(js, /Desplazamientos defensivos, temporización y control de distancia/);
+  assert.match(js, /Pase, recepción y control orientado/);
+  assert.match(js, /Finalización y ejecución del remate/);
+  assert.match(js, /Transición y cambio rápido de rol/);
+  assert.match(js, /Percepción, lectura del juego y toma de decisiones/);
+  assert.match(js, /return \(distinct\.length \? distinct : items\)\.slice\(0, 4\)/);
 });
 
 test('objetivo y Qué se trabaja se escriben en secciones distintas', async () => {
