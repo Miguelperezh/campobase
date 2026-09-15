@@ -24,6 +24,7 @@
 .attendance-actions button.active.absent { background: #f7e0e0; border-color: #d7a0a0; color: #8d2d2d; }
 .attendance-actions button.active.pending { background: #e7ece9; border-color: #bcc8c1; color: #53625b; }
 .attendance-entry { white-space: nowrap; }
+#field-content [data-attendance-kind] { min-height: 58px; border: 1px solid var(--campo-line); border-radius: 14px; background: #fff; color: var(--campo-ink); padding: .75rem 1rem; font: inherit; font-size: .95rem; font-weight: 900; }
 
 @media (max-width: 650px) {
   .attendance-summary { grid-template-columns: repeat(2, 1fr); }
