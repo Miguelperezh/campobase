@@ -1,8 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+const localPath = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
+
+test('Los JavaScript de Modo Campo tienen sintaxis válida', () => {
+  for (const path of ['js/modo-campo-preview.js', 'js/modo-campo-preview-enhancements.js']) {
+    const result = spawnSync(process.execPath, ['--check', localPath(path)], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${path}: ${result.stderr || result.stdout}`);
+  }
+});
 
 test('Modo Campo permanece aislado y en solo lectura', async () => {
   const source = await read('js/modo-campo-preview.js');
