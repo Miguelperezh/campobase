@@ -2,7 +2,8 @@
 // No reimplementa lógica de negocio: solo añade acceso/retorno y abre las
 // funciones ya existentes de CampoBase cuando se llega desde Modo Campo.
 
-const params = new URLSearchParams(window.location.search);
+const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+const params = new URLSearchParams(hasBrowser ? window.location.search : '');
 const fromCampo = params.get('fromCampo') === '1';
 
 function addTopbarButton({ id, text, onClick, primary = false }) {
@@ -110,5 +111,7 @@ function install() {
   openRealAction().catch((error) => console.warn('No se pudo abrir la función solicitada desde Modo Campo:', error));
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-else install();
+if (hasBrowser) {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  else install();
+}
