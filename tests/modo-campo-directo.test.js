@@ -72,14 +72,31 @@ test('Modo Campo usa identidad real y el mismo tema efectivo que Ajustes', async
   assert.match(identity, /FONT_FAMILY_MAP/);
 });
 
+test('Modo Campo replica las variables de color y atributos efectivos de CampoBase normal', async () => {
+  const html = await read('modo-campo-directo.html');
+  const parity = await read('js/modo-campo-theme-parity.js');
+  const css = await read('modo-campo-theme.css');
+  assert.match(html, /js\/modo-campo-theme-parity\.js\?v=1/);
+  for (const variable of ['--cb-surface-bg','--cb-surface-card','--cb-surface-nav','--cb-surface-input','--cb-slate-900','--cb-slate-200','--accent','--cb-accent','--cb-brand']) {
+    assert.match(parity, new RegExp(variable.replace(/[-]/g, '\\-')));
+  }
+  assert.match(parity, /document\.body\.style\.setProperty/);
+  assert.match(parity, /data-theme-bg/);
+  assert.match(parity, /data-theme-family/);
+  assert.match(css, /\.top\{background:var\(--field-nav\)!important/);
+  assert.doesNotMatch(parity, /MutationObserver/);
+});
+
 test('Modo Campo no carga el catálogo pesado al entrar ni usa observadores globales continuos', async () => {
   const html = await read('modo-campo-directo.html');
   const identity = await read('js/modo-campo-identity-exercises.js');
   const actions = await read('js/modo-campo-actions.js');
+  const parity = await read('js/modo-campo-theme-parity.js');
   assert.doesNotMatch(html, /library-v2\/data\/catalog-data\.js/);
   assert.doesNotMatch(html, /modo-campo-local-theme\.js/);
   assert.doesNotMatch(identity, /MutationObserver/);
   assert.doesNotMatch(actions, /MutationObserver/);
+  assert.doesNotMatch(parity, /MutationObserver/);
   assert.match(identity, /fetch\('\.\/library-v2\/data\/catalog\.json'/);
 });
 
@@ -98,8 +115,9 @@ test('la página integrada carga únicamente las capas vigentes', async () => {
   assert.match(html, /vendor\/supabase\.js/);
   assert.match(html, /js\/modo-campo-directo\.js\?v=4/);
   assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=2/);
+  assert.match(html, /js\/modo-campo-theme-parity\.js\?v=1/);
   assert.match(html, /js\/modo-campo-actions\.js\?v=2/);
-  assert.match(html, /modo-campo-theme\.css\?v=2/);
+  assert.match(html, /modo-campo-theme\.css\?v=3/);
   assert.match(html, /modo-campo-flow\.css\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
 });
@@ -145,7 +163,7 @@ test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', a
 });
 
 test('scripts nuevos tienen sintaxis válida', () => {
-  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js', 'js/session-reorder-ui.js']) {
+  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js', 'js/modo-campo-theme-parity.js', 'js/session-reorder-ui.js']) {
     execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio:'pipe' });
   }
 });
