@@ -14,17 +14,18 @@
     sessions: [],
     team: {},
     field: null,
+    attendanceDrafts: new Map(),
   };
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const esc = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const clone = (value) => JSON.parse(JSON.stringify(value));
 
   function todayKey() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
-
   function dateKey(value = '') { return String(value).slice(0, 10); }
   function timeFrom(value = '') { return String(value).includes('T') ? String(value).split('T')[1].slice(0, 5) : ''; }
   function fmtDate(value) {
@@ -61,12 +62,14 @@
   function sourceText() {
     return `Supabase directo · ${state.players.length} jugadores · ${state.sessions.length} sesiones · ${state.matches.length} partidos · ${state.attendance.length} asistencias`;
   }
-
   function status(text, cls) { return `<span class="status ${cls}">${esc(text)}</span>`; }
   function sessionMinutes(session) {
     const sum = (session?.blocks || []).reduce((acc, block) => acc + (Number(block?.duration) || 0), 0);
     return sum || Number(session?.totalDuration) || Number(session?.targetDuration) || 0;
   }
+  function playerName(id) { return state.players.find((p) => String(p.id) === String(id))?.name || 'Jugador'; }
+  function teamName() { return state.team.teamName || 'Mi equipo'; }
+
   function sessionCard(session, archived = false) {
     const rel = relation(session.date);
     return `<article class="card" data-session-id="${esc(session.id)}">
@@ -77,7 +80,6 @@
       <div class="actions">
         <button class="btn primary" data-start-session="${esc(session.id)}">▶ Entrenar ahora</button>
         <button class="btn secondary" data-attendance-session="${esc(session.id)}">👥 Asistencia</button>
-        <a class="btn ghost" href="./index.html">CampoBase normal</a>
       </div>
     </article>`;
   }
@@ -92,7 +94,6 @@
       <div class="actions">
         <button class="btn primary" data-start-match="${esc(match.id)}">${archived ? 'Ver partido' : '▶ Partido ahora'}</button>
         <button class="btn secondary" data-attendance-match="${esc(match.id)}">👥 Asistencia</button>
-        <a class="btn ghost" href="./index.html">CampoBase normal</a>
       </div>
     </article>`;
   }
@@ -141,8 +142,72 @@
       ${archived.length ? `<details class="fold"><summary>Partidos jugados (${archived.length})</summary><div class="fold-body stack">${archived.map((m) => matchCard(m,true)).join('')}</div></details>` : ''}`;
   }
 
-  function renderPlantilla() {
-    $('#plantilla').innerHTML = `<div class="section-head"><div><p class="kicker">Plantilla</p><h2>${state.players.length} jugadores</h2></div></div><div class="card">${state.players.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es')).map((p) => `<div class="player-row"><strong>${esc(p.name || 'Jugador')}</strong><span class="pill">${esc((p.positions || p.position || []).toString() || 'Jugador')}</span></div>`).join('')}</div>`;
+  function liveRecord() { return state.settings.find((item) => item?.id === 'live') || null; }
+  function liveTimer() { return liveRecord()?.timer || null; }
+  function liveMatch() {
+    const timer = liveTimer();
+    return timer ? state.matches.find((m) => String(m.id) === String(timer.matchId)) || null : null;
+  }
+  function callupForMatch(match) {
+    return state.callups.find((c) => String(c.id) === String(match?.callupId) || String(c.matchId || '') === String(match?.id));
+  }
+  function eligibleLiveMatches() { return upcomingMatches().filter((m) => Boolean(m.callupId || callupForMatch(m))); }
+  function timerSeconds(timer) {
+    if (!timer) return 0;
+    let seconds = Number(timer.elapsed) || 0;
+    const runningSince = Number(timer.runningSince);
+    if (runningSince > 0) seconds += Math.max(0, Math.floor((Date.now() - runningSince) / 1000));
+    return seconds;
+  }
+  function formatClock(seconds) {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+    return `${String(Math.floor(safe / 60)).padStart(2,'0')}:${String(safe % 60).padStart(2,'0')}`;
+  }
+  function scoreFor(match, timer) {
+    const details = timer?.details || {};
+    return { for: Number(details.goalsFor ?? match?.goalsFor ?? 0) || 0, against: Number(details.goalsAgainst ?? match?.goalsAgainst ?? 0) || 0 };
+  }
+  function currentFieldIds(timer, callup) {
+    const onField = Array.isArray(timer?.onField) ? timer.onField : [];
+    const available = callup?.availableIds || [];
+    return { onField, bench: available.filter((id) => !onField.includes(id)) };
+  }
+  function playerList(ids = []) {
+    return ids.length ? ids.map((id) => `<div class="live-player"><strong>${esc(playerName(id))}</strong></div>`).join('') : '<p class="empty">Sin jugadores</p>';
+  }
+
+  function renderVivo() {
+    const timer = liveTimer();
+    const match = liveMatch();
+    if (!timer || !match) {
+      const eligible = eligibleLiveMatches();
+      $('#vivo').innerHTML = `<div class="section-head"><div><p class="kicker">Partido en vivo</p><h2>Control de partido</h2></div></div>
+        <div class="card"><h3>No hay un partido en vivo iniciado</h3><p>En la versión integrada, desde aquí podrás preparar e iniciar el partido con las mismas funciones validadas de CampoBase.</p></div>
+        <div class="stack">${eligible.map((m) => `<article class="card"><h3>${esc(m.opponent || 'Rival')}</h3><p>${esc(relation(m.date))}${timeFrom(m.date) ? ` · ${esc(timeFrom(m.date))}` : ''}</p><button class="btn primary" data-preview-live="${esc(m.id)}">Ver preparación de partido</button></article>`).join('') || '<div class="card empty">No hay partidos convocados disponibles.</div>'}</div>`;
+      return;
+    }
+    const score = scoreFor(match, timer);
+    const callup = callupForMatch(match);
+    const field = currentFieldIds(timer, callup);
+    $('#vivo').innerHTML = `<div class="section-head"><div><p class="kicker">Partido en vivo</p><h2>${esc(teamName())} · ${esc(match.opponent || 'Rival')}</h2></div><span>${esc(timer.phase || 'ready')}</span></div>
+      <section class="live-score card"><div><strong>${esc(teamName())}</strong><span>${score.for}</span></div><div class="clock-big">${formatClock(timerSeconds(timer))}</div><div><strong>${esc(match.opponent || 'Rival')}</strong><span>${score.against}</span></div></section>
+      <div class="actions"><button class="btn secondary" data-attendance-match="${esc(match.id)}">👥 Asistencia</button><button class="btn primary" data-preview-live="${esc(match.id)}">Abrir vista grande</button></div>
+      <div class="grid live-grid"><section class="card"><h3>En campo</h3>${playerList(field.onField)}</section><section class="card"><h3>Banquillo</h3>${playerList(field.bench)}</section></div>
+      <p class="note">Prueba aislada: esta pantalla no registra goles, cambios ni tiempo. La integración final reutilizará la lógica validada de CampoBase.</p>`;
+  }
+
+  function renderDelegado() {
+    const timer = liveTimer();
+    const match = liveMatch();
+    if (!timer || !match) {
+      $('#delegado').innerHTML = `<div class="section-head"><div><p class="kicker">Vista delegado</p><h2>Disponible cuando haya partido en vivo</h2></div></div><div class="card"><p>Esta pestaña se mantiene en Modo Campo para que puedas abrirla cuando quieras. Cuando no hay un partido iniciado, no muestra controles de cambios.</p></div>`;
+      return;
+    }
+    const callup = callupForMatch(match);
+    const field = currentFieldIds(timer, callup);
+    $('#delegado').innerHTML = `<div class="section-head"><div><p class="kicker">Vista delegado</p><h2>${esc(teamName())} · ${esc(match.opponent || 'Rival')}</h2></div><span>${formatClock(timerSeconds(timer))}</span></div>
+      <div class="grid live-grid"><section class="card delegate-out"><h3>Sale del campo</h3>${playerList(field.onField)}</section><section class="card delegate-in"><h3>Entra al campo</h3>${playerList(field.bench)}</section></div>
+      <div class="card"><h3>Controles que se conservarán</h3><div class="actions"><button class="btn primary" disabled>Registrar cambio</button><button class="btn secondary" disabled>Automático</button><button class="btn secondary" disabled>Proponer reparto</button></div><p class="note">En esta prueba los botones están bloqueados para no tocar el partido real. La integración final reutilizará las funciones ya validadas de Vista delegado.</p></div>`;
   }
 
   function showView(id) {
@@ -158,37 +223,87 @@
   function attendanceRecordForMatch(match) {
     return state.attendance.find((row) => row.kind === 'match' && String(row.matchId || '') === String(match.id));
   }
-  function callupForMatch(match) {
-    return state.callups.find((c) => String(c.id) === String(match.callupId) || String(c.matchId || '') === String(match.id));
+  function attendanceKey(kind, id) { return `${kind}:${id}`; }
+  function attendancePlayers(kind, event) {
+    if (kind !== 'match') return state.players;
+    const callup = callupForMatch(event);
+    const ids = callup?.availableIds || [];
+    return ids.length ? ids.map((pid) => state.players.find((p) => String(p.id) === String(pid))).filter(Boolean) : state.players;
   }
-  function attendanceStatus(entry) {
-    if (!entry) return ['Pendiente',''];
-    if (entry.status === 'absent') return ['Ausente','absent'];
-    if (entry.status === 'late') return ['Tarde','late'];
-    return ['Presente','present'];
+  function attendanceDraft(kind, event) {
+    const key = attendanceKey(kind, event.id);
+    if (state.attendanceDrafts.has(key)) return state.attendanceDrafts.get(key);
+    const record = kind === 'match' ? attendanceRecordForMatch(event) : attendanceRecordForSession(event);
+    const players = attendancePlayers(kind, event);
+    const existing = new Map((record?.attendance || []).map((entry) => [String(entry.playerId), entry]));
+    const draft = {
+      id: record?.id || '',
+      kind,
+      matchId: kind === 'match' ? event.id : '',
+      sessionId: kind === 'session' ? event.id : '',
+      date: dateKey(record?.date || event.date),
+      notes: record?.notes || '',
+      attendance: players.map((p) => ({ playerId: p.id, ...(existing.get(String(p.id)) || { status:'present', arrivalTime:'', note:'' }) })),
+    };
+    state.attendanceDrafts.set(key, draft);
+    return draft;
+  }
+  function hourOptions(selected = '') {
+    return '<option value="">hh</option>' + Array.from({length:24},(_,i)=>String(i).padStart(2,'0')).map((v)=>`<option value="${v}" ${selected === v ? 'selected' : ''}>${v}</option>`).join('');
+  }
+  function minuteOptions(selected = '') {
+    return '<option value="">mm</option>' + Array.from({length:60},(_,i)=>String(i).padStart(2,'0')).map((v)=>`<option value="${v}" ${selected === v ? 'selected' : ''}>${v}</option>`).join('');
+  }
+  function splitArrival(value = '') {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value || '');
+    return { hour: match?.[1] || '', minute: match?.[2] || '' };
+  }
+  function attendanceSummary(draft) {
+    const counts = { present:0, late:0, absent:0 };
+    draft.attendance.forEach((entry) => { counts[entry.status] = (counts[entry.status] || 0) + 1; });
+    return `<div class="attendance-summary"><span class="pill">✓ ${counts.present} presentes</span><span class="pill">⏱ ${counts.late} tarde</span><span class="pill">✕ ${counts.absent} ausentes</span></div>`;
   }
   function openAttendance(kind, id) {
     const isMatch = kind === 'match';
     const event = isMatch ? state.matches.find((m) => String(m.id) === String(id)) : state.sessions.find((s) => String(s.id) === String(id));
     if (!event) return;
-    const record = isMatch ? attendanceRecordForMatch(event) : attendanceRecordForSession(event);
-    const map = new Map((record?.attendance || []).map((entry) => [String(entry.playerId), entry]));
-    let players = state.players;
-    if (isMatch) {
-      const callup = callupForMatch(event);
-      const ids = callup?.availableIds || [];
-      if (ids.length) players = ids.map((pid) => state.players.find((p) => String(p.id) === String(pid))).filter(Boolean);
-    }
-    const counts = { present:0, late:0, absent:0, pending:0 };
-    const rows = players.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es')).map((player) => {
-      const entry = map.get(String(player.id));
-      const [label, cls] = attendanceStatus(entry);
-      counts[entry?.status || 'pending'] = (counts[entry?.status || 'pending'] || 0) + 1;
-      return `<div class="player-row"><strong>${esc(player.name || 'Jugador')}</strong><span class="attendance-state ${cls}">${label}${entry?.arrivalTime ? ` · ${esc(entry.arrivalTime)}` : ''}</span></div>`;
+    const draft = attendanceDraft(kind, event);
+    const byId = new Map(draft.attendance.map((entry) => [String(entry.playerId), entry]));
+    const rows = attendancePlayers(kind, event).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es')).map((player) => {
+      const entry = byId.get(String(player.id)) || { status:'present', arrivalTime:'', note:'' };
+      const arrival = splitArrival(entry.arrivalTime);
+      return `<div class="attendance-row-full" data-player-id="${esc(player.id)}">
+        <div class="attendance-player-name"><strong>${esc(player.name || 'Jugador')}</strong></div>
+        <label>Estado<select data-att-status><option value="present" ${entry.status==='present'?'selected':''}>Presente</option><option value="late" ${entry.status==='late'?'selected':''}>Tarde</option><option value="absent" ${entry.status==='absent'?'selected':''}>Ausente</option></select></label>
+        <div class="arrival-box ${entry.status==='late'?'':'hidden'}"><span>Hora de llegada</span><div class="time-pair"><select data-att-hour>${hourOptions(arrival.hour)}</select><b>:</b><select data-att-minute>${minuteOptions(arrival.minute)}</select></div></div>
+        <label class="observation">Observaciones<input data-att-note maxlength="200" value="${esc(entry.note || '')}" placeholder="Incidencia o comentario"></label>
+      </div>`;
     }).join('');
     const title = isMatch ? `Asistencia · ${event.opponent || 'Partido'}` : `Asistencia · ${event.name || 'Entrenamiento'}`;
-    $('#overlay-body').innerHTML = `<p class="kicker">${isMatch ? 'Partido' : 'Entrenamiento'}</p><h2 class="field-title">${esc(title)}</h2><div class="attendance-summary"><span class="pill">✓ ${counts.present} presentes</span><span class="pill">⏱ ${counts.late} tarde</span><span class="pill">✕ ${counts.absent} ausentes</span><span class="pill">? ${counts.pending} pendientes</span></div><div class="card">${rows || '<div class="empty">Sin jugadores</div>'}</div><p class="note">Esta prueba es de solo lectura. La asistencia real se sigue guardando en CampoBase normal.</p>`;
+    $('#overlay-body').innerHTML = `<form id="campo-attendance-form" data-att-kind="${kind}" data-att-id="${esc(event.id)}"><p class="kicker">${isMatch ? 'Partido' : 'Entrenamiento'}</p><h2 class="field-title">${esc(title)}</h2>${attendanceSummary(draft)}<div class="attendance-list">${rows || '<div class="empty">Sin jugadores</div>'}</div><label class="record-notes">Notas del registro<textarea data-att-record-notes maxlength="1000" placeholder="Notas generales">${esc(draft.notes || '')}</textarea></label><button class="btn primary big" type="submit">Guardar prueba de asistencia</button><p class="note">Misma estructura que la asistencia real: Presente, Tarde con hora, Ausente y observaciones. En esta prueba aislada los cambios solo viven en esta pantalla y no escriben en Supabase.</p></form>`;
     openOverlay();
+  }
+  function saveAttendancePreview(form) {
+    const kind = form.dataset.attKind;
+    const id = form.dataset.attId;
+    const event = kind === 'match' ? state.matches.find((m)=>String(m.id)===String(id)) : state.sessions.find((s)=>String(s.id)===String(id));
+    if (!event) return;
+    const draft = attendanceDraft(kind, event);
+    draft.notes = $('[data-att-record-notes]', form)?.value || '';
+    draft.attendance = $$('.attendance-row-full', form).map((row) => {
+      const statusValue = $('[data-att-status]', row)?.value || 'present';
+      const hour = $('[data-att-hour]', row)?.value || '';
+      const minute = $('[data-att-minute]', row)?.value || '';
+      return {
+        playerId: row.dataset.playerId,
+        status: statusValue,
+        arrivalTime: statusValue === 'late' && hour && minute ? `${hour}:${minute}` : '',
+        note: $('[data-att-note]', row)?.value || '',
+      };
+    });
+    state.attendanceDrafts.set(attendanceKey(kind,id), clone(draft));
+    showToast('Asistencia de prueba guardada solo en esta pantalla.');
+    openAttendance(kind,id);
   }
 
   function exerciseName(id) {
@@ -198,29 +313,40 @@
   function startSession(id) {
     const session = state.sessions.find((s) => String(s.id) === String(id));
     if (!session) return;
-    const blocks = session.blocks || [];
     state.field = { type:'session', id, index:0 };
-    renderSessionField(session, blocks);
+    renderSessionField(session, session.blocks || []);
   }
   function renderSessionField(session, blocks) {
     const index = Math.max(0, Math.min(state.field?.index || 0, Math.max(0, blocks.length - 1)));
     const block = blocks[index];
-    $('#overlay-body').innerHTML = `<p class="kicker">${esc(session.name || 'Entrenamiento')} · ${blocks.length ? `${index+1}/${blocks.length}` : 'sin ejercicios'}</p><h2 class="field-title">${esc(block ? exerciseName(block.exerciseId) : 'Sesión sin ejercicios')}</h2>${block ? `<div class="meta"><span class="pill">⏱ ${Number(block.duration)||'—'} min</span><span class="pill">${esc(block.type || 'Ejercicio')}</span></div>${block.notes ? `<div class="card"><h3>Consigna</h3><p>${esc(block.notes)}</p></div>` : ''}<div class="actions"><button class="btn secondary" data-field-prev ${index===0?'disabled':''}>← Anterior</button><button class="btn primary" data-attendance-session="${esc(session.id)}">👥 Asistencia</button><button class="btn secondary" data-field-next ${index>=blocks.length-1?'disabled':''}>Siguiente →</button></div>` : ''}<p class="note">Prueba directa: los ejercicios completos seguirán usando las fichas validadas de CampoBase cuando integremos el modo.</p>`;
+    $('#overlay-body').innerHTML = `<p class="kicker">${esc(session.name || 'Entrenamiento')} · ${blocks.length ? `${index+1}/${blocks.length}` : 'sin ejercicios'}</p><h2 class="field-title">${esc(block ? exerciseName(block.exerciseId) : 'Sesión sin ejercicios')}</h2>${block ? `<div class="meta"><span class="pill">⏱ ${Number(block.duration)||'—'} min</span><span class="pill">${esc(block.type || 'Ejercicio')}</span></div>${block.notes ? `<div class="card"><h3>Cómo hacerlo / consigna</h3><p class="big-copy">${esc(block.notes)}</p></div>` : ''}<div class="actions"><button class="btn secondary" data-field-prev ${index===0?'disabled':''}>← Anterior</button><button class="btn primary" data-attendance-session="${esc(session.id)}">👥 Asistencia</button><button class="btn secondary" data-field-next ${index>=blocks.length-1?'disabled':''}>Siguiente →</button></div>` : ''}<p class="note">Prueba directa. Las fichas completas de ejercicios seguirán siendo las ya validadas de CampoBase en la integración final.</p>`;
     openOverlay();
   }
+
   function startMatch(id) {
     const match = state.matches.find((m) => String(m.id) === String(id));
     if (!match) return;
-    const team = state.team.teamName || 'Mi equipo';
-    const away = match.venue === 'away';
-    const home = away ? match.opponent || 'Rival' : team;
-    const visitor = away ? team : match.opponent || 'Rival';
-    $('#overlay-body').innerHTML = `<p class="kicker">${esc(relation(match.date))}${timeFrom(match.date)?` · ${esc(timeFrom(match.date))}`:''}</p><h2 class="field-title">${esc(match.opponent || 'Partido')}</h2><div class="card" style="text-align:center"><div style="font-size:22px;font-weight:900">${esc(home)}</div><div style="font-size:54px;font-weight:950;margin:12px 0">${Number(match.goalsFor)||0} — ${Number(match.goalsAgainst)||0}</div><div style="font-size:22px;font-weight:900">${esc(visitor)}</div></div><div class="actions"><button class="btn primary" data-attendance-match="${esc(match.id)}">👥 Asistencia</button><a class="btn ghost" href="./index.html">Abrir partido en CampoBase</a></div><p class="note">Marcador y cambios se gestionan en CampoBase normal mientras esta prueba siga aislada.</p>`;
+    renderMatchOverlay(match);
+  }
+  function renderMatchOverlay(match) {
+    const timer = liveTimer();
+    const active = timer && String(timer.matchId) === String(match.id);
+    const score = scoreFor(match, active ? timer : null);
+    const callup = callupForMatch(match);
+    const field = currentFieldIds(active ? timer : null, callup);
+    $('#overlay-body').innerHTML = `<p class="kicker">${esc(relation(match.date))}${timeFrom(match.date)?` · ${esc(timeFrom(match.date))}`:''}</p><h2 class="field-title">${esc(match.opponent || 'Partido')}</h2><section class="live-score card"><div><strong>${esc(teamName())}</strong><span>${score.for}</span></div><div class="clock-big">${active ? formatClock(timerSeconds(timer)) : '00:00'}</div><div><strong>${esc(match.opponent || 'Rival')}</strong><span>${score.against}</span></div></section><div class="actions"><button class="btn primary" data-attendance-match="${esc(match.id)}">👥 Asistencia</button><button class="btn secondary" data-nav="delegado" data-close-before-nav>Vista delegado</button><button class="btn secondary" data-nav="vivo" data-close-before-nav>Partido en vivo</button></div>${active ? `<div class="grid live-grid"><section class="card"><h3>En campo</h3>${playerList(field.onField)}</section><section class="card"><h3>Banquillo</h3>${playerList(field.bench)}</section></div>` : '<p class="note">El partido todavía no tiene un control en vivo activo.</p>'}`;
     openOverlay();
   }
 
   function openOverlay() { $('#overlay').classList.remove('hidden'); window.scrollTo({top:0}); }
   function closeOverlay() { $('#overlay').classList.add('hidden'); state.field = null; }
+  function showToast(message) {
+    const toast = $('#toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
 
   async function load() {
     const sync = $('#sync');
@@ -234,7 +360,7 @@
       state.sessions = settings.filter((item) => item?.recordType === 'trainingSession');
       state.team = settings.find((item) => item?.id === 'main') || {};
       sync.textContent = sourceText();
-      renderHoy(); renderEntrenos(); renderPartidos(); renderPlantilla();
+      renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     } catch (error) {
       sync.textContent = 'Error Supabase';
       $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos</h2><p>${esc(error?.message || error)}</p><button class="btn primary" onclick="location.reload()">Reintentar</button></div>`;
@@ -242,13 +368,41 @@
     }
   }
 
+  document.addEventListener('change', (event) => {
+    const statusSelect = event.target.closest('[data-att-status]');
+    if (!statusSelect) return;
+    const row = statusSelect.closest('.attendance-row-full');
+    $('.arrival-box', row)?.classList.toggle('hidden', statusSelect.value !== 'late');
+    if (statusSelect.value !== 'late') {
+      const h = $('[data-att-hour]', row); const m = $('[data-att-minute]', row);
+      if (h) h.value = ''; if (m) m.value = '';
+    }
+  });
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('#campo-attendance-form');
+    if (!form) return;
+    event.preventDefault();
+    saveAttendancePreview(form);
+  });
+
   document.addEventListener('click', (event) => {
     const nav = event.target.closest('[data-nav]');
-    if (nav) { showView(nav.dataset.nav); return; }
+    if (nav) {
+      if (nav.hasAttribute('data-close-before-nav')) closeOverlay();
+      showView(nav.dataset.nav);
+      return;
+    }
     const session = event.target.closest('[data-start-session]');
     if (session) { startSession(session.dataset.startSession); return; }
     const match = event.target.closest('[data-start-match]');
     if (match) { startMatch(match.dataset.startMatch); return; }
+    const previewLive = event.target.closest('[data-preview-live]');
+    if (previewLive) {
+      const m = state.matches.find((item)=>String(item.id)===String(previewLive.dataset.previewLive));
+      if (m) renderMatchOverlay(m);
+      return;
+    }
     const attSession = event.target.closest('[data-attendance-session]');
     if (attSession) { openAttendance('session', attSession.dataset.attendanceSession); return; }
     const attMatch = event.target.closest('[data-attendance-match]');
