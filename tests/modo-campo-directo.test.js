@@ -17,7 +17,7 @@ test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local', async
 
 test('la capa integrada guarda asistencia real y Realizado en Supabase', async () => {
   const js = await read('js/modo-campo-actions.js');
-  assert.match(js, /from\('asistencias'\)/);
+  assert.match(js, /upsertPayload\('asistencias', record\)/);
   assert.match(js, /\.upsert\(/);
   assert.match(js, /status: isMatch \? 'finished' : 'closed'/);
   assert.match(js, /closedAt: now/);
@@ -62,6 +62,14 @@ test('la página integrada carga Supabase y sus dos scripts de Modo Campo', asyn
   assert.match(html, /js\/modo-campo-directo\.js\?v=3/);
   assert.match(html, /js\/modo-campo-actions\.js\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
+});
+
+test('CampoBase normal carga el puente oficial de Modo Campo sin tocar app.js', async () => {
+  const completed = await read('js/completed-events-ui.js');
+  assert.match(completed, /modo-campo-integration\.js\?v=1/);
+  const integration = await read('js/modo-campo-integration.js');
+  assert.match(integration, /text: 'Modo Campo'/);
+  assert.match(integration, /Volver a Modo Campo/);
 });
 
 test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', async () => {
