@@ -1,4 +1,5 @@
 import './exercise-view-mode-ui.js?v=2519';
+import './modo-campo-integration.js?v=1';
 import { put } from './db.js';
 
 // Desde el 15/09/2026 las sesiones solo se archivan cuando el entrenador las
