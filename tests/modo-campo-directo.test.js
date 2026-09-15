@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
 
-test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local', async () => {
+test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local de datos', async () => {
   const js = await read('js/modo-campo-directo.js');
   assert.doesNotMatch(js, /from\s+['\"].*db\.js|import\s*\(/);
   assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
@@ -56,11 +56,38 @@ test('la navegación de campo no incluye Plantilla y sí Delegado y En vivo', as
   assert.match(html, />En vivo</);
 });
 
-test('la página integrada carga Supabase y sus dos scripts de Modo Campo', async () => {
+test('Modo Campo usa la identidad real del equipo y no el logo CB', async () => {
+  const html = await read('modo-campo-directo.html');
+  const identity = await read('js/modo-campo-identity-exercises.js');
+  assert.match(html, /id="campo-club-crest"/);
+  assert.match(html, /id="campo-team-name"/);
+  assert.doesNotMatch(html, /class="mark">CB</);
+  assert.doesNotMatch(html, /CampoBase · Uso en campo/);
+  assert.match(identity, /main\.clubCrest/);
+  assert.match(identity, /main\.teamName/);
+  assert.match(identity, /main\.theme/);
+  assert.match(identity, /FONT_SCALE_MAP/);
+  assert.match(identity, /FONT_FAMILY_MAP/);
+});
+
+test('Modo Campo resuelve los IDs PDF con el catálogo oficial y muestra la ejecución', async () => {
+  const html = await read('modo-campo-directo.html');
+  const identity = await read('js/modo-campo-identity-exercises.js');
+  assert.match(html, /library-v2\/data\/catalog-data\.js/);
+  assert.match(identity, /__CAMPOBASE_CATALOG__/);
+  assert.match(identity, /exercise\.como_se_hace/);
+  assert.match(identity, /campo-session-exercises/);
+  assert.match(identity, /campo-exercise-video/);
+  assert.match(identity, /Cómo hacerlo/);
+});
+
+test('la página integrada carga la capa visual compartida y scripts vigentes', async () => {
   const html = await read('modo-campo-directo.html');
   assert.match(html, /vendor\/supabase\.js/);
-  assert.match(html, /js\/modo-campo-directo\.js\?v=3/);
+  assert.match(html, /js\/modo-campo-directo\.js\?v=4/);
+  assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=1/);
   assert.match(html, /js\/modo-campo-actions\.js\?v=1/);
+  assert.match(html, /modo-campo-theme\.css\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
 });
 
@@ -70,6 +97,15 @@ test('CampoBase normal carga el puente oficial de Modo Campo sin tocar app.js', 
   const integration = await read('js/modo-campo-integration.js');
   assert.match(integration, /text: 'Modo Campo'/);
   assert.match(integration, /Volver a Modo Campo/);
+});
+
+test('la cabecera móvil coloca Modo Campo, Actualizar y Cerrar sesión en horizontal debajo de la identidad', async () => {
+  const integration = await read('js/modo-campo-integration.js');
+  assert.match(integration, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(integration, /#manual-refresh/);
+  assert.match(integration, /#logout/);
+  assert.match(integration, /#open-field-mode/);
+  assert.match(integration, /grid-template-columns: minmax\(0, 1fr\)/);
 });
 
 test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', async () => {
@@ -85,7 +121,7 @@ test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', a
 });
 
 test('scripts de Modo Campo tienen sintaxis válida', () => {
-  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js']) {
+  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js']) {
     execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio:'pipe' });
   }
 });
