@@ -1,3 +1,5 @@
+import './exercise-view-mode-ui.js?v=2519';
+
 // Agrupa únicamente eventos ya realizados en bloques plegados.
 // No modifica datos, Supabase ni la lógica de edición/borrado: solo reorganiza
 // las tarjetas ya renderizadas para mantener limpia la vista de Entrenos/Partidos.
