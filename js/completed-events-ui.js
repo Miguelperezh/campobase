@@ -1,43 +1,19 @@
 import './exercise-view-mode-ui.js?v=2519';
+import { put } from './db.js';
 
-// Agrupa únicamente eventos ya realizados en bloques plegados.
-// No modifica datos, Supabase ni la lógica de edición/borrado: solo reorganiza
-// las tarjetas ya renderizadas para mantener limpia la vista de Entrenos/Partidos.
-
+// Desde el 15/09/2026 las sesiones solo se archivan cuando el entrenador las
+// cierra de forma explícita. Las sesiones anteriores se conservan como legado
+// para no desmontar el historial ya validado.
 const SESSION_GROUP_ID = 'completed-sessions-collapsible';
 const MATCH_GROUP_ID = 'played-matches-collapsible';
+const MANUAL_CLOSE_FROM = '2026-09-15';
 let syncQueued = false;
+let closeBound = false;
 
-function localDayKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function sessionMinutes(session) {
-  const blocks = Array.isArray(session?.blocks) ? session.blocks : [];
-  const fromBlocks = blocks.reduce((sum, block) => sum + (Number(block?.duration) || 0), 0);
-  return fromBlocks || Number(session?.totalDuration) || Number(session?.targetDuration) || 0;
-}
-
-function sessionHasFinished(session, now = new Date()) {
+function sessionIsArchived(session) {
+  if (session?.status === 'closed' || session?.status === 'finished' || session?.closedAt || session?.archived === true) return true;
   const day = String(session?.date || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
-
-  const today = localDayKey(now);
-  if (day < today) return true;
-  if (day > today) return false;
-
-  const time = String(session?.time || '').trim();
-  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
-  if (!match) return false;
-
-  const [year, month, date] = day.split('-').map(Number);
-  const start = new Date(year, month - 1, date, Number(match[1]), Number(match[2]), 0, 0);
-  const duration = sessionMinutes(session);
-  const end = new Date(start.getTime() + Math.max(1, duration) * 60_000);
-  return now >= end;
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) && day < MANUAL_CLOSE_FROM;
 }
 
 function makeAccordion({ id, title, count }) {
@@ -57,17 +33,35 @@ function makeAccordion({ id, title, count }) {
   return details;
 }
 
+function ensureManualCloseButtons() {
+  const root = document.getElementById('sessions-list');
+  const sessions = window.__campobase?.state?.trainingSessions;
+  if (!root || !Array.isArray(sessions)) return;
+  const byId = new Map(sessions.map((session) => [String(session.id), session]));
+
+  for (const card of root.querySelectorAll('article.session-card[data-session-id]')) {
+    const session = byId.get(String(card.dataset.sessionId));
+    if (!session || sessionIsArchived(session)) continue;
+    const actions = card.querySelector('.button-row');
+    if (!actions || actions.querySelector('.close-session-manual')) continue;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'close-session-manual secondary';
+    button.dataset.id = session.id;
+    button.textContent = 'Cerrar sesión';
+    actions.appendChild(button);
+  }
+}
+
 function groupCompletedSessions() {
   const root = document.getElementById('sessions-list');
   const sessions = window.__campobase?.state?.trainingSessions;
   if (!root || !Array.isArray(sessions)) return;
 
-  // Si la app acaba de renderizar de nuevo, el bloque anterior ya no existe.
-  // Si existe, no lo reconstruimos para no interferir mientras el usuario lo abre.
   if (root.querySelector(`#${SESSION_GROUP_ID}`)) return;
 
   const completedIds = new Set(
-    sessions.filter((session) => sessionHasFinished(session)).map((session) => String(session.id)),
+    sessions.filter(sessionIsArchived).map((session) => String(session.id)),
   );
   if (!completedIds.size) return;
 
@@ -91,12 +85,10 @@ function groupPlayedMatchesFallback() {
   const matches = window.__campobase?.state?.matches;
   if (!root || !Array.isArray(matches)) return;
 
-  // La app actual ya crea este bloque. Solo actuamos como respaldo si alguna
-  // renderización futura dejara los partidos finalizados fuera del desplegable.
   if (root.querySelector(`#${MATCH_GROUP_ID}`)) return;
 
   const playedIds = new Set(
-    matches.filter((match) => match?.status === 'finished').map((match) => String(match.id)),
+    matches.filter((match) => match?.status === 'finished' || match?.status === 'closed' || match?.closedAt).map((match) => String(match.id)),
   );
   if (!playedIds.size) return;
 
@@ -112,6 +104,7 @@ function groupPlayedMatchesFallback() {
 }
 
 function syncCompletedEvents() {
+  ensureManualCloseButtons();
   groupCompletedSessions();
   groupPlayedMatchesFallback();
 }
@@ -125,7 +118,40 @@ function scheduleSync() {
   });
 }
 
+async function closeSessionManually(sessionId, button) {
+  const sessions = window.__campobase?.state?.trainingSessions;
+  const session = Array.isArray(sessions) ? sessions.find((item) => String(item.id) === String(sessionId)) : null;
+  if (!session || sessionIsArchived(session)) return;
+
+  const accepted = window.confirm('¿Cerrar esta sesión? Pasará a «Sesiones realizadas». Guardar asistencia por sí solo no la cerrará.');
+  if (!accepted) return;
+
+  button.disabled = true;
+  try {
+    const now = Date.now();
+    await put('settings', { ...session, status: 'closed', closedAt: now, updatedAt: now });
+    if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
+    else window.location.reload();
+  } catch (error) {
+    console.warn('No se pudo cerrar la sesión:', error);
+    button.disabled = false;
+  }
+}
+
+function bindManualClose() {
+  if (closeBound) return;
+  closeBound = true;
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.close-session-manual');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeSessionManually(button.dataset.id, button);
+  });
+}
+
 function install() {
+  bindManualClose();
   syncCompletedEvents();
 
   const sessionsRoot = document.getElementById('sessions-list');
