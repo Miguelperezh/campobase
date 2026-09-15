@@ -6,6 +6,70 @@ const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefin
 const params = new URLSearchParams(hasBrowser ? window.location.search : '');
 const fromCampo = params.get('fromCampo') === '1';
 
+function installTopbarActionLayout() {
+  if (document.getElementById('cb-campo-topbar-layout')) return;
+  const style = document.createElement('style');
+  style.id = 'cb-campo-topbar-layout';
+  style.textContent = `
+    @media (max-width: 650px) {
+      body.cb-redesign-active .topbar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: .45rem !important;
+        padding-top: max(.65rem, env(safe-area-inset-top, 0px)) !important;
+        overflow: visible !important;
+      }
+      body.cb-redesign-active .topbar-brand {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      body.cb-redesign-active .topbar .status {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        align-items: stretch !important;
+        gap: .35rem !important;
+        padding-top: .4rem !important;
+        margin-top: .05rem !important;
+        border-top: 1px solid var(--cb-slate-200, var(--line, #e2e8f0)) !important;
+        flex-direction: initial !important;
+      }
+      body.cb-redesign-active .topbar .status #active-format {
+        grid-column: 1 / -1 !important;
+        justify-self: end !important;
+        min-height: 28px !important;
+        font-size: .62rem !important;
+        padding: .25rem .55rem !important;
+      }
+      body.cb-redesign-active .topbar .status #role-label,
+      body.cb-redesign-active .topbar .status #network-dot,
+      body.cb-redesign-active .topbar .status #network-label {
+        display: none !important;
+      }
+      body.cb-redesign-active .topbar .status #open-field-mode,
+      body.cb-redesign-active .topbar .status #return-to-field-mode,
+      body.cb-redesign-active .topbar .status #manual-refresh,
+      body.cb-redesign-active .topbar .status #logout {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 40px !important;
+        margin: 0 !important;
+        padding: .45rem .35rem !important;
+        font-size: .68rem !important;
+        white-space: normal !important;
+        line-height: 1.05 !important;
+        text-align: center !important;
+      }
+      body.cb-redesign-active .topbar .status #open-field-mode,
+      body.cb-redesign-active .topbar .status #return-to-field-mode { grid-column: 1; }
+      body.cb-redesign-active .topbar .status #manual-refresh { grid-column: 2; }
+      body.cb-redesign-active .topbar .status #logout { grid-column: 3; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function addTopbarButton({ id, text, onClick, primary = false }) {
   if (document.getElementById(id)) return;
   const status = document.querySelector('.topbar .status');
@@ -107,6 +171,7 @@ async function openRealAction() {
 }
 
 function install() {
+  installTopbarActionLayout();
   installEntryButtons();
   openRealAction().catch((error) => console.warn('No se pudo abrir la función solicitada desde Modo Campo:', error));
 }
