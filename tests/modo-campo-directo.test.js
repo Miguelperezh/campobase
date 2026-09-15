@@ -70,6 +70,16 @@ test('Modo Campo usa la identidad real del equipo y no el logo CB', async () => 
   assert.match(identity, /FONT_FAMILY_MAP/);
 });
 
+test('Modo Campo aplica también el tema local usado por Ajustes sin guardar datos deportivos en local', async () => {
+  const html = await read('modo-campo-directo.html');
+  const localTheme = await read('js/modo-campo-local-theme.js');
+  assert.match(html, /js\/modo-campo-local-theme\.js\?v=1/);
+  assert.match(localTheme, /localStorage\.getItem\('campobase\.theme'\)/);
+  assert.match(localTheme, /--field-accent/);
+  assert.match(localTheme, /--field-font-family/);
+  assert.doesNotMatch(localTheme, /indexedDB|jugadores|partidos|asistencias|configuracion/);
+});
+
 test('Modo Campo resuelve los IDs PDF con el catálogo oficial y muestra la ejecución', async () => {
   const html = await read('modo-campo-directo.html');
   const identity = await read('js/modo-campo-identity-exercises.js');
@@ -86,6 +96,7 @@ test('la página integrada carga la capa visual compartida y scripts vigentes', 
   assert.match(html, /vendor\/supabase\.js/);
   assert.match(html, /js\/modo-campo-directo\.js\?v=4/);
   assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=1/);
+  assert.match(html, /js\/modo-campo-local-theme\.js\?v=1/);
   assert.match(html, /js\/modo-campo-actions\.js\?v=1/);
   assert.match(html, /modo-campo-theme\.css\?v=1/);
   assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
@@ -121,7 +132,7 @@ test('Modo Campo enlaza las funciones reales de WhatsApp, Delegado y En vivo', a
 });
 
 test('scripts de Modo Campo tienen sintaxis válida', () => {
-  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js']) {
+  for (const path of ['js/modo-campo-directo.js', 'js/modo-campo-actions.js', 'js/modo-campo-integration.js', 'js/modo-campo-identity-exercises.js', 'js/modo-campo-local-theme.js']) {
     execFileSync(process.execPath, ['--check', fileURLToPath(new URL(path, root))], { stdio:'pipe' });
   }
 });
