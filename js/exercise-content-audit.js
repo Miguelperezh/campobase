@@ -209,18 +209,19 @@ function auditedObjective(exercise = {}) {
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
 
-function applyAudit(exerciseId) {
-  const body = document.getElementById('exercise-detail-body');
-  if (!body || !exerciseId) return;
-  const exercise = findValidatedExercise(exerciseId);
+function applyAuditToRoot(root, exerciseId = '') {
+  if (!root) return;
+  const id = exerciseId || root.dataset?.id || root.getAttribute?.('data-id') || '';
+  if (!id) return;
+  const exercise = findValidatedExercise(id);
   if (!exercise) return;
 
   const objective = auditedObjective(exercise);
   const focus = auditedFocus(exercise, objective);
-  const objectiveBox = body.querySelector('#section-objetivo .main-objective-box');
+  const objectiveBox = root.querySelector('#section-objetivo .main-objective-box');
   if (objectiveBox && objective && objectiveBox.textContent !== objective) objectiveBox.textContent = objective;
 
-  const section = body.querySelector('#section-que-se-trabaja');
+  const section = root.querySelector('#section-que-se-trabaja');
   if (section) {
     let container = section.querySelector('.pills-container');
     if (!container) {
@@ -228,34 +229,147 @@ function applyAudit(exerciseId) {
       container.className = 'pills-container';
       section.appendChild(container);
     }
-    const markup = focus.map((item) => `<span class="pill-tag">${escapeHtml(item)}</span>`).join('');
+    const markup = focus.map((item) => `<span class="pill-tag">${escapeHtml(item)}</span>`).join(' ');
     if (container.innerHTML !== markup) container.innerHTML = markup;
   }
-  body.dataset.exerciseContentAuditId = exerciseId;
+  root.dataset.exerciseContentAuditId = id;
+}
+
+function applyAudit(exerciseId) {
+  const body = document.getElementById('exercise-detail-body');
+  if (!body || !exerciseId) return;
+  const root = body.querySelector(`.ejercicio-validado[data-id="${CSS.escape(exerciseId)}"]`) || body.querySelector('.ejercicio-validado[data-id]') || body;
+  applyAuditToRoot(root, exerciseId);
+}
+
+function auditRenderedExercises() {
+  document.querySelectorAll('.ejercicio-validado[data-id]').forEach((root) => applyAuditToRoot(root));
+}
+
+function installBoardMaterialControls(frame) {
+  if (!frame || frame.dataset.materialOrientationPatched === '1') return;
+  frame.dataset.materialOrientationPatched = '1';
+
+  const patch = () => {
+    let doc;
+    try { doc = frame.contentDocument; } catch { return; }
+    if (!doc?.body || doc.getElementById('campobase-material-orientation-runtime')) return;
+    if (!doc.getElementById('rotationControl') && !doc.getElementById('rotRange')) return;
+
+    const runtime = doc.createElement('script');
+    runtime.id = 'campobase-material-orientation-runtime';
+    runtime.textContent = `
+      (() => {
+        if (window.__campobaseMaterialOrientationInstalled) return;
+        if (typeof selectedItem !== 'function' || typeof pushHistory !== 'function' || typeof render !== 'function' || typeof itemGraphic !== 'function') return;
+        window.__campobaseMaterialOrientationInstalled = true;
+        const MATERIALS = new Set(['goalLarge','goalSmall','cone','marker','pole','hurdle','ladder','ring','mannequin']);
+        const GOALS = new Set(['goalLarge','goalSmall']);
+        const anchor = document.getElementById('rotationControl') || document.getElementById('rotRange')?.closest('.field-row');
+        const inspector = document.getElementById('inspectorBody');
+        if (!anchor || !inspector) return;
+
+        const style = document.createElement('style');
+        style.id = 'campobase-material-orientation-style';
+        style.textContent = '.cb-material-orientation{display:grid;gap:7px;margin-top:8px}.cb-material-orientation>label{font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.07em}.cb-material-orientation-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cb-material-orientation-actions button{min-height:38px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-weight:850;font-size:11px;padding:6px 8px}.cb-material-orientation-actions button.active{border-color:#d2ad00;background:#fff7c7;box-shadow:0 0 0 2px rgba(210,173,0,.15)}.cb-material-orientation-actions button.goal-net{grid-column:1/-1}.cb-material-orientation.hidden{display:none!important}';
+        document.head.append(style);
+
+        const controls = document.createElement('div');
+        controls.id = 'campobaseMaterialOrientationControls';
+        controls.className = 'cb-material-orientation hidden';
+        controls.innerHTML = '<label>Colocación del material</label><div class="cb-material-orientation-actions"><button type="button" id="rotateLeft90" title="Girar 90 grados a la izquierda">↺ 90°</button><button type="button" id="rotateRight90" title="Girar 90 grados a la derecha">↻ 90°</button><button type="button" id="flipVerticalSelected" title="Reflejar el material de arriba abajo">↕ Reflejo vertical</button><button type="button" id="invertGoalNet" class="goal-net hidden" title="Cambiar el lado hacia el que sale el fondo de la red">Invertir fondo de red</button></div>';
+        anchor.insertAdjacentElement('afterend', controls);
+
+        const left = document.getElementById('rotateLeft90');
+        const right = document.getElementById('rotateRight90');
+        const flipY = document.getElementById('flipVerticalSelected');
+        const net = document.getElementById('invertGoalNet');
+        const normaliseAngle = (value) => ((Number(value || 0) % 360) + 360) % 360;
+        const mutate = (callback) => {
+          const it = selectedItem();
+          if (!it || !MATERIALS.has(it.type)) return;
+          pushHistory();
+          callback(it);
+          render();
+        };
+
+        left.addEventListener('click', () => mutate((it) => { it.rot = normaliseAngle((it.rot || 0) - 90); }));
+        right.addEventListener('click', () => mutate((it) => { it.rot = normaliseAngle((it.rot || 0) + 90); }));
+        flipY.addEventListener('click', () => mutate((it) => { it.flipY = !it.flipY; }));
+        net.addEventListener('click', () => mutate((it) => { if (GOALS.has(it.type)) it.netDepth = it.netDepth === -1 ? 1 : -1; }));
+
+        const baseItemTransform = typeof itemTransform === 'function' ? itemTransform : null;
+        if (baseItemTransform) {
+          itemTransform = function(a, x, y, rot, scale, mirror) {
+            const transformed = baseItemTransform(a, x, y, rot, scale, mirror);
+            return a?.flipY ? transformed + ' scale(1 -1)' : transformed;
+          };
+        }
+
+        const baseItemGraphic = itemGraphic;
+        itemGraphic = function(it) {
+          const graphic = baseItemGraphic(it);
+          if (!baseItemTransform && it?.flipY) {
+            graphic.setAttribute('transform', (graphic.getAttribute('transform') || '') + ' scale(1 -1)');
+          }
+          if (GOALS.has(it?.type) && it.netDepth === -1) {
+            const children = [...graphic.children];
+            const netGroup = children.at(-1);
+            const depthPath = children.at(-2);
+            if (depthPath?.tagName?.toLowerCase() === 'path') depthPath.setAttribute('transform', 'scale(-1 1)');
+            if (netGroup?.tagName?.toLowerCase() === 'g') netGroup.setAttribute('transform', 'scale(-1 1)');
+          }
+          return graphic;
+        };
+
+        const baseUpdateInspector = typeof updateInspector === 'function' ? updateInspector : null;
+        if (baseUpdateInspector) {
+          updateInspector = function() {
+            baseUpdateInspector();
+            const it = selectedItem();
+            const materialSelected = Boolean(it && MATERIALS.has(it.type));
+            controls.classList.toggle('hidden', !materialSelected);
+            net.classList.toggle('hidden', !(it && GOALS.has(it.type)));
+            flipY.classList.toggle('active', Boolean(it?.flipY));
+            net.classList.toggle('active', it?.netDepth === -1);
+          };
+        }
+        render();
+      })();
+    `;
+    doc.body.append(runtime);
+  };
+
+  frame.addEventListener('load', () => setTimeout(patch, 0));
+  setTimeout(patch, 0);
+}
+
+function discoverBoardFrames() {
+  document.querySelectorAll('iframe[title="Creador de ejercicios CampoBase"]').forEach(installBoardMaterialControls);
 }
 
 function install() {
   let currentExerciseId = '';
   let queued = false;
   const schedule = () => {
-    if (!currentExerciseId || queued) return;
+    if (queued) return;
     queued = true;
     setTimeout(() => {
       queued = false;
-      applyAudit(currentExerciseId);
+      if (currentExerciseId) applyAudit(currentExerciseId);
+      auditRenderedExercises();
+      discoverBoardFrames();
     }, 0);
   };
 
   document.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-exercise-id]');
-    if (!trigger?.dataset.exerciseId) return;
-    currentExerciseId = trigger.dataset.exerciseId;
+    if (trigger?.dataset.exerciseId) currentExerciseId = trigger.dataset.exerciseId;
     schedule();
   }, true);
 
-  const body = document.getElementById('exercise-detail-body');
-  if (!body) return;
-  new MutationObserver(() => schedule()).observe(body, { childList: true, subtree: true });
+  schedule();
+  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
 }
 
 if (hasBrowser) {
