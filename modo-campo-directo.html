@@ -50,5 +50,24 @@
   <script src="./js/modo-campo-identity-exercises.js?v=2"></script>
   <script src="./js/modo-campo-theme-parity.js?v=1"></script>
   <script src="./js/modo-campo-actions.js?v=2"></script>
+  <script>
+    (() => {
+      const REMOVE = new Set(['Grande, directo y sin menús innecesarios', 'Lo esencial a golpe de vista']);
+      let queued = false;
+      const cleanCopy = () => {
+        queued = false;
+        document.querySelectorAll('#hoy h2, #entrenos h2').forEach((heading) => {
+          if (REMOVE.has(heading.textContent.trim())) heading.remove();
+        });
+      };
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(cleanCopy);
+      };
+      schedule();
+      new MutationObserver(schedule).observe(document.querySelector('.shell'), { childList: true, subtree: true });
+    })();
+  </script>
 </body>
 </html>
