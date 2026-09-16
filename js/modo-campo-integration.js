@@ -9,6 +9,8 @@ import './custom-exercise-persistence.js?v=1';
 const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 const params = new URLSearchParams(hasBrowser ? window.location.search : '');
 const fromCampo = params.get('fromCampo') === '1';
+const DETAIL_BADGE_KEY = 'campobase.detailBadgeStyle';
+const DETAIL_BADGE_STYLE_ID = 'cb-detail-badge-user-style';
 
 function installTopbarActionLayout() {
   if (document.getElementById('cb-campo-topbar-layout')) return;
@@ -195,9 +197,246 @@ async function openRealAction() {
   }
 }
 
+function normalizeDorsal(value = '') {
+  const raw = String(value).trim().replace(/^#\s*/, '');
+  if (!raw) return '';
+  return /^\d+$/.test(raw) ? String(Number(raw)) : raw.toLocaleLowerCase('es');
+}
+
+function showDorsalWarning(form, message) {
+  let warning = form.querySelector('.cb-dorsal-warning');
+  if (!warning) {
+    warning = document.createElement('p');
+    warning.className = 'warning panel cb-dorsal-warning';
+    warning.setAttribute('role', 'alert');
+    const numberField = form.elements.number?.closest('label') || form.elements.number;
+    numberField?.insertAdjacentElement('afterend', warning);
+  }
+  warning.textContent = message;
+
+  const toast = document.getElementById('toast');
+  if (toast) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    window.setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+}
+
+function clearDorsalWarning(form) {
+  form?.querySelector('.cb-dorsal-warning')?.remove();
+}
+
+function findDorsalOwner(number, currentId = '') {
+  const normalized = normalizeDorsal(number);
+  if (!normalized) return null;
+
+  for (const card of document.querySelectorAll('#players-list .card.player[data-player-id]')) {
+    if (card.dataset.playerId === currentId) continue;
+    const badge = card.querySelector('.player-subhead-pill')?.textContent || '';
+    const match = badge.match(/Dorsal\s+(.+)/i);
+    if (!match || normalizeDorsal(match[1]) !== normalized) continue;
+    return {
+      id: card.dataset.playerId,
+      name: card.querySelector('.player-name h3, h3')?.textContent?.trim() || 'otro jugador',
+    };
+  }
+  return null;
+}
+
+function installPlayerDorsalGuard() {
+  document.addEventListener('submit', (event) => {
+    const form = event.target?.closest?.('#player-form');
+    if (!form) return;
+
+    clearDorsalWarning(form);
+    const numberInput = form.elements.number;
+    const dorsal = normalizeDorsal(numberInput?.value || '');
+    if (!dorsal) return;
+
+    const owner = findDorsalOwner(dorsal, form.elements.id?.value || '');
+    if (!owner) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    event.stopPropagation();
+    showDorsalWarning(form, `El dorsal ${dorsal} ya está asignado a ${owner.name}. Elige otro dorsal.`);
+    numberInput?.focus();
+    numberInput?.select?.();
+  }, true);
+
+  document.addEventListener('input', (event) => {
+    if (event.target?.matches?.('#player-form [name="number"]')) {
+      clearDorsalWarning(event.target.closest('#player-form'));
+    }
+  });
+}
+
+function readDetailBadgeSettings() {
+  try {
+    const value = JSON.parse(localStorage.getItem(DETAIL_BADGE_KEY) || 'null');
+    return value && typeof value === 'object' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function detailBadgeFont(value) {
+  return value === 'inter'
+    ? 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    : '"Barlow Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+}
+
+function installDetailBadgeStyles() {
+  if (document.getElementById(DETAIL_BADGE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = DETAIL_BADGE_STYLE_ID;
+  style.textContent = `
+    html[data-cb-detail-badges="custom"] body.cb-redesign-active #active-format.format-badge,
+    html[data-cb-detail-badges="custom"] body.cb-redesign-active .plantilla-staff-role-badge,
+    html[data-cb-detail-badges="custom"] body.cb-redesign-active .staff-badge {
+      background: var(--cb-detail-badge-bg) !important;
+      color: var(--cb-detail-badge-text) !important;
+      font-family: var(--cb-detail-badge-font) !important;
+      font-weight: var(--cb-detail-badge-weight) !important;
+      border-color: transparent !important;
+    }
+    .cb-detail-badge-preview-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      align-items: center;
+      margin: .8rem 0 1rem;
+    }
+    .cb-detail-badge-preview {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: .35rem .7rem;
+      border-radius: 999px;
+      line-height: 1;
+    }
+    .cb-detail-badge-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .75rem;
+    }
+    .cb-detail-badge-bold {
+      display: flex !important;
+      align-items: center;
+      gap: .55rem;
+      min-height: 44px;
+    }
+    @media (max-width: 650px) {
+      .cb-detail-badge-fields { grid-template-columns: 1fr; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function applyDetailBadgeSettings(settings) {
+  installDetailBadgeStyles();
+  const root = document.documentElement;
+  if (!settings) {
+    root.removeAttribute('data-cb-detail-badges');
+    root.style.removeProperty('--cb-detail-badge-bg');
+    root.style.removeProperty('--cb-detail-badge-text');
+    root.style.removeProperty('--cb-detail-badge-font');
+    root.style.removeProperty('--cb-detail-badge-weight');
+    return;
+  }
+
+  root.setAttribute('data-cb-detail-badges', 'custom');
+  root.style.setProperty('--cb-detail-badge-bg', settings.background || '#c8102e');
+  root.style.setProperty('--cb-detail-badge-text', settings.text || '#000000');
+  root.style.setProperty('--cb-detail-badge-font', detailBadgeFont(settings.font));
+  root.style.setProperty('--cb-detail-badge-weight', settings.bold === false ? '500' : '800');
+}
+
+function updateDetailBadgePreview(form) {
+  const background = form.elements.background?.value || '#c8102e';
+  const text = form.elements.text?.value || '#000000';
+  const font = detailBadgeFont(form.elements.font?.value || 'barlow');
+  const weight = form.elements.bold?.checked ? '800' : '500';
+  form.querySelectorAll('.cb-detail-badge-preview').forEach((preview) => {
+    preview.style.background = background;
+    preview.style.color = text;
+    preview.style.fontFamily = font;
+    preview.style.fontWeight = weight;
+  });
+}
+
+function installDetailBadgeSettings() {
+  applyDetailBadgeSettings(readDetailBadgeSettings());
+
+  const grid = document.querySelector('#ajustes .settings-grid');
+  if (!grid || document.getElementById('detail-badge-settings-panel')) return;
+
+  const saved = readDetailBadgeSettings();
+  const panel = document.createElement('article');
+  panel.className = 'panel';
+  panel.id = 'detail-badge-settings-panel';
+  panel.innerHTML = `
+    <h3>Distintivos de información</h3>
+    <p class="meta">Configura de forma común los distintivos como «F7 · 7 en campo · 70 min» y los cargos del cuerpo técnico. No modifica el resto del tema.</p>
+    <form id="detail-badge-settings-form">
+      <div class="cb-detail-badge-fields">
+        <label>Color de fondo
+          <input type="color" name="background" value="${saved?.background || '#c8102e'}">
+        </label>
+        <label>Color del texto
+          <input type="color" name="text" value="${saved?.text || '#000000'}">
+        </label>
+        <label>Fuente
+          <select name="font">
+            <option value="barlow" ${(saved?.font || 'barlow') === 'barlow' ? 'selected' : ''}>Actual · Barlow Condensed</option>
+            <option value="inter" ${saved?.font === 'inter' ? 'selected' : ''}>Alternativa · Inter</option>
+          </select>
+        </label>
+        <label class="cb-detail-badge-bold">
+          <input type="checkbox" name="bold" ${saved?.bold === false ? '' : 'checked'}> Negrita
+        </label>
+      </div>
+      <div class="cb-detail-badge-preview-row" aria-label="Vista previa">
+        <span class="cb-detail-badge-preview">F7 · 7 en campo · 70 min</span>
+        <span class="cb-detail-badge-preview">1º ENTRENADOR</span>
+      </div>
+      <button class="primary" type="submit">Guardar distintivos</button>
+    </form>
+  `;
+
+  const themePanel = grid.querySelector('#theme-settings-form')?.closest('.panel');
+  if (themePanel) themePanel.insertAdjacentElement('afterend', panel);
+  else grid.appendChild(panel);
+
+  const form = panel.querySelector('#detail-badge-settings-form');
+  updateDetailBadgePreview(form);
+  form.addEventListener('input', () => updateDetailBadgePreview(form));
+  form.addEventListener('change', () => updateDetailBadgePreview(form));
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const settings = {
+      background: form.elements.background.value,
+      text: form.elements.text.value,
+      font: form.elements.font.value === 'inter' ? 'inter' : 'barlow',
+      bold: form.elements.bold.checked,
+    };
+    localStorage.setItem(DETAIL_BADGE_KEY, JSON.stringify(settings));
+    applyDetailBadgeSettings(settings);
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = 'Distintivos actualizados.';
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+  });
+}
+
 function install() {
   installTopbarActionLayout();
   installEntryButtons();
+  installPlayerDorsalGuard();
+  installDetailBadgeSettings();
   openRealAction().catch((error) => console.warn('No se pudo abrir la función solicitada desde Modo Campo:', error));
 }
 
