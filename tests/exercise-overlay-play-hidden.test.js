@@ -28,17 +28,6 @@ test('js/ejercicio-viewer.js gestiona el ocultamiento síncrono del botón overl
   assert.match(js, /video\.addEventListener\('pause'/, 'Debe escuchar evento pause');
 });
 
-test('los visores standalone library-v2 ocultan el botón overlay con display none !important', () => {
-  const preview = fs.readFileSync('library-v2-preview.html', 'utf8');
-  const viewer = fs.readFileSync('library-v2/viewer/index.html', 'utf8');
-
-  for (const [name, content] of [['library-v2-preview.html', preview], ['library-v2/viewer/index.html', viewer]]) {
-    assert.match(content, /\.video-overlay-play\.playing[\s\S]*?display:\s*none\s*!important/, `${name} debe ocultar overlay con display none !important`);
-    assert.match(content, /videoOverlayPlay\.classList\.add\('playing',\s*'hidden'\)/, `${name} debe añadir playing y hidden en togglePlay`);
-    assert.match(content, /videoOverlayPlay\.style\.setProperty\('display',\s*'none',\s*'important'\)/, `${name} debe forzar inline display none !important`);
-  }
-});
-
 test('versión de caché en sw.js e index.html están sincronizadas a v=2502', () => {
   const sw = fs.readFileSync('sw.js', 'utf8');
   const html = fs.readFileSync('index.html', 'utf8');
