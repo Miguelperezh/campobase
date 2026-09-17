@@ -1,1 +1,0 @@
-Punto de corte de Fase 2 aislada. main no modificado.
