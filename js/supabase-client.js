@@ -2,7 +2,7 @@ import './match-postgame-editor.js';
 import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
-import './attendance-session-manual-state.js?v=2';
+import './attendance-session-manual-state.js?v=3';
 import './exercise-board-persistence.js?v=2473';
 import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
@@ -71,10 +71,8 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui.js?v=2'))
+    .then(() => import('./saas-auth-ui-v2.js?v=1'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
-    .then(() => import('./saas-auth-enhancements.js?v=2'))
-    .then(({ initSaasAuthEnhancements }) => initSaasAuthEnhancements(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso de usuario:', error);
     });
