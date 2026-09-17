@@ -24,6 +24,20 @@ function playerCardName(card) {
   return card.querySelector('.player-name h3')?.textContent?.trim() || '';
 }
 
+function attendanceRowName(row) {
+  return row.querySelector('.attendance-player-ident strong, .attendance-player-name strong')?.textContent?.trim() || '';
+}
+
+function sortChildrenAlphabetically(container, items, getName) {
+  if (!container || items.length < 2) return;
+  const sorted = [...items].sort((a, b) => getName(a).localeCompare(getName(b), 'es', { sensitivity: 'base' }));
+  const alreadySorted = items.every((item, index) => item === sorted[index]);
+  if (alreadySorted) return;
+  const fragment = document.createDocumentFragment();
+  sorted.forEach((item) => fragment.appendChild(item));
+  container.appendChild(fragment);
+}
+
 function installPlayerRosterGuard() {
   if (typeof document === 'undefined') return;
 
@@ -79,32 +93,35 @@ function installPlayerRosterGuard() {
     const list = document.getElementById('players-list');
     if (!list) return;
     const cards = [...list.children].filter((node) => node.matches?.('article.card.player[data-player-id]'));
-    if (cards.length < 2) return;
+    sortChildrenAlphabetically(list, cards, playerCardName);
+  }
 
-    const sorted = [...cards].sort((a, b) => playerCardName(a).localeCompare(playerCardName(b), 'es', { sensitivity: 'base' }));
-    const alreadySorted = cards.every((card, index) => card === sorted[index]);
-    if (alreadySorted) return;
-
-    const fragment = document.createDocumentFragment();
-    sorted.forEach((card) => fragment.appendChild(card));
-    list.appendChild(fragment);
+  function sortAttendancePlayerLists() {
+    document.querySelectorAll('.attendance-player-list').forEach((list) => {
+      const rows = [...list.children].filter((node) => node.matches?.('.attendance-player-row[data-attendance-player]'));
+      sortChildrenAlphabetically(list, rows, attendanceRowName);
+    });
   }
 
   function installAlphabeticalRosterObserver() {
-    const attach = () => {
-      const list = document.getElementById('players-list');
-      if (!list) return false;
+    const list = document.getElementById('players-list');
+    if (list) {
       sortVisiblePlayerCards();
       const observer = new MutationObserver(() => sortVisiblePlayerCards());
       observer.observe(list, { childList: true });
-      return true;
-    };
+    }
 
-    if (attach()) return;
-    const rootObserver = new MutationObserver(() => {
-      if (attach()) rootObserver.disconnect();
+    sortAttendancePlayerLists();
+    let attendanceQueued = false;
+    const attendanceObserver = new MutationObserver(() => {
+      if (attendanceQueued) return;
+      attendanceQueued = true;
+      queueMicrotask(() => {
+        attendanceQueued = false;
+        sortAttendancePlayerLists();
+      });
     });
-    rootObserver.observe(document.documentElement, { childList: true, subtree: true });
+    attendanceObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
