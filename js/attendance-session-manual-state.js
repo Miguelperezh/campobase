@@ -98,12 +98,13 @@ function sortAttendancePlayersAlphabetically() {
   const list = document.querySelector('#training-form[data-visual-attendance="1"] .attendance-player-list');
   if (!list) return;
   const rows = [...list.querySelectorAll('.attendance-player-row')];
-  rows.sort((a, b) => {
+  const sorted = [...rows].sort((a, b) => {
     const nameA = a.querySelector('.attendance-player-ident strong')?.textContent || '';
     const nameB = b.querySelector('.attendance-player-ident strong')?.textContent || '';
     return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
   });
-  rows.forEach((row) => list.appendChild(row));
+  const alreadySorted = rows.every((row, index) => row === sorted[index]);
+  if (!alreadySorted) sorted.forEach((row) => list.appendChild(row));
 }
 
 function updateCompletedGroup(group) {
@@ -149,7 +150,6 @@ async function syncAttendanceSessionState() {
     }
 
     updateCompletedGroup(completedGroup);
-    sortAttendancePlayersAlphabetically();
   } finally {
     syncing = false;
   }
@@ -189,7 +189,8 @@ function installStyles() {
   const style = document.createElement('style');
   style.id = 'attendance-manual-session-style';
   style.textContent = `
-    .attendance-session-actions{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .attendance-session-actions{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;justify-content:flex-end;position:relative;z-index:2}
+    .attendance-session-actions>button{pointer-events:auto}
     .attendance-manual-open-list{margin-top:.75rem}
     .attendance-activity-card[data-activity-type="session"][data-session-closed="0"]{border-left:3px solid color-mix(in srgb,var(--cb-brand,#173f35) 55%,transparent)}
     @media(max-width:620px){.attendance-session-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.attendance-session-actions>button{width:100%}}
@@ -197,22 +198,40 @@ function installStyles() {
   document.head.appendChild(style);
 }
 
+function mutationTouchesAttendancePanel(mutation) {
+  const target = mutation.target;
+  if (target?.id === ROOT_ID || target?.closest?.(`#${ROOT_ID}`)) return true;
+  return [...(mutation.addedNodes || [])].some((node) => node?.id === ROOT_ID || node?.querySelector?.(`#${ROOT_ID}`));
+}
+
 function install() {
   installStyles();
   scheduleSync();
+
   document.addEventListener('click', (event) => {
-    const button = event.target.closest('.attendance-mark-session-realized');
-    if (button) {
+    const realized = event.target.closest('.attendance-mark-session-realized');
+    if (realized) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      markSessionRealized(button).catch((error) => console.warn('No se pudo marcar la sesión como realizada:', error));
+      markSessionRealized(realized).catch((error) => console.warn('No se pudo marcar la sesión como realizada:', error));
+      return;
+    }
+
+    const attendanceButton = event.target.closest('[data-attendance-source][data-source-id], .edit-attendance[data-id]');
+    if (attendanceButton) {
+      window.setTimeout(sortAttendancePlayersAlphabetically, 120);
+      window.setTimeout(sortAttendancePlayersAlphabetically, 350);
     }
   }, true);
+
   document.addEventListener('campobase:data-changed', (event) => {
     const stores = new Set(event.detail?.stores || []);
     if (stores.has('settings') || stores.has('trainings') || stores.has('players')) scheduleSync();
   });
-  new MutationObserver(scheduleSync).observe(document.body, { childList: true, subtree: true });
+
+  new MutationObserver((mutations) => {
+    if (mutations.some(mutationTouchesAttendancePanel)) scheduleSync();
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 if (typeof document !== 'undefined') {
