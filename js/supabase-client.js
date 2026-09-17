@@ -30,8 +30,8 @@ function installIndexedDbUserNamespace() {
       return version === undefined ? nativeOpen(mappedName) : nativeOpen(mappedName, version);
     };
   } catch {
-    // Si un navegador no permite sustituir IDBFactory.open, la app sigue operativa
-    // y la sesión cloud continúa protegida por RLS.
+    // El aislamiento cloud sigue estando protegido por RLS incluso si un navegador
+    // impide sustituir el método de IndexedDB.
   }
 }
 
@@ -68,7 +68,9 @@ async function requireBoundUser(client) {
 export function createCampoBaseCloudStore() {
   const client = getCampoBaseSupabaseClient();
 
-  void import('./saas-auth-ui.js?v=1')
+  void import('./saas-session-guard.js?v=1')
+    .then(({ guardSaasSession }) => guardSaasSession(client))
+    .then(() => import('./saas-auth-ui.js?v=1'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso de usuario:', error);
