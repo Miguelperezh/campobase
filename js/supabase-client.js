@@ -2,6 +2,7 @@ import './match-postgame-editor.js';
 import './plantilla-stats-sync.js';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
+import './attendance-session-manual-state.js?v=1';
 import './exercise-board-persistence.js?v=2473';
 import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
