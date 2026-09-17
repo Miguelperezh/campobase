@@ -23,6 +23,7 @@ export function detectPlatform(ua = (typeof navigator !== 'undefined' ? navigato
 export function detectBrowser(ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '')) {
   if (typeof navigator !== 'undefined' && navigator.brave) return 'brave';
   if (/EdgiOS\//i.test(ua)) return 'edge-ios';
+  if (/EdgA\//i.test(ua)) return 'edge-android';
   if (/Edg\//i.test(ua)) return 'edge';
   if (/OPiOS\//i.test(ua)) return 'opera-ios';
   if (/OPR\//i.test(ua)) return 'opera';
@@ -41,7 +42,13 @@ export function isStandalone() {
 }
 
 export function getInstallButtonLabel(platform = detectPlatform()) {
-  return ({ mac: 'Instalar CampoBase en Mac', windows: 'Instalar CampoBase en Windows', android: 'Instalar CampoBase en Android', ios: 'Instalar en iPhone / iPad' })[platform] || 'Instalar CampoBase como App';
+  return ({
+    mac: 'Instalar CampoBase en Mac',
+    windows: 'Instalar CampoBase en Windows',
+    linux: 'Instalar CampoBase en este equipo',
+    android: 'Instalar CampoBase en Android',
+    ios: 'Instalar CampoBase en iPhone / iPad',
+  })[platform] || 'Instalar CampoBase como aplicación';
 }
 
 export function isPermanentlyDismissed() {
@@ -107,7 +114,7 @@ function platformInfo(platform = detectPlatform()) {
 
 function browserInfo(browser = detectBrowser()) {
   if (browser === 'safari') return ['safari', 'Safari'];
-  if (browser === 'edge' || browser === 'edge-ios') return ['edge', 'Edge'];
+  if (browser === 'edge' || browser === 'edge-ios' || browser === 'edge-android') return ['edge', 'Edge'];
   if (browser === 'chrome' || browser === 'chrome-ios') return ['chrome', 'Chrome'];
   if (browser === 'firefox' || browser === 'firefox-ios') return ['firefox', 'Firefox'];
   if (browser === 'opera' || browser === 'opera-ios') return ['opera', 'Opera'];
@@ -186,54 +193,221 @@ function showModal(title, kicker, iconKind, intro, steps, note = '') {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
+export function getInstallGuide(platform = detectPlatform(), browser = detectBrowser()) {
+  const [, bLabel] = browserInfo(browser);
+
+  if (platform === 'ios') {
+    if (browser === 'chrome-ios') {
+      return {
+        icon: 'chrome',
+        intro: 'En Chrome para iPhone o iPad se añade CampoBase desde el botón Compartir.',
+        steps: [
+          'Mira la <strong>barra de direcciones</strong> de Chrome y pulsa el botón <strong>Compartir</strong> que está a su derecha.',
+          'Busca y pulsa <strong>«Añadir a pantalla de inicio»</strong>.',
+          'Revisa el nombre de CampoBase y pulsa <strong>«Añadir»</strong>.',
+        ],
+        note: 'Si CampoBase está disponible como app web, el icono de la pantalla de inicio abrirá la aplicación web.',
+      };
+    }
+    if (browser === 'firefox-ios') {
+      return {
+        icon: 'firefox',
+        intro: 'Firefox para iPhone y iPad permite crear el acceso desde su botón Compartir.',
+        steps: [
+          'Busca el icono <strong>Compartir</strong> en la barra de direcciones de Firefox y púlsalo.',
+          'En el menú de compartir, pulsa <strong>«Añadir a pantalla de inicio»</strong>.',
+          'Revisa el nombre y pulsa <strong>«Añadir»</strong> arriba a la derecha.',
+        ],
+        note: 'Firefox documenta este flujo como acceso directo a la pantalla de inicio.',
+      };
+    }
+    if (browser === 'safari') {
+      return {
+        icon: 'safari',
+        intro: 'Safari permite convertir CampoBase en una app web desde el menú Compartir.',
+        steps: [
+          'En iPhone, pulsa <strong>Menú de página</strong> y después <strong>Compartir</strong>; si ves directamente el botón Compartir, púlsalo. En iPad, pulsa <strong>Compartir</strong> y después <strong>Más</strong>.',
+          'Pulsa <strong>«Añadir a pantalla de inicio»</strong>. Si no aparece en iPhone, baja hasta <strong>«Editar acciones»</strong> y añádela.',
+          'Activa <strong>«Abrir como app web»</strong>.',
+          'Pulsa <strong>«Añadir»</strong>.',
+        ],
+        note: 'El icono se añadirá a la pantalla de inicio y abrirá CampoBase como una app web.',
+      };
+    }
+    return {
+      icon: browserInfo(browser)[0],
+      intro: `No hay una ruta oficial única verificada para instalar una PWA desde ${bLabel} en iPhone/iPad. Para evitar indicaciones incorrectas, usa Safari o Chrome.`,
+      steps: [
+        'Abre CampoBase en <strong>Safari</strong> o <strong>Chrome</strong>.',
+        'Pulsa <strong>Compartir</strong> y elige <strong>«Añadir a pantalla de inicio»</strong>.',
+        'Si usas Safari, activa <strong>«Abrir como app web»</strong> y pulsa <strong>«Añadir»</strong>.',
+      ],
+      note: 'CampoBase no inventa nombres de menús que puedan variar entre navegadores.',
+    };
+  }
+
+  if (platform === 'android') {
+    if (browser === 'chrome') {
+      return {
+        icon: 'chrome',
+        intro: 'Chrome para Android tiene una ruta específica para instalar aplicaciones web.',
+        steps: [
+          'Mira a la <strong>derecha de la barra de direcciones</strong> y pulsa los <strong>tres puntos verticales ⋮</strong>. Ese es el menú de Chrome.',
+          'Pulsa <strong>«Instalar y crear acceso directo»</strong>.',
+          'Pulsa <strong>«Instalar»</strong> y confirma si Android te lo pide.',
+        ],
+      };
+    }
+    if (browser === 'firefox') {
+      return {
+        icon: 'firefox',
+        intro: 'Firefox para Android instala las apps web desde su menú de tres puntos.',
+        steps: [
+          'Pulsa el botón de los <strong>tres puntos ⋮</strong> de Firefox.',
+          'Pulsa <strong>«Instalar»</strong>. Si Firefox no reconoce la PWA, puede mostrar <strong>«Añadir a pantalla de inicio»</strong>.',
+          'Coloca el icono donde quieras o pulsa la opción de <strong>añadir automáticamente</strong>.',
+        ],
+        note: 'En Firefox Android la opción puede variar entre instalación de app web y simple acceso directo según cómo detecte el sitio.',
+      };
+    }
+    if (browser === 'opera') {
+      return {
+        icon: 'opera',
+        intro: 'Opera para Android permite añadir una página desde el menú situado junto a la barra de direcciones.',
+        steps: [
+          'Pulsa los <strong>tres puntos</strong> situados en el extremo derecho de la barra de direcciones.',
+          'Pulsa <strong>«Añadir a»</strong>.',
+          'Elige <strong>añadir a la pantalla de inicio</strong> y confirma.',
+        ],
+      };
+    }
+    if (browser === 'samsung') {
+      return {
+        icon: 'samsung',
+        intro: 'Samsung Internet puede mostrar directamente un indicador de instalación para las PWA.',
+        steps: [
+          'Busca el indicador <strong>+</strong> de aplicación web en la barra de direcciones; si aparece, púlsalo.',
+          'Si no aparece, abre el menú de Samsung Internet y busca <strong>«Añadir a Inicio»</strong> o la opción equivalente de pantalla de inicio.',
+          'Confirma para crear el icono de CampoBase.',
+        ],
+        note: 'Samsung documenta el indicador + y la función «Add to Home» para aplicaciones web.',
+      };
+    }
+    return {
+      icon: browserInfo(browser)[0],
+      intro: `En ${bLabel} para Android el nombre exacto puede variar. CampoBase intentará primero abrir el instalador nativo del navegador.`,
+      steps: [
+        'Busca el botón de menú junto a la <strong>barra de direcciones</strong>.',
+        'Busca una opción llamada <strong>«Instalar»</strong>, <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.',
+        'Confirma para crear la aplicación o el acceso.',
+      ],
+      note: 'Si no aparece una opción de instalación, abre CampoBase en Chrome para Android y sigue su ruta específica.',
+    };
+  }
+
+  if (browser === 'chrome') {
+    return {
+      icon: 'chrome',
+      intro: 'En Chrome de ordenador la instalación está dentro del menú de los tres puntos.',
+      steps: [
+        'Mira <strong>arriba a la derecha de Chrome</strong>. Busca los <strong>tres puntos verticales ⋮</strong>, junto a la zona del perfil, y púlsalos. Ese botón abre el menú de Chrome.',
+        'Dentro del menú, pulsa <strong>«Enviar, guardar y compartir»</strong>. En algunas versiones de Chrome puede aparecer como <strong>«Transmitir, guardar y compartir»</strong>.',
+        'Pulsa <strong>«Instalar página como aplicación…»</strong>.',
+        'Confirma la instalación. CampoBase se abrirá en su propia ventana.',
+      ],
+      note: 'Si Chrome muestra un icono de instalación directamente en la barra de direcciones, también puedes pulsarlo.',
+    };
+  }
+
+  if (platform === 'mac' && browser === 'safari') {
+    return {
+      icon: 'safari',
+      intro: 'Safari en macOS Sonoma 14 o posterior puede convertir CampoBase en una app web.',
+      steps: [
+        'En la barra de menús superior del Mac, pulsa <strong>«Archivo»</strong>.',
+        'Pulsa <strong>«Añadir al Dock»</strong>. También puedes usar el botón <strong>Compartir</strong> de Safari y después <strong>«Añadir al Dock»</strong>.',
+        'Revisa el nombre y pulsa <strong>«Añadir»</strong>.',
+      ],
+      note: 'La app web quedará disponible en Aplicaciones, Dock o Spotlight.',
+    };
+  }
+
+  if (browser === 'edge') {
+    return {
+      icon: 'edge',
+      intro: 'Edge permite instalar cualquier sitio como aplicación desde su menú principal.',
+      steps: [
+        'Mira la <strong>esquina superior derecha</strong> de Edge y pulsa <strong>«Configuración y más …»</strong>.',
+        'Pulsa <strong>«Más herramientas»</strong> → <strong>«Aplicaciones»</strong>.',
+        'Pulsa <strong>«Instalar este sitio como una aplicación»</strong>.',
+        'Confirma la instalación.',
+      ],
+      note: 'Si Edge detecta CampoBase como PWA, también puede mostrar directamente la opción o icono de instalación.',
+    };
+  }
+
+  if (platform === 'windows' && browser === 'firefox') {
+    return {
+      icon: 'firefox',
+      intro: 'Firefox para Windows puede instalar sitios como aplicaciones web desde la barra de direcciones.',
+      steps: [
+        'Mira la <strong>barra de direcciones</strong> de Firefox.',
+        'Pulsa el botón de <strong>aplicaciones web</strong> cuando aparezca.',
+        'Firefox instalará CampoBase y añadirá acceso desde Windows.',
+      ],
+      note: 'La disponibilidad depende de la versión de Firefox instalada.',
+    };
+  }
+
+  if (platform === 'mac' && browser === 'firefox') {
+    return {
+      icon: 'firefox',
+      intro: 'Firefox en Mac no ofrece el mismo flujo nativo de aplicaciones web que Safari, Chrome o Edge.',
+      steps: [
+        'Abre CampoBase en <strong>Safari</strong>, <strong>Chrome</strong> o <strong>Edge</strong>.',
+        'Usa la guía de instalación que CampoBase mostrará para ese navegador.',
+        'Confirma la instalación.',
+      ],
+    };
+  }
+
+  return {
+    icon: browserInfo(browser)[0],
+    intro: `CampoBase no tiene una ruta oficial verificada específica para ${bLabel} en este sistema.`,
+    steps: [
+      'Busca en la barra de direcciones un <strong>icono de instalación</strong>.',
+      'Si no aparece, abre el menú principal del navegador y busca <strong>«Instalar»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.',
+      'Si tampoco aparece, abre CampoBase en <strong>Chrome</strong>, <strong>Edge</strong> o <strong>Safari</strong> y sigue la guía específica.',
+    ],
+  };
+}
+
+export function showInstallInstructions(platform = detectPlatform(), browser = detectBrowser()) {
+  const [, pLabel] = platformInfo(platform);
+  const [, bLabel] = browserInfo(browser);
+  const guide = getInstallGuide(platform, browser);
+  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, guide.icon, guide.intro, guide.steps, guide.note || '');
+}
+
 export function showIosInstallInstructions(browser = detectBrowser()) {
-  const [icon, label] = browserInfo(browser);
-  const safari = browser === 'safari';
-  const chrome = browser === 'chrome-ios';
-  const edge = browser === 'edge-ios';
-  const firefox = browser === 'firefox-ios';
-  const shareText = safari ? 'Pulsa <strong>Compartir</strong> en Safari.' : `Pulsa <strong>Compartir</strong> en ${label}.`;
-  const note = (!safari && !chrome && !edge && !firefox) ? 'Si tu navegador no ofrece «Añadir a pantalla de inicio», abre CampoBase en Safari y repite estos pasos.' : '';
-  showModal('Instalar CampoBase', `IPHONE / IPAD · ${label.toUpperCase()}`, icon === 'generic' ? 'apple' : icon, 'En iPhone y iPad la instalación se hace desde el menú Compartir del navegador.', [shareText, 'Elige <strong>«Añadir a pantalla de inicio»</strong>.', safari ? 'Activa <strong>«Abrir como app web»</strong> si aparece y pulsa <strong>«Añadir»</strong>.' : 'Confirma con <strong>«Añadir»</strong>. CampoBase quedará accesible desde la pantalla de inicio.'], note);
+  showInstallInstructions('ios', browser);
 }
 
 export function showDesktopInstallInstructions(platform = detectPlatform(), browser = detectBrowser()) {
-  const [pIcon, pLabel] = platformInfo(platform);
-  const [, bLabel] = browserInfo(browser);
-  let intro = 'El navegador decide si muestra el icono de instalación en la barra. Si no aparece, usa su menú de instalación.';
-  let steps;
-  let note = '';
-
-  if (platform === 'mac' && browser === 'safari') {
-    intro = 'Safari permite guardar CampoBase como una app web independiente en macOS.';
-    steps = ['Abre el menú <strong>Archivo</strong> de Safari o pulsa <strong>Compartir</strong>.', 'Selecciona <strong>«Añadir al Dock»</strong>.', 'Confirma para abrir CampoBase como una app independiente.'];
-  } else if (platform === 'windows' && browser === 'firefox') {
-    intro = 'Firefox para Windows puede instalar sitios como aplicaciones web desde la barra de direcciones.';
-    steps = ['Busca el botón de <strong>aplicaciones web</strong> en la barra de direcciones.', 'Pulsa el botón para instalar CampoBase.', 'La app quedará disponible como aplicación en Windows.'];
-  } else if (platform === 'mac' && browser === 'firefox') {
-    steps = ['Abre CampoBase en <strong>Safari</strong>, <strong>Chrome</strong> o <strong>Edge</strong>.', 'Usa la opción de instalación de ese navegador.', 'Confirma para crear la app de CampoBase.'];
-    note = 'Firefox en Mac no ofrece el mismo flujo nativo de instalación de aplicaciones web.';
-  } else if (platform === 'android') {
-    steps = [`Abre el menú de <strong>${bLabel}</strong>.`, 'Busca <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.', 'Confirma la instalación.'];
-  } else {
-    steps = [`Busca el icono de instalación en la barra o abre el menú de <strong>${bLabel}</strong>.`, 'Elige <strong>«Instalar aplicación»</strong>, <strong>«Instalar página como aplicación»</strong> o la opción equivalente.', 'Confirma para abrir CampoBase en su propia ventana.'];
-  }
-
-  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, pIcon, intro, steps, note);
+  showInstallInstructions(platform, browser);
 }
 
 function showInstructions() {
-  if (detectPlatform() === 'ios') showIosInstallInstructions();
-  else showDesktopInstallInstructions();
+  showInstallInstructions();
 }
 
 export async function promptInstall() {
   if (detectPlatform() === 'ios') {
-    showIosInstallInstructions();
+    showInstallInstructions();
     return { outcome: 'manual-ios' };
   }
   if (!deferredInstallPrompt) {
-    showDesktopInstallInstructions();
+    showInstallInstructions();
     return { outcome: 'manual' };
   }
   try {
@@ -247,7 +421,7 @@ export async function promptInstall() {
     return choice;
   } catch (error) {
     console.warn('[PWA] No se pudo abrir el instalador:', error);
-    showDesktopInstallInstructions();
+    showInstallInstructions();
     return { outcome: 'dismissed' };
   }
 }
@@ -277,6 +451,7 @@ export function initPwaInstallManager() {
   window.addEventListener('appinstalled', () => {
     isAppInstalled = true;
     deferredInstallPrompt = null;
+    setPermanentlyDismissed(true);
     updateUi();
   });
   window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', () => updateUi());
