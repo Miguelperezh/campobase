@@ -1,4 +1,4 @@
-import './detail-badge-runtime-fix.js?v=3';
+import './detail-badge-runtime-fix.js?v=4';
 
 const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
