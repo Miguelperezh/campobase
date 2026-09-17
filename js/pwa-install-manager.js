@@ -1,7 +1,5 @@
-// ============================================================================
 // CampoBase · Gestor de instalación PWA
-// Capa aislada de UI: no lee ni escribe datos deportivos ni modifica Supabase.
-// ============================================================================
+// Capa aislada de UI. No toca Supabase ni datos deportivos.
 
 let deferredInstallPrompt = null;
 let isAppInstalled = false;
@@ -11,22 +9,7 @@ const PERMANENT_DISMISS_KEY = 'campobase.pwa_permanently_dismissed';
 const SESSION_DISMISS_KEY = 'campobase.pwa_dismissed';
 const STYLE_LINK_ID = 'cb-pwa-install-styles';
 
-/**
- * Detecta la plataforma del dispositivo.
- * @param {string} ua
- * @returns {'ios'|'android'|'mac'|'windows'|'linux'|'other'}
- */
 export function detectPlatform(ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '')) {
-  if (typeof window !== 'undefined' && window.location?.search) {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const simulated = params.get('simular') || params.get('device');
-      if (simulated && ['windows', 'mac', 'android', 'ios'].includes(simulated.toLowerCase())) {
-        return simulated.toLowerCase();
-      }
-    } catch {}
-  }
-
   if (!ua) return 'other';
   if (/iPad|iPhone|iPod/i.test(ua)) return 'ios';
   if (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua)) return 'ios';
@@ -37,40 +20,40 @@ export function detectPlatform(ua = (typeof navigator !== 'undefined' ? navigato
   return 'other';
 }
 
-/** Comprueba si CampoBase se está ejecutando como PWA instalada. */
-export function isStandalone() {
-  if (typeof window === 'undefined') return false;
-  const mediaStandalone = Boolean(window.matchMedia?.('(display-mode: standalone)').matches);
-  const iosStandalone = Boolean(window.navigator?.standalone);
-  return mediaStandalone || iosStandalone;
+export function detectBrowser(ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '')) {
+  if (/Edg\//i.test(ua)) return 'edge';
+  if (/OPR\//i.test(ua)) return 'opera';
+  if (/CriOS\//i.test(ua)) return 'chrome-ios';
+  if (/FxiOS\//i.test(ua)) return 'firefox-ios';
+  if (/Chrome\//i.test(ua)) return 'chrome';
+  if (/Firefox\//i.test(ua)) return 'firefox';
+  if (/Safari\//i.test(ua)) return 'safari';
+  return 'other';
 }
 
-/** Texto del botón según el dispositivo detectado. */
+export function isStandalone() {
+  if (typeof window === 'undefined') return false;
+  return Boolean(window.matchMedia?.('(display-mode: standalone)').matches || window.navigator?.standalone);
+}
+
 export function getInstallButtonLabel(platform = detectPlatform()) {
-  switch (platform) {
-    case 'mac': return 'Instalar CampoBase en Mac';
-    case 'windows': return 'Instalar CampoBase en Windows';
-    case 'android': return 'Instalar CampoBase en Android';
-    case 'ios': return 'Instalar en tu iPhone / iPad';
-    default: return 'Instalar CampoBase como App';
-  }
+  return ({
+    mac: 'Instalar CampoBase en Mac',
+    windows: 'Instalar CampoBase en Windows',
+    android: 'Instalar CampoBase en Android',
+    ios: 'Instalar en iPhone / iPad',
+  })[platform] || 'Instalar CampoBase como App';
 }
 
 export function isPermanentlyDismissed() {
-  if (typeof localStorage === 'undefined') return false;
-  try {
-    return localStorage.getItem(PERMANENT_DISMISS_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  try { return localStorage.getItem(PERMANENT_DISMISS_KEY) === 'true'; }
+  catch { return false; }
 }
 
 export function setPermanentlyDismissed(value = true) {
-  if (typeof localStorage === 'undefined') return;
   try {
-    if (value) {
-      localStorage.setItem(PERMANENT_DISMISS_KEY, 'true');
-    } else {
+    if (value) localStorage.setItem(PERMANENT_DISMISS_KEY, 'true');
+    else {
       localStorage.removeItem(PERMANENT_DISMISS_KEY);
       sessionStorage.removeItem(SESSION_DISMISS_KEY);
     }
@@ -78,231 +61,161 @@ export function setPermanentlyDismissed(value = true) {
 }
 
 function isDismissedForSession() {
-  if (typeof sessionStorage === 'undefined') return false;
-  try {
-    return sessionStorage.getItem(SESSION_DISMISS_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  try { return sessionStorage.getItem(SESSION_DISMISS_KEY) === 'true'; }
+  catch { return false; }
 }
 
-function setDismissedForSession() {
-  if (typeof sessionStorage === 'undefined') return;
-  try {
-    sessionStorage.setItem(SESSION_DISMISS_KEY, 'true');
-  } catch {}
+function dismissForSession() {
+  try { sessionStorage.setItem(SESSION_DISMISS_KEY, 'true'); }
+  catch {}
 }
 
 function ensureStylesheet() {
-  if (typeof document === 'undefined' || document.getElementById(STYLE_LINK_ID)) return;
+  if (document.getElementById(STYLE_LINK_ID)) return;
   const link = document.createElement('link');
   link.id = STYLE_LINK_ID;
   link.rel = 'stylesheet';
-  link.href = 'pwa-install.css?v=1';
+  link.href = 'pwa-install.css?v=2';
   document.head.appendChild(link);
 }
 
-function createInstallBanner() {
-  const banner = document.createElement('div');
-  banner.id = 'cb-pwa-install-banner';
-  banner.className = 'cb-pwa-banner cb-hidden';
-  banner.setAttribute('role', 'region');
-  banner.setAttribute('aria-label', 'Instalar aplicación');
-  banner.innerHTML = `
-    <div class="cb-pwa-banner-content">
-      <div class="cb-pwa-banner-info">
-        <span class="cb-pwa-icon" aria-hidden="true">📲</span>
-        <div>
-          <strong id="cb-pwa-banner-title">Instala CampoBase en tu dispositivo</strong>
-          <p id="cb-pwa-banner-sub">Acceso directo sin navegador, pantalla completa y modo sin conexión.</p>
-        </div>
-      </div>
-      <div class="cb-pwa-banner-actions">
-        <button type="button" id="cb-pwa-install-btn" class="primary compact">Instalar CampoBase</button>
-        <button type="button" id="cb-pwa-never-btn" class="secondary compact">No ver más en este dispositivo</button>
-        <button type="button" id="cb-pwa-dismiss-btn" class="ghost compact">Cerrar aviso</button>
-      </div>
-    </div>
-  `;
-  return banner;
+function svg(kind) {
+  const base = 'viewBox="0 0 24 24" aria-hidden="true"';
+  const icons = {
+    apple: `<svg ${base}><path fill="currentColor" d="M16.7 13.1c0-2.1 1.7-3.1 1.8-3.2-1-.1-2.2.6-2.7.6-.6 0-1.4-.6-2.4-.6-1.2 0-2.4.7-3 1.8-1.3 2.2-.3 5.4.9 7.1.6.8 1.3 1.8 2.3 1.7.9 0 1.3-.6 2.4-.6 1.1 0 1.4.6 2.4.6 1 0 1.6-.9 2.2-1.7.7-1 1-2 1-2.1-.1 0-1.9-.7-1.9-3.6zM15.9 8.8c.5-.6.9-1.5.8-2.4-.8 0-1.7.5-2.3 1.1-.5.6-.9 1.4-.8 2.3.9.1 1.8-.4 2.3-1z"/></svg>`,
+    android: `<svg ${base}><path fill="currentColor" d="M7.1 7.5 5.8 5.2l.8-.5 1.4 2.4c1.1-.5 2.3-.8 4-.8s2.9.3 4 .8l1.4-2.4.8.5-1.3 2.3c1.8 1.1 3 2.8 3.1 4.8H4c.1-2 1.3-3.7 3.1-4.8zM8.2 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm7.6 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM4 13.3h16v5.2c0 1.1-.9 2-2 2h-1v2h-2v-2H9v2H7v-2H6c-1.1 0-2-.9-2-2v-5.2z"/></svg>`,
+    windows: `<svg ${base}><path fill="currentColor" d="m3 5.2 7.6-1v7.3H3V5.2zm8.6-1.1L21 3v8.5h-9.4V4.1zM3 12.5h7.6v7.3l-7.6-1v-6.3zm8.6 0H21V21l-9.4-1.1v-7.4z"/></svg>`,
+    chrome: `<svg ${base}><path fill="currentColor" d="M12 2a10 10 0 0 0-8.7 5h7.2a5 5 0 0 1 8.7 0h-5.4A5 5 0 0 1 9.4 17L6 22A10 10 0 1 0 12 2zm0 7a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>`,
+    safari: `<svg ${base}><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="m14.8 8-1.6 5.2L8 14.8l1.6-5.2L14.8 8zm-3.4 3.4-.8 2.6 2.6-.8.8-2.6-2.6.8z"/></svg>`,
+    edge: `<svg ${base}><path fill="currentColor" d="M20.4 13.5c0-5-3.2-8.4-8.1-8.4-4.4 0-8.3 3.4-8.3 8.3 0 .6.1 1.3.2 1.9 1-2.4 3.3-4.1 6.1-4.1 3 0 5.5 2 6.2 4.8-1.2-1.1-2.8-1.8-4.6-1.8-2.9 0-5.4 1.9-6.3 4.6 1.6 1.4 3.7 2.2 6 2.2 4.9 0 8.8-3.2 8.8-7.5z"/></svg>`,
+    generic: `<svg ${base}><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2"/></svg>`,
+  };
+  return icons[kind] || icons.generic;
+}
+
+function platformInfo(platform = detectPlatform()) {
+  if (platform === 'ios') return ['apple', 'iPhone / iPad'];
+  if (platform === 'mac') return ['apple', 'Mac'];
+  if (platform === 'android') return ['android', 'Android'];
+  if (platform === 'windows') return ['windows', 'Windows'];
+  if (platform === 'linux') return ['generic', 'Linux'];
+  return ['generic', 'Tu dispositivo'];
+}
+
+function browserInfo(browser = detectBrowser()) {
+  if (browser === 'safari') return ['safari', 'Safari'];
+  if (browser === 'edge') return ['edge', 'Edge'];
+  if (browser === 'chrome' || browser === 'chrome-ios') return ['chrome', 'Chrome'];
+  if (browser === 'firefox' || browser === 'firefox-ios') return ['generic', 'Firefox'];
+  if (browser === 'opera') return ['generic', 'Opera'];
+  return ['generic', 'Navegador'];
+}
+
+function deviceChips() {
+  const [pIcon, pLabel] = platformInfo();
+  const [bIcon, bLabel] = browserInfo();
+  return `<div class="cb-pwa-platform-row"><span class="cb-pwa-platform-chip">${svg(pIcon)}<span>${pLabel}</span></span><span class="cb-pwa-platform-chip">${svg(bIcon)}<span>${bLabel}</span></span></div>`;
+}
+
+function createBanner() {
+  const el = document.createElement('aside');
+  el.id = 'cb-pwa-install-banner';
+  el.className = 'cb-pwa-banner cb-hidden';
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', 'Instalar CampoBase');
+  el.innerHTML = `<div class="cb-pwa-banner-content"><div class="cb-pwa-banner-leading"><div class="cb-pwa-app-mark">CB</div><div class="cb-pwa-banner-copy"><span class="cb-pwa-kicker">CAMPOBASE EN TU EQUIPO</span><strong>Instala CampoBase como aplicación</strong><p>Ábrela en su propia ventana, con acceso rápido y soporte sin conexión.</p>${deviceChips()}</div></div><div class="cb-pwa-banner-actions"><button id="cb-pwa-install-btn" class="primary compact" type="button">Instalar ahora</button><button id="cb-pwa-how-btn" class="secondary compact" type="button">Cómo instalar</button><button id="cb-pwa-never-btn" class="ghost compact" type="button">No volver a mostrar</button><button id="cb-pwa-dismiss-btn" class="ghost compact" type="button">Ahora no</button></div></div>`;
+  return el;
 }
 
 function createSettingsPanel() {
-  const panel = document.createElement('article');
-  panel.className = 'panel';
-  panel.id = 'cb-install-settings-panel';
-  panel.innerHTML = `
-    <div class="panel-head">
-      <h3>Aplicación e Instalación</h3>
-      <p class="meta">Instala CampoBase en tu dispositivo para abrirlo en su propia ventana, sin barras de navegación y con acceso rápido.</p>
-    </div>
-    <div id="cb-install-status-box" class="cb-install-status-box">
-      <button type="button" id="cb-settings-install-btn" class="primary compact">Instalar CampoBase en este equipo</button>
-      <p id="cb-settings-installed-msg" class="meta hidden">CampoBase ya está instalada y funcionando como aplicación en este dispositivo.</p>
-      <button type="button" id="cb-settings-restore-pwa-btn" class="secondary compact hidden">Volver a mostrar aviso de instalación</button>
-    </div>
-  `;
-  return panel;
+  const [pIcon, pLabel] = platformInfo();
+  const [, bLabel] = browserInfo();
+  const el = document.createElement('article');
+  el.className = 'panel cb-install-settings-card';
+  el.id = 'cb-install-settings-panel';
+  el.innerHTML = `<div class="cb-install-settings-head"><div class="cb-install-settings-icon">${svg(pIcon)}</div><div><p class="eyebrow">Aplicación</p><h3>Instalar CampoBase</h3><p class="meta">Úsala como una app en ${pLabel} con ${bLabel}.</p></div></div>${deviceChips()}<div id="cb-install-status-box" class="cb-install-status-box"><button id="cb-settings-install-btn" class="primary compact" type="button">Instalar CampoBase</button><button id="cb-settings-how-btn" class="secondary compact" type="button">Ver instrucciones</button><p id="cb-settings-installed-msg" class="meta hidden">CampoBase ya está instalada y funcionando como aplicación en este dispositivo.</p><button id="cb-settings-restore-pwa-btn" class="secondary compact hidden" type="button">Volver a mostrar aviso de instalación</button></div>`;
+  return el;
 }
 
-function ensureInstallUi() {
-  if (typeof document === 'undefined') return;
+function ensureUi() {
   ensureStylesheet();
-
   if (!document.getElementById('cb-pwa-install-banner')) {
-    const banner = createInstallBanner();
+    const banner = createBanner();
     const topbar = document.querySelector('.topbar');
-    if (topbar?.parentNode) topbar.parentNode.insertBefore(banner, topbar);
-    else document.body.prepend(banner);
+    topbar?.parentNode ? topbar.parentNode.insertBefore(banner, topbar) : document.body.prepend(banner);
   }
-
-  if (!document.getElementById('cb-install-settings-panel')) {
-    const settingsGrid = document.querySelector('#ajustes .settings-grid');
-    if (settingsGrid) settingsGrid.appendChild(createSettingsPanel());
-  }
+  if (!document.getElementById('cb-install-settings-panel')) document.querySelector('#ajustes .settings-grid')?.appendChild(createSettingsPanel());
 }
 
-function setHidden(element, hidden) {
-  if (!element) return;
-  element.classList.toggle('hidden', hidden);
-  element.classList.toggle('cb-hidden', hidden);
+function setHidden(el, hidden) {
+  if (!el) return;
+  el.classList.toggle('hidden', hidden);
+  el.classList.toggle('cb-hidden', hidden);
 }
 
-function updateInstallUi({ forceBanner = false } = {}) {
-  if (typeof document === 'undefined') return;
-  ensureInstallUi();
-
+function updateUi({ forceBanner = false } = {}) {
+  ensureUi();
   const installed = isStandalone() || isAppInstalled;
   const permanent = isPermanentlyDismissed();
   const sessionDismissed = isDismissedForSession();
-  const label = getInstallButtonLabel();
-
+  const installLabel = deferredInstallPrompt ? 'Instalar ahora' : getInstallButtonLabel();
   const banner = document.getElementById('cb-pwa-install-banner');
-  const bannerButton = document.getElementById('cb-pwa-install-btn');
-  const settingsButton = document.getElementById('cb-settings-install-btn');
-  const installedMessage = document.getElementById('cb-settings-installed-msg');
-  const restoreButton = document.getElementById('cb-settings-restore-pwa-btn');
-
-  if (bannerButton) bannerButton.textContent = label;
-  if (settingsButton) settingsButton.textContent = label;
-
-  setHidden(settingsButton, installed);
-  setHidden(installedMessage, !installed);
-  setHidden(restoreButton, installed || !permanent);
-
-  const showBanner = !installed && !permanent && (forceBanner || !sessionDismissed);
-  setHidden(banner, !showBanner);
+  const mainBtn = document.getElementById('cb-pwa-install-btn');
+  const settingsBtn = document.getElementById('cb-settings-install-btn');
+  if (mainBtn) mainBtn.textContent = installLabel;
+  if (settingsBtn) settingsBtn.textContent = installLabel;
+  setHidden(settingsBtn, installed);
+  setHidden(document.getElementById('cb-settings-how-btn'), installed);
+  setHidden(document.getElementById('cb-settings-installed-msg'), !installed);
+  setHidden(document.getElementById('cb-settings-restore-pwa-btn'), installed || !permanent);
+  setHidden(banner, installed || permanent || (!forceBanner && sessionDismissed));
 }
 
-function removeInstallModal(modal) {
-  if (!modal) return;
-  modal.remove();
+function showModal(title, kicker, iconKind, intro, steps) {
+  document.querySelector('.cb-install-modal-backdrop')?.remove();
+  const modal = document.createElement('div');
+  modal.className = 'cb-install-modal-backdrop';
+  modal.innerHTML = `<div class="cb-install-modal-card" role="dialog" aria-modal="true"><div class="cb-install-modal-hero"><div class="cb-install-modal-logo">${svg(iconKind)}</div><div><p class="cb-pwa-kicker">${kicker}</p><h3>${title}</h3></div></div><div class="cb-install-modal-body"><p>${intro}</p><ol class="cb-install-steps">${steps.map((s, i) => `<li><span>${i + 1}</span><div>${s}</div></li>`).join('')}</ol></div><div class="cb-install-modal-footer"><button class="primary" type="button" data-cb-install-close>Cerrar</button></div></div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('[data-cb-install-close]')?.addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
-function bindModalClose(modal) {
-  modal.querySelectorAll('[data-cb-install-close]').forEach((button) => {
-    button.addEventListener('click', () => removeInstallModal(modal));
-  });
-  modal.addEventListener('click', (event) => {
-    if (event.target === modal) removeInstallModal(modal);
-  });
-}
-
-/** Instrucciones de instalación para Safari en iPhone/iPad. */
 export function showIosInstallInstructions() {
-  if (typeof document === 'undefined') return;
-  document.getElementById('cb-ios-install-modal')?.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'cb-ios-install-modal';
-  modal.className = 'cb-install-modal-backdrop';
-  modal.innerHTML = `
-    <div class="cb-install-modal-card" role="dialog" aria-modal="true" aria-labelledby="cb-ios-modal-title">
-      <div class="cb-install-modal-head">
-        <h3 id="cb-ios-modal-title">Instalar CampoBase en iPhone / iPad</h3>
-      </div>
-      <div class="cb-install-modal-body">
-        <p>Para usar CampoBase a pantalla completa y sin barras de navegación:</p>
-        <ol class="cb-install-steps">
-          <li><strong>1.</strong> Pulsa <strong>Compartir</strong> en Safari (cuadrado con flecha hacia arriba).</li>
-          <li><strong>2.</strong> Desliza y toca <strong>«Añadir a pantalla de inicio»</strong>.</li>
-          <li><strong>3.</strong> Pulsa <strong>«Añadir»</strong> arriba a la derecha.</li>
-        </ol>
-      </div>
-      <div class="cb-install-modal-footer">
-        <button type="button" class="primary" data-cb-install-close>Cerrar</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  bindModalClose(modal);
+  showModal('Instalar CampoBase', 'IPHONE / IPAD', 'apple', 'En iPhone y iPad la instalación se hace desde el menú Compartir de Safari.', ['Pulsa <strong>Compartir</strong> en Safari.', 'Elige <strong>«Añadir a pantalla de inicio»</strong>.', 'Pulsa <strong>«Añadir»</strong>. CampoBase quedará como una app.']);
 }
 
-/** Instrucciones de respaldo cuando el navegador no ofrece el prompt automático. */
-export function showDesktopInstallInstructions(platform = detectPlatform()) {
-  if (typeof document === 'undefined') return;
-  document.getElementById('cb-desktop-install-modal')?.remove();
-
-  const titles = {
-    mac: 'Instalar CampoBase en Mac',
-    windows: 'Instalar CampoBase en Windows',
-    android: 'Instalar CampoBase en Android',
-    linux: 'Instalar CampoBase como App',
-    other: 'Instalar CampoBase como App',
-  };
-  const title = titles[platform] || titles.other;
-  const isMac = platform === 'mac';
-  const isAndroid = platform === 'android';
-
-  const modal = document.createElement('div');
-  modal.id = 'cb-desktop-install-modal';
-  modal.className = 'cb-install-modal-backdrop';
-  modal.innerHTML = `
-    <div class="cb-install-modal-card" role="dialog" aria-modal="true" aria-labelledby="cb-desk-modal-title">
-      <div class="cb-install-modal-head">
-        <h3 id="cb-desk-modal-title">${title}</h3>
-      </div>
-      <div class="cb-install-modal-body">
-        ${isAndroid ? `
-          <p>Si el botón de instalación no aparece automáticamente, abre el menú del navegador y elige <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.</p>
-        ` : `
-          <p>Puedes instalar CampoBase desde las opciones de tu navegador:</p>
-          <ol class="cb-install-steps">
-            <li><strong>Chrome o Edge:</strong> usa el icono de instalación de la barra de direcciones o el menú del navegador para instalar la página como aplicación.</li>
-            ${isMac ? '<li><strong>Safari en Mac:</strong> abre el menú <strong>Archivo</strong> y selecciona <strong>Añadir al Dock</strong>.</li>' : ''}
-          </ol>
-        `}
-      </div>
-      <div class="cb-install-modal-footer">
-        <button type="button" class="primary" data-cb-install-close>Cerrar</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  bindModalClose(modal);
+export function showDesktopInstallInstructions(platform = detectPlatform(), browser = detectBrowser()) {
+  const [pIcon, pLabel] = platformInfo(platform);
+  const [, bLabel] = browserInfo(browser);
+  let steps;
+  if (platform === 'mac' && browser === 'safari') steps = ['Abre el menú <strong>Archivo</strong> de Safari.', 'Selecciona <strong>«Añadir al Dock»</strong>.', 'Confirma para abrir CampoBase como una app independiente.'];
+  else if (platform === 'android') steps = [`Abre el menú de <strong>${bLabel}</strong>.`, 'Busca <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.', 'Confirma la instalación.'];
+  else steps = [`Busca el icono de instalación en la barra o abre el menú de <strong>${bLabel}</strong>.`, 'Elige <strong>«Instalar aplicación»</strong> o <strong>«Instalar página como aplicación»</strong>.', 'Confirma para abrir CampoBase en su propia ventana.'];
+  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, pIcon, 'El navegador decide si muestra el icono de instalación en la barra. Si no aparece, puedes instalar CampoBase desde su menú.', steps);
 }
 
-/** Inicia el prompt nativo o muestra las instrucciones apropiadas. */
+function showInstructions() {
+  if (detectPlatform() === 'ios') showIosInstallInstructions();
+  else showDesktopInstallInstructions();
+}
+
 export async function promptInstall() {
-  const platform = detectPlatform();
-
-  if (platform === 'ios') {
+  if (detectPlatform() === 'ios') {
     showIosInstallInstructions();
     return { outcome: 'ios' };
   }
-
   if (!deferredInstallPrompt) {
-    showDesktopInstallInstructions(platform);
+    showDesktopInstallInstructions();
     return { outcome: 'unsupported' };
   }
-
   try {
     deferredInstallPrompt.prompt();
     const choice = await deferredInstallPrompt.userChoice;
     if (choice.outcome === 'accepted') {
       isAppInstalled = true;
       deferredInstallPrompt = null;
-      updateInstallUi();
+      updateUi();
     }
     return choice;
   } catch (error) {
@@ -311,61 +224,37 @@ export async function promptInstall() {
   }
 }
 
-function bindUiEvents() {
+function bindEvents() {
   document.getElementById('cb-pwa-install-btn')?.addEventListener('click', () => promptInstall());
+  document.getElementById('cb-pwa-how-btn')?.addEventListener('click', showInstructions);
   document.getElementById('cb-settings-install-btn')?.addEventListener('click', () => promptInstall());
-
-  document.getElementById('cb-pwa-dismiss-btn')?.addEventListener('click', () => {
-    setDismissedForSession();
-    updateInstallUi();
-  });
-
-  document.getElementById('cb-pwa-never-btn')?.addEventListener('click', () => {
-    setPermanentlyDismissed(true);
-    updateInstallUi();
-  });
-
-  document.getElementById('cb-settings-restore-pwa-btn')?.addEventListener('click', () => {
-    setPermanentlyDismissed(false);
-    updateInstallUi({ forceBanner: true });
-  });
-
-  // Compatibilidad con el contrato de la fase original de Antigravity.
-  window.cbDismissPwa = (permanent) => {
-    if (permanent) setPermanentlyDismissed(true);
-    else setDismissedForSession();
-    updateInstallUi();
-  };
+  document.getElementById('cb-settings-how-btn')?.addEventListener('click', showInstructions);
+  document.getElementById('cb-pwa-dismiss-btn')?.addEventListener('click', () => { dismissForSession(); updateUi(); });
+  document.getElementById('cb-pwa-never-btn')?.addEventListener('click', () => { setPermanentlyDismissed(true); updateUi(); });
+  document.getElementById('cb-settings-restore-pwa-btn')?.addEventListener('click', () => { setPermanentlyDismissed(false); updateUi({ forceBanner: true }); });
+  window.cbDismissPwa = permanent => { permanent ? setPermanentlyDismissed(true) : dismissForSession(); updateUi(); };
 }
 
-/** Inicializa la Fase 1 sin tocar la lógica principal de CampoBase. */
 export function initPwaInstallManager() {
-  if (typeof window === 'undefined' || typeof document === 'undefined' || initialized) return;
+  if (initialized || typeof window === 'undefined' || typeof document === 'undefined') return;
   initialized = true;
-
-  ensureInstallUi();
-  bindUiEvents();
-  updateInstallUi();
-
-  window.addEventListener('beforeinstallprompt', (event) => {
+  ensureUi();
+  bindEvents();
+  updateUi();
+  window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    updateInstallUi();
+    updateUi();
   });
-
   window.addEventListener('appinstalled', () => {
     isAppInstalled = true;
     deferredInstallPrompt = null;
-    updateInstallUi();
+    updateUi();
   });
-
-  window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', () => updateInstallUi());
+  window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', () => updateUi());
 }
 
 if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPwaInstallManager, { once: true });
-  } else {
-    initPwaInstallManager();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPwaInstallManager, { once: true });
+  else initPwaInstallManager();
 }
