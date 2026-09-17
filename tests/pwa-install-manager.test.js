@@ -24,12 +24,12 @@ test('detecta Windows con Edge', () => {
   const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0';
   assert.equal(detectPlatform(ua), 'windows');
   assert.equal(detectBrowser(ua), 'edge');
-  assert.equal(getInstallButtonLabel('windows'), 'Instalar CampoBase en Windows');
+  assert.equal(getInstallButtonLabel('windows'), 'Instalar aplicación');
 });
 
 test('detecta Mac con Safari', () => {
   const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15';
   assert.equal(detectPlatform(ua), 'mac');
   assert.equal(detectBrowser(ua), 'safari');
-  assert.equal(getInstallButtonLabel('mac'), 'Instalar CampoBase en Mac');
+  assert.equal(getInstallButtonLabel('mac'), 'Instalar aplicación');
 });
