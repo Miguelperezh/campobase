@@ -16,13 +16,26 @@ function checkResult(result) {
   return result.data;
 }
 
-export function createCampoBaseCloudStore() {
+export function getCampoBaseSupabaseClient() {
   if (!globalThis.supabase?.createClient) {
     throw new Error('No se ha podido cargar el cliente oficial de Supabase.');
   }
-  const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    realtime: { params: { eventsPerSecond: 2 } },
+  if (!globalThis.__cbSupabaseClient) {
+    globalThis.__cbSupabaseClient = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      realtime: { params: { eventsPerSecond: 2 } },
+    });
+  }
+  return globalThis.__cbSupabaseClient;
+}
+
+export function createCampoBaseCloudStore() {
+  const client = getCampoBaseSupabaseClient();
+
+  // Fase 2 se carga como módulo aislado sobre el mismo cliente existente.
+  // No modifica la autenticación actual ni la sincronización deportiva.
+  void import('./promo-codes-admin.js?v=1').catch((error) => {
+    console.warn('No se pudo cargar el módulo de promociones:', error);
   });
 
   return {
