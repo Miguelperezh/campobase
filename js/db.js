@@ -1,13 +1,19 @@
 import { buildMutation, mergeCloudRecord, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
+import { getBoundSaasUserId, userDatabaseName } from './auth-manager.js';
 
 const REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
 
+function boundDatabaseName() {
+  const userId = getBoundSaasUserId();
+  return userId ? userDatabaseName(userId) : REAL_DB_NAME;
+}
+
 var databasePromises = new Map();
-var activeDatabaseName = REAL_DB_NAME;
+var activeDatabaseName = boundDatabaseName();
 var demoSession = null;
 var demoStores = null;
 var cloudStore = null;
@@ -37,9 +43,14 @@ export function configureDemoDatabase(session, now = Date.now()) {
   activeDatabaseName = demoDatabaseName(session);
 }
 
+export function configureUserDatabase(userId) {
+  demoSession = null;
+  activeDatabaseName = userDatabaseName(userId);
+}
+
 export function configureRealDatabase() {
   demoSession = null;
-  activeDatabaseName = REAL_DB_NAME;
+  activeDatabaseName = boundDatabaseName();
 }
 
 export async function deleteDemoDatabase(session) {
