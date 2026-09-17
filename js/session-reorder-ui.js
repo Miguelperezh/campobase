@@ -1,4 +1,5 @@
 import './detail-badge-runtime-fix.js?v=4';
+import './staff-card-layout-fix.js?v=1';
 
 const hasBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
