@@ -5,6 +5,7 @@ export const REMEMBERED_ACCOUNT_STORAGE_KEY = 'campobase.rememberedAccount.v1';
 export const LEGACY_DATABASE_NAME = 'campobase';
 export const DATABASE_VERSION = 2;
 export const DATABASE_STORES = ['players', 'callups', 'matches', 'trainings', 'settings', 'syncQueue'];
+export const PRODUCTION_APP_URL = 'https://miguelperezh.github.io/campobase/';
 
 export function normalizeUsername(raw = '') {
   return String(raw).trim().toLocaleLowerCase('es').replace(/^@/, '').replace(/\s+/g, '_');
@@ -158,6 +159,7 @@ export async function registerCoachAccount(client, { email, username, password, 
     email: cleanEmail,
     password,
     options: {
+      emailRedirectTo: PRODUCTION_APP_URL,
       data: {
         username: cleanUsername,
         full_name: cleanFullName,
@@ -177,15 +179,8 @@ export async function sendPasswordResetEmail(client, emailOrUser) {
     ? clean.toLocaleLowerCase('es')
     : await resolveUsernameEmail(client, clean);
 
-  let redirectTo;
-  if (typeof window !== 'undefined' && window.location) {
-    const url = new URL(window.location.href);
-    url.search = '';
-    url.hash = '';
-    redirectTo = url.href;
-  }
-
-  const { error } = await client.auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
+  const redirectTo = PRODUCTION_APP_URL;
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
   return { success: true };
 }
