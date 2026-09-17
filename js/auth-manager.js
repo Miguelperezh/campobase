@@ -1,4 +1,7 @@
+import { hashPin } from './domain.js';
+
 export const SAAS_USER_STORAGE_KEY = 'campobase.saasUserId';
+export const REMEMBERED_ACCOUNT_STORAGE_KEY = 'campobase.rememberedAccount.v1';
 export const LEGACY_DATABASE_NAME = 'campobase';
 export const DATABASE_VERSION = 2;
 export const DATABASE_STORES = ['players', 'callups', 'matches', 'trainings', 'settings', 'syncQueue'];
@@ -24,6 +27,36 @@ export function setBoundSaasUserId(userId) {
 
 export function clearBoundSaasUserId() {
   try { localStorage.removeItem(SAAS_USER_STORAGE_KEY); } catch { /* Sin almacenamiento local que limpiar. */ }
+}
+
+export function getRememberedSaasAccount() {
+  try {
+    const raw = localStorage.getItem(REMEMBERED_ACCOUNT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.id) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberSaasAccount(user, profile = {}) {
+  if (!user?.id) throw new TypeError('Falta el usuario que se quiere recordar.');
+  const account = {
+    id: String(user.id),
+    email: String(profile?.email || user.email || '').trim(),
+    username: String(profile?.username || user?.user_metadata?.username || '').trim(),
+    fullName: String(profile?.full_name || user?.user_metadata?.full_name || '').trim(),
+    clubName: String(profile?.club_name || user?.user_metadata?.club_name || '').trim(),
+    rememberedAt: Date.now(),
+  };
+  try { localStorage.setItem(REMEMBERED_ACCOUNT_STORAGE_KEY, JSON.stringify(account)); } catch { /* El acceso seguirá funcionando sin recordar cuenta. */ }
+  return account;
+}
+
+export function clearRememberedSaasAccount() {
+  try { localStorage.removeItem(REMEMBERED_ACCOUNT_STORAGE_KEY); } catch { /* Sin almacenamiento local que limpiar. */ }
 }
 
 export function userDatabaseName(userId) {
@@ -60,22 +93,49 @@ async function resolveUsernameEmail(client, username) {
   return email;
 }
 
+async function legacyOwnerPasswordFromPin(pin) {
+  const cleanPin = String(pin || '').trim();
+  if (!/^\d{4,8}$/.test(cleanPin) || typeof indexedDB === 'undefined') return '';
+  let db;
+  try {
+    db = await openRawDatabase(LEGACY_DATABASE_NAME);
+    const transaction = db.transaction('settings', 'readonly');
+    const main = await requestResult(transaction.objectStore('settings').get('main'));
+    await transactionDone(transaction);
+    if (!main?.pinSalt || !main?.ownerPinHash) return '';
+    const digest = await hashPin(cleanPin, main.pinSalt);
+    return digest === main.ownerPinHash ? digest : '';
+  } catch {
+    return '';
+  } finally {
+    try { db?.close(); } catch { /* noop */ }
+  }
+}
+
 export async function loginWithEmailOrUsername(client, identifier, password) {
   if (!client?.auth) throw new Error('No se ha podido iniciar el acceso.');
   const cleanId = String(identifier).trim();
   if (!cleanId) throw new Error('Introduce tu correo o nombre de usuario.');
-  if (!password) throw new Error('Introduce tu contraseña.');
+  if (!password) throw new Error('Introduce tu contraseña o PIN.');
 
   const targetEmail = classifyIdentifier(cleanId) === 'email'
     ? cleanId.toLocaleLowerCase('es')
     : await resolveUsernameEmail(client, cleanId);
 
-  const { data, error } = await client.auth.signInWithPassword({ email: targetEmail, password });
-  if (error) {
-    if (/invalid login credentials/i.test(error.message || '')) throw new Error('Correo, usuario o contraseña incorrectos.');
-    throw error;
+  let result = await client.auth.signInWithPassword({ email: targetEmail, password: String(password) });
+
+  if (result.error && /invalid login credentials/i.test(result.error.message || '') && /^\d{4,8}$/.test(String(password).trim())) {
+    const derivedPassword = await legacyOwnerPasswordFromPin(password);
+    if (derivedPassword) {
+      result = await client.auth.signInWithPassword({ email: targetEmail, password: derivedPassword });
+    }
   }
-  return data;
+
+  if (result.error) {
+    if (/invalid login credentials/i.test(result.error.message || '')) throw new Error('Correo, usuario, contraseña o PIN incorrectos.');
+    throw result.error;
+  }
+  return result.data;
 }
 
 export async function registerCoachAccount(client, { email, username, password, fullName = '', clubName = '' }) {
