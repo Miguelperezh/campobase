@@ -7,6 +7,7 @@
 
 import { renderTodayDashboard } from './today-dashboard.js?v=2456';
 import { refreshStaffView, initStaffManagement } from './staff-management.js';
+import './pwa-install-manager.js?v=1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
