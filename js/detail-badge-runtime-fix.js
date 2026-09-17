@@ -6,7 +6,7 @@ import { getOne, put } from './db.js';
 
 const STORAGE_KEY = 'campobase.detailBadgeStyle';
 const TARGET_SELECTOR = '.format-badge, .plantilla-staff-role-badge, .staff-badge';
-const OWNED_STYLE_PROPS = ['background', 'color', 'font-family', 'font-weight', 'border-color'];
+const OWNED_STYLE_PROPS = ['background', 'color', '-webkit-text-fill-color', 'font-family', 'font-weight', 'border-color'];
 
 let activeSettings = null;
 let observer = null;
@@ -53,10 +53,11 @@ function applyToElement(element, settings) {
     return;
   }
 
-  // Inline + !important evita que los colores de rol (también !important)
-  // anulen la configuración elegida por el usuario en la app real.
+  // El color seleccionado por el usuario manda siempre sobre los colores
+  // propios de cada rol. Se aplica directamente al texto real del distintivo.
   element.style.setProperty('background', settings.background, 'important');
   element.style.setProperty('color', settings.text, 'important');
+  element.style.setProperty('-webkit-text-fill-color', settings.text, 'important');
   element.style.setProperty('font-family', fontFamily(settings.font), 'important');
   element.style.setProperty('font-weight', settings.bold ? '800' : '500', 'important');
   element.style.setProperty('border-color', 'transparent', 'important');
@@ -138,13 +139,23 @@ async function hydrateSharedSettings() {
 }
 
 function bindExistingSettingsForm() {
-  // El formulario visual sigue siendo exactamente el que ya está validado.
+  // La interfaz visual se mantiene exactamente como está. La diferencia es que
+  // fondo, texto, fuente y negrita se reflejan también EN VIVO en la app real.
+  const applyFromFormLive = (event) => {
+    const form = event.target?.closest?.('#detail-badge-settings-form');
+    if (!form) return;
+    const settings = settingsFromForm(form);
+    if (!settings) return;
+    applyToRealApp(settings);
+  };
+
+  document.addEventListener('input', applyFromFormLive, true);
+  document.addEventListener('change', applyFromFormLive, true);
+
   document.addEventListener('submit', (event) => {
     const form = event.target?.closest?.('#detail-badge-settings-form');
     if (!form) return;
 
-    // El listener original guarda en localStorage. Aquí reforzamos aplicación
-    // real y sincronización en el siguiente turno, sin sustituir su UI.
     window.setTimeout(() => {
       const settings = settingsFromForm(form);
       if (!settings) return;
