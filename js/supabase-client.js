@@ -7,6 +7,7 @@ import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
 import { CLOUD_TABLES } from './sync-core.js';
+import { getBoundSaasUserId } from './auth-manager.js';
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -17,21 +18,63 @@ function checkResult(result) {
   return result.data;
 }
 
+function installIndexedDbUserNamespace() {
+  if (typeof indexedDB === 'undefined' || globalThis.__cbIndexedDbNamespaceInstalled) return;
+  globalThis.__cbIndexedDbNamespaceInstalled = true;
+  const factory = indexedDB;
+  const nativeOpen = factory.open.bind(factory);
+  try {
+    factory.open = (name, version) => {
+      const boundUserId = getBoundSaasUserId();
+      const mappedName = name === 'campobase' && boundUserId ? `campobase_${boundUserId}` : name;
+      return version === undefined ? nativeOpen(mappedName) : nativeOpen(mappedName, version);
+    };
+  } catch {
+    // El aislamiento cloud sigue estando protegido por RLS incluso si un navegador
+    // impide sustituir el método de IndexedDB.
+  }
+}
+
+installIndexedDbUserNamespace();
+
 export function getCampoBaseSupabaseClient() {
   if (!globalThis.supabase?.createClient) {
     throw new Error('No se ha podido cargar el cliente oficial de Supabase.');
   }
   if (!globalThis.__cbSupabaseClient) {
     globalThis.__cbSupabaseClient = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
       realtime: { params: { eventsPerSecond: 2 } },
     });
   }
   return globalThis.__cbSupabaseClient;
 }
 
+export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
+
+async function requireBoundUser(client) {
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  const user = data?.session?.user;
+  const boundUserId = getBoundSaasUserId();
+  if (!user || !boundUserId || user.id !== boundUserId) {
+    const authError = new Error('Inicia sesión para sincronizar esta cuenta.');
+    authError.code = 'CAMPOBASE_AUTH_REQUIRED';
+    throw authError;
+  }
+  return user;
+}
+
 export function createCampoBaseCloudStore() {
   const client = getCampoBaseSupabaseClient();
+
+  void import('./saas-session-guard.js?v=1')
+    .then(({ guardSaasSession }) => guardSaasSession(client))
+    .then(() => import('./saas-auth-ui.js?v=1'))
+    .then(({ initSaasAuth }) => initSaasAuth(client))
+    .catch((error) => {
+      console.warn('No se pudo cargar el acceso de usuario:', error);
+    });
 
   void import('./promo-codes-admin.js?v=4')
     .then(() => import('./promo-codes-ui-v2.js?v=2'))
@@ -41,8 +84,12 @@ export function createCampoBaseCloudStore() {
 
   return {
     async getSnapshot(store) {
+      const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
-      const rows = checkResult(await client.from(table).select('id,payload,updated_at,deleted_at')) ?? [];
+      const rows = checkResult(await client
+        .from(table)
+        .select('id,payload,updated_at,deleted_at,user_id')
+        .eq('user_id', user.id)) ?? [];
       return {
         records: rows.filter(({ deleted_at: deletedAt }) => !deletedAt).map(({ payload }) => payload),
         deletedIds: rows.filter(({ deleted_at: deletedAt }) => Boolean(deletedAt)).map(({ id }) => id),
@@ -51,26 +98,31 @@ export function createCampoBaseCloudStore() {
     },
 
     async upsert(mutation) {
+      const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
+        user_id: user.id,
         id: mutation.recordId,
         payload: mutation.payload,
         updated_at: mutation.queuedAt,
         deleted_at: null,
-      }, { onConflict: 'id' }));
+      }, { onConflict: 'user_id,id' }));
     },
 
     async remove(mutation) {
+      const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
+        user_id: user.id,
         id: mutation.recordId,
         payload: null,
         updated_at: mutation.queuedAt,
         deleted_at: mutation.queuedAt,
-      }, { onConflict: 'id' }));
+      }, { onConflict: 'user_id,id' }));
     },
 
     async uploadVideo(path, file) {
+      await requireBoundUser(client);
       const { data, error } = await client.storage.from(VIDEO_BUCKET).upload(path, file, {
         cacheControl: '3600',
         contentType: file.type || 'video/mp4',
@@ -81,6 +133,7 @@ export function createCampoBaseCloudStore() {
     },
 
     async removeVideo(path) {
+      await requireBoundUser(client);
       const { data, error } = await client.storage.from(VIDEO_BUCKET).remove([path]);
       if (error) throw error;
       return data;
