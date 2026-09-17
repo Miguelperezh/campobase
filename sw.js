@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-250917';
+const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -13,7 +13,7 @@ const ASSETS = [
   './library-v2/data/catalog.json', './library-v2/data/catalog-data.js',
   ...BOARD_PARTS,
   './vendor/supabase.js',
-  './icons/icon-192.svg', './icons/icon-512.svg', './icons/escudo.png',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-192.svg', './icons/icon-512.svg', './icons/escudo.png',
 ];
 
 const REVALIDATE_PATHS = [
