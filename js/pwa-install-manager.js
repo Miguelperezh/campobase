@@ -21,8 +21,12 @@ export function detectPlatform(ua = (typeof navigator !== 'undefined' ? navigato
 }
 
 export function detectBrowser(ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '')) {
+  if (typeof navigator !== 'undefined' && navigator.brave) return 'brave';
+  if (/EdgiOS\//i.test(ua)) return 'edge-ios';
   if (/Edg\//i.test(ua)) return 'edge';
+  if (/OPiOS\//i.test(ua)) return 'opera-ios';
   if (/OPR\//i.test(ua)) return 'opera';
+  if (/SamsungBrowser\//i.test(ua)) return 'samsung';
   if (/CriOS\//i.test(ua)) return 'chrome-ios';
   if (/FxiOS\//i.test(ua)) return 'firefox-ios';
   if (/Chrome\//i.test(ua)) return 'chrome';
@@ -37,12 +41,7 @@ export function isStandalone() {
 }
 
 export function getInstallButtonLabel(platform = detectPlatform()) {
-  return ({
-    mac: 'Instalar CampoBase en Mac',
-    windows: 'Instalar CampoBase en Windows',
-    android: 'Instalar CampoBase en Android',
-    ios: 'Instalar en iPhone / iPad',
-  })[platform] || 'Instalar CampoBase como App';
+  return ({ mac: 'Instalar CampoBase en Mac', windows: 'Instalar CampoBase en Windows', android: 'Instalar CampoBase en Android', ios: 'Instalar en iPhone / iPad' })[platform] || 'Instalar CampoBase como App';
 }
 
 export function isPermanentlyDismissed() {
@@ -88,6 +87,10 @@ function svg(kind) {
     chrome: `<svg ${base}><path fill="currentColor" d="M12 2a10 10 0 0 0-8.7 5h7.2a5 5 0 0 1 8.7 0h-5.4A5 5 0 0 1 9.4 17L6 22A10 10 0 1 0 12 2zm0 7a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>`,
     safari: `<svg ${base}><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="m14.8 8-1.6 5.2L8 14.8l1.6-5.2L14.8 8zm-3.4 3.4-.8 2.6 2.6-.8.8-2.6-2.6.8z"/></svg>`,
     edge: `<svg ${base}><path fill="currentColor" d="M20.4 13.5c0-5-3.2-8.4-8.1-8.4-4.4 0-8.3 3.4-8.3 8.3 0 .6.1 1.3.2 1.9 1-2.4 3.3-4.1 6.1-4.1 3 0 5.5 2 6.2 4.8-1.2-1.1-2.8-1.8-4.6-1.8-2.9 0-5.4 1.9-6.3 4.6 1.6 1.4 3.7 2.2 6 2.2 4.9 0 8.8-3.2 8.8-7.5z"/></svg>`,
+    firefox: `<svg ${base}><path fill="currentColor" d="M20.7 8.4c-.5-1.4-1.5-2.7-2.7-3.6.1.6 0 1.3-.3 1.9-.9-1-2.3-1.7-3.8-1.8-1.7-.1-3.3.5-4.5 1.6.9-.1 1.8.1 2.5.6-2.2.3-4 1.7-4.9 3.6-.9 2-.6 4.4.8 6.1 1.6 2 4.2 3 6.7 2.5 2.7-.5 5-2.5 5.8-5.1.6-1.9.5-4-.2-5.8h.6zM13 17.1c-2.5.5-4.9-1.2-5.3-3.7-.2-1.4.2-2.8 1.2-3.8-.2 2 1.2 3.9 3.2 4.2 1.7.3 3.3-.6 4-2.1.2.4.3.8.3 1.2.4 2-1.1 3.8-3.4 4.2z"/></svg>`,
+    opera: `<svg ${base}><path fill="currentColor" d="M12 2C6.7 2 3.5 6.2 3.5 12S6.7 22 12 22s8.5-4.2 8.5-10S17.3 2 12 2zm0 3.3c2.7 0 4.4 2.7 4.4 6.7s-1.7 6.7-4.4 6.7S7.6 16 7.6 12 9.3 5.3 12 5.3z"/></svg>`,
+    brave: `<svg ${base}><path fill="currentColor" d="m12 2 5.8 1.8 2.7 4.8-1 8.2L12 22l-7.5-5.2-1-8.2 2.7-4.8L12 2zm0 4.1L8.1 7.3 6.4 10l.6 4.8 5 3.4 5-3.4.6-4.8-1.7-2.7L12 6.1z"/></svg>`,
+    samsung: `<svg ${base}><ellipse cx="12" cy="12" rx="9" ry="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6.5 13.6c1.8 1.7 7.8 2.5 11-1.1M7.3 9.5c2.4-1.2 6.9-1.5 9.6.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
     generic: `<svg ${base}><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2"/></svg>`,
   };
   return icons[kind] || icons.generic;
@@ -104,10 +107,12 @@ function platformInfo(platform = detectPlatform()) {
 
 function browserInfo(browser = detectBrowser()) {
   if (browser === 'safari') return ['safari', 'Safari'];
-  if (browser === 'edge') return ['edge', 'Edge'];
+  if (browser === 'edge' || browser === 'edge-ios') return ['edge', 'Edge'];
   if (browser === 'chrome' || browser === 'chrome-ios') return ['chrome', 'Chrome'];
-  if (browser === 'firefox' || browser === 'firefox-ios') return ['generic', 'Firefox'];
-  if (browser === 'opera') return ['generic', 'Opera'];
+  if (browser === 'firefox' || browser === 'firefox-ios') return ['firefox', 'Firefox'];
+  if (browser === 'opera' || browser === 'opera-ios') return ['opera', 'Opera'];
+  if (browser === 'brave') return ['brave', 'Brave'];
+  if (browser === 'samsung') return ['samsung', 'Samsung Internet'];
   return ['generic', 'Navegador'];
 }
 
@@ -129,11 +134,11 @@ function createBanner() {
 
 function createSettingsPanel() {
   const [pIcon, pLabel] = platformInfo();
-  const [, bLabel] = browserInfo();
+  const [bIcon, bLabel] = browserInfo();
   const el = document.createElement('article');
   el.className = 'panel cb-install-settings-card';
   el.id = 'cb-install-settings-panel';
-  el.innerHTML = `<div class="cb-install-settings-head"><div class="cb-install-settings-icon">${svg(pIcon)}</div><div><p class="eyebrow">Aplicación</p><h3>Instalar CampoBase</h3><p class="meta">Úsala como una app en ${pLabel} con ${bLabel}.</p></div></div>${deviceChips()}<div id="cb-install-status-box" class="cb-install-status-box"><button id="cb-settings-install-btn" class="primary compact" type="button">Instalar CampoBase</button><button id="cb-settings-how-btn" class="secondary compact" type="button">Ver instrucciones</button><p id="cb-settings-installed-msg" class="meta hidden">CampoBase ya está instalada y funcionando como aplicación en este dispositivo.</p><button id="cb-settings-restore-pwa-btn" class="secondary compact hidden" type="button">Volver a mostrar aviso de instalación</button></div>`;
+  el.innerHTML = `<div class="cb-install-settings-head"><div class="cb-install-settings-icon">${svg(pIcon)}</div><div><p class="eyebrow">Aplicación</p><h3>Instalar CampoBase</h3><p class="meta">Úsala como una app en ${pLabel} con ${bLabel}.</p></div></div><div class="cb-pwa-platform-row cb-pwa-platform-row-settings"><span class="cb-pwa-platform-chip">${svg(pIcon)}<span>${pLabel}</span></span><span class="cb-pwa-platform-chip">${svg(bIcon)}<span>${bLabel}</span></span></div><div id="cb-install-status-box" class="cb-install-status-box"><button id="cb-settings-install-btn" class="primary compact" type="button">Instalar CampoBase</button><button id="cb-settings-how-btn" class="secondary compact" type="button">Ver instrucciones</button><p id="cb-settings-installed-msg" class="meta hidden">CampoBase ya está instalada y funcionando como aplicación en este dispositivo.</p><button id="cb-settings-restore-pwa-btn" class="secondary compact hidden" type="button">Volver a mostrar aviso de instalación</button></div>`;
   return el;
 }
 
@@ -171,28 +176,50 @@ function updateUi({ forceBanner = false } = {}) {
   setHidden(banner, installed || permanent || (!forceBanner && sessionDismissed));
 }
 
-function showModal(title, kicker, iconKind, intro, steps) {
+function showModal(title, kicker, iconKind, intro, steps, note = '') {
   document.querySelector('.cb-install-modal-backdrop')?.remove();
   const modal = document.createElement('div');
   modal.className = 'cb-install-modal-backdrop';
-  modal.innerHTML = `<div class="cb-install-modal-card" role="dialog" aria-modal="true"><div class="cb-install-modal-hero"><div class="cb-install-modal-logo">${svg(iconKind)}</div><div><p class="cb-pwa-kicker">${kicker}</p><h3>${title}</h3></div></div><div class="cb-install-modal-body"><p>${intro}</p><ol class="cb-install-steps">${steps.map((s, i) => `<li><span>${i + 1}</span><div>${s}</div></li>`).join('')}</ol></div><div class="cb-install-modal-footer"><button class="primary" type="button" data-cb-install-close>Cerrar</button></div></div>`;
+  modal.innerHTML = `<div class="cb-install-modal-card" role="dialog" aria-modal="true"><div class="cb-install-modal-hero"><div class="cb-install-modal-logo">${svg(iconKind)}</div><div><p class="cb-pwa-kicker">${kicker}</p><h3>${title}</h3></div></div><div class="cb-install-modal-body"><p>${intro}</p><ol class="cb-install-steps">${steps.map((s, i) => `<li><span>${i + 1}</span><div>${s}</div></li>`).join('')}</ol>${note ? `<p class="meta" style="margin-top:.85rem">${note}</p>` : ''}</div><div class="cb-install-modal-footer"><button class="primary" type="button" data-cb-install-close>Cerrar</button></div></div>`;
   document.body.appendChild(modal);
   modal.querySelector('[data-cb-install-close]')?.addEventListener('click', () => modal.remove());
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
-export function showIosInstallInstructions() {
-  showModal('Instalar CampoBase', 'IPHONE / IPAD', 'apple', 'En iPhone y iPad la instalación se hace desde el menú Compartir de Safari.', ['Pulsa <strong>Compartir</strong> en Safari.', 'Elige <strong>«Añadir a pantalla de inicio»</strong>.', 'Pulsa <strong>«Añadir»</strong>. CampoBase quedará como una app.']);
+export function showIosInstallInstructions(browser = detectBrowser()) {
+  const [icon, label] = browserInfo(browser);
+  const safari = browser === 'safari';
+  const chrome = browser === 'chrome-ios';
+  const edge = browser === 'edge-ios';
+  const firefox = browser === 'firefox-ios';
+  const shareText = safari ? 'Pulsa <strong>Compartir</strong> en Safari.' : `Pulsa <strong>Compartir</strong> en ${label}.`;
+  const note = (!safari && !chrome && !edge && !firefox) ? 'Si tu navegador no ofrece «Añadir a pantalla de inicio», abre CampoBase en Safari y repite estos pasos.' : '';
+  showModal('Instalar CampoBase', `IPHONE / IPAD · ${label.toUpperCase()}`, icon === 'generic' ? 'apple' : icon, 'En iPhone y iPad la instalación se hace desde el menú Compartir del navegador.', [shareText, 'Elige <strong>«Añadir a pantalla de inicio»</strong>.', safari ? 'Activa <strong>«Abrir como app web»</strong> si aparece y pulsa <strong>«Añadir»</strong>.' : 'Confirma con <strong>«Añadir»</strong>. CampoBase quedará accesible desde la pantalla de inicio.'], note);
 }
 
 export function showDesktopInstallInstructions(platform = detectPlatform(), browser = detectBrowser()) {
   const [pIcon, pLabel] = platformInfo(platform);
   const [, bLabel] = browserInfo(browser);
+  let intro = 'El navegador decide si muestra el icono de instalación en la barra. Si no aparece, usa su menú de instalación.';
   let steps;
-  if (platform === 'mac' && browser === 'safari') steps = ['Abre el menú <strong>Archivo</strong> de Safari.', 'Selecciona <strong>«Añadir al Dock»</strong>.', 'Confirma para abrir CampoBase como una app independiente.'];
-  else if (platform === 'android') steps = [`Abre el menú de <strong>${bLabel}</strong>.`, 'Busca <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.', 'Confirma la instalación.'];
-  else steps = [`Busca el icono de instalación en la barra o abre el menú de <strong>${bLabel}</strong>.`, 'Elige <strong>«Instalar aplicación»</strong> o <strong>«Instalar página como aplicación»</strong>.', 'Confirma para abrir CampoBase en su propia ventana.'];
-  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, pIcon, 'El navegador decide si muestra el icono de instalación en la barra. Si no aparece, puedes instalar CampoBase desde su menú.', steps);
+  let note = '';
+
+  if (platform === 'mac' && browser === 'safari') {
+    intro = 'Safari permite guardar CampoBase como una app web independiente en macOS.';
+    steps = ['Abre el menú <strong>Archivo</strong> de Safari o pulsa <strong>Compartir</strong>.', 'Selecciona <strong>«Añadir al Dock»</strong>.', 'Confirma para abrir CampoBase como una app independiente.'];
+  } else if (platform === 'windows' && browser === 'firefox') {
+    intro = 'Firefox para Windows puede instalar sitios como aplicaciones web desde la barra de direcciones.';
+    steps = ['Busca el botón de <strong>aplicaciones web</strong> en la barra de direcciones.', 'Pulsa el botón para instalar CampoBase.', 'La app quedará disponible como aplicación en Windows.'];
+  } else if (platform === 'mac' && browser === 'firefox') {
+    steps = ['Abre CampoBase en <strong>Safari</strong>, <strong>Chrome</strong> o <strong>Edge</strong>.', 'Usa la opción de instalación de ese navegador.', 'Confirma para crear la app de CampoBase.'];
+    note = 'Firefox en Mac no ofrece el mismo flujo nativo de instalación de aplicaciones web.';
+  } else if (platform === 'android') {
+    steps = [`Abre el menú de <strong>${bLabel}</strong>.`, 'Busca <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.', 'Confirma la instalación.'];
+  } else {
+    steps = [`Busca el icono de instalación en la barra o abre el menú de <strong>${bLabel}</strong>.`, 'Elige <strong>«Instalar aplicación»</strong>, <strong>«Instalar página como aplicación»</strong> o la opción equivalente.', 'Confirma para abrir CampoBase en su propia ventana.'];
+  }
+
+  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, pIcon, intro, steps, note);
 }
 
 function showInstructions() {
@@ -203,11 +230,11 @@ function showInstructions() {
 export async function promptInstall() {
   if (detectPlatform() === 'ios') {
     showIosInstallInstructions();
-    return { outcome: 'ios' };
+    return { outcome: 'manual-ios' };
   }
   if (!deferredInstallPrompt) {
     showDesktopInstallInstructions();
-    return { outcome: 'unsupported' };
+    return { outcome: 'manual' };
   }
   try {
     deferredInstallPrompt.prompt();
@@ -220,6 +247,7 @@ export async function promptInstall() {
     return choice;
   } catch (error) {
     console.warn('[PWA] No se pudo abrir el instalador:', error);
+    showDesktopInstallInstructions();
     return { outcome: 'dismissed' };
   }
 }
