@@ -34,7 +34,7 @@ export function createCampoBaseCloudStore() {
 
   // Fase 2 se carga como módulo aislado sobre el mismo cliente existente.
   // No modifica la autenticación actual ni la sincronización deportiva.
-  void import('./promo-codes-admin.js?v=2')
+  void import('./promo-codes-admin.js?v=3')
     .then(() => import('./promo-codes-ui-v2.js?v=1'))
     .catch((error) => {
       console.warn('No se pudo cargar el módulo de promociones:', error);
