@@ -73,6 +73,8 @@ export function createCampoBaseCloudStore() {
     .then(({ guardSaasSession }) => guardSaasSession(client))
     .then(() => import('./saas-auth-ui-v2.js?v=1'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
+    .then(() => import('./legacy-data-link-guard.js?v=1'))
+    .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
     .catch((error) => {
       console.warn('No se pudo cargar el acceso de usuario:', error);
     });
