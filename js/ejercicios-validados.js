@@ -17,11 +17,31 @@ export function findValidatedExercise(id) {
   return EJERCICIOS_NUEVO_FORMATO.find((item) => item.id === id) || findValidatedExerciseBase(id);
 }
 
+function humanVideoUrl(item) {
+  return String(
+    item?.video_muestra_humanos
+    || item?.video_muestra_url
+    || item?.video_humano
+    || item?.video_humanos
+    || item?.video
+    || ''
+  ).trim();
+}
+
 export function toCampoBaseExercise(item) {
   const exercise = toCampoBaseExerciseBase(item);
-  if (!NUEVOS_IDS.has(item?.id)) return exercise;
-  return {
+  const videoMuestra = humanVideoUrl(item);
+  const mapped = {
     ...exercise,
+    // `video` del formato interno sigue siendo la animación/MP4 gráfico para no romper nada.
+    // El vídeo humano queda separado y es el que usa el filtro «Solo con vídeo».
+    video_muestra: videoMuestra,
+    hasHumanVideo: Boolean(videoMuestra),
+  };
+
+  if (!NUEVOS_IDS.has(item?.id)) return mapped;
+  return {
+    ...mapped,
     formato_juego: 'todos',
     formatos_juego: ['futbol_7', 'futbol_11'],
     format: 'F7/F11',
