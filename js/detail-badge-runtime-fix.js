@@ -1,18 +1,29 @@
 import { getOne, put } from './db.js';
 
-// Corrección funcional para los distintivos configurables ya existentes.
-// No cambia su interfaz ni su aspecto por defecto: únicamente garantiza que
-// lo guardado se aplique a los elementos reales y se conserve entre dispositivos.
+// Personalización segura SOLO para distintivos concretos.
+// Este módulo también limpia cualquier rastro de la versión global defectuosa
+// que llegó a aplicar colores/fuentes a navegación, botones y campos de toda la app.
 
 const STORAGE_KEY = 'campobase.detailBadgeStyle';
 const TARGET_SELECTOR = '.format-badge, .plantilla-staff-role-badge, .staff-badge';
 const OWNED_STYLE_PROPS = ['background', 'color', '-webkit-text-fill-color', 'font-family', 'font-weight', 'border-color'];
+const LEGACY_BOX_CLASS = 'cb-user-boxed-surface';
+const LEGACY_STYLE_ID = 'cb-user-boxed-surface-style';
+const LEGACY_INLINE_PROPS = ['background-color', 'color', '-webkit-text-fill-color', 'font-family', 'font-weight'];
 
 let activeSettings = null;
 let observer = null;
 
 function delay(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function cleanupLegacyGlobalBoxStyles() {
+  document.getElementById(LEGACY_STYLE_ID)?.remove();
+  document.querySelectorAll(`.${LEGACY_BOX_CLASS}`).forEach((element) => {
+    element.classList.remove(LEGACY_BOX_CLASS);
+    LEGACY_INLINE_PROPS.forEach((prop) => element.style.removeProperty(prop));
+  });
 }
 
 function normalizeSettings(value) {
@@ -53,8 +64,6 @@ function applyToElement(element, settings) {
     return;
   }
 
-  // El color seleccionado por el usuario manda siempre sobre los colores
-  // propios de cada rol. Se aplica directamente al texto real del distintivo.
   element.style.setProperty('background', settings.background, 'important');
   element.style.setProperty('color', settings.text, 'important');
   element.style.setProperty('-webkit-text-fill-color', settings.text, 'important');
@@ -64,6 +73,7 @@ function applyToElement(element, settings) {
 }
 
 function applyToRealApp(settings) {
+  cleanupLegacyGlobalBoxStyles();
   activeSettings = normalizeSettings(settings);
   document.querySelectorAll(TARGET_SELECTOR).forEach((element) => applyToElement(element, activeSettings));
 
@@ -120,7 +130,6 @@ async function persistSharedSettings(settings) {
 }
 
 async function hydrateSharedSettings() {
-  // La base real se configura durante el arranque. Se reintenta sin bloquear la UI.
   for (let attempt = 0; attempt < 16; attempt += 1) {
     try {
       const current = await getOne('settings', 'main');
@@ -139,8 +148,6 @@ async function hydrateSharedSettings() {
 }
 
 function bindExistingSettingsForm() {
-  // La interfaz visual se mantiene exactamente como está. La diferencia es que
-  // fondo, texto, fuente y negrita se reflejan también EN VIVO en la app real.
   const applyFromFormLive = (event) => {
     const form = event.target?.closest?.('#detail-badge-settings-form');
     if (!form) return;
@@ -167,6 +174,7 @@ function bindExistingSettingsForm() {
 }
 
 function install() {
+  cleanupLegacyGlobalBoxStyles();
   const local = readLocalSettings();
   if (local) applyToRealApp(local);
   startTargetObserver();
