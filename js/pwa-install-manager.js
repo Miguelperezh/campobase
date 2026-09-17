@@ -1,10 +1,11 @@
-// CampoBase · Gestor de instalación PWA
+// Gestor de instalación PWA
 // Capa aislada de UI. No toca Supabase ni datos deportivos.
 
 let deferredInstallPrompt = null;
 let isAppInstalled = false;
 let initialized = false;
 
+// Se conservan estas claves para no perder preferencias ya guardadas en dispositivos existentes.
 const PERMANENT_DISMISS_KEY = 'campobase.pwa_permanently_dismissed';
 const SESSION_DISMISS_KEY = 'campobase.pwa_dismissed';
 const STYLE_LINK_ID = 'cb-pwa-install-styles';
@@ -41,14 +42,8 @@ export function isStandalone() {
   return Boolean(window.matchMedia?.('(display-mode: standalone)').matches || window.navigator?.standalone);
 }
 
-export function getInstallButtonLabel(platform = detectPlatform()) {
-  return ({
-    mac: 'Instalar CampoBase en Mac',
-    windows: 'Instalar CampoBase en Windows',
-    linux: 'Instalar CampoBase en este equipo',
-    android: 'Instalar CampoBase en Android',
-    ios: 'Instalar CampoBase en iPhone / iPad',
-  })[platform] || 'Instalar CampoBase como aplicación';
+export function getInstallButtonLabel() {
+  return 'Instalar aplicación';
 }
 
 export function isPermanentlyDismissed() {
@@ -134,8 +129,8 @@ function createBanner() {
   el.id = 'cb-pwa-install-banner';
   el.className = 'cb-pwa-banner cb-hidden';
   el.setAttribute('role', 'region');
-  el.setAttribute('aria-label', 'Instalar CampoBase');
-  el.innerHTML = `<div class="cb-pwa-banner-content"><div class="cb-pwa-banner-leading"><div class="cb-pwa-app-mark">CB</div><div class="cb-pwa-banner-copy"><span class="cb-pwa-kicker">CAMPOBASE EN TU EQUIPO</span><strong>Instala CampoBase como aplicación</strong><p>Ábrela en su propia ventana, con acceso rápido y soporte sin conexión.</p>${deviceChips()}</div></div><div class="cb-pwa-banner-actions"><button id="cb-pwa-install-btn" class="primary compact" type="button">Instalar ahora</button><button id="cb-pwa-how-btn" class="secondary compact" type="button">Cómo instalar</button><button id="cb-pwa-never-btn" class="ghost compact" type="button">No volver a mostrar</button><button id="cb-pwa-dismiss-btn" class="ghost compact" type="button">Ahora no</button></div></div>`;
+  el.setAttribute('aria-label', 'Instalar aplicación');
+  el.innerHTML = `<div class="cb-pwa-banner-content"><div class="cb-pwa-banner-leading"><div class="cb-pwa-banner-copy"><span class="cb-pwa-kicker">APLICACIÓN EN TU DISPOSITIVO</span><strong>Instalar como aplicación</strong><p>Acceso rápido, ventana independiente y soporte sin conexión.</p>${deviceChips()}</div></div><div class="cb-pwa-banner-actions"><button id="cb-pwa-install-btn" class="primary compact" type="button">Instalar aplicación</button><button id="cb-pwa-never-btn" class="ghost compact" type="button">No volver a mostrar</button><button id="cb-pwa-dismiss-btn" class="ghost compact" type="button">Ahora no</button></div></div>`;
   return el;
 }
 
@@ -145,7 +140,7 @@ function createSettingsPanel() {
   const el = document.createElement('article');
   el.className = 'panel cb-install-settings-card';
   el.id = 'cb-install-settings-panel';
-  el.innerHTML = `<div class="cb-install-settings-head"><div class="cb-install-settings-icon">${svg(pIcon)}</div><div><p class="eyebrow">Aplicación</p><h3>Instalar CampoBase</h3><p class="meta">Úsala como una app en ${pLabel} con ${bLabel}.</p></div></div><div class="cb-pwa-platform-row cb-pwa-platform-row-settings"><span class="cb-pwa-platform-chip">${svg(pIcon)}<span>${pLabel}</span></span><span class="cb-pwa-platform-chip">${svg(bIcon)}<span>${bLabel}</span></span></div><div id="cb-install-status-box" class="cb-install-status-box"><button id="cb-settings-install-btn" class="primary compact" type="button">Instalar CampoBase</button><button id="cb-settings-how-btn" class="secondary compact" type="button">Ver instrucciones</button><p id="cb-settings-installed-msg" class="meta hidden">CampoBase ya está instalada y funcionando como aplicación en este dispositivo.</p><button id="cb-settings-restore-pwa-btn" class="secondary compact hidden" type="button">Volver a mostrar aviso de instalación</button></div>`;
+  el.innerHTML = `<div class="cb-install-settings-head"><div class="cb-install-settings-icon">${svg(pIcon)}</div><div><p class="eyebrow">Aplicación</p><h3>Instalar aplicación</h3><p class="meta">Úsala como una app en ${pLabel} con ${bLabel}.</p></div></div><div class="cb-pwa-platform-row cb-pwa-platform-row-settings"><span class="cb-pwa-platform-chip">${svg(pIcon)}<span>${pLabel}</span></span><span class="cb-pwa-platform-chip">${svg(bIcon)}<span>${bLabel}</span></span></div><div id="cb-install-status-box" class="cb-install-status-box"><button id="cb-settings-install-btn" class="primary compact" type="button">Instalar aplicación</button><p id="cb-settings-installed-msg" class="meta hidden">La aplicación ya está instalada y funcionando como app en este dispositivo.</p><button id="cb-settings-restore-pwa-btn" class="secondary compact hidden" type="button">Volver a mostrar aviso de instalación</button></div>`;
   return el;
 }
 
@@ -170,14 +165,12 @@ function updateUi({ forceBanner = false } = {}) {
   const installed = isStandalone() || isAppInstalled;
   const permanent = isPermanentlyDismissed();
   const sessionDismissed = isDismissedForSession();
-  const installLabel = deferredInstallPrompt ? 'Instalar ahora' : getInstallButtonLabel();
   const banner = document.getElementById('cb-pwa-install-banner');
   const mainBtn = document.getElementById('cb-pwa-install-btn');
   const settingsBtn = document.getElementById('cb-settings-install-btn');
-  if (mainBtn) mainBtn.textContent = installLabel;
-  if (settingsBtn) settingsBtn.textContent = installLabel;
+  if (mainBtn) mainBtn.textContent = getInstallButtonLabel();
+  if (settingsBtn) settingsBtn.textContent = getInstallButtonLabel();
   setHidden(settingsBtn, installed);
-  setHidden(document.getElementById('cb-settings-how-btn'), installed);
   setHidden(document.getElementById('cb-settings-installed-msg'), !installed);
   setHidden(document.getElementById('cb-settings-restore-pwa-btn'), installed || !permanent);
   setHidden(banner, installed || permanent || (!forceBanner && sessionDismissed));
@@ -200,13 +193,13 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
     if (browser === 'chrome-ios') {
       return {
         icon: 'chrome',
-        intro: 'En Chrome para iPhone o iPad se añade CampoBase desde el botón Compartir.',
+        intro: 'En Chrome para iPhone o iPad se añade la aplicación desde el botón Compartir.',
         steps: [
           'Mira la <strong>barra de direcciones</strong> de Chrome y pulsa el botón <strong>Compartir</strong> que está a su derecha.',
           'Busca y pulsa <strong>«Añadir a pantalla de inicio»</strong>.',
-          'Revisa el nombre de CampoBase y pulsa <strong>«Añadir»</strong>.',
+          'Revisa el nombre de la aplicación y pulsa <strong>«Añadir»</strong>.',
         ],
-        note: 'Si CampoBase está disponible como app web, el icono de la pantalla de inicio abrirá la aplicación web.',
+        note: 'Si el sitio está disponible como app web, el icono de la pantalla de inicio abrirá la aplicación web.',
       };
     }
     if (browser === 'firefox-ios') {
@@ -224,25 +217,25 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
     if (browser === 'safari') {
       return {
         icon: 'safari',
-        intro: 'Safari permite convertir CampoBase en una app web desde el menú Compartir.',
+        intro: 'Safari permite convertir este sitio en una app web desde el menú Compartir.',
         steps: [
           'En iPhone, pulsa <strong>Menú de página</strong> y después <strong>Compartir</strong>; si ves directamente el botón Compartir, púlsalo. En iPad, pulsa <strong>Compartir</strong> y después <strong>Más</strong>.',
           'Pulsa <strong>«Añadir a pantalla de inicio»</strong>. Si no aparece en iPhone, baja hasta <strong>«Editar acciones»</strong> y añádela.',
           'Activa <strong>«Abrir como app web»</strong>.',
           'Pulsa <strong>«Añadir»</strong>.',
         ],
-        note: 'El icono se añadirá a la pantalla de inicio y abrirá CampoBase como una app web.',
+        note: 'El icono se añadirá a la pantalla de inicio y abrirá el sitio como una app web.',
       };
     }
     return {
       icon: browserInfo(browser)[0],
       intro: `No hay una ruta oficial única verificada para instalar una PWA desde ${bLabel} en iPhone/iPad. Para evitar indicaciones incorrectas, usa Safari o Chrome.`,
       steps: [
-        'Abre CampoBase en <strong>Safari</strong> o <strong>Chrome</strong>.',
+        'Abre este sitio en <strong>Safari</strong> o <strong>Chrome</strong>.',
         'Pulsa <strong>Compartir</strong> y elige <strong>«Añadir a pantalla de inicio»</strong>.',
         'Si usas Safari, activa <strong>«Abrir como app web»</strong> y pulsa <strong>«Añadir»</strong>.',
       ],
-      note: 'CampoBase no inventa nombres de menús que puedan variar entre navegadores.',
+      note: 'La guía no inventa nombres de menús que puedan variar entre navegadores.',
     };
   }
 
@@ -288,20 +281,20 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
         steps: [
           'Busca el indicador <strong>+</strong> de aplicación web en la barra de direcciones; si aparece, púlsalo.',
           'Si no aparece, abre el menú de Samsung Internet y busca <strong>«Añadir a Inicio»</strong> o la opción equivalente de pantalla de inicio.',
-          'Confirma para crear el icono de CampoBase.',
+          'Confirma para crear el icono de la aplicación.',
         ],
         note: 'Samsung documenta el indicador + y la función «Add to Home» para aplicaciones web.',
       };
     }
     return {
       icon: browserInfo(browser)[0],
-      intro: `En ${bLabel} para Android el nombre exacto puede variar. CampoBase intentará primero abrir el instalador nativo del navegador.`,
+      intro: `En ${bLabel} para Android el nombre exacto puede variar. Se intentará primero abrir el instalador nativo del navegador.`,
       steps: [
         'Busca el botón de menú junto a la <strong>barra de direcciones</strong>.',
         'Busca una opción llamada <strong>«Instalar»</strong>, <strong>«Instalar aplicación»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.',
         'Confirma para crear la aplicación o el acceso.',
       ],
-      note: 'Si no aparece una opción de instalación, abre CampoBase en Chrome para Android y sigue su ruta específica.',
+      note: 'Si no aparece una opción de instalación, abre este sitio en Chrome para Android y sigue su ruta específica.',
     };
   }
 
@@ -313,7 +306,7 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
         'Mira <strong>arriba a la derecha de Chrome</strong>. Busca los <strong>tres puntos verticales ⋮</strong>, junto a la zona del perfil, y púlsalos. Ese botón abre el menú de Chrome.',
         'Dentro del menú, pulsa <strong>«Enviar, guardar y compartir»</strong>. En algunas versiones de Chrome puede aparecer como <strong>«Transmitir, guardar y compartir»</strong>.',
         'Pulsa <strong>«Instalar página como aplicación…»</strong>.',
-        'Confirma la instalación. CampoBase se abrirá en su propia ventana.',
+        'Confirma la instalación. La aplicación se abrirá en su propia ventana.',
       ],
       note: 'Si Chrome muestra un icono de instalación directamente en la barra de direcciones, también puedes pulsarlo.',
     };
@@ -322,7 +315,7 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
   if (platform === 'mac' && browser === 'safari') {
     return {
       icon: 'safari',
-      intro: 'Safari en macOS Sonoma 14 o posterior puede convertir CampoBase en una app web.',
+      intro: 'Safari en macOS Sonoma 14 o posterior puede convertir este sitio en una app web.',
       steps: [
         'En la barra de menús superior del Mac, pulsa <strong>«Archivo»</strong>.',
         'Pulsa <strong>«Añadir al Dock»</strong>. También puedes usar el botón <strong>Compartir</strong> de Safari y después <strong>«Añadir al Dock»</strong>.',
@@ -342,7 +335,7 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
         'Pulsa <strong>«Instalar este sitio como una aplicación»</strong>.',
         'Confirma la instalación.',
       ],
-      note: 'Si Edge detecta CampoBase como PWA, también puede mostrar directamente la opción o icono de instalación.',
+      note: 'Si Edge detecta una PWA, también puede mostrar directamente la opción o icono de instalación.',
     };
   }
 
@@ -353,7 +346,7 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
       steps: [
         'Mira la <strong>barra de direcciones</strong> de Firefox.',
         'Pulsa el botón de <strong>aplicaciones web</strong> cuando aparezca.',
-        'Firefox instalará CampoBase y añadirá acceso desde Windows.',
+        'Firefox instalará el sitio y añadirá acceso desde Windows.',
       ],
       note: 'La disponibilidad depende de la versión de Firefox instalada.',
     };
@@ -364,8 +357,8 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
       icon: 'firefox',
       intro: 'Firefox en Mac no ofrece el mismo flujo nativo de aplicaciones web que Safari, Chrome o Edge.',
       steps: [
-        'Abre CampoBase en <strong>Safari</strong>, <strong>Chrome</strong> o <strong>Edge</strong>.',
-        'Usa la guía de instalación que CampoBase mostrará para ese navegador.',
+        'Abre este sitio en <strong>Safari</strong>, <strong>Chrome</strong> o <strong>Edge</strong>.',
+        'Usa la guía de instalación que aparecerá para ese navegador.',
         'Confirma la instalación.',
       ],
     };
@@ -373,11 +366,11 @@ export function getInstallGuide(platform = detectPlatform(), browser = detectBro
 
   return {
     icon: browserInfo(browser)[0],
-    intro: `CampoBase no tiene una ruta oficial verificada específica para ${bLabel} en este sistema.`,
+    intro: `No hay una ruta oficial verificada específica para ${bLabel} en este sistema.`,
     steps: [
       'Busca en la barra de direcciones un <strong>icono de instalación</strong>.',
       'Si no aparece, abre el menú principal del navegador y busca <strong>«Instalar»</strong> o <strong>«Añadir a pantalla de inicio»</strong>.',
-      'Si tampoco aparece, abre CampoBase en <strong>Chrome</strong>, <strong>Edge</strong> o <strong>Safari</strong> y sigue la guía específica.',
+      'Si tampoco aparece, abre este sitio en <strong>Chrome</strong>, <strong>Edge</strong> o <strong>Safari</strong> y sigue la guía específica.',
     ],
   };
 }
@@ -386,7 +379,7 @@ export function showInstallInstructions(platform = detectPlatform(), browser = d
   const [, pLabel] = platformInfo(platform);
   const [, bLabel] = browserInfo(browser);
   const guide = getInstallGuide(platform, browser);
-  showModal('Instalar CampoBase', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, guide.icon, guide.intro, guide.steps, guide.note || '');
+  showModal('Instalar aplicación', `${pLabel.toUpperCase()} · ${bLabel.toUpperCase()}`, guide.icon, guide.intro, guide.steps, guide.note || '');
 }
 
 export function showIosInstallInstructions(browser = detectBrowser()) {
@@ -395,10 +388,6 @@ export function showIosInstallInstructions(browser = detectBrowser()) {
 
 export function showDesktopInstallInstructions(platform = detectPlatform(), browser = detectBrowser()) {
   showInstallInstructions(platform, browser);
-}
-
-function showInstructions() {
-  showInstallInstructions();
 }
 
 export async function promptInstall() {
@@ -428,9 +417,7 @@ export async function promptInstall() {
 
 function bindEvents() {
   document.getElementById('cb-pwa-install-btn')?.addEventListener('click', () => promptInstall());
-  document.getElementById('cb-pwa-how-btn')?.addEventListener('click', showInstructions);
   document.getElementById('cb-settings-install-btn')?.addEventListener('click', () => promptInstall());
-  document.getElementById('cb-settings-how-btn')?.addEventListener('click', showInstructions);
   document.getElementById('cb-pwa-dismiss-btn')?.addEventListener('click', () => { dismissForSession(); updateUi(); });
   document.getElementById('cb-pwa-never-btn')?.addEventListener('click', () => { setPermanentlyDismissed(true); updateUi(); });
   document.getElementById('cb-settings-restore-pwa-btn')?.addEventListener('click', () => { setPermanentlyDismissed(false); updateUi({ forceBanner: true }); });
