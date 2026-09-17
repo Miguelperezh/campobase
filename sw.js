@@ -1,4 +1,4 @@
-const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v1';
+const CACHE = 'campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2456-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2502-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v2';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -70,8 +70,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))));
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+    await self.clients.claim();
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(clients.map((client) => client.navigate(client.url).catch(() => null)));
+  })());
 });
 
 async function readBoardPart(path) {
