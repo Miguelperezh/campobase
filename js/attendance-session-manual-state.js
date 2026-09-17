@@ -27,7 +27,7 @@ function sourceIdFromCard(card) {
 }
 
 function ensureOpenList(root, completedGroup) {
-  const directLists = [...root.children].filter((node) => node.classList?.contains('attendance-activity-list'));
+  const directLists = [...root.children].filter((node) => node.classList?.contains('attendance-activity-list') && !node.classList?.contains('attendance-completed-list'));
   if (directLists.length) return directLists[0];
   const list = document.createElement('div');
   list.className = 'attendance-activity-list attendance-manual-open-list';
@@ -45,13 +45,21 @@ function ensureCompletedGroup(root) {
     <summary class="attendance-completed-summary">
       <div class="attendance-completed-title">
         <span class="toggle-icon">▶</span>
-        <strong>Asistencias registradas y finalizadas (<span data-manual-completed-count>0</span>)</strong>
+        <strong>Actividades finalizadas (0)</strong>
       </div>
       <span class="pill accent">Desplegar</span>
     </summary>
     <div class="attendance-activity-list attendance-completed-list"></div>`;
   root.appendChild(group);
   return group;
+}
+
+function normalizeSessionCardLabel(card, closed) {
+  const saved = card.querySelector('.attendance-saved');
+  if (saved) saved.textContent = closed ? 'Asistencia guardada' : 'Asistencia preparada';
+  const pending = card.querySelector('.attendance-pending');
+  if (pending && !closed) pending.textContent = 'Asistencia pendiente';
+  card.dataset.sessionClosed = closed ? '1' : '0';
 }
 
 function installRealizadoButton(card, session) {
@@ -103,7 +111,7 @@ function updateCompletedGroup(group) {
   const list = group.querySelector('.attendance-completed-list');
   const count = list?.querySelectorAll('.attendance-activity-card').length || 0;
   const strong = group.querySelector('.attendance-completed-title strong');
-  if (strong) strong.textContent = `Asistencias registradas y finalizadas (${count})`;
+  if (strong) strong.textContent = `Actividades finalizadas (${count})`;
   group.hidden = count === 0;
 }
 
@@ -116,7 +124,7 @@ async function syncAttendanceSessionState() {
     const sessions = await sessionMap();
     let completedGroup = root.querySelector('.attendance-completed-group');
     let completedList = completedGroup?.querySelector('.attendance-completed-list') || null;
-    let openList = [...root.children].find((node) => node.classList?.contains('attendance-activity-list')) || null;
+    let openList = [...root.children].find((node) => node.classList?.contains('attendance-activity-list') && !node.classList?.contains('attendance-completed-list')) || null;
 
     const cards = [...root.querySelectorAll('article.attendance-activity-card[data-activity-type="session"]')];
     for (const card of cards) {
@@ -124,6 +132,8 @@ async function syncAttendanceSessionState() {
       const session = sessions.get(id);
       if (!session) continue;
       const closed = sessionIsClosed(session);
+
+      normalizeSessionCardLabel(card, closed);
 
       if (closed) {
         if (!completedGroup) {
@@ -149,7 +159,7 @@ function scheduleSync() {
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => {
     syncAttendanceSessionState().catch((error) => console.warn('No se pudo sincronizar el estado manual de sesiones:', error));
-  }, 50);
+  }, 40);
 }
 
 async function markSessionRealized(button) {
@@ -181,6 +191,7 @@ function installStyles() {
   style.textContent = `
     .attendance-session-actions{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
     .attendance-manual-open-list{margin-top:.75rem}
+    .attendance-activity-card[data-activity-type="session"][data-session-closed="0"]{border-left:3px solid color-mix(in srgb,var(--cb-brand,#173f35) 55%,transparent)}
     @media(max-width:620px){.attendance-session-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.attendance-session-actions>button{width:100%}}
   `;
   document.head.appendChild(style);
