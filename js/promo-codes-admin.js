@@ -12,7 +12,7 @@ const escapeHtml = (value = '') => String(value ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
+  .replace(/\"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
 function appTitle() {
@@ -32,12 +32,12 @@ function currentLocalRole() {
 async function requireAuthenticatedClient() {
   const client = getCampoBaseSupabaseClient();
   if (!client?.rpc || !client?.auth?.getSession) {
-    throw new Error('El servicio seguro de cuenta todavía no está disponible.');
+    throw new Error('No se puede conectar con tu cuenta en este momento.');
   }
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
   if (!data?.session?.user) {
-    throw new Error('Esta función se activará con el acceso SaaS seguro de la Fase 3.');
+    throw new Error('Inicia sesión para utilizar esta función.');
   }
   return client;
 }
@@ -147,7 +147,6 @@ function styles() {
     .cb-promo-card{border:1px solid var(--line,#e2e8f0);border-radius:14px;padding:.8rem;background:var(--card,#fff)}
     .cb-promo-card code{font-weight:900;font-size:.95rem;overflow-wrap:anywhere}
     .cb-promo-status{margin-left:auto}
-    .cb-promo-note{padding:.65rem .75rem;border:1px solid color-mix(in srgb,var(--cb-brand,var(--brand,#173f35)) 22%,var(--line,#e2e8f0));background:color-mix(in srgb,var(--card,#fff) 94%,var(--cb-brand,var(--brand,#173f35)) 6%);border-radius:12px;margin:.65rem 0;color:var(--muted,#64748b);font-size:.84rem}
     .cb-promo-create-box{margin-top:.75rem}
     .cb-promo-list-header{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
     .cb-promo-admin-panel.hidden{display:none!important}
@@ -159,8 +158,7 @@ function styles() {
 function adminMarkup() {
   return `
     <article class="panel cb-promo-admin-panel hidden" id="${PROMO_PANEL_ID}">
-      <div class="panel-head"><div><span class="eyebrow">Administración SaaS</span><h3>🎁 Bonos, regalos y promociones</h3><p class="meta">Crea y controla códigos promocionales. La validación y el canje real se ejecutan únicamente en servidor.</p></div></div>
-      <p class="cb-promo-note" id="cb-promo-auth-note">Fase 2 integrada. Las operaciones que conceden ventajas requieren la sesión SaaS segura de la Fase 3.</p>
+      <div class="panel-head"><div><h3>🎁 Bonos, regalos y promociones</h3></div></div>
       <form id="cb-create-promo-form" class="cb-promo-create-box">
         <div class="form-row">
           <label>Código promocional<div class="button-row"><input type="text" id="cb-promo-new-code" maxlength="30" required placeholder="Ej. REGALO-CLUB-2026"><button type="button" id="cb-promo-random-btn" class="secondary compact">🎲 Al azar</button></div></label>
@@ -180,7 +178,7 @@ function adminMarkup() {
         <div class="button-row"><button type="submit" class="primary" id="cb-promo-submit-btn">Crear código</button><span class="meta" id="cb-promo-form-feedback"></span></div>
       </form>
       <div class="cb-promo-list-header"><h4>Códigos creados (<span id="cb-promo-count">0</span>)</h4><div class="button-row"><button type="button" class="secondary compact" id="cb-promo-refresh-btn">🔄 Refrescar</button><select id="cb-promo-filter-status" class="compact"><option value="all">Todos</option><option value="disponible">Disponibles</option><option value="agotado">Agotados</option><option value="caducado">Caducados</option><option value="pausado">Pausados</option></select></div></div>
-      <div id="cb-promo-cards-container" class="cb-promo-grid"><p class="meta">Inicia sesión SaaS para cargar códigos del servidor.</p></div>
+      <div id="cb-promo-cards-container" class="cb-promo-grid"><p class="meta">Inicia sesión para cargar los códigos.</p></div>
     </article>`;
 }
 
@@ -188,7 +186,7 @@ function redeemMarkup() {
   return `
     <article class="panel cb-promo-redeem-panel" id="${REDEEM_PANEL_ID}">
       <h3>🎁 Canjear código de regalo o promoción</h3>
-      <p class="meta">Introduce el código recibido. El beneficio solo se concede después de validarlo en el servidor.</p>
+      <p class="meta">Introduce el código recibido.</p>
       <form id="cb-coach-redeem-form"><div class="form-row"><input type="text" id="cb-coach-code-input" maxlength="30" autocomplete="off" placeholder="Introduce tu código" required><button type="submit" class="primary" id="cb-coach-redeem-submit-btn">Canjear código</button></div></form>
       <div id="cb-coach-redeem-feedback" class="meta"></div>
     </article>`;
@@ -262,7 +260,7 @@ function bindEvents() {
     event.preventDefault();
     const feedback = document.getElementById('cb-promo-form-feedback');
     try {
-      if (feedback) feedback.textContent = 'Guardando de forma segura…';
+      if (feedback) feedback.textContent = 'Guardando…';
       const type = document.getElementById('cb-promo-benefit-type')?.value || 'vitalicio_regalo';
       const usageType = document.getElementById('cb-promo-usage-limit-type')?.value || 'single';
       const expiryType = document.getElementById('cb-promo-expiry-type')?.value || 'never';
@@ -319,7 +317,7 @@ function bindEvents() {
         return;
       }
       if (button.classList.contains('cb-delete-code-btn')) {
-        if (!window.confirm(`¿Eliminar el código ${code}? Si tiene canjes, el servidor impedirá borrar el historial.`)) return;
+        if (!window.confirm(`¿Eliminar el código ${code}? Los códigos con canjes registrados deben pausarse para conservar su historial.`)) return;
         await deletePromoCodeRecord(code);
         await renderPromoCodeCardsList();
       }
