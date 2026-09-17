@@ -15,5 +15,76 @@ import e14 from './ejercicios-nuevo-formato/14-campobase-video-finalizacion-dobl
 import e15 from './ejercicios-nuevo-formato/15-campobase-video-reaccion-espaldas-senales-lateral-giro-cono-balon-v2.js';
 import e16 from './ejercicios-nuevo-formato/16-campobase-video-reaccion-lateral-senal-balon-cono.js';
 
-export const EJERCICIOS_NUEVO_FORMATO = Object.freeze([e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16]);
+const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16];
+
+function key(value = '') {
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('es');
+}
+
+function uniqueStrings(values = []) {
+  const seen = new Set();
+  return values.filter((value) => {
+    const clean = String(value || '').trim();
+    const normalized = key(clean);
+    if (!clean || !normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function summarizeNumericRange(value, suffix) {
+  const source = String(value || '').trim();
+  const numbers = [...source.matchAll(/\d+(?:[.,]\d+)?/g)]
+    .map((match) => Number(match[0].replace(',', '.')))
+    .filter(Number.isFinite);
+  if (!numbers.length) return source;
+  const min = Math.min(...numbers);
+  const max = Math.max(...numbers);
+  const format = (number) => Number.isInteger(number) ? String(number) : String(number).replace('.', ',');
+  return min === max ? `${format(min)} ${suffix}` : `${format(min)}-${format(max)} ${suffix}`;
+}
+
+function normalizeNewExercise(exercise) {
+  const categoryKey = key(exercise.categoria);
+  const etiquetas = uniqueStrings(exercise.etiquetas || [])
+    .filter((tag) => key(tag) !== categoryKey);
+  const queSeTrabaja = uniqueStrings(exercise.que_se_trabaja || []).slice(0, 4);
+  const datosRapidos = { ...(exercise.datos_rapidos || {}) };
+  if (datosRapidos.jugadores) datosRapidos.jugadores = summarizeNumericRange(datosRapidos.jugadores, 'jugadores');
+  if (datosRapidos.duracion) datosRapidos.duracion = summarizeNumericRange(datosRapidos.duracion, 'min aprox.');
+
+  const originalMedia = exercise.media || {};
+  const humanVideo = String(
+    exercise.video_muestra_humanos
+    || exercise.video_muestra_url
+    || exercise.video_humano
+    || exercise.video_humanos
+    || exercise.video
+    || ''
+  ).trim();
+
+  return {
+    ...exercise,
+    etiquetas,
+    que_se_trabaja: queSeTrabaja,
+    datos_rapidos: datosRapidos,
+    media: {
+      ...originalMedia,
+      preview: '',
+      video: humanVideo || String(originalMedia.video || '').trim(),
+    },
+    video: humanVideo,
+    video_muestra_humanos: humanVideo,
+    _video_ejercicio_original: String(originalMedia.video || '').trim(),
+    _preview_original: String(originalMedia.preview || '').trim(),
+  };
+}
+
+export const EJERCICIOS_NUEVO_FORMATO = Object.freeze(
+  RAW_EJERCICIOS_NUEVO_FORMATO.map(normalizeNewExercise)
+);
 export const NUEVOS_EJERCICIOS_IDS = Object.freeze(EJERCICIOS_NUEVO_FORMATO.map(({ id }) => id));
