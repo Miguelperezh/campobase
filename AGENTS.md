@@ -317,6 +317,42 @@ Estado que debe conservarse:
 - No se han eliminado ejercicios, sesiones, vídeos ni datos existentes y no se ha modificado la lógica validada del editor/pizarra.
 - La verificación automática `CampoBase verify` del cambio funcional pasó correctamente antes y después de fusionar.
 
+## 2.10.3 Corrección final de ejercicios, previews y sesiones — PR #48
+
+Integración fusionada en `main` el 18/09/2026 mediante el PR #48, commit:
+`bb3b875b0d959a617cea530ec94aa4a665e81a24`.
+
+Estado obligatorio a conservar:
+
+- En el catálogo activo aparecen **solo los 12 ejercicios actuales** del lote nuevo.
+- Las **4 versiones anteriores** siguen conservadas en código como respaldo mediante `EJERCICIOS_NUEVO_FORMATO_ANTERIORES`, pero no pueden aparecer en la biblioteca activa ni en el selector de Sesiones.
+- Los 12 ejercicios actuales conservan separados:
+  1. preview;
+  2. MP4 gráfico de fichas;
+  3. vídeo humano.
+- La preview y el MP4 gráfico eliminan visualmente la cabecera, panel lateral y resto de interfaz legacy mediante el recorte validado del área de campo.
+- La preview es estática y procede únicamente del recurso gráfico; nunca del vídeo humano.
+- El mismo criterio de preview limpia se usa en:
+  - tarjeta de Biblioteca;
+  - Vista rápida;
+  - Vista completa;
+  - selector de ejercicios dentro de Sesiones;
+  - detalle de una sesión.
+- El MP4 gráfico se mantiene como segundo medio y el vídeo humano como tercero.
+- Los ejercicios creados desde **+ Ejercicio** siguen persistiendo como `recordType: exercise`, `userCreated: true`, `source: personal`.
+- Tras guardarlos, deben abrirse en **Mis ejercicios** y sobrevivir a recarga/sincronización.
+- **Mis ejercicios** debe seguir disponible en el filtro **Categoría** del selector de Sesiones.
+- Crear y editar sesiones continúa usando el mismo builder; debe conservar ID, `createdAt`, bloques, orden, minutos, consignas, notas y ejercicios personales.
+- No se modificaron autenticación, SaaS, jugadores, partidos, Supabase ni la lógica del editor/pizarra.
+
+Verificaciones realizadas antes de fusionar:
+- sintaxis correcta de los JS modificados y tests;
+- 12 ejercicios activos y 4 anteriores aislados sin fuga al catálogo;
+- los 12 actuales con crop de preview/MP4 y vídeo humano separado;
+- orden HTML comprobado: preview → MP4 gráfico → vídeo humano;
+- simulación de creación y edición de sesión con un ejercicio de **Mis ejercicios**, conservando identidad, orden, minutos y notas;
+- comprobación del cableado de persistencia de **+ Ejercicio**, pestaña **Mis ejercicios** y filtro **Mis ejercicios** en Sesiones.
+
 ## 2.11 Supabase
 
 Supabase es fuente de verdad cuando la app use esos datos.
