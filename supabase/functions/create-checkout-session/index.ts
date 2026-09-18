@@ -107,7 +107,12 @@ Deno.serve(async (req) => {
   }
 
   const priceId = plan === "annual" ? annualPrice : monthlyPrice;
-  const trialEndSeconds = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const reservedTrialEnd = subscription?.expira_en
+    ? Math.floor(new Date(subscription.expira_en).getTime() / 1000)
+    : 0;
+  const fallbackTrialEnd = nowSeconds + (14 * 24 * 60 * 60);
+  const trialEndSeconds = reservedTrialEnd > nowSeconds ? reservedTrialEnd : fallbackTrialEnd;
   const trialEndsAt = new Date(trialEndSeconds * 1000).toISOString();
 
   await admin
