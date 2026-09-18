@@ -188,10 +188,7 @@ export async function sendPasswordResetEmail(client, emailOrUser) {
 export async function updatePassword(client, password) {
   if (!client?.auth) throw new Error('No se ha podido actualizar la contraseña.');
   if (String(password).length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres.');
-  const { data: userData } = await client.auth.getUser();
-  const metadata = { ...(userData?.user?.user_metadata || {}) };
-  delete metadata.must_set_password;
-  const { error } = await client.auth.updateUser({ password: String(password), data: metadata });
+  const { error } = await client.auth.updateUser({ password: String(password) });
   if (error) throw error;
   return { success: true };
 }
