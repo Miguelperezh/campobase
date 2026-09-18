@@ -38,8 +38,9 @@ export async function guardSaasSession(client) {
   const session = await getCurrentSession(client).catch(() => null);
   if (session?.user?.id === boundUserId) return true;
 
+  // Una sesión SaaS caducada o todavía no vinculada nunca debe bloquear
+  // el acceso local existente. Limpiamos solo el enlace SaaS y dejamos que
+  // la pantalla normal permita entrar por correo/contraseña o por PIN local.
   clearBoundSaasUserId();
-  await waitForApp();
-  forceLockedUi();
-  return false;
+  return true;
 }
