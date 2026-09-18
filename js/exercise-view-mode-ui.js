@@ -42,7 +42,9 @@ function installStyles() {
     }
 
     .exercise-preview-img,
-    .exercise-preview-static-video {
+    .exercise-preview-static-video,
+    .exercise-preview-static-canvas,
+    .card-preview-static-canvas {
       width: 100% !important;
       height: 100% !important;
       display: block !important;
@@ -148,6 +150,60 @@ function updateModeHelp(sheet) {
   }
 }
 
+function paintStaticPreviewCanvas(canvas) {
+  if (!canvas || canvas.dataset.cbPreviewCanvasPainted === '1') return;
+  const src = String(canvas.dataset.previewVideoSrc || '').trim();
+  if (!src) return;
+
+  canvas.dataset.cbPreviewCanvasPainted = '1';
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'metadata';
+  video.crossOrigin = 'anonymous';
+  video.src = src;
+
+  const fail = () => {
+    canvas.dataset.cbPreviewCanvasPainted = 'error';
+    const wrap = canvas.closest('.card-thumb-wrap, .exercise-preview-stage, .session-block-preview');
+    if (wrap && !wrap.querySelector('.card-thumb-placeholder')) {
+      const fallback = document.createElement('div');
+      fallback.className = 'card-thumb-placeholder';
+      fallback.textContent = '⚽ CampoBase';
+      canvas.replaceWith(fallback);
+    }
+  };
+
+  const paint = () => {
+    try {
+      if (!video.videoWidth || !video.videoHeight) return fail();
+      const width = Math.min(video.videoWidth, 960);
+      const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    } catch {
+      fail();
+    }
+  };
+
+  video.addEventListener('error', fail, { once: true });
+  video.addEventListener('loadeddata', () => {
+    if (!Number.isFinite(video.duration) || video.duration <= 0.05) return paint();
+    try {
+      video.currentTime = 0.05;
+      video.addEventListener('seeked', paint, { once: true });
+    } catch {
+      paint();
+    }
+  }, { once: true });
+  video.load();
+}
+
 function freezePreviewVideo(video) {
   if (!video || video.dataset.cbPreviewVideoGuard === '1') return;
   video.dataset.cbPreviewVideoGuard = '1';
@@ -170,6 +226,19 @@ function guardPreviewImage(img) {
   if (!img || img.dataset.cbPreviewGuard === '1') return;
   img.dataset.cbPreviewGuard = '1';
   img.addEventListener('error', () => {
+    const source = String(img.dataset.previewVideoSrc || '').trim();
+    if (source) {
+      const canvas = document.createElement('canvas');
+      canvas.className = img.classList.contains('card-preview-img')
+        ? 'card-preview-img card-preview-static-canvas'
+        : 'exercise-preview-static-canvas';
+      canvas.dataset.previewVideoSrc = source;
+      canvas.setAttribute('aria-label', img.alt || 'Vista previa del ejercicio');
+      img.replaceWith(canvas);
+      paintStaticPreviewCanvas(canvas);
+      return;
+    }
+
     const wrap = img.closest('.card-thumb-wrap');
     if (wrap) {
       img.remove();
@@ -185,9 +254,7 @@ function guardPreviewImage(img) {
     const previewBlock = img.closest('.exercise-media-preview');
     if (previewBlock) {
       const stage = previewBlock.querySelector('.exercise-preview-stage');
-      if (stage) {
-        stage.innerHTML = '<div class="card-thumb-placeholder">⚽ Preview pendiente de publicar</div>';
-      }
+      if (stage) stage.innerHTML = '<div class="card-thumb-placeholder">⚽ CampoBase</div>';
     }
   }, { once: true });
 }
@@ -236,6 +303,9 @@ function scan(root = document) {
 
   if (root.matches?.('.exercise-preview-static-video, .card-preview-static-video')) freezePreviewVideo(root);
   root.querySelectorAll?.('.exercise-preview-static-video, .card-preview-static-video').forEach(freezePreviewVideo);
+
+  if (root.matches?.('.exercise-preview-static-canvas, .card-preview-static-canvas, .session-preview-static-canvas')) paintStaticPreviewCanvas(root);
+  root.querySelectorAll?.('.exercise-preview-static-canvas, .card-preview-static-canvas, .session-preview-static-canvas').forEach(paintStaticPreviewCanvas);
 }
 
 function install() {
