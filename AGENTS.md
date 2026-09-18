@@ -1,5 +1,55 @@
 # CampoBase — instrucciones para agentes
 
+## LECTURA OBLIGATORIA ANTES DE TOCAR NADA
+
+Todo agente debe detenerse y leer, en este orden:
+
+1. `AGENTS.md` completo.
+2. `README.md` para entender la arquitectura y funciones actuales.
+3. La documentación específica del área:
+   - ejercicios/sesiones/vídeos: `docs/EJERCICIOS.md`;
+   - migración R2: la sección de migración de este archivo y sus scripts.
+4. Los archivos y tests directamente relacionados con la tarea antes de editar.
+
+Si no ha leído lo anterior, NO debe modificar el proyecto.
+
+## GUARDARRAÍLES GLOBALES
+
+CampoBase es una aplicación ya validada. La prioridad es conservar lo que funciona.
+
+- NO trabajar directamente sobre `main`.
+- NO fusionar automáticamente a `main` sin validación.
+- NO borrar, sustituir ni rediseñar una función validada para resolver otra tarea.
+- NO hacer refactors amplios si la tarea puede resolverse con un cambio pequeño y aditivo.
+- NO cambiar contratos de datos, IDs, nombres de campos, rutas, tablas o formatos persistidos salvo necesidad explícita y migración segura.
+- NO borrar datos reales de Supabase.
+- NO borrar archivos actuales de Supabase Storage mientras exista una migración sin validar.
+- NO introducir secretos, claves privadas o tokens en Git, frontend, logs o documentación.
+- NO asumir que un cambio visual/técnico autoriza cambios de UX no solicitados.
+- NO modificar ejercicios validados existentes salvo petición explícita de Miguel.
+- NO cambiar IDs de ejercicios: las sesiones los referencian por `exerciseId`.
+- NO alterar jugadores, partidos, sesiones, estadísticas, tácticas, Auth o configuración por una tarea de vídeos.
+- NO convertir componentes estáticos validados a otra arquitectura solo por preferencia técnica.
+- Ante una duda que pueda romper datos o comportamiento, detener el cambio destructivo y preservar el estado actual.
+
+### Regla de cambio mínimo
+
+Cada tarea debe tocar solo los archivos necesarios. Si aparecen cambios colaterales no indispensables, revertirlos antes de presentar el trabajo.
+
+### Regla de pruebas
+
+Antes de considerar una tarea terminada:
+- ejecutar tests relacionados;
+- ejecutar `npm test` cuando el cambio pueda afectar lógica compartida;
+- ejecutar `npm run check`;
+- revisar que no haya regresiones en las funciones afectadas;
+- no declarar éxito si las pruebas no se han ejecutado o han fallado.
+
+### Regla de rollback
+
+Los cambios deben ser reversibles. Mantener ramas/commits claros y no eliminar la fuente anterior hasta haber validado la sustitución.
+
+
 ## Estado vigente: migración de vídeos Supabase Storage → Cloudflare R2
 
 Objetivo: reducir el egress de Supabase sin cambiar el comportamiento de CampoBase.
