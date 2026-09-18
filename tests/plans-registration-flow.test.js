@@ -204,3 +204,20 @@ test('la simulación sigue mostrando contador en Hoy y cancelación en Ajustes',
   assert.match(billing, /Cancelar antes del primer cobro/);
   assert.match(billing, /Quedan \$\{days\} días/);
 });
+
+
+test('los colores de botones y fuentes siguen Ajustes y no un rojo fijo', async () => {
+  const [app, redesign, billing] = await Promise.all([
+    projectFile('js/app.js'),
+    projectFile('styles-redesign.css'),
+    projectFile('billing.css'),
+  ]);
+  assert.match(app, /setProperty\('--brand', accent\)/);
+  assert.match(app, /setProperty\('--cb-brand', accent\)/);
+  assert.match(app, /setProperty\('--cb-accent-text', contrastText\)/);
+  assert.match(redesign, /body\.cb-redesign-active \.primary[\s\S]*var\(--cb-brand/);
+  assert.doesNotMatch(redesign, /body\.cb-redesign-active \.primary \{[\s\S]{0,160}var\(--cb-red-600\)/);
+  assert.match(redesign, /data-has-custom-font-color="true"\] \.primary \*/);
+  assert.match(billing, /#cb-account-billing-panel[\s\S]*color: var\(--ink/);
+  assert.match(billing, /\.cb-preview-note[\s\S]*background: transparent/);
+});
