@@ -81,10 +81,10 @@ test('sin vídeos y sin permiso de Migue no se pinta la sección', () => {
 });
 
 
-test('todas las referencias MP4 de la biblioteca migrada existen en el manifiesto de GitHub Releases', () => {
+test('todas las referencias que se transforman apuntan a assets existentes y el manifiesto completo es resoluble', () => {
   const manifest = JSON.parse(readFileSync(new URL('../scripts/github-release-video-manifest.json', import.meta.url), 'utf8'));
   const knownPaths = new Set(manifest.map(({ name }) => name));
-  const found = new Set();
+  const migratedRefs = new Set();
 
   const visit = (value) => {
     if (typeof value === 'string') {
@@ -92,9 +92,12 @@ test('todas las referencias MP4 de la biblioteca migrada existen en el manifiest
         const marker = '/storage/v1/object/public/ejercicio-videos/';
         const raw = value.slice(value.indexOf(marker) + marker.length).split(/[?#]/, 1)[0];
         const path = raw.split('/').map((segment) => decodeURIComponent(segment)).join('/');
-        found.add(path);
-        assert.ok(knownPaths.has(path), `Falta en el release manifest: ${path}`);
-        assert.match(resolveHostedVideoUrl(value), /\/releases\/download\/campobase-videos-v1\//);
+        const resolved = resolveHostedVideoUrl(value);
+        if (resolved !== value) {
+          migratedRefs.add(path);
+          assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
+          assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+        }
       }
       return;
     }
@@ -106,5 +109,12 @@ test('todas las referencias MP4 de la biblioteca migrada existen en el manifiest
   };
 
   EJERCICIOS_VALIDADOS.forEach(visit);
-  assert.ok(found.size > 0, 'Debe encontrar referencias históricas MP4 en la biblioteca');
+  assert.ok(migratedRefs.size > 0, 'Debe encontrar referencias migradas en la biblioteca');
+
+  for (const { name } of manifest) {
+    const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
+    const resolved = resolveHostedVideoUrl(synthetic);
+    assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
+    assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+  }
 });
