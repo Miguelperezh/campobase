@@ -187,22 +187,27 @@ test('durante la prueba aparece un contador compacto en Hoy y el detalle en Ajus
 });
 
 
-test('la simulación visual de prueba no modifica la suscripción real', async () => {
-  const billing = await projectFile('js/billing-manager.js');
-  assert.match(billing, /simulacion.*prueba/);
-  assert.match(billing, /createTrialPreviewContext/);
-  assert.match(billing, /_preview:\s*true/);
-  assert.match(billing, /Esta simulación no cambia tu cuenta ni tu suscripción real/);
-  assert.match(billing, /billingPreviewCancelled = true/);
-  assert.match(billing, /SIMULACIÓN: renovación cancelada/);
+test('la simulación está aislada y nunca sustituye el contexto real de la app', async () => {
+  const [billing, preview] = await Promise.all([
+    projectFile('js/billing-manager.js'),
+    projectFile('simulacion-fase4.html'),
+  ]);
+  assert.doesNotMatch(billing, /createTrialPreviewContext/);
+  assert.doesNotMatch(billing, /billingPreviewCancelled/);
+  assert.doesNotMatch(billing, /simulacion.*prueba/i);
+  assert.match(preview, /SIMULACIÓN/);
+  assert.match(preview, /No toca tus datos ni tu cuenta real/);
+  assert.doesNotMatch(preview, /supabase\.co|createClient|js\/app\.js/);
 });
 
-test('la simulación sigue mostrando contador en Hoy y cancelación en Ajustes', async () => {
-  const billing = await projectFile('js/billing-manager.js');
-  assert.match(billing, /Simulación · Prueba Pro/);
-  assert.match(billing, /cb-account-cancel-btn/);
-  assert.match(billing, /Cancelar antes del primer cobro/);
-  assert.match(billing, /Quedan \$\{days\} días/);
+test('la simulación independiente muestra registro Stripe prueba contador cancelación y delegado', async () => {
+  const preview = await projectFile('simulacion-fase4.html');
+  assert.match(preview, /Continuar a Stripe/);
+  assert.match(preview, /Activar 14 días gratis/);
+  assert.match(preview, /Quedan 11 días/);
+  assert.match(preview, /Cancelar antes del primer cobro/);
+  assert.match(preview, /Cuenta de delegado/);
+  assert.match(preview, /Ajustes ni creación de equipos/);
 });
 
 
@@ -220,4 +225,18 @@ test('los colores de botones y fuentes siguen Ajustes y no un rojo fijo', async 
   assert.match(redesign, /data-has-custom-font-color="true"\] \.primary \*/);
   assert.match(billing, /#cb-account-billing-panel[\s\S]*color: var\(--ink/);
   assert.match(billing, /\.cb-preview-note[\s\S]*background: transparent/);
+});
+
+
+test('el acceso siempre presenta login o PIN y el PIN local no queda bloqueado por una cuenta vinculada', async () => {
+  const auth = await projectFile('js/saas-auth-ui-v2.js');
+  const localPinStart = auth.indexOf('function showLocalPin()');
+  const localPinEnd = auth.indexOf('function showRememberedPane', localPinStart);
+  const localPinBlock = auth.slice(localPinStart, localPinEnd);
+  assert.match(localPinBlock, /localPinMode = true/);
+  assert.match(localPinBlock, /#auth-form/);
+  assert.doesNotMatch(localPinBlock, /getBoundSaasUserId/);
+  assert.match(auth, /Sin sesión SaaS válida nunca dejamos la app abierta y vacía/);
+  assert.match(auth, /dialog\.showModal\(\)/);
+  assert.match(auth, /showPane\('login'\)/);
 });
