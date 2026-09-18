@@ -50,6 +50,49 @@ Antes de considerar una tarea terminada:
 Los cambios deben ser reversibles. Mantener ramas/commits claros y no eliminar la fuente anterior hasta haber validado la sustitución.
 
 
+## CONTEXTO SEPARADO POR AGENTE / CONVERSACIÓN
+
+Cada agente debe trabajar en su propio bloque y NO reescribir ni mezclar el contexto de otro agente.
+
+Formato obligatorio al iniciar o continuar trabajo:
+- fecha;
+- agente;
+- tarea;
+- rama;
+- estado actual;
+- archivos tocados;
+- pruebas realizadas;
+- pendiente / siguiente paso.
+
+### ChatGPT — coordinación, GitHub y Supabase
+- Puede trabajar con GitHub y Supabase cuando las conexiones estén disponibles.
+- No debe afirmar que ha subido archivos a Cloudflare R2 si no dispone de acceso de escritura real a Cloudflare.
+- Si una tarea requiere R2 y no hay acceso directo, debe dejar el trabajo preparado/documentado para el agente que sí tenga ese acceso.
+- Debe mantener el contexto de esta conversación separado del bloque de Antigravity y PrograMARIO.
+
+### Antigravity — ejecución local en el Mac
+- Puede usar el Terminal local y la sesión de Wrangler ya autorizada.
+- Es el agente preferente para operaciones R2 cuando Cloudflare no esté disponible como conector.
+- Debe leer primero este archivo y la documentación específica de la tarea.
+- Debe ejecutar por sí mismo los comandos y verificaciones; no pedir a Miguel que copie comandos salvo bloqueo real de autorización.
+
+### PrograMARIO — programación e integración
+- Debe respetar los mismos guardarraíles globales.
+- Debe limitarse a programación, integración y pruebas de la tarea asignada.
+- No debe cambiar arquitectura, UX, datos persistidos ni servicios externos fuera del alcance pedido.
+- Si necesita una operación externa (R2, Supabase, despliegue), debe dejarla claramente indicada sin simular que se ha ejecutado.
+
+### Regla de traspaso entre agentes
+Cuando un agente termina o queda bloqueado, debe dejar en SU bloque:
+- qué hizo exactamente;
+- qué no hizo;
+- por qué se detuvo;
+- commit/PR/rama;
+- comando o acción siguiente, si procede;
+- cualquier validación pendiente.
+
+Ningún agente debe borrar el historial de otro agente. Si una conversación nueva continúa una tarea anterior, debe leer primero el bloque del agente anterior y después añadir su propio estado.
+
 ## Estado vigente: migración de vídeos Supabase Storage → Cloudflare R2
 
 Objetivo: reducir el egress de Supabase sin cambiar el comportamiento de CampoBase.
