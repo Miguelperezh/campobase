@@ -33,9 +33,13 @@ export function filterExercises(exercises, filters = {}) {
     ? normalizeFormatoJuego(formatVal, 'futbol_11')
     : null;
 
-  // El filtro base usa item.video, que en los ejercicios validados es el MP4 gráfico.
-  // Lo desactivamos aquí y aplicamos después el criterio correcto: vídeo humano de muestra.
-  const baseFilters = filters.video ? { ...filters, video: false } : filters;
+  // "Mis ejercicios" es un filtro virtual: no sustituye la categoría técnica real.
+  const onlyMine = filters.category === '__mine__';
+  const baseFilters = {
+    ...filters,
+    ...(onlyMine ? { category: '' } : {}),
+    ...(filters.video ? { video: false } : {}),
+  };
   let filtered;
 
   if (!['futbol_7', 'futbol_11'].includes(target)) {
@@ -50,6 +54,10 @@ export function filterExercises(exercises, filters = {}) {
     });
 
     filtered = filterExercisesBase(adapted, baseFilters).map((item) => originals.get(item.id) || item);
+  }
+
+  if (onlyMine) {
+    filtered = filtered.filter((item) => item?.isMine === true || item?.source === 'mine' || item?.recordType === 'exercise');
   }
 
   return filters.video ? filtered.filter(hasHumanVideo) : filtered;
