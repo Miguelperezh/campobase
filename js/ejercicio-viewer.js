@@ -64,6 +64,47 @@ if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
+function displayKey(value = '') {
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('es');
+}
+
+function uniqueDisplayTags(values = []) {
+  const seen = new Set();
+  return values.filter((value) => {
+    const clean = String(value || '').replace(/^--\s*/, '').trim();
+    const key = displayKey(clean);
+    if (!clean || !key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function formatExercisePlayers(value = '') {
+  const source = String(value || '').trim();
+  if (!source || !source.includes('/')) return source;
+  const numbers = [...source.matchAll(/\d+(?:[.,]\d+)?/g)]
+    .map((match) => Number(match[0].replace(',', '.')))
+    .filter(Number.isFinite);
+  if (!numbers.length) return source;
+  const min = Math.min(...numbers);
+  const max = Math.max(...numbers);
+  const fmt = (number) => Number.isInteger(number) ? String(number) : String(number).replace('.', ',');
+  return min === max ? `${fmt(min)} jugadores` : `${fmt(min)}-${fmt(max)} jugadores`;
+}
+
+function isUsablePreview(value = '') {
+  const source = String(value || '').trim();
+  if (!source) return false;
+  // Este bucket no existe en CampoBase; no renderizar nunca una imagen rota.
+  if (/\/ejercicio-previews\//i.test(source)) return false;
+  if (/\.(?:mp4|webm|mov|m4v)(?:$|[?#])/i.test(source)) return false;
+  return true;
+}
+
 export function formatExerciseDuration(dur) {
   if (!dur) return '';
   if (typeof dur === 'object') {
@@ -74,6 +115,20 @@ export function formatExerciseDuration(dur) {
   const s = String(dur).trim();
   if (!s || s === 'null' || s === 'undefined') return '';
   if (/^\d+$/.test(s)) return `${s} min`;
+
+  // Algunos ejercicios nuevos traen carga F7 / F11 en la misma cadena.
+  // La tarjeta debe mostrar un único rango limpio, no dos textos separados por "/".
+  if (s.includes('/')) {
+    const numbers = [...s.matchAll(/\d+(?:[.,]\d+)?/g)]
+      .map((match) => Number(match[0].replace(',', '.')))
+      .filter(Number.isFinite);
+    if (numbers.length) {
+      const min = Math.min(...numbers);
+      const max = Math.max(...numbers);
+      const fmt = (number) => Number.isInteger(number) ? String(number) : String(number).replace('.', ',');
+      return min === max ? `${fmt(min)} min aprox.` : `${fmt(min)}-${fmt(max)} min aprox.`;
+    }
+  }
   return s;
 }
 
@@ -112,7 +167,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
 
   // Tags en cabecera
-  const tags = [ex.categoria, ...(ex.etiquetas || [])].filter(Boolean).map(t => typeof t === 'string' ? t.replace(/^--\s*/, '').trim() : t).filter(t => t && t !== '--');
+  const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]);
   const tagsHtml = tags.map(t => `<span class="brand-badge">${esc(t)}</span>`).join('');
 
   // 1. Qué se trabaja
@@ -147,7 +202,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 
   // 3. Datos rápidos
   const rapItems = [];
-  if (dr.jugadores) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">👥 Jugadores</span><span class="fact-value">${esc(dr.jugadores)}</span></div>`);
+  if (dr.jugadores) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">👥 Jugadores</span><span class="fact-value">${esc(formatExercisePlayers(dr.jugadores))}</span></div>`);
   const drDur = formatExerciseDuration(dr.duracion || ex.duracion || ex.duration || (ex.duracion_min ? `${ex.duracion_min} min` : ''));
   if (drDur) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">⏱ Duración</span><span class="fact-value">${esc(drDur)}</span></div>`);
   if (dr.espacio) rapItems.push(`<div class="quick-fact-card"><span class="fact-label">📐 Espacio</span><span class="fact-value">${esc(dr.espacio)}</span></div>`);
@@ -574,16 +629,27 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
  */
 export function renderExerciseGridCard(ex) {
   const media = ex.media || {};
-  const preview = media.preview || ex.preview || '';
+  const rawPreview = media.preview || ex.preview || '';
+  const preview = isUsablePreview(rawPreview) ? rawPreview : '';
+  // Si falta preview válido en un ejercicio nuevo, mostramos el primer fotograma
+  // del vídeo humano ya publicado. Evita imágenes rotas sin crear otro diseño.
+  const fallbackVideo = !preview && ex._nuevo_formato
+    ? String(ex.video_muestra_humanos || ex.video_muestra || ex.video || '').trim()
+    : '';
   const dr = ex.datos_rapidos || {};
-  const tags = [ex.categoria, ...(ex.etiquetas || [])].slice(0, 2);
+  const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]).slice(0, 2);
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
   const dur = formatExerciseDuration(dr.duracion || ex.duracion || ex.duration || (ex.duracion_min ? `${ex.duracion_min} min` : ''));
+  const players = formatExercisePlayers(dr.jugadores || '');
 
   return `
   <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
     <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
-      ${preview ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy">` : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
+      ${preview
+        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy">`
+        : fallbackVideo
+          ? `<video class="card-preview-img card-preview-video" muted playsinline preload="metadata" src="${esc(fallbackVideo)}#t=0.1" aria-label="${esc(cleanNombre)}"></video>`
+          : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
       ${dur ? `<span class="card-duration-badge">${esc(dur)}</span>` : ''}
     </div>
@@ -599,7 +665,7 @@ export function renderExerciseGridCard(ex) {
       <h3 class="card-title view-exercise" data-exercise-id="${esc(ex.id)}">${esc(cleanNombre)}</h3>
 
       <div class="card-meta-facts">
-        ${dr.jugadores ? `<span>👥 ${esc(dr.jugadores)}</span>` : ''}
+        ${players ? `<span>👥 ${esc(players)}</span>` : ''}
         ${dr.material ? `<span>📦 ${esc(dr.material)}</span>` : ''}
       </div>
 
