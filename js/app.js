@@ -2295,6 +2295,8 @@ function renderExercises() {
     favorites: form.elements.favorites.checked,
     video: form.elements.video.checked,
   };
+  const mineCategorySelected = filters.category === '__mine__';
+  if (mineCategorySelected) filters.category = '';
 
   const humanVideoExerciseIds = new Set(
     state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
@@ -2307,7 +2309,7 @@ function renderExercises() {
       ))
     : state.exercises;
 
-  const filterableExercises = exerciseLibraryMode === 'mine'
+  const filterableExercises = (exerciseLibraryMode === 'mine' || mineCategorySelected)
     ? withVideoFlags.filter((item) => item.userCreated === true)
     : withVideoFlags;
 
@@ -5483,7 +5485,10 @@ async function init() {
   addSessionForm.elements.dateYear.innerHTML = yearOptions();
   const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
-  $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
+  $('#exercise-filters').elements.category.insertAdjacentHTML(
+    'beforeend',
+    '<option value="__mine__">Mis ejercicios</option>' + categoryOptions,
+  );
 
   const exFilters = $('#exercise-filters');
   if (exFilters) {
@@ -5536,7 +5541,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2506-custom-sessions').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2507-mis-category').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {

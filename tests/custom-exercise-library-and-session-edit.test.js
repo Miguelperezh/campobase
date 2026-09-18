@@ -38,6 +38,13 @@ test('crear y editar sesiones usa el mismo builder y confirma el guardado', () =
 });
 
 test('la PWA fuerza la actualización de esta corrección', () => {
-  assert.match(sw, /force2506-custom-exercises-sessions/);
-  assert.match(app, /20260918-exercises-2506-custom-sessions/);
+  assert.match(sw, /force2507-mis-ejercicios-category/);
+  assert.match(app, /20260918-exercises-2507-mis-category/);
+});
+
+
+test('Mis ejercicios también está disponible en el filtro Categoría de la biblioteca', () => {
+  assert.match(app, /<option value="__mine__">Mis ejercicios<\/option>/);
+  assert.match(app, /mineCategorySelected = filters\.category === '__mine__'/);
+  assert.match(app, /exerciseLibraryMode === 'mine' \|\| mineCategorySelected/);
 });
