@@ -1281,3 +1281,27 @@ Separación obligatoria:
 
 No mezclar ambas responsabilidades en una misma pantalla salvo que sea necesario por el paywall previo al acceso.
 
+---
+
+# 20. Simulación visual de prueba — solo para validación
+
+Existe un modo de simulación visual para poder revisar la experiencia de prueba gratuita antes de conectar Stripe real.
+
+Activación:
+- abrir la app de validación con `?simulacion=prueba`.
+
+La simulación debe:
+- mostrar una prueba activa ficticia;
+- mostrar el contador en **Hoy**;
+- mostrar fecha de finalización;
+- mostrar **Cancelar antes del primer cobro** en **Ajustes → Mi cuenta y suscripción**;
+- permitir simular la cancelación y mostrar el estado posterior;
+- indicar claramente que es una simulación;
+- no modificar Supabase;
+- no modificar Stripe;
+- no cancelar ni cambiar la suscripción real;
+- no conceder acceso real si la cuenta no lo tiene;
+- no usarse como sustituto de una prueba real de Stripe.
+
+La simulación sirve únicamente para validar diseño, textos y flujo de interacción.
+
