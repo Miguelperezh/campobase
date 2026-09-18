@@ -15,7 +15,11 @@ import e14 from './ejercicios-nuevo-formato/14-campobase-video-finalizacion-dobl
 import e15 from './ejercicios-nuevo-formato/15-campobase-video-reaccion-espaldas-senales-lateral-giro-cono-balon-v2.js';
 import e16 from './ejercicios-nuevo-formato/16-campobase-video-reaccion-lateral-senal-balon-cono.js';
 
-const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16];
+// Los 12 primeros son las versiones actuales validadas.
+// e13-e16 se conservan en el repositorio únicamente como versiones anteriores,
+// pero no deben aparecer en la biblioteca activa ni en el selector de sesiones.
+const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12];
+const RAW_EJERCICIOS_NUEVO_FORMATO_ANTERIORES = [e13, e14, e15, e16];
 
 function key(value = '') {
   return String(value)
@@ -75,6 +79,21 @@ const GRAPHIC_VIDEO_PATH_ALIAS = Object.freeze({
     'assets/ejercicios/CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT/CampoBase_Rodillas_Altas_Laterales_Zigzag_Cambios_Direccion_Sprint_V1.mp4',
 });
 
+const GRAPHIC_MEDIA_CROP = Object.freeze({
+  'CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL': { x: 52, y: 217, width: 812, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M': { x: 47, y: 217, width: 817, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE': { x: 54, y: 219, width: 406, height: 553, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION': { x: 47, y: 217, width: 821, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO': { x: 52, y: 217, width: 812, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION': { x: 65, y: 230, width: 786, height: 437, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2': { x: 56, y: 221, width: 804, height: 549, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION-V2': { x: 55, y: 219, width: 815, height: 552, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES': { x: 52, y: 217, width: 812, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3': { x: 47, y: 217, width: 817, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES': { x: 54, y: 219, width: 808, height: 553, sourceWidth: 1280, sourceHeight: 820 },
+  'CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT': { x: 52, y: 217, width: 812, height: 557, sourceWidth: 1280, sourceHeight: 820 },
+});
+
 const HUMAN_VIDEO_PATH_ALIAS = Object.freeze({
   // El vídeo humano de esta conversión ya existe en Storage con su ID histórico.
   'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
@@ -114,6 +133,8 @@ function normalizeNewExercise(exercise) {
   if (!humanVideo && HUMAN_VIDEO_PATH_ALIAS[exercise.id]) {
     humanVideo = HUMAN_VIDEO_PUBLIC_BASE + HUMAN_VIDEO_PATH_ALIAS[exercise.id];
   }
+
+  const graphicCrop = GRAPHIC_MEDIA_CROP[exercise.id] || null;
 
   const originalPreview = String(
     exercise.preview
@@ -178,6 +199,8 @@ function normalizeNewExercise(exercise) {
     },
     preview,
     preview_video: graphicVideo,
+    preview_crop: graphicCrop,
+    media_crop: graphicCrop,
     video_ejercicio: graphicVideo,
     video: humanVideo,
     video_muestra_humanos: humanVideo,
@@ -189,4 +212,10 @@ function normalizeNewExercise(exercise) {
 export const EJERCICIOS_NUEVO_FORMATO = Object.freeze(
   RAW_EJERCICIOS_NUEVO_FORMATO.map(normalizeNewExercise)
 );
+
+// Respaldo explícito: se conserva, pero ningún catálogo activo lo importa.
+export const EJERCICIOS_NUEVO_FORMATO_ANTERIORES = Object.freeze(
+  RAW_EJERCICIOS_NUEVO_FORMATO_ANTERIORES.map(normalizeNewExercise)
+);
+
 export const NUEVOS_EJERCICIOS_IDS = Object.freeze(EJERCICIOS_NUEVO_FORMATO.map(({ id }) => id));
