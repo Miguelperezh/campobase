@@ -1194,3 +1194,67 @@ Sí pueden mostrarse beneficios concretos para el usuario, por ejemplo:
 
 La infraestructura técnica puede seguir existiendo y documentarse en archivos técnicos, pero no debe aparecer como función comercial salvo petición expresa del usuario.
 
+---
+
+# 18. Fase 4 — diseño validado y flujo obligatorio de registro, prueba y pago
+
+**Estado visual validado por el usuario el 18/09/2026.**
+
+El diseño actual de Planes, la presentación de funciones, la regla comercial de acceso y la sección ampliada de Cuenta de delegado se consideran validados. No rehacer su estructura visual sin una petición posterior expresa.
+
+## 18.1 Registro con plan y método de pago
+
+Una cuenta principal nueva no debe obtener acceso solo por registrarse.
+
+Flujo obligatorio:
+1. el usuario puede ver Planes antes de registrarse;
+2. al crear la cuenta debe elegir plan mensual o anual;
+3. después de confirmar/identificar su cuenta debe completar Stripe Checkout y dejar un método de pago;
+4. Stripe inicia una prueba gratuita de 14 días;
+5. durante esos 14 días no se cobra;
+6. mostrar siempre la fecha exacta en la que termina la prueba y comenzaría el primer cobro;
+7. el usuario puede cancelar antes de esa fecha y no debe producirse el primer cobro;
+8. cuando Stripe confirma la prueba, la cuenta pasa a estado `trial` y obtiene acceso;
+9. si no completa Stripe y tampoco dispone de un código gratuito válido, no puede entrar a los datos del equipo.
+
+No confundir:
+- **cuenta creada** con **acceso concedido**;
+- **plan elegido** con **pago/método de pago configurado**;
+- **código de descuento** con **código gratuito**.
+
+## 18.2 Fecha de finalización de la prueba
+
+La fecha de prueba debe proceder del servidor/Supabase y mantenerse alineada con Stripe.
+
+En interfaz debe mostrarse con un texto inequívoco, por ejemplo:
+
+**Prueba gratis hasta el 2 de octubre de 2026. No se te cobrará antes de esa fecha. Puedes cancelar antes de que termine la prueba.**
+
+No usar una fecha inventada ni depender solo del reloj del navegador cuando ya exista una fecha de servidor.
+
+## 18.3 Cancelación
+
+Debe existir una acción real de cancelación cuando ya existe una suscripción Stripe.
+
+Durante la prueba:
+- cancelar debe programar la baja al final de la prueba;
+- el usuario conserva acceso hasta la fecha de fin;
+- no debe producirse el primer cobro.
+
+En una suscripción pagada:
+- cancelar debe programar la baja al final del periodo ya pagado;
+- el acceso se mantiene hasta la fecha vigente.
+
+La cancelación debe ejecutarse en servidor/Edge Function. Nunca simularla únicamente en la interfaz.
+
+## 18.4 Regla de acceso reforzada
+
+Para cuentas principales nuevas, el estado previo a configurar Stripe debe ser un estado sin acceso (por ejemplo `pending_payment`).
+
+Solo conceden acceso:
+- `trial` confirmado;
+- `gift_free` válido;
+- `active` pagado.
+
+El delegado sigue heredando el acceso del titular y nunca configura un pago propio.
+
