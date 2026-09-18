@@ -1,0 +1,29 @@
+name: Finalize CampoBase video releases
+
+on:
+  push:
+    branches:
+      - github-releases-video-test
+    paths:
+      - .github/workflows/finalize-video-releases.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Promote production release
+        run: |
+          set -euo pipefail
+          gh release edit campobase-videos-v1             --repo "$GITHUB_REPOSITORY"             --title "CampoBase video assets v1"             --notes "Almacenamiento de vídeo de producción de CampoBase. Assets gestionados automáticamente; no borrar manualmente."             --prerelease=false             --latest=false
+
+      - name: Remove isolated test release
+        run: |
+          set -euo pipefail
+          if gh release view campobase-video-storage-test-v1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete campobase-video-storage-test-v1 --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+          fi
