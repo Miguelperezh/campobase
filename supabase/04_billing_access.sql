@@ -2,7 +2,7 @@
 -- Mantiene al propietario con acceso permanente y bloquea datos SaaS cuando
 -- la prueba o suscripción deja de estar vigente.
 
-create or replace function public.has_app_access(p_user_id uuid default auth.uid())
+create or replace function public.has_app_access()
 returns boolean
 language sql
 stable
@@ -13,13 +13,13 @@ as $$
     exists (
       select 1
       from public.perfiles p
-      where p.id = p_user_id
+      where p.id = auth.uid()
         and p.role = 'owner'
     )
     or exists (
       select 1
       from public.suscripciones s
-      where s.user_id = p_user_id
+      where s.user_id = auth.uid()
         and (
           s.estado = 'gift_free'
           or (
@@ -35,8 +35,8 @@ as $$
     );
 $$;
 
-revoke all on function public.has_app_access(uuid) from public;
-grant execute on function public.has_app_access(uuid) to authenticated;
+revoke all on function public.has_app_access() from public;
+grant execute on function public.has_app_access() to authenticated;
 
 do $$
 declare
@@ -48,8 +48,8 @@ begin
     execute format(
       'create policy campobase_user_%I on public.%I
        for all to authenticated
-       using (auth.uid() = user_id and public.has_app_access(auth.uid()))
-       with check (auth.uid() = user_id and public.has_app_access(auth.uid()))',
+       using (auth.uid() = user_id and public.has_app_access())
+       with check (auth.uid() = user_id and public.has_app_access())',
       t, t
     );
   end loop;
