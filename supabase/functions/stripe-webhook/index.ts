@@ -89,10 +89,18 @@ Deno.serve(async (req) => {
     }
     if (!userId) return;
 
-    const activeStatuses = new Set(["active", "trialing"]);
-    const status = activeStatuses.has(stripeSub.status) ? "active" : stripeSub.status === "canceled" ? "inactive" : stripeSub.status;
-    const expires = Number(stripeSub.current_period_end)
-      ? new Date(Number(stripeSub.current_period_end) * 1000).toISOString()
+    const status = stripeSub.status === "trialing"
+      ? "trial"
+      : stripeSub.status === "active"
+        ? "active"
+        : stripeSub.status === "canceled"
+          ? "inactive"
+          : stripeSub.status;
+    const expirySeconds = stripeSub.status === "trialing" && Number(stripeSub.trial_end)
+      ? Number(stripeSub.trial_end)
+      : Number(stripeSub.current_period_end);
+    const expires = expirySeconds
+      ? new Date(expirySeconds * 1000).toISOString()
       : null;
 
     await admin.from("suscripciones").update({
@@ -101,6 +109,7 @@ Deno.serve(async (req) => {
       stripe_customer_id: typeof stripeSub.customer === "string" ? stripeSub.customer : stripeSub.customer?.id || null,
       stripe_subscription_id: stripeSub.id,
       expira_en: expires,
+      cancel_at_period_end: Boolean(stripeSub.cancel_at_period_end),
       updated_at: new Date().toISOString(),
     }).eq("user_id", userId);
   }
@@ -125,6 +134,7 @@ Deno.serve(async (req) => {
       const query = admin.from("suscripciones").update({
         estado: "inactive",
         expira_en: object.current_period_end ? new Date(Number(object.current_period_end) * 1000).toISOString() : new Date().toISOString(),
+        cancel_at_period_end: true,
         updated_at: new Date().toISOString(),
       });
       if (userId) await query.eq("user_id", userId);
