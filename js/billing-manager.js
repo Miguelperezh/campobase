@@ -203,8 +203,17 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
       <div class="panel-head">
         <p class="eyebrow">Acceso completo</p>
         <h3>Elige tu plan</h3>
-        <p class="meta">Mantén todas las herramientas del equipo disponibles en tu cuenta.</p>
+        <p class="meta">Todas las funciones de CampoBase están incluidas en mensual y anual.</p>
         <p><span class="badge">Pago seguro con Stripe</span></p>
+      </div>
+      <div class="cb-access-rule">
+        <strong>Para entrar a CampoBase necesitas una de estas 3 opciones</strong>
+        <div class="cb-access-options">
+          <div><span aria-hidden="true">🆓</span><b>Prueba activa</b><small>14 días gratis desde el alta</small></div>
+          <div><span aria-hidden="true">🎁</span><b>Código gratuito</b><small>Regalo válido o meses gratis vigentes</small></div>
+          <div><span aria-hidden="true">💳</span><b>Suscripción</b><small>Mensual o anual pagada</small></div>
+        </div>
+        <p class="meta"><strong>Si no tienes ninguna de las tres, no se permite entrar a los datos del equipo.</strong></p>
       </div>
       <article class="panel cb-plan-includes">
         <h4>Todo CampoBase incluido</h4>
