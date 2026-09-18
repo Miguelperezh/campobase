@@ -18,9 +18,9 @@ test('la recuperación fuerza app y service worker nuevos', async () => {
     projectFile('js/app.js'),
     projectFile('sw.js'),
   ]);
-  assert.match(html, /js\/app\.js\?v=2504/);
-  assert.match(html, /js\/redesign-nav\.js\?v=2504/);
+  assert.match(html, /js\/app\.js\?v=2503/);
+  assert.match(html, /js\/redesign-nav\.js\?v=2503/);
   assert.match(app, /emergency-auth-restore-v3/);
   assert.match(sw, /emergency-auth-restore-v3/);
-  assert.match(sw, /\.\/js\/app\.js\?v=2504/);
+  assert.match(sw, /\.\/js\/app\.js\?v=2503/);
 });
