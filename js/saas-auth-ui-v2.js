@@ -439,7 +439,10 @@ async function handlePersistentSession(client) {
     return true;
   }
   if (bound !== session.user.id) return false;
-  if (browserSessionIsActive(session.user.id)) return unlockBoundSession(client);
+  if (browserSessionIsActive(session.user.id)) {
+    clearBrowserSessionActive();
+    return unlockBoundSession(client);
+  }
   if (remembered?.userId === session.user.id) {
     showRememberedPane(remembered);
     return true;
@@ -686,6 +689,7 @@ export async function initSaasAuth(client) {
 
   if (session?.user && bound === session.user.id) {
     if (browserSessionIsActive(session.user.id)) {
+      clearBrowserSessionActive();
       unlockBoundSession(client).catch(() => {});
       return;
     }
