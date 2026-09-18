@@ -369,3 +369,30 @@ body.cb-redesign-active #cb-delegate-account-panel,
     grid-template-columns: 1fr !important;
   }
 }
+
+
+.cb-trial-summary {
+  display: grid;
+  gap: .35rem;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 14px;
+  background: var(--cb-slate-50, #f8fafc);
+}
+
+.cb-trial-summary h4,
+.cb-trial-summary p,
+.cb-cancel-subscription p {
+  margin: 0;
+}
+
+.cb-cancel-subscription {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+}
+
+.cb-cancel-subscription .secondary {
+  justify-self: start;
+}
