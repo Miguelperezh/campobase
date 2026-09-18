@@ -1305,3 +1305,66 @@ La simulación debe:
 
 La simulación sirve únicamente para validar diseño, textos y flujo de interacción.
 
+---
+
+# 21. Colores y tipografía — siempre vinculados a Ajustes
+
+Esta regla aplica a toda la interfaz, incluida Fase 4, simulaciones, Planes, Ajustes y futuros módulos.
+
+## 21.1 Botones
+
+Los botones principales no pueden llevar un color fijo de marca dentro del CSS.
+
+Deben usar el color de acento configurado en:
+
+**Ajustes → Preferencias visuales y tema**
+
+Variables de referencia:
+- `--cb-brand`;
+- `--brand`;
+- `--cb-accent`.
+
+El texto de un botón principal debe usar el contraste calculado para ese color:
+- `--cb-accent-text`.
+
+No volver a imponer un rojo fijo como `--cb-red-600` para botones principales si el usuario ha elegido otro color de acento.
+
+Los botones secundarios deben conservar una apariencia secundaria, pero derivada del color configurado y del fondo actual, manteniendo contraste y legibilidad.
+
+## 21.2 Color de fuente
+
+Textos, títulos, metadatos y componentes nuevos deben heredar el color de fuente configurado por el usuario.
+
+Variables de referencia:
+- `--ink`;
+- `--cb-font-custom-color`;
+- variables `--cb-slate-*` ya sincronizadas por el gestor de tema cuando proceda.
+
+No introducir negro, blanco o gris como color principal de texto si eso impide que la preferencia de fuente de Ajustes se aplique.
+
+Excepción:
+- cuando un botón o elemento coloreado necesita contraste, usar el color de contraste calculado (`--cb-accent-text`) en vez del color normal de fuente.
+
+## 21.3 Fase 4 y simulaciones
+
+En:
+- Mi cuenta y suscripción;
+- Planes;
+- contador de prueba;
+- simulación de prueba;
+- Cuenta de delegado;
+- paywall;
+- botones de contratación/cancelación;
+
+los colores deben cambiar automáticamente al modificar el tema desde Ajustes.
+
+No crear una paleta propia para Fase 4.
+
+## 21.4 Comprobación
+
+Antes de dar por validado un cambio visual:
+1. cambiar el color de acento en Ajustes y comprobar los botones;
+2. cambiar el color de fuente y comprobar títulos, párrafos y metadatos;
+3. comprobar que el texto de los botones mantiene contraste;
+4. comprobar que ningún componente nuevo conserva rojo/negro/blanco fijo salvo que sea semánticamente necesario.
+
