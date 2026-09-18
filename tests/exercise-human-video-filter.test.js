@@ -74,9 +74,13 @@ test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7
     assert.equal(String(exercise.datos_rapidos?.jugadores || '').includes('/'), false, `${exercise.id}: jugadores mezclados F7/F11`);
     assert.equal(String(exercise.datos_rapidos?.duracion || '').includes('/'), false, `${exercise.id}: duración mezclada F7/F11`);
 
-    assert.ok(exercise.media?.preview, `${exercise.id}: debe conservar la URL de preview.png`);
-    assert.match(exercise.media.preview, /\/ejercicio-videos\//, `${exercise.id}: preview debe usar el bucket ejercicio-videos`);
-    assert.doesNotMatch(exercise.media.preview, /\/ejercicio-previews\//, `${exercise.id}: no debe usar el bucket inexistente`);
+    if (exercise.media?.preview) {
+      assert.match(exercise.media.preview, /\/ejercicio-videos\//, `${exercise.id}: preview publicada debe usar el bucket ejercicio-videos`);
+      assert.doesNotMatch(exercise.media.preview, /\/ejercicio-previews\//, `${exercise.id}: no debe usar el bucket inexistente`);
+    } else {
+      assert.ok(exercise.preview_video, `${exercise.id}: si preview.png no está publicada debe existir fallback desde el MP4 gráfico`);
+      assert.equal(exercise.preview_video, exercise.media?.video, `${exercise.id}: la preview temporal debe salir del MP4 gráfico, no del vídeo humano`);
+    }
 
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
     assert.equal(exercise.media?.video, exercise._video_ejercicio_original, `${exercise.id}: el reproductor principal debe ser el MP4 gráfico`);
