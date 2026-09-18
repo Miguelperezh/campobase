@@ -605,6 +605,7 @@ async function refreshBillingState() {
     currentContext = { user: null, profile: null, subscription: null, source: 'none' };
     updateAccountBillingUI(document, currentContext);
     renderPlansView(document, currentContext);
+    renderTodayTrialBanner(document, currentContext);
     closePaywall(document);
     return currentContext;
   }
@@ -626,6 +627,7 @@ async function refreshBillingState() {
   };
   updateAccountBillingUI(document, currentContext);
   renderPlansView(document, currentContext);
+  renderTodayTrialBanner(document, currentContext);
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
