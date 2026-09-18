@@ -48,6 +48,23 @@ test('el mapeo conserva separados el MP4 gráfico y el vídeo humano', () => {
   assert.equal(mapped.hasHumanVideo, true);
 });
 
+test('un MP4 gráfico repetido en video no se considera vídeo humano', () => {
+  const source = {
+    id: 'test-solo-grafico',
+    nombre: 'Solo gráfico',
+    categoria: 'Finalización',
+    formato_juego: 'Fútbol 11',
+    datos_rapidos: {},
+    media: { video: 'https://example.test/ejercicio.mp4' },
+    video: 'https://example.test/ejercicio.mp4',
+  };
+
+  const mapped = toCampoBaseExercise(source);
+  assert.equal(mapped.video, 'https://example.test/ejercicio.mp4');
+  assert.equal(mapped.video_muestra, '');
+  assert.equal(mapped.hasHumanVideo, false);
+});
+
 test('los 16 nuevos se muestran limpios: sin categoría duplicada, sin barras F7/F11 y sin preview roto', () => {
   assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 16);
   for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
@@ -140,7 +157,8 @@ test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categor�
   assert.match(card, /card-preview-video/);
   assert.equal((card.match(/<span class="pill">Finalización<\/span>/g) || []).length, 1);
   assert.match(card, /15-22 jugadores/);
-  assert.match(card, /8-12 min aprox\./);
+  assert.doesNotMatch(card, /card-duration-badge/);
+  assert.doesNotMatch(card, /8-12 min aprox\./);
 });
 
 
