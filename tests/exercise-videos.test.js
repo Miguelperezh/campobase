@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
 import {
   VIDEO_MAX_BYTES,
   buildVideoRecord,
@@ -76,4 +78,33 @@ test('la sección de vídeos muestra reproductor y solo Migue puede subir o borr
 test('sin vídeos y sin permiso de Migue no se pinta la sección', () => {
   assert.equal(renderVideoSectionHTML([], { role: 'delegate', exerciseId: 'EX-1' }), '');
   assert.match(renderVideoSectionHTML([], { role: 'owner', exerciseId: 'EX-1' }), /Sin vídeos todavía/);
+});
+
+
+test('todas las referencias MP4 de la biblioteca migrada existen en el manifiesto de GitHub Releases', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../scripts/github-release-video-manifest.json', import.meta.url), 'utf8'));
+  const knownPaths = new Set(manifest.map(({ name }) => name));
+  const found = new Set();
+
+  const visit = (value) => {
+    if (typeof value === 'string') {
+      if (value.includes('/storage/v1/object/public/ejercicio-videos/') && /\.mp4(?:$|[?#])/i.test(value)) {
+        const marker = '/storage/v1/object/public/ejercicio-videos/';
+        const raw = value.slice(value.indexOf(marker) + marker.length).split(/[?#]/, 1)[0];
+        const path = raw.split('/').map((segment) => decodeURIComponent(segment)).join('/');
+        found.add(path);
+        assert.ok(knownPaths.has(path), `Falta en el release manifest: ${path}`);
+        assert.match(resolveHostedVideoUrl(value), /\/releases\/download\/campobase-videos-v1\//);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (value && typeof value === 'object') Object.values(value).forEach(visit);
+  };
+
+  EJERCICIOS_VALIDADOS.forEach(visit);
+  assert.ok(found.size > 0, 'Debe encontrar referencias históricas MP4 en la biblioteca');
 });
