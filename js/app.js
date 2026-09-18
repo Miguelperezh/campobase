@@ -4743,10 +4743,10 @@ function wireEvents() {
     }
     $(`#${button.dataset.dialog}`).showModal();
   }));
-  $('.exercise-library-tab').forEach((button) => button.addEventListener('click', () => {
+  $$('.exercise-library-tab').forEach((button) => button.addEventListener('click', () => {
     setExerciseLibraryMode(button.dataset.exerciseLibraryMode);
   }));
-  $('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
+  $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
 
   playerCropper = wirePhotoCropperField({
     fileInput: $('#player-form [name="photo"]'),
