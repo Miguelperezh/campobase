@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=2503">
   <link rel="stylesheet" href="styles-redesign.css?v=2503">
+  <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -92,6 +93,7 @@
       <div class="section-head today-section-head">
         <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
       </div>
+      <!-- CampoBase billing: trial banner injected here after the section header when applicable -->
       <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
     </section>
 
@@ -178,9 +180,67 @@
       <div id="tacticas-interactivas" class="exercise-grid"></div>
     </section>
 
+    <section id="planes" class="view" aria-labelledby="title-planes">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Suscripción y pagos</p>
+          <h2 id="title-planes">Planes</h2>
+        </div>
+      </div>
+      <div id="cb-plans-content" class="stack">
+        <article class="panel">
+          <p class="meta">Cargando planes y estado de la cuenta…</p>
+        </article>
+      </div>
+    </section>
+
     <section id="ajustes" class="view" aria-labelledby="title-settings">
       <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
       <div class="settings-grid">
+        <article id="cb-delegate-account-panel" class="panel cb-delegate-account-panel">
+          <div class="panel-head">
+            <span class="eyebrow">Acceso del mismo equipo</span>
+            <h3>Cuenta de delegado</h3>
+            <p class="meta">Crea una cuenta independiente para tu delegado. Trabajará sobre este mismo equipo y tú decides exactamente qué partes de CampoBase puede ver.</p>
+          </div>
+          <div id="cb-delegate-account-content">
+            <div class="cb-delegate-access-preview">
+              <div class="cb-delegate-account-summary">
+                <div>
+                  <span class="eyebrow">Cuenta asociada</span>
+                  <label>Nombre del delegado
+                    <input type="text" value="" placeholder="Nombre y apellidos" disabled>
+                  </label>
+                </div>
+                <div>
+                  <span class="eyebrow">Acceso propio</span>
+                  <label>Correo del delegado
+                    <input type="email" value="" placeholder="delegado@correo.es" disabled>
+                  </label>
+                </div>
+              </div>
+              <div class="cb-delegate-preview-copy">
+                <h4>¿Qué puede ver el delegado?</h4>
+                <p class="meta">La vista de delegado del partido siempre está incluida. Marca las demás secciones que quieras permitir. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
+              </div>
+              <div class="cb-delegate-permissions-grid" aria-label="Permisos configurables del delegado">
+                <label class="cb-delegate-permission"><input type="checkbox" checked disabled><span>Vista delegado del partido · acceso base</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Inicio / Hoy</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Plantilla</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Cuerpo técnico</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Asistencia</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Convocatorias</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Preparación de partido</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Partido en vivo</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Calendario y resultados</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Sesiones de entrenamiento</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Ejercicios</span></label>
+                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Pizarra táctica</span></label>
+              </div>
+              <p class="meta cb-delegate-login-note"><strong>Gestión:</strong> al entrar como Administrador o Entrenador podrás indicar el nombre y correo del delegado y activar o quitar estos permisos.</p>
+            </div>
+          </div>
+        </article>
         <article class="panel">
           <h3>Identidad del club</h3>
           <p class="meta">Personaliza el escudo y nombre de tu equipo para toda la aplicación.</p>
