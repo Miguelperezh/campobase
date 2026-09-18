@@ -27,17 +27,28 @@ jobs:
           echo "source_size=$SIZE"
           test "$SIZE" = "34993"
 
-      - name: Create public prerelease and upload test asset
+      - name: Create prerelease and upload MP4 with correct MIME
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+
           if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$TAG"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "CampoBase video storage test"               --notes "Prueba técnica aislada de un MP4. No usar en producción hasta validar."               --prerelease               --latest=false
           fi
-          gh release upload "$TAG" "/tmp/$ASSET" --repo "$GITHUB_REPOSITORY" --clobber
 
-      - name: Verify complete download, Range seek and response timing
+          RELEASE_ID="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.id')"
+          EXISTING_ID="$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets"             --jq ".[] | select(.name == \"$ASSET\") | .id" | head -1 || true)"
+          if [ -n "$EXISTING_ID" ]; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$EXISTING_ID"
+          fi
+
+          curl -fL             -X POST             -H "Accept: application/vnd.github+json"             -H "Authorization: Bearer $GH_TOKEN"             -H "X-GitHub-Api-Version: 2026-03-10"             -H "Content-Type: video/mp4"             "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$ASSET"             --data-binary "@/tmp/$ASSET"             -o /tmp/upload-response.json
+
+          cat /tmp/upload-response.json
+          grep -q '"content_type":"video/mp4"' /tmp/upload-response.json
+
+      - name: Verify complete download, Range seek, MIME and response timing
         run: |
           set -euo pipefail
           URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
