@@ -82,15 +82,12 @@ export function getCachedSubscription(userId) {
 export async function fetchUserSubscription(client, userId) {
   if (!client || !userId) return { subscription: null, source: 'none' };
   try {
-    const { data, error } = await client
-      .from('suscripciones')
-      .select('user_id,estado,plan,promo_code,dias_prueba,expira_en,pending_discount_code,pending_discount_percent,created_at,updated_at')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data, error } = await client.rpc('get_my_subscription');
     if (error) throw error;
-    if (data) {
-      saveCurrentSubscription(data, userId);
-      return { subscription: data, source: 'server' };
+    const row = Array.isArray(data) ? (data[0] || null) : (data || null);
+    if (row) {
+      saveCurrentSubscription(row, userId);
+      return { subscription: row, source: 'server' };
     }
     return { subscription: null, source: 'server' };
   } catch (error) {
@@ -178,8 +175,22 @@ function formatExpiry(value) {
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-export function renderPaywallModalHTML(sub = null) {
+export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
   const discount = Number(sub?.pending_discount_percent) || 0;
+  if (delegate) {
+    return `
+      <div class="cb-paywall-modal-card">
+        <div class="panel-head">
+          <p class="eyebrow">Acceso del equipo</p>
+          <h3>La suscripción del equipo necesita renovación</h3>
+          <p class="meta">La suscripción y los códigos promocionales los gestiona el entrenador titular. Tu cuenta de delegado seguirá asociada al mismo equipo.</p>
+        </div>
+        <div class="button-row cb-paywall-account-actions">
+          <button type="button" class="secondary" id="cb-paywall-logout-btn">Salir de la cuenta</button>
+        </div>
+      </div>
+    `;
+  }
   return `
     <div class="cb-paywall-modal-card">
       <div class="panel-head">
@@ -255,8 +266,9 @@ function updateAccountBillingUI(root, context) {
   discountBox?.classList.toggle('hidden', discount <= 0);
   if (discountEl && discount > 0) discountEl.textContent = `${discount}%`;
 
-  const isOwner = context.profile?.role === 'owner';
-  upgrade?.classList.toggle('hidden', isOwner || status.canUseApp && sub?.estado !== 'trial');
+  const isOwner = context.profile?.role === 'owner' || context.profile?.role === 'admin';
+  const isDelegate = context.profile?.role === 'delegate';
+  upgrade?.classList.toggle('hidden', isOwner || isDelegate || status.canUseApp && sub?.estado !== 'trial');
 }
 
 function closePaywall(root = document) {
@@ -271,7 +283,7 @@ async function openPaywallModal(root = document, { forced = false } = {}) {
   const body = root.getElementById('cb-paywall-dialog-body');
   if (!dialog || !body) return;
   dialog.dataset.forced = String(Boolean(forced));
-  body.innerHTML = renderPaywallModalHTML(currentContext?.subscription);
+  body.innerHTML = renderPaywallModalHTML(currentContext?.subscription, { delegate: currentContext?.profile?.role === 'delegate' });
 
   const closeButton = dialog.querySelector('[data-close]');
   closeButton?.classList.toggle('hidden', forced);
@@ -372,9 +384,10 @@ async function refreshBillingState() {
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
-  if (profile?.role !== 'owner' && subscriptionChecked && !canUse) {
+  const isAdmin = profile?.role === 'owner' || profile?.role === 'admin';
+  if (!isAdmin && subscriptionChecked && !canUse) {
     await openPaywallModal(document, { forced: true });
-  } else if (canUse || profile?.role === 'owner') {
+  } else if (canUse || isAdmin) {
     closePaywall(document);
   }
 
