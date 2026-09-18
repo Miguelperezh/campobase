@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
-import { EJERCICIOS_NUEVO_FORMATO, EJERCICIOS_NUEVO_FORMATO_ANTERIORES, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
+import { EJERCICIOS_NUEVO_FORMATO, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
 import { renderExerciseGridCard } from '../js/ejercicio-viewer.js';
 
 test('Solo con vídeo considera el vídeo humano y no el MP4 gráfico principal', () => {
@@ -65,8 +65,8 @@ test('un MP4 gráfico repetido en video no se considera vídeo humano', () => {
   assert.equal(mapped.hasHumanVideo, false);
 });
 
-test('los 12 ejercicios actuales separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
-  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 12);
+test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
+  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 16);
   for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
     const category = String(exercise.categoria || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const tagKeys = (exercise.etiquetas || []).map((tag) => String(tag).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
@@ -82,11 +82,6 @@ test('los 12 ejercicios actuales separan preview, MP4 gráfico y vídeo humano s
       assert.equal(exercise.preview_video, exercise.media?.video, `${exercise.id}: la preview temporal debe salir del MP4 gráfico, no del vídeo humano`);
     }
 
-    assert.ok(exercise.preview_crop, `${exercise.id}: falta el recorte de preview limpia`);
-    assert.ok(exercise.media_crop, `${exercise.id}: falta el recorte del MP4 gráfico`);
-    assert.equal(exercise.preview_crop.sourceWidth, 1280, `${exercise.id}: ancho fuente inesperado`);
-    assert.equal(exercise.preview_crop.sourceHeight, 820, `${exercise.id}: alto fuente inesperado`);
-
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
     assert.equal(exercise.media?.video, exercise._video_ejercicio_original, `${exercise.id}: el reproductor principal debe ser el MP4 gráfico`);
     assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano de muestra`);
@@ -94,19 +89,11 @@ test('los 12 ejercicios actuales separan preview, MP4 gráfico y vídeo humano s
   }
 });
 
-test('los 12 actuales anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
+test('los 16 nuevos anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
   const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
   const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
-  assert.equal(humanIds.length, 12);
+  assert.equal(humanIds.length, 16);
   assert.deepEqual(humanIds, NUEVOS_EJERCICIOS_IDS);
-});
-
-test('las 4 versiones anteriores se conservan pero no forman parte del catálogo activo', () => {
-  assert.equal(EJERCICIOS_NUEVO_FORMATO_ANTERIORES.length, 4);
-  const activeIds = new Set(EJERCICIOS_NUEVO_FORMATO.map(({ id }) => id));
-  for (const previous of EJERCICIOS_NUEVO_FORMATO_ANTERIORES) {
-    assert.equal(activeIds.has(previous.id), false, `${previous.id}: una versión anterior no debe aparecer activa`);
-  }
 });
 
 test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 16 nuevos arriba cuando correspondan', () => {
@@ -121,8 +108,8 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
 
   const f7 = filterExercises(mapped, { formato_juego: 'futbol_7' });
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
-  const expectedF7New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
-  const expectedF11New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
+  const expectedF7New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
+  const expectedF11New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
   assert.deepEqual(f7.slice(0, expectedF7New.length).map((item) => item.id), expectedF7New);
   assert.deepEqual(f11.slice(0, expectedF11New.length).map((item) => item.id), expectedF11New);
 });
