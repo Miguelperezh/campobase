@@ -130,7 +130,7 @@
   padding: .9rem;
   border: 1px solid var(--line, #e2e8f0);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--card, #fff) 96%, var(--cb-brand, #10b981) 4%);
+  background: var(--card, #fff);
 }
 
 .cb-feature-group-head {
@@ -150,8 +150,8 @@
   width: 36px;
   height: 28px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--cb-brand, #10b981) 12%, transparent);
-  color: var(--cb-brand, #0f766e);
+  background: var(--cb-slate-100, #f1f5f9);
+  color: var(--cb-slate-700, #334155);
   font-size: .74rem;
   font-weight: 900;
   letter-spacing: .08em;
@@ -161,9 +161,9 @@
   display: grid;
   gap: .75rem;
   padding: 1rem;
-  border: 2px solid color-mix(in srgb, var(--cb-brand, #10b981) 42%, var(--line, #e2e8f0));
+  border: 1px solid var(--line, #e2e8f0);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--card, #fff) 92%, var(--cb-brand, #10b981) 8%);
+  background: var(--cb-slate-50, #f8fafc);
 }
 
 .cb-access-flow {
@@ -202,15 +202,17 @@
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: var(--cb-brand, #10b981);
+  background: var(--cb-slate-900, #0f172a);
   color: #fff;
   font-weight: 900;
 }
 
 .cb-access-blocked {
   margin: 0;
+  padding-top: .7rem;
+  border-top: 1px solid var(--line, #e2e8f0);
   font-weight: 800;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 @media (max-width: 760px) {
