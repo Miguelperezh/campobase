@@ -154,9 +154,12 @@ function ensureBillingUI(root = document) {
         <p id="cb-account-expiry-box" class="hidden"><strong>Vigencia:</strong> <span id="cb-account-expiry-date">—</span></p>
         <p id="cb-account-discount-box" class="hidden"><strong>Descuento disponible:</strong> <span id="cb-account-discount">—</span></p>
       </div>
+      <div id="cb-account-trial-summary" class="cb-account-trial-summary hidden"></div>
       <div class="button-row" id="cb-account-actions">
         <button type="button" class="primary compact hidden" id="cb-account-upgrade-btn">⭐ Ver planes Pro</button>
+        <button type="button" class="secondary compact hidden" id="cb-account-cancel-btn">Cancelar renovación</button>
       </div>
+      <p id="cb-account-action-feedback" class="meta" aria-live="polite"></p>
     `;
     grid.prepend(panel);
   }
@@ -352,34 +355,6 @@ function renderPlansView(root = document, context = currentContext) {
 
   target.querySelector('#cb-paywall-logout-btn')?.classList.add('hidden');
 
-  if (!isDelegate && hasUser && sub?.stripe_subscription_id && ['trial', 'active'].includes(sub.estado)) {
-    const container = document.createElement('article');
-    container.className = 'panel cb-cancel-subscription';
-    const endDate = formatBillingDate(sub.expira_en);
-    container.innerHTML = sub.cancel_at_period_end
-      ? `<strong>Renovación cancelada</strong><p class="meta">Mantienes el acceso hasta ${endDate || 'el final del periodo actual'}. No se renovará automáticamente.</p>`
-      : `<strong>${sub.estado === 'trial' ? '¿No quieres continuar después de la prueba?' : 'Gestionar renovación'}</strong>
-         <p class="meta">${sub.estado === 'trial' ? `Puedes cancelar antes de ${endDate || 'que termine la prueba'} y no se realizará el primer cobro.` : 'Puedes cancelar la renovación y conservar el acceso hasta el final del periodo ya pagado.'}</p>
-         <button type="button" class="secondary compact" id="cb-cancel-subscription-btn">Cancelar renovación</button>
-         <p class="meta" id="cb-cancel-subscription-feedback" aria-live="polite"></p>`;
-    target.append(container);
-
-    const cancelButton = container.querySelector('#cb-cancel-subscription-btn');
-    cancelButton?.addEventListener('click', async () => {
-      if (!confirm('¿Quieres cancelar la renovación? Mantendrás el acceso hasta la fecha indicada.')) return;
-      cancelButton.disabled = true;
-      const feedback = container.querySelector('#cb-cancel-subscription-feedback');
-      if (feedback) feedback.textContent = 'Cancelando…';
-      try {
-        const result = await cancelSubscriptionAtPeriodEnd(currentClient);
-        if (feedback) feedback.textContent = result.message || 'Renovación cancelada.';
-        await refreshBillingState();
-      } catch (error) {
-        if (feedback) feedback.textContent = error.message || 'No se pudo cancelar la renovación.';
-        cancelButton.disabled = false;
-      }
-    });
-  }
 }
 
 function updateAccountBillingUI(root, context) {
@@ -392,7 +367,10 @@ function updateAccountBillingUI(root, context) {
   const expiryDate = panel.querySelector('#cb-account-expiry-date');
   const discountBox = panel.querySelector('#cb-account-discount-box');
   const discountEl = panel.querySelector('#cb-account-discount');
+  const trialSummary = panel.querySelector('#cb-account-trial-summary');
   const upgrade = panel.querySelector('#cb-account-upgrade-btn');
+  const cancelButton = panel.querySelector('#cb-account-cancel-btn');
+  const actionFeedback = panel.querySelector('#cb-account-action-feedback');
 
   if (!context?.user) {
     if (userEl) userEl.textContent = 'Acceso local con PIN';
@@ -400,9 +378,13 @@ function updateAccountBillingUI(root, context) {
     if (planEl) planEl.textContent = 'Sin cuenta conectada';
     expiryBox?.classList.add('hidden');
     discountBox?.classList.add('hidden');
+    trialSummary?.classList.add('hidden');
+    cancelButton?.classList.add('hidden');
+    if (actionFeedback) actionFeedback.textContent = '';
     upgrade?.classList.remove('hidden');
     if (upgrade) upgrade.textContent = '⭐ Ver planes y pagos';
     renderPlansView(root, context);
+    renderTodayTrialBanner(root, context);
     return;
   }
 
@@ -421,9 +403,44 @@ function updateAccountBillingUI(root, context) {
   if (discountEl && discount > 0) discountEl.textContent = `${discount}%`;
 
   const isDelegate = context.profile?.role === 'delegate';
+  const isTrial = sub?.estado === 'trial' && isSubscriptionActive(sub);
+  const canCancel = !isDelegate
+    && Boolean(sub?.stripe_subscription_id)
+    && ['trial', 'active'].includes(sub?.estado)
+    && !sub?.cancel_at_period_end;
+
+  trialSummary?.classList.toggle('hidden', !isTrial);
+  if (trialSummary && isTrial) {
+    const date = formatBillingDate(sub.expira_en);
+    trialSummary.innerHTML = `
+      <span class="eyebrow">Prueba gratuita activa</span>
+      <strong>${trialCountdownText(sub)}</strong>
+      <span>No se te cobrará antes del ${date}. Puedes cancelar antes de que termine la prueba.</span>
+    `;
+  }
+
+  cancelButton?.classList.toggle('hidden', !canCancel);
+  if (cancelButton) {
+    cancelButton.textContent = sub?.estado === 'trial' ? 'Cancelar antes del primer cobro' : 'Cancelar renovación';
+    if (!cancelButton.dataset.bound) {
+      cancelButton.dataset.bound = '1';
+      cancelButton.addEventListener('click', () => handleCancelSubscription(cancelButton, actionFeedback));
+    }
+  }
+
+  if (sub?.cancel_at_period_end && actionFeedback) {
+    const date = formatBillingDate(sub.expira_en);
+    actionFeedback.textContent = sub.estado === 'trial'
+      ? `Prueba cancelada. Mantienes acceso hasta el ${date}; no se realizará el primer cobro.`
+      : `Renovación cancelada. Mantienes acceso hasta el ${date}.`;
+  } else if (actionFeedback) {
+    actionFeedback.textContent = '';
+  }
+
   upgrade?.classList.toggle('hidden', isDelegate);
   if (upgrade) upgrade.textContent = '⭐ Ver planes y pagos';
   renderPlansView(root, context);
+  renderTodayTrialBanner(root, context);
 }
 
 function closePaywall(root = document) {
