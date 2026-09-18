@@ -81,6 +81,9 @@ const HUMAN_VIDEO_PATH_ALIAS = Object.freeze({
     'CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/video.mp4',
 });
 
+const HUMAN_VIDEO_PUBLIC_BASE =
+  'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/';
+
 function normalizeNewExercise(exercise) {
   const categoryKey = key(exercise.categoria);
   const etiquetas = uniqueStrings(exercise.etiquetas || [])
@@ -108,10 +111,8 @@ function normalizeNewExercise(exercise) {
     || ''
   ).trim();
 
-  if (!humanVideo && HUMAN_VIDEO_PATH_ALIAS[exercise.id] && graphicVideo.includes('/ejercicio-videos/')) {
-    humanVideo = graphicVideo.split('/ejercicio-videos/')[0]
-      + '/ejercicio-videos/'
-      + HUMAN_VIDEO_PATH_ALIAS[exercise.id];
+  if (!humanVideo && HUMAN_VIDEO_PATH_ALIAS[exercise.id]) {
+    humanVideo = HUMAN_VIDEO_PUBLIC_BASE + HUMAN_VIDEO_PATH_ALIAS[exercise.id];
   }
 
   const originalPreview = String(
