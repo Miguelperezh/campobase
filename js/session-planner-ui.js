@@ -105,8 +105,16 @@ function itemFromCard(card) {
   const quick = validated?.vista_rapida || {};
   const dr = validated?.datos_rapidos || {};
 
+  const formatos_juego = Array.isArray(validated?.formatos_juego)
+    ? validated.formatos_juego.filter((value) => value === 'futbol_7' || value === 'futbol_11')
+    : [];
+
   let formato_juego = 'futbol_11';
-  if (validated?.formato_juego) {
+  if (formatos_juego.length > 1 || validated?.formato_juego === 'todos') {
+    formato_juego = 'todos';
+  } else if (formatos_juego.length === 1) {
+    formato_juego = formatos_juego[0];
+  } else if (validated?.formato_juego) {
     formato_juego = validated.formato_juego === 'futbol_7' ? 'futbol_7' : 'futbol_11';
   } else if (id.startsWith('f7-')) {
     formato_juego = 'futbol_7';
@@ -127,6 +135,7 @@ function itemFromCard(card) {
     type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
     category: validated?.categoria || quick.tipo_principal || pills[0] || 'Otros',
     formato_juego,
+    formatos_juego,
     playerCount,
     playersText,
     materialText: rawMat,
@@ -154,11 +163,14 @@ function defaultFormat() {
   return /\bF11\b/i.test($('#active-format')?.textContent || '') ? 'F11' : 'F7';
 }
 
+function matchesFormat(item, target = formatVal) {
+  if (!target || target === 'todos') return true;
+  if (item.formato_juego === 'todos' || item.formato_juego === target) return true;
+  return Array.isArray(item.formatos_juego) && item.formatos_juego.includes(target);
+}
+
 function allowed(item) {
-  if (formatVal && formatVal !== 'todos') {
-    return item.formato_juego === formatVal;
-  }
-  return true;
+  return matchesFormat(item);
 }
 
 function score(item, value) {
@@ -320,9 +332,20 @@ function bindCoverFallbacks(root) {
   });
 }
 
+function hasHumanVideo(item) {
+  const validated = item?.validated || byId.get(String(item?.id || '')) || {};
+  return videos.has(String(item?.id || '')) || Boolean(
+    validated?.video_muestra_humanos
+    || validated?.video_muestra_url
+    || validated?.video_humano
+    || validated?.video_humanos
+    || validated?.video
+  );
+}
+
 function card(item, recommended) {
   const favorite = favorites.has(item.id);
-  const hasRealVideo = videos.has(item.id) || Boolean(item.validated?.video);
+  const hasRealVideo = hasHumanVideo(item);
   const image = item.cover
     ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(item.animationVideo)}" alt="Portada de ${esc(item.name)}">`
     : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
@@ -358,12 +381,7 @@ function renderLibrary(form) {
   root.classList.add('session-exercise-library');
 
   const recommended = recIds();
-  const base = catalog.filter((item) => {
-    if (formatVal && formatVal !== 'todos') {
-      if (item.formato_juego !== formatVal) return false;
-    }
-    return true;
-  });
+  const base = catalog.filter((item) => matchesFormat(item));
   const categories = [...new Set(catalog.map((item) => item.type || item.category))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
   const list = base.filter((item) => {
     if (query && !item.search.includes(norm(query))) return false;
@@ -383,7 +401,7 @@ function renderLibrary(form) {
       if (norm(item.difficulty) !== norm(difficultyFilter)) return false;
     }
     if (onlyFav && !favorites.has(item.id)) return false;
-    if (onlyVideo && !(videos.has(item.id) || Boolean(item.validated?.video) || Boolean(item.animationVideo))) return false;
+    if (onlyVideo && !hasHumanVideo(item)) return false;
     if (mode === 'recommended' && !recommended.has(item.id)) return false;
     return true;
   });

@@ -2249,7 +2249,20 @@ function renderExercises() {
     favorites: form.elements.favorites.checked,
     video: form.elements.video.checked,
   };
-  const exercises = filterExercises(state.exercises, filters)
+  // Un vídeo subido por el entrenador (recordType=exerciseVideo) es vídeo humano/real.
+  // Lo aplicamos solo para filtrar; no mutamos ni sobrescribimos el catálogo validado.
+  const humanVideoExerciseIds = new Set(
+    state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
+  );
+  const filterableExercises = humanVideoExerciseIds.size
+    ? state.exercises.map((item) => (
+        humanVideoExerciseIds.has(String(item.id)) && item.hasHumanVideo !== true
+          ? { ...item, hasHumanVideo: true }
+          : item
+      ))
+    : state.exercises;
+
+  const exercises = filterExercises(filterableExercises, filters)
     .sort((a, b) => {
       // Los ejercicios validados van primero, en orden canónico (comenzando por los interactivos y con vídeo).
       const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
