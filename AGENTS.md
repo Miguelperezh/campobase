@@ -922,11 +922,11 @@ Esta sección pertenece únicamente al área de vídeos/almacenamiento. Cualquie
 
 ## 16.1 Destino vigente de los vídeos pesados
 
-El destino objetivo para los archivos de vídeo de CampoBase es **Tigris Object Storage**, una vez creada y autorizada la cuenta/bucket correspondiente.
+El candidato actual para los archivos de vídeo de CampoBase es **Tigris Object Storage**, pero NO se considera destino definitivo hasta verificar expresamente el comportamiento de facturación, límites y ausencia/presencia de gasto automático.
 
-- No continuar una migración a Cloudflare R2 salvo que Miguel lo vuelva a pedir expresamente.
+- No continuar una migración definitiva a ningún proveedor hasta que Miguel valide expresamente el coste y el comportamiento de facturación.
 - Supabase sigue siendo la fuente compartida para los datos de la aplicación que ya le correspondan.
-- Los archivos MP4 pesados no deben volver a alojarse en Supabase Storage cuando la migración a Tigris esté validada.
+- Los archivos MP4 pesados no deben moverse de forma definitiva fuera de Supabase Storage hasta que el nuevo proveedor esté validado técnica y económicamente.
 - No afirmar que Tigris está operativo hasta que existan realmente cuenta, bucket, permisos y una prueba de subida/reproducción correcta.
 
 Motivo técnico de esta elección:
@@ -982,7 +982,15 @@ Para ejercicios del nuevo formato se deben conservar los nombres funcionales ya 
 
 La ubicación física del MP4 puede cambiar de proveedor, pero la asociación con el mismo `exerciseId` debe mantenerse.
 
-## 16.5 Migración segura
+## 16.5 Facturación y gasto
+
+- No añadir método de pago ni activar un servicio de pago por decisión del agente.
+- No asumir que un Free Tier es un límite duro de gasto.
+- Antes de declarar un proveedor como definitivo, comprobar si permite límite de gasto, hard cap, suspensión al agotar cuota o facturación automática.
+- Si no existe evidencia oficial de un tope de gasto, documentarlo como riesgo y pedir validación explícita de Miguel antes de producción.
+- Tigris tiene actualmente cuota gratuita publicada, pero también precios por uso por encima de ella; por tanto, no debe describirse como servicio garantizado a coste cero.
+
+## 16.6 Migración segura
 
 Nunca hacer un cambio destructivo directo.
 
@@ -999,7 +1007,7 @@ Orden obligatorio:
 
 No borrar los vídeos de Supabase durante la fase de prueba.
 
-## 16.6 Nuevos vídeos futuros
+## 16.7 Nuevos vídeos futuros
 
 Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
 
@@ -1011,7 +1019,7 @@ Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
 
 Si el agente no tiene acceso al almacenamiento, debe indicar únicamente que falta autorización/conexión. No debe cambiar de proveedor, guardar el MP4 en Supabase ni crear una solución paralela sin permiso.
 
-## 16.7 Cambios prohibidos desde una tarea de vídeos
+## 16.8 Cambios prohibidos desde una tarea de vídeos
 
 Una tarea de vídeos NO autoriza a:
 - modificar reglas de ejercicios;
@@ -1027,7 +1035,7 @@ Una tarea de vídeos NO autoriza a:
 
 Solo se toca otra área cuando Miguel lo pida expresamente.
 
-## 16.8 Validación mínima
+## 16.9 Validación mínima
 
 Antes de declarar terminado cualquier cambio de vídeos:
 - comprobar que el archivo remoto responde;
