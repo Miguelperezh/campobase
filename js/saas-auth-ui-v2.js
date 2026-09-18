@@ -678,16 +678,34 @@ export async function initSaasAuth(client) {
   observeDialog(client);
 
   const session = await getCurrentSession(client).catch(() => null);
-  const bound = getBoundSaasUserId();
-  if (bound && (!session?.user || session.user.id !== bound)) clearBoundSaasUserId();
+  let bound = getBoundSaasUserId();
+  if (bound && (!session?.user || session.user.id !== bound)) {
+    clearBoundSaasUserId();
+    bound = '';
+  }
+
   if (session?.user && bound === session.user.id) {
-    if (browserSessionIsActive(session.user.id)) unlockBoundSession(client).catch(() => {});
-    else if (rememberedAccount()?.userId === session.user.id) {
+    if (browserSessionIsActive(session.user.id)) {
+      unlockBoundSession(client).catch(() => {});
+      return;
+    }
+    const remembered = rememberedAccount();
+    if (remembered?.userId === session.user.id) {
       const dialog = $('#auth-dialog');
       if (dialog && !dialog.open) dialog.showModal();
-      showRememberedPane(rememberedAccount());
-    } else {
-      handlePersistentSession(client).catch(() => {});
+      showRememberedPane(remembered);
+      return;
     }
+    handlePersistentSession(client).catch(() => {});
+    return;
   }
+
+  // Sin sesión SaaS válida nunca dejamos la app abierta y vacía:
+  // mostramos siempre el acceso por cuenta, manteniendo disponible
+  // el botón de acceso local con PIN.
+  const dialog = $('#auth-dialog');
+  if (dialog && !dialog.open) dialog.showModal();
+  localPinMode = false;
+  showPane('login');
+  prefillRememberedIdentifier();
 }
