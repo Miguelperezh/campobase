@@ -276,6 +276,13 @@ async function openPaywallModal(root = document, { forced = false } = {}) {
   closeButton?.classList.toggle('hidden', forced);
   closeButton?.addEventListener('click', () => closePaywall(root), { once: true });
 
+  if (!dialog.dataset.cancelGuardBound) {
+    dialog.dataset.cancelGuardBound = '1';
+    dialog.addEventListener('cancel', (event) => {
+      if (dialog.dataset.forced === 'true') event.preventDefault();
+    });
+  }
+
   const logout = body.querySelector('#cb-paywall-logout-btn');
   logout?.classList.toggle('hidden', !forced);
   logout?.addEventListener('click', async () => {
@@ -362,9 +369,9 @@ async function refreshBillingState() {
   };
   updateAccountBillingUI(document, currentContext);
 
-  const serverVerified = currentContext.source === 'server';
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
-  if (serverVerified && profile?.role !== 'owner' && !canUse) {
+  const hasKnownSubscription = Boolean(currentContext.subscription);
+  if (profile?.role !== 'owner' && hasKnownSubscription && !canUse) {
     await openPaywallModal(document, { forced: true });
   } else if (canUse || profile?.role === 'owner') {
     closePaywall(document);
