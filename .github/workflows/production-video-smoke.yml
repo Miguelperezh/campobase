@@ -1,0 +1,110 @@
+name: CampoBase production video smoke
+
+on:
+  push:
+    branches:
+      - github-releases-video-test
+    paths:
+      - .github/workflows/production-video-smoke.yml
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Verify deployed production files
+        run: |
+          set -euo pipefail
+          BASE="https://miguelperezh.github.io/campobase"
+          curl -fL --retry 5 --retry-delay 3 "$BASE/" -o /tmp/index.html
+          curl -fL --retry 5 --retry-delay 3 "$BASE/js/ejercicio-videos.js" -o /tmp/ejercicio-videos.js
+          grep -q "campobase-videos-v1" /tmp/ejercicio-videos.js
+          grep -q "resolveHostedVideoUrl" /tmp/ejercicio-videos.js
+
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/campobase-production-smoke
+          cd /tmp/campobase-production-smoke
+          npm init -y
+          npm install playwright@1.57.0
+          npx playwright install --with-deps chromium webkit
+
+      - name: Verify production resolver and real playback
+        working-directory: /tmp/campobase-production-smoke
+        run: |
+          cat > smoke.cjs <<'NODE'
+          const { chromium, webkit } = require('playwright');
+
+          const BASE = 'https://miguelperezh.github.io/campobase/';
+          const OLD = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/ejercicio.mp4';
+          const EXPECTED = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__pdf150-022__ejercicio.mp4';
+
+          async function test(name, browserType) {
+            const browser = await browserType.launch({ headless: true });
+            const page = await browser.newPage();
+            const response = await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            if (!response || !response.ok()) throw new Error(name + ': production page HTTP ' + response?.status());
+
+            const result = await page.evaluate(async ({ oldUrl }) => {
+              const mod = await import('./js/ejercicio-videos.js');
+              const resolved = mod.resolveHostedVideoUrl(oldUrl);
+
+              const video = document.createElement('video');
+              video.muted = true;
+              video.playsInline = true;
+              video.preload = 'metadata';
+              document.body.appendChild(video);
+
+              const wait = (event, timeout = 20000) => new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('timeout ' + event)), timeout);
+                video.addEventListener(event, () => { clearTimeout(timer); resolve(); }, { once: true });
+                video.addEventListener('error', () => {
+                  clearTimeout(timer);
+                  reject(new Error('media error ' + (video.error?.code || 'unknown') + ': ' + (video.error?.message || '')));
+                }, { once: true });
+              });
+
+              video.src = resolved;
+              video.load();
+              await wait('loadedmetadata');
+              const duration = video.duration;
+              await video.play();
+              await new Promise(r => setTimeout(r, 400));
+              const playedTime = video.currentTime;
+
+              const seekTarget = Math.min(duration * 0.5, Math.max(0.1, duration - 0.1));
+              const seeked = wait('seeked');
+              video.currentTime = seekTarget;
+              await seeked;
+
+              return {
+                resolved,
+                duration,
+                playedTime,
+                currentTime: video.currentTime,
+                readyState: video.readyState,
+                width: video.videoWidth,
+                height: video.videoHeight,
+              };
+            }, { oldUrl: OLD });
+
+            console.log(name, JSON.stringify(result));
+            if (result.resolved !== EXPECTED) throw new Error(name + ': resolver mismatch ' + result.resolved);
+            if (!(result.readyState >= 1)) throw new Error(name + ': media metadata not ready');
+            if (!(result.width > 0 && result.height > 0)) throw new Error(name + ': no video dimensions');
+            if (!(result.playedTime > 0)) throw new Error(name + ': playback did not advance');
+            if (!(result.currentTime > 0)) throw new Error(name + ': seek did not work');
+            await browser.close();
+          }
+
+          (async () => {
+            await test('chromium', chromium);
+            await test('webkit', webkit);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+          node smoke.cjs
