@@ -15,7 +15,11 @@ import e14 from './ejercicios-nuevo-formato/14-campobase-video-finalizacion-dobl
 import e15 from './ejercicios-nuevo-formato/15-campobase-video-reaccion-espaldas-senales-lateral-giro-cono-balon-v2.js';
 import e16 from './ejercicios-nuevo-formato/16-campobase-video-reaccion-lateral-senal-balon-cono.js';
 
-const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16];
+// Solo las 12 versiones actuales se publican en la biblioteca.
+// e13-e16 se conservan en el repositorio como versiones anteriores de respaldo
+// y NO deben aparecer como ejercicios actuales ni generar duplicados.
+const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12];
+export const EJERCICIOS_NUEVO_FORMATO_ARCHIVADOS = Object.freeze([e13, e14, e15, e16]);
 
 function key(value = '') {
   return String(value)
