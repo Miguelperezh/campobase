@@ -2,6 +2,17 @@
 
 Este archivo contiene normas permanentes para cualquier agente que trabaje en este repositorio.
 
+## Regla de convivencia entre agentes
+
+`AGENTS.md` es un manual compartido y acumulativo. Cada chat/agente debe añadir únicamente las normas de su área sin borrar, sustituir, resumir, reordenar ni sobrescribir lo que hayan añadido otros agentes.
+
+Antes de modificar este archivo:
+- leer siempre la versión más reciente de `AGENTS.md` en `main`;
+- editar solo la sección propia o añadir una nueva;
+- conservar literalmente las secciones ajenas salvo autorización explícita del usuario;
+- no reemplazar el archivo completo por una copia antigua procedente de otra rama;
+- si una rama contiene instrucciones que todavía no están en `main`, no incorporarlas automáticamente salvo que formen parte de la tarea o el usuario lo pida.
+
 ## 0. Lectura obligatoria antes de modificar CampoBase
 
 Antes de tocar código, datos, Supabase, ejercicios, sesiones, vídeos, diseño o navegación:
