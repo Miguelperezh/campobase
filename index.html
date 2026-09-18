@@ -656,7 +656,26 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script type="module" src="js/app.js?v=2503"></script>
-  <script type="module" src="js/redesign-nav.js?v=2503"></script>
+  <script type="module" src="js/app.js?v=2504"></script>
+  <script type="module" src="js/redesign-nav.js?v=2504"></script>
+  <script>
+    // Último salvavidas del arranque: si tras cargar los módulos no existe
+    // ningún rol activo, CampoBase no puede quedar abierto y vacío.
+    window.addEventListener('load', () => {
+      window.setTimeout(() => {
+        const app = window.__campobase;
+        if (app?.state?.role) return;
+        const dialog = document.getElementById('auth-dialog');
+        if (!dialog) return;
+        document.body.classList.add('auth-locked');
+        const saasShell = document.getElementById('saas-auth-shell');
+        const localForm = document.getElementById('auth-form');
+        // Si el módulo SaaS está disponible, conserva correo/contraseña + botón PIN.
+        // Si falló al cargar, muestra directamente el PIN local.
+        if (!saasShell) localForm?.classList.remove('hidden');
+        if (!dialog.open) dialog.showModal();
+      }, 2500);
+    });
+  </script>
 </body>
 </html>
