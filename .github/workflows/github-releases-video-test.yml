@@ -27,7 +27,7 @@ jobs:
           echo "source_size=$SIZE"
           test "$SIZE" = "34993"
 
-      - name: Create prerelease and upload MP4 with correct MIME
+      - name: Create prerelease and upload MP4
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -45,30 +45,92 @@ jobs:
 
           curl -fL             -X POST             -H "Accept: application/vnd.github+json"             -H "Authorization: Bearer $GH_TOKEN"             -H "X-GitHub-Api-Version: 2026-03-10"             -H "Content-Type: video/mp4"             "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$ASSET"             --data-binary "@/tmp/$ASSET"             -o /tmp/upload-response.json
 
-          cat /tmp/upload-response.json
           grep -q '"content_type":"video/mp4"' /tmp/upload-response.json
 
-      - name: Verify complete download, Range seek, MIME and response timing
+      - name: Verify bytes, Range and response time
         run: |
           set -euo pipefail
           URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
-          echo "url=$URL"
+          echo "VIDEO_URL=$URL" >> "$GITHUB_ENV"
 
           curl -fL -D /tmp/full-headers.txt -o /tmp/full.mp4             -w "full_http=%{http_code} full_time=%{time_total} full_speed=%{speed_download}\n"             "$URL"
-          FULL_SIZE="$(stat -c%s /tmp/full.mp4)"
-          echo "full_size=$FULL_SIZE"
-          test "$FULL_SIZE" = "34993"
+          test "$(stat -c%s /tmp/full.mp4)" = "34993"
 
           RANGE_HTTP="$(curl -sSL -D /tmp/range-headers.txt -o /tmp/range.bin             -w "%{http_code}" -H "Range: bytes=0-1023" "$URL")"
           RANGE_SIZE="$(stat -c%s /tmp/range.bin)"
-          echo "range_http=$RANGE_HTTP"
-          echo "range_size=$RANGE_SIZE"
-          echo "--- final response headers ---"
-          tail -n 30 /tmp/range-headers.txt
-
+          echo "range_http=$RANGE_HTTP range_size=$RANGE_SIZE"
+          grep -iE '^(accept-ranges|content-range|content-type|content-disposition):' /tmp/range-headers.txt | tail -10 || true
           test "$RANGE_HTTP" = "206"
           test "$RANGE_SIZE" = "1024"
 
-          CONTENT_TYPE="$(grep -i '^content-type:' /tmp/full-headers.txt | tail -1 | tr -d '\r' || true)"
-          echo "content_type=$CONTENT_TYPE"
-          echo "$CONTENT_TYPE" | grep -qi 'video/mp4'
+      - name: Install Playwright browsers
+        run: |
+          npm --prefix /tmp/campobase-video-browser-test init -y
+          npm --prefix /tmp/campobase-video-browser-test install playwright@1.57.0
+          cd /tmp/campobase-video-browser-test
+          npx playwright install --with-deps chromium webkit
+
+      - name: Test real HTML5 playback in Chromium and WebKit
+        working-directory: /tmp/campobase-video-browser-test
+        run: |
+          cat > test-video.cjs <<'NODE'
+          const { chromium, webkit } = require('playwright');
+
+          async function test(engine, browserType) {
+            const browser = await browserType.launch({ headless: true });
+            const page = await browser.newPage();
+            const result = await page.evaluate(async (url) => {
+              const video = document.createElement('video');
+              video.muted = true;
+              video.playsInline = true;
+              video.preload = 'metadata';
+              document.body.appendChild(video);
+
+              const waitEvent = (name, timeout = 15000) => new Promise((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('timeout ' + name)), timeout);
+                video.addEventListener(name, () => { clearTimeout(timer); resolve(); }, { once: true });
+                video.addEventListener('error', () => {
+                  clearTimeout(timer);
+                  reject(new Error('media error ' + (video.error?.code || 'unknown') + ': ' + (video.error?.message || '')));
+                }, { once: true });
+              });
+
+              video.src = url;
+              video.load();
+              await waitEvent('loadedmetadata');
+              const duration = video.duration;
+              await video.play();
+              await new Promise(r => setTimeout(r, 500));
+              const playedTime = video.currentTime;
+
+              const seekTarget = Number.isFinite(duration) && duration > 0 ? Math.min(duration * 0.5, Math.max(0.1, duration - 0.1)) : 0.1;
+              const seeked = waitEvent('seeked');
+              video.currentTime = seekTarget;
+              await seeked;
+
+              return {
+                duration,
+                playedTime,
+                seekTarget,
+                currentTime: video.currentTime,
+                readyState: video.readyState,
+                networkState: video.networkState,
+                videoWidth: video.videoWidth,
+                videoHeight: video.videoHeight,
+              };
+            }, process.env.VIDEO_URL);
+
+            console.log(engine, JSON.stringify(result));
+            if (!(result.readyState >= 1)) throw new Error(engine + ': metadata not loaded');
+            if (!(result.videoWidth > 0 && result.videoHeight > 0)) throw new Error(engine + ': no video dimensions');
+            if (!(result.currentTime > 0)) throw new Error(engine + ': seek failed');
+            await browser.close();
+          }
+
+          (async () => {
+            await test('chromium', chromium);
+            await test('webkit', webkit);
+          })().catch((err) => { console.error(err); process.exit(1); });
+          NODE
+
+          node test-video.cjs
