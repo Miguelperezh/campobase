@@ -182,6 +182,7 @@ function keeperIdsFromCallup(callup) {
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
+  if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   $('#app').focus();
@@ -3254,12 +3255,14 @@ function applyCustomTheme(themeInput) {
     root.style.setProperty('--cb-pitch-600', accent);
     root.style.setProperty('--cb-pitch-700', accent);
     root.style.setProperty('--cb-brand', accent);
+    root.style.setProperty('--brand', accent);
     body.style.setProperty('--accent', accent);
     body.style.setProperty('--cb-accent', accent);
     body.style.setProperty('--cb-accent-text', contrastText);
     body.style.setProperty('--cb-pitch-600', accent);
     body.style.setProperty('--cb-pitch-700', accent);
     body.style.setProperty('--cb-brand', accent);
+    body.style.setProperty('--brand', accent);
   } else {
     root.style.removeProperty('--accent');
     root.style.removeProperty('--cb-accent');
@@ -3267,12 +3270,14 @@ function applyCustomTheme(themeInput) {
     root.style.removeProperty('--cb-pitch-600');
     root.style.removeProperty('--cb-pitch-700');
     root.style.removeProperty('--cb-brand');
+    root.style.removeProperty('--brand');
     body.style.removeProperty('--accent');
     body.style.removeProperty('--cb-accent');
     body.style.removeProperty('--cb-accent-text');
     body.style.removeProperty('--cb-pitch-600');
     body.style.removeProperty('--cb-pitch-700');
     body.style.removeProperty('--cb-brand');
+    body.style.removeProperty('--brand');
   }
 
   // 3. Familia tipográfica (data-theme-family y variable CSS)
