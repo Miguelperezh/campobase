@@ -12,6 +12,31 @@ import { SUPABASE_URL, VIDEO_BUCKET } from './supabase-client.js';
 // Límite global de Supabase en el plan Free: 50 MB por archivo.
 export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
+export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
+export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
+
+// Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
+// ya migrado a GitHub Releases. Otras URLs (assets locales, previews, fuentes externas)
+// se conservan sin cambios.
+export function resolveHostedVideoUrl(value) {
+  const source = String(value ?? '').trim();
+  if (!source) return '';
+  const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
+  const markerIndex = source.indexOf(marker);
+  if (markerIndex < 0) return source;
+
+  const rawPath = source.slice(markerIndex + marker.length).split(/[?#]/, 1)[0];
+  let path;
+  try {
+    path = rawPath.split('/').map((segment) => decodeURIComponent(segment)).join('/');
+  } catch {
+    path = rawPath;
+  }
+  if (!/\.mp4$/i.test(path)) return source;
+  const asset = path.replaceAll('/', '__');
+  return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
+}
+
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
 // Ruta del archivo dentro del bucket: <exerciseId>/<videoId>.<ext>.
