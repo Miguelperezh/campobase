@@ -17,9 +17,23 @@ export function sanitizeRecordForCloud(store, record) {
   return structuredClone(record);
 }
 
+export function mergeLocalRecordForWrite(store, currentRecord, incomingRecord) {
+  assertStore(store);
+  if (!currentRecord || store !== 'players') return structuredClone(incomingRecord);
+  // Una escritura parcial de una ficha nunca debe borrar campos ya guardados.
+  // Los campos enviados explícitamente (incluidos '', [] o null) sí prevalecen,
+  // para que una edición intencionada siga pudiendo vaciarlos.
+  return { ...structuredClone(currentRecord), ...structuredClone(incomingRecord) };
+}
+
 export function mergeCloudRecord(store, localRecord, cloudRecord) {
   assertStore(store);
-  const merged = structuredClone(cloudRecord);
+  let merged = structuredClone(cloudRecord);
+  if (store === 'players' && localRecord) {
+    // Si una versión remota antigua llega sin algunos campos de ficha,
+    // conserva los valores locales en vez de hacerlos desaparecer.
+    merged = { ...structuredClone(localRecord), ...merged };
+  }
   if (store === 'settings' && cloudRecord.id === 'main') {
     for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash', 'demoPinSalt', 'demoPinHash']) {
       if (!merged[field] && localRecord?.[field]) merged[field] = localRecord[field];
