@@ -282,7 +282,22 @@ async function refresh() {
 
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
-  state.exercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+  const validatedExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+  const personalExercises = settingRecords
+    .filter(({ recordType }) => recordType === 'exercise')
+    .map((exercise) => ({
+      ...exercise,
+      recordType: 'exercise',
+      source: 'mine',
+      isMine: true,
+      validated: false,
+      example: false,
+    }));
+  const personalIds = new Set(personalExercises.map(({ id }) => String(id)));
+  state.exercises = [
+    ...validatedExercises.filter(({ id }) => !personalIds.has(String(id))),
+    ...personalExercises,
+  ];
   state.trainingSessions = settingRecords
     .filter(({ recordType }) => recordType === 'trainingSession')
     .map((session) => {
@@ -2217,7 +2232,7 @@ function exerciseName(id) {
 function exerciseCardHTML(rawItem) {
   const item = completeExercise(rawItem);
   const list = (values) => `<ul class="plain-list">${values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')}</ul>`;
-  return `<article class="panel exercise-card">
+  return `<article class="panel exercise-card" data-user-exercise="${rawItem?.isMine || rawItem?.source === 'mine' || rawItem?.recordType === 'exercise' ? '1' : '0'}">
     <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span>${item.code ? `<span class="pill accent">${escapeHtml(item.code)}</span>` : ''}<h3>${escapeHtml(item.name)}</h3></div><button type="button" class="favorite-exercise ${item.favorite ? 'active' : ''}" data-id="${item.id}" aria-label="${item.favorite ? 'Quitar de' : 'Añadir a'} favoritos">${item.favorite ? '★' : '☆'}</button></div>
     <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span><span class="meta">${escapeHtml(item.space)}</span></div>
     <p><strong>Material:</strong> ${escapeHtml(item.material)}</p>
@@ -2284,6 +2299,9 @@ function renderExercises() {
 function editExercise(id) {
   const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
   if (!item) return;
+  if (findValidatedExercise(id) && !item.isMine && item.source !== 'mine') {
+    return toast('Los ejercicios de la biblioteca validada no se editan desde + Ejercicio.');
+  }
   const form = $('#exercise-form');
   for (const key of ['id', 'name', 'category', 'formato_juego', 'format', 'difficulty', 'players', 'duration', 'material', 'space', 'description', 'variants']) {
     if (form.elements[key]) form.elements[key].value = item[key] ?? '';
@@ -2300,7 +2318,15 @@ async function saveExercise(event) {
     id: existing?.id ?? uid(), favorite: existing?.favorite ?? false,
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(), diagram: existing?.diagram,
   });
-  await put('settings', { ...existing, ...saved, recordType: 'exercise', example: existing?.example ?? false });
+  await put('settings', {
+    ...existing,
+    ...saved,
+    recordType: 'exercise',
+    source: 'mine',
+    isMine: true,
+    validated: false,
+    example: false,
+  });
   $('#exercise-dialog').close();
   form.reset();
   await refresh();
@@ -2479,6 +2505,7 @@ async function saveTrainingSession(event) {
   renderTrainings();
   showView('sesiones');
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
+  toast(existing ? `Sesión actualizada. ${status.message}` : `Sesión creada. ${status.message}`);
 }
 
 function videosForExercise(exerciseId) {
@@ -5391,7 +5418,7 @@ async function init() {
   addSessionForm.elements.dateYear.innerHTML = yearOptions();
   const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
-  $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', categoryOptions);
+  $('#exercise-filters').elements.category.insertAdjacentHTML('beforeend', `<option value="__mine__">Mis ejercicios</option>${categoryOptions}`);
 
   const exFilters = $('#exercise-filters');
   if (exFilters) {
