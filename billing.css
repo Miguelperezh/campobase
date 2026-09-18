@@ -473,3 +473,63 @@ body.cb-redesign-active #cb-delegate-account-panel,
   font-weight: 800;
   letter-spacing: .01em;
 }
+
+
+/* Fase 4: todos los colores visibles heredan las preferencias de Ajustes */
+#cb-account-billing-panel,
+#cb-plans-content,
+.cb-paywall-dialog,
+.cb-today-trial-banner,
+.cb-account-trial-summary,
+.cb-trial-summary,
+.cb-cancel-subscription {
+  color: var(--ink, var(--cb-font-custom-color, #0f172a));
+}
+
+#cb-account-billing-panel .meta,
+#cb-plans-content .meta,
+.cb-paywall-dialog .meta,
+.cb-today-trial-banner .meta,
+.cb-trial-banner-note {
+  color: var(--ink, var(--cb-font-custom-color, #0f172a));
+  opacity: .72;
+}
+
+#cb-account-billing-panel .primary,
+#cb-plans-content .primary,
+.cb-paywall-dialog .primary {
+  background: var(--cb-brand, var(--brand, #10b981)) !important;
+  border-color: var(--cb-brand, var(--brand, #10b981)) !important;
+  color: var(--cb-accent-text, #ffffff) !important;
+}
+
+#cb-account-billing-panel .secondary,
+#cb-plans-content .secondary,
+.cb-paywall-dialog .secondary {
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 8%, var(--card, #ffffff)) !important;
+  border-color: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 28%, var(--line, #e2e8f0)) !important;
+  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+}
+
+#cb-account-billing-panel .eyebrow,
+#cb-plans-content .eyebrow,
+.cb-paywall-dialog .eyebrow,
+.cb-today-trial-banner .eyebrow {
+  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+  opacity: .7;
+}
+
+.cb-preview-note {
+  background: transparent !important;
+  border: 1px solid var(--cb-brand, var(--brand, #10b981));
+  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+}
+
+body.cb-redesign-active[data-has-custom-font-color="true"] .cb-preview-note {
+  color: var(--cb-font-custom-color) !important;
+}
+
+.cb-access-number {
+  background: var(--cb-brand, var(--brand, #10b981));
+  color: var(--cb-accent-text, #ffffff);
+}
