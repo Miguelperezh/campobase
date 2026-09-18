@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
+import { renderValidatedExerciseHTML } from '../js/ejercicio-viewer.js';
 import {
   VIDEO_MAX_BYTES,
   buildVideoRecord,
@@ -117,4 +118,25 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
     assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
     assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
   }
+});
+
+
+test('el visor renderiza los MP4 migrados desde GitHub Releases y no desde Supabase', () => {
+  const html = renderValidatedExerciseHTML({
+    id: 'pdf150-022',
+    nombre: 'Prueba',
+    categoria: 'Coordinación',
+    media: {
+      video: 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/ejercicio.mp4',
+    },
+    datos_rapidos: {},
+  });
+  assert.match(
+    html,
+    /github\.com\/Miguelperezh\/campobase\/releases\/download\/campobase-videos-v1\/library-v2-preview__pdf150-022__ejercicio\.mp4/,
+  );
+  assert.doesNotMatch(
+    html,
+    /storage\/v1\/object\/public\/ejercicio-videos\/library-v2-preview\/pdf150-022\/ejercicio\.mp4/,
+  );
 });
