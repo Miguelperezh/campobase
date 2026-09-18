@@ -914,3 +914,129 @@ Mensual y anual incluyen las mismas funciones mientras no haya una instrucción 
 
 La elección de Planes debe poder verse **antes del registro**, y después de identificarse la cuenta debe comprobarse el acceso antes de mostrar los datos del equipo.
 
+---
+
+# 16. REGLAS — SUBIR VÍDEOS Y DÓNDE
+
+Esta sección pertenece únicamente al área de vídeos/almacenamiento. Cualquier agente al que Miguel asigne una tarea de vídeos debe leer las reglas generales de convivencia y esta sección. No debe editar, resumir, reordenar ni actualizar las reglas de ejercicios, interfaz, jugadores, sesiones, pagos u otras áreas salvo petición explícita de Miguel.
+
+## 16.1 Destino vigente de los vídeos pesados
+
+El destino objetivo para los archivos de vídeo de CampoBase es **Tigris Object Storage**, una vez creada y autorizada la cuenta/bucket correspondiente.
+
+- No continuar una migración a Cloudflare R2 salvo que Miguel lo vuelva a pedir expresamente.
+- Supabase sigue siendo la fuente compartida para los datos de la aplicación que ya le correspondan.
+- Los archivos MP4 pesados no deben volver a alojarse en Supabase Storage cuando la migración a Tigris esté validada.
+- No afirmar que Tigris está operativo hasta que existan realmente cuenta, bucket, permisos y una prueba de subida/reproducción correcta.
+
+Motivo técnico de esta elección:
+- Tigris es compatible con S3;
+- admite API/SDK/CLI estándar;
+- dispone de MCP y herramientas orientadas a agentes;
+- permite que distintos agentes autorizados trabajen con el mismo almacenamiento sin depender de una integración exclusiva de una sola IA;
+- el acceso debe concederse mediante credenciales limitadas al bucket o mediante un mecanismo equivalente autorizado por Miguel.
+
+## 16.2 Regla de acceso para IA y agentes
+
+La identidad del agente no importa. Importa la función asignada y el permiso concedido.
+
+Un agente autorizado para vídeos puede:
+- subir;
+- comprobar;
+- listar;
+- sustituir;
+- y, solo cuando la tarea lo requiera expresamente, borrar vídeos.
+
+Un agente no autorizado no debe intentar conseguir credenciales por su cuenta ni simular que la operación se realizó.
+
+Las credenciales:
+- nunca se guardan en el repositorio;
+- nunca se ponen en JavaScript cliente;
+- nunca se escriben en AGENTS.md;
+- nunca se incluyen en commits, logs públicos o documentación;
+- deben ser de alcance mínimo, preferiblemente restringidas al bucket de vídeos.
+
+## 16.3 Qué se guarda en cada sitio
+
+Arquitectura objetivo:
+
+- **GitHub/código:** definición oficial del ejercicio y assets que pertenezcan al código.
+- **Tigris:** archivos de vídeo pesados.
+- **Supabase:** datos sincronizados de CampoBase y metadata que la aplicación necesite compartir.
+- **Sesiones:** referencias mediante `exerciseId`; no incrustar MP4 ni blobs.
+
+No mover jugadores, partidos, estadísticas, sesiones, Auth, permisos ni otros datos a Tigris por una tarea de vídeos.
+
+## 16.4 Rutas y nombres
+
+Durante una migración:
+- conservar las claves/rutas existentes siempre que sea posible;
+- no renombrar vídeos arbitrariamente;
+- no cambiar IDs de ejercicios;
+- no romper URLs o referencias históricas.
+
+Para ejercicios del nuevo formato se deben conservar los nombres funcionales ya definidos por las reglas de ejercicios, incluido:
+- `ejercicio.mp4`;
+- `video_muestra_humanos.mp4`;
+- `preview.png` cuando corresponda.
+
+La ubicación física del MP4 puede cambiar de proveedor, pero la asociación con el mismo `exerciseId` debe mantenerse.
+
+## 16.5 Migración segura
+
+Nunca hacer un cambio destructivo directo.
+
+Orden obligatorio:
+1. copiar;
+2. verificar que el objeto existe;
+3. verificar tamaño/tipo;
+4. comprobar reproducción real;
+5. comprobar seek/range cuando corresponda;
+6. probar la app en la rama de trabajo;
+7. comprobar sesiones que referencian esos ejercicios;
+8. cambiar el origen de vídeo solo después de validar;
+9. conservar la fuente anterior hasta que Miguel confirme que la nueva funciona.
+
+No borrar los vídeos de Supabase durante la fase de prueba.
+
+## 16.6 Nuevos vídeos futuros
+
+Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
+
+- el agente debe subir el vídeo al almacenamiento vigente de esta sección si dispone de permiso;
+- no debe pedir a Miguel que haga manualmente la subida si el propio agente dispone de acceso autorizado;
+- debe conservar la relación con el `exerciseId`;
+- debe actualizar solo la metadata/referencia necesaria;
+- debe comprobar que el vídeo se reproduce desde la app antes de dar la tarea por terminada.
+
+Si el agente no tiene acceso al almacenamiento, debe indicar únicamente que falta autorización/conexión. No debe cambiar de proveedor, guardar el MP4 en Supabase ni crear una solución paralela sin permiso.
+
+## 16.7 Cambios prohibidos desde una tarea de vídeos
+
+Una tarea de vídeos NO autoriza a:
+- modificar reglas de ejercicios;
+- modificar interfaz/UX;
+- cambiar categorías;
+- cambiar fichas de jugadores;
+- cambiar sesiones;
+- cambiar estadísticas;
+- cambiar pagos;
+- cambiar autenticación;
+- refactorizar otras áreas;
+- actualizar otras secciones de AGENTS.md.
+
+Solo se toca otra área cuando Miguel lo pida expresamente.
+
+## 16.8 Validación mínima
+
+Antes de declarar terminado cualquier cambio de vídeos:
+- comprobar que el archivo remoto responde;
+- comprobar `Content-Type`;
+- comprobar tamaño;
+- reproducir;
+- avanzar/retroceder el vídeo;
+- verificar que el ejercicio correcto carga el vídeo correcto;
+- probar móvil y escritorio cuando el cambio llegue a la app;
+- ejecutar las pruebas del proyecto que correspondan;
+- no fusionar una migración con vídeos faltantes o rotos.
+
