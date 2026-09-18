@@ -360,7 +360,10 @@ function bindStaticPreviewVideos(root) {
 }
 
 function bindCoverFallbacks(root) {
-  root.querySelectorAll('.sp-cover img[data-sp-cover-video]').forEach((img) => {
+  root.querySelectorAll('.sp-cover img[data-sp-capture-cover="1"][data-sp-cover-video]').forEach((img) => {
+    captureCoverFromVideo(img);
+  });
+  root.querySelectorAll('.sp-cover img[data-sp-cover-video]:not([data-sp-capture-cover="1"])').forEach((img) => {
     img.addEventListener('error', () => captureCoverFromVideo(img), { once: true });
   });
   root.querySelectorAll('.sp-cover img:not([data-sp-cover-video])').forEach((img) => {
@@ -400,7 +403,7 @@ function card(item, recommended) {
   const image = item.cover
     ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(graphicPreviewVideo)}" alt="Portada de ${esc(item.name)}">`
     : graphicPreviewVideo
-      ? `<video class="sp-cover-static-video" muted playsinline preload="metadata" src="${esc(graphicPreviewVideo)}#t=0.05" aria-label="Portada de ${esc(item.name)}"></video>`
+      ? `<img loading="lazy" decoding="async" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-capture-cover="1" alt="Portada de ${esc(item.name)}">`
       : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
 
   return `<article class="sp-card ${recommended.has(item.id) ? 'recommended' : ''}">
@@ -532,7 +535,6 @@ function renderLibrary(form) {
     <div class="sp-grid">${list.length ? list.map((item) => card(item, recommended)).join('') : '<p class="empty">No hay ejercicios con esos filtros.</p>'}</div>`;
 
   bindCoverFallbacks(root);
-  bindStaticPreviewVideos(root);
   $('#sp-search', root).oninput = (event) => { query = event.target.value; renderLibrary(form); };
   $('#sp-format', root).onchange = (event) => { formatVal = event.target.value; renderLibrary(form); };
   $('#sp-category', root).onchange = (event) => { category = event.target.value; renderLibrary(form); };
