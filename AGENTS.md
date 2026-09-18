@@ -963,108 +963,81 @@ Esta sección pertenece únicamente al área de vídeos/almacenamiento. Cualquie
 
 Para el almacenamiento y entrega de vídeos de CampoBase, Miguel exige **coste máximo real de 0 €**.
 
-Reglas vinculantes:
-- NO usar como destino definitivo un servicio que facture automáticamente al superar su cuota gratuita.
-- NO activar Pay As You Go, auto-recharge, overage billing ni equivalentes.
-- NO añadir ni utilizar una tarjeta para habilitar consumo facturable.
-- Una cuota gratuita con precio por exceso NO cumple este requisito, aunque el exceso sea barato.
-- Si se supera un límite gratuito, es preferible que el servicio limite o detenga la operación antes que generar una factura.
-- Antes de aprobar un proveedor, comprobar documentación oficial sobre: almacenamiento, egress, solicitudes, comportamiento al alcanzar límites y transición a pago.
-- Tigris queda **descartado como destino definitivo bajo este requisito**, porque publica tarifas por uso por encima de su cuota gratuita y no se ha verificado un hard cap de gasto a 0 €.
-- No cambiar de proveedor futuro sin actualizar únicamente esta sección y sin autorización explícita de Miguel.
+- No usar servicios con facturación automática por exceso.
+- No activar Pay As You Go, overage billing, auto-recharge o equivalentes.
+- No añadir una tarjeta para habilitar consumo facturable.
+- Si un servicio gratuito alcanza un límite, se prefiere limitación/suspensión antes que una factura.
+- No cambiar de proveedor sin autorización explícita de Miguel.
 
-## 16.1.1 Candidato no-Cloudflare en evaluación
+## 16.2 Destino elegido: GitHub Releases
 
-**Oracle Cloud Free Tier / Always Free** es el candidato actual a evaluar porque:
-- la cuenta puede permanecer en modalidad gratuita sin actualizarse a Pay As You Go;
-- Object Storage ofrece recursos Always Free;
-- existe compatibilidad con la API S3, útil para agentes y herramientas estándar;
-- Oracle publica una asignación gratuita de transferencia saliente elevada.
+El destino elegido para validar los vídeos pesados es **GitHub Releases del repositorio CampoBase**.
 
-No se considera todavía destino definitivo porque debe validarse el límite de solicitudes y el comportamiento real para el patrón de vídeo de CampoBase antes de migrar producción.
+GitHub documenta para Releases:
+- hasta 1.000 assets por release;
+- cada asset por debajo de 2 GiB;
+- sin límite declarado de tamaño total del release;
+- sin límite declarado de ancho de banda de Releases.
 
-## 16.2 Regla de acceso para IA y agentes
-
-La identidad del agente no importa. Importa la función asignada y el permiso concedido.
-
-Un agente autorizado para vídeos puede:
-- subir;
-- comprobar;
-- listar;
-- sustituir;
-- y, solo cuando la tarea lo requiera expresamente, borrar vídeos.
-
-Un agente no autorizado no debe intentar conseguir credenciales por su cuenta ni simular que la operación se realizó.
-
-Las credenciales:
-- nunca se guardan en el repositorio;
-- nunca se ponen en JavaScript cliente;
-- nunca se escriben en AGENTS.md;
-- nunca se incluyen en commits, logs públicos o documentación;
-- deben ser de alcance mínimo, preferiblemente restringidas al bucket de vídeos.
+Limitación obligatoria:
+- GitHub Releases no se tratará como un CDN con SLA;
+- GitHub puede limitar alojamiento/actividad si considera el uso de ancho de banda significativamente excesivo;
+- por ello no se cambia producción hasta superar una prueba real de reproducción, HTTP Range/seek y rendimiento.
 
 ## 16.3 Qué se guarda en cada sitio
 
-Arquitectura objetivo:
-
-- **GitHub/código:** definición oficial del ejercicio y assets que pertenezcan al código.
-- **Tigris:** archivos de vídeo pesados.
+- **GitHub/código:** definición oficial del ejercicio y código de CampoBase.
+- **GitHub Releases:** archivos MP4 pesados.
 - **Supabase:** datos sincronizados de CampoBase y metadata que la aplicación necesite compartir.
-- **Sesiones:** referencias mediante `exerciseId`; no incrustar MP4 ni blobs.
+- **Sesiones:** referencias mediante `exerciseId`; nunca incrustar MP4 ni blobs.
 
-No mover jugadores, partidos, estadísticas, sesiones, Auth, permisos ni otros datos a Tigris por una tarea de vídeos.
+Una tarea de vídeos no autoriza a mover jugadores, partidos, sesiones, estadísticas, Auth, pagos, interfaz ni otros datos.
 
-## 16.4 Rutas y nombres
+## 16.4 Acceso para IA y agentes
 
-Durante una migración:
-- conservar las claves/rutas existentes siempre que sea posible;
-- no renombrar vídeos arbitrariamente;
-- no cambiar IDs de ejercicios;
-- no romper URLs o referencias históricas.
+La identidad del agente no importa. Importa la función asignada y el permiso concedido.
 
-Para ejercicios del nuevo formato se deben conservar los nombres funcionales ya definidos por las reglas de ejercicios, incluido:
-- `ejercicio.mp4`;
-- `video_muestra_humanos.mp4`;
-- `preview.png` cuando corresponda.
+Un agente autorizado para vídeos puede gestionar los assets mediante GitHub API/CLI con los permisos concedidos al repositorio.
 
-La ubicación física del MP4 puede cambiar de proveedor, pero la asociación con el mismo `exerciseId` debe mantenerse.
+- No pedir a Miguel que suba manualmente vídeos si el agente dispone de acceso autorizado.
+- Nunca guardar tokens/secretos en Git, frontend, documentación o logs.
+- Usar permisos mínimos.
+- No borrar un vídeo existente salvo petición expresa y con rollback/validación.
 
-## 16.5 Facturación y gasto
+## 16.5 Nombres y asociación
 
-- No añadir método de pago ni activar un servicio de pago por decisión del agente.
-- No asumir que un Free Tier es un límite duro de gasto.
-- Antes de declarar un proveedor como definitivo, comprobar si permite límite de gasto, hard cap, suspensión al agotar cuota o facturación automática.
-- Si no existe evidencia oficial de un tope de gasto, documentarlo como riesgo y pedir validación explícita de Miguel antes de producción.
-- Tigris tiene actualmente cuota gratuita publicada, pero también precios por uso por encima de ella; por tanto, no debe describirse como servicio garantizado a coste cero.
+Los assets de GitHub Releases son archivos planos, no carpetas.
+
+- No cambiar `exerciseId`.
+- Usar nombres de asset estables y únicos derivados de la ruta/ID.
+- Mantener una correspondencia determinista entre `exerciseId`, tipo de vídeo y asset.
+- No sobrescribir silenciosamente otro ejercicio.
+- Mantener separadas las funciones de `ejercicio.mp4` y `video_muestra_humanos.mp4`.
 
 ## 16.6 Migración segura
 
-Nunca hacer un cambio destructivo directo.
-
 Orden obligatorio:
-1. copiar;
-2. verificar que el objeto existe;
-3. verificar tamaño/tipo;
-4. comprobar reproducción real;
-5. comprobar seek/range cuando corresponda;
-6. probar la app en la rama de trabajo;
-7. comprobar sesiones que referencian esos ejercicios;
-8. cambiar el origen de vídeo solo después de validar;
-9. conservar la fuente anterior hasta que Miguel confirme que la nueva funciona.
+1. subir un único MP4 pequeño de prueba;
+2. verificar descarga completa y tamaño;
+3. verificar HTTP Range/206 para seek;
+4. medir respuesta y comprobar reproducción;
+5. probar la app en rama aislada;
+6. probar móvil y escritorio;
+7. migrar el resto solo si la prueba es correcta;
+8. cambiar URLs de producción únicamente tras validar;
+9. conservar todos los originales de Supabase hasta confirmación explícita de Miguel.
 
-No borrar los vídeos de Supabase durante la fase de prueba.
+No hacer una migración destructiva directa.
 
 ## 16.7 Nuevos vídeos futuros
 
 Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
-
-- el agente debe subir el vídeo al almacenamiento vigente de esta sección si dispone de permiso;
-- no debe pedir a Miguel que haga manualmente la subida si el propio agente dispone de acceso autorizado;
-- debe conservar la relación con el `exerciseId`;
-- debe actualizar solo la metadata/referencia necesaria;
-- debe comprobar que el vídeo se reproduce desde la app antes de dar la tarea por terminada.
-
-Si el agente no tiene acceso al almacenamiento, debe indicar únicamente que falta autorización/conexión. No debe cambiar de proveedor, guardar el MP4 en Supabase ni crear una solución paralela sin permiso.
+- el agente autorizado debe subir el MP4 al GitHub Release vigente;
+- debe actualizar únicamente la referencia necesaria;
+- debe conservar el `exerciseId`;
+- debe verificar URL, reproducción y seek;
+- no debe mandar a Miguel a hacer manualmente la subida si dispone de acceso a GitHub;
+- no debe guardar el MP4 en Supabase Storage como solución alternativa salvo petición explícita.
 
 ## 16.8 Cambios prohibidos desde una tarea de vídeos
 
@@ -1072,11 +1045,10 @@ Una tarea de vídeos NO autoriza a:
 - modificar reglas de ejercicios;
 - modificar interfaz/UX;
 - cambiar categorías;
-- cambiar fichas de jugadores;
+- cambiar jugadores;
 - cambiar sesiones;
 - cambiar estadísticas;
-- cambiar pagos;
-- cambiar autenticación;
+- cambiar pagos o autenticación;
 - refactorizar otras áreas;
 - actualizar otras secciones de AGENTS.md.
 
@@ -1084,16 +1056,16 @@ Solo se toca otra área cuando Miguel lo pida expresamente.
 
 ## 16.9 Validación mínima
 
-Antes de declarar terminado cualquier cambio de vídeos:
-- comprobar que el archivo remoto responde;
-- comprobar `Content-Type`;
-- comprobar tamaño;
-- reproducir;
-- avanzar/retroceder el vídeo;
-- verificar que el ejercicio correcto carga el vídeo correcto;
-- probar móvil y escritorio cuando el cambio llegue a la app;
-- ejecutar las pruebas del proyecto que correspondan;
-- no fusionar una migración con vídeos faltantes o rotos.
+Antes de declarar terminado:
+- URL remota válida;
+- `Content-Type` adecuado;
+- tamaño correcto;
+- reproducción completa;
+- seek/avance/retroceso correcto;
+- asociación correcta ejercicio-vídeo;
+- prueba móvil y escritorio antes de producción;
+- pruebas del proyecto correspondientes;
+- cero vídeos faltantes o rotos.
 
 ---
 
