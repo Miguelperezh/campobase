@@ -1,10 +1,9 @@
 import { redeemPromoCodeFlow } from './promo-codes-admin.js';
+import { PLAN_PRICES, planFeaturesHTML } from './plan-catalog.js';
+
+export { PLAN_PRICES } from './plan-catalog.js';
 
 export const SUBSCRIPTION_CACHE_PREFIX = 'campobase.subscription.';
-export const PLAN_PRICES = Object.freeze({
-  monthly: { label: 'Plan Mensual', price: '9,99 € / mes' },
-  annual: { label: 'Plan Anual', price: '79 € / año' },
-});
 
 let initialized = false;
 let currentContext = null;
@@ -201,6 +200,10 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
         <p class="meta">Mantén todas las herramientas del equipo disponibles en tu cuenta.</p>
         <p><span class="badge">Pago seguro con Stripe</span></p>
       </div>
+      <article class="panel cb-plan-includes">
+        <h4>Todo CampoBase incluido</h4>
+        ${planFeaturesHTML()}
+      </article>
       ${discount > 0 ? `<p class="cb-discount-banner">Tienes un <strong>${discount}% de descuento</strong> guardado para tu próxima suscripción.</p>` : ''}
       <div class="cb-plans-grid">
         <article class="card cb-plan-card">
