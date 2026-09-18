@@ -22,7 +22,7 @@ test('el catálogo de planes enumera todas las áreas principales de la app', ()
     'Cuerpo técnico',
     'asistencia',
     'Convocatorias',
-    'Preparación de partido',
+    'Preparación y alineaciones',
     'Partido en vivo',
     'Calendario',
     'Sesiones',
