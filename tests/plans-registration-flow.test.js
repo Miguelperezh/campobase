@@ -58,7 +58,7 @@ test('las cuentas nuevas reciben prueba Pro de 14 días desde servidor', async (
 test('Ajustes muestra la Cuenta de delegado con permisos visibles', async () => {
   const html = await projectFile('index.html');
   assert.match(html, /id="cb-delegate-account-panel"/);
-  assert.match(html, /Permisos del delegado/);
+  assert.match(html, /¿Qué puede ver el delegado\?/);
   assert.match(html, /Vista delegado del partido/);
   assert.match(html, /Asistencia/);
   assert.match(html, /Partido en vivo/);
@@ -80,4 +80,16 @@ test('el acceso comercial exige prueba, regalo o pago también en servidor', asy
   assert.match(gate, /s\.estado = 'active'/);
   assert.match(gate, /s\.estado = 'trial'/);
   assert.doesNotMatch(gate, /p\.role in \('owner','admin'\)/);
+});
+
+
+test('el diseño evita tarjetas estrechas y hace grande la gestión del delegado', async () => {
+  const [auth, css] = await Promise.all([
+    projectFile('js/saas-auth-ui-v2.js'),
+    projectFile('billing.css'),
+  ]);
+  assert.match(auth, /width:min\(96vw,1080px\)/);
+  assert.match(css, /cb-delegate-account-panel[\s\S]*grid-column:\s*1\s*\/\s*-1/i);
+  assert.match(css, /cb-delegate-permissions-grid[\s\S]*repeat\(3,minmax\(0,1fr\)\)/i);
+  assert.match(css, /@media \(max-width: 980px\)[\s\S]*cb-feature-groups[\s\S]*grid-template-columns:\s*1fr/i);
 });
