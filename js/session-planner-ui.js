@@ -333,14 +333,26 @@ function bindCoverFallbacks(root) {
 }
 
 function hasHumanVideo(item) {
-  const validated = item?.validated || byId.get(String(item?.id || '')) || {};
-  return videos.has(String(item?.id || '')) || Boolean(
+  const id = String(item?.id || '');
+  if (videos.has(id)) return true;
+
+  const validated = item?.validated || byId.get(id) || {};
+  const explicit = Boolean(
     validated?.video_muestra_humanos
     || validated?.video_muestra_url
     || validated?.video_humano
     || validated?.video_humanos
-    || validated?.video
   );
+  if (explicit) return true;
+
+  const topLevel = String(validated?.video || '').trim();
+  const graphic = String(
+    validated?.media?.video
+    || validated?.media?.mp4
+    || validated?.media?.mp4_url
+    || ''
+  ).trim();
+  return Boolean(topLevel && topLevel !== graphic);
 }
 
 function card(item, recommended) {
