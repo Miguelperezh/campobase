@@ -767,24 +767,27 @@ body.cb-redesign-active .button {
 }
 
 body.cb-redesign-active .primary {
-  background: var(--cb-red-600);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.25);
+  background: var(--cb-brand, var(--brand, #10b981));
+  color: var(--cb-accent-text, #ffffff);
+  border: 1px solid var(--cb-brand, var(--brand, #10b981));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 24%, transparent);
 }
 
 body.cb-redesign-active .primary:hover {
-  background: var(--cb-red-700);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 86%, #000000);
+  border-color: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 86%, #000000);
+  color: var(--cb-accent-text, #ffffff);
 }
 
 body.cb-redesign-active .secondary {
-  background: var(--cb-slate-100);
-  color: var(--cb-slate-800);
-  border: 1px solid var(--cb-slate-200);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 8%, var(--card, #ffffff));
+  color: var(--ink, #0f172a);
+  border: 1px solid color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 28%, var(--line, #e2e8f0));
 }
 
 body.cb-redesign-active .secondary:hover {
-  background: var(--cb-slate-200);
-  color: var(--cb-slate-900);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 14%, var(--card, #ffffff));
+  color: var(--ink, #0f172a);
 }
 
 body.cb-redesign-active .danger {
@@ -1309,8 +1312,8 @@ body.cb-redesign-active .score-team button {
 }
 
 body.cb-redesign-active .score-step.primary {
-  background: var(--cb-red-600);
-  color: #ffffff;
+  background: var(--cb-brand, var(--brand, #10b981));
+  color: var(--cb-accent-text, #ffffff);
 }
 
 body.cb-redesign-active .clock {
