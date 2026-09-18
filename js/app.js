@@ -437,6 +437,8 @@ async function removePlayerIncident(key) {
     await put('trainings', next);
   }
   await refresh();
+  renderPlayers();
+  renderTrainings();
   toast('Incidencia eliminada.');
 }
 
@@ -678,7 +680,32 @@ function renderCallups() {
 async function deleteCallup(id) {
   const callup = state.callups.find((item) => item.id === id); if (!callup || !await askConfirmation({ title: 'Borrar convocatoria', message: 'Se borrará esta convocatoria y se recalcularán sus contadores de rotación.', acceptLabel: 'Borrar', danger: true })) return;
   const match = state.matches.find((item) => item.callupId === id); if (match) await put('matches', { ...match, callupId: null });
-  await remove('callups', id); await synchronizeRotationCounters(); await refresh(); toast('Convocatoria borrada.');
+  await remove('callups', id); await synchronizeRotationCounters(); await refresh(); renderPlayers(); toast('Convocatoria borrada.');
+}
+
+async function deleteTrainingSession(id) {
+  const session = state.trainingSessions.find((item) => item.id === id);
+  if (!session || !await askConfirmation({
+    title: 'Borrar sesión',
+    message: 'Se eliminarán la sesión, su asistencia y todo lo que esa asistencia aporta a las fichas de jugadores.',
+    acceptLabel: 'Borrar',
+    danger: true,
+  })) return;
+
+  const sessionDay = String(session.date || '').slice(0, 10);
+  const sessionsSameDay = state.trainingSessions.filter((item) => String(item.date || '').slice(0, 10) === sessionDay);
+  const relatedAttendance = state.trainings.filter((record) => {
+    if ((record.kind ?? 'training') !== 'training') return false;
+    if (record.sessionId === session.id) return true;
+    return !record.sessionId && sessionsSameDay.length === 1 && String(record.date || '').slice(0, 10) === sessionDay;
+  });
+
+  for (const record of relatedAttendance) await remove('trainings', record.id);
+  await remove('settings', session.id);
+  await refresh();
+  renderPlayers();
+  renderTrainings();
+  toast('Sesión, asistencia y estadísticas relacionadas eliminadas.');
 }
 
 async function deleteMatch(id) {
@@ -697,6 +724,8 @@ async function deleteMatch(id) {
   if (updatedPlayers.length) await putBatch({ players: updatedPlayers });
   await synchronizeRotationCounters();
   await refresh();
+  renderPlayers();
+  renderTrainings();
   toast('Partido y todos sus datos asociados borrados.');
 }
 
@@ -1661,6 +1690,7 @@ async function saveRateMatch(event) {
     $('#rating-dialog').close();
     state.ratingMatchId = null;
     await refresh();
+    renderPlayers();
     toast('Puntuaciones guardadas.');
   } finally {
     state.finishing = false;
@@ -1671,8 +1701,18 @@ async function saveMatch(event) {
   event.preventDefault(); const form = event.currentTarget; const values = formObject(form); const existing = values.id ? await getOne('matches', values.id) : null;
   const goalsFor = values.goalsFor === '' ? null : Number(values.goalsFor); const goalsAgainst = values.goalsAgainst === '' ? null : Number(values.goalsAgainst);
   const date = composeDateTime24(composeDate(values.dateDay, values.dateMonth, values.dateYear), values.dateHour, values.dateMinute);
-  await put('matches', { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, venue: values.venue, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() });
-  form.closest('dialog').close(); form.reset(); await refresh(); toast('Partido guardado.');
+  const savedMatch = { ...existing, id: values.id || uid(), date, round: values.round.trim(), type: values.type, venue: values.venue, opponent: values.opponent.trim(), location: values.location.trim(), goalsFor, goalsAgainst, status: (goalsFor !== null && goalsAgainst !== null) ? 'finished' : (existing?.status ?? 'planned'), createdAt: existing?.createdAt ?? Date.now() };
+  await put('matches', savedMatch);
+  if (existing) {
+    const day = date.slice(0, 10);
+    for (const record of state.trainings.filter((item) => item.matchId === savedMatch.id)) {
+      if (String(record.date || '').slice(0, 10) !== day) await put('trainings', { ...record, date: day, updatedAt: Date.now() });
+    }
+    for (const callup of state.callups.filter((item) => item.matchId === savedMatch.id || item.id === savedMatch.callupId)) {
+      if (String(callup.date || '').slice(0, 10) !== day) await put('callups', { ...callup, date: day, matchType: savedMatch.type, updatedAt: Date.now() });
+    }
+  }
+  form.closest('dialog').close(); form.reset(); await refresh(); renderPlayers(); renderTrainings(); toast('Partido guardado.');
 }
 
 function renderMatchCard(match) {
@@ -2090,6 +2130,7 @@ async function addDetailEvent(matchId) {
   }
   await put('matches', next);
   await refresh();
+  renderPlayers();
   showMatchDetail(matchId);
   toast('Incidencia añadida.');
 }
@@ -2104,6 +2145,7 @@ async function removeMatchEvent(matchId, kind, index) {
   if (kind === 'goal' && removed) next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
   await put('matches', next);
   await refresh();
+  renderPlayers();
   showMatchDetail(matchId);
   toast('Incidencia eliminada.');
 }
@@ -2138,7 +2180,7 @@ async function saveTraining(event) {
   for (const { id } of players) values[`arrivalTime-${id}`] = composeTime24(values[`arrivalTime-${id}Hour`], values[`arrivalTime-${id}Minute`]);
   values.date = composeDate(values.dateDay, values.dateMonth, values.dateYear);
   const record = buildAttendanceRecord(players, values, { id: existing?.id ?? uid(), kind: values.kind, matchId: values.matchId, createdAt: existing?.createdAt ?? Date.now() });
-  await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
+  await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(); renderPlayers(); renderTrainings(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
 }
 
 function renderTrainings() {
@@ -2405,8 +2447,23 @@ async function saveTrainingSession(event) {
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
   });
   await put('settings', session);
+  const legacyCandidates = existing
+    ? state.trainings.filter((record) => (record.kind ?? 'training') === 'training'
+        && !record.sessionId
+        && String(record.date || '').slice(0, 10) === String(existing.date || '').slice(0, 10)
+        && state.trainingSessions.filter((item) => String(item.date || '').slice(0, 10) === String(existing.date || '').slice(0, 10)).length === 1)
+    : [];
+  const linkedAttendance = state.trainings.filter((record) => record.sessionId === session.id).concat(legacyCandidates);
+  for (const record of linkedAttendance) {
+    const nextDate = String(session.date || '').slice(0, 10);
+    if (record.sessionId !== session.id || String(record.date || '').slice(0, 10) !== nextDate) {
+      await put('trainings', { ...record, sessionId: session.id, date: nextDate, updatedAt: Date.now() });
+    }
+  }
   form.closest('#session-builder').classList.add('hidden');
   await refresh();
+  renderPlayers();
+  renderTrainings();
   showView('sesiones');
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
 }
@@ -5170,7 +5227,7 @@ function wireEvents() {
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
-    if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); renderPlayers(); renderTrainings(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {
       if (!$('#session-builder').classList.contains('hidden')) {
@@ -5230,7 +5287,7 @@ function wireEvents() {
       }
       renderSessionDraft();
     }
-    if (target.matches('.delete-session') && await askConfirmation({ title: 'Borrar sesión', message: 'Se eliminará esta sesión de entrenamiento.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();
     if (target.id === 'make-sub') await makeSubstitution();
