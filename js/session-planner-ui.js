@@ -147,10 +147,6 @@ function itemFromCard(card) {
     || customMaterial;
   const difficulty = validated?.dificultad || validated?.nivel || customDifficulty;
   const cleanTitle = String(validated?.nombre || name).replace(/^--\s*/, '').trim();
-  const previewCrop = validated?.preview_crop || validated?.media_crop || null;
-  const previewCropToken = previewCrop
-    ? [previewCrop.x, previewCrop.y, previewCrop.width, previewCrop.height, previewCrop.sourceWidth || 1280, previewCrop.sourceHeight || 820].join(',')
-    : '';
 
   return {
     id,
@@ -171,7 +167,6 @@ function itemFromCard(card) {
     search: norm(validated ? validatedText(validated) : card.textContent || cleanTitle),
     cover: cover(validated),
     animationVideo: animationVideo(validated),
-    previewCrop: previewCropToken,
     validated,
   };
 }
@@ -288,14 +283,6 @@ function coverFallback(name) {
   return fallback;
 }
 
-function parsePreviewCrop(value = '') {
-  const parts = String(value || '').split(',').map(Number);
-  if (parts.length !== 6 || !parts.every(Number.isFinite)) return null;
-  const [x, y, width, height, sourceWidth, sourceHeight] = parts;
-  if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0) return null;
-  return { x, y, width, height, sourceWidth, sourceHeight };
-}
-
 function captureCoverFromVideo(img) {
   const src = img?.dataset.spCoverVideo;
   if (!src || img.dataset.spCoverFallbackStarted === '1') {
@@ -322,30 +309,15 @@ function captureCoverFromVideo(img) {
     if (finished || !video.videoWidth || !video.videoHeight) return fail();
     try {
       const canvas = document.createElement('canvas');
-      const crop = parsePreviewCrop(img.dataset.spPreviewCrop);
+      const width = Math.min(video.videoWidth, 720);
+      const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
+      canvas.width = width;
+      canvas.height = height;
       canvas.className = 'sp-cover-canvas';
       canvas.setAttribute('role', 'img');
       canvas.setAttribute('aria-label', img.alt);
       const context = canvas.getContext('2d');
-      if (crop) {
-        const scaleX = video.videoWidth / crop.sourceWidth;
-        const scaleY = video.videoHeight / crop.sourceHeight;
-        const sx = crop.x * scaleX;
-        const sy = crop.y * scaleY;
-        const sw = crop.width * scaleX;
-        const sh = crop.height * scaleY;
-        const width = Math.min(Math.max(1, Math.round(sw)), 720);
-        const height = Math.max(1, Math.round(width * crop.height / crop.width));
-        canvas.width = width;
-        canvas.height = height;
-        context.drawImage(video, sx, sy, sw, sh, 0, 0, width, height);
-      } else {
-        const width = Math.min(video.videoWidth, 720);
-        const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
-        canvas.width = width;
-        canvas.height = height;
-        context.drawImage(video, 0, 0, width, height);
-      }
+      context.drawImage(video, 0, 0, width, height);
       finished = true;
       video.pause();
       video.removeAttribute('src');
@@ -429,9 +401,9 @@ function card(item, recommended) {
   const hasRealVideo = hasHumanVideo(item);
   const graphicPreviewVideo = resolveHostedVideoUrl(item.animationVideo || '');
   const image = item.cover
-    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-preview-crop="${esc(item.previewCrop || '')}" alt="Portada de ${esc(item.name)}">`
+    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(graphicPreviewVideo)}" alt="Portada de ${esc(item.name)}">`
     : graphicPreviewVideo
-      ? `<img loading="lazy" decoding="async" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-preview-crop="${esc(item.previewCrop || '')}" data-sp-capture-cover="1" alt="Portada de ${esc(item.name)}">`
+      ? `<img loading="lazy" decoding="async" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-capture-cover="1" alt="Portada de ${esc(item.name)}">`
       : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
 
   return `<article class="sp-card ${recommended.has(item.id) ? 'recommended' : ''}">
