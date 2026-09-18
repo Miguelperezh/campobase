@@ -129,9 +129,12 @@ function itemFromCard(card) {
   const difficulty = validated?.dificultad || validated?.nivel || '';
   const cleanTitle = String(validated?.nombre || name).replace(/^--\s*/, '').trim();
 
+  const isMine = card.dataset.userExercise === '1' || Boolean(validated?.isMine);
+
   return {
     id,
     name: cleanTitle,
+    isMine,
     type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
     category: validated?.categoria || quick.tipo_principal || pills[0] || 'Otros',
     formato_juego,
@@ -397,7 +400,8 @@ function renderLibrary(form) {
   const categories = [...new Set(catalog.map((item) => item.type || item.category))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
   const list = base.filter((item) => {
     if (query && !item.search.includes(norm(query))) return false;
-    if (category && item.type !== category && item.category !== category) return false;
+    if (category === '__mine__' && !item.isMine) return false;
+    if (category && category !== '__mine__' && item.type !== category && item.category !== category) return false;
     if (playersFilter) {
       const c = item.playerCount;
       if (playersFilter === '1-4' && !(c >= 1 && c <= 4)) return false;
@@ -439,6 +443,7 @@ function renderLibrary(form) {
         <span>Categoría</span>
         <select id="sp-category">
           <option value="">Todas las categorías</option>
+          <option value="__mine__" ${category === '__mine__' ? 'selected' : ''}>Mis ejercicios</option>
           ${categories.map((entry) => `<option value="${esc(entry)}" ${category === entry ? 'selected' : ''}>${esc(entry)}</option>`).join('')}
         </select>
       </label>
