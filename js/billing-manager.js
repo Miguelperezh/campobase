@@ -151,6 +151,8 @@ function ensureBillingUI(root = document) {
     `;
     root.body.append(dialog);
   }
+  const plans = root.getElementById('cb-plans-content');
+  if (plans && !plans.dataset.billingReady) plans.dataset.billingReady = '1';
   return true;
 }
 
@@ -197,6 +199,7 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
         <p class="eyebrow">Acceso completo</p>
         <h3>Elige tu plan</h3>
         <p class="meta">Mantén todas las herramientas del equipo disponibles en tu cuenta.</p>
+        <p><span class="badge">Pago seguro con Stripe</span></p>
       </div>
       ${discount > 0 ? `<p class="cb-discount-banner">Tienes un <strong>${discount}% de descuento</strong> guardado para tu próxima suscripción.</p>` : ''}
       <div class="cb-plans-grid">
@@ -230,6 +233,80 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
   `;
 }
 
+function renderPlansView(root = document, context = currentContext) {
+  const target = root.getElementById('cb-plans-content');
+  if (!target) return;
+
+  const isDelegate = context?.profile?.role === 'delegate';
+  target.innerHTML = renderPaywallModalHTML(context?.subscription || null, { delegate: isDelegate });
+
+  const header = target.querySelector('.panel-head');
+  if (header && !isDelegate) {
+    const accountStatus = formatSubscriptionStatus(context?.subscription || null).label;
+    header.insertAdjacentHTML('afterend', `<article class="panel cb-plans-account-summary"><strong>Estado actual:</strong> ${accountStatus}</article>`);
+  }
+
+  const isAdmin = context?.profile?.role === 'owner' || context?.profile?.role === 'admin';
+  const hasUser = Boolean(context?.user);
+  const checkoutButtons = [...target.querySelectorAll('.cb-checkout-btn')];
+
+  if (isAdmin) {
+    checkoutButtons.forEach((button) => {
+      button.disabled = true;
+      button.textContent = 'Incluido en tu Pro vitalicio';
+    });
+    target.querySelector('.cb-promo-redeem-box')?.classList.add('hidden');
+  } else if (!hasUser) {
+    checkoutButtons.forEach((button) => {
+      button.disabled = true;
+      button.textContent = 'Inicia sesión para contratar';
+    });
+  } else {
+    checkoutButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const feedback = target.querySelector('#cb-paywall-payment-feedback');
+        const label = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Abriendo Stripe…';
+        if (feedback) feedback.textContent = '';
+        try {
+          await startStripeCheckout(currentClient, button.dataset.plan);
+        } catch (error) {
+          if (feedback) feedback.textContent = error.message || 'No se ha podido abrir el pago.';
+        } finally {
+          button.disabled = false;
+          button.textContent = label;
+        }
+      });
+    });
+  }
+
+  const redeemButton = target.querySelector('#cb-paywall-redeem-btn');
+  const redeemInput = target.querySelector('#cb-paywall-promo-input');
+  const redeemFeedback = target.querySelector('#cb-paywall-promo-feedback');
+  if (redeemButton && hasUser && !isAdmin && !isDelegate) {
+    redeemButton.addEventListener('click', async () => {
+      const code = redeemInput?.value?.trim();
+      if (!code) return;
+      redeemButton.disabled = true;
+      try {
+        const result = await redeemPromoCodeFlow(code);
+        if (redeemFeedback) redeemFeedback.textContent = result.message || 'Código aplicado.';
+        if (redeemInput) redeemInput.value = '';
+        await refreshBillingState();
+      } catch (error) {
+        if (redeemFeedback) redeemFeedback.textContent = error.message || 'No se ha podido aplicar el código.';
+      } finally {
+        redeemButton.disabled = false;
+      }
+    });
+  } else if (redeemButton && !hasUser) {
+    redeemButton.disabled = true;
+  }
+
+  target.querySelector('#cb-paywall-logout-btn')?.classList.add('hidden');
+}
+
 function updateAccountBillingUI(root, context) {
   const panel = root.getElementById('cb-account-billing-panel');
   if (!panel) return;
@@ -248,7 +325,9 @@ function updateAccountBillingUI(root, context) {
     if (planEl) planEl.textContent = 'Sin cuenta conectada';
     expiryBox?.classList.add('hidden');
     discountBox?.classList.add('hidden');
-    upgrade?.classList.add('hidden');
+    upgrade?.classList.remove('hidden');
+    if (upgrade) upgrade.textContent = '⭐ Ver planes y pagos';
+    renderPlansView(root, context);
     return;
   }
 
@@ -268,7 +347,9 @@ function updateAccountBillingUI(root, context) {
 
   const isOwner = context.profile?.role === 'owner' || context.profile?.role === 'admin';
   const isDelegate = context.profile?.role === 'delegate';
-  upgrade?.classList.toggle('hidden', isOwner || isDelegate || status.canUseApp && sub?.estado !== 'trial');
+  upgrade?.classList.toggle('hidden', isDelegate);
+  if (upgrade) upgrade.textContent = '⭐ Ver planes y pagos';
+  renderPlansView(root, context);
 }
 
 function closePaywall(root = document) {
@@ -361,6 +442,7 @@ async function refreshBillingState() {
   if (!user) {
     currentContext = { user: null, profile: null, subscription: null, source: 'none' };
     updateAccountBillingUI(document, currentContext);
+    renderPlansView(document, currentContext);
     closePaywall(document);
     return currentContext;
   }
@@ -381,6 +463,7 @@ async function refreshBillingState() {
     source: subscriptionPayload.source,
   };
   updateAccountBillingUI(document, currentContext);
+  renderPlansView(document, currentContext);
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
@@ -399,7 +482,10 @@ function bindBillingEvents(root = document) {
   const upgrade = root.getElementById('cb-account-upgrade-btn');
   if (upgrade && !upgrade.dataset.bound) {
     upgrade.dataset.bound = '1';
-    upgrade.addEventListener('click', () => openPaywallModal(root));
+    upgrade.addEventListener('click', () => {
+      if (window.__campobase?.showView) window.__campobase.showView('planes');
+      else document.querySelector('[data-target-view="planes"]')?.click();
+    });
   }
 
   window.addEventListener('campobase:subscription-updated', () => {
