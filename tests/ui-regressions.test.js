@@ -230,12 +230,13 @@ test('la limpieza elimina los ejercicios precargados malos y el builder de sesi�
   assert.match(sw, /campobase-v2\.44\.0/, 'caché actualizada');
 });
 
-test('la precarga de plantilla está conectada al arranque y a la caché PWA', async () => {
-  const [app, sw] = await Promise.all([projectFile('js/app.js'), projectFile('sw.js')]);
-  assert.match(app, /async function ensureSquadSeeded/);
-  assert.match(app, /squad-26-27-seeded/);
-  assert.match(app, /await ensureSquadSeeded\(\)/);
-  assert.match(sw, /squad-seed\.js/);
+test('la app no precarga ni sobrescribe automáticamente datos personales de jugadores', async () => {
+  const [app, seed] = await Promise.all([projectFile('js/app.js'), projectFile('js/squad-seed.js')]);
+  assert.doesNotMatch(app, /ensureSquadSeeded/);
+  assert.doesNotMatch(app, /OFFICIAL_SQUAD_DATA/);
+  assert.match(app, /putPlayerProfile/);
+  assert.match(seed, /OFFICIAL_SQUAD_DATA = \[\]/);
+  assert.match(seed, /players: \[\]/);
 });
 
 test('la pizarra táctica permite arrastrar piezas, colocar balón y dibujar cinco tipos de flecha', async () => {
