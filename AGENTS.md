@@ -276,6 +276,24 @@ Si ya existe, no sobrescribir automáticamente.
 
 Las versiones anteriores deben conservarse como respaldo y no aparecer como ejercicios actuales.
 
+## 2.10.1 Ejercicios creados por el entrenador — “Mis ejercicios”
+
+Los ejercicios creados manualmente desde **+ Ejercicio** son contenido personal del entrenador y deben persistir.
+
+Reglas obligatorias:
+- al guardar un ejercicio nuevo, debe quedar marcado como ejercicio creado por el usuario y no confundirse con favoritos/caché del catálogo validado;
+- después de guardar, debe aparecer en la pestaña **Mis ejercicios**;
+- recargar, sincronizar o reiniciar la PWA no puede eliminarlo ni hacerlo desaparecer de la biblioteca;
+- la limpieza de ejercicios legacy no puede borrar registros marcados como creados por el usuario;
+- los ejercicios personales deben poder editarse y borrarse mediante su flujo normal;
+- deben estar disponibles para añadirlos a sesiones;
+- en el selector de ejercicios de **Sesiones**, el desplegable **Categoría** debe incluir la opción **Mis ejercicios**;
+- la opción **Mis ejercicios** filtra solo ejercicios personales, sin mezclar los favoritos del catálogo validado;
+- categoría, formato F7/F11, material y dificultad del ejercicio personal deben conservarse para los filtros de sesiones.
+
+Comprobar siempre el flujo completo:
+**+ Ejercicio → Guardar → Mis ejercicios → recargar → sigue visible → Sesiones → Categoría → Mis ejercicios → añadir a sesión**.
+
 ## 2.11 Supabase
 
 Supabase es fuente de verdad cuando la app use esos datos.
@@ -659,6 +677,27 @@ Reglas:
 - no cerrar automáticamente una sesión por tener asistencia completa.
 
 Los partidos mantienen su flujo independiente; no aplicarles automáticamente esta regla de sesiones.
+
+---
+
+## 8.1 Crear y editar sesiones
+
+El entrenador debe poder crear y editar sesiones de entrenamiento desde la interfaz normal.
+
+Reglas:
+- **+ Nueva sesión** abre el constructor de sesión vacío;
+- **Editar** desde la tarjeta de una sesión abre el mismo constructor con todos sus datos existentes;
+- **Editar sesión** desde el detalle de una sesión debe hacer lo mismo;
+- editar conserva el mismo ID y fecha de creación de la sesión;
+- al guardar una edición se actualiza la sesión existente, no se crea un duplicado;
+- nombre, fecha, hora, campo, duración objetivo, bloques, duración de cada bloque, notas y material deben quedar editables;
+- los ejercicios personales de **Mis ejercicios** se pueden añadir exactamente igual que los del catálogo;
+- la clasificación de bloques debe reconocer las categorías actuales, incluida `Calentamiento/activación` como calentamiento y `Juego reducido` como juego final;
+- al guardar, la interfaz debe confirmar si la sesión se ha creado o actualizado;
+- no romper la asistencia vinculada ni crear registros huérfanos al editar fecha/datos de una sesión.
+
+Antes de dar este flujo por terminado, probar:
+**crear → guardar → abrir → editar → guardar → recargar → comprobar que existe una sola sesión con los cambios**.
 
 ---
 
