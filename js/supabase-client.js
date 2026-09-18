@@ -86,6 +86,12 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el módulo de promociones:', error);
     });
 
+  void import('./billing-manager.js?v=1')
+    .then(({ initBillingManager }) => initBillingManager(client))
+    .catch((error) => {
+      console.warn('No se pudo cargar el estado de la cuenta:', error);
+    });
+
   return {
     async getSnapshot(store) {
       const user = await requireBoundUser(client);
