@@ -1,0 +1,63 @@
+name: CampoBase GitHub Releases video test
+
+on:
+  push:
+    branches:
+      - github-releases-video-test
+    paths:
+      - .github/workflows/github-releases-video-test.yml
+
+permissions:
+  contents: write
+
+jobs:
+  test-release-video:
+    runs-on: ubuntu-latest
+    env:
+      TAG: campobase-video-storage-test-v1
+      ASSET: library-v2-preview__pdf150-094__ejercicio.mp4
+      SOURCE_URL: https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-094/ejercicio.mp4
+
+    steps:
+      - name: Download one existing video from Supabase
+        run: |
+          set -euo pipefail
+          curl -fL "$SOURCE_URL" -o "/tmp/$ASSET"
+          SIZE="$(stat -c%s "/tmp/$ASSET")"
+          echo "source_size=$SIZE"
+          test "$SIZE" = "34993"
+
+      - name: Create public prerelease and upload test asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "CampoBase video storage test"               --notes "Prueba técnica aislada de un MP4. No usar en producción hasta validar."               --prerelease               --latest=false
+          fi
+          gh release upload "$TAG" "/tmp/$ASSET" --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Verify complete download, Range seek and response timing
+        run: |
+          set -euo pipefail
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
+          echo "url=$URL"
+
+          curl -fL -D /tmp/full-headers.txt -o /tmp/full.mp4             -w "full_http=%{http_code} full_time=%{time_total} full_speed=%{speed_download}\n"             "$URL"
+          FULL_SIZE="$(stat -c%s /tmp/full.mp4)"
+          echo "full_size=$FULL_SIZE"
+          test "$FULL_SIZE" = "34993"
+
+          RANGE_HTTP="$(curl -sSL -D /tmp/range-headers.txt -o /tmp/range.bin             -w "%{http_code}" -H "Range: bytes=0-1023" "$URL")"
+          RANGE_SIZE="$(stat -c%s /tmp/range.bin)"
+          echo "range_http=$RANGE_HTTP"
+          echo "range_size=$RANGE_SIZE"
+          echo "--- final response headers ---"
+          tail -n 30 /tmp/range-headers.txt
+
+          test "$RANGE_HTTP" = "206"
+          test "$RANGE_SIZE" = "1024"
+
+          CONTENT_TYPE="$(grep -i '^content-type:' /tmp/full-headers.txt | tail -1 | tr -d '\r' || true)"
+          echo "content_type=$CONTENT_TYPE"
+          echo "$CONTENT_TYPE" | grep -qi 'video/mp4'
