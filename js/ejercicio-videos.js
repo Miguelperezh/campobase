@@ -9,6 +9,10 @@
 
 import { SUPABASE_URL, VIDEO_BUCKET } from './supabase-client.js';
 
+// Origen público de vídeos. Se mantiene Supabase por defecto hasta validar R2.
+// Para migrar sin romper producción basta con cambiar esta constante en la rama de migración.
+export const VIDEO_PUBLIC_BASE_URL = `${SUPABASE_URL}/storage/v1/object/public/${VIDEO_BUCKET}`;
+
 // Límite global de Supabase en el plan Free: 50 MB por archivo.
 export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
@@ -26,7 +30,7 @@ export function videoPath(exerciseId, videoId, extension) {
 // URL pública de reproducción (sin token, bucket público).
 export function videoPublicUrl(path) {
   const segments = String(path ?? '').split('/').map((segment) => encodeURIComponent(segment)).join('/');
-  return `${SUPABASE_URL}/storage/v1/object/public/${VIDEO_BUCKET}/${segments}`;
+  return `${VIDEO_PUBLIC_BASE_URL}/${segments}`;
 }
 
 // Construye y valida el registro de metadata de un vídeo.
