@@ -92,6 +92,7 @@ export async function fetchUserSubscription(client, userId) {
       saveCurrentSubscription(data, userId);
       return { subscription: data, source: 'server' };
     }
+    return { subscription: null, source: 'server' };
   } catch (error) {
     console.warn('No se pudo actualizar el estado de la suscripción:', error);
   }
@@ -370,8 +371,8 @@ async function refreshBillingState() {
   updateAccountBillingUI(document, currentContext);
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
-  const hasKnownSubscription = Boolean(currentContext.subscription);
-  if (profile?.role !== 'owner' && hasKnownSubscription && !canUse) {
+  const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
+  if (profile?.role !== 'owner' && subscriptionChecked && !canUse) {
     await openPaywallModal(document, { forced: true });
   } else if (canUse || profile?.role === 'owner') {
     closePaywall(document);
