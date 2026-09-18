@@ -189,6 +189,20 @@ async function renderDelegatePanel(root = document) {
     panel.classList.remove('hidden');
     content.innerHTML = `
       <div class="cb-delegate-access-preview">
+        <div class="cb-delegate-account-summary">
+          <div>
+            <span class="eyebrow">Cuenta asociada</span>
+            <label>Nombre del delegado
+              <input type="text" placeholder="Nombre y apellidos" disabled>
+            </label>
+          </div>
+          <div>
+            <span class="eyebrow">Acceso propio</span>
+            <label>Correo del delegado
+              <input type="email" placeholder="delegado@correo.es" disabled>
+            </label>
+          </div>
+        </div>
         <div class="cb-delegate-preview-copy">
           <h4>¿Qué puede ver el delegado?</h4>
           <p class="meta">La vista de delegado del partido siempre está incluida. El resto de permisos se configuran aquí. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
