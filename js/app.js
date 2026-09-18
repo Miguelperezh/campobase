@@ -3173,12 +3173,14 @@ function applyCustomTheme(themeInput) {
       contrastText = yiq >= 135 ? '#0f172a' : '#ffffff';
     }
     root.style.setProperty('--accent', accent);
+    root.style.setProperty('--brand', accent);
     root.style.setProperty('--cb-accent', accent);
     root.style.setProperty('--cb-accent-text', contrastText);
     root.style.setProperty('--cb-pitch-600', accent);
     root.style.setProperty('--cb-pitch-700', accent);
     root.style.setProperty('--cb-brand', accent);
     body.style.setProperty('--accent', accent);
+    body.style.setProperty('--brand', accent);
     body.style.setProperty('--cb-accent', accent);
     body.style.setProperty('--cb-accent-text', contrastText);
     body.style.setProperty('--cb-pitch-600', accent);
@@ -3186,12 +3188,14 @@ function applyCustomTheme(themeInput) {
     body.style.setProperty('--cb-brand', accent);
   } else {
     root.style.removeProperty('--accent');
+    root.style.removeProperty('--brand');
     root.style.removeProperty('--cb-accent');
     root.style.removeProperty('--cb-accent-text');
     root.style.removeProperty('--cb-pitch-600');
     root.style.removeProperty('--cb-pitch-700');
     root.style.removeProperty('--cb-brand');
     body.style.removeProperty('--accent');
+    body.style.removeProperty('--brand');
     body.style.removeProperty('--cb-accent');
     body.style.removeProperty('--cb-accent-text');
     body.style.removeProperty('--cb-pitch-600');
