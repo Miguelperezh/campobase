@@ -78,6 +78,15 @@ export function createCampoBaseCloudStore() {
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
     .catch((error) => {
       console.warn('No se pudo cargar el acceso de usuario:', error);
+      // Fallback de emergencia: un fallo del acceso SaaS nunca puede dejar
+      // CampoBase abierto y vacío sin ofrecer el PIN local validado.
+      document.body?.classList.add('auth-locked');
+      const dialog = document.getElementById('auth-dialog');
+      const localForm = document.getElementById('auth-form');
+      const saasShell = document.getElementById('saas-auth-shell');
+      saasShell?.classList.add('hidden');
+      localForm?.classList.remove('hidden');
+      if (dialog && !dialog.open) dialog.showModal();
     });
 
   void import('./promo-codes-admin.js?v=4')
