@@ -73,9 +73,10 @@ test('los 16 nuevos se muestran limpios: sin categoría duplicada, sin barras F7
     assert.equal(tagKeys.includes(category), false, `${exercise.id}: categoría repetida en etiquetas`);
     assert.equal(String(exercise.datos_rapidos?.jugadores || '').includes('/'), false, `${exercise.id}: jugadores mezclados F7/F11`);
     assert.equal(String(exercise.datos_rapidos?.duracion || '').includes('/'), false, `${exercise.id}: duración mezclada F7/F11`);
-    assert.equal(exercise.media?.preview, '', `${exercise.id}: no debe apuntar al bucket inexistente de previews`);
+    assert.ok(exercise.media?.preview, `${exercise.id}: debe conservar la ruta de preview.png`);
     assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano`);
-    assert.equal(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: el reproductor debe tener un vídeo válido mientras se conserva la ruta gráfica original`);
+    assert.ok(exercise.media?.video, `${exercise.id}: falta MP4 gráfico principal`);
+    assert.notEqual(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: el MP4 gráfico no puede ser el vídeo humano`);
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
   }
 });
