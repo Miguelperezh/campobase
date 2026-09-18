@@ -630,7 +630,9 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 export function renderExerciseGridCard(ex) {
   const media = ex.media || {};
   const rawPreview = media.preview || ex.preview || '';
-  const preview = isUsablePreview(rawPreview) ? rawPreview : '';
+  // Los ejercicios del nuevo lote no publican todavía preview.png en Storage.
+  // Usamos el primer fotograma del vídeo humano y evitamos cualquier imagen rota.
+  const preview = ex._nuevo_formato ? '' : (isUsablePreview(rawPreview) ? rawPreview : '');
   // Si falta preview válido en un ejercicio nuevo, mostramos el primer fotograma
   // del vídeo humano ya publicado. Evita imágenes rotas sin crear otro diseño.
   const fallbackVideo = !preview && ex._nuevo_formato
@@ -639,7 +641,6 @@ export function renderExerciseGridCard(ex) {
   const dr = ex.datos_rapidos || {};
   const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]).slice(0, 2);
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
-  const dur = formatExerciseDuration(dr.duracion || ex.duracion || ex.duration || (ex.duracion_min ? `${ex.duracion_min} min` : ''));
   const players = formatExercisePlayers(dr.jugadores || '');
 
   return `
@@ -651,7 +652,6 @@ export function renderExerciseGridCard(ex) {
           ? `<video class="card-preview-img card-preview-video" muted playsinline preload="metadata" src="${esc(fallbackVideo)}#t=0.1" aria-label="${esc(cleanNombre)}"></video>`
           : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
-      ${dur ? `<span class="card-duration-badge">${esc(dur)}</span>` : ''}
     </div>
 
     <div class="card-content">

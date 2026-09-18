@@ -18,14 +18,25 @@ export function findValidatedExercise(id) {
 }
 
 function humanVideoUrl(item) {
-  return String(
+  const explicit = String(
     item?.video_muestra_humanos
     || item?.video_muestra_url
     || item?.video_humano
     || item?.video_humanos
-    || item?.video
     || ''
   ).trim();
+  if (explicit) return explicit;
+
+  // Compatibilidad legacy: un vídeo superior solo es humano si no es el mismo
+  // MP4 gráfico que ya figura en media.video/media.mp4.
+  const topLevel = String(item?.video || '').trim();
+  const graphic = String(
+    item?.media?.video
+    || item?.media?.mp4
+    || item?.media?.mp4_url
+    || ''
+  ).trim();
+  return topLevel && topLevel !== graphic ? topLevel : '';
 }
 
 export function toCampoBaseExercise(item) {
