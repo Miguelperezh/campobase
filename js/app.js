@@ -3754,8 +3754,10 @@ async function restoreSessionRole() {
     return true;
   }
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
-  applyRole(role);
-  return true;
+  // Nunca restaurar automáticamente owner/delegate tras recargar:
+  // se vuelve a pedir PIN para proteger el acceso.
+  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistida. */ }
+  return false;
 }
 
 function showAuth() {
@@ -5553,7 +5555,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v2-exercises-media-crop-v1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v4').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
