@@ -297,3 +297,358 @@ Documentación específica actual:
 
 Si se añaden documentos de sesiones, vídeos, Supabase, arquitectura o diseño, deben enlazarse también desde este archivo.
 
+---
+
+# 4. Estado de trabajo actual y reglas de continuidad — 18/09/2026
+
+Esta sección documenta decisiones ya tomadas en conversaciones recientes para que el siguiente agente continúe desde el estado real del proyecto y no vuelva a implementar comportamientos descartados.
+
+## 4.1 Flujo de trabajo obligatorio
+
+- Los cambios funcionales se desarrollan primero en una rama aislada.
+- No fusionar cambios funcionales a `main` hasta que el usuario los haya probado y diga expresamente que están validados.
+- La rama aislada actual para la Fase 4 es:
+  - `fase-4-billing-aislada`
+- Antes de fusionar:
+  1. comparar la rama con `main`;
+  2. revisar exactamente qué archivos cambian;
+  3. ejecutar la batería completa de pruebas;
+  4. comprobar Supabase si la función depende de base de datos/RLS;
+  5. no fusionar si existe una regresión conocida.
+- No usar una maqueta como sustituto de la app real. Las validaciones deben hacerse sobre una URL funcional de la aplicación.
+- Mantener siempre una URL que el usuario pueda abrir para comprobar el estado de la app.
+- No inventar datos, IDs, claves, productos, precios, correos, usuarios ni configuraciones externas.
+- Si una integración externa todavía no dispone de credenciales o configuración real, dejarla preparada pero no simular que está operativa.
+
+## 4.2 Principio de preservación
+
+Cualquier agente que continúe el proyecto debe asumir que las funciones ya validadas son patrimonio estable de CampoBase.
+
+No se debe:
+- rehacer una función solo porque otra implementación parezca más limpia;
+- sustituir datos existentes por valores de ejemplo;
+- volver a introducir datos precargados de jugadores;
+- eliminar protecciones de datos para simplificar sincronización;
+- convertir un proceso validado en otro distinto sin autorización explícita.
+
+Cuando una tarea afecta a varias áreas, modificar solo lo necesario y conservar el resto.
+
+---
+
+# 5. Cuentas, roles, equipo y suscripciones
+
+## 5.1 Roles vigentes
+
+Los roles funcionales que deben mantenerse son:
+
+- `admin`: administrador/titular del equipo;
+- `coach`: entrenador titular normal;
+- `delegate`: delegado asociado al equipo;
+- `owner`: rol legado que se conserva por compatibilidad y se trata como administrador.
+
+En interfaz, la cuenta principal del usuario debe mostrarse como **Administrador**, aunque internamente pueda seguir existiendo `owner` por compatibilidad.
+
+No mezclar estos roles SaaS con el antiguo rol local por PIN de partido.
+
+## 5.2 Un equipo por cuenta principal
+
+Cada cuenta principal de entrenador/administrador posee un único equipo.
+
+Reglas:
+- no permitir crear varios equipos desde la misma cuenta principal;
+- no permitir que una cuenta de delegado cree equipos;
+- el delegado comparte exactamente el mismo equipo y los mismos datos deportivos;
+- no crear una plantilla separada para el delegado;
+- no duplicar jugadores, partidos, sesiones o configuraciones por crear un delegado.
+
+La relación de equipo debe resolverse en servidor/Supabase, no únicamente con lógica visual.
+
+## 5.3 Cuenta de delegado
+
+Cada equipo puede tener como máximo **una cuenta de delegado** asociada.
+
+El delegado:
+- usa su propio correo y contraseña;
+- queda asociado al equipo del entrenador titular;
+- no crea un equipo nuevo;
+- no puede pertenecer simultáneamente a otro equipo desde esta relación;
+- hereda el acceso de suscripción del equipo;
+- no gestiona pagos, promociones ni la suscripción;
+- no entra en Ajustes;
+- no puede cambiar permisos;
+- no puede crear más cuentas/equipos desde la interfaz de delegado.
+
+El entrenador/administrador configura desde Ajustes qué vistas puede usar el delegado.
+
+La vista base obligatoria es:
+- `delegado`
+
+Vistas adicionales configurables:
+- `hoy`
+- `plantilla`
+- `cuerpo-tecnico`
+- `asistencia`
+- `convocatorias`
+- `preparacion`
+- `partido`
+- `calendario`
+- `sesiones`
+- `ejercicios`
+- `tacticas`
+
+`ajustes` no debe ser concedible al delegado.
+
+La restricción debe existir también en servidor/RLS o funciones seguras cuando afecte a datos, no solo ocultando botones.
+
+## 5.4 Suscripciones / Fase 4
+
+La Fase 4 se está desarrollando en `fase-4-billing-aislada`.
+
+Reglas validadas de arquitectura:
+- prueba Pro: 14 días, gestionada por servidor;
+- plan mensual: 9,99 €/mes;
+- plan anual: 79 €/año;
+- códigos de regalo/descuento se validan en servidor;
+- no usar `localStorage` como autoridad de suscripción;
+- no crear pagos simulados;
+- no inventar IDs de Stripe;
+- Stripe Checkout y el webhook deben trabajar mediante Edge Functions;
+- la cuenta administrador/owner principal tiene acceso Pro vitalicio;
+- el delegado hereda la suscripción del titular;
+- una suscripción caducada debe bloquear el acceso SaaS a los datos protegidos, no solo mostrar un modal.
+
+El estado de pago real solo debe considerarse operativo cuando Stripe esté conectado y configurado con claves, precios y webhook reales.
+
+---
+
+# 6. Fichas de jugadores — protección obligatoria
+
+Esta sección es crítica. Ya se han producido pérdidas/sobrescrituras de datos personales de jugadores y no deben repetirse.
+
+## 6.1 Datos que nunca se inventan
+
+No inventar ni completar automáticamente:
+- nombre;
+- dorsal;
+- posiciones;
+- pierna dominante;
+- notas;
+- nombre del padre;
+- teléfono del padre;
+- nombre de la madre;
+- teléfono de la madre;
+- foto;
+- cualquier otro dato personal del jugador.
+
+Si un dato no está respaldado por la ficha real, una copia anterior comprobada o una entrada explícita del usuario, debe quedarse vacío.
+
+No reutilizar datos de otro jugador con nombre parecido.
+
+## 6.2 Edición manual como única autoridad de la ficha
+
+Los campos personales de una ficha de jugador solo deben cambiar cuando el usuario entra en **Editar jugador** y guarda expresamente esa ficha.
+
+Una operación automática de:
+- sincronización;
+- estadísticas;
+- partidos;
+- asistencias;
+- convocatorias;
+- sesiones;
+- migraciones;
+- refresco;
+- cambio de dispositivo;
+- actualización de la PWA;
+
+no debe cambiar esos campos personales.
+
+La app dispone de una ruta específica de guardado manual de ficha (`putPlayerProfile` o equivalente). No sustituirla por escrituras genéricas que puedan sobrescribir campos personales.
+
+## 6.3 Prohibido reintroducir plantillas precargadas
+
+La antigua precarga automática de nombres/dorsales/contactos fue eliminada.
+
+No reintroducir:
+- `OFFICIAL_SQUAD_DATA` con jugadores reales;
+- seeds que creen jugadores automáticamente;
+- migraciones que rellenen nombres, dorsales, posiciones o padres;
+- datos de muestra sobre una cuenta real.
+
+Una cuenta nueva debe empezar con plantilla vacía salvo importación explícita y controlada por el usuario.
+
+## 6.4 Protección de sincronización
+
+Las escrituras parciales de una ficha no deben borrar campos existentes.
+
+La protección existe en dos niveles y ambos deben mantenerse:
+1. aplicación/IndexedDB;
+2. Supabase.
+
+Si una versión remota antigua llega sin algunos campos personales, no debe vaciar los campos locales válidos.
+
+Si una edición manual envía explícitamente un nuevo valor, ese valor sí puede sustituir al anterior.
+
+## 6.5 Historial de fichas
+
+Supabase dispone de historial/auditoría de cambios de jugadores.
+
+Antes de modificar o borrar una ficha se conserva la versión anterior para recuperación.
+
+No eliminar esta protección sin una migración equivalente y validada.
+
+## 6.6 Dorsales
+
+- Dos jugadores activos del mismo equipo no pueden tener el mismo dorsal.
+- Si se elimina un jugador, su dorsal vuelve a quedar disponible.
+- No asignar dorsales automáticamente.
+- No cambiar dorsales durante cálculos de estadísticas o sincronización.
+
+## 6.7 Orden alfabético
+
+Cuando el orden no tenga significado táctico, los jugadores deben mostrarse por nombre en orden alfabético.
+
+Aplica a:
+- Plantilla;
+- Asistencia;
+- selectores normales de jugadores;
+- listados equivalentes;
+- futuras altas.
+
+No forzar orden alfabético en vistas donde el orden representa:
+- posiciones;
+- titulares/suplentes;
+- sustituciones;
+- orden táctico;
+- orden de juego.
+
+---
+
+# 7. Estadísticas de jugadores — siempre derivadas de los datos reales
+
+Las fichas de estadísticas deben reflejar el estado actual de partidos, convocatorias y asistencias.
+
+Regla central:
+
+**si se edita o se borra el dato de origen, la estadística derivada debe recalcularse inmediatamente.**
+
+## 7.1 Partidos
+
+Al editar o borrar un partido deben recalcularse los datos relacionados del jugador.
+
+Incluye:
+- resultado;
+- goles;
+- minutos;
+- amarillas;
+- rojas;
+- lesiones;
+- incidencias;
+- puntuaciones;
+- convocatoria;
+- asistencia del partido;
+- pretemporada vs liga;
+- cualquier otro total derivado.
+
+Si un partido cambia de competición/tipo, las estadísticas deben moverse al bloque correcto.
+
+Si un partido se elimina, sus aportaciones deben dejar de existir en las estadísticas.
+
+## 7.2 Entrenamientos y asistencia
+
+Si se edita una asistencia:
+- actualizar presentes;
+- actualizar llegadas tarde;
+- actualizar ausencias.
+
+Si se borra una asistencia:
+- eliminar su efecto de las fichas.
+
+Si se borra una sesión de entrenamiento:
+- borrar también la asistencia vinculada a esa sesión;
+- eliminar todo efecto estadístico de ese día;
+- no dejar registros huérfanos.
+
+No conservar ausencias de una sesión que ya no existe.
+
+## 7.3 Convocatorias
+
+Si se edita o elimina una convocatoria:
+- recalcular convocatorias;
+- recalcular rotaciones o contadores derivados;
+- no dejar estadísticas asociadas a una convocatoria inexistente.
+
+## 7.4 No guardar totales derivados como sustituto del origen
+
+Siempre que sea posible, goles, tarjetas, minutos, asistencias y contadores deben derivarse de los eventos/registros de origen.
+
+No convertir un total calculado en la única fuente de verdad si existe el evento original.
+
+---
+
+# 8. Sesiones de entrenamiento — estado y asistencia
+
+Guardar o editar la asistencia de una sesión **no finaliza la sesión**.
+
+El entrenador puede pasar asistencia:
+- el mismo día;
+- días antes;
+- anticipando jugadores que sabe que faltarán;
+- anotando retrasos previstos o ausencias conocidas.
+
+La sesión debe seguir visible y editable hasta que el entrenador pulse expresamente **Realizado**.
+
+Reglas:
+- asistencia guardada ≠ sesión finalizada;
+- una sesión solo pasa a finalizada/archivada mediante la acción explícita **Realizado**;
+- borrar la sesión elimina también su asistencia y sus efectos estadísticos;
+- editar la fecha de la sesión debe mantener correctamente vinculada su asistencia;
+- no cerrar automáticamente una sesión por tener asistencia completa.
+
+Los partidos mantienen su flujo independiente; no aplicarles automáticamente esta regla de sesiones.
+
+---
+
+# 9. Acceso local, SaaS y dispositivo
+
+Mantener el **Acceso local con PIN** como alternativa validada.
+
+Para cuentas SaaS:
+- puede recordarse una cuenta en un dispositivo;
+- después puede pedirse solo un PIN de dispositivo mientras la sesión segura siga siendo válida;
+- la cuenta recordada es específica de ese dispositivo;
+- no guardar contraseñas en texto plano;
+- no bloquear toda la app si una sesión SaaS caduca: debe seguir siendo posible usar el flujo de acceso autorizado correspondiente;
+- la verificación y recuperación de correo deben redirigir a la URL real de la app, nunca a `localhost`.
+
+No escribir correos personales concretos del usuario como constantes públicas en el repositorio.
+
+---
+
+# 10. Supabase — reglas adicionales actuales
+
+- RLS es obligatoria para separar cuentas/equipos.
+- Un usuario no debe poder leer o escribir datos de otro equipo.
+- El delegado puede acceder a los datos de su equipo mediante la relación de membresía, no mediante copia de datos.
+- Las funciones administrativas deben validar el rol en servidor.
+- El cliente nunca debe poder autopromocionarse a `admin`/`owner`.
+- Las promociones, suscripciones, invitaciones y permisos deben validarse en servidor.
+- No usar políticas permisivas `using (true)` para datos SaaS reales.
+- No ejecutar migraciones destructivas sobre datos deportivos existentes.
+- Antes de tocar tablas de jugadores, partidos, asistencias, convocatorias o configuración, comprobar recuentos y preservar los registros existentes.
+- Cuando se pruebe una migración con datos reales, usar transacción/rollback siempre que sea posible.
+
+---
+
+# 11. Regla final para futuros agentes
+
+Antes de modificar cualquier pieza relacionada con jugadores, estadísticas, sesiones, cuentas, delegados, pagos o Supabase:
+
+1. leer esta sección completa;
+2. revisar el comportamiento actual en código;
+3. revisar los datos reales afectados;
+4. implementar en rama aislada si es un cambio funcional;
+5. probar la regresión exacta que motivó la regla;
+6. no borrar ni reemplazar silenciosamente una protección existente.
+
+Si el usuario dice que algo ya estaba validado, asumir que debe preservarse salvo petición explícita de cambio.
+
