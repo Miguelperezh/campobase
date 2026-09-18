@@ -2,7 +2,7 @@
 // Implementa las 17 secciones completas, controles interactivos, zoom táctico con clamping,
 // leyenda visual bajo el vídeo y botones accesibles de cierre (superior con safe-area e inferior fijo).
 
-import { renderVideoSectionHTML } from './ejercicio-videos.js';
+import { renderVideoSectionHTML, resolveHostedVideoUrl } from './ejercicio-videos.js';
 import { attachMediaLightbox } from './media-lightbox.js';
 import { findValidatedExercise } from './ejercicios-validados.js';
 
@@ -159,13 +159,13 @@ export function renderActionVisualSVG(trazo = '') {
  */
 export function renderValidatedExerciseHTML(ex, options = {}) {
   const media = ex.media || {};
-  const videoSrc = String(
+  const videoSrc = resolveHostedVideoUrl(String(
     media.video
     || media.mp4
     || ex.video_ejercicio
     || ex.animacion?.mp4
     || ''
-  ).trim();
+  ).trim());
   const previewSrc = String(
     media.preview
     || ex.preview
@@ -181,8 +181,8 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     || ex.video
     || ''
   ).trim();
-  const realVideo = explicitHumanVideo && explicitHumanVideo !== videoSrc
-    ? explicitHumanVideo
+  const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
+    ? resolveHostedVideoUrl(explicitHumanVideo)
     : '';
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
