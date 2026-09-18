@@ -200,9 +200,12 @@ function installStyles() {
     .cb-plan-features li>span:first-child{font-weight:900;color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
     .cb-account-plan-choice{display:grid;gap:.8rem;padding:.9rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
     .cb-account-plan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+    .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:2px solid color-mix(in srgb,var(--cb-brand,#173f35) 40%,var(--line,#e2e8f0));border-radius:14px;background:color-mix(in srgb,var(--card,#fff) 92%,var(--cb-brand,#173f35) 8%)}
+    .cb-access-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
+    .cb-access-steps span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:66px;padding:.65rem;border-radius:12px;background:var(--card,#fff);font-weight:800;border:1px solid var(--line,#e2e8f0)}
     @media(max-width:700px){
       #auth-dialog.auth-dialog{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:1rem}
-      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features{grid-template-columns:1fr}
+      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features,.cb-access-steps{grid-template-columns:1fr}
       .cb-auth-actions>button{flex-basis:100%}
     }
   `;
@@ -296,7 +299,15 @@ function shellMarkup() {
           <h3>Todo CampoBase incluido</h3>
           ${planFeaturesHTML()}
         </article>
-        <p class="meta">La prueba Pro inicial de 14 días se mantiene mientras siga vigente en el alta. Si la prueba termina sin un plan activo, tendrás que elegir mensual o anual antes de acceder a los datos del equipo.</p>
+        <div class="cb-access-rule">
+          <strong>Acceso a CampoBase</strong>
+          <div class="cb-access-steps">
+            <span>1️⃣ Creas tu cuenta</span>
+            <span>2️⃣ Usas CampoBase gratis durante 14 días</span>
+            <span>3️⃣ Después necesitas pagar un plan o usar un código de regalo válido</span>
+          </div>
+          <p class="meta">Sin prueba activa, sin código gratuito válido y sin suscripción pagada, no se permite entrar a los datos del equipo.</p>
+        </div>
       </section>
 
       <section id="saas-remembered-pane" class="cb-auth-pane hidden cb-remembered-card" aria-live="polite">
@@ -407,6 +418,10 @@ function prefillRememberedIdentifier() {
 }
 
 function showLocalPin() {
+  if (getBoundSaasUserId()) {
+    setMessage('#saas-login-message', 'Para una cuenta registrada, usa tu correo/contraseña o el PIN recordado del dispositivo. El PIN local antiguo no sustituye la prueba, un código gratuito o una suscripción activa.');
+    return;
+  }
   localPinMode = true;
   $('#saas-auth-shell')?.classList.add('hidden');
   $('#auth-form')?.classList.remove('hidden');
@@ -479,24 +494,21 @@ async function prepareSignedInChoice(client, data) {
   const planBox = $('#saas-account-plan-choice');
   const enterButton = $('#saas-enter-account');
   const isDelegate = profile.role === 'delegate';
-  const isAdmin = profile.role === 'owner' || profile.role === 'admin';
   let subscription = null;
-  let planStatus = { canUseApp: true, label: '' };
+  let planStatus = { canUseApp: false, label: 'Sin acceso activo' };
 
-  if (!isDelegate && !isAdmin) {
-    try {
-      const { fetchUserSubscription, formatSubscriptionStatus } = await import('./billing-manager.js?v=1');
-      const result = await fetchUserSubscription(client, user.id);
-      subscription = result.subscription;
-      planStatus = formatSubscriptionStatus(subscription);
-    } catch (error) {
-      console.warn('No se pudo comprobar el plan antes de entrar:', error);
-      planStatus = { canUseApp: false, label: 'Plan pendiente de comprobar' };
-    }
+  try {
+    const { fetchUserSubscription, formatSubscriptionStatus } = await import('./billing-manager.js?v=1');
+    const result = await fetchUserSubscription(client, user.id);
+    subscription = result.subscription;
+    planStatus = formatSubscriptionStatus(subscription);
+  } catch (error) {
+    console.warn('No se pudo comprobar el plan antes de entrar:', error);
+    planStatus = { canUseApp: false, label: 'No se pudo comprobar el acceso' };
   }
 
   if (planBox) {
-    const shouldShow = !isDelegate && !isAdmin;
+    const shouldShow = !isDelegate;
     planBox.classList.toggle('hidden', !shouldShow);
     if (shouldShow) {
       const statusEl = $('#saas-account-plan-status');
@@ -504,10 +516,12 @@ async function prepareSignedInChoice(client, data) {
       if (statusEl) statusEl.textContent = planStatus.label || 'Elige tu plan';
       if (helpEl) {
         helpEl.textContent = subscription?.estado === 'trial' && planStatus.canUseApp
-          ? 'Tu prueba Pro está activa. Puedes continuar con la prueba o contratar ahora el plan que prefieras.'
-          : planStatus.canUseApp
-            ? 'Tu cuenta tiene acceso activo.'
-            : 'Para acceder a los datos del equipo necesitas activar un plan mensual o anual.';
+          ? 'Tienes acceso completo durante tu prueba gratuita. Puedes entrar ahora o contratar ya mensual/anual.'
+          : subscription?.estado === 'gift_free' && planStatus.canUseApp
+            ? 'Tu código gratuito está activo. Puedes entrar a CampoBase.'
+            : planStatus.canUseApp
+              ? 'Tu suscripción está activa. Puedes entrar a CampoBase.'
+              : 'No tienes acceso activo. Necesitas una prueba vigente, un código gratuito válido o una suscripción mensual/anual.';
       }
       planBox.querySelectorAll('.saas-account-checkout').forEach((button) => {
         button.classList.toggle('primary', button.dataset.plan === pendingPreferredPlan);
@@ -517,7 +531,7 @@ async function prepareSignedInChoice(client, data) {
   }
 
   if (enterButton) {
-    const canEnter = isDelegate || isAdmin || Boolean(planStatus.canUseApp);
+    const canEnter = Boolean(planStatus.canUseApp);
     enterButton.classList.toggle('hidden', !canEnter);
     enterButton.disabled = !canEnter;
     enterButton.textContent = subscription?.estado === 'trial' && planStatus.canUseApp
@@ -526,7 +540,7 @@ async function prepareSignedInChoice(client, data) {
   }
 
   showPane('choice');
-  return { user, profile, available, subscription, canEnter: isDelegate || isAdmin || Boolean(planStatus.canUseApp) };
+  return { user, profile, available, subscription, canEnter: Boolean(planStatus.canUseApp) };
 }
 
 function waitForApp(timeoutMs = 12000) {
