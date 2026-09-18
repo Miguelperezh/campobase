@@ -1,11 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { EJERCICIOS_VALIDADOS } from '../js/ejercicios-validados.js';
 import {
   VIDEO_MAX_BYTES,
   buildVideoRecord,
   sortVideos,
   videoPath,
   videoPublicUrl,
+  resolveHostedVideoUrl,
   renderVideoSectionHTML,
 } from '../js/ejercicio-videos.js';
 
@@ -45,6 +48,21 @@ test('genera la ruta y la URL pública del vídeo', () => {
   );
 });
 
+test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar otras URLs', () => {
+  assert.equal(
+    resolveHostedVideoUrl('https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/ejercicio.mp4'),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__pdf150-022__ejercicio.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl('https://example.test/video.mp4'),
+    'https://example.test/video.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl('https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png'),
+    'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png',
+  );
+});
+
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
   const videos = [{ id: 'v1', nombre: 'Demo', path: 'EX-1/v1.mp4', orden: 0, createdAt: 1 }];
   const owner = renderVideoSectionHTML(videos, { role: 'owner', exerciseId: 'EX-1' });
@@ -60,4 +78,43 @@ test('la sección de vídeos muestra reproductor y solo Migue puede subir o borr
 test('sin vídeos y sin permiso de Migue no se pinta la sección', () => {
   assert.equal(renderVideoSectionHTML([], { role: 'delegate', exerciseId: 'EX-1' }), '');
   assert.match(renderVideoSectionHTML([], { role: 'owner', exerciseId: 'EX-1' }), /Sin vídeos todavía/);
+});
+
+
+test('todas las referencias que se transforman apuntan a assets existentes y el manifiesto completo es resoluble', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../scripts/github-release-video-manifest.json', import.meta.url), 'utf8'));
+  const knownPaths = new Set(manifest.map(({ name }) => name));
+  const migratedRefs = new Set();
+
+  const visit = (value) => {
+    if (typeof value === 'string') {
+      if (value.includes('/storage/v1/object/public/ejercicio-videos/') && /\.mp4(?:$|[?#])/i.test(value)) {
+        const marker = '/storage/v1/object/public/ejercicio-videos/';
+        const raw = value.slice(value.indexOf(marker) + marker.length).split(/[?#]/, 1)[0];
+        const path = raw.split('/').map((segment) => decodeURIComponent(segment)).join('/');
+        const resolved = resolveHostedVideoUrl(value);
+        if (resolved !== value) {
+          migratedRefs.add(path);
+          assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
+          assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (value && typeof value === 'object') Object.values(value).forEach(visit);
+  };
+
+  EJERCICIOS_VALIDADOS.forEach(visit);
+  assert.ok(migratedRefs.size > 0, 'Debe encontrar referencias migradas en la biblioteca');
+
+  for (const { name } of manifest) {
+    const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
+    const resolved = resolveHostedVideoUrl(synthetic);
+    assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
+    assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+  }
 });
