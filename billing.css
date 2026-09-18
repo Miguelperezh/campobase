@@ -78,3 +78,42 @@
     max-height: 92vh;
   }
 }
+
+
+.cb-plan-includes {
+  margin: 0;
+}
+
+.cb-plan-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem .9rem;
+  padding: 0;
+  margin: .8rem 0 0;
+  list-style: none;
+}
+
+.cb-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  min-width: 0;
+}
+
+.cb-plan-features li > span:first-child {
+  font-weight: 900;
+}
+
+#cb-plans-content {
+  width: 100%;
+}
+
+#cb-plans-content .cb-paywall-modal-card {
+  width: 100%;
+}
+
+@media (max-width: 680px) {
+  .cb-plan-features {
+    grid-template-columns: 1fr;
+  }
+}
