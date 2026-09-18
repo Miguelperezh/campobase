@@ -292,7 +292,7 @@ function shellMarkup() {
           <p class="meta">Los primeros 14 días son gratis. Para activar la prueba te pediremos un método de pago. No se cobrará nada hasta que termine la prueba.</p>
           <div class="cb-register-plan-grid">
             <label class="cb-register-plan-option">
-              <input type="radio" name="selectedPlan" value="monthly" checked>
+              <input type="radio" name="selectedPlan" value="monthly" checked required>
               <span><strong>Mensual</strong><small>9,99 € / mes después de la prueba</small></span>
             </label>
             <label class="cb-register-plan-option">
