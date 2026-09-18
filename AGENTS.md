@@ -294,6 +294,29 @@ Reglas obligatorias:
 Comprobar siempre el flujo completo:
 **+ Ejercicio → Guardar → Mis ejercicios → recargar → sigue visible → Sesiones → Categoría → Mis ejercicios → añadir a sesión**.
 
+## 2.10.2 Integración aplicada en la app — 18/09/2026
+
+Integración funcional fusionada en `main` mediante el PR #46, commit de merge:
+`4d315a05fff9b5632ffd2f0fa332fb11335c7d23`.
+
+Estado que debe conservarse:
+
+- Los ejercicios personales creados desde **+ Ejercicio** persisten como registros propios del entrenador.
+- Al guardarlos aparecen en **Mis ejercicios** y siguen visibles después de recargar/sincronizar.
+- **Mis ejercicios** está disponible también dentro del desplegable **Categoría** del selector de ejercicios de **Sesiones**.
+- Los ejercicios personales conservan categoría, formato F7/F11, material y dificultad para poder filtrarlos y añadirlos a una sesión.
+- Crear y editar sesiones utiliza el mismo builder y debe conservar ID de sesión, fecha de creación, bloques, orden, minutos, notas y ejercicios seleccionados.
+- Existe prueba de regresión específica para crear y editar una sesión que contiene un ejercicio personal.
+- Para los ejercicios del nuevo formato, el orden visual obligatorio sigue siendo:
+  1. preview;
+  2. MP4 gráfico;
+  3. vídeo humano.
+- El vídeo humano nunca se utiliza como falsa preview.
+- Si el `preview.png` todavía no está publicado, la interfaz evita la URL rota y genera una portada estática a partir del **MP4 gráfico**, nunca del vídeo humano.
+- En el selector de Sesiones se mantiene el mismo criterio de preview gráfica.
+- No se han eliminado ejercicios, sesiones, vídeos ni datos existentes y no se ha modificado la lógica validada del editor/pizarra.
+- La verificación automática `CampoBase verify` del cambio funcional pasó correctamente antes y después de fusionar.
+
 ## 2.11 Supabase
 
 Supabase es fuente de verdad cuando la app use esos datos.
