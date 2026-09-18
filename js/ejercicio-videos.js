@@ -33,6 +33,16 @@ export function resolveHostedVideoUrl(value) {
     path = rawPath;
   }
   if (!/\.mp4$/i.test(path)) return source;
+
+  // Solo migramos los objetos que existen realmente en el bucket origen:
+  // - biblioteca V2: library-v2-preview/.../ejercicio.mp4
+  // - vídeos humanos históricos: CAMPOBASE-VIDEO-.../video.mp4
+  // Algunos ejercicios nuevos referencian además .../ejercicio.mp4 bajo CAMPOBASE-VIDEO-...,
+  // pero esos objetos no existen en Storage y no deben convertirse en URLs 404 del release.
+  const isLibraryV2 = path.startsWith('library-v2-preview/');
+  const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
+  if (!isLibraryV2 && !isCampoBaseHuman) return source;
+
   const asset = path.replaceAll('/', '__');
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
