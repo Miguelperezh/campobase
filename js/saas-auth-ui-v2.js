@@ -163,7 +163,7 @@ function installStyles() {
   const style = document.createElement('style');
   style.id = 'cb-saas-auth-style-v2';
   style.textContent = `
-    #auth-dialog.auth-dialog{width:min(96vw,720px);max-height:min(94vh,820px);overflow:auto}
+    #auth-dialog.auth-dialog{width:min(96vw,1080px);max-width:1080px;max-height:min(94vh,900px);overflow:auto}
     #saas-auth-shell{display:grid;gap:1rem;width:100%}
     #saas-auth-shell.hidden,#auth-form.hidden{display:none!important}
     .cb-auth-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:0 0 .25rem}
@@ -203,6 +203,11 @@ function installStyles() {
     .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:2px solid color-mix(in srgb,var(--cb-brand,#173f35) 40%,var(--line,#e2e8f0));border-radius:14px;background:color-mix(in srgb,var(--card,#fff) 92%,var(--cb-brand,#173f35) 8%)}
     .cb-access-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
     .cb-access-steps span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:66px;padding:.65rem;border-radius:12px;background:var(--card,#fff);font-weight:800;border:1px solid var(--line,#e2e8f0)}
+    @media(max-width:900px){
+      #saas-public-plans .cb-feature-groups{grid-template-columns:1fr}
+      #saas-public-plans .cb-plan-features{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cb-access-steps{grid-template-columns:1fr}
+    }
     @media(max-width:700px){
       #auth-dialog.auth-dialog{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:1rem}
       .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features,.cb-access-steps{grid-template-columns:1fr}
