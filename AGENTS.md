@@ -142,6 +142,22 @@ Debe:
 
 No convertir el MP4 nuevo a GIF como formato principal.
 
+## 2.3.1 Orden obligatorio de visualización en ejercicios del nuevo formato
+
+Tanto en **Vista rápida/reducida** como en **Vista completa/ampliada**, los ejercicios del nuevo formato deben mostrar los medios en este orden exacto:
+
+1. **Preview**: `preview.png`, igual que las portadas del resto de la biblioteca.
+2. **MP4 gráfico del ejercicio**: `ejercicio.mp4`, con las fichas/animación del ejercicio.
+3. **Vídeo de muestra con humanos**: `video_muestra_humanos.mp4`.
+
+Reglas:
+- la preview nunca se sustituye por el primer fotograma del vídeo humano;
+- el vídeo humano nunca ocupa el lugar del MP4 gráfico;
+- el MP4 gráfico nunca sustituye a la preview de la tarjeta;
+- los tres medios deben mantener ese mismo orden en vista reducida y vista completa;
+- si falta temporalmente un asset, mostrar un placeholder neutro y no reutilizar otro medio como si fuera ese asset;
+- antes de publicar, comprobar que `preview.png`, `ejercicio.mp4` y `video_muestra_humanos.mp4` existen realmente en Storage y responden correctamente.
+
 ## 2.4 Vídeo humano obligatorio cuando exista fuente en vídeo
 
 Los ejercicios creados a partir de vídeo deben conservar también el vídeo real de muestra con humanos.
