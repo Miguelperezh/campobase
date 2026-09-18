@@ -475,8 +475,58 @@ async function prepareSignedInChoice(client, data) {
   $('#saas-claim-offer')?.classList.toggle('hidden', !available);
   setMessage('#saas-claim-message', '');
   setMessage('#saas-account-promo-message', pendingPromoFeedback, pendingPromoFeedback && !pendingPromoFeedback.startsWith('El código no se pudo'));
+
+  const planBox = $('#saas-account-plan-choice');
+  const enterButton = $('#saas-enter-account');
+  const isDelegate = profile.role === 'delegate';
+  const isAdmin = profile.role === 'owner' || profile.role === 'admin';
+  let subscription = null;
+  let planStatus = { canUseApp: true, label: '' };
+
+  if (!isDelegate && !isAdmin) {
+    try {
+      const { fetchUserSubscription, formatSubscriptionStatus } = await import('./billing-manager.js?v=1');
+      const result = await fetchUserSubscription(client, user.id);
+      subscription = result.subscription;
+      planStatus = formatSubscriptionStatus(subscription);
+    } catch (error) {
+      console.warn('No se pudo comprobar el plan antes de entrar:', error);
+      planStatus = { canUseApp: false, label: 'Plan pendiente de comprobar' };
+    }
+  }
+
+  if (planBox) {
+    const shouldShow = !isDelegate && !isAdmin;
+    planBox.classList.toggle('hidden', !shouldShow);
+    if (shouldShow) {
+      const statusEl = $('#saas-account-plan-status');
+      const helpEl = $('#saas-account-plan-help');
+      if (statusEl) statusEl.textContent = planStatus.label || 'Elige tu plan';
+      if (helpEl) {
+        helpEl.textContent = subscription?.estado === 'trial' && planStatus.canUseApp
+          ? 'Tu prueba Pro está activa. Puedes continuar con la prueba o contratar ahora el plan que prefieras.'
+          : planStatus.canUseApp
+            ? 'Tu cuenta tiene acceso activo.'
+            : 'Para acceder a los datos del equipo necesitas activar un plan mensual o anual.';
+      }
+      planBox.querySelectorAll('.saas-account-checkout').forEach((button) => {
+        button.classList.toggle('primary', button.dataset.plan === pendingPreferredPlan);
+        button.classList.toggle('secondary', button.dataset.plan !== pendingPreferredPlan);
+      });
+    }
+  }
+
+  if (enterButton) {
+    const canEnter = isDelegate || isAdmin || Boolean(planStatus.canUseApp);
+    enterButton.classList.toggle('hidden', !canEnter);
+    enterButton.disabled = !canEnter;
+    enterButton.textContent = subscription?.estado === 'trial' && planStatus.canUseApp
+      ? 'Continuar con la prueba'
+      : 'Entrar a esta cuenta';
+  }
+
   showPane('choice');
-  return { user, profile, available };
+  return { user, profile, available, subscription, canEnter: isDelegate || isAdmin || Boolean(planStatus.canUseApp) };
 }
 
 function waitForApp(timeoutMs = 12000) {
@@ -582,6 +632,28 @@ function bindEvents(client) {
       if (form) form.dataset.preferredPlan = pendingPreferredPlan;
     });
   });
+  document.querySelectorAll('.saas-account-checkout').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const user = pendingSession?.user;
+      if (!user) return showPane('login');
+      const message = $('#saas-account-plan-message');
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Abriendo Stripe…';
+      setMessage('#saas-account-plan-message', '');
+      try {
+        const { startStripeCheckout } = await import('./billing-manager.js?v=1');
+        pendingPreferredPlan = button.dataset.plan || '';
+        savePendingPlan(user.email || '', pendingPreferredPlan);
+        await startStripeCheckout(client, pendingPreferredPlan);
+      } catch (error) {
+        setMessage('#saas-account-plan-message', error.message || 'No se pudo abrir el pago.');
+        button.disabled = false;
+        button.textContent = original;
+      }
+      if (message) message.classList.remove('success');
+    });
+  });
   $('#saas-local-pin-btn')?.addEventListener('click', showLocalPin);
   $('#saas-local-back')?.addEventListener('click', () => { showPane('login'); prefillRememberedIdentifier(); });
   $('#saas-demo-btn')?.addEventListener('click', () => $('#auth-demo-btn')?.click());
@@ -685,8 +757,13 @@ function bindEvents(client) {
   $('#saas-enter-account')?.addEventListener('click', async () => {
     const user = pendingSession?.user;
     if (!user) return showPane('login');
-    try { await activateAccount(user, pendingProfile); }
-    catch (error) { setMessage('#saas-claim-message', error.message || 'No se pudo abrir la cuenta.'); }
+    if ($('#saas-enter-account')?.disabled) return;
+    try {
+      clearPendingPlan();
+      await activateAccount(user, pendingProfile);
+    } catch (error) {
+      setMessage('#saas-claim-message', error.message || 'No se pudo abrir la cuenta.');
+    }
   });
 
   $('#saas-cancel-account')?.addEventListener('click', async () => {
