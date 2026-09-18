@@ -658,5 +658,21 @@
   <script src="vendor/supabase.js"></script>
   <script type="module" src="js/app.js?v=2503"></script>
   <script type="module" src="js/redesign-nav.js?v=2503"></script>
+  <script>
+    // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
+    window.addEventListener('load', () => {
+      window.setTimeout(() => {
+        const app = window.__campobase;
+        if (app?.state?.role) return;
+        const dialog = document.getElementById('auth-dialog');
+        if (!dialog) return;
+        document.body.classList.add('auth-locked');
+        const saasShell = document.getElementById('saas-auth-shell');
+        const localForm = document.getElementById('auth-form');
+        if (!saasShell) localForm?.classList.remove('hidden');
+        if (!dialog.open) dialog.showModal();
+      }, 2500);
+    });
+  </script>
 </body>
 </html>

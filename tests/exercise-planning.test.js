@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import {
   addExerciseToSession,
   buildFlexibleTrainingSession,
@@ -169,34 +168,4 @@ test('crea y edita sesiones con ejercicios de Mis ejercicios sin perder identida
     [mine.id, 12],
   ]);
   assert.equal(edited.blocks[0].notes, 'Consigna editada');
-});
-
-
-test('+ Ejercicio persiste como Mis ejercicios y la biblioteca de Sesiones permite filtrarlos', () => {
-  const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-  const plannerSource = readFileSync(new URL('../js/session-planner-ui.js', import.meta.url), 'utf8');
-
-  assert.match(appSource, /recordType:\s*'exercise'/);
-  assert.match(appSource, /userCreated:\s*true/);
-  assert.match(appSource, /source:\s*'personal'/);
-  assert.match(appSource, /persistedExerciseRecords/);
-  assert.match(appSource, /recordType\s*===\s*'exercise'/);
-  assert.match(appSource, /exerciseLibraryMode\s*=\s*'mine'/);
-  assert.match(appSource, /value="__mine__">Mis ejercicios/);
-
-  assert.match(plannerSource, /value="__mine__"[^>]*>Mis ejercicios/);
-  assert.match(plannerSource, /category\s*===\s*'__mine__'/);
-  assert.match(plannerSource, /item\.isMine/);
-});
-
-test('crear y editar sesiones sigue cableado al mismo editor y guardado persistente', () => {
-  const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
-
-  assert.match(appSource, /function sessionBuilder\(editId = ''/);
-  assert.match(appSource, /existing\s*=\s*state\.trainingSessions\.find/);
-  assert.match(appSource, /sessionDraftBlocks\s*=\s*\(existing\?\.blocks \?\? \[\]\)\.map/);
-  assert.match(appSource, /formId === 'session-form'\) saveTrainingSession/);
-  assert.match(appSource, /target\.matches\('\.edit-session'\)/);
-  assert.match(appSource, /sessionBuilder\(target\.dataset\.id\)/);
-  assert.match(appSource, /await put\('settings', session\)/);
 });

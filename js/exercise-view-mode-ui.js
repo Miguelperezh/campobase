@@ -150,14 +150,6 @@ function updateModeHelp(sheet) {
   }
 }
 
-function parsePreviewCrop(value = '') {
-  const parts = String(value || '').split(',').map(Number);
-  if (parts.length !== 6 || !parts.every(Number.isFinite)) return null;
-  const [x, y, width, height, sourceWidth, sourceHeight] = parts;
-  if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0) return null;
-  return { x, y, width, height, sourceWidth, sourceHeight };
-}
-
 function paintStaticPreviewCanvas(canvas) {
   if (!canvas || canvas.dataset.cbPreviewCanvasPainted === '1') return;
   const src = String(canvas.dataset.previewVideoSrc || '').trim();
@@ -185,27 +177,12 @@ function paintStaticPreviewCanvas(canvas) {
   const paint = () => {
     try {
       if (!video.videoWidth || !video.videoHeight) return fail();
-      const crop = parsePreviewCrop(canvas.dataset.previewCrop);
+      const width = Math.min(video.videoWidth, 960);
+      const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
-      if (crop) {
-        const scaleX = video.videoWidth / crop.sourceWidth;
-        const scaleY = video.videoHeight / crop.sourceHeight;
-        const sx = crop.x * scaleX;
-        const sy = crop.y * scaleY;
-        const sw = crop.width * scaleX;
-        const sh = crop.height * scaleY;
-        const width = Math.min(960, Math.max(1, Math.round(sw)));
-        const height = Math.max(1, Math.round(width * crop.height / crop.width));
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, width, height);
-      } else {
-        const width = Math.min(video.videoWidth, 960);
-        const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(video, 0, 0, width, height);
-      }
+      ctx.drawImage(video, 0, 0, width, height);
       video.pause();
       video.removeAttribute('src');
       video.load();
@@ -256,7 +233,6 @@ function guardPreviewImage(img) {
         ? 'card-preview-img card-preview-static-canvas'
         : 'exercise-preview-static-canvas';
       canvas.dataset.previewVideoSrc = source;
-      canvas.dataset.previewCrop = String(img.dataset.previewCrop || '');
       canvas.setAttribute('aria-label', img.alt || 'Vista previa del ejercicio');
       img.replaceWith(canvas);
       paintStaticPreviewCanvas(canvas);
