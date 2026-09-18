@@ -65,7 +65,7 @@ test('un MP4 gráfico repetido en video no se considera vídeo humano', () => {
   assert.equal(mapped.hasHumanVideo, false);
 });
 
-test('los 16 nuevos se muestran limpios: sin categoría duplicada, sin barras F7/F11 y sin preview roto', () => {
+test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
   assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 16);
   for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
     const category = String(exercise.categoria || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -73,23 +73,23 @@ test('los 16 nuevos se muestran limpios: sin categoría duplicada, sin barras F7
     assert.equal(tagKeys.includes(category), false, `${exercise.id}: categoría repetida en etiquetas`);
     assert.equal(String(exercise.datos_rapidos?.jugadores || '').includes('/'), false, `${exercise.id}: jugadores mezclados F7/F11`);
     assert.equal(String(exercise.datos_rapidos?.duracion || '').includes('/'), false, `${exercise.id}: duración mezclada F7/F11`);
-    assert.equal(exercise.media?.preview, '', `${exercise.id}: no debe apuntar al bucket inexistente de previews`);
-    if (exercise.id === 'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION') {
-      assert.equal(exercise.video_muestra_humanos, '', `${exercise.id}: no debe usar un vídeo humano parecido o incorrecto`);
-      assert.equal(exercise.media?.video, '', `${exercise.id}: no debe apuntar a un MP4 no publicado`);
-    } else {
-      assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano publicado`);
-      assert.equal(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: el reproductor temporal debe usar el vídeo humano confirmado`);
-    }
+
+    assert.ok(exercise.media?.preview, `${exercise.id}: debe conservar la URL de preview.png`);
+    assert.match(exercise.media.preview, /\/ejercicio-videos\//, `${exercise.id}: preview debe usar el bucket ejercicio-videos`);
+    assert.doesNotMatch(exercise.media.preview, /\/ejercicio-previews\//, `${exercise.id}: no debe usar el bucket inexistente`);
+
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
+    assert.equal(exercise.media?.video, exercise._video_ejercicio_original, `${exercise.id}: el reproductor principal debe ser el MP4 gráfico`);
+    assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano de muestra`);
+    assert.notEqual(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: MP4 gráfico y vídeo humano deben permanecer separados`);
   }
 });
 
-test('de los 16 nuevos, solo 15 anuncian vídeo humano porque uno aún no está publicado', () => {
+test('los 16 nuevos anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
   const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
   const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
-  assert.equal(humanIds.length, 15);
-  assert.equal(humanIds.includes('CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION'), false);
+  assert.equal(humanIds.length, 16);
+  assert.deepEqual(humanIds, NUEVOS_EJERCICIOS_IDS);
 });
 
 test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 16 nuevos arriba cuando correspondan', () => {
@@ -104,8 +104,10 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
 
   const f7 = filterExercises(mapped, { formato_juego: 'futbol_7' });
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
-  assert.deepEqual(f7.slice(0, 16).map((item) => item.id), NUEVOS_EJERCICIOS_IDS);
-  assert.deepEqual(f11.slice(0, 16).map((item) => item.id), NUEVOS_EJERCICIOS_IDS);
+  const expectedF7New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
+  const expectedF11New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
+  assert.deepEqual(f7.slice(0, expectedF7New.length).map((item) => item.id), expectedF7New);
+  assert.deepEqual(f11.slice(0, expectedF11New.length).map((item) => item.id), expectedF11New);
 });
 
 
@@ -166,7 +168,8 @@ test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categor�
   });
 
   assert.doesNotMatch(card, /ejercicio-previews/);
-  assert.match(card, /card-preview-video/);
+  assert.doesNotMatch(card, /card-preview-video/);
+  assert.match(card, /card-thumb-placeholder/);
   assert.equal((card.match(/<span class="pill">Finalización<\/span>/g) || []).length, 1);
   assert.match(card, /15-22 jugadores/);
   assert.doesNotMatch(card, /card-duration-badge/);
@@ -177,7 +180,7 @@ test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categor�
 test('la biblioteca principal incluye los vídeos humanos persistidos sin convertir los MP4 gráficos en vídeo humano', () => {
   const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(source, /humanVideoExerciseIds/);
-  assert.match(source, /recordType=exerciseVideo/);
+  assert.match(source, /state\.videos\.map/);
   assert.match(source, /hasHumanVideo: true/);
   assert.match(source, /filterExercises\(filterableExercises, filters\)/);
 });

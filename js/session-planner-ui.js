@@ -104,6 +104,11 @@ function itemFromCard(card) {
   const validated = byId.get(id);
   const quick = validated?.vista_rapida || {};
   const dr = validated?.datos_rapidos || {};
+  const isMine = card.dataset.userCreated === '1';
+  const customCategory = card.dataset.category || pills[0] || 'Otros';
+  const customFormat = card.dataset.formatoJuego || '';
+  const customMaterial = card.dataset.material || '';
+  const customDifficulty = card.dataset.difficulty || '';
 
   const formatos_juego = Array.isArray(validated?.formatos_juego)
     ? validated.formatos_juego.filter((value) => value === 'futbol_7' || value === 'futbol_11')
@@ -116,6 +121,12 @@ function itemFromCard(card) {
     formato_juego = formatos_juego[0];
   } else if (validated?.formato_juego) {
     formato_juego = validated.formato_juego === 'futbol_7' ? 'futbol_7' : 'futbol_11';
+  } else if (customFormat === 'todos') {
+    formato_juego = 'todos';
+  } else if (/f7|futbol_7/i.test(customFormat)) {
+    formato_juego = 'futbol_7';
+  } else if (/f11|futbol_11/i.test(customFormat)) {
+    formato_juego = 'futbol_11';
   } else if (id.startsWith('f7-')) {
     formato_juego = 'futbol_7';
   }
@@ -125,15 +136,18 @@ function itemFromCard(card) {
   const playerCount = numMatch ? parseInt(numMatch[0], 10) : (validated?.organizacion?.participantes_totales || 8);
   const playersText = rawPlayers ? rawPlayers.replace(/^👥\s*/, '') : `${playerCount} jugadores`;
 
-  const rawMat = dr.material || (validated?.materiales ? (Array.isArray(validated.materiales) ? validated.materiales.join(' ') : String(validated.materiales)) : '');
-  const difficulty = validated?.dificultad || validated?.nivel || '';
+  const rawMat = dr.material
+    || (validated?.materiales ? (Array.isArray(validated.materiales) ? validated.materiales.join(' ') : String(validated.materiales)) : '')
+    || customMaterial;
+  const difficulty = validated?.dificultad || validated?.nivel || customDifficulty;
   const cleanTitle = String(validated?.nombre || name).replace(/^--\s*/, '').trim();
 
   return {
     id,
     name: cleanTitle,
-    type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
-    category: validated?.categoria || quick.tipo_principal || pills[0] || 'Otros',
+    type: quick.tipo_principal || validated?.categoria || customCategory,
+    category: validated?.categoria || quick.tipo_principal || customCategory,
+    isMine,
     formato_juego,
     formatos_juego,
     playerCount,
@@ -397,7 +411,8 @@ function renderLibrary(form) {
   const categories = [...new Set(catalog.map((item) => item.type || item.category))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
   const list = base.filter((item) => {
     if (query && !item.search.includes(norm(query))) return false;
-    if (category && item.type !== category && item.category !== category) return false;
+    if (category === '__mine__' && !item.isMine) return false;
+    if (category && category !== '__mine__' && item.type !== category && item.category !== category) return false;
     if (playersFilter) {
       const c = item.playerCount;
       if (playersFilter === '1-4' && !(c >= 1 && c <= 4)) return false;
@@ -439,6 +454,7 @@ function renderLibrary(form) {
         <span>Categoría</span>
         <select id="sp-category">
           <option value="">Todas las categorías</option>
+          <option value="__mine__" ${category === '__mine__' ? 'selected' : ''}>Mis ejercicios</option>
           ${categories.map((entry) => `<option value="${esc(entry)}" ${category === entry ? 'selected' : ''}>${esc(entry)}</option>`).join('')}
         </select>
       </label>

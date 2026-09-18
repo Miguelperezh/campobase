@@ -41,6 +41,7 @@ async function saveCustomExercise(form) {
     recordType: 'exercise',
     example: false,
     userCreated: true,
+    source: 'personal',
     createdAt: existing?.createdAt ?? saved.createdAt ?? now,
     updatedAt: now,
   });
@@ -49,7 +50,8 @@ async function saveCustomExercise(form) {
   form.reset();
   if (window.__campobase?.refresh) await window.__campobase.refresh();
   window.__campobase?.showView?.('ejercicios');
-  showToast(existing ? 'Ejercicio actualizado.' : 'Ejercicio creado y guardado.');
+  window.__campobase?.setExerciseLibraryMode?.('mine');
+  showToast(existing ? 'Ejercicio actualizado en Mis ejercicios.' : 'Ejercicio creado y guardado en Mis ejercicios.');
 }
 
 function install() {
