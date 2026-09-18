@@ -146,6 +146,10 @@
 
     <section id="ejercicios" class="view" aria-labelledby="title-exercises">
       <div class="section-head"><div><p class="eyebrow">Planificación de entrenamientos</p><h2 id="title-exercises">Ejercicios</h2></div><div class="button-row"><button data-dialog="exercise-dialog" class="primary">+ Ejercicio</button><button id="new-session-exercises" class="secondary">+ Sesión</button></div></div>
+      <div class="exercise-library-tabs" role="tablist" aria-label="Tipo de biblioteca de ejercicios">
+        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca</button>
+        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
+      </div>
       <form id="exercise-filters" class="panel exercise-filters">
         <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
         <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
