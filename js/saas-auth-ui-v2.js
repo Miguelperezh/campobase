@@ -205,6 +205,14 @@ function installStyles() {
     .cb-plan-features li>span:first-child{font-weight:900;color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
     .cb-account-plan-choice{display:grid;gap:.8rem;padding:.9rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
     .cb-account-plan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+    .cb-register-plan{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--cb-slate-50,#f8fafc)}
+    .cb-register-plan legend{font-weight:850;padding:0 .3rem}
+    .cb-register-plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+    .cb-register-plan-option{display:grid!important;grid-template-columns:20px minmax(0,1fr)!important;align-items:start;gap:.65rem!important;padding:.8rem;border:1px solid var(--line,#e2e8f0);border-radius:12px;background:var(--card,#fff);cursor:pointer}
+    .cb-register-plan-option input{width:18px!important;min-height:18px!important;margin-top:.08rem}
+    .cb-register-plan-option span,.cb-register-plan-option strong,.cb-register-plan-option small{display:block}
+    .cb-register-plan-option small{margin-top:.18rem;line-height:1.35;color:var(--muted,#64748b)}
+    .cb-register-trial-note{margin:0;font-size:.9rem;font-weight:750;line-height:1.45}
     .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--cb-slate-50,#f8fafc)}
     .cb-access-flow{display:grid;gap:.55rem;margin:0;padding:0;list-style:none}
     .cb-access-flow li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:.7rem;align-items:start;padding:.72rem .8rem;border:1px solid var(--line,#e2e8f0);border-radius:12px;background:var(--card,#fff)}
@@ -217,7 +225,7 @@ function installStyles() {
     }
     @media(max-width:700px){
       #auth-dialog.auth-dialog{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:1rem}
-      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features{grid-template-columns:1fr}
+      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features,.cb-register-plan-grid{grid-template-columns:1fr}
       .cb-auth-actions>button{flex-basis:100%}
     }
   `;
@@ -279,6 +287,21 @@ function shellMarkup() {
           <label>Correo electrónico<input name="email" type="email" maxlength="120" autocomplete="email" required></label>
         </div>
         <label>Contraseña<input name="password" type="password" minlength="6" maxlength="100" autocomplete="new-password" required></label>
+        <fieldset class="cb-register-plan">
+          <legend>Elige tu plan para después de la prueba</legend>
+          <p class="meta">Los primeros 14 días son gratis. Para activar la prueba te pediremos un método de pago. No se cobrará nada hasta que termine la prueba.</p>
+          <div class="cb-register-plan-grid">
+            <label class="cb-register-plan-option">
+              <input type="radio" name="selectedPlan" value="monthly" checked>
+              <span><strong>Mensual</strong><small>9,99 € / mes después de la prueba</small></span>
+            </label>
+            <label class="cb-register-plan-option">
+              <input type="radio" name="selectedPlan" value="annual">
+              <span><strong>Anual</strong><small>79 € / año después de la prueba</small></span>
+            </label>
+          </div>
+          <p class="cb-register-trial-note">Puedes cancelar antes de que terminen los 14 días y no se realizará el primer cobro.</p>
+        </fieldset>
         <label class="cb-promo-optional">¿Tienes un código de regalo o descuento? <span class="meta">(opcional)</span>
           <input name="promoCode" type="text" maxlength="30" autocomplete="off" placeholder="Introduce aquí tu código">
         </label>
@@ -525,15 +548,27 @@ async function prepareSignedInChoice(client, data) {
     if (shouldShow) {
       const statusEl = $('#saas-account-plan-status');
       const helpEl = $('#saas-account-plan-help');
-      if (statusEl) statusEl.textContent = planStatus.label || 'Elige tu plan';
+      if (statusEl) {
+        const expiry = subscription?.expira_en
+          ? new Date(subscription.expira_en).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+          : '';
+        statusEl.textContent = subscription?.estado === 'pending_payment' && expiry
+          ? `14 días gratis · hasta el ${expiry}`
+          : (planStatus.label || 'Elige tu plan');
+      }
       if (helpEl) {
-        helpEl.textContent = subscription?.estado === 'trial' && planStatus.canUseApp
-          ? 'Tienes acceso completo durante tu prueba gratuita. Puedes entrar ahora o contratar ya mensual/anual.'
-          : subscription?.estado === 'gift_free' && planStatus.canUseApp
-            ? 'Tu código gratuito está activo. Puedes entrar a CampoBase.'
-            : planStatus.canUseApp
-              ? 'Tu suscripción está activa. Puedes entrar a CampoBase.'
-              : 'No tienes acceso activo. Necesitas una prueba vigente, un código gratuito válido o una suscripción mensual/anual.';
+        const expiry = subscription?.expira_en
+          ? new Date(subscription.expira_en).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+          : '';
+        helpEl.textContent = subscription?.estado === 'pending_payment'
+          ? `Elige mensual o anual y añade tu método de pago para activar la prueba. No se te cobrará antes del ${expiry || 'final de los 14 días'} y puedes cancelar antes de esa fecha.`
+          : subscription?.estado === 'trial' && planStatus.canUseApp
+            ? `Tu prueba está activa hasta el ${expiry || 'final de los 14 días'}. No se te cobrará antes de esa fecha y puedes cancelar cuando quieras antes de que termine.`
+            : subscription?.estado === 'gift_free' && planStatus.canUseApp
+              ? 'Tu código gratuito está activo. Puedes entrar a CampoBase.'
+              : planStatus.canUseApp
+                ? `Tu suscripción está activa${expiry ? ` hasta el ${expiry}` : ''}.`
+                : 'No tienes acceso activo. Necesitas una prueba vigente, un código gratuito válido o una suscripción mensual/anual.';
       }
       planBox.querySelectorAll('.saas-account-checkout').forEach((button) => {
         button.classList.toggle('primary', button.dataset.plan === pendingPreferredPlan);
@@ -655,7 +690,11 @@ function bindEvents(client) {
       pendingPreferredPlan = button.dataset.plan || '';
       showPane('register');
       const form = $('#saas-register-form');
-      if (form) form.dataset.preferredPlan = pendingPreferredPlan;
+      if (form) {
+        form.dataset.preferredPlan = pendingPreferredPlan;
+        const planInput = form.querySelector(`input[name="selectedPlan"][value="${pendingPreferredPlan}"]`);
+        if (planInput) planInput.checked = true;
+      }
     });
   });
   document.querySelectorAll('.saas-account-checkout').forEach((button) => {
@@ -722,7 +761,7 @@ function bindEvents(client) {
       pendingDevicePin = String(form.elements.devicePin?.value || '').trim();
       if (pendingRememberDevice && !/^\d{4,8}$/.test(pendingDevicePin)) throw new Error('Crea un PIN de 4 a 8 cifras para recordar esta cuenta en este dispositivo.');
       const promoCode = String(form.elements.promoCode?.value || '').trim().toUpperCase();
-      pendingPreferredPlan = form.dataset.preferredPlan || pendingPreferredPlan || '';
+      pendingPreferredPlan = String(form.elements.selectedPlan?.value || form.dataset.preferredPlan || pendingPreferredPlan || 'monthly');
       const data = await registerCoachAccount(client, {
         fullName: form.elements.fullName.value,
         clubName: form.elements.clubName.value,
@@ -737,9 +776,12 @@ function bindEvents(client) {
       } else {
         if (promoCode) savePendingPromo(form.elements.email.value, promoCode);
         if (pendingPreferredPlan) savePendingPlan(form.elements.email.value, pendingPreferredPlan);
+        const createdAt = data?.user?.created_at ? new Date(data.user.created_at) : new Date();
+        const trialEnd = new Date(createdAt.getTime() + (14 * 24 * 60 * 60 * 1000));
+        const trialEndText = trialEnd.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
         setMessage('#saas-register-message', promoCode
-          ? 'Cuenta creada. Confirma el correo e inicia sesión; el código se aplicará entonces.'
-          : 'Cuenta creada. Revisa tu correo para confirmar la cuenta y después inicia sesión.', true);
+          ? `Cuenta creada. Confirma el correo e inicia sesión. Aplicaremos tu código y, si hace falta, te pediremos el método de pago. Tu periodo inicial llega hasta el ${trialEndText}.`
+          : `Cuenta creada. Confirma el correo. Después te pediremos el método de pago para activar los 14 días gratis. La prueba terminará el ${trialEndText}; puedes cancelar antes de esa fecha y no se realizará el primer cobro.`, true);
       }
     } catch (error) {
       setMessage('#saas-register-message', error.message || 'No se pudo crear la cuenta.');
