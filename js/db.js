@@ -6,6 +6,21 @@ const REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
+const PLAYER_PROFILE_FIELDS = Object.freeze([
+  'name', 'number', 'positions', 'foot', 'notes',
+  'fatherName', 'fatherPhone', 'motherName', 'motherPhone',
+  'photo', 'createdAt', 'profileUpdatedAt',
+]);
+
+function preservePlayerProfileFields(current, incoming) {
+  if (!current || !incoming) return structuredClone(incoming);
+  const next = structuredClone(incoming);
+  for (const field of PLAYER_PROFILE_FIELDS) {
+    if (Object.hasOwn(current, field)) next[field] = structuredClone(current[field]);
+    else delete next[field];
+  }
+  return next;
+}
 
 function boundDatabaseName() {
   const userId = getBoundSaasUserId();
@@ -144,7 +159,10 @@ export async function put(store, value) {
     return value;
   }
   const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
-  const recordToStore = mergeLocalRecordForWrite(store, existing, value);
+  const genericRecord = mergeLocalRecordForWrite(store, existing, value);
+  const recordToStore = store === 'players' && existing
+    ? preservePlayerProfileFields(existing, genericRecord)
+    : genericRecord;
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).put(recordToStore);
@@ -152,6 +170,24 @@ export async function put(store, value) {
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
   notifyDataChanged(store, 'upsert');
+  return recordToStore;
+}
+
+export async function putPlayerProfile(value) {
+  if (!value?.id) throw new TypeError('La ficha del jugador necesita un identificador.');
+  const recordToStore = { ...structuredClone(value), profileUpdatedAt: Date.now() };
+  if (isDemoDatabase()) {
+    demoStores.players.set(recordToStore.id, structuredClone(recordToStore));
+    notifyDataChanged('players', 'profile-upsert');
+    return recordToStore;
+  }
+  const db = await openDatabase();
+  const transaction = db.transaction(['players', SYNC_QUEUE], 'readwrite');
+  transaction.objectStore('players').put(recordToStore);
+  transaction.objectStore(SYNC_QUEUE).put(buildMutation('players', 'upsert', recordToStore));
+  await transactionDone(transaction);
+  await flushSyncQueue().catch(() => false);
+  notifyDataChanged('players', 'profile-upsert');
   return recordToStore;
 }
 
@@ -177,7 +213,8 @@ export async function putBatch(recordsByStore) {
     }
     normalizedRecordsByStore[storeName] = await Promise.all(records.map(async (record) => {
       const existing = record?.id ? await localGetOne('players', record.id) : null;
-      return mergeLocalRecordForWrite('players', existing, record);
+      const merged = mergeLocalRecordForWrite('players', existing, record);
+      return existing ? preservePlayerProfileFields(existing, merged) : merged;
     }));
   }
 
