@@ -107,3 +107,56 @@ test('Planes no publicita infraestructura de nube y evita cortes artificiales de
   assert.match(css, /overflow-wrap:\s*normal/);
   assert.match(css, /hyphens:\s*none/);
 });
+
+
+test('el registro obliga a elegir plan antes de activar la prueba', async () => {
+  const auth = await projectFile('js/saas-auth-ui-v2.js');
+  assert.match(auth, /name="selectedPlan"/);
+  assert.match(auth, /value="monthly" checked required/);
+  assert.match(auth, /79 € \/ año después de la prueba/);
+  assert.match(auth, /9,99 € \/ mes después de la prueba/);
+});
+
+test('las nuevas cuentas quedan pendientes de Stripe y no acceden solo por registrarse', async () => {
+  const migration = await projectFile('supabase/08_registration_requires_checkout.sql');
+  assert.match(migration, /'pending_payment'/);
+  assert.match(migration, /interval '14 days'/);
+  assert.match(migration, /cancel_at_period_end boolean/);
+});
+
+test('Stripe recoge método de pago y mantiene 14 días gratis antes del primer cobro', async () => {
+  const checkout = await projectFile('supabase/functions/create-checkout-session/index.ts');
+  assert.match(checkout, /payment_method_collection:\s*"always"/);
+  assert.match(checkout, /subscription_data\[trial_end\]/);
+  assert.match(checkout, /missing_payment_method\]\": "cancel"/);
+  assert.match(checkout, /trialEndsAt/);
+});
+
+test('el webhook conserva el estado trial y la fecha exacta devuelta por Stripe', async () => {
+  const webhook = await projectFile('supabase/functions/stripe-webhook/index.ts');
+  assert.match(webhook, /stripeSub\.status === "trialing"/);
+  assert.match(webhook, /\? "trial"/);
+  assert.match(webhook, /stripeSub\.trial_end/);
+  assert.match(webhook, /cancel_at_period_end/);
+});
+
+test('la cancelación de renovación es real y se ejecuta en servidor', async () => {
+  const [billing, edge] = await Promise.all([
+    projectFile('js/billing-manager.js'),
+    projectFile('supabase/functions/cancel-subscription/index.ts'),
+  ]);
+  assert.match(billing, /cancelSubscriptionAtPeriodEnd/);
+  assert.match(billing, /Cancelar renovación/);
+  assert.match(edge, /cancel_at_period_end/);
+  assert.match(edge, /no se realizará el primer cobro/i);
+});
+
+test('la fecha de fin de prueba se muestra de forma explícita', async () => {
+  const [auth, billing] = await Promise.all([
+    projectFile('js/saas-auth-ui-v2.js'),
+    projectFile('js/billing-manager.js'),
+  ]);
+  assert.match(auth, /La prueba terminará el/);
+  assert.match(auth, /No se te cobrará antes del/);
+  assert.match(billing, /Tu prueba termina el/);
+});
