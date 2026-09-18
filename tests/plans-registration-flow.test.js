@@ -43,7 +43,7 @@ test('el catálogo de planes enumera todas las áreas principales de la app', ()
 
 test('una cuenta sin acceso válido no puede saltarse la elección de plan al entrar', async () => {
   const auth = await projectFile('js/saas-auth-ui-v2.js');
-  assert.match(auth, /const canEnter = isDelegate \|\| isAdmin \|\| Boolean\(planStatus\.canUseApp\)/);
+  assert.match(auth, /const canEnter = Boolean\(planStatus\.canUseApp\)/);
   assert.match(auth, /enterButton\.classList\.toggle\('hidden', !canEnter\)/);
   assert.match(auth, /startStripeCheckout/);
 });
@@ -63,4 +63,21 @@ test('Ajustes muestra la Cuenta de delegado con permisos visibles', async () => 
   assert.match(html, /Asistencia/);
   assert.match(html, /Partido en vivo/);
   assert.match(html, /Pizarra táctica/);
+});
+
+
+test('el acceso comercial exige prueba, regalo o pago también en servidor', async () => {
+  const [auth, billing, gate] = await Promise.all([
+    projectFile('js/saas-auth-ui-v2.js'),
+    projectFile('js/billing-manager.js'),
+    projectFile('supabase/07_strict_access_gate.sql'),
+  ]);
+  assert.match(auth, /No tienes acceso activo/);
+  assert.match(billing, /Prueba activa/);
+  assert.match(billing, /Código gratuito/);
+  assert.match(billing, /Suscripción/);
+  assert.match(gate, /s\.estado = 'gift_free'/);
+  assert.match(gate, /s\.estado = 'active'/);
+  assert.match(gate, /s\.estado = 'trial'/);
+  assert.doesNotMatch(gate, /p\.role in \('owner','admin'\)/);
 });
