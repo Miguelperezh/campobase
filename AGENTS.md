@@ -1490,3 +1490,38 @@ Objetivo:
 
 La app real y la simulación deben estar completamente separadas.
 
+---
+
+# 21. Producción y Supabase — una rama aislada no puede cambiar el backend vivo
+
+Esta norma se añade después de una incidencia real de producción y es obligatoria.
+
+- Si una función está todavía en una rama de validación, sus migraciones SQL, RLS, triggers, Edge Functions que alteren acceso, y cambios de autenticación **no deben cambiar el comportamiento de la app publicada en `main`**.
+- No aplicar a la base de datos de producción una política RLS que dependa de código que todavía no está publicado y validado en `main`.
+- No cambiar `handle_new_user`, el modelo de acceso, la propiedad de datos o el bloqueo por suscripción en producción mientras la interfaz correspondiente siga aislada en otra rama.
+- Una rama aislada de frontend no equivale a un entorno aislado de Supabase.
+- Para probar Fase 4 antes de fusionarla, usar simulación visual o un entorno backend separado. No reutilizar Supabase de producción para probar restricciones incompatibles con la app publicada.
+- Antes de aplicar cualquier migración que afecte acceso:
+  1. comprobar qué versión está actualmente en `main`;
+  2. comprobar qué cliente espera esa versión;
+  3. verificar que RLS y cliente son compatibles;
+  4. crear una vía de rollback;
+  5. comprobar que el propietario actual sigue viendo sus datos.
+- Después de tocar RLS/autenticación, probar expresamente con la cuenta real del propietario que puede leer jugadores, partidos, asistencias, convocatorias y configuración.
+- Un fallo de módulos SaaS nunca puede dejar la aplicación abierta y vacía sin mostrar acceso. Debe existir siempre un fallback visible a login y al PIN local validado.
+- No borrar datos para resolver un problema de acceso. Primero restaurar autenticación/RLS y comprobar los registros existentes.
+
+## 21.1 Incidencia del 18/09/2026
+
+La Fase 4 llegó a modificar el backend de producción mientras su interfaz seguía en validación. Esto podía provocar una app vacía o sin flujo de acceso aunque los registros siguieran almacenados.
+
+La corrección de producción restaura:
+- aislamiento por `auth.uid() = user_id`;
+- cliente de datos por usuario;
+- login SaaS estable;
+- botón de acceso local con PIN;
+- fallback que abre el PIN si falla el módulo SaaS;
+- Fase 4 otra vez fuera del flujo activo de producción hasta validación completa.
+
+No volver a introducir el acoplamiento de una rama no publicada con el backend vivo.
+
