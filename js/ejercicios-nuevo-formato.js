@@ -48,6 +48,33 @@ function summarizeNumericRange(value, suffix) {
   return min === max ? `${format(min)} ${suffix}` : `${format(min)}-${format(max)} ${suffix}`;
 }
 
+const GRAPHIC_VIDEO_PATH_ALIAS = Object.freeze({
+  'CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL':
+    'assets/ejercicios/CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL/CampoBase_3_Finalizaciones_Centro_Exterior_Centro_Lateral_V1.mp4',
+  'CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M':
+    'assets/ejercicios/CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M/CampoBase_6_Saltos_Laterales_Knee_Drive_Sprint_13_7m_V4.mp4',
+  'CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE':
+    'assets/ejercicios/CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE/CampoBase_Conduccion_Dejar_Balon_3_Conos_Vuelta_Lateral_Pase_V1.mp4',
+  'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
+    'assets/ejercicios/CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/CampoBase_Deja_Balon_Gira_Cono_Pasa_Siguiente_Cola_V3.mp4',
+  'CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO':
+    'assets/ejercicios/CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO/CampoBase_Desplazamiento_Lateral_Progresivo_Pasillo_Cambios_Apoyo_V1.mp4',
+  'CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION':
+    'assets/ejercicios/CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION/CampoBase_Duelos_3vs2_Finalizacion_Robo_Rotacion_V1.mp4',
+  'CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2':
+    'assets/ejercicios/CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2/CampoBase_Finalizacion_Doble_2_Balones_Transicion_1v1_Cambio_Carril_V2.mp4',
+  'CAMPOBASE-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION-V2':
+    'assets/ejercicios/CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION/CampoBase_Pase_Balon_Espacio_2_Conos_1v1_Finalizacion_V2.mp4',
+  'CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES':
+    'assets/ejercicios/CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES/CampoBase_Pies_Rapidos_Sprint_3_Variaciones_V1.mp4',
+  'CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3':
+    'assets/ejercicios/CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3/CampoBase_Reaccion_Giro_Inicial_Senales_Laterales_Cono_Balon_V3.mp4',
+  'CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES':
+    'assets/ejercicios/CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES/CampoBase_Reactive_Knee_Drive_Skater_3_Variaciones_V3.mp4',
+  'CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT':
+    'assets/ejercicios/CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT/CampoBase_Rodillas_Altas_Laterales_Zigzag_Cambios_Direccion_Sprint_V1.mp4',
+});
+
 const HUMAN_VIDEO_PATH_ALIAS = Object.freeze({
   // El vídeo humano de esta conversión ya existe en Storage con su ID histórico.
   'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
@@ -74,7 +101,8 @@ function normalizeNewExercise(exercise) {
   ).trim();
 
   const graphicVideo = String(
-    exercise.video_ejercicio
+    GRAPHIC_VIDEO_PATH_ALIAS[exercise.id]
+    || exercise.video_ejercicio
     || originalMedia.video
     || originalMedia.mp4
     || ''
@@ -102,6 +130,13 @@ function normalizeNewExercise(exercise) {
     preview = graphicVideo.split('/ejercicio-videos/')[0]
       + '/ejercicio-videos/'
       + assetPreviewPath;
+  }
+
+  // En el lote importado, preview.png aún no está publicado en Storage.
+  // Nunca dejamos una URL 404. La interfaz genera una preview estática
+  // desde el MP4 gráfico (nunca desde el vídeo humano) hasta que exista PNG.
+  if (GRAPHIC_VIDEO_PATH_ALIAS[exercise.id] && /\/preview\.png(?:$|[?#])/i.test(preview)) {
+    preview = '';
   }
 
   const formatoOriginal = String(
@@ -141,6 +176,7 @@ function normalizeNewExercise(exercise) {
       mp4: graphicVideo,
     },
     preview,
+    preview_video: graphicVideo,
     video_ejercicio: graphicVideo,
     video: humanVideo,
     video_muestra_humanos: humanVideo,
