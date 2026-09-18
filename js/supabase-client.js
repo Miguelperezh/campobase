@@ -1,5 +1,6 @@
 import './match-postgame-editor.js';
 import './plantilla-stats-sync.js';
+import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
