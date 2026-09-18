@@ -1409,3 +1409,36 @@ Antes de dar por validado un cambio visual:
 3. comprobar que el texto de los botones mantiene contraste;
 4. comprobar que ningún componente nuevo conserva rojo/negro/blanco fijo salvo que sea semánticamente necesario.
 
+---
+
+# 22. Corrección de seguridad de validaciones — la simulación nunca entra en la app real
+
+Esta norma corrige el enfoque anterior de la sección 20.
+
+La simulación visual de Fase 4 **no debe activarse mediante parámetros dentro de la aplicación real** ni sustituir temporalmente el usuario, la suscripción o el contexto de datos.
+
+Motivo:
+- una simulación incrustada en la app puede interferir con autenticación, PIN, sesión y carga de datos;
+- una URL de validación en otro origen puede no compartir almacenamiento local con la app real;
+- una simulación nunca debe hacer parecer que la aplicación real está vacía o desbloqueada.
+
+Regla vigente:
+- la app real conserva siempre su autenticación normal;
+- sin sesión válida debe mostrarse un acceso claro por cuenta y mantenerse disponible el acceso local con PIN;
+- una cuenta recordada con sesión válida puede seguir usando su PIN de dispositivo;
+- la simulación vive en una página independiente, actualmente `simulacion-fase4.html`;
+- esa página no importa `app.js`, no conecta con Supabase, no usa datos reales y no modifica ninguna cuenta;
+- cualquier botón de pago, cancelación, registro o delegado dentro de esa página es únicamente demostrativo.
+
+La simulación independiente debe usarse para validar:
+- registro;
+- elección mensual/anual;
+- paso visual por Stripe;
+- activación de prueba;
+- contador;
+- cancelación antes del primer cobro;
+- Planes;
+- Cuenta de delegado y permisos.
+
+Después de validar la interfaz en esa simulación, la funcionalidad real se prueba por separado con autenticación y Stripe reales.
+

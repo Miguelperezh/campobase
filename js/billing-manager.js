@@ -8,49 +8,9 @@ export const SUBSCRIPTION_CACHE_PREFIX = 'campobase.subscription.';
 let initialized = false;
 let currentContext = null;
 let currentClient = null;
-let billingPreviewCancelled = false;
 
 function appName() {
   return String(document?.title || 'Aplicación').trim() || 'Aplicación';
-}
-
-function isTrialPreviewEnabled() {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  return params.get('simulacion') === 'prueba' || params.get('billingPreview') === 'trial';
-}
-
-function createTrialPreviewContext(realContext = null) {
-  const end = new Date(Date.now() + (11 * 24 * 60 * 60 * 1000));
-  const baseUser = realContext?.user || { email: 'simulacion@campobase.local' };
-  const baseProfile = realContext?.profile || {
-    role: 'coach',
-    full_name: 'Cuenta de prueba',
-    username: 'simulacion',
-  };
-  return {
-    ...(realContext || {}),
-    user: baseUser,
-    profile: baseProfile?.role === 'delegate' ? { ...baseProfile, role: 'coach' } : baseProfile,
-    source: 'preview',
-    subscription: {
-      user_id: baseUser?.id || 'preview-user',
-      estado: 'trial',
-      plan: 'mensual',
-      dias_prueba: 14,
-      expira_en: end.toISOString(),
-      stripe_subscription_id: 'preview_subscription',
-      stripe_customer_id: 'preview_customer',
-      cancel_at_period_end: billingPreviewCancelled,
-      pending_discount_code: null,
-      pending_discount_percent: 0,
-      _preview: true,
-    },
-  };
-}
-
-function billingDisplayContext(realContext = currentContext) {
-  return isTrialPreviewEnabled() ? createTrialPreviewContext(realContext) : realContext;
 }
 
 function cacheKey(userId) {
@@ -450,8 +410,7 @@ function renderTodayTrialBanner(root, context) {
 
 async function handleCancelSubscription(button, feedback) {
   if (!button || button.disabled) return;
-  const displayContext = billingDisplayContext(currentContext);
-  const sub = displayContext?.subscription;
+  const sub = currentContext?.subscription;
   const endDate = formatBillingDate(sub?.expira_en);
   const message = sub?.estado === 'trial'
     ? `¿Cancelar la renovación? Seguirás teniendo acceso hasta ${endDate || 'el final de la prueba'} y no se realizará el primer cobro.`
@@ -459,16 +418,7 @@ async function handleCancelSubscription(button, feedback) {
   if (!confirm(message)) return;
 
   button.disabled = true;
-  if (feedback) feedback.textContent = sub?._preview ? 'Simulando cancelación…' : 'Cancelando renovación…';
-
-  if (sub?._preview) {
-    billingPreviewCancelled = true;
-    if (feedback) feedback.textContent = `SIMULACIÓN: renovación cancelada. Mantendrías acceso hasta el ${endDate}; no se realizaría el primer cobro.`;
-    updateAccountBillingUI(document, billingDisplayContext(currentContext));
-    renderPlansView(document, billingDisplayContext(currentContext));
-    renderTodayTrialBanner(document, billingDisplayContext(currentContext));
-    return;
-  }
+  if (feedback) feedback.textContent = 'Cancelando renovación…';
 
   try {
     const result = await cancelSubscriptionAtPeriodEnd(currentClient);
@@ -535,12 +485,10 @@ function updateAccountBillingUI(root, context) {
   trialSummary?.classList.toggle('hidden', !isTrial);
   if (trialSummary && isTrial) {
     const date = formatBillingDate(sub.expira_en);
-    const preview = Boolean(sub?._preview);
     trialSummary.innerHTML = `
-      <span class="eyebrow">${preview ? 'SIMULACIÓN · Prueba gratuita activa' : 'Prueba gratuita activa'}</span>
+      <span class="eyebrow">Prueba gratuita activa</span>
       <strong>${trialCountdownText(sub)}</strong>
       <span>No se te cobrará antes del ${date}. Puedes cancelar antes de que termine la prueba.</span>
-      ${preview ? '<span class="cb-preview-note">Esta simulación no cambia tu cuenta ni tu suscripción real.</span>' : ''}
     `;
   }
 
@@ -555,11 +503,9 @@ function updateAccountBillingUI(root, context) {
 
   if (sub?.cancel_at_period_end && actionFeedback) {
     const date = formatBillingDate(sub.expira_en);
-    actionFeedback.textContent = sub?._preview
-      ? `SIMULACIÓN: renovación cancelada. Mantendrías acceso hasta el ${date}; no se realizaría el primer cobro.`
-      : sub.estado === 'trial'
-        ? `Prueba cancelada. Mantienes acceso hasta el ${date}; no se realizará el primer cobro.`
-        : `Renovación cancelada. Mantienes acceso hasta el ${date}.`;
+    actionFeedback.textContent = sub.estado === 'trial'
+      ? `Prueba cancelada. Mantienes acceso hasta el ${date}; no se realizará el primer cobro.`
+      : `Renovación cancelada. Mantienes acceso hasta el ${date}.`;
   } else if (actionFeedback) {
     actionFeedback.textContent = '';
   }
@@ -659,10 +605,9 @@ async function refreshBillingState() {
   const user = data?.session?.user || null;
   if (!user) {
     currentContext = { user: null, profile: null, subscription: null, source: 'none' };
-    const displayContext = billingDisplayContext(currentContext);
-    updateAccountBillingUI(document, displayContext);
-    renderPlansView(document, displayContext);
-    renderTodayTrialBanner(document, displayContext);
+    updateAccountBillingUI(document, currentContext);
+    renderPlansView(document, currentContext);
+    renderTodayTrialBanner(document, currentContext);
     closePaywall(document);
     return currentContext;
   }
@@ -682,10 +627,9 @@ async function refreshBillingState() {
     subscription: subscriptionPayload.subscription,
     source: subscriptionPayload.source,
   };
-  const displayContext = billingDisplayContext(currentContext);
-  updateAccountBillingUI(document, displayContext);
-  renderPlansView(document, displayContext);
-  renderTodayTrialBanner(document, displayContext);
+  updateAccountBillingUI(document, currentContext);
+  renderPlansView(document, currentContext);
+  renderTodayTrialBanner(document, currentContext);
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
