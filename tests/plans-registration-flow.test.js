@@ -90,6 +90,6 @@ test('el diseño evita tarjetas estrechas y hace grande la gestión del delegado
   ]);
   assert.match(auth, /width:min\(96vw,1080px\)/);
   assert.match(css, /cb-delegate-account-panel[\s\S]*grid-column:\s*1\s*\/\s*-1/i);
-  assert.match(css, /cb-delegate-permissions-grid[\s\S]*repeat\(3,minmax\(0,1fr\)\)/i);
+  assert.match(css, /cb-delegate-permissions-grid[\s\S]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/i);
   assert.match(css, /@media \(max-width: 980px\)[\s\S]*cb-feature-groups[\s\S]*grid-template-columns:\s*1fr/i);
 });
