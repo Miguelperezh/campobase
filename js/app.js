@@ -51,6 +51,7 @@ const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'E
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
+const USER_EXERCISE_PREFIX = 'pdf98-user-';
 let toastTimer;
 let sessionDraftBlocks = [];
 let sessionDraftMeta = null;
@@ -2345,7 +2346,7 @@ async function saveExercise(event) {
   const values = formObject(form);
   const existing = values.id ? state.exercises.find(({ id }) => id === values.id) : null;
   const saved = buildExercise(values, {
-    id: existing?.id ?? uid(), favorite: existing?.favorite ?? false,
+    id: existing?.id ?? `${USER_EXERCISE_PREFIX}${uid()}`, favorite: existing?.favorite ?? false,
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(), diagram: existing?.diagram,
   });
   await put('settings', {
@@ -2994,8 +2995,16 @@ async function ensureSlideshareSeeded() {
 // validados oficiales viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
 async function ensureLegacyExercisesNotPresent() {
   const current = await getAll('settings');
-  const toRemove = current.filter(({ id, recordType, example }) => 
-    recordType === 'exercise' && (example === true || (!id.startsWith('pdf150-') && !id.startsWith('pdf98-')))
+  const toRemove = current.filter(({ id, recordType, example, userCreated }) =>
+    recordType === 'exercise'
+    && (
+      example === true
+      || (
+        userCreated !== true
+        && !String(id || '').startsWith('pdf150-')
+        && !String(id || '').startsWith('pdf98-')
+      )
+    )
   );
   for (const record of toRemove) await remove('settings', record.id);
   await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 10, createdAt: Date.now() });
@@ -5553,7 +5562,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, renderAll, showView, showMatchDetail, get state() { return state; } };
+  window.__campobase = { refresh, renderAll, showView, showMatchDetail, setExerciseLibraryMode, get state() { return state; } };
 }
 
 init().catch(handleError);
