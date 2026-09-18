@@ -357,6 +357,77 @@ function renderPlansView(root = document, context = currentContext) {
 
 }
 
+function trialCountdownText(sub) {
+  if (!sub?.expira_en || sub.estado !== 'trial') return '';
+  const days = getDaysRemaining(sub);
+  const date = formatBillingDate(sub.expira_en);
+  const daysText = days === 1 ? '1 día' : `${days} días`;
+  return `Quedan ${daysText} · termina el ${date}`;
+}
+
+function renderTodayTrialBanner(root, context) {
+  const host = root.getElementById('hoy');
+  if (!host) return;
+  let banner = root.getElementById('cb-today-trial-banner');
+  const sub = context?.subscription;
+  const isDelegate = context?.profile?.role === 'delegate';
+  const show = Boolean(context?.user && !isDelegate && sub?.estado === 'trial' && isSubscriptionActive(sub));
+
+  if (!show) {
+    banner?.remove();
+    return;
+  }
+
+  if (!banner) {
+    banner = root.createElement('article');
+    banner.id = 'cb-today-trial-banner';
+    banner.className = 'cb-today-trial-banner';
+    const head = host.querySelector('.section-head');
+    if (head) head.insertAdjacentElement('afterend', banner);
+    else host.prepend(banner);
+  }
+
+  const date = formatBillingDate(sub.expira_en);
+  const days = getDaysRemaining(sub);
+  banner.innerHTML = `
+    <div class="cb-trial-banner-copy">
+      <span class="eyebrow">Prueba Pro</span>
+      <strong>${days === 1 ? 'Queda 1 día' : `Quedan ${days} días`}</strong>
+      <span>Termina el ${date}</span>
+    </div>
+    <div class="cb-trial-banner-note">
+      <span>No se te cobrará antes de esa fecha.</span>
+      <button type="button" class="ghost compact" data-open-subscription-settings>Gestionar prueba</button>
+    </div>
+  `;
+
+  banner.querySelector('[data-open-subscription-settings]')?.addEventListener('click', () => {
+    if (window.__campobase?.showView) window.__campobase.showView('ajustes');
+    else root.querySelector('[data-view="ajustes"]')?.click();
+  });
+}
+
+async function handleCancelSubscription(button, feedback) {
+  if (!button || button.disabled) return;
+  const sub = currentContext?.subscription;
+  const endDate = formatBillingDate(sub?.expira_en);
+  const message = sub?.estado === 'trial'
+    ? `¿Cancelar la renovación? Seguirás teniendo acceso hasta ${endDate || 'el final de la prueba'} y no se realizará el primer cobro.`
+    : `¿Cancelar la renovación? Mantendrás el acceso hasta ${endDate || 'el final del periodo actual'}.`;
+  if (!confirm(message)) return;
+
+  button.disabled = true;
+  if (feedback) feedback.textContent = 'Cancelando renovación…';
+  try {
+    const result = await cancelSubscriptionAtPeriodEnd(currentClient);
+    if (feedback) feedback.textContent = result.message || 'Renovación cancelada.';
+    await refreshBillingState();
+  } catch (error) {
+    if (feedback) feedback.textContent = error.message || 'No se pudo cancelar la renovación.';
+    button.disabled = false;
+  }
+}
+
 function updateAccountBillingUI(root, context) {
   const panel = root.getElementById('cb-account-billing-panel');
   if (!panel) return;
