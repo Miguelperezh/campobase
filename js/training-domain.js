@@ -18,13 +18,10 @@ function hasHumanVideo(item) {
   );
   if (explicitHumanVideo) return true;
 
-  // Registros validados antiguos podían guardar en `video` el MP4 gráfico.
-  // Nunca se debe interpretar ese `video` como vídeo humano por defecto.
-  if (item?.validated === true || item?.source === 'validado') return false;
-
-  // Compatibilidad exclusivamente para ejercicios personales/legacy,
-  // donde `video` sí representa un vídeo real subido por el entrenador.
-  return Boolean(item?.video);
+  // Nunca usar el campo genérico `video` para este filtro: en CampoBase
+  // puede ser el MP4 gráfico de la ficha. Solo cuentan campos humanos explícitos
+  // o hasHumanVideo=true (incluidos los exerciseVideo persistidos por app.js).
+  return false;
 }
 
 export function filterExercises(exercises, filters = {}) {
