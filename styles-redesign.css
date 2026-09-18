@@ -5665,3 +5665,16 @@ dialog {
   border-color: #dc2626 !important;
   transform: scale(1.03) !important;
 }
+
+
+/* El texto dentro de botones respeta el contraste del color de acento,
+   incluso cuando el usuario ha elegido un color de fuente personalizado. */
+body.cb-redesign-active[data-has-custom-font-color="true"] .primary,
+body.cb-redesign-active[data-has-custom-font-color="true"] .primary * {
+  color: var(--cb-accent-text, #ffffff) !important;
+}
+
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
+  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+}
