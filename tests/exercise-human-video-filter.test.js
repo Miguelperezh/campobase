@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
 import { EJERCICIOS_NUEVO_FORMATO, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
@@ -140,4 +141,23 @@ test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categor�
   assert.equal((card.match(/<span class="pill">Finalización<\/span>/g) || []).length, 1);
   assert.match(card, /15-22 jugadores/);
   assert.match(card, /8-12 min aprox\./);
+});
+
+
+test('la biblioteca principal incluye los vídeos humanos persistidos sin convertir los MP4 gráficos en vídeo humano', () => {
+  const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(source, /humanVideoExerciseIds/);
+  assert.match(source, /recordType=exerciseVideo/);
+  assert.match(source, /hasHumanVideo: true/);
+  assert.match(source, /filterExercises\(filterableExercises, filters\)/);
+});
+
+test('el planificador de sesiones usa solo vídeo humano y respeta ejercicios F7 y F11', () => {
+  const source = readFileSync(new URL('../js/session-planner-ui.js', import.meta.url), 'utf8');
+  assert.match(source, /function hasHumanVideo\(item\)/);
+  assert.match(source, /if \(onlyVideo && !hasHumanVideo\(item\)\) return false;/);
+  assert.doesNotMatch(source, /onlyVideo[^\n]+animationVideo/);
+  assert.match(source, /function matchesFormat\(item, target = formatVal\)/);
+  assert.match(source, /item\.formato_juego === 'todos'/);
+  assert.match(source, /item\.formatos_juego\.includes\(target\)/);
 });
