@@ -6,6 +6,7 @@ import {
   sortVideos,
   videoPath,
   videoPublicUrl,
+  resolveHostedVideoUrl,
   renderVideoSectionHTML,
 } from '../js/ejercicio-videos.js';
 
@@ -42,6 +43,21 @@ test('genera la ruta y la URL pública del vídeo', () => {
   assert.equal(
     videoPublicUrl('EX-1/v1.mp4'),
     'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/EX-1/v1.mp4',
+  );
+});
+
+test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar otras URLs', () => {
+  assert.equal(
+    resolveHostedVideoUrl('https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/ejercicio.mp4'),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__pdf150-022__ejercicio.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl('https://example.test/video.mp4'),
+    'https://example.test/video.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl('https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png'),
+    'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png',
   );
 });
 
