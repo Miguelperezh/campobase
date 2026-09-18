@@ -1,5 +1,6 @@
 import { getAll } from './db.js';
 import { EJERCICIOS_VALIDADOS } from './ejercicios-validados.js';
+import { resolveHostedVideoUrl } from './ejercicio-videos.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -67,7 +68,12 @@ function cover(item) {
 
 function animationVideo(item) {
   const animation = item?.animacion || {};
-  return String(item?.media?.video || animation.mp4 || (animation.gif || '').replace(/\.gif$/i, '.mp4') || '');
+  return resolveHostedVideoUrl(String(
+    item?.media?.video
+    || animation.mp4
+    || (animation.gif || '').replace(/\.gif$/i, '.mp4')
+    || ''
+  ));
 }
 
 function validatedText(item) {
