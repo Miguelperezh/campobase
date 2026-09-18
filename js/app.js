@@ -2695,7 +2695,7 @@ function showSessionDetail(sessionId) {
               ${previewImg
                 ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>`
                 : graphicPreviewVideo
-                  ? `<div class="session-block-preview"><video class="session-block-preview-video" muted playsinline preload="metadata" src="${escapeHtml(graphicPreviewVideo)}#t=0.05" aria-label="Vista previa de ${escapeHtml(name)}"></video></div>`
+                  ? `<div class="session-block-preview"><video class="session-block-preview-video" muted playsinline preload="metadata" src="${escapeHtml(graphicPreviewVideo)}#t=0.05" aria-label="Vista previa de ${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none"></video></div>`
                   : ''}
               <div class="session-block-card-info">
                 <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
