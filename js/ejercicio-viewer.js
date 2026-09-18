@@ -105,39 +105,6 @@ function isUsablePreview(value = '') {
   return true;
 }
 
-function normalizeMediaCrop(value) {
-  const crop = value && typeof value === 'object' ? value : null;
-  if (!crop) return null;
-  const x = Number(crop.x);
-  const y = Number(crop.y);
-  const width = Number(crop.width);
-  const height = Number(crop.height);
-  const sourceWidth = Number(crop.sourceWidth || 1280);
-  const sourceHeight = Number(crop.sourceHeight || 820);
-  if (![x, y, width, height, sourceWidth, sourceHeight].every(Number.isFinite)) return null;
-  if (width <= 0 || height <= 0 || sourceWidth <= 0 || sourceHeight <= 0) return null;
-  return { x, y, width, height, sourceWidth, sourceHeight };
-}
-
-function mediaCropToken(crop) {
-  if (!crop) return '';
-  return [crop.x, crop.y, crop.width, crop.height, crop.sourceWidth, crop.sourceHeight].join(',');
-}
-
-function mediaCropStageStyle(crop) {
-  if (!crop) return 'position:relative';
-  return `position:relative;overflow:hidden;aspect-ratio:${crop.width} / ${crop.height};background:#8BC753`;
-}
-
-function mediaCropVideoStyle(crop) {
-  if (!crop) return '';
-  const widthPct = (crop.sourceWidth / crop.width) * 100;
-  const heightPct = (crop.sourceHeight / crop.height) * 100;
-  const leftPct = -(crop.x / crop.width) * 100;
-  const topPct = -(crop.y / crop.height) * 100;
-  return `position:absolute;max-width:none;max-height:none;width:${widthPct.toFixed(5)}%;height:${heightPct.toFixed(5)}%;left:${leftPct.toFixed(5)}%;top:${topPct.toFixed(5)}%;object-fit:fill`;
-}
-
 export function formatExerciseDuration(dur) {
   if (!dur) return '';
   if (typeof dur === 'object') {
@@ -223,8 +190,6 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
     ? resolveHostedVideoUrl(explicitHumanVideo)
     : '';
-  const graphicCrop = normalizeMediaCrop(ex.media_crop || ex.preview_crop);
-  const graphicCropToken = mediaCropToken(graphicCrop);
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
@@ -578,13 +543,13 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(graphicCropToken)}">
+          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}">
         </div>
       </div>` : previewVideoSrc ? `
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(graphicCropToken)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
+          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
         </div>
       </div>` : `
       <div class="exercise-media-preview" data-media-order="1">
@@ -596,8 +561,8 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <!-- Reproductor de animación con controles y zoom integrado -->
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
-      <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline muted loop preload="none"></video>
+      <div class="video-stage" style="position:relative">
+        <video class="frame-video" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" playsinline muted loop preload="none"></video>
         <div class="video-overlay-play" title="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </div>
@@ -725,8 +690,6 @@ export function renderExerciseGridCard(ex) {
     || media.mp4
     || ''
   ).trim());
-  const graphicCrop = normalizeMediaCrop(ex.media_crop || ex.preview_crop);
-  const graphicCropToken = mediaCropToken(graphicCrop);
   const dr = ex.datos_rapidos || {};
   const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]).slice(0, 2);
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
@@ -736,9 +699,9 @@ export function renderExerciseGridCard(ex) {
   <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
     <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
       ${preview
-        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy" data-preview-image="1" data-preview-video-src="${esc(graphicPreviewVideo)}" data-preview-crop="${esc(graphicCropToken)}">`
+        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy" data-preview-image="1" data-preview-video-src="${esc(graphicPreviewVideo)}">`
         : graphicPreviewVideo
-          ? `<canvas class="card-preview-img card-preview-static-canvas" data-preview-video-src="${esc(graphicPreviewVideo)}" data-preview-crop="${esc(graphicCropToken)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>`
+          ? `<canvas class="card-preview-img card-preview-static-canvas" data-preview-video-src="${esc(graphicPreviewVideo)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>`
           : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
     </div>
