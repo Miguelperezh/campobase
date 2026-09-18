@@ -663,3 +663,114 @@ Antes de modificar cualquier pieza relacionada con jugadores, estadísticas, ses
 
 Si el usuario dice que algo ya estaba validado, asumir que debe preservarse salvo petición explícita de cambio.
 
+---
+
+# 12. Mantenimiento de AGENTS.md — norma de continuidad
+
+Esta norma aplica a cualquier chat o agente que añada instrucciones permanentes al proyecto.
+
+- `AGENTS.md` es un documento acumulativo compartido entre distintos trabajos.
+- Cada agente debe añadir su parte bajo títulos claros y fechables cuando sea útil.
+- No borrar contenido existente escrito por otros chats/agentes.
+- No reescribir, resumir ni “limpiar” secciones ajenas solo por estilo.
+- No mover secciones antiguas si no es estrictamente necesario.
+- Si una norma nueva sustituye a otra antigua, añadir la nueva norma y explicar expresamente qué comportamiento queda superado, sin eliminar el histórico.
+- Las reglas nuevas deben escribirse de forma operativa: qué hacer, qué no hacer y cómo comprobarlo.
+- Las correcciones de errores importantes deben quedar documentadas para que otro agente no vuelva a introducir el mismo fallo.
+
+---
+
+# 13. Ajustes — Cuenta de delegado debe ser una sección principal y completa
+
+La gestión del delegado no puede quedar reducida a un texto informativo pequeño.
+
+En **Ajustes** debe existir una sección grande, claramente visible, titulada:
+
+**Cuenta de delegado**
+
+Debe explicar que:
+- el delegado usa su propia cuenta;
+- comparte el mismo equipo;
+- no crea otro equipo;
+- solo accede a las vistas autorizadas;
+- la cuenta principal controla esos permisos.
+
+La sección debe mostrar siempre de forma visual la lista de permisos/vistas disponibles.
+
+Si todavía no existe delegado:
+- mostrar campos de nombre y correo;
+- mostrar todas las vistas configurables;
+- marcar la vista base de delegado;
+- permitir elegir las vistas antes de enviar la invitación.
+
+Si ya existe delegado:
+- mostrar identidad/correo del delegado;
+- mostrar los permisos actuales;
+- permitir ampliar o reducir los permisos;
+- guardar los cambios desde la misma sección.
+
+Si la página se visualiza sin una sesión administradora válida:
+- no ocultar toda la sección;
+- mostrar la estructura y los permisos en modo informativo/no editable;
+- indicar que para cambiar esos permisos hay que entrar como Administrador/Entrenador.
+
+`Ajustes` nunca es un permiso concedible al delegado.
+
+La sección debe ocupar el ancho disponible y tener jerarquía visual suficiente para no confundirse con una nota secundaria.
+
+---
+
+# 14. Planes, registro y pago — orden correcto del flujo
+
+Los planes no pueden depender únicamente de entrar primero dentro de la aplicación.
+
+Regla de producto:
+- una persona debe poder conocer precios y funciones **antes de registrarse**;
+- la pantalla de acceso/registro debe incluir una entrada visible a **Planes**;
+- durante el registro debe quedar claro qué planes existen y qué incluye CampoBase;
+- después de identificar la cuenta, si no existe acceso válido, se debe mostrar la elección de plan antes de permitir entrar a los datos protegidos;
+- un usuario con prueba activa puede continuar con su prueba, pero debe poder ver y contratar un plan sin entrar primero en Ajustes;
+- una prueba o suscripción caducada no debe permitir saltarse el pago entrando por una pestaña interna;
+- el delegado nunca contrata: hereda el plan del titular del equipo.
+
+El pago real necesita una cuenta identificada para asociar correctamente la suscripción al equipo. Por tanto:
+- los planes y precios se muestran públicamente antes del registro;
+- Stripe Checkout se inicia después de que exista una cuenta autenticada;
+- no pedir al usuario que “entre en la app y luego busque Planes” como único camino de contratación.
+
+## 14.1 Funciones que deben mostrarse en Planes
+
+La página/pantalla de Planes debe explicar que los planes de pago incluyen el conjunto funcional de CampoBase, no solo mostrar un precio.
+
+Como mínimo debe reflejar de forma comprensible:
+- Inicio / resumen del día;
+- Plantilla y fichas de jugadores;
+- estadísticas individuales;
+- cuerpo técnico;
+- control de asistencia;
+- convocatorias;
+- preparación de partido;
+- alineaciones y reparto;
+- partido en vivo;
+- cronómetro, cambios e incidencias;
+- calendario y resultados;
+- sesiones de entrenamiento;
+- biblioteca de ejercicios;
+- vídeos/demostraciones de ejercicios cuando existan;
+- pizarra táctica;
+- cuenta de delegado con permisos configurables;
+- sincronización en nube;
+- acceso desde varios dispositivos;
+- copia de seguridad y recuperación previstas por la app;
+- personalización de equipo/club;
+- soporte de códigos de regalo o descuento cuando aplique.
+
+Mensual y anual pueden incluir las mismas funciones; la diferencia puede ser únicamente el periodo y el precio, salvo que el usuario decida otra cosa.
+
+## 14.2 Precios vigentes mientras no exista una instrucción posterior
+
+- Plan mensual: **9,99 €/mes**.
+- Plan anual: **79 €/año**.
+- Prueba Pro inicial: **14 días**, si el flujo de alta vigente la mantiene.
+- Cuenta Administrador/owner del proyecto: **Pro vitalicio**.
+
