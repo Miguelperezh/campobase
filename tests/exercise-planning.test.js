@@ -6,6 +6,7 @@ import {
   moveSessionBlock,
   removeSessionBlock,
   renderBoardDiagrams,
+  sessionBlockType,
   sessionDurationStatus,
 } from '../js/exercise-planning.js';
 
@@ -74,6 +75,14 @@ test('añade ejercicios por categoría, permite reordenar y quitar sin mutar la 
   const moved = moveSessionBlock(withFinal.blocks, 1, -1);
   assert.deepEqual(moved.map(({ exerciseId }) => exerciseId), ['p1', 'e-square']);
   assert.deepEqual(removeSessionBlock(moved, 0).map(({ exerciseId }) => exerciseId), ['e-square']);
+});
+
+test('clasifica correctamente las categorías actuales al añadir ejercicios a una sesión', () => {
+  assert.equal(sessionBlockType('Calentamiento / activación'), 'warmup');
+  assert.equal(sessionBlockType('Calentamiento/activación'), 'warmup');
+  assert.equal(sessionBlockType('Juego reducido'), 'final');
+  assert.equal(sessionBlockType('Partido condicionado / Small-sided games'), 'final');
+  assert.equal(sessionBlockType('Finalización'), 'main');
 });
 
 test('calcula el aviso de sesión hasta sumar exactamente 60 minutos', () => {
