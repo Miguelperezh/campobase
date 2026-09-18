@@ -1,0 +1,419 @@
+import { redeemPromoCodeFlow } from './promo-codes-admin.js';
+
+export const SUBSCRIPTION_CACHE_PREFIX = 'campobase.subscription.';
+export const PLAN_PRICES = Object.freeze({
+  monthly: { label: 'Plan Mensual', price: '9,99 € / mes' },
+  annual: { label: 'Plan Anual', price: '79 € / año' },
+});
+
+let initialized = false;
+let currentContext = null;
+let currentClient = null;
+
+function appName() {
+  return String(document?.title || 'Aplicación').trim() || 'Aplicación';
+}
+
+function cacheKey(userId) {
+  return userId ? `${SUBSCRIPTION_CACHE_PREFIX}${userId}` : '';
+}
+
+export function isSubscriptionActive(sub, now = Date.now()) {
+  if (!sub) return false;
+  if (sub.estado === 'gift_free') return true;
+  if (sub.estado === 'active') {
+    return !sub.expira_en || new Date(sub.expira_en).getTime() > now;
+  }
+  if (sub.estado === 'trial') {
+    return Boolean(sub.expira_en) && new Date(sub.expira_en).getTime() > now;
+  }
+  return false;
+}
+
+export function getDaysRemaining(sub, now = Date.now()) {
+  if (!sub?.expira_en) return 0;
+  const expires = new Date(sub.expira_en).getTime();
+  if (!Number.isFinite(expires)) return 0;
+  return Math.max(0, Math.ceil((expires - now) / 86400000));
+}
+
+export function formatSubscriptionStatus(sub, now = Date.now()) {
+  if (!sub) return { label: 'Sin plan activo', canUseApp: false, kind: 'inactive' };
+  if (sub.estado === 'gift_free') {
+    return { label: '🎁 Pro vitalicio', canUseApp: true, kind: 'gift' };
+  }
+  if (sub.estado === 'active') {
+    const active = isSubscriptionActive(sub, now);
+    const planText = sub.plan === 'anual' ? 'Plan anual Pro' : 'Plan mensual Pro';
+    return {
+      label: active ? `⭐ ${planText}` : 'Plan finalizado',
+      canUseApp: active,
+      kind: active ? 'active' : 'inactive',
+    };
+  }
+  if (sub.estado === 'trial') {
+    const days = getDaysRemaining(sub, now);
+    return days > 0
+      ? { label: `⏳ Prueba Pro · ${days} ${days === 1 ? 'día restante' : 'días restantes'}`, canUseApp: true, kind: 'trial' }
+      : { label: 'Prueba gratuita finalizada', canUseApp: false, kind: 'inactive' };
+  }
+  return { label: 'Suscripción inactiva', canUseApp: false, kind: 'inactive' };
+}
+
+export function saveCurrentSubscription(sub, userId) {
+  if (!sub || !userId || typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(cacheKey(userId), JSON.stringify({ ...sub, _verifiedAt: Date.now() }));
+  } catch {}
+}
+
+export function getCachedSubscription(userId) {
+  if (!userId || typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(cacheKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchUserSubscription(client, userId) {
+  if (!client || !userId) return { subscription: null, source: 'none' };
+  try {
+    const { data, error } = await client
+      .from('suscripciones')
+      .select('user_id,estado,plan,promo_code,dias_prueba,expira_en,pending_discount_code,pending_discount_percent,created_at,updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      saveCurrentSubscription(data, userId);
+      return { subscription: data, source: 'server' };
+    }
+  } catch (error) {
+    console.warn('No se pudo actualizar el estado de la suscripción:', error);
+  }
+  return { subscription: getCachedSubscription(userId), source: 'cache' };
+}
+
+export async function startStripeCheckout(client, plan = 'monthly', returnUrl = '') {
+  if (!client) throw new Error('No se ha podido iniciar el pago.');
+  if (!Object.hasOwn(PLAN_PRICES, plan)) throw new TypeError('El plan seleccionado no es válido.');
+  const { data, error } = await client.functions.invoke('create-checkout-session', {
+    body: {
+      plan,
+      returnUrl: returnUrl || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ''),
+    },
+  });
+  if (error) throw new Error(error.message || 'No se ha podido abrir el pago.');
+  if (!data?.url) throw new Error(data?.message || 'El pago todavía no está disponible.');
+  if (typeof window !== 'undefined') window.location.assign(data.url);
+  return data;
+}
+
+function ensureBillingUI(root = document) {
+  const grid = root.querySelector('#ajustes .settings-grid');
+  if (!grid) return false;
+
+  if (!root.getElementById('cb-account-billing-panel')) {
+    const panel = root.createElement('article');
+    panel.id = 'cb-account-billing-panel';
+    panel.className = 'panel cb-account-billing-panel';
+    panel.innerHTML = `
+      <div class="panel-head">
+        <span class="eyebrow">Licencia y acceso</span>
+        <h3>Mi cuenta y suscripción</h3>
+      </div>
+      <p><span id="cb-account-status-badge" class="badge">Comprobando…</span></p>
+      <div class="account-details">
+        <p><strong>Cuenta:</strong> <span id="cb-account-user-email">—</span></p>
+        <p><strong>Plan:</strong> <span id="cb-account-plan-title">—</span></p>
+        <p id="cb-account-expiry-box" class="hidden"><strong>Vigencia:</strong> <span id="cb-account-expiry-date">—</span></p>
+        <p id="cb-account-discount-box" class="hidden"><strong>Descuento disponible:</strong> <span id="cb-account-discount">—</span></p>
+      </div>
+      <div class="button-row" id="cb-account-actions">
+        <button type="button" class="primary compact hidden" id="cb-account-upgrade-btn">⭐ Ver planes Pro</button>
+      </div>
+    `;
+    grid.prepend(panel);
+  }
+
+  if (!root.getElementById('cb-paywall-dialog')) {
+    const dialog = root.createElement('dialog');
+    dialog.id = 'cb-paywall-dialog';
+    dialog.className = 'cb-paywall-dialog';
+    dialog.innerHTML = `
+      <div class="dialog-head">
+        <h2>⭐ Planes Pro</h2>
+        <button type="button" data-close aria-label="Cerrar">×</button>
+      </div>
+      <div id="cb-paywall-dialog-body"></div>
+    `;
+    root.body.append(dialog);
+  }
+  return true;
+}
+
+function accountLabel(user, profile) {
+  const name = profile?.full_name || user?.user_metadata?.full_name || profile?.username || '';
+  if (name && user?.email) return `${name} · ${user.email}`;
+  return user?.email || name || 'Cuenta conectada';
+}
+
+function planTitle(sub) {
+  if (!sub) return 'Sin plan activo';
+  if (sub.estado === 'gift_free') return 'Pro vitalicio';
+  if (sub.estado === 'trial') return 'Prueba Pro de 14 días';
+  if (sub.estado === 'active') return sub.plan === 'anual' ? 'Pro anual' : 'Pro mensual';
+  return 'Sin plan activo';
+}
+
+function formatExpiry(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+export function renderPaywallModalHTML(sub = null) {
+  const discount = Number(sub?.pending_discount_percent) || 0;
+  return `
+    <div class="cb-paywall-modal-card">
+      <div class="panel-head">
+        <p class="eyebrow">Acceso completo</p>
+        <h3>Elige tu plan</h3>
+        <p class="meta">Mantén todas las herramientas del equipo disponibles en tu cuenta.</p>
+      </div>
+      ${discount > 0 ? `<p class="cb-discount-banner">Tienes un <strong>${discount}% de descuento</strong> guardado para tu próxima suscripción.</p>` : ''}
+      <div class="cb-plans-grid">
+        <article class="card cb-plan-card">
+          <h4>Plan mensual</h4>
+          <p class="cb-plan-price"><strong>9,99 €</strong> / mes</p>
+          <p class="meta">Pago mensual. Puedes cancelar cuando quieras.</p>
+          <button type="button" class="secondary cb-checkout-btn" data-plan="monthly">Elegir mensual</button>
+        </article>
+        <article class="card cb-plan-card featured">
+          <span class="eyebrow">Ahorra frente al mensual</span>
+          <h4>Plan anual</h4>
+          <p class="cb-plan-price"><strong>79 €</strong> / año</p>
+          <p class="meta">Equivale a 6,58 € al mes durante un año.</p>
+          <button type="button" class="primary cb-checkout-btn" data-plan="annual">Elegir anual</button>
+        </article>
+      </div>
+      <div class="panel cb-promo-redeem-box">
+        <h4>¿Tienes un código de regalo o descuento?</h4>
+        <div class="form-row">
+          <input type="text" id="cb-paywall-promo-input" placeholder="Introduce tu código" autocomplete="off">
+          <button type="button" id="cb-paywall-redeem-btn" class="secondary">Canjear</button>
+        </div>
+        <p id="cb-paywall-promo-feedback" class="meta" aria-live="polite"></p>
+      </div>
+      <p id="cb-paywall-payment-feedback" class="meta" aria-live="polite"></p>
+      <div class="button-row cb-paywall-account-actions">
+        <button type="button" class="secondary hidden" id="cb-paywall-logout-btn">Salir de la cuenta</button>
+      </div>
+    </div>
+  `;
+}
+
+function updateAccountBillingUI(root, context) {
+  const panel = root.getElementById('cb-account-billing-panel');
+  if (!panel) return;
+  const userEl = panel.querySelector('#cb-account-user-email');
+  const badgeEl = panel.querySelector('#cb-account-status-badge');
+  const planEl = panel.querySelector('#cb-account-plan-title');
+  const expiryBox = panel.querySelector('#cb-account-expiry-box');
+  const expiryDate = panel.querySelector('#cb-account-expiry-date');
+  const discountBox = panel.querySelector('#cb-account-discount-box');
+  const discountEl = panel.querySelector('#cb-account-discount');
+  const upgrade = panel.querySelector('#cb-account-upgrade-btn');
+
+  if (!context?.user) {
+    if (userEl) userEl.textContent = 'Acceso local con PIN';
+    if (badgeEl) badgeEl.textContent = 'Acceso local';
+    if (planEl) planEl.textContent = 'Sin cuenta conectada';
+    expiryBox?.classList.add('hidden');
+    discountBox?.classList.add('hidden');
+    upgrade?.classList.add('hidden');
+    return;
+  }
+
+  const sub = context.subscription;
+  const status = formatSubscriptionStatus(sub);
+  if (userEl) userEl.textContent = accountLabel(context.user, context.profile);
+  if (badgeEl) badgeEl.textContent = status.label;
+  if (planEl) planEl.textContent = planTitle(sub);
+
+  const hasExpiry = Boolean(sub?.expira_en && sub?.estado !== 'gift_free');
+  expiryBox?.classList.toggle('hidden', !hasExpiry);
+  if (expiryDate && hasExpiry) expiryDate.textContent = formatExpiry(sub.expira_en);
+
+  const discount = Number(sub?.pending_discount_percent) || 0;
+  discountBox?.classList.toggle('hidden', discount <= 0);
+  if (discountEl && discount > 0) discountEl.textContent = `${discount}%`;
+
+  const isOwner = context.profile?.role === 'owner';
+  upgrade?.classList.toggle('hidden', isOwner || status.canUseApp && sub?.estado !== 'trial');
+}
+
+function closePaywall(root = document) {
+  const dialog = root.getElementById('cb-paywall-dialog');
+  if (!dialog) return;
+  dialog.dataset.forced = 'false';
+  if (dialog.open) dialog.close();
+}
+
+async function openPaywallModal(root = document, { forced = false } = {}) {
+  const dialog = root.getElementById('cb-paywall-dialog');
+  const body = root.getElementById('cb-paywall-dialog-body');
+  if (!dialog || !body) return;
+  dialog.dataset.forced = String(Boolean(forced));
+  body.innerHTML = renderPaywallModalHTML(currentContext?.subscription);
+
+  const closeButton = dialog.querySelector('[data-close]');
+  closeButton?.classList.toggle('hidden', forced);
+  closeButton?.addEventListener('click', () => closePaywall(root), { once: true });
+
+  const logout = body.querySelector('#cb-paywall-logout-btn');
+  logout?.classList.toggle('hidden', !forced);
+  logout?.addEventListener('click', async () => {
+    await currentClient?.auth.signOut();
+    closePaywall(root);
+  });
+
+  body.querySelectorAll('.cb-checkout-btn').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const feedback = body.querySelector('#cb-paywall-payment-feedback');
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Abriendo pago…';
+      if (feedback) feedback.textContent = '';
+      try {
+        await startStripeCheckout(currentClient, button.dataset.plan);
+      } catch (error) {
+        if (feedback) feedback.textContent = error.message || 'No se ha podido abrir el pago.';
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    });
+  });
+
+  const redeemButton = body.querySelector('#cb-paywall-redeem-btn');
+  const redeemInput = body.querySelector('#cb-paywall-promo-input');
+  const redeemFeedback = body.querySelector('#cb-paywall-promo-feedback');
+  redeemButton?.addEventListener('click', async () => {
+    const code = redeemInput?.value?.trim();
+    if (!code) return;
+    redeemButton.disabled = true;
+    try {
+      const result = await redeemPromoCodeFlow(code);
+      if (redeemFeedback) redeemFeedback.textContent = result.message || 'Código aplicado.';
+      if (redeemInput) redeemInput.value = '';
+      await refreshBillingState();
+    } catch (error) {
+      if (redeemFeedback) redeemFeedback.textContent = error.message || 'No se ha podido aplicar el código.';
+    } finally {
+      redeemButton.disabled = false;
+    }
+  });
+
+  if (!dialog.open && typeof dialog.showModal === 'function') dialog.showModal();
+}
+
+async function getProfile(client, userId) {
+  const { data, error } = await client
+    .from('perfiles')
+    .select('id,email,username,full_name,role')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function refreshBillingState() {
+  if (!currentClient || typeof document === 'undefined') return null;
+  const { data, error } = await currentClient.auth.getSession();
+  if (error) throw error;
+  const user = data?.session?.user || null;
+  if (!user) {
+    currentContext = { user: null, profile: null, subscription: null, source: 'none' };
+    updateAccountBillingUI(document, currentContext);
+    closePaywall(document);
+    return currentContext;
+  }
+
+  const [profileResult, subscriptionResult] = await Promise.allSettled([
+    getProfile(currentClient, user.id),
+    fetchUserSubscription(currentClient, user.id),
+  ]);
+  const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
+  const subscriptionPayload = subscriptionResult.status === 'fulfilled'
+    ? subscriptionResult.value
+    : { subscription: getCachedSubscription(user.id), source: 'cache' };
+
+  currentContext = {
+    user,
+    profile,
+    subscription: subscriptionPayload.subscription,
+    source: subscriptionPayload.source,
+  };
+  updateAccountBillingUI(document, currentContext);
+
+  const serverVerified = currentContext.source === 'server';
+  const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
+  if (serverVerified && profile?.role !== 'owner' && !canUse) {
+    await openPaywallModal(document, { forced: true });
+  } else if (canUse || profile?.role === 'owner') {
+    closePaywall(document);
+  }
+
+  window.dispatchEvent(new CustomEvent('campobase:billing-state', { detail: currentContext }));
+  return currentContext;
+}
+
+function bindBillingEvents(root = document) {
+  const upgrade = root.getElementById('cb-account-upgrade-btn');
+  if (upgrade && !upgrade.dataset.bound) {
+    upgrade.dataset.bound = '1';
+    upgrade.addEventListener('click', () => openPaywallModal(root));
+  }
+
+  window.addEventListener('campobase:subscription-updated', () => {
+    refreshBillingState().catch((error) => console.warn('No se pudo actualizar la suscripción:', error));
+  });
+
+  currentClient.auth.onAuthStateChange(() => {
+    queueMicrotask(() => refreshBillingState().catch((error) => console.warn('No se pudo actualizar la cuenta:', error)));
+  });
+}
+
+export async function initBillingManager(client, root = document) {
+  if (!client || !root || initialized) return;
+  currentClient = client;
+  if (!ensureBillingUI(root)) {
+    const observer = new MutationObserver(() => {
+      if (ensureBillingUI(root)) {
+        observer.disconnect();
+        initBillingManager(client, root).catch(() => {});
+      }
+    });
+    observer.observe(root.documentElement, { childList: true, subtree: true });
+    return;
+  }
+  initialized = true;
+  bindBillingEvents(root);
+  await refreshBillingState();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('billing') === 'success') {
+    await refreshBillingState();
+    params.delete('billing');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', next);
+  }
+}
+
+export { refreshBillingState, openPaywallModal, updateAccountBillingUI };
