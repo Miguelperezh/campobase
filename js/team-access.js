@@ -184,7 +184,16 @@ async function renderDelegatePanel(root = document) {
   if (!panel || !content || !currentClient) return;
 
   const context = currentContext || await fetchTeamContext(currentClient).catch(() => null);
-  const canManage = ['admin', 'coach'].includes(context?.membership_role);
+  if (!context) {
+    panel.classList.remove('hidden');
+    content.innerHTML = '<p class="meta">Inicia sesión como administrador o entrenador para gestionar la cuenta de delegado.</p>';
+    return;
+  }
+  if (context.membership_role === 'delegate') {
+    panel.classList.add('hidden');
+    return;
+  }
+  const canManage = ['admin', 'coach'].includes(context.membership_role);
   panel.classList.toggle('hidden', !canManage);
   if (!canManage) return;
 
