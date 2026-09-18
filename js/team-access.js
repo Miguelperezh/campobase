@@ -140,12 +140,13 @@ export function applyTeamAccessContext(context) {
   }
 }
 
-function permissionMarkup(selected = []) {
+function permissionMarkup(selected = [], { disabled = false } = {}) {
   const active = new Set(normalizedPermissions(selected));
   return DELEGATE_VIEW_OPTIONS.map(([id, label]) => {
     const mandatory = id === 'delegado';
+    const isDisabled = disabled || mandatory;
     return `<label class="cb-delegate-permission">
-      <input type="checkbox" name="delegateViews" value="${id}" ${active.has(id) ? 'checked' : ''} ${mandatory ? 'disabled' : ''}>
+      <input type="checkbox" name="delegateViews" value="${id}" ${active.has(id) ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
       <span>${label}${mandatory ? ' · acceso base' : ''}</span>
     </label>`;
   }).join('');
@@ -186,7 +187,16 @@ async function renderDelegatePanel(root = document) {
   const context = currentContext || await fetchTeamContext(currentClient).catch(() => null);
   if (!context) {
     panel.classList.remove('hidden');
-    content.innerHTML = '<p class="meta">Inicia sesión como administrador o entrenador para gestionar la cuenta de delegado.</p>';
+    content.innerHTML = `
+      <div class="cb-delegate-access-preview">
+        <div class="cb-delegate-preview-copy">
+          <h4>Permisos del delegado</h4>
+          <p class="meta">Esta es la lista de vistas que podrás activar o desactivar. La vista de delegado del partido es la base y Ajustes nunca se concede.</p>
+        </div>
+        <div class="cb-delegate-permissions-grid">${permissionMarkup(['delegado'], { disabled: true })}</div>
+        <p class="meta cb-delegate-login-note">Inicia sesión como Administrador o Entrenador para introducir el correo del delegado y cambiar estos permisos.</p>
+      </div>
+    `;
     return;
   }
   if (context.membership_role === 'delegate') {
@@ -285,15 +295,24 @@ function installStyles(root = document) {
   const style = root.createElement('style');
   style.id = 'cb-team-access-style';
   style.textContent = `
-    .cb-delegate-account-panel{grid-column:1/-1}
-    .cb-delegate-permissions{margin:.9rem 0;padding:.85rem;border:1px solid var(--line,#e2e8f0);border-radius:14px}
-    .cb-delegate-permissions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem .9rem;margin-top:.7rem}
-    .cb-delegate-permission{display:flex;align-items:center;gap:.55rem;min-width:0}
-    .cb-delegate-permission input{width:18px;min-height:18px;flex:0 0 18px}
-    .cb-delegate-account-summary{display:grid;gap:.25rem;margin:.6rem 0}
+    .cb-delegate-account-panel{grid-column:1/-1;min-height:360px;padding:clamp(1rem,2.4vw,1.6rem)}
+    .cb-delegate-account-panel .panel-head{max-width:900px;margin-bottom:1rem}
+    .cb-delegate-account-panel .panel-head h3{font-size:clamp(1.35rem,2vw,1.75rem);margin:.15rem 0}
+    .cb-delegate-account-panel .panel-head .meta{font-size:1rem;line-height:1.55}
+    .cb-delegate-permissions{margin:1rem 0;padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:16px}
+    .cb-delegate-permissions legend{font-weight:800;padding:0 .3rem}
+    .cb-delegate-permissions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem .9rem;margin-top:.8rem}
+    .cb-delegate-permission{display:flex;align-items:flex-start;gap:.65rem;min-width:0;padding:.7rem;border:1px solid color-mix(in srgb,var(--line,#e2e8f0) 88%,transparent);border-radius:12px;background:color-mix(in srgb,var(--card,#fff) 96%,var(--cb-brand,#173f35) 4%)}
+    .cb-delegate-permission input{width:20px;min-height:20px;flex:0 0 20px;margin-top:.08rem}
+    .cb-delegate-permission span{font-weight:700;line-height:1.35}
+    .cb-delegate-account-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem 1rem;margin:.8rem 0 1rem;padding:.9rem;border-radius:14px;background:color-mix(in srgb,var(--card,#fff) 94%,var(--cb-brand,#173f35) 6%)}
     .cb-delegate-account-summary p{margin:0;overflow-wrap:anywhere}
+    .cb-delegate-access-preview{display:grid;gap:.8rem}
+    .cb-delegate-preview-copy h4{margin:0 0 .25rem;font-size:1.1rem}
+    .cb-delegate-login-note{padding:.8rem;border-radius:12px;background:color-mix(in srgb,var(--card,#fff) 92%,var(--cb-brand,#173f35) 8%)}
     html[data-saas-team-role="delegate"] #settings-nav{display:none!important}
-    @media(max-width:680px){.cb-delegate-permissions-grid{grid-template-columns:1fr}}
+    @media(max-width:900px){.cb-delegate-permissions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:680px){.cb-delegate-permissions-grid,.cb-delegate-account-summary{grid-template-columns:1fr}}
   `;
   root.head.append(style);
 }
