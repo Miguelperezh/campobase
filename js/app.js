@@ -306,6 +306,8 @@ async function refresh() {
       userCreated: true,
       source: 'personal',
       example: false,
+      category: item.category || 'Técnico-táctico',
+      formato_juego: item.formato_juego || (item.format === 'F7' ? 'futbol_7' : 'futbol_11'),
     }));
 
   state.exercises = [...validatedExercises, ...myExercises];
@@ -2520,6 +2522,7 @@ async function saveTrainingSession(event) {
   const form = event.target.closest('form');
   syncSessionDraft();
   const existing = sessionDraftMeta.id ? state.trainingSessions.find(({ id }) => id === sessionDraftMeta.id) : null;
+  if (sessionDraftMeta.id && !existing) throw new TypeError('La sesión que intentas editar ya no está disponible. Recarga antes de guardar.');
   const autoMaterial = calculateSessionTotalMaterial(sessionDraftBlocks, state.exercises);
   if (!sessionDraftMeta.material?.trim()) {
     sessionDraftMeta.material = autoMaterial;
@@ -2693,9 +2696,9 @@ function showSessionDetail(sessionId) {
           <div class="session-block-accordion-body">
             <div class="session-block-card-main">
               ${previewImg
-                ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>`
+                ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy" data-preview-image="1" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}"></div>`
                 : graphicPreviewVideo
-                  ? `<div class="session-block-preview"><video class="session-block-preview-video" muted playsinline preload="metadata" src="${escapeHtml(graphicPreviewVideo)}#t=0.05" aria-label="Vista previa de ${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none"></video></div>`
+                  ? `<div class="session-block-preview"><canvas class="session-preview-static-canvas" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}" aria-label="Vista previa de ${escapeHtml(name)}"></canvas></div>`
                   : ''}
               <div class="session-block-card-info">
                 <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
