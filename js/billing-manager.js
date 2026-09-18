@@ -38,6 +38,13 @@ export function getDaysRemaining(sub, now = Date.now()) {
   return Math.max(0, Math.ceil((expires - now) / 86400000));
 }
 
+export function formatBillingDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 export function formatSubscriptionStatus(sub, now = Date.now()) {
   if (!sub) return { label: 'Sin plan activo', canUseApp: false, kind: 'inactive' };
   if (sub.estado === 'gift_free') {
@@ -61,6 +68,9 @@ export function formatSubscriptionStatus(sub, now = Date.now()) {
     return days > 0
       ? { label: `⏳ Prueba Pro · ${days} ${days === 1 ? 'día restante' : 'días restantes'}`, canUseApp: true, kind: 'trial' }
       : { label: 'Prueba gratuita finalizada', canUseApp: false, kind: 'inactive' };
+  }
+  if (sub.estado === 'pending_payment') {
+    return { label: 'Falta configurar la prueba', canUseApp: false, kind: 'pending' };
   }
   return { label: 'Suscripción inactiva', canUseApp: false, kind: 'inactive' };
 }
@@ -113,6 +123,14 @@ export async function startStripeCheckout(client, plan = 'monthly', returnUrl = 
   if (error) throw new Error(error.message || 'No se ha podido abrir el pago.');
   if (!data?.url) throw new Error(data?.message || 'El pago todavía no está disponible.');
   if (typeof window !== 'undefined') window.location.assign(data.url);
+  return data;
+}
+
+export async function cancelSubscriptionAtPeriodEnd(client) {
+  if (!client) throw new Error('No se ha podido cancelar la suscripción.');
+  const { data, error } = await client.functions.invoke('cancel-subscription', { body: {} });
+  if (error) throw new Error(error.message || 'No se ha podido cancelar la renovación.');
+  if (!data?.success) throw new Error(data?.message || 'No se ha podido cancelar la renovación.');
   return data;
 }
 
@@ -176,10 +194,7 @@ function planTitle(sub) {
 }
 
 function formatExpiry(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+  return formatBillingDate(value);
 }
 
 export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
@@ -224,14 +239,14 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
         <article class="card cb-plan-card">
           <h4>Plan mensual</h4>
           <p class="cb-plan-price"><strong>9,99 €</strong> / mes</p>
-          <p class="meta">Pago mensual. Puedes cancelar cuando quieras.</p>
+          <p class="meta">14 días gratis. Después 9,99 €/mes. Puedes cancelar antes de que termine la prueba.</p>
           <button type="button" class="secondary cb-checkout-btn" data-plan="monthly">Elegir mensual</button>
         </article>
         <article class="card cb-plan-card featured">
           <span class="eyebrow">Ahorra frente al mensual</span>
           <h4>Plan anual</h4>
           <p class="cb-plan-price"><strong>79 €</strong> / año</p>
-          <p class="meta">Equivale a 6,58 € al mes durante un año.</p>
+          <p class="meta">14 días gratis. Después 79 €/año. Puedes cancelar antes de que termine la prueba.</p>
           <button type="button" class="primary cb-checkout-btn" data-plan="annual">Elegir anual</button>
         </article>
       </div>
@@ -257,6 +272,19 @@ function renderPlansView(root = document, context = currentContext) {
 
   const isDelegate = context?.profile?.role === 'delegate';
   target.innerHTML = renderPaywallModalHTML(context?.subscription || null, { delegate: isDelegate });
+
+  const sub = context?.subscription || null;
+  const expiryLabel = formatBillingDate(sub?.expira_en);
+  if (!isDelegate && expiryLabel && ['pending_payment', 'trial'].includes(sub?.estado)) {
+    const planIncludes = target.querySelector('.cb-plan-includes');
+    planIncludes?.insertAdjacentHTML('beforebegin', `
+      <article class="panel cb-trial-summary">
+        <span class="eyebrow">${sub.estado === 'trial' ? 'Prueba activa' : 'Antes de entrar'}</span>
+        <h4>${sub.estado === 'trial' ? 'Tu prueba termina el' : 'Tu prueba de 14 días terminará el'} ${expiryLabel}</h4>
+        <p class="meta">No se te cobrará antes de esa fecha. Puedes cancelar antes de que termine la prueba y no se realizará el primer cobro.</p>
+      </article>
+    `);
+  }
 
   const header = target.querySelector('.panel-head');
   if (header && !isDelegate) {
@@ -322,6 +350,35 @@ function renderPlansView(root = document, context = currentContext) {
   }
 
   target.querySelector('#cb-paywall-logout-btn')?.classList.add('hidden');
+
+  if (!isDelegate && hasUser && sub?.stripe_subscription_id && ['trial', 'active'].includes(sub.estado)) {
+    const container = document.createElement('article');
+    container.className = 'panel cb-cancel-subscription';
+    const endDate = formatBillingDate(sub.expira_en);
+    container.innerHTML = sub.cancel_at_period_end
+      ? `<strong>Renovación cancelada</strong><p class="meta">Mantienes el acceso hasta ${endDate || 'el final del periodo actual'}. No se renovará automáticamente.</p>`
+      : `<strong>${sub.estado === 'trial' ? '¿No quieres continuar después de la prueba?' : 'Gestionar renovación'}</strong>
+         <p class="meta">${sub.estado === 'trial' ? `Puedes cancelar antes de ${endDate || 'que termine la prueba'} y no se realizará el primer cobro.` : 'Puedes cancelar la renovación y conservar el acceso hasta el final del periodo ya pagado.'}</p>
+         <button type="button" class="secondary compact" id="cb-cancel-subscription-btn">Cancelar renovación</button>
+         <p class="meta" id="cb-cancel-subscription-feedback" aria-live="polite"></p>`;
+    target.append(container);
+
+    const cancelButton = container.querySelector('#cb-cancel-subscription-btn');
+    cancelButton?.addEventListener('click', async () => {
+      if (!confirm('¿Quieres cancelar la renovación? Mantendrás el acceso hasta la fecha indicada.')) return;
+      cancelButton.disabled = true;
+      const feedback = container.querySelector('#cb-cancel-subscription-feedback');
+      if (feedback) feedback.textContent = 'Cancelando…';
+      try {
+        const result = await cancelSubscriptionAtPeriodEnd(currentClient);
+        if (feedback) feedback.textContent = result.message || 'Renovación cancelada.';
+        await refreshBillingState();
+      } catch (error) {
+        if (feedback) feedback.textContent = error.message || 'No se pudo cancelar la renovación.';
+        cancelButton.disabled = false;
+      }
+    });
+  }
 }
 
 function updateAccountBillingUI(root, context) {
