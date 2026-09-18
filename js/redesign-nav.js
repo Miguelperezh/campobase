@@ -103,13 +103,19 @@ export const MODULE_CONFIG = {
     label: 'Más',
     icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></svg>`,
     defaultView: 'tacticas',
-    views: ['tacticas', 'ajustes'],
+    views: ['tacticas', 'planes', 'ajustes'],
     subTabs: [
       {
         id: 'tacticas',
         label: 'Pizarra Táctica',
         desc: 'Pizarra táctica interactiva libre',
         icon: `<svg viewBox="0 0 24 24"><path d="m3 3 18 18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`,
+      },
+      {
+        id: 'planes',
+        label: 'Planes',
+        desc: 'Suscripción, pagos y códigos',
+        icon: `<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`,
       },
       {
         id: 'ajustes',
