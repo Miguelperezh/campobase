@@ -20,7 +20,18 @@ test('la recuperación fuerza app y service worker nuevos', async () => {
   ]);
   assert.match(html, /js\/app\.js\?v=2503/);
   assert.match(html, /js\/redesign-nav\.js\?v=2503/);
-  assert.match(app, /emergency-auth-restore-v3/);
-  assert.match(sw, /emergency-auth-restore-v3/);
+  assert.match(app, /emergency-auth-restore-v4/);
+  assert.match(sw, /emergency-auth-restore-v4/);
   assert.match(sw, /\.\/js\/app\.js\?v=2503/);
+});
+
+
+test('el PIN vuelve a pedirse al recargar y el desbloqueo SaaS de arranque se consume una sola vez', async () => {
+  const [app, auth] = await Promise.all([
+    projectFile('js/app.js'),
+    projectFile('js/saas-auth-ui-v2.js'),
+  ]);
+  assert.match(app, /sessionStorage\.removeItem\(SESSION_ROLE_KEY\)/);
+  assert.match(app, /Cada nueva carga debe volver a pedir PIN/);
+  assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*clearBrowserSessionActive\(\)/);
 });
