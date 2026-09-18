@@ -167,9 +167,9 @@ function ensurePanel(root = document) {
   panel.className = 'panel cb-delegate-account-panel';
   panel.innerHTML = `
     <div class="panel-head">
-      <span class="eyebrow">Mismo equipo</span>
+      <span class="eyebrow">Acceso del mismo equipo</span>
       <h3>Cuenta de delegado</h3>
-      <p class="meta">El delegado entra con su propia cuenta, comparte exclusivamente este equipo y solo ve las secciones que tú autorices.</p>
+      <p class="meta">Crea una cuenta independiente para tu delegado. Trabajará sobre este mismo equipo y tú decides exactamente qué partes de CampoBase puede ver.</p>
     </div>
     <div id="cb-delegate-account-content"><p class="meta">Comprobando…</p></div>
   `;
@@ -190,11 +190,11 @@ async function renderDelegatePanel(root = document) {
     content.innerHTML = `
       <div class="cb-delegate-access-preview">
         <div class="cb-delegate-preview-copy">
-          <h4>Permisos del delegado</h4>
-          <p class="meta">Esta es la lista de vistas que podrás activar o desactivar. La vista de delegado del partido es la base y Ajustes nunca se concede.</p>
+          <h4>¿Qué puede ver el delegado?</h4>
+          <p class="meta">La vista de delegado del partido siempre está incluida. El resto de permisos se configuran aquí. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
         </div>
         <div class="cb-delegate-permissions-grid">${permissionMarkup(['delegado'], { disabled: true })}</div>
-        <p class="meta cb-delegate-login-note">Inicia sesión como Administrador o Entrenador para introducir el correo del delegado y cambiar estos permisos.</p>
+        <p class="meta cb-delegate-login-note"><strong>Gestión:</strong> entra como Administrador o Entrenador para indicar el nombre y correo del delegado y activar o quitar permisos.</p>
       </div>
     `;
     return;
