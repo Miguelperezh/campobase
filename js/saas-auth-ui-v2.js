@@ -195,22 +195,29 @@ function installStyles() {
     .cb-auth-plan-card.featured{border-width:2px;border-color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
     .cb-auth-plan-price{font-size:1.35rem;margin:.1rem 0}
     .cb-auth-plan-price strong{font-size:1.65rem}
-    .cb-plan-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem .8rem;padding:0;margin:.7rem 0 0;list-style:none}
-    .cb-plan-features li{display:flex;align-items:flex-start;gap:.45rem;min-width:0}
+    #saas-public-plans .cb-feature-groups{grid-template-columns:1fr!important}
+    #saas-public-plans .cb-plan-features{grid-template-columns:1fr!important}
+    #saas-public-plans .cb-auth-plans-grid{grid-template-columns:1fr!important}
+    #saas-public-plans .cb-feature-group{min-width:0}
+    #saas-public-plans .cb-plan-features li span:last-child{word-break:normal!important;overflow-wrap:normal!important;hyphens:none!important}
+    .cb-plan-features{display:grid;grid-template-columns:1fr;gap:.42rem;padding:0;margin:.7rem 0 0;list-style:none}
+    .cb-plan-features li{display:flex;align-items:flex-start;gap:.45rem;min-width:0;line-height:1.4;word-break:normal;overflow-wrap:normal;hyphens:none}
     .cb-plan-features li>span:first-child{font-weight:900;color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
     .cb-account-plan-choice{display:grid;gap:.8rem;padding:.9rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
     .cb-account-plan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
     .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:2px solid color-mix(in srgb,var(--cb-brand,#173f35) 40%,var(--line,#e2e8f0));border-radius:14px;background:color-mix(in srgb,var(--card,#fff) 92%,var(--cb-brand,#173f35) 8%)}
-    .cb-access-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
-    .cb-access-steps span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:66px;padding:.65rem;border-radius:12px;background:var(--card,#fff);font-weight:800;border:1px solid var(--line,#e2e8f0)}
+    .cb-access-flow{display:grid;gap:.55rem;margin:0;padding:0;list-style:none}
+    .cb-access-flow li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:.7rem;align-items:start;padding:.72rem .8rem;border:1px solid var(--line,#e2e8f0);border-radius:12px;background:var(--card,#fff)}
+    .cb-access-flow b,.cb-access-flow small{display:block}.cb-access-flow small{margin-top:.16rem;line-height:1.35;color:var(--muted,#64748b)}
+    .cb-access-number{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;background:var(--cb-brand,var(--cb-pitch-600,#173f35));color:#fff;font-weight:900}
+    .cb-access-blocked{margin:0;font-weight:800;line-height:1.4}
     @media(max-width:900px){
       #saas-public-plans .cb-feature-groups{grid-template-columns:1fr}
-      #saas-public-plans .cb-plan-features{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .cb-access-steps{grid-template-columns:1fr}
+      #saas-public-plans .cb-plan-features{grid-template-columns:1fr}
     }
     @media(max-width:700px){
       #auth-dialog.auth-dialog{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:1rem}
-      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features,.cb-access-steps{grid-template-columns:1fr}
+      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features{grid-template-columns:1fr}
       .cb-auth-actions>button{flex-basis:100%}
     }
   `;
@@ -306,12 +313,12 @@ function shellMarkup() {
         </article>
         <div class="cb-access-rule">
           <strong>Acceso a CampoBase</strong>
-          <div class="cb-access-steps">
-            <span>1️⃣ Creas tu cuenta</span>
-            <span>2️⃣ Usas CampoBase gratis durante 14 días</span>
-            <span>3️⃣ Después necesitas pagar un plan o usar un código de regalo válido</span>
-          </div>
-          <p class="meta">Sin prueba activa, sin código gratuito válido y sin suscripción pagada, no se permite entrar a los datos del equipo.</p>
+          <ol class="cb-access-flow">
+            <li><span class="cb-access-number">1</span><div><b>Crea tu cuenta</b><small>Empiezas con 14 días de acceso completo gratis.</small></div></li>
+            <li><span class="cb-access-number">2</span><div><b>Usa la prueba</b><small>Durante esos 14 días puedes utilizar todas las funciones.</small></div></li>
+            <li><span class="cb-access-number">3</span><div><b>Después de la prueba</b><small>Necesitas un plan mensual/anual o un código de regalo válido.</small></div></li>
+          </ol>
+          <p class="cb-access-blocked">Sin prueba activa, código gratuito válido o suscripción pagada, no se puede entrar a los datos del equipo.</p>
         </div>
       </section>
 
