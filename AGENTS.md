@@ -1230,3 +1230,54 @@ Solo conceden acceso:
 
 El delegado sigue heredando el acceso del titular y nunca configura un pago propio.
 
+---
+
+# 19. Prueba gratuita — contador visible y cancelación en Ajustes
+
+Esta norma completa el flujo validado de la Fase 4.
+
+## 19.1 Dónde se muestra el contador
+
+Mientras una cuenta principal esté en estado `trial` activo:
+- mostrar un contador compacto en **Hoy**;
+- mostrar el detalle completo en **Ajustes → Mi cuenta y suscripción**;
+- indicar siempre la fecha exacta de fin de prueba;
+- no usar un contador de segundos ni una animación invasiva.
+
+Formato recomendado:
+- **Quedan X días**
+- **Termina el [fecha exacta]**
+- **No se te cobrará antes de esa fecha**
+
+El contador se deriva de `suscripciones.expira_en`, no de una fecha inventada en cliente.
+
+## 19.2 Dónde se cancela
+
+La acción **Cancelar renovación** no pertenece a la pantalla comercial de Planes.
+
+Debe estar en:
+
+**Ajustes → Mi cuenta y suscripción**
+
+Durante la prueba, el texto debe ser todavía más claro:
+
+**Cancelar antes del primer cobro**
+
+Al cancelar durante la prueba:
+- mantener acceso hasta la fecha de fin;
+- marcar `cancel_at_period_end`;
+- no realizar el primer cobro;
+- mostrar la confirmación y la fecha hasta la que mantiene acceso.
+
+Después de pagar:
+- la misma zona de Ajustes permite cancelar la renovación;
+- mantiene acceso hasta el final del periodo pagado.
+
+## 19.3 Planes es comercial; Ajustes es gestión
+
+Separación obligatoria:
+- **Planes**: precios, funciones, elección mensual/anual, códigos y contratación;
+- **Ajustes → Mi cuenta y suscripción**: estado real, fecha de prueba/periodo, contador, renovación y cancelación.
+
+No mezclar ambas responsabilidades en una misma pantalla salvo que sea necesario por el paywall previo al acceso.
+
