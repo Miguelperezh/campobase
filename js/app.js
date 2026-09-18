@@ -3750,8 +3750,11 @@ async function restoreSessionRole() {
     return true;
   }
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
-  applyRole(role);
-  return true;
+  // El acceso local no se restaura automáticamente tras recargar.
+  // Cada nueva carga debe volver a pedir PIN, salvo el desbloqueo único
+  // inmediatamente posterior a un login SaaS correcto.
+  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistida. */ }
+  return false;
 }
 
 function showAuth() {
@@ -5549,7 +5552,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v3').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v4').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
