@@ -1,4 +1,4 @@
-import { buildMutation, mergeCloudRecord, reconcileCloudSnapshot } from './sync-core.js';
+import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, userDatabaseName } from './auth-manager.js';
 
@@ -143,14 +143,16 @@ export async function put(store, value) {
     notifyDataChanged(store, 'upsert');
     return value;
   }
+  const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
+  const recordToStore = mergeLocalRecordForWrite(store, existing, value);
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  transaction.objectStore(store).put(value);
-  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', value));
+  transaction.objectStore(store).put(recordToStore);
+  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
   await flushSyncQueue().catch(() => false);
   notifyDataChanged(store, 'upsert');
-  return value;
+  return recordToStore;
 }
 
 export async function putBatch(recordsByStore) {
@@ -166,10 +168,22 @@ export async function putBatch(recordsByStore) {
     notifyDataChanged(storeNames, 'batch');
     return;
   }
-  const db = await openDatabase();
-  const transaction = db.transaction([...storeNames, SYNC_QUEUE], 'readwrite');
+  const normalizedRecordsByStore = {};
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
+    if (storeName !== 'players') {
+      normalizedRecordsByStore[storeName] = records;
+      continue;
+    }
+    normalizedRecordsByStore[storeName] = await Promise.all(records.map(async (record) => {
+      const existing = record?.id ? await localGetOne('players', record.id) : null;
+      return mergeLocalRecordForWrite('players', existing, record);
+    }));
+  }
+
+  const db = await openDatabase();
+  const transaction = db.transaction([...storeNames, SYNC_QUEUE], 'readwrite');
+  for (const [storeName, records] of Object.entries(normalizedRecordsByStore)) {
     for (const record of records) {
       transaction.objectStore(storeName).put(record);
       transaction.objectStore(SYNC_QUEUE).put(buildMutation(storeName, 'upsert', record));
@@ -245,6 +259,19 @@ export async function syncFromCloud() {
         await queueInitialRecords(store, localRecords);
         await flushSyncQueue();
         continue;
+      }
+      if (store === 'players' && localRecords.length && snapshot.records.length) {
+        const localById = new Map(localRecords.map((record) => [record.id, record]));
+        const repaired = [];
+        snapshot.records = snapshot.records.map((cloudRecord) => {
+          const merged = mergeCloudRecord('players', localById.get(cloudRecord.id), cloudRecord);
+          if (JSON.stringify(merged) !== JSON.stringify(cloudRecord)) repaired.push(merged);
+          return merged;
+        });
+        if (repaired.length) {
+          await queueInitialRecords('players', repaired);
+          await flushSyncQueue();
+        }
       }
       if (store === 'settings') {
         const localMain = localRecords.find(({ id }) => id === 'main');
