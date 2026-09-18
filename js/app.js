@@ -2671,8 +2671,9 @@ function showSessionDetail(sessionId) {
       ${session.blocks.map((block, idx) => {
         const validated = findValidatedExercise(block.exerciseId);
         const name = validated?.nombre || exerciseName(block.exerciseId);
-        const previewImg = validated?.media?.preview || '';
-        const videoSrc = validated?.media?.video || validated?.video || '';
+        const previewImg = validated?.media?.preview || validated?.preview || '';
+        const graphicPreviewVideo = validated?.preview_video || validated?.video_ejercicio || validated?.media?.video || validated?.media?.mp4 || '';
+        const videoSrc = validated?.media?.video || validated?.video_ejercicio || '';
         const category = validated?.categoria || (block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final');
         return `<details name="session-detail-accordion" class="session-block-card session-block-accordion panel" data-block-index="${idx}">
           <summary class="session-block-accordion-summary">
@@ -2691,7 +2692,11 @@ function showSessionDetail(sessionId) {
           </summary>
           <div class="session-block-accordion-body">
             <div class="session-block-card-main">
-              ${previewImg ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>` : ''}
+              ${previewImg
+                ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy"></div>`
+                : graphicPreviewVideo
+                  ? `<div class="session-block-preview"><video class="session-block-preview-video" muted playsinline preload="metadata" src="${escapeHtml(graphicPreviewVideo)}#t=0.05" aria-label="Vista previa de ${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none"></video></div>`
+                  : ''}
               <div class="session-block-card-info">
                 <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
                 ${block.notes ? `<p class="session-block-notes"><strong>Consignas:</strong> ${escapeHtml(block.notes)}</p>` : ''}
@@ -5541,7 +5546,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2507-mis-category-auth-hotfix-v2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2507-mis-category-auth-hotfix-v2-media-sessions-v1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {

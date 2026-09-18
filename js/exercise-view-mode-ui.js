@@ -41,11 +41,17 @@ function installStyles() {
       background: #061c14 !important;
     }
 
-    .exercise-preview-img {
+    .exercise-preview-img,
+    .exercise-preview-static-video {
       width: 100% !important;
       height: 100% !important;
       display: block !important;
       object-fit: contain !important;
+    }
+
+    .exercise-preview-static-video,
+    .card-preview-static-video {
+      pointer-events: none !important;
     }
 
     .exercise-media-human .video-item,
@@ -142,6 +148,24 @@ function updateModeHelp(sheet) {
   }
 }
 
+function freezePreviewVideo(video) {
+  if (!video || video.dataset.cbPreviewVideoGuard === '1') return;
+  video.dataset.cbPreviewVideoGuard = '1';
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'metadata';
+
+  const freeze = () => {
+    try {
+      if (video.currentTime < 0.04) video.currentTime = 0.05;
+      video.pause();
+    } catch {}
+  };
+  video.addEventListener('loadeddata', freeze);
+  video.addEventListener('seeked', () => video.pause());
+  video.addEventListener('play', () => video.pause());
+}
+
 function guardPreviewImage(img) {
   if (!img || img.dataset.cbPreviewGuard === '1') return;
   img.dataset.cbPreviewGuard = '1';
@@ -209,6 +233,9 @@ function scan(root = document) {
 
   if (root.matches?.('[data-preview-image="1"], .exercise-preview-img')) guardPreviewImage(root);
   root.querySelectorAll?.('[data-preview-image="1"], .exercise-preview-img').forEach(guardPreviewImage);
+
+  if (root.matches?.('.exercise-preview-static-video, .card-preview-static-video')) freezePreviewVideo(root);
+  root.querySelectorAll?.('.exercise-preview-static-video, .card-preview-static-video').forEach(freezePreviewVideo);
 }
 
 function install() {

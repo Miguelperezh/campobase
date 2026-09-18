@@ -341,8 +341,29 @@ function captureCoverFromVideo(img) {
   video.load();
 }
 
+function bindStaticPreviewVideos(root) {
+  root.querySelectorAll('.sp-cover-static-video').forEach((video) => {
+    if (video.dataset.spStaticPreviewInit === '1') return;
+    video.dataset.spStaticPreviewInit = '1';
+    video.muted = true;
+    video.playsInline = true;
+    const freeze = () => {
+      try {
+        if (video.currentTime < 0.04) video.currentTime = 0.05;
+        video.pause();
+      } catch {}
+    };
+    video.addEventListener('loadeddata', freeze);
+    video.addEventListener('seeked', () => video.pause());
+    video.addEventListener('play', () => video.pause());
+  });
+}
+
 function bindCoverFallbacks(root) {
-  root.querySelectorAll('.sp-cover img[data-sp-cover-video]').forEach((img) => {
+  root.querySelectorAll('.sp-cover img[data-sp-capture-cover="1"][data-sp-cover-video]').forEach((img) => {
+    captureCoverFromVideo(img);
+  });
+  root.querySelectorAll('.sp-cover img[data-sp-cover-video]:not([data-sp-capture-cover="1"])').forEach((img) => {
     img.addEventListener('error', () => captureCoverFromVideo(img), { once: true });
   });
   root.querySelectorAll('.sp-cover img:not([data-sp-cover-video])').forEach((img) => {
@@ -378,9 +399,12 @@ function hasHumanVideo(item) {
 function card(item, recommended) {
   const favorite = favorites.has(item.id);
   const hasRealVideo = hasHumanVideo(item);
+  const graphicPreviewVideo = resolveHostedVideoUrl(item.animationVideo || '');
   const image = item.cover
-    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(item.animationVideo)}" alt="Portada de ${esc(item.name)}">`
-    : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
+    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(graphicPreviewVideo)}" alt="Portada de ${esc(item.name)}">`
+    : graphicPreviewVideo
+      ? `<img loading="lazy" decoding="async" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-capture-cover="1" alt="Portada de ${esc(item.name)}">`
+      : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
 
   return `<article class="sp-card ${recommended.has(item.id) ? 'recommended' : ''}">
     <div class="sp-cover">
@@ -730,6 +754,7 @@ function styles() {
 .sp-advanced>summary{cursor:pointer;color:var(--muted);font-size:.75rem;font-weight:700}
 .sp-advanced .session-selected-blocks{margin-top:.5rem;max-height:38vh;overflow:auto;box-shadow:none}
 .sp-source-hidden{display:none!important}
+.sp-cover-static-video{width:100%;height:100%;display:block;object-fit:cover;pointer-events:none;background:#061c14}
 .sp-library-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:.7rem}
 .sp-library-head h3,.sp-library-head p{margin:0}
 .sp-filters-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem;margin:.55rem 0}
