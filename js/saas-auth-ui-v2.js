@@ -13,6 +13,7 @@ import {
   setBoundSaasUserId,
   updatePassword,
 } from './auth-manager.js';
+import { PLAN_PRICES, planFeaturesHTML } from './plan-catalog.js';
 
 let initialized = false;
 let localPinMode = false;
@@ -21,11 +22,13 @@ let pendingProfile = null;
 let pendingRememberDevice = false;
 let pendingDevicePin = '';
 let pendingPromoFeedback = '';
+let pendingPreferredPlan = '';
 let recoveryMode = false;
 
 const REMEMBERED_ACCOUNT_KEY = 'campobase.rememberedAccount.v1';
 const ACTIVE_BROWSER_SESSION_KEY = 'campobase.saasActiveBrowserSession';
 const PENDING_PROMO_KEY = 'campobase.pendingPromo.v1';
+const PENDING_PLAN_KEY = 'campobase.pendingPlan.v1';
 const $ = (selector, root = document) => root.querySelector(selector);
 
 function readJson(storage, key) {
@@ -119,6 +122,28 @@ function savePendingPromo(email, code) {
   writeJson(localStorage, PENDING_PROMO_KEY, { email: String(email || '').trim().toLocaleLowerCase('es'), code: clean, savedAt: Date.now() });
 }
 
+function pendingPlanFor(email = '') {
+  const item = readJson(localStorage, PENDING_PLAN_KEY);
+  if (!item?.plan || !['monthly', 'annual'].includes(item.plan)) return '';
+  if (item.email && email && String(item.email).toLocaleLowerCase('es') !== String(email).toLocaleLowerCase('es')) return '';
+  return item.plan;
+}
+
+function savePendingPlan(email, plan) {
+  if (!['monthly', 'annual'].includes(plan)) return;
+  writeJson(localStorage, PENDING_PLAN_KEY, {
+    email: String(email || '').trim().toLocaleLowerCase('es'),
+    plan,
+    savedAt: Date.now(),
+  });
+}
+
+function clearPendingPlan() {
+  removeStored(localStorage, PENDING_PLAN_KEY);
+  pendingPreferredPlan = '';
+}
+
+
 async function redeemPromoIfPresent(code) {
   const clean = String(code || '').trim().toUpperCase();
   if (!clean) return '';
@@ -141,7 +166,7 @@ function installStyles() {
     #auth-dialog.auth-dialog{width:min(96vw,720px);max-height:min(94vh,820px);overflow:auto}
     #saas-auth-shell{display:grid;gap:1rem;width:100%}
     #saas-auth-shell.hidden,#auth-form.hidden{display:none!important}
-    .cb-auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:0 0 .25rem}
+    .cb-auth-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:0 0 .25rem}
     .cb-auth-tab{min-height:44px;border-radius:12px}
     .cb-auth-tab.active{background:var(--cb-brand,var(--cb-pitch-600,#173f35));color:#fff;border-color:transparent}
     .cb-auth-pane{display:grid;gap:.9rem;width:100%}
@@ -164,9 +189,20 @@ function installStyles() {
     .cb-remembered-card{display:grid;gap:.85rem;padding:1rem;border:1px solid color-mix(in srgb,var(--cb-brand,#173f35) 28%,var(--line,#e2e8f0));border-radius:15px;background:var(--card,#fff)}
     .cb-remembered-account{font-weight:800;font-size:1.02rem;overflow-wrap:anywhere}
     .cb-promo-optional{padding:.75rem;border:1px dashed color-mix(in srgb,var(--cb-brand,#173f35) 32%,var(--line,#e2e8f0));border-radius:12px}
+    .cb-auth-plans-intro{padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
+    .cb-auth-plans-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+    .cb-auth-plan-card{display:grid;gap:.55rem;padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
+    .cb-auth-plan-card.featured{border-width:2px;border-color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
+    .cb-auth-plan-price{font-size:1.35rem;margin:.1rem 0}
+    .cb-auth-plan-price strong{font-size:1.65rem}
+    .cb-plan-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem .8rem;padding:0;margin:.7rem 0 0;list-style:none}
+    .cb-plan-features li{display:flex;align-items:flex-start;gap:.45rem;min-width:0}
+    .cb-plan-features li>span:first-child{font-weight:900;color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
+    .cb-account-plan-choice{display:grid;gap:.8rem;padding:.9rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
+    .cb-account-plan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
     @media(max-width:700px){
       #auth-dialog.auth-dialog{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:1rem}
-      .cb-auth-pane .form-row,.cb-auth-inline{grid-template-columns:1fr}
+      .cb-auth-pane .form-row,.cb-auth-inline,.cb-auth-plans-grid,.cb-account-plan-actions,.cb-plan-features{grid-template-columns:1fr}
       .cb-auth-actions>button{flex-basis:100%}
     }
   `;
@@ -192,6 +228,7 @@ function shellMarkup() {
       <div class="cb-auth-tabs" role="tablist" aria-label="Acceso">
         <button type="button" id="saas-tab-login" class="secondary cb-auth-tab active" role="tab" aria-selected="true">Iniciar sesión</button>
         <button type="button" id="saas-tab-register" class="secondary cb-auth-tab" role="tab" aria-selected="false">Crear cuenta</button>
+        <button type="button" id="saas-tab-plans" class="secondary cb-auth-tab" role="tab" aria-selected="false">Planes</button>
       </div>
 
       <form id="saas-login-form" class="cb-auth-pane">
@@ -235,6 +272,33 @@ function shellMarkup() {
         <div class="cb-auth-actions"><button class="primary" type="submit">Crear cuenta</button></div>
       </form>
 
+      <section id="saas-public-plans" class="cb-auth-pane hidden" aria-labelledby="saas-plans-title">
+        <div class="cb-auth-plans-intro">
+          <h2 id="saas-plans-title">Planes CampoBase</h2>
+          <p class="meta">Puedes consultar precios y todo lo incluido antes de crear tu cuenta. El pago se asocia después a una cuenta identificada para que quede ligado al equipo correcto.</p>
+        </div>
+        <div class="cb-auth-plans-grid">
+          <article class="cb-auth-plan-card">
+            <h3>Plan mensual</h3>
+            <p class="cb-auth-plan-price"><strong>${PLAN_PRICES.monthly.shortPrice}</strong> / mes</p>
+            <p class="meta">Mismas funciones Pro, pago mes a mes.</p>
+            <button type="button" class="primary cb-public-plan-register" data-plan="monthly">Crear cuenta · Mensual</button>
+          </article>
+          <article class="cb-auth-plan-card featured">
+            <span class="eyebrow">Mejor precio anual</span>
+            <h3>Plan anual</h3>
+            <p class="cb-auth-plan-price"><strong>${PLAN_PRICES.annual.shortPrice}</strong> / año</p>
+            <p class="meta">Todas las funciones durante 12 meses.</p>
+            <button type="button" class="primary cb-public-plan-register" data-plan="annual">Crear cuenta · Anual</button>
+          </article>
+        </div>
+        <article class="cb-auth-plans-intro">
+          <h3>Todo CampoBase incluido</h3>
+          ${planFeaturesHTML()}
+        </article>
+        <p class="meta">La prueba Pro inicial de 14 días se mantiene mientras siga vigente en el alta. Si la prueba termina sin un plan activo, tendrás que elegir mensual o anual antes de acceder a los datos del equipo.</p>
+      </section>
+
       <section id="saas-remembered-pane" class="cb-auth-pane hidden cb-remembered-card" aria-live="polite">
         <h2>Cuenta recordada</h2>
         <p id="saas-remembered-label" class="cb-remembered-account"></p>
@@ -253,6 +317,17 @@ function shellMarkup() {
         <h2>Cuenta preparada</h2>
         <p id="saas-account-label" class="meta"></p>
         <p id="saas-account-promo-message" class="cb-auth-message" role="status"></p>
+        <div id="saas-account-plan-choice" class="cb-account-plan-choice hidden">
+          <div>
+            <strong id="saas-account-plan-status">Comprobando plan…</strong>
+            <p id="saas-account-plan-help" class="meta"></p>
+          </div>
+          <div class="cb-account-plan-actions">
+            <button type="button" class="secondary saas-account-checkout" data-plan="monthly">Mensual · ${PLAN_PRICES.monthly.shortPrice}</button>
+            <button type="button" class="primary saas-account-checkout" data-plan="annual">Anual · ${PLAN_PRICES.annual.shortPrice}</button>
+          </div>
+          <p id="saas-account-plan-message" class="cb-auth-message" role="status"></p>
+        </div>
         <div id="saas-claim-offer" class="cb-auth-claim hidden">
           <strong>¿Ya usabas esta aplicación con tus datos actuales?</strong>
           <p class="meta">Puedes vincularlos a esta cuenta introduciendo tu PIN actual. Si esta es una cuenta nueva, entra normalmente.</p>
@@ -309,6 +384,7 @@ function showPane(name) {
   const panes = {
     login: $('#saas-login-form'),
     register: $('#saas-register-form'),
+    plans: $('#saas-public-plans'),
     remembered: $('#saas-remembered-pane'),
     choice: $('#saas-account-choice'),
     password: $('#saas-password-update-form'),
@@ -316,8 +392,10 @@ function showPane(name) {
   Object.entries(panes).forEach(([key, pane]) => pane?.classList.toggle('hidden', key !== name));
   $('#saas-tab-login')?.classList.toggle('active', name === 'login');
   $('#saas-tab-register')?.classList.toggle('active', name === 'register');
+  $('#saas-tab-plans')?.classList.toggle('active', name === 'plans');
   $('#saas-tab-login')?.setAttribute('aria-selected', String(name === 'login'));
   $('#saas-tab-register')?.setAttribute('aria-selected', String(name === 'register'));
+  $('#saas-tab-plans')?.setAttribute('aria-selected', String(name === 'plans'));
   const tabs = $('.cb-auth-tabs');
   if (tabs) tabs.classList.toggle('hidden', ['remembered', 'choice', 'password'].includes(name));
 }
@@ -495,6 +573,15 @@ function wireRememberToggle(formSelector, checkboxSelector, wrapSelector) {
 function bindEvents(client) {
   $('#saas-tab-login')?.addEventListener('click', () => { showPane('login'); prefillRememberedIdentifier(); });
   $('#saas-tab-register')?.addEventListener('click', () => showPane('register'));
+  $('#saas-tab-plans')?.addEventListener('click', () => showPane('plans'));
+  document.querySelectorAll('.cb-public-plan-register').forEach((button) => {
+    button.addEventListener('click', () => {
+      pendingPreferredPlan = button.dataset.plan || '';
+      showPane('register');
+      const form = $('#saas-register-form');
+      if (form) form.dataset.preferredPlan = pendingPreferredPlan;
+    });
+  });
   $('#saas-local-pin-btn')?.addEventListener('click', showLocalPin);
   $('#saas-local-back')?.addEventListener('click', () => { showPane('login'); prefillRememberedIdentifier(); });
   $('#saas-demo-btn')?.addEventListener('click', () => $('#auth-demo-btn')?.click());
@@ -518,6 +605,7 @@ function bindEvents(client) {
       pendingDevicePin = String(form.elements.devicePin?.value || '').trim();
       if (pendingRememberDevice && !/^\d{4,8}$/.test(pendingDevicePin)) throw new Error('Crea un PIN de 4 a 8 cifras para recordar esta cuenta en este dispositivo.');
       const data = await loginWithEmailOrUsername(client, form.elements.identifier.value, form.elements.password.value);
+      pendingPreferredPlan = pendingPlanFor(data?.user?.email || '') || pendingPreferredPlan;
       const storedPromo = pendingPromoFor(data?.user?.email || '');
       pendingPromoFeedback = storedPromo ? await redeemPromoIfPresent(storedPromo) : '';
       setMessage('#saas-login-message', '');
@@ -536,6 +624,7 @@ function bindEvents(client) {
       pendingDevicePin = String(form.elements.devicePin?.value || '').trim();
       if (pendingRememberDevice && !/^\d{4,8}$/.test(pendingDevicePin)) throw new Error('Crea un PIN de 4 a 8 cifras para recordar esta cuenta en este dispositivo.');
       const promoCode = String(form.elements.promoCode?.value || '').trim().toUpperCase();
+      pendingPreferredPlan = form.dataset.preferredPlan || pendingPreferredPlan || '';
       const data = await registerCoachAccount(client, {
         fullName: form.elements.fullName.value,
         clubName: form.elements.clubName.value,
@@ -549,6 +638,7 @@ function bindEvents(client) {
         await prepareSignedInChoice(client, data);
       } else {
         if (promoCode) savePendingPromo(form.elements.email.value, promoCode);
+        if (pendingPreferredPlan) savePendingPlan(form.elements.email.value, pendingPreferredPlan);
         setMessage('#saas-register-message', promoCode
           ? 'Cuenta creada. Confirma el correo e inicia sesión; el código se aplicará entonces.'
           : 'Cuenta creada. Revisa tu correo para confirmar la cuenta y después inicia sesión.', true);
@@ -606,6 +696,7 @@ function bindEvents(client) {
     pendingRememberDevice = false;
     pendingDevicePin = '';
     pendingPromoFeedback = '';
+    pendingPreferredPlan = '';
     clearBoundSaasUserId();
     clearBrowserSessionActive();
     showPane('login');
