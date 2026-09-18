@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
 import { EJERCICIOS_NUEVO_FORMATO, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
+import { renderExerciseGridCard } from '../js/ejercicio-viewer.js';
 
 test('Solo con vídeo considera el vídeo humano y no el MP4 gráfico principal', () => {
   const pool = [
@@ -75,4 +76,68 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
   assert.deepEqual(f7.slice(0, 16).map((item) => item.id), NUEVOS_EJERCICIOS_IDS);
   assert.deepEqual(f11.slice(0, 16).map((item) => item.id), NUEVOS_EJERCICIOS_IDS);
+});
+
+
+test('Solo con vídeo no confunde un MP4 gráfico persistido de un ejercicio validado con vídeo humano', () => {
+  const pool = [
+    {
+      id: 'validado-antiguo-solo-grafico',
+      name: 'Validado antiguo',
+      category: 'Finalización',
+      formato_juego: 'futbol_11',
+      validated: true,
+      source: 'validado',
+      video: 'https://example.test/ejercicio.mp4',
+    },
+    {
+      id: 'personal-antiguo-con-video',
+      name: 'Personal con vídeo',
+      category: 'Finalización',
+      formato_juego: 'futbol_11',
+      source: 'personal',
+      video: 'https://example.test/video-humano.mp4',
+    },
+    {
+      id: 'validado-con-humano-explicito',
+      name: 'Validado con muestra',
+      category: 'Finalización',
+      formato_juego: 'futbol_11',
+      validated: true,
+      source: 'validado',
+      video: 'https://example.test/ejercicio.mp4',
+      video_muestra: 'https://example.test/video-muestra.mp4',
+    },
+  ];
+
+  const filtered = filterExercises(pool, { video: true });
+  assert.deepEqual(filtered.map(({ id }) => id), [
+    'personal-antiguo-con-video',
+    'validado-con-humano-explicito',
+  ]);
+});
+
+test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categoría, jugadores y duración', () => {
+  const card = renderExerciseGridCard({
+    id: 'nuevo-prueba-visual',
+    _nuevo_formato: true,
+    nombre: 'Prueba visual',
+    categoria: 'Finalización',
+    etiquetas: ['Finalización', 'Tiro'],
+    datos_rapidos: {
+      jugadores: '15 / 16-22 jugadores',
+      duracion: '8-10 min. / 10-12 min.',
+      material: 'Balones',
+    },
+    media: {
+      preview: 'https://example.test/storage/v1/object/public/ejercicio-previews/nuevo/preview.png',
+    },
+    video: 'https://example.test/video-humano.mp4',
+  });
+
+  assert.doesNotMatch(card, /ejercicio-previews/);
+  assert.match(card, /card-preview-video/);
+  assert.equal((card.match(/<span class="pill">Finalización<\/span>/g) || []).length, 1);
+  assert.match(card, /15-22 jugadores/);
+  assert.match(card, /8-12 min aprox\./);
 });
