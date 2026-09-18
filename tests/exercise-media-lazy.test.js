@@ -13,12 +13,15 @@ function mp4Path(item) {
   return anim.mp4 || String(anim.gif || '').replace(/\.gif$/i, '.mp4');
 }
 
-test('todas las demostraciones validadas tienen un MP4 disponible', async () => {
+test('las demostraciones validadas no anuncian MP4 inexistentes', async () => {
   const missing = [];
+  const intentionallyUnavailable = new Set([
+    'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION',
+  ]);
   for (const item of EJERCICIOS_VALIDADOS) {
     const path = mp4Path(item);
     if (!path) {
-      missing.push(`${item.id}: sin ruta MP4`);
+      if (!intentionallyUnavailable.has(item.id)) missing.push(`${item.id}: sin ruta MP4`);
       continue;
     }
     if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -30,7 +33,7 @@ test('todas las demostraciones validadas tienen un MP4 disponible', async () => 
       missing.push(`${item.id}: ${path}`);
     }
   }
-  assert.deepEqual(missing, [], `Faltan MP4 para:\n${missing.join('\n')}`);
+  assert.deepEqual(missing, [], `Faltan MP4 inesperadamente para:\n${missing.join('\n')}`);
 });
 
 test('las demostraciones de Ejercicios no reciben src ni preload auto al construir la biblioteca', async () => {

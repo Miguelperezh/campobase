@@ -74,10 +74,22 @@ test('los 16 nuevos se muestran limpios: sin categoría duplicada, sin barras F7
     assert.equal(String(exercise.datos_rapidos?.jugadores || '').includes('/'), false, `${exercise.id}: jugadores mezclados F7/F11`);
     assert.equal(String(exercise.datos_rapidos?.duracion || '').includes('/'), false, `${exercise.id}: duración mezclada F7/F11`);
     assert.equal(exercise.media?.preview, '', `${exercise.id}: no debe apuntar al bucket inexistente de previews`);
-    assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano`);
-    assert.equal(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: el reproductor debe tener un vídeo válido mientras se conserva la ruta gráfica original`);
+    if (exercise.id === 'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION') {
+      assert.equal(exercise.video_muestra_humanos, '', `${exercise.id}: no debe usar un vídeo humano parecido o incorrecto`);
+      assert.equal(exercise.media?.video, '', `${exercise.id}: no debe apuntar a un MP4 no publicado`);
+    } else {
+      assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano publicado`);
+      assert.equal(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: el reproductor temporal debe usar el vídeo humano confirmado`);
+    }
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
   }
+});
+
+test('de los 16 nuevos, solo 15 anuncian vídeo humano porque uno aún no está publicado', () => {
+  const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
+  const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
+  assert.equal(humanIds.length, 15);
+  assert.equal(humanIds.includes('CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION'), false);
 });
 
 test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 16 nuevos arriba cuando correspondan', () => {

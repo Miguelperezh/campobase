@@ -75,7 +75,9 @@ function normalizeNewExercise(exercise) {
     media: {
       ...originalMedia,
       preview: '',
-      video: humanVideo || String(originalMedia.video || '').trim(),
+      // Los MP4 gráficos nuevos aún no están publicados en Storage.
+      // Nunca apuntar a una ruta 404: mientras tanto solo se usa el vídeo humano confirmado.
+      video: humanVideo,
     },
     video: humanVideo,
     video_muestra_humanos: humanVideo,
