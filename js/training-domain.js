@@ -4,18 +4,27 @@ export * from './training-domain-base.js';
 import { filterExercises as filterExercisesBase, normalizeFormatoJuego } from './training-domain-base.js';
 
 function hasHumanVideo(item) {
-  // Los ejercicios mapeados por ejercicios-validados.js llevan este dato explícito,
-  // evitando confundir el MP4 gráfico principal con el vídeo humano de muestra.
+  // Los ejercicios mapeados por ejercicios-validados.js llevan este dato explícito.
+  // Es la fuente prioritaria porque separa el MP4 gráfico del vídeo humano.
   if (typeof item?.hasHumanVideo === 'boolean') return item.hasHumanVideo;
-  return Boolean(
+
+  const explicitHumanVideo = Boolean(
     item?.video_muestra
     || item?.videoMuestra
+    || item?.video_muestra_humanos
     || item?.video_muestra_url
     || item?.video_humano
     || item?.video_humanos
-    // Compatibilidad con ejercicios legacy/personales donde `video` sí era el vídeo real.
-    || item?.video
   );
+  if (explicitHumanVideo) return true;
+
+  // Registros validados antiguos podían guardar en `video` el MP4 gráfico.
+  // Nunca se debe interpretar ese `video` como vídeo humano por defecto.
+  if (item?.validated === true || item?.source === 'validado') return false;
+
+  // Compatibilidad exclusivamente para ejercicios personales/legacy,
+  // donde `video` sí representa un vídeo real subido por el entrenador.
+  return Boolean(item?.video);
 }
 
 export function filterExercises(exercises, filters = {}) {
