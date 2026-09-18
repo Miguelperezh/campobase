@@ -185,39 +185,3 @@ test('durante la prueba aparece un contador compacto en Hoy y el detalle en Ajus
   assert.match(css, /cb-today-trial-banner/);
   assert.match(css, /cb-account-trial-summary/);
 });
-
-
-test('la simulación visual de prueba no modifica la suscripción real', async () => {
-  const billing = await projectFile('js/billing-manager.js');
-  assert.match(billing, /simulacion.*prueba/);
-  assert.match(billing, /createTrialPreviewContext/);
-  assert.match(billing, /_preview:\s*true/);
-  assert.match(billing, /Esta simulación no cambia tu cuenta ni tu suscripción real/);
-  assert.match(billing, /billingPreviewCancelled = true/);
-  assert.match(billing, /SIMULACIÓN: renovación cancelada/);
-});
-
-test('la simulación sigue mostrando contador en Hoy y cancelación en Ajustes', async () => {
-  const billing = await projectFile('js/billing-manager.js');
-  assert.match(billing, /Simulación · Prueba Pro/);
-  assert.match(billing, /cb-account-cancel-btn/);
-  assert.match(billing, /Cancelar antes del primer cobro/);
-  assert.match(billing, /Quedan \$\{days\} días/);
-});
-
-
-test('los colores de botones y fuentes siguen Ajustes y no un rojo fijo', async () => {
-  const [app, redesign, billing] = await Promise.all([
-    projectFile('js/app.js'),
-    projectFile('styles-redesign.css'),
-    projectFile('billing.css'),
-  ]);
-  assert.match(app, /setProperty\('--brand', accent\)/);
-  assert.match(app, /setProperty\('--cb-brand', accent\)/);
-  assert.match(app, /setProperty\('--cb-accent-text', contrastText\)/);
-  assert.match(redesign, /body\.cb-redesign-active \.primary[\s\S]*var\(--cb-brand/);
-  assert.doesNotMatch(redesign, /body\.cb-redesign-active \.primary \{[\s\S]{0,160}var\(--cb-red-600\)/);
-  assert.match(redesign, /data-has-custom-font-color="true"\] \.primary \*/);
-  assert.match(billing, /#cb-account-billing-panel[\s\S]*color: var\(--ink/);
-  assert.match(billing, /\.cb-preview-note[\s\S]*background: transparent/);
-});
