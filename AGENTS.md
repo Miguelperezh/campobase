@@ -1040,3 +1040,52 @@ Antes de declarar terminado cualquier cambio de vídeos:
 - ejecutar las pruebas del proyecto que correspondan;
 - no fusionar una migración con vídeos faltantes o rotos.
 
+---
+
+# 16. UI de Planes y Delegado — legibilidad obligatoria
+
+Estas reglas nacen de una regresión visual real detectada en validación.
+
+## 16.1 Planes
+
+La pantalla/modal de Planes debe poder leerse sin solapes.
+
+No permitir:
+- tarjetas con columnas tan estrechas que las palabras se monten unas sobre otras;
+- grids anidados de dos columnas dentro de tarjetas demasiado pequeñas;
+- diálogos estrechos para listas largas de funciones;
+- textos cortados lateralmente.
+
+Reglas:
+- el diálogo de Planes debe usar un ancho amplio en escritorio;
+- las categorías de funciones pueden mostrarse 2x2 solo si cada tarjeta mantiene ancho suficiente;
+- al reducir el ancho, las categorías deben pasar a una sola columna;
+- el texto debe poder envolver sin invadir otra columna;
+- validar visualmente también con una ventana del navegador reducida o con barra lateral abierta;
+- el bloque de acceso debe ser legible y no comprimirse.
+
+## 16.2 Cuenta de delegado
+
+La sección **Cuenta de delegado** debe ser uno de los bloques principales de Ajustes.
+
+Debe:
+- ocupar todo el ancho de la rejilla;
+- mostrar claramente nombre/correo de la cuenta asociada;
+- mostrar siempre el bloque de permisos;
+- mostrar todas las vistas configurables;
+- usar tarjetas/checks suficientemente grandes;
+- no limitarse a un párrafo informativo;
+- seguir siendo comprensible incluso antes de iniciar sesión, mostrando la estructura en modo deshabilitado;
+- al iniciar sesión como Administrador/Entrenador, convertir esa misma estructura en editable.
+
+La lista de permisos no puede quedar escondida detrás de una acción secundaria ni depender de que el usuario adivine dónde configurarla.
+
+## 16.3 Validación visual
+
+Antes de dar por terminada una modificación visual:
+1. comprobar que no hay solapes;
+2. comprobar escritorio y ancho reducido;
+3. comprobar que títulos, botones, checks y textos se leen completos;
+4. comprobar específicamente Planes y Cuenta de delegado si se han tocado;
+5. no afirmar que una interfaz está validada solo porque pase tests de código.
+
