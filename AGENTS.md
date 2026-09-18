@@ -920,21 +920,29 @@ La elección de Planes debe poder verse **antes del registro**, y después de id
 
 Esta sección pertenece únicamente al área de vídeos/almacenamiento. Cualquier agente al que Miguel asigne una tarea de vídeos debe leer las reglas generales de convivencia y esta sección. No debe editar, resumir, reordenar ni actualizar las reglas de ejercicios, interfaz, jugadores, sesiones, pagos u otras áreas salvo petición explícita de Miguel.
 
-## 16.1 Destino vigente de los vídeos pesados
+## 16.1 Requisito económico obligatorio: 0 € y sin sorpresas
 
-El candidato actual para los archivos de vídeo de CampoBase es **Tigris Object Storage**, pero NO se considera destino definitivo hasta verificar expresamente el comportamiento de facturación, límites y ausencia/presencia de gasto automático.
+Para el almacenamiento y entrega de vídeos de CampoBase, Miguel exige **coste máximo real de 0 €**.
 
-- No continuar una migración definitiva a ningún proveedor hasta que Miguel valide expresamente el coste y el comportamiento de facturación.
-- Supabase sigue siendo la fuente compartida para los datos de la aplicación que ya le correspondan.
-- Los archivos MP4 pesados no deben moverse de forma definitiva fuera de Supabase Storage hasta que el nuevo proveedor esté validado técnica y económicamente.
-- No afirmar que Tigris está operativo hasta que existan realmente cuenta, bucket, permisos y una prueba de subida/reproducción correcta.
+Reglas vinculantes:
+- NO usar como destino definitivo un servicio que facture automáticamente al superar su cuota gratuita.
+- NO activar Pay As You Go, auto-recharge, overage billing ni equivalentes.
+- NO añadir ni utilizar una tarjeta para habilitar consumo facturable.
+- Una cuota gratuita con precio por exceso NO cumple este requisito, aunque el exceso sea barato.
+- Si se supera un límite gratuito, es preferible que el servicio limite o detenga la operación antes que generar una factura.
+- Antes de aprobar un proveedor, comprobar documentación oficial sobre: almacenamiento, egress, solicitudes, comportamiento al alcanzar límites y transición a pago.
+- Tigris queda **descartado como destino definitivo bajo este requisito**, porque publica tarifas por uso por encima de su cuota gratuita y no se ha verificado un hard cap de gasto a 0 €.
+- No cambiar de proveedor futuro sin actualizar únicamente esta sección y sin autorización explícita de Miguel.
 
-Motivo técnico de esta elección:
-- Tigris es compatible con S3;
-- admite API/SDK/CLI estándar;
-- dispone de MCP y herramientas orientadas a agentes;
-- permite que distintos agentes autorizados trabajen con el mismo almacenamiento sin depender de una integración exclusiva de una sola IA;
-- el acceso debe concederse mediante credenciales limitadas al bucket o mediante un mecanismo equivalente autorizado por Miguel.
+## 16.1.1 Candidato no-Cloudflare en evaluación
+
+**Oracle Cloud Free Tier / Always Free** es el candidato actual a evaluar porque:
+- la cuenta puede permanecer en modalidad gratuita sin actualizarse a Pay As You Go;
+- Object Storage ofrece recursos Always Free;
+- existe compatibilidad con la API S3, útil para agentes y herramientas estándar;
+- Oracle publica una asignación gratuita de transferencia saliente elevada.
+
+No se considera todavía destino definitivo porque debe validarse el límite de solicitudes y el comportamiento real para el patrón de vídeo de CampoBase antes de migrar producción.
 
 ## 16.2 Regla de acceso para IA y agentes
 
