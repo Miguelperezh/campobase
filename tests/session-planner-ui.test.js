@@ -36,6 +36,13 @@ test('la biblioteca mantiene favoritos, vídeo, ver y añadir', () => {
   assert.match(source, /add-exercise-to-session/);
 });
 
+test('Sesiones permite filtrar Mis ejercicios dentro de Categoría', () => {
+  assert.match(source, /Mis ejercicios/);
+  assert.match(source, /category === '__mine__'/);
+  assert.match(source, /item\.isMine/);
+  assert.match(source, /card\.dataset\.userCreated/);
+});
+
 test('el resumen expresa minutos y permite ver o quitar sin quedarse fijo al hacer scroll', () => {
   assert.match(source, /min de \$\{target\} min/);
   assert.match(source, /remove-session-block/);
