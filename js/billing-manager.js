@@ -207,13 +207,13 @@ export function renderPaywallModalHTML(sub = null, { delegate = false } = {}) {
         <p><span class="badge">Pago seguro con Stripe</span></p>
       </div>
       <div class="cb-access-rule">
-        <strong>Para entrar a CampoBase necesitas una de estas 3 opciones</strong>
-        <div class="cb-access-options">
-          <div><span aria-hidden="true">🆓</span><b>Prueba activa</b><small>14 días gratis desde el alta</small></div>
-          <div><span aria-hidden="true">🎁</span><b>Código gratuito</b><small>Regalo válido o meses gratis vigentes</small></div>
-          <div><span aria-hidden="true">💳</span><b>Suscripción</b><small>Mensual o anual pagada</small></div>
-        </div>
-        <p class="meta"><strong>Si no tienes ninguna de las tres, no se permite entrar a los datos del equipo.</strong></p>
+        <strong>Acceso a CampoBase</strong>
+        <ol class="cb-access-flow">
+          <li><span class="cb-access-number">1</span><div><b>Crea tu cuenta</b><small>Empiezas con 14 días de acceso completo gratis.</small></div></li>
+          <li><span class="cb-access-number">2</span><div><b>Usa la prueba</b><small>Durante esos 14 días puedes utilizar todas las funciones.</small></div></li>
+          <li><span class="cb-access-number">3</span><div><b>Después de la prueba</b><small>Necesitas un plan mensual/anual o un código de regalo válido.</small></div></li>
+        </ol>
+        <p class="cb-access-blocked">Sin prueba activa, código gratuito válido o suscripción pagada, no se puede entrar a los datos del equipo.</p>
       </div>
       <article class="panel cb-plan-includes">
         <h4>Todo CampoBase incluido</h4>
