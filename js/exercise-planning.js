@@ -136,8 +136,17 @@ export function renderBoardDiagrams(rawItem = {}) {
 }
 
 export function sessionBlockType(category) {
-  if (category === 'Calentamiento') return 'warmup';
-  if (category === 'Partido condicionado / Small-sided games') return 'final';
+  const value = String(category || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es');
+
+  if (value.includes('calentamiento') || value.includes('activacion')) return 'warmup';
+  if (
+    value.includes('juego reducido')
+    || value.includes('partido condicionado')
+    || value.includes('small-sided')
+  ) return 'final';
   return 'main';
 }
 
