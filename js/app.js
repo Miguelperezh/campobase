@@ -2676,6 +2676,10 @@ function showSessionDetail(sessionId) {
         const name = validated?.nombre || exerciseName(block.exerciseId);
         const previewImg = validated?.media?.preview || validated?.preview || '';
         const graphicPreviewVideo = validated?.preview_video || validated?.video_ejercicio || validated?.media?.video || validated?.media?.mp4 || '';
+        const previewCrop = validated?.preview_crop || validated?.media_crop || null;
+        const previewCropToken = previewCrop
+          ? [previewCrop.x, previewCrop.y, previewCrop.width, previewCrop.height, previewCrop.sourceWidth || 1280, previewCrop.sourceHeight || 820].join(',')
+          : '';
         const videoSrc = validated?.media?.video || validated?.video_ejercicio || '';
         const category = validated?.categoria || (block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte principal' : 'Juego final');
         return `<details name="session-detail-accordion" class="session-block-card session-block-accordion panel" data-block-index="${idx}">
@@ -2696,9 +2700,9 @@ function showSessionDetail(sessionId) {
           <div class="session-block-accordion-body">
             <div class="session-block-card-main">
               ${previewImg
-                ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy" data-preview-image="1" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}"></div>`
+                ? `<div class="session-block-preview"><img src="${escapeHtml(previewImg)}" alt="${escapeHtml(name)}" loading="lazy" data-preview-image="1" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}" data-preview-crop="${escapeHtml(previewCropToken)}"></div>`
                 : graphicPreviewVideo
-                  ? `<div class="session-block-preview"><canvas class="session-preview-static-canvas" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}" aria-label="Vista previa de ${escapeHtml(name)}"></canvas></div>`
+                  ? `<div class="session-block-preview"><canvas class="session-preview-static-canvas" data-preview-video-src="${escapeHtml(graphicPreviewVideo)}" data-preview-crop="${escapeHtml(previewCropToken)}" aria-label="Vista previa de ${escapeHtml(name)}"></canvas></div>`
                   : ''}
               <div class="session-block-card-info">
                 <p class="meta session-block-category">${escapeHtml(category)} · 👥 ${escapeHtml(validated?.jugadores?.total || validated?.players || 'Equipo')}</p>
