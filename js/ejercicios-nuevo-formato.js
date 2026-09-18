@@ -48,6 +48,12 @@ function summarizeNumericRange(value, suffix) {
   return min === max ? `${format(min)} ${suffix}` : `${format(min)}-${format(max)} ${suffix}`;
 }
 
+const HUMAN_VIDEO_PATH_ALIAS = Object.freeze({
+  // El vídeo humano de esta conversión ya existe en Storage con su ID histórico.
+  'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
+    'CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/video.mp4',
+});
+
 function normalizeNewExercise(exercise) {
   const categoryKey = key(exercise.categoria);
   const etiquetas = uniqueStrings(exercise.etiquetas || [])
@@ -58,7 +64,7 @@ function normalizeNewExercise(exercise) {
   if (datosRapidos.duracion) datosRapidos.duracion = summarizeNumericRange(datosRapidos.duracion, 'min aprox.');
 
   const originalMedia = exercise.media || {};
-  const humanVideo = String(
+  let humanVideo = String(
     exercise.video_muestra_humanos
     || exercise.video_muestra_url
     || exercise.video_humano
@@ -67,22 +73,79 @@ function normalizeNewExercise(exercise) {
     || ''
   ).trim();
 
+  const graphicVideo = String(
+    exercise.video_ejercicio
+    || originalMedia.video
+    || originalMedia.mp4
+    || ''
+  ).trim();
+
+  if (!humanVideo && HUMAN_VIDEO_PATH_ALIAS[exercise.id] && graphicVideo.includes('/ejercicio-videos/')) {
+    humanVideo = graphicVideo.split('/ejercicio-videos/')[0]
+      + '/ejercicio-videos/'
+      + HUMAN_VIDEO_PATH_ALIAS[exercise.id];
+  }
+
+  const originalPreview = String(
+    exercise.preview
+    || originalMedia.preview
+    || ''
+  ).trim();
+
+  // Los ZIP validados guardan preview.png junto al resto de assets del ejercicio
+  // en el bucket ejercicio-videos. Algunos imports anteriores generaron por error
+  // URLs hacia un bucket inexistente (ejercicio-previews); se corrige de forma
+  // aditiva y sin tocar los ejercicios legacy.
+  const assetPreviewPath = String(exercise?._assets?.preview_path || '').trim();
+  let preview = originalPreview.replace('/ejercicio-previews/', '/ejercicio-videos/');
+  if (assetPreviewPath && graphicVideo.includes('/ejercicio-videos/')) {
+    preview = graphicVideo.split('/ejercicio-videos/')[0]
+      + '/ejercicio-videos/'
+      + assetPreviewPath;
+  }
+
+  const formatoOriginal = String(
+    exercise.formato_futbol_original
+    || exercise.formato_futbol
+    || ''
+  ).trim();
+  const formatoKey = key(formatoOriginal);
+  const formatoJuego = formatoKey.includes('11')
+    ? 'futbol_11'
+    : formatoKey.includes('7')
+      ? 'futbol_7'
+      : String(exercise.formato_juego || 'todos');
+  const formatosJuego = formatoJuego === 'futbol_7'
+    ? ['futbol_7']
+    : formatoJuego === 'futbol_11'
+      ? ['futbol_11']
+      : (exercise.formatos_juego || ['futbol_7', 'futbol_11']);
+  const formatLabel = formatoJuego === 'futbol_7'
+    ? 'F7'
+    : formatoJuego === 'futbol_11'
+      ? 'F11'
+      : (exercise.format || 'F7/F11');
+
   return {
     ...exercise,
     etiquetas,
     que_se_trabaja: queSeTrabaja,
     datos_rapidos: datosRapidos,
+    formato_juego: formatoJuego,
+    formatos_juego: formatosJuego,
+    format: formatLabel,
     media: {
       ...originalMedia,
-      preview: '',
-      // Los MP4 gráficos nuevos aún no están publicados en Storage.
-      // Nunca apuntar a una ruta 404: mientras tanto solo se usa el vídeo humano confirmado.
-      video: humanVideo,
+      preview,
+      video: graphicVideo,
+      mp4: graphicVideo,
     },
+    preview,
+    video_ejercicio: graphicVideo,
     video: humanVideo,
     video_muestra_humanos: humanVideo,
-    _video_ejercicio_original: String(originalMedia.video || '').trim(),
-    _preview_original: String(originalMedia.preview || '').trim(),
+    _video_ejercicio_original: graphicVideo,
+    _preview_original: originalPreview,
   };
 }
 
