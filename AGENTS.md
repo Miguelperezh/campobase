@@ -801,3 +801,100 @@ Mensual y anual pueden incluir las mismas funciones; la diferencia puede ser ún
 - Prueba Pro inicial: **14 días**, si el flujo de alta vigente la mantiene.
 - Cuenta Administrador/owner del proyecto: **Pro vitalicio**.
 
+---
+
+# 15. Regla comercial de acceso — prueba, código gratuito o pago
+
+Esta regla es obligatoria y prevalece sobre cualquier comportamiento anterior que concediera acceso únicamente por ser Administrador, owner, entrenador o por tener una cuenta creada.
+
+Una cuenta solo puede entrar a los datos del equipo si cumple **al menos una** de estas condiciones:
+
+1. tiene una **prueba gratuita activa**;
+2. tiene un **código gratuito/regalo válido** todavía vigente;
+3. tiene una **suscripción pagada activa** mensual o anual.
+
+Si no cumple ninguna:
+- no permitir entrar a los datos del equipo;
+- no permitir saltarse el bloqueo mediante una pestaña interna;
+- no conceder acceso por el rol `admin`, `owner` o `coach`;
+- no conceder acceso por haber creado/verificado la cuenta;
+- no considerar un descuento pendiente como acceso gratuito;
+- no considerar un código caducado como acceso;
+- no permitir que el PIN local antiguo de una cuenta SaaS sustituya esta comprobación.
+
+La cuenta Administrador del proyecto puede seguir teniendo Pro vitalicio, pero debe estar representado en la suscripción como `gift_free`/regalo vitalicio; no debe depender de un bypass por rol.
+
+La cuenta de delegado:
+- no compra un plan propio;
+- hereda el acceso comercial del titular del mismo equipo;
+- si el titular pierde el acceso por caducidad, el delegado también queda bloqueado.
+
+## 15.1 Texto de producto claro
+
+No usar explicaciones ambiguas como:
+
+“la prueba se mantiene mientras siga vigente en el alta”.
+
+Explicar de forma directa:
+
+- **Creas tu cuenta.**
+- **Tienes 14 días gratis.**
+- **Después necesitas un plan mensual/anual o un código gratuito válido.**
+- **Sin prueba activa, código gratuito válido o suscripción pagada, no puedes entrar a los datos del equipo.**
+
+## 15.2 Planes deben ser visuales y mostrar todas las funciones
+
+La pantalla de Planes debe ser visual, no una lista técnica pequeña.
+
+Debe agrupar las funciones en bloques claros, como mínimo:
+
+### Equipo y jugadores
+- Inicio / resumen del día;
+- Plantilla;
+- fichas de jugadores;
+- estadísticas individuales;
+- cuerpo técnico;
+- asistencia;
+- cuenta de delegado con permisos.
+
+### Partidos
+- convocatorias;
+- reparto de minutos;
+- preparación;
+- alineaciones;
+- partido en vivo;
+- cronómetro;
+- cambios;
+- goles;
+- tarjetas;
+- lesiones;
+- incidencias;
+- puntuaciones;
+- calendario;
+- resultados;
+- liga y pretemporada.
+
+### Entrenamientos
+- sesiones;
+- asistencia por sesión;
+- biblioteca de ejercicios;
+- búsqueda y filtros;
+- vídeos/demostraciones;
+- planificación por bloques;
+- materiales;
+- pizarra táctica.
+
+### Cuenta, nube y seguridad
+- sincronización en nube;
+- varios dispositivos;
+- copias/recuperación;
+- personalización de equipo/club;
+- escudo, colores y tema;
+- PIN de dispositivo cuando proceda;
+- códigos de regalo;
+- códigos de descuento.
+
+Mensual y anual incluyen las mismas funciones mientras no haya una instrucción posterior que diga lo contrario.
+
+La elección de Planes debe poder verse **antes del registro**, y después de identificarse la cuenta debe comprobarse el acceso antes de mostrar los datos del equipo.
+
