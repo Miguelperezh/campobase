@@ -1,4 +1,4 @@
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -12,7 +12,7 @@ import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, 
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { planSquadSeed, OFFICIAL_SQUAD_DATA } from './squad-seed.js';
+
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
@@ -463,7 +463,7 @@ async function savePlayer(event) {
     }
   }
   const positions = checkedValues('positions', form);
-  await put('players', buildPlayerRecord({ ...values, id: values.id || uid() }, positions, existing, photo));
+  await putPlayerProfile(buildPlayerRecord({ ...values, id: values.id || uid() }, positions, existing, photo));
   form.closest('dialog').close();
   form.reset();
   if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
@@ -2892,14 +2892,6 @@ async function ensurePhase2Seeded() {
     ...PHASE2_V3_EXERCISES,
   ].filter(({ id }) => !existingIds.has(id)).map((item) => structuredClone(item));
   await putBatch({ settings: [...goodExercises, { id: 'phase2-seeded', recordType: 'migration', version: 5, createdAt: Date.now() }] });
-}
-
-async function ensureSquadSeeded() {
-  await deduplicatePlayers();
-  if (await getOne('settings', 'squad-26-27-seeded')) return;
-  const currentPlayers = await getAll('players');
-  await putBatch(planSquadSeed(currentPlayers));
-  await deduplicatePlayers();
 }
 
 async function ensurePhase2V2Seeded() {
@@ -5464,7 +5456,6 @@ async function init() {
     }
   }
   await synchronizeCloud();
-  await ensureSquadSeeded();
   await ensureLegacyExercisesNotPresent();
   await refresh();
   const live = await getOne('settings', 'live');
