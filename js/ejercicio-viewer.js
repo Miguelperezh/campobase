@@ -160,8 +160,16 @@ export function renderActionVisualSVG(trazo = '') {
 export function renderValidatedExerciseHTML(ex, options = {}) {
   const media = ex.media || {};
   const videoSrc = media.video || media.mp4 || (ex.animacion?.mp4) || '';
-  const previewSrc = media.preview || (ex.animacion?.preview) || '';
-  const realVideo = ex.video || '';
+  const rawPreviewSrc = media.preview || (ex.animacion?.preview) || '';
+  const previewSrc = isUsablePreview(rawPreviewSrc) ? rawPreviewSrc : '';
+  const realVideo = String(
+    ex.video_muestra_humanos
+    || ex.video_muestra
+    || ex.video_muestra_url
+    || ex.video_humano
+    || ((ex.video && ex.video !== videoSrc) ? ex.video : '')
+    || ''
+  ).trim();
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
@@ -630,13 +638,11 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 export function renderExerciseGridCard(ex) {
   const media = ex.media || {};
   const rawPreview = media.preview || ex.preview || '';
-  // Los ejercicios del nuevo lote no publican todavía preview.png en Storage.
-  // Usamos el primer fotograma del vídeo humano y evitamos cualquier imagen rota.
-  const preview = ex._nuevo_formato ? '' : (isUsablePreview(rawPreview) ? rawPreview : '');
-  // Si falta preview válido en un ejercicio nuevo, mostramos el primer fotograma
-  // del vídeo humano ya publicado. Evita imágenes rotas sin crear otro diseño.
-  const fallbackVideo = !preview && ex._nuevo_formato
-    ? String(ex.video_muestra_humanos || ex.video_muestra || ex.video || '').trim()
+  const preview = isUsablePreview(rawPreview) ? rawPreview : '';
+  // Regla de portada: preview.png cuando está disponible. Si aún no está publicado,
+  // el único fallback permitido es el MP4 GRÁFICO de la ficha, nunca el vídeo humano.
+  const fallbackVideo = !preview
+    ? String(media.video || media.mp4 || ex._video_ejercicio_original || '').trim()
     : '';
   const dr = ex.datos_rapidos || {};
   const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]).slice(0, 2);
