@@ -64,7 +64,11 @@ async function requireBoundUser(client) {
     authError.code = 'CAMPOBASE_AUTH_REQUIRED';
     throw authError;
   }
-  return user;
+
+  const { data: teamContext, error: teamError } = await client.rpc('mi_equipo_contexto');
+  if (teamError) throw teamError;
+  const dataOwnerUserId = teamContext?.data_owner_user_id || user.id;
+  return { user, teamContext: teamContext || null, dataOwnerUserId };
 }
 
 export function createCampoBaseCloudStore() {
@@ -92,14 +96,20 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el estado de la cuenta:', error);
     });
 
+  void import('./team-access.js?v=1')
+    .then(({ initTeamAccess }) => initTeamAccess(client))
+    .catch((error) => {
+      console.warn('No se pudo cargar el acceso del equipo:', error);
+    });
+
   return {
     async getSnapshot(store) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
       const rows = checkResult(await client
         .from(table)
         .select('id,payload,updated_at,deleted_at,user_id')
-        .eq('user_id', user.id)) ?? [];
+        .eq('user_id', dataOwnerUserId)) ?? [];
       return {
         records: rows.filter(({ deleted_at: deletedAt }) => !deletedAt).map(({ payload }) => payload),
         deletedIds: rows.filter(({ deleted_at: deletedAt }) => Boolean(deletedAt)).map(({ id }) => id),
@@ -108,10 +118,10 @@ export function createCampoBaseCloudStore() {
     },
 
     async upsert(mutation) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
-        user_id: user.id,
+        user_id: dataOwnerUserId,
         id: mutation.recordId,
         payload: mutation.payload,
         updated_at: mutation.queuedAt,
@@ -120,10 +130,10 @@ export function createCampoBaseCloudStore() {
     },
 
     async remove(mutation) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
-        user_id: user.id,
+        user_id: dataOwnerUserId,
         id: mutation.recordId,
         payload: null,
         updated_at: mutation.queuedAt,
