@@ -276,6 +276,24 @@ Si ya existe, no sobrescribir automáticamente.
 
 Las versiones anteriores deben conservarse como respaldo y no aparecer como ejercicios actuales.
 
+## 2.10.1 Ejercicios creados por el entrenador — “Mis ejercicios”
+
+Los ejercicios creados manualmente desde **+ Ejercicio** son contenido personal del entrenador y deben persistir.
+
+Reglas obligatorias:
+- al guardar un ejercicio nuevo, debe quedar marcado como ejercicio creado por el usuario y no confundirse con favoritos/caché del catálogo validado;
+- después de guardar, debe aparecer en la pestaña **Mis ejercicios**;
+- recargar, sincronizar o reiniciar la PWA no puede eliminarlo ni hacerlo desaparecer de la biblioteca;
+- la limpieza de ejercicios legacy no puede borrar registros marcados como creados por el usuario;
+- los ejercicios personales deben poder editarse y borrarse mediante su flujo normal;
+- deben estar disponibles para añadirlos a sesiones;
+- en el selector de ejercicios de **Sesiones**, el desplegable **Categoría** debe incluir la opción **Mis ejercicios**;
+- la opción **Mis ejercicios** filtra solo ejercicios personales, sin mezclar los favoritos del catálogo validado;
+- categoría, formato F7/F11, material y dificultad del ejercicio personal deben conservarse para los filtros de sesiones.
+
+Comprobar siempre el flujo completo:
+**+ Ejercicio → Guardar → Mis ejercicios → recargar → sigue visible → Sesiones → Categoría → Mis ejercicios → añadir a sesión**.
+
 ## 2.11 Supabase
 
 Supabase es fuente de verdad cuando la app use esos datos.
@@ -662,6 +680,27 @@ Los partidos mantienen su flujo independiente; no aplicarles automáticamente es
 
 ---
 
+## 8.1 Crear y editar sesiones
+
+El entrenador debe poder crear y editar sesiones de entrenamiento desde la interfaz normal.
+
+Reglas:
+- **+ Nueva sesión** abre el constructor de sesión vacío;
+- **Editar** desde la tarjeta de una sesión abre el mismo constructor con todos sus datos existentes;
+- **Editar sesión** desde el detalle de una sesión debe hacer lo mismo;
+- editar conserva el mismo ID y fecha de creación de la sesión;
+- al guardar una edición se actualiza la sesión existente, no se crea un duplicado;
+- nombre, fecha, hora, campo, duración objetivo, bloques, duración de cada bloque, notas y material deben quedar editables;
+- los ejercicios personales de **Mis ejercicios** se pueden añadir exactamente igual que los del catálogo;
+- la clasificación de bloques debe reconocer las categorías actuales, incluida `Calentamiento/activación` como calentamiento y `Juego reducido` como juego final;
+- al guardar, la interfaz debe confirmar si la sesión se ha creado o actualizado;
+- no romper la asistencia vinculada ni crear registros huérfanos al editar fecha/datos de una sesión.
+
+Antes de dar este flujo por terminado, probar:
+**crear → guardar → abrir → editar → guardar → recargar → comprobar que existe una sola sesión con los cambios**.
+
+---
+
 # 9. Acceso local, SaaS y dispositivo
 
 Mantener el **Acceso local con PIN** como alternativa validada.
@@ -920,125 +959,113 @@ La elección de Planes debe poder verse **antes del registro**, y después de id
 
 Esta sección pertenece únicamente al área de vídeos/almacenamiento. Cualquier agente al que Miguel asigne una tarea de vídeos debe leer las reglas generales de convivencia y esta sección. No debe editar, resumir, reordenar ni actualizar las reglas de ejercicios, interfaz, jugadores, sesiones, pagos u otras áreas salvo petición explícita de Miguel.
 
-## 16.1 Destino vigente de los vídeos pesados
+## 16.1 Requisito económico obligatorio: 0 € y sin sorpresas
 
-El destino objetivo para los archivos de vídeo de CampoBase es **Tigris Object Storage**, una vez creada y autorizada la cuenta/bucket correspondiente.
+Para el almacenamiento y entrega de vídeos de CampoBase, Miguel exige **coste máximo real de 0 €**.
 
-- No continuar una migración a Cloudflare R2 salvo que Miguel lo vuelva a pedir expresamente.
-- Supabase sigue siendo la fuente compartida para los datos de la aplicación que ya le correspondan.
-- Los archivos MP4 pesados no deben volver a alojarse en Supabase Storage cuando la migración a Tigris esté validada.
-- No afirmar que Tigris está operativo hasta que existan realmente cuenta, bucket, permisos y una prueba de subida/reproducción correcta.
+- No usar servicios con facturación automática por exceso.
+- No activar Pay As You Go, overage billing, auto-recharge o equivalentes.
+- No añadir una tarjeta para habilitar consumo facturable.
+- Si un servicio gratuito alcanza un límite, se prefiere limitación/suspensión antes que una factura.
+- No cambiar de proveedor sin autorización explícita de Miguel.
 
-Motivo técnico de esta elección:
-- Tigris es compatible con S3;
-- admite API/SDK/CLI estándar;
-- dispone de MCP y herramientas orientadas a agentes;
-- permite que distintos agentes autorizados trabajen con el mismo almacenamiento sin depender de una integración exclusiva de una sola IA;
-- el acceso debe concederse mediante credenciales limitadas al bucket o mediante un mecanismo equivalente autorizado por Miguel.
+## 16.2 Destino elegido: GitHub Releases
 
-## 16.2 Regla de acceso para IA y agentes
+El destino elegido para validar los vídeos pesados es **GitHub Releases del repositorio CampoBase**.
 
-La identidad del agente no importa. Importa la función asignada y el permiso concedido.
+GitHub documenta para Releases:
+- hasta 1.000 assets por release;
+- cada asset por debajo de 2 GiB;
+- sin límite declarado de tamaño total del release;
+- sin límite declarado de ancho de banda de Releases.
 
-Un agente autorizado para vídeos puede:
-- subir;
-- comprobar;
-- listar;
-- sustituir;
-- y, solo cuando la tarea lo requiera expresamente, borrar vídeos.
-
-Un agente no autorizado no debe intentar conseguir credenciales por su cuenta ni simular que la operación se realizó.
-
-Las credenciales:
-- nunca se guardan en el repositorio;
-- nunca se ponen en JavaScript cliente;
-- nunca se escriben en AGENTS.md;
-- nunca se incluyen en commits, logs públicos o documentación;
-- deben ser de alcance mínimo, preferiblemente restringidas al bucket de vídeos.
+Limitación obligatoria:
+- GitHub Releases no se tratará como un CDN con SLA;
+- GitHub puede limitar alojamiento/actividad si considera el uso de ancho de banda significativamente excesivo;
+- por ello no se cambia producción hasta superar una prueba real de reproducción, HTTP Range/seek y rendimiento.
 
 ## 16.3 Qué se guarda en cada sitio
 
-Arquitectura objetivo:
-
-- **GitHub/código:** definición oficial del ejercicio y assets que pertenezcan al código.
-- **Tigris:** archivos de vídeo pesados.
+- **GitHub/código:** definición oficial del ejercicio y código de CampoBase.
+- **GitHub Releases:** archivos MP4 pesados.
 - **Supabase:** datos sincronizados de CampoBase y metadata que la aplicación necesite compartir.
-- **Sesiones:** referencias mediante `exerciseId`; no incrustar MP4 ni blobs.
+- **Sesiones:** referencias mediante `exerciseId`; nunca incrustar MP4 ni blobs.
 
-No mover jugadores, partidos, estadísticas, sesiones, Auth, permisos ni otros datos a Tigris por una tarea de vídeos.
+Una tarea de vídeos no autoriza a mover jugadores, partidos, sesiones, estadísticas, Auth, pagos, interfaz ni otros datos.
 
-## 16.4 Rutas y nombres
+## 16.4 Acceso para IA y agentes
 
-Durante una migración:
-- conservar las claves/rutas existentes siempre que sea posible;
-- no renombrar vídeos arbitrariamente;
-- no cambiar IDs de ejercicios;
-- no romper URLs o referencias históricas.
+La identidad del agente no importa. Importa la función asignada y el permiso concedido.
 
-Para ejercicios del nuevo formato se deben conservar los nombres funcionales ya definidos por las reglas de ejercicios, incluido:
-- `ejercicio.mp4`;
-- `video_muestra_humanos.mp4`;
-- `preview.png` cuando corresponda.
+Un agente autorizado para vídeos puede gestionar los assets mediante GitHub API/CLI con los permisos concedidos al repositorio.
 
-La ubicación física del MP4 puede cambiar de proveedor, pero la asociación con el mismo `exerciseId` debe mantenerse.
+- No pedir a Miguel que suba manualmente vídeos si el agente dispone de acceso autorizado.
+- Nunca guardar tokens/secretos en Git, frontend, documentación o logs.
+- Usar permisos mínimos.
+- No borrar un vídeo existente salvo petición expresa y con rollback/validación.
 
-## 16.5 Migración segura
+## 16.5 Nombres y asociación
 
-Nunca hacer un cambio destructivo directo.
+Los assets de GitHub Releases son archivos planos, no carpetas.
+
+- No cambiar `exerciseId`.
+- Usar nombres de asset estables y únicos derivados de la ruta/ID.
+- Mantener una correspondencia determinista entre `exerciseId`, tipo de vídeo y asset.
+- No sobrescribir silenciosamente otro ejercicio.
+- Mantener separadas las funciones de `ejercicio.mp4` y `video_muestra_humanos.mp4`.
+
+## 16.6 Migración segura
 
 Orden obligatorio:
-1. copiar;
-2. verificar que el objeto existe;
-3. verificar tamaño/tipo;
-4. comprobar reproducción real;
-5. comprobar seek/range cuando corresponda;
-6. probar la app en la rama de trabajo;
-7. comprobar sesiones que referencian esos ejercicios;
-8. cambiar el origen de vídeo solo después de validar;
-9. conservar la fuente anterior hasta que Miguel confirme que la nueva funciona.
+1. subir un único MP4 pequeño de prueba;
+2. verificar descarga completa y tamaño;
+3. verificar HTTP Range/206 para seek;
+4. medir respuesta y comprobar reproducción;
+5. probar la app en rama aislada;
+6. probar móvil y escritorio;
+7. migrar el resto solo si la prueba es correcta;
+8. cambiar URLs de producción únicamente tras validar;
+9. conservar todos los originales de Supabase hasta confirmación explícita de Miguel.
 
-No borrar los vídeos de Supabase durante la fase de prueba.
+No hacer una migración destructiva directa.
 
-## 16.6 Nuevos vídeos futuros
+## 16.7 Nuevos vídeos futuros
 
 Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
+- el agente autorizado debe subir el MP4 al GitHub Release vigente;
+- debe actualizar únicamente la referencia necesaria;
+- debe conservar el `exerciseId`;
+- debe verificar URL, reproducción y seek;
+- no debe mandar a Miguel a hacer manualmente la subida si dispone de acceso a GitHub;
+- no debe guardar el MP4 en Supabase Storage como solución alternativa salvo petición explícita.
 
-- el agente debe subir el vídeo al almacenamiento vigente de esta sección si dispone de permiso;
-- no debe pedir a Miguel que haga manualmente la subida si el propio agente dispone de acceso autorizado;
-- debe conservar la relación con el `exerciseId`;
-- debe actualizar solo la metadata/referencia necesaria;
-- debe comprobar que el vídeo se reproduce desde la app antes de dar la tarea por terminada.
-
-Si el agente no tiene acceso al almacenamiento, debe indicar únicamente que falta autorización/conexión. No debe cambiar de proveedor, guardar el MP4 en Supabase ni crear una solución paralela sin permiso.
-
-## 16.7 Cambios prohibidos desde una tarea de vídeos
+## 16.8 Cambios prohibidos desde una tarea de vídeos
 
 Una tarea de vídeos NO autoriza a:
 - modificar reglas de ejercicios;
 - modificar interfaz/UX;
 - cambiar categorías;
-- cambiar fichas de jugadores;
+- cambiar jugadores;
 - cambiar sesiones;
 - cambiar estadísticas;
-- cambiar pagos;
-- cambiar autenticación;
+- cambiar pagos o autenticación;
 - refactorizar otras áreas;
 - actualizar otras secciones de AGENTS.md.
 
 Solo se toca otra área cuando Miguel lo pida expresamente.
 
-## 16.8 Validación mínima
+## 16.9 Validación mínima
 
-Antes de declarar terminado cualquier cambio de vídeos:
-- comprobar que el archivo remoto responde;
-- comprobar `Content-Type`;
-- comprobar tamaño;
-- reproducir;
-- avanzar/retroceder el vídeo;
-- verificar que el ejercicio correcto carga el vídeo correcto;
-- probar móvil y escritorio cuando el cambio llegue a la app;
-- ejecutar las pruebas del proyecto que correspondan;
-- no fusionar una migración con vídeos faltantes o rotos.
+Antes de declarar terminado:
+- URL remota válida;
+- `Content-Type` adecuado;
+- tamaño correcto;
+- reproducción completa;
+- seek/avance/retroceso correcto;
+- asociación correcta ejercicio-vídeo;
+- prueba móvil y escritorio antes de producción;
+- pruebas del proyecto correspondientes;
+- cero vídeos faltantes o rotos.
 
 ---
 
@@ -1138,4 +1165,68 @@ Sí pueden mostrarse beneficios concretos para el usuario, por ejemplo:
 - códigos de regalo/descuento.
 
 La infraestructura técnica puede seguir existiendo y documentarse en archivos técnicos, pero no debe aparecer como función comercial salvo petición expresa del usuario.
+
+---
+
+# 18. Fase 4 — diseño validado y flujo obligatorio de registro, prueba y pago
+
+**Estado visual validado por el usuario el 18/09/2026.**
+
+El diseño actual de Planes, la presentación de funciones, la regla comercial de acceso y la sección ampliada de Cuenta de delegado se consideran validados. No rehacer su estructura visual sin una petición posterior expresa.
+
+## 18.1 Registro con plan y método de pago
+
+Una cuenta principal nueva no debe obtener acceso solo por registrarse.
+
+Flujo obligatorio:
+1. el usuario puede ver Planes antes de registrarse;
+2. al crear la cuenta debe elegir plan mensual o anual;
+3. después de confirmar/identificar su cuenta debe completar Stripe Checkout y dejar un método de pago;
+4. Stripe inicia una prueba gratuita de 14 días;
+5. durante esos 14 días no se cobra;
+6. mostrar siempre la fecha exacta en la que termina la prueba y comenzaría el primer cobro;
+7. el usuario puede cancelar antes de esa fecha y no debe producirse el primer cobro;
+8. cuando Stripe confirma la prueba, la cuenta pasa a estado `trial` y obtiene acceso;
+9. si no completa Stripe y tampoco dispone de un código gratuito válido, no puede entrar a los datos del equipo.
+
+No confundir:
+- **cuenta creada** con **acceso concedido**;
+- **plan elegido** con **pago/método de pago configurado**;
+- **código de descuento** con **código gratuito**.
+
+## 18.2 Fecha de finalización de la prueba
+
+La fecha de prueba debe proceder del servidor/Supabase y mantenerse alineada con Stripe.
+
+En interfaz debe mostrarse con un texto inequívoco, por ejemplo:
+
+**Prueba gratis hasta el 2 de octubre de 2026. No se te cobrará antes de esa fecha. Puedes cancelar antes de que termine la prueba.**
+
+No usar una fecha inventada ni depender solo del reloj del navegador cuando ya exista una fecha de servidor.
+
+## 18.3 Cancelación
+
+Debe existir una acción real de cancelación cuando ya existe una suscripción Stripe.
+
+Durante la prueba:
+- cancelar debe programar la baja al final de la prueba;
+- el usuario conserva acceso hasta la fecha de fin;
+- no debe producirse el primer cobro.
+
+En una suscripción pagada:
+- cancelar debe programar la baja al final del periodo ya pagado;
+- el acceso se mantiene hasta la fecha vigente.
+
+La cancelación debe ejecutarse en servidor/Edge Function. Nunca simularla únicamente en la interfaz.
+
+## 18.4 Regla de acceso reforzada
+
+Para cuentas principales nuevas, el estado previo a configurar Stripe debe ser un estado sin acceso (por ejemplo `pending_payment`).
+
+Solo conceden acceso:
+- `trial` confirmado;
+- `gift_free` válido;
+- `active` pagado.
+
+El delegado sigue heredando el acceso del titular y nunca configura un pago propio.
 
