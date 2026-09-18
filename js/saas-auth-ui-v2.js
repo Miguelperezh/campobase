@@ -205,12 +205,12 @@ function installStyles() {
     .cb-plan-features li>span:first-child{font-weight:900;color:var(--cb-brand,var(--cb-pitch-600,#173f35))}
     .cb-account-plan-choice{display:grid;gap:.8rem;padding:.9rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--card,#fff)}
     .cb-account-plan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
-    .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:2px solid color-mix(in srgb,var(--cb-brand,#173f35) 40%,var(--line,#e2e8f0));border-radius:14px;background:color-mix(in srgb,var(--card,#fff) 92%,var(--cb-brand,#173f35) 8%)}
+    .cb-access-rule{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--cb-slate-50,#f8fafc)}
     .cb-access-flow{display:grid;gap:.55rem;margin:0;padding:0;list-style:none}
     .cb-access-flow li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:.7rem;align-items:start;padding:.72rem .8rem;border:1px solid var(--line,#e2e8f0);border-radius:12px;background:var(--card,#fff)}
     .cb-access-flow b,.cb-access-flow small{display:block}.cb-access-flow small{margin-top:.16rem;line-height:1.35;color:var(--muted,#64748b)}
-    .cb-access-number{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;background:var(--cb-brand,var(--cb-pitch-600,#173f35));color:#fff;font-weight:900}
-    .cb-access-blocked{margin:0;font-weight:800;line-height:1.4}
+    .cb-access-number{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;background:var(--cb-slate-900,#0f172a);color:#fff;font-weight:900}
+    .cb-access-blocked{margin:0;padding-top:.7rem;border-top:1px solid var(--line,#e2e8f0);font-weight:800;line-height:1.45}
     @media(max-width:900px){
       #saas-public-plans .cb-feature-groups{grid-template-columns:1fr}
       #saas-public-plans .cb-plan-features{grid-template-columns:1fr}
