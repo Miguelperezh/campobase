@@ -5541,7 +5541,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2507-mis-category').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2507-mis-category-auth-hotfix-v2').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
