@@ -40,7 +40,34 @@ Antes de tocar código, datos, Supabase, ejercicios, sesiones, vídeos, diseño 
 
 ---
 
-# 2. Ejercicios — normas vigentes
+# EJERCICIOS
+
+Esta sección reúne el estado real y las normas permanentes de CampoBase para crear, convertir, importar e integrar ejercicios. Cualquier agente que vaya a tocar ejercicios debe leer esta sección completa y también `docs/ejercicios/ESPECIFICACION_EJERCICIOS.md`.
+
+## Estado actual de lo realizado
+
+En el trabajo del 18/09/2026 se preparó la conversión de los ejercicios procedentes del ZIP histórico de vídeos de CampoBase al nuevo formato.
+
+Se hizo lo siguiente:
+- **12 ejercicios actuales** preparados en el nuevo formato;
+- **4 versiones anteriores** preparadas también, pero conservadas aparte y marcadas como no actuales;
+- paquete global preparado con **16 carpetas**, manteniendo separados actuales y anteriores;
+- cada ejercicio preparado contiene `preview.png`, `ejercicio.mp4`, `video_muestra_humanos.mp4`, `data.json`, `ficha.md`, `origen.json` y `qa.json`;
+- cuando existía, se conservó también `fuente_animacion.gif` como trazabilidad del formato anterior;
+- el formato gráfico principal pasó a ser **MP4**;
+- se añadió el vídeo original con personas como **vídeo de muestra humano**;
+- se aplicó la separación entre categoría principal y filtro `Fútbol 7 / Fútbol 11`;
+- se aplicaron las reglas de terminología, incluida la prohibición visible de `chip`;
+- se añadió QA individual por ejercicio.
+
+Paquete preparado en aquella conversación:
+- `CampoBase_NUEVO_FORMATO_ABSOLUTAMENTE_TODOS_16.zip`
+
+**Importante:** que este trabajo esté documentado aquí no significa que esos 16 ejercicios estén ya integrados en producción. Antes de afirmar que están subidos o activos, comprobar repositorio, storage, Supabase y funcionamiento real de la app.
+
+Las **4 versiones anteriores** deben seguir separadas y **no deben aparecer como ejercicios actuales**.
+
+## Normas vigentes de ejercicios
 
 La especificación detallada vive en:
 
