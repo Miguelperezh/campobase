@@ -16,6 +16,11 @@ test('el acceso vitalicio no caduca', () => {
   assert.equal(formatSubscriptionStatus({ estado: 'gift_free' }, NOW).canUseApp, true);
 });
 
+test('un regalo temporal caducado deja de dar acceso', () => {
+  assert.equal(isSubscriptionActive({ estado: 'gift_free', expira_en: '2026-09-19T08:00:00Z' }, NOW), true);
+  assert.equal(isSubscriptionActive({ estado: 'gift_free', expira_en: '2026-09-18T07:59:59Z' }, NOW), false);
+});
+
 test('la prueba depende de la fecha real del servidor, no de un trial local inventado', () => {
   assert.equal(isSubscriptionActive({ estado: 'trial', expira_en: '2026-09-19T08:00:00Z' }, NOW), true);
   assert.equal(isSubscriptionActive({ estado: 'trial', expira_en: '2026-09-18T07:59:59Z' }, NOW), false);
