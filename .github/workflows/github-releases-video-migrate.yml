@@ -1,0 +1,27 @@
+name: CampoBase migrate videos to GitHub Releases
+
+on:
+  push:
+    branches:
+      - github-releases-video-test
+    paths:
+      - scripts/github-release-video-manifest.json
+      - scripts/migrate-supabase-videos-to-github-releases.mjs
+      - .github/workflows/github-releases-video-migrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-videos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CAMPOBASE_VIDEO_RELEASE_TAG: campobase-videos-v1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Migrate and verify all current Supabase videos
+        run: node scripts/migrate-supabase-videos-to-github-releases.mjs
