@@ -150,12 +150,15 @@ test('la tarjeta nunca pinta el bucket inexistente de previews y limpia categor√
     },
     media: {
       preview: 'https://example.test/storage/v1/object/public/ejercicio-previews/nuevo/preview.png',
+      video: 'assets/ejercicios/nuevo/ejercicio.mp4',
     },
     video: 'https://example.test/video-humano.mp4',
   });
 
   assert.doesNotMatch(card, /ejercicio-previews/);
   assert.match(card, /card-preview-video/);
+  assert.match(card, /assets\/ejercicios\/nuevo\/ejercicio\.mp4/);
+  assert.doesNotMatch(card, /video-humano\.mp4/);
   assert.equal((card.match(/<span class="pill">Finalizaci√≥n<\/span>/g) || []).length, 1);
   assert.match(card, /15-22 jugadores/);
   assert.doesNotMatch(card, /card-duration-badge/);
