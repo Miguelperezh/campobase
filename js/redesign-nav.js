@@ -134,6 +134,7 @@ export function getActiveModule(viewId) {
 }
 
 export function triggerStandardView(viewId) {
+  if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   if (window.__campobase && typeof window.__campobase.showView === 'function') {
     window.__campobase.showView(viewId);
   } else {
