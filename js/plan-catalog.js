@@ -5,7 +5,7 @@ export const PLAN_PRICES = Object.freeze({
 
 export const APP_PLAN_FEATURE_GROUPS = Object.freeze([
   {
-    icon: '👥',
+    index: '01',
     title: 'Equipo y jugadores',
     features: [
       'Resumen del día',
@@ -17,7 +17,7 @@ export const APP_PLAN_FEATURE_GROUPS = Object.freeze([
     ],
   },
   {
-    icon: '⚽',
+    index: '02',
     title: 'Partidos',
     features: [
       'Convocatorias',
@@ -32,7 +32,7 @@ export const APP_PLAN_FEATURE_GROUPS = Object.freeze([
     ],
   },
   {
-    icon: '📋',
+    index: '03',
     title: 'Entrenamientos',
     features: [
       'Sesiones de entrenamiento',
@@ -46,7 +46,7 @@ export const APP_PLAN_FEATURE_GROUPS = Object.freeze([
     ],
   },
   {
-    icon: '⚙️',
+    index: '04',
     title: 'Cuenta y personalización',
     features: [
       'Acceso desde varios dispositivos',
@@ -68,7 +68,7 @@ export function planFeaturesHTML() {
   return `<div class="cb-feature-groups">${APP_PLAN_FEATURE_GROUPS.map((group) => `
     <article class="cb-feature-group">
       <div class="cb-feature-group-head">
-        <span class="cb-feature-icon" aria-hidden="true">${group.icon}</span>
+        <span class="cb-feature-index" aria-hidden="true">${group.index}</span>
         <h4>${group.title}</h4>
       </div>
       <ul class="cb-plan-features">
