@@ -16,7 +16,7 @@ test('los planes se muestran antes del registro', async () => {
 test('el catálogo de planes enumera todas las áreas principales de la app', () => {
   const joined = APP_PLAN_FEATURES.join(' | ');
   for (const expected of [
-    'Inicio',
+    'Resumen del día',
     'Plantilla',
     'Estadísticas',
     'Cuerpo técnico',
@@ -73,9 +73,9 @@ test('el acceso comercial exige prueba, regalo o pago también en servidor', asy
     projectFile('supabase/07_strict_access_gate.sql'),
   ]);
   assert.match(auth, /No tienes acceso activo/);
-  assert.match(billing, /Prueba activa/);
-  assert.match(billing, /Código gratuito/);
-  assert.match(billing, /Suscripción/);
+  assert.match(billing, /14 días de acceso completo gratis/);
+  assert.match(billing, /código de regalo válido/i);
+  assert.match(billing, /suscripción pagada/i);
   assert.match(gate, /s\.estado = 'gift_free'/);
   assert.match(gate, /s\.estado = 'active'/);
   assert.match(gate, /s\.estado = 'trial'/);
