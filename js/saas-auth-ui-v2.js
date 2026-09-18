@@ -368,8 +368,9 @@ async function activateAccount(user, profile, { migrateLegacy = false } = {}) {
   if (pendingRememberDevice) await saveRememberedAccount(user, profile, pendingDevicePin);
   markBrowserSessionActive(user.id);
 
+  const localRole = profile?.role === 'delegate' ? 'delegate' : 'owner';
   try {
-    sessionStorage.setItem('campobase.sessionRole', 'owner');
+    sessionStorage.setItem('campobase.sessionRole', localRole);
     sessionStorage.removeItem('campobase.demoSession');
   } catch { /* La sesión SaaS permanece activa igualmente. */ }
   window.location.reload();
@@ -382,7 +383,14 @@ async function prepareSignedInChoice(client, data) {
   pendingSession = data?.session || (await getCurrentSession(client));
   pendingProfile = profile;
 
-  const available = profile.role !== 'owner' && await legacyOwnerClaimAvailable(client).catch(() => false);
+  if (profile.role === 'delegate' && user.user_metadata?.must_set_password) {
+    recoveryMode = true;
+    showPane('password');
+    setMessage('#saas-password-message', 'Crea una contraseña para tu cuenta de delegado.', true);
+    return { user, profile, available: false };
+  }
+
+  const available = profile.role === 'coach' && await legacyOwnerClaimAvailable(client).catch(() => false);
   $('#saas-account-label').textContent = profile.full_name
     ? `${profile.full_name}${profile.club_name ? ` · ${profile.club_name}` : ''}`
     : (profile.email || user.email || 'Cuenta de entrenador');
@@ -413,16 +421,27 @@ async function unlockBoundSession(client) {
   const app = await waitForApp();
   if (!app?.state) return false;
 
-  app.state.role = 'owner';
+  const isDelegate = profile.role === 'delegate';
+  const isAdmin = profile.role === 'owner' || profile.role === 'admin';
+  const localRole = isDelegate ? 'delegate' : 'owner';
+  app.state.role = localRole;
+  // La cuenta SaaS de delegado usa navegación configurable. No activamos el
+  // antiguo "delegate-mode", que seguirá reservado al PIN local limitado.
   app.state.delegateMode = false;
-  try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* No bloquea la sesión. */ }
+  try { sessionStorage.setItem('campobase.sessionRole', localRole); } catch { /* No bloquea la sesión. */ }
   document.body.classList.remove('auth-locked', 'delegate-mode', 'demo-mode');
-  document.documentElement.dataset.saasRole = profile.role === 'owner' ? 'owner' : 'coach';
+  document.documentElement.dataset.saasRole = isAdmin ? 'admin' : (isDelegate ? 'delegate' : 'coach');
   const roleLabel = $('#role-label');
-  if (roleLabel) roleLabel.textContent = profile.role === 'owner' ? 'Administrador' : 'Entrenador';
+  if (roleLabel) roleLabel.textContent = isAdmin ? 'Administrador' : (isDelegate ? 'Delegado' : 'Entrenador');
   const settingsNav = $('#settings-nav');
-  if (settingsNav) settingsNav.hidden = false;
+  if (settingsNav) settingsNav.hidden = isDelegate;
   $('#demo-team-panel')?.classList.add('hidden');
+  try {
+    const { initTeamAccess } = await import('./team-access.js?v=1');
+    await initTeamAccess(client);
+  } catch (error) {
+    console.warn('No se pudo aplicar el acceso del equipo:', error);
+  }
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
   return true;
