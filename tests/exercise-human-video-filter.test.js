@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
-import { EJERCICIOS_NUEVO_FORMATO, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
+import { EJERCICIOS_NUEVO_FORMATO, EJERCICIOS_NUEVO_FORMATO_ANTERIORES, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
 import { renderExerciseGridCard } from '../js/ejercicio-viewer.js';
 
 test('Solo con vídeo considera el vídeo humano y no el MP4 gráfico principal', () => {
@@ -65,8 +65,9 @@ test('un MP4 gráfico repetido en video no se considera vídeo humano', () => {
   assert.equal(mapped.hasHumanVideo, false);
 });
 
-test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
-  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 16);
+test('los 12 ejercicios actuales separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
+  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 12);
+  assert.equal(EJERCICIOS_NUEVO_FORMATO_ANTERIORES.length, 4);
   for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
     const category = String(exercise.categoria || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const tagKeys = (exercise.etiquetas || []).map((tag) => String(tag).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
@@ -74,9 +75,9 @@ test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7
     assert.equal(String(exercise.datos_rapidos?.jugadores || '').includes('/'), false, `${exercise.id}: jugadores mezclados F7/F11`);
     assert.equal(String(exercise.datos_rapidos?.duracion || '').includes('/'), false, `${exercise.id}: duración mezclada F7/F11`);
 
-    assert.ok(exercise.media?.preview, `${exercise.id}: debe conservar la URL de preview.png`);
-    assert.match(exercise.media.preview, /\/ejercicio-videos\//, `${exercise.id}: preview debe usar el bucket ejercicio-videos`);
-    assert.doesNotMatch(exercise.media.preview, /\/ejercicio-previews\//, `${exercise.id}: no debe usar el bucket inexistente`);
+    assert.ok(exercise.media?.preview, `${exercise.id}: debe conservar preview.png`);
+    assert.match(exercise.media.preview, /^assets\/ejercicios-nuevo-formato-previews\//, `${exercise.id}: preview debe ser un asset local estable`);
+    assert.doesNotMatch(exercise.media.preview, /ejercicio-previews/, `${exercise.id}: no debe usar el bucket inexistente`);
 
     assert.ok(exercise._video_ejercicio_original, `${exercise.id}: debe conservarse la ruta original del MP4 gráfico`);
     assert.equal(exercise.media?.video, exercise._video_ejercicio_original, `${exercise.id}: el reproductor principal debe ser el MP4 gráfico`);
@@ -85,14 +86,14 @@ test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7
   }
 });
 
-test('los 16 nuevos anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
+test('los 12 actuales anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
   const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
   const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
-  assert.equal(humanIds.length, 16);
+  assert.equal(humanIds.length, 12);
   assert.deepEqual(humanIds, NUEVOS_EJERCICIOS_IDS);
 });
 
-test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 16 nuevos arriba cuando correspondan', () => {
+test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 12 actuales arriba cuando correspondan', () => {
   const mapped = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
   const expectedIds = mapped.filter((item) => item.hasHumanVideo).map((item) => item.id);
   const filtered = filterExercises(mapped, { video: true });
@@ -104,12 +105,38 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
 
   const f7 = filterExercises(mapped, { formato_juego: 'futbol_7' });
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
-  const expectedF7New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
-  const expectedF11New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
+  const expectedF7New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
+  const expectedF11New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
   assert.deepEqual(f7.slice(0, expectedF7New.length).map((item) => item.id), expectedF7New);
   assert.deepEqual(f11.slice(0, expectedF11New.length).map((item) => item.id), expectedF11New);
 });
 
+
+test('los 12 actuales apuntan a previews y MP4 gráficos existentes en el repositorio', () => {
+  for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
+    assert.ok(exercise.media?.preview, `${exercise.id}: preview ausente`);
+    assert.ok(exercise.media?.video, `${exercise.id}: MP4 gráfico ausente`);
+    const previewFile = new URL(`../${exercise.media.preview}`, import.meta.url);
+    const videoFile = new URL(`../${exercise.media.video}`, import.meta.url);
+    assert.equal(readFileSync(previewFile).length > 100, true, `${exercise.id}: preview no existe o está vacía`);
+    assert.equal(readFileSync(videoFile).length > 1000, true, `${exercise.id}: MP4 gráfico no existe o está vacío`);
+  }
+});
+
+test('la conducción con frenada reutiliza el vídeo humano histórico que sí existe en Storage', () => {
+  const exercise = EJERCICIOS_NUEVO_FORMATO.find((item) => item.id === 'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION');
+  assert.ok(exercise);
+  assert.match(exercise.video_muestra_humanos, /CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA\/video\.mp4$/);
+  assert.notEqual(exercise.media.video, exercise.video_muestra_humanos);
+});
+
+test('las 4 versiones anteriores se conservan como respaldo pero no entran en el catálogo activo', () => {
+  const active = new Set(NUEVOS_EJERCICIOS_IDS);
+  assert.equal(EJERCICIOS_NUEVO_FORMATO_ANTERIORES.length, 4);
+  for (const previous of EJERCICIOS_NUEVO_FORMATO_ANTERIORES) {
+    assert.equal(active.has(previous.id), false, `${previous.id}: una versión anterior no debe estar activa`);
+  }
+});
 
 test('Solo con vídeo no confunde un MP4 gráfico persistido de un ejercicio validado con vídeo humano', () => {
   const pool = [
