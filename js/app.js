@@ -3,7 +3,7 @@ import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
-import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionDurationStatus } from './exercise-planning.js';
+import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
 import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
@@ -55,6 +55,7 @@ let toastTimer;
 let sessionDraftBlocks = [];
 let sessionDraftMeta = null;
 let pendingExerciseId = '';
+let exerciseLibraryMode = 'all';
 let tacticTool = 'select';
 let tacticDraft = null;
 let liveTactic = null; // estado de la pizarra táctica en vivo (Fase A)
@@ -282,7 +283,30 @@ async function refresh() {
 
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
-  state.exercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+
+  // Catálogo oficial + ejercicios creados por el entrenador.
+  // Los favoritos de ejercicios validados también se guardan como recordType=exercise,
+  // así que solo es "Mis ejercicios" un registro cuyo ID no pertenece al catálogo validado.
+  const validatedIds = new Set(EJERCICIOS_VALIDADOS.map(({ id }) => String(id)));
+  const persistedExerciseRecords = settingRecords.filter(({ recordType }) => recordType === 'exercise');
+  const persistedById = new Map(persistedExerciseRecords.map((item) => [String(item.id), item]));
+
+  const validatedExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise).map((item) => {
+    const persisted = persistedById.get(String(item.id));
+    return persisted ? { ...item, favorite: Boolean(persisted.favorite) } : item;
+  });
+
+  const myExercises = persistedExerciseRecords
+    .filter((item) => !validatedIds.has(String(item.id)))
+    .map((item) => ({
+      ...item,
+      recordType: 'exercise',
+      userCreated: true,
+      source: 'personal',
+      example: false,
+    }));
+
+  state.exercises = [...validatedExercises, ...myExercises];
   state.trainingSessions = settingRecords
     .filter(({ recordType }) => recordType === 'trainingSession')
     .map((session) => {
@@ -2237,9 +2261,29 @@ function exerciseCardHTML(rawItem) {
   </article>`;
 }
 
+function setExerciseLibraryMode(mode = 'all') {
+  exerciseLibraryMode = mode === 'mine' ? 'mine' : 'all';
+  $$('.exercise-library-tab').forEach((button) => {
+    const active = button.dataset.exerciseLibraryMode === exerciseLibraryMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  renderExercises();
+}
+
 function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
+
+  const myExerciseCount = state.exercises.filter((item) => item.userCreated === true).length;
+  const countEl = $('#my-exercises-count');
+  if (countEl) countEl.textContent = `(${myExerciseCount})`;
+  $$('.exercise-library-tab').forEach((button) => {
+    const active = button.dataset.exerciseLibraryMode === exerciseLibraryMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
   const filters = {
     formato_juego: form.elements.formato_juego?.value || form.elements.format?.value || 'todos',
     category: form.elements.category.value,
@@ -2249,12 +2293,11 @@ function renderExercises() {
     favorites: form.elements.favorites.checked,
     video: form.elements.video.checked,
   };
-  // Un vídeo subido por el entrenador (recordType=exerciseVideo) es vídeo humano/real.
-  // Lo aplicamos solo para filtrar; no mutamos ni sobrescribimos el catálogo validado.
+
   const humanVideoExerciseIds = new Set(
     state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
   );
-  const filterableExercises = humanVideoExerciseIds.size
+  const withVideoFlags = humanVideoExerciseIds.size
     ? state.exercises.map((item) => (
         humanVideoExerciseIds.has(String(item.id)) && item.hasHumanVideo !== true
           ? { ...item, hasHumanVideo: true }
@@ -2262,9 +2305,12 @@ function renderExercises() {
       ))
     : state.exercises;
 
+  const filterableExercises = exerciseLibraryMode === 'mine'
+    ? withVideoFlags.filter((item) => item.userCreated === true)
+    : withVideoFlags;
+
   const exercises = filterExercises(filterableExercises, filters)
     .sort((a, b) => {
-      // Los ejercicios validados van primero, en orden canónico (comenzando por los interactivos y con vídeo).
       const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
       const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
       const aValid = aIdx !== -1, bValid = bIdx !== -1;
@@ -2273,14 +2319,16 @@ function renderExercises() {
       if (bValid) return 1;
       return Number(b.favorite) - Number(a.favorite) || a.category.localeCompare(b.category, 'es') || a.name.localeCompare(b.name, 'es');
     });
+
   const list = $('#exercises-list');
   list.innerHTML = exercises.length ? exercises.map((rawItem) => {
     const validated = findValidatedExercise(rawItem.id);
-    if (validated) return renderExerciseGridCard(validated);
+    if (validated) return renderExerciseGridCard({ ...validated, favorite: Boolean(rawItem.favorite) });
     return exerciseCardHTML(rawItem);
-  }).join('') : empty('No hay ejercicios que coincidan con estos filtros.');
+  }).join('') : empty(exerciseLibraryMode === 'mine'
+    ? 'Todavía no has creado ejercicios propios con + Ejercicio.'
+    : 'No hay ejercicios que coincidan con estos filtros.');
 }
-
 function editExercise(id) {
   const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
   if (!item) return;
@@ -2300,12 +2348,21 @@ async function saveExercise(event) {
     id: existing?.id ?? uid(), favorite: existing?.favorite ?? false,
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(), diagram: existing?.diagram,
   });
-  await put('settings', { ...existing, ...saved, recordType: 'exercise', example: existing?.example ?? false });
+  await put('settings', {
+    ...existing,
+    ...saved,
+    recordType: 'exercise',
+    userCreated: true,
+    source: 'personal',
+    example: false,
+  });
   $('#exercise-dialog').close();
   form.reset();
+  exerciseLibraryMode = 'mine';
   await refresh();
   showView('ejercicios');
-  toast(existing ? 'Ejercicio actualizado.' : 'Ejercicio creado.');
+  setExerciseLibraryMode('mine');
+  toast(existing ? 'Ejercicio actualizado en Mis ejercicios.' : 'Ejercicio creado y guardado en Mis ejercicios.');
 }
 
 function exerciseOptions(selectedId = '', predicate = () => true) {
@@ -2376,7 +2433,16 @@ function renderSessionDraft() {
   }
   const picker = `<div class="session-exercise-picker"><h3>Añadir ejercicios</h3><p class="meta">Pulsa <strong>+ Añadir</strong> en cada ejercicio. Entra como calentamiento, parte principal o juego final según su categoría.</p><div class="exercise-grid">${state.exercises.map((rawItem) => {
     const item = completeExercise(rawItem);
-    return `<article class="panel exercise-card picker-card"><div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.name)}</h3></div></div><div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div><button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button></article>`;
+    return `<article class="panel exercise-card picker-card"
+      data-user-created="${rawItem.userCreated === true ? '1' : '0'}"
+      data-category="${escapeHtml(item.category || '')}"
+      data-formato-juego="${escapeHtml(rawItem.formato_juego || rawItem.format || '')}"
+      data-material="${escapeHtml(item.material || '')}"
+      data-difficulty="${escapeHtml(rawItem.difficulty || '')}">
+      <div class="exercise-card-head"><div><span class="pill">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.name)}</h3></div></div>
+      <div class="exercise-highlights"><span class="player-count">👥 ${escapeHtml(item.players)}</span><span class="pill accent">${item.duration} min</span></div>
+      <button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button>
+    </article>`;
   }).join('')}</div></div>`;
   root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
@@ -2479,6 +2545,7 @@ async function saveTrainingSession(event) {
   renderTrainings();
   showView('sesiones');
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
+  toast(existing ? 'Sesión actualizada.' : 'Sesión creada.');
 }
 
 function videosForExercise(exerciseId) {
@@ -2637,6 +2704,7 @@ function showSessionDetail(sessionId) {
     ${materialText ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(materialText)}</p>` : ''}
     ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
     <div class="button-row" style="margin-top:1rem;">
+      <button type="button" class="edit-session secondary" data-id="${session.id}">✏️ Editar sesión</button>
       <button type="button" class="open-whistle-session primary" data-id="${session.id}">⏱️ Iniciar cronómetro / Silbato</button>
       <button type="button" class="open-whatsapp-session secondary" data-id="${session.id}">📱 Compartir por WhatsApp</button>
     </div>
@@ -4644,9 +4712,15 @@ function wireEvents() {
     if (form?.elements.id) form.elements.id.value = '';
     if (form?.elements.photoRemoved) form.elements.photoRemoved.value = '0';
     if (button.dataset.dialog === 'player-dialog') playerCropper?.setExistingPhoto('');
+    if (button.dataset.dialog === 'exercise-dialog' && form?.elements.formato_juego) {
+      form.elements.formato_juego.value = state.format === 'F7' ? 'futbol_7' : 'futbol_11';
+    }
     $(`#${button.dataset.dialog}`).showModal();
   }));
-  $$('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
+  $('.exercise-library-tab').forEach((button) => button.addEventListener('click', () => {
+    setExerciseLibraryMode(button.dataset.exerciseLibraryMode);
+  }));
+  $('[data-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog').close()));
 
   playerCropper = wirePhotoCropperField({
     fileInput: $('#player-form [name="photo"]'),
@@ -5122,7 +5196,7 @@ function wireEvents() {
       const exercise = state.exercises.find(({ id }) => id === event.target.value);
       const row = event.target.closest('.session-block');
       if (exercise && row) {
-        row.querySelector('[name="blockType"]').value = exercise.category === 'Calentamiento' ? 'warmup' : exercise.category === 'Partido condicionado / Small-sided games' ? 'final' : 'main';
+        row.querySelector('[name="blockType"]').value = sessionBlockType(exercise.category);
         row.querySelector('.pill').textContent = sessionBlockLabel(row.querySelector('[name="blockType"]').value);
       }
       syncSessionDraft();
@@ -5252,7 +5326,11 @@ function wireEvents() {
     }
     if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
-    if (target.matches('.edit-session')) sessionBuilder(target.dataset.id);
+    if (target.matches('.edit-session')) {
+      target.closest('dialog')?.close();
+      showView('sesiones');
+      sessionBuilder(target.dataset.id);
+    }
     if (target.matches('.view-session')) showSessionDetail(target.dataset.id);
     const toggleBtn = target.closest('.toggle-session-blocks');
     if (toggleBtn) {
@@ -5444,7 +5522,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2503').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260918-exercises-2506-custom-sessions').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
