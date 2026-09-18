@@ -543,13 +543,13 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1">
+          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}">
         </div>
       </div>` : previewVideoSrc ? `
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <video class="exercise-preview-static-video" muted playsinline preload="metadata" src="${esc(previewVideoSrc)}#t=0.05" aria-label="Vista previa de ${esc(cleanNombre)}"></video>
+          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
         </div>
       </div>` : `
       <div class="exercise-media-preview" data-media-order="1">
@@ -699,9 +699,9 @@ export function renderExerciseGridCard(ex) {
   <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
     <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
       ${preview
-        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy" data-preview-image="1">`
+        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy" data-preview-image="1" data-preview-video-src="${esc(graphicPreviewVideo)}">`
         : graphicPreviewVideo
-          ? `<video class="card-preview-img card-preview-static-video" muted playsinline preload="metadata" src="${esc(graphicPreviewVideo)}#t=0.05" aria-label="Vista previa de ${esc(cleanNombre)}"></video>`
+          ? `<canvas class="card-preview-img card-preview-static-canvas" data-preview-video-src="${esc(graphicPreviewVideo)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>`
           : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
     </div>
