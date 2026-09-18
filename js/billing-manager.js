@@ -19,7 +19,9 @@ function cacheKey(userId) {
 
 export function isSubscriptionActive(sub, now = Date.now()) {
   if (!sub) return false;
-  if (sub.estado === 'gift_free') return true;
+  if (sub.estado === 'gift_free') {
+    return !sub.expira_en || new Date(sub.expira_en).getTime() > now;
+  }
   if (sub.estado === 'active') {
     return !sub.expira_en || new Date(sub.expira_en).getTime() > now;
   }
@@ -39,7 +41,11 @@ export function getDaysRemaining(sub, now = Date.now()) {
 export function formatSubscriptionStatus(sub, now = Date.now()) {
   if (!sub) return { label: 'Sin plan activo', canUseApp: false, kind: 'inactive' };
   if (sub.estado === 'gift_free') {
-    return { label: '🎁 Pro vitalicio', canUseApp: true, kind: 'gift' };
+    const active = isSubscriptionActive(sub, now);
+    if (!active) return { label: 'Regalo caducado', canUseApp: false, kind: 'inactive' };
+    return sub.expira_en
+      ? { label: `🎁 Pro gratis hasta ${new Date(sub.expira_en).toLocaleDateString('es-ES')}`, canUseApp: true, kind: 'gift' }
+      : { label: '🎁 Pro vitalicio', canUseApp: true, kind: 'gift' };
   }
   if (sub.estado === 'active') {
     const active = isSubscriptionActive(sub, now);
@@ -163,7 +169,7 @@ function accountLabel(user, profile) {
 
 function planTitle(sub) {
   if (!sub) return 'Sin plan activo';
-  if (sub.estado === 'gift_free') return 'Pro vitalicio';
+  if (sub.estado === 'gift_free') return sub.expira_en ? 'Pro gratis' : 'Pro vitalicio';
   if (sub.estado === 'trial') return 'Prueba Pro de 14 días';
   if (sub.estado === 'active') return sub.plan === 'anual' ? 'Pro anual' : 'Pro mensual';
   return 'Sin plan activo';
@@ -249,16 +255,15 @@ function renderPlansView(root = document, context = currentContext) {
     header.insertAdjacentHTML('afterend', `<article class="panel cb-plans-account-summary"><strong>Estado actual:</strong> ${accountStatus}</article>`);
   }
 
-  const isAdmin = context?.profile?.role === 'owner' || context?.profile?.role === 'admin';
   const hasUser = Boolean(context?.user);
   const checkoutButtons = [...target.querySelectorAll('.cb-checkout-btn')];
+  const status = formatSubscriptionStatus(context?.subscription || null);
 
-  if (isAdmin) {
+  if (status.canUseApp && context?.subscription?.estado === 'gift_free') {
     checkoutButtons.forEach((button) => {
       button.disabled = true;
-      button.textContent = 'Incluido en tu Pro vitalicio';
+      button.textContent = context.subscription.expira_en ? 'Acceso gratis activo' : 'Incluido en tu Pro vitalicio';
     });
-    target.querySelector('.cb-promo-redeem-box')?.classList.add('hidden');
   } else if (!hasUser) {
     checkoutButtons.forEach((button) => {
       button.disabled = true;
@@ -287,7 +292,7 @@ function renderPlansView(root = document, context = currentContext) {
   const redeemButton = target.querySelector('#cb-paywall-redeem-btn');
   const redeemInput = target.querySelector('#cb-paywall-promo-input');
   const redeemFeedback = target.querySelector('#cb-paywall-promo-feedback');
-  if (redeemButton && hasUser && !isAdmin && !isDelegate) {
+  if (redeemButton && hasUser && !isDelegate) {
     redeemButton.addEventListener('click', async () => {
       const code = redeemInput?.value?.trim();
       if (!code) return;
@@ -348,7 +353,6 @@ function updateAccountBillingUI(root, context) {
   discountBox?.classList.toggle('hidden', discount <= 0);
   if (discountEl && discount > 0) discountEl.textContent = `${discount}%`;
 
-  const isOwner = context.profile?.role === 'owner' || context.profile?.role === 'admin';
   const isDelegate = context.profile?.role === 'delegate';
   upgrade?.classList.toggle('hidden', isDelegate);
   if (upgrade) upgrade.textContent = '⭐ Ver planes y pagos';
@@ -470,10 +474,9 @@ async function refreshBillingState() {
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
-  const isAdmin = profile?.role === 'owner' || profile?.role === 'admin';
-  if (!isAdmin && subscriptionChecked && !canUse) {
+  if (subscriptionChecked && !canUse) {
     await openPaywallModal(document, { forced: true });
-  } else if (canUse || isAdmin) {
+  } else if (canUse) {
     closePaywall(document);
   }
 
