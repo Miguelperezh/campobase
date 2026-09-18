@@ -44,8 +44,10 @@ export function toCampoBaseExercise(item) {
   const videoMuestra = humanVideoUrl(item);
   const mapped = {
     ...exercise,
-    // `video` del formato interno sigue siendo la animación/MP4 gráfico para no romper nada.
-    // El vídeo humano queda separado y es el que usa el filtro «Solo con vídeo».
+    // Todo lo que sale de este catálogo es ejercicio validado: su campo genérico
+    // `video` puede ser el MP4 gráfico y nunca debe activar por sí solo «Solo con vídeo».
+    validated: true,
+    source: 'validado',
     video_muestra: videoMuestra,
     hasHumanVideo: Boolean(videoMuestra),
   };
