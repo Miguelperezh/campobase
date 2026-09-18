@@ -160,3 +160,28 @@ test('la fecha de fin de prueba se muestra de forma explícita', async () => {
   assert.match(auth, /No se te cobrará antes del/);
   assert.match(billing, /Tu prueba termina el/);
 });
+
+
+test('la cancelación vive en Ajustes y no en la vista comercial de Planes', async () => {
+  const billing = await projectFile('js/billing-manager.js');
+  assert.match(billing, /id="cb-account-cancel-btn"/);
+  assert.match(billing, /Cancelar antes del primer cobro/);
+  const plansStart = billing.indexOf('function renderPlansView');
+  const settingsStart = billing.indexOf('function updateAccountBillingUI');
+  const plansBlock = billing.slice(plansStart, settingsStart);
+  assert.doesNotMatch(plansBlock, /cb-cancel-subscription-btn/);
+});
+
+test('durante la prueba aparece un contador compacto en Hoy y el detalle en Ajustes', async () => {
+  const [billing, css] = await Promise.all([
+    projectFile('js/billing-manager.js'),
+    projectFile('billing.css'),
+  ]);
+  assert.match(billing, /trialCountdownText/);
+  assert.match(billing, /renderTodayTrialBanner/);
+  assert.match(billing, /Quedan/);
+  assert.match(billing, /Termina el/);
+  assert.match(billing, /Prueba gratuita activa/);
+  assert.match(css, /cb-today-trial-banner/);
+  assert.match(css, /cb-account-trial-summary/);
+});
