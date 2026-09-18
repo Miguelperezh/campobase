@@ -1465,3 +1465,28 @@ La simulación independiente debe usarse para validar:
 
 Después de validar la interfaz en esa simulación, la funcionalidad real se prueba por separado con autenticación y Stripe reales.
 
+---
+
+# 21. Corrección de la simulación — nunca dentro del runtime real
+
+La simulación visual de prueba **no debe activarse dentro de la app real mediante query params ni sustituir el contexto real de usuario/suscripción**.
+
+Queda prohibido volver a:
+- inyectar una suscripción ficticia en `billing-manager.js`;
+- sustituir `currentContext` o el usuario real por un usuario simulado;
+- usar `?simulacion=prueba` para alterar el runtime real;
+- ocultar o saltarse el flujo normal de login/PIN por mostrar una simulación;
+- hacer que una simulación pueda afectar carga de datos, sesión, IndexedDB, Supabase o Stripe.
+
+La simulación debe vivir en una página separada:
+- `billing-preview.html`
+
+Objetivo:
+- enseñar registro + elección de plan;
+- enseñar contador de prueba;
+- enseñar Ajustes → Mi cuenta y suscripción;
+- enseñar cancelación antes del primer cobro;
+- permitir validar textos y diseño sin tocar la app ni sus datos.
+
+La app real y la simulación deben estar completamente separadas.
+
