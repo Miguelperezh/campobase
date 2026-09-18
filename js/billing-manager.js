@@ -188,7 +188,8 @@ function accountLabel(user, profile) {
 function planTitle(sub) {
   if (!sub) return 'Sin plan activo';
   if (sub.estado === 'gift_free') return sub.expira_en ? 'Pro gratis' : 'Pro vitalicio';
-  if (sub.estado === 'trial') return 'Prueba Pro de 14 días';
+  if (sub.estado === 'pending_payment') return sub.plan === 'anual' ? 'Anual · pendiente de activar prueba' : 'Mensual · pendiente de activar prueba';
+  if (sub.estado === 'trial') return sub.plan === 'anual' ? 'Anual · prueba Pro' : 'Mensual · prueba Pro';
   if (sub.estado === 'active') return sub.plan === 'anual' ? 'Pro anual' : 'Pro mensual';
   return 'Sin plan activo';
 }
