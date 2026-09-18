@@ -109,12 +109,27 @@ async function uploadAsset(releaseId, asset, body) {
   return res.json();
 }
 async function verifyRange(asset, expectedSize) {
-  const res = await fetch(publicUrl(asset), { headers: { Range: 'bytes=0-0' }, redirect: 'follow' });
-  if (res.status !== 206) throw new Error(`Range no válido ${asset}: HTTP ${res.status}`);
-  const range = res.headers.get('content-range') || '';
-  if (!range.endsWith('/' + expectedSize)) throw new Error(`Content-Range incorrecto ${asset}: ${range}`);
-  const one = Buffer.from(await res.arrayBuffer());
-  if (one.length !== 1) throw new Error(`Range devolvió ${one.length} bytes en ${asset}`);
+  const url = publicUrl(asset);
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= 12; attempt++) {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-0' }, redirect: 'follow' });
+    lastStatus = res.status;
+    if (res.status === 206) {
+      const range = res.headers.get('content-range') || '';
+      if (!range.endsWith('/' + expectedSize)) {
+        throw new Error(`Content-Range incorrecto ${asset}: ${range}`);
+      }
+      const one = Buffer.from(await res.arrayBuffer());
+      if (one.length !== 1) throw new Error(`Range devolvió ${one.length} bytes en ${asset}`);
+      return;
+    }
+    // Un asset recién subido puede tardar unos segundos en propagarse al CDN público.
+    if (res.status !== 404 && res.status !== 403 && res.status !== 502 && res.status !== 503) {
+      throw new Error(`Range no válido ${asset}: HTTP ${res.status}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, Math.min(1000 * attempt, 5000)));
+  }
+  throw new Error(`El asset no se propagó a tiempo ${asset}: último HTTP ${lastStatus}`);
 }
 
 console.log(`Destino: GitHub Release ${TAG}`);
