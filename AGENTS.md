@@ -1089,3 +1089,53 @@ Antes de dar por terminada una modificación visual:
 4. comprobar específicamente Planes y Cuenta de delegado si se han tocado;
 5. no afirmar que una interfaz está validada solo porque pase tests de código.
 
+---
+
+# 17. Planes — diseño profesional, texto completo y sin referencias comerciales a “nube”
+
+Esta norma corrige una regresión visual detectada en validación.
+
+## 17.1 El texto nunca puede partirse de forma artificial
+
+En Planes y en cualquier pantalla comercial:
+- no usar `overflow-wrap:anywhere` para textos normales;
+- no usar reglas que puedan partir palabras por la mitad;
+- mantener `word-break: normal`;
+- mantener `hyphens: none` salvo petición expresa;
+- las tarjetas deben crecer o pasar a una sola columna antes de comprimir el texto;
+- en el modal de acceso/registro, las listas de funciones deben ser de una columna si el espacio es limitado;
+- la legibilidad tiene prioridad sobre meter más columnas.
+
+Ejemplos que no deben volver a aparecer:
+- `Estadístic / as`;
+- `configurab / les`;
+- `entrenami / entos`;
+- cualquier palabra dividida porque la tarjeta sea demasiado estrecha.
+
+## 17.2 Presentación profesional
+
+La pantalla de Planes debe usar:
+- jerarquía clara;
+- tarjetas amplias;
+- títulos cortos;
+- listas limpias;
+- pasos de acceso en formato vertical legible;
+- numeración o iconografía sobria;
+- suficiente espacio en blanco.
+
+No usar una cuadrícula de muchas cajas estrechas si perjudica la lectura.
+
+## 17.3 No vender la infraestructura
+
+No mostrar “nube”, “sincronización en la nube” ni lenguaje de infraestructura como argumento comercial en la pantalla de Planes.
+
+Sí pueden mostrarse beneficios concretos para el usuario, por ejemplo:
+- acceso desde varios dispositivos;
+- aplicación instalable;
+- exportar e importar datos;
+- personalización;
+- PIN de dispositivo;
+- códigos de regalo/descuento.
+
+La infraestructura técnica puede seguir existiendo y documentarse en archivos técnicos, pero no debe aparecer como función comercial salvo petición expresa del usuario.
+
