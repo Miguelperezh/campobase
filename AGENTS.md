@@ -294,6 +294,29 @@ Reglas obligatorias:
 Comprobar siempre el flujo completo:
 **+ Ejercicio → Guardar → Mis ejercicios → recargar → sigue visible → Sesiones → Categoría → Mis ejercicios → añadir a sesión**.
 
+## 2.10.2 Integración aplicada en la app — 18/09/2026
+
+Integración funcional fusionada en `main` mediante el PR #46, commit de merge:
+`4d315a05fff9b5632ffd2f0fa332fb11335c7d23`.
+
+Estado que debe conservarse:
+
+- Los ejercicios personales creados desde **+ Ejercicio** persisten como registros propios del entrenador.
+- Al guardarlos aparecen en **Mis ejercicios** y siguen visibles después de recargar/sincronizar.
+- **Mis ejercicios** está disponible también dentro del desplegable **Categoría** del selector de ejercicios de **Sesiones**.
+- Los ejercicios personales conservan categoría, formato F7/F11, material y dificultad para poder filtrarlos y añadirlos a una sesión.
+- Crear y editar sesiones utiliza el mismo builder y debe conservar ID de sesión, fecha de creación, bloques, orden, minutos, notas y ejercicios seleccionados.
+- Existe prueba de regresión específica para crear y editar una sesión que contiene un ejercicio personal.
+- Para los ejercicios del nuevo formato, el orden visual obligatorio sigue siendo:
+  1. preview;
+  2. MP4 gráfico;
+  3. vídeo humano.
+- El vídeo humano nunca se utiliza como falsa preview.
+- Si el `preview.png` todavía no está publicado, la interfaz evita la URL rota y genera una portada estática a partir del **MP4 gráfico**, nunca del vídeo humano.
+- En el selector de Sesiones se mantiene el mismo criterio de preview gráfica.
+- No se han eliminado ejercicios, sesiones, vídeos ni datos existentes y no se ha modificado la lógica validada del editor/pizarra.
+- La verificación automática `CampoBase verify` del cambio funcional pasó correctamente antes y después de fusionar.
+
 ## 2.11 Supabase
 
 Supabase es fuente de verdad cuando la app use esos datos.
@@ -969,20 +992,34 @@ Para el almacenamiento y entrega de vídeos de CampoBase, Miguel exige **coste m
 - Si un servicio gratuito alcanza un límite, se prefiere limitación/suspensión antes que una factura.
 - No cambiar de proveedor sin autorización explícita de Miguel.
 
-## 16.2 Destino elegido: GitHub Releases
+## 16.2 Destino vigente: GitHub Releases
 
-El destino elegido para validar los vídeos pesados es **GitHub Releases del repositorio CampoBase**.
+El destino vigente de los MP4 pesados de CampoBase es **GitHub Releases del repositorio `Miguelperezh/campobase`**.
 
-GitHub documenta para Releases:
-- hasta 1.000 assets por release;
-- cada asset por debajo de 2 GiB;
-- sin límite declarado de tamaño total del release;
-- sin límite declarado de ancho de banda de Releases.
+Release de producción:
+- tag: `campobase-videos-v1`;
+- nombre: `CampoBase video assets v1`;
+- estado: release estable, no prerelease;
+- migración inicial completada el 18/09/2026;
+- 323/323 MP4 migrados;
+- 316.509.123 bytes verificados en origen y destino.
 
-Limitación obligatoria:
-- GitHub Releases no se tratará como un CDN con SLA;
-- GitHub puede limitar alojamiento/actividad si considera el uso de ancho de banda significativamente excesivo;
-- por ello no se cambia producción hasta superar una prueba real de reproducción, HTTP Range/seek y rendimiento.
+La aplicación de producción ya resuelve los MP4 migrados hacia este release mediante `resolveHostedVideoUrl()` en `js/ejercicio-videos.js`.
+
+Validación realizada antes de activar producción:
+- descarga completa;
+- HTTP Range `206`;
+- `Accept-Ranges: bytes`;
+- reproducción;
+- seek/avance/retroceso;
+- Chromium;
+- WebKit;
+- smoke test contra la web de producción publicada en GitHub Pages;
+- batería `CampoBase verify` en verde.
+
+Cloudflare R2 y Tigris NO son destinos vigentes. No reactivar esos caminos salvo petición expresa de Miguel.
+
+GitHub Releases no se tratará como un CDN con SLA. GitHub puede limitar alojamiento/actividad si considera el uso de ancho de banda significativamente excesivo. Si algún día el servicio deja de ser adecuado, no cambiar de proveedor por iniciativa propia: documentar el problema y esperar autorización de Miguel.
 
 ## 16.3 Qué se guarda en cada sitio
 
@@ -990,6 +1027,8 @@ Limitación obligatoria:
 - **GitHub Releases:** archivos MP4 pesados.
 - **Supabase:** datos sincronizados de CampoBase y metadata que la aplicación necesite compartir.
 - **Sesiones:** referencias mediante `exerciseId`; nunca incrustar MP4 ni blobs.
+
+Los MP4 originales que aún permanezcan en Supabase Storage son únicamente rollback de seguridad de la migración histórica. No deben considerarse el destino para nuevos vídeos y no deben borrarse sin autorización expresa de Miguel.
 
 Una tarea de vídeos no autoriza a mover jugadores, partidos, sesiones, estadísticas, Auth, pagos, interfaz ni otros datos.
 
@@ -1003,41 +1042,66 @@ Un agente autorizado para vídeos puede gestionar los assets mediante GitHub API
 - Nunca guardar tokens/secretos en Git, frontend, documentación o logs.
 - Usar permisos mínimos.
 - No borrar un vídeo existente salvo petición expresa y con rollback/validación.
+- Si el entorno concreto del agente no dispone de una acción capaz de subir binarios a Releases, debe usar un entorno autorizado que sí disponga de GitHub API/CLI; no debe volver a Supabase ni cambiar de proveedor por su cuenta.
 
-## 16.5 Nombres y asociación
+## 16.5 Nombres, rutas y asociación
 
 Los assets de GitHub Releases son archivos planos, no carpetas.
 
-- No cambiar `exerciseId`.
-- Usar nombres de asset estables y únicos derivados de la ruta/ID.
-- Mantener una correspondencia determinista entre `exerciseId`, tipo de vídeo y asset.
-- No sobrescribir silenciosamente otro ejercicio.
-- Mantener separadas las funciones de `ejercicio.mp4` y `video_muestra_humanos.mp4`.
+Regla de nombre para un objeto cuya ruta lógica sea, por ejemplo:
+`library-v2-preview/pdf150-022/ejercicio.mp4`
 
-## 16.6 Migración segura
+Asset en Releases:
+`library-v2-preview__pdf150-022__ejercicio.mp4`
 
-Orden obligatorio:
-1. subir un único MP4 pequeño de prueba;
+Regla:
+- convertir cada `/` de la ruta lógica en `__`;
+- no cambiar `exerciseId`;
+- usar nombres de asset estables y únicos;
+- mantener una correspondencia determinista entre `exerciseId`, tipo de vídeo y asset;
+- no sobrescribir silenciosamente otro ejercicio;
+- mantener separadas las funciones de `ejercicio.mp4` y vídeo humano/de muestra;
+- no fabricar una URL de Release para una ruta que nunca haya sido subida realmente.
+
+Durante la migración se detectaron referencias `CAMPOBASE-VIDEO-.../ejercicio.mp4` que no existían físicamente en Storage. El resolver está diseñado para NO convertir esas referencias en assets inexistentes. Ningún agente debe “arreglarlas” inventando un archivo o cambiando el ejercicio sin una tarea específica de Miguel.
+
+## 16.6 Migración y rollback
+
+La migración Supabase Storage → GitHub Releases está completada en producción.
+
+Para cualquier migración futura, el orden obligatorio sigue siendo:
+1. copiar;
 2. verificar descarga completa y tamaño;
 3. verificar HTTP Range/206 para seek;
-4. medir respuesta y comprobar reproducción;
-5. probar la app en rama aislada;
-6. probar móvil y escritorio;
-7. migrar el resto solo si la prueba es correcta;
-8. cambiar URLs de producción únicamente tras validar;
-9. conservar todos los originales de Supabase hasta confirmación explícita de Miguel.
+4. comprobar reproducción;
+5. probar en rama aislada;
+6. probar Chromium/WebKit y móvil/escritorio cuando corresponda;
+7. cambiar producción solo después de validar;
+8. mantener la fuente anterior como rollback hasta autorización expresa para borrarla.
 
 No hacer una migración destructiva directa.
 
 ## 16.7 Nuevos vídeos futuros
 
 Cuando Miguel pida a una IA/agente crear o integrar un ejercicio con vídeo:
-- el agente autorizado debe subir el MP4 al GitHub Release vigente;
-- debe actualizar únicamente la referencia necesaria;
-- debe conservar el `exerciseId`;
-- debe verificar URL, reproducción y seek;
-- no debe mandar a Miguel a hacer manualmente la subida si dispone de acceso a GitHub;
-- no debe guardar el MP4 en Supabase Storage como solución alternativa salvo petición explícita.
+
+1. determinar el `exerciseId` correcto según las reglas de ejercicios;
+2. preparar la ruta lógica estable del vídeo;
+3. convertir la ruta lógica al nombre plano del asset sustituyendo `/` por `__`;
+4. subir el MP4 al release `campobase-videos-v1`;
+5. comprobar que el asset existe y que su tamaño es correcto;
+6. comprobar reproducción y seek;
+7. actualizar únicamente la referencia necesaria del ejercicio/metadata;
+8. comprobar que CampoBase carga el vídeo correcto;
+9. ejecutar las pruebas relacionadas antes de fusionar.
+
+URL pública de un asset:
+`https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/<NOMBRE_ASSET>`
+
+- No mandar a Miguel a realizar manualmente la subida si el agente dispone de acceso GitHub autorizado.
+- No guardar nuevos MP4 en Supabase Storage como solución alternativa salvo petición explícita.
+- No incrustar vídeos binarios en la base de datos.
+- No meter MP4 pesados como archivos normales del repositorio cuando su destino corresponde a Releases.
 
 ## 16.8 Cambios prohibidos desde una tarea de vídeos
 
@@ -1056,14 +1120,14 @@ Solo se toca otra área cuando Miguel lo pida expresamente.
 
 ## 16.9 Validación mínima
 
-Antes de declarar terminado:
+Antes de declarar terminado cualquier cambio de vídeo:
 - URL remota válida;
-- `Content-Type` adecuado;
+- asset realmente existente;
 - tamaño correcto;
 - reproducción completa;
 - seek/avance/retroceso correcto;
 - asociación correcta ejercicio-vídeo;
-- prueba móvil y escritorio antes de producción;
+- prueba de navegador relevante;
 - pruebas del proyecto correspondientes;
 - cero vídeos faltantes o rotos.
 
@@ -1367,4 +1431,62 @@ Antes de dar por validado un cambio visual:
 2. cambiar el color de fuente y comprobar títulos, párrafos y metadatos;
 3. comprobar que el texto de los botones mantiene contraste;
 4. comprobar que ningún componente nuevo conserva rojo/negro/blanco fijo salvo que sea semánticamente necesario.
+
+---
+
+# 22. Corrección de seguridad de validaciones — la simulación nunca entra en la app real
+
+Esta norma corrige el enfoque anterior de la sección 20.
+
+La simulación visual de Fase 4 **no debe activarse mediante parámetros dentro de la aplicación real** ni sustituir temporalmente el usuario, la suscripción o el contexto de datos.
+
+Motivo:
+- una simulación incrustada en la app puede interferir con autenticación, PIN, sesión y carga de datos;
+- una URL de validación en otro origen puede no compartir almacenamiento local con la app real;
+- una simulación nunca debe hacer parecer que la aplicación real está vacía o desbloqueada.
+
+Regla vigente:
+- la app real conserva siempre su autenticación normal;
+- sin sesión válida debe mostrarse un acceso claro por cuenta y mantenerse disponible el acceso local con PIN;
+- una cuenta recordada con sesión válida puede seguir usando su PIN de dispositivo;
+- la simulación vive en una página independiente, actualmente `simulacion-fase4.html`;
+- esa página no importa `app.js`, no conecta con Supabase, no usa datos reales y no modifica ninguna cuenta;
+- cualquier botón de pago, cancelación, registro o delegado dentro de esa página es únicamente demostrativo.
+
+La simulación independiente debe usarse para validar:
+- registro;
+- elección mensual/anual;
+- paso visual por Stripe;
+- activación de prueba;
+- contador;
+- cancelación antes del primer cobro;
+- Planes;
+- Cuenta de delegado y permisos.
+
+Después de validar la interfaz en esa simulación, la funcionalidad real se prueba por separado con autenticación y Stripe reales.
+
+---
+
+# 21. Corrección de la simulación — nunca dentro del runtime real
+
+La simulación visual de prueba **no debe activarse dentro de la app real mediante query params ni sustituir el contexto real de usuario/suscripción**.
+
+Queda prohibido volver a:
+- inyectar una suscripción ficticia en `billing-manager.js`;
+- sustituir `currentContext` o el usuario real por un usuario simulado;
+- usar `?simulacion=prueba` para alterar el runtime real;
+- ocultar o saltarse el flujo normal de login/PIN por mostrar una simulación;
+- hacer que una simulación pueda afectar carga de datos, sesión, IndexedDB, Supabase o Stripe.
+
+La simulación debe vivir en una página separada:
+- `billing-preview.html`
+
+Objetivo:
+- enseñar registro + elección de plan;
+- enseñar contador de prueba;
+- enseñar Ajustes → Mi cuenta y suscripción;
+- enseñar cancelación antes del primer cobro;
+- permitir validar textos y diseño sin tocar la app ni sus datos.
+
+La app real y la simulación deben estar completamente separadas.
 
