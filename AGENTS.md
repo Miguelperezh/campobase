@@ -23,6 +23,15 @@ Objetivo: reducir el egress de Supabase sin cambiar el comportamiento de CampoBa
 - Script: `scripts/migrate-supabase-videos-to-r2.mjs`
 - Manifiesto: `scripts/r2-migration-manifest.json`
 
+### Ejecución autónoma preferente
+
+- Si el agente se ejecuta en el Mac de Miguel, debe reutilizar primero la sesión existente de Wrangler. El login ya fue autorizado correctamente el 18/09/2026 mediante `npx wrangler login`.
+- Antes de pedir ninguna intervención al usuario, ejecutar `npx wrangler whoami`. Si responde autenticado, continuar sin preguntas.
+- No pedir al usuario que copie comandos, descargue archivos, suba vídeos manualmente ni use ChatGPT Work.
+- Un agente local con acceso al repositorio y al Terminal debe ejecutar por sí mismo la prueba, la migración y las verificaciones.
+- Si la sesión Wrangler ha caducado de verdad, entonces y solo entonces solicitar una nueva autorización OAuth.
+- Para automatización independiente del Mac se puede usar GitHub Actions, pero requiere una credencial Cloudflare no interactiva guardada de forma segura como secreto de GitHub. Nunca guardar esa credencial en archivos del repositorio.
+
 ### Procedimiento para un agente con acceso al equipo/Cloudflare
 1. Verificar autenticación de Wrangler con `npx wrangler whoami`. Si ya está autenticado, no preguntar nada al usuario.
 2. Probar un único objeto:
