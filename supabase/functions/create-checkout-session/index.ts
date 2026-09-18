@@ -60,8 +60,12 @@ Deno.serve(async (req) => {
     admin.from("suscripciones").select("*").eq("user_id", user.id).maybeSingle(),
   ]);
   if (subError) return json({ message: "No se ha podido comprobar la suscripción." }, 500);
-  if (profile?.role === "owner" || subscription?.estado === "gift_free") {
-    return json({ message: "Esta cuenta ya dispone de acceso Pro." }, 409);
+  const giftIsActive = subscription?.estado === "gift_free"
+    && (!subscription?.expira_en || new Date(subscription.expira_en).getTime() > Date.now());
+  const stripePlanAlreadyActive = Boolean(subscription?.stripe_subscription_id)
+    && ["trial", "active"].includes(subscription?.estado || "");
+  if (giftIsActive || stripePlanAlreadyActive) {
+    return json({ message: "Esta cuenta ya dispone de acceso activo." }, 409);
   }
 
   let body: { plan?: string; returnUrl?: string } = {};
@@ -103,9 +107,25 @@ Deno.serve(async (req) => {
   }
 
   const priceId = plan === "annual" ? annualPrice : monthlyPrice;
+  const trialEndSeconds = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60);
+  const trialEndsAt = new Date(trialEndSeconds * 1000).toISOString();
+
+  await admin
+    .from("suscripciones")
+    .update({
+      estado: "pending_payment",
+      plan: plan === "annual" ? "anual" : "mensual",
+      dias_prueba: 14,
+      expira_en: trialEndsAt,
+      cancel_at_period_end: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id);
+
   const sessionParams = new URLSearchParams({
     mode: "subscription",
     customer: customerId,
+    payment_method_collection: "always",
     "line_items[0][price]": priceId,
     "line_items[0][quantity]": "1",
     success_url: `${returnUrl}${returnUrl.includes("?") ? "&" : "?"}billing=success`,
@@ -115,12 +135,15 @@ Deno.serve(async (req) => {
     "metadata[plan]": plan === "annual" ? "anual" : "mensual",
     "subscription_data[metadata][user_id]": user.id,
     "subscription_data[metadata][plan]": plan === "annual" ? "anual" : "mensual",
+    "subscription_data[metadata][trial_ends_at]": trialEndsAt,
+    "subscription_data[trial_end]": String(trialEndSeconds),
+    "subscription_data[trial_settings][end_behavior][missing_payment_method]": "cancel",
   });
   if (couponId) sessionParams.set("discounts[0][coupon]", couponId);
 
   try {
     const session = await stripeRequest("checkout/sessions", stripeSecret, sessionParams);
-    return json({ url: session.url });
+    return json({ url: session.url, trialEndsAt });
   } catch (error) {
     console.error(error);
     return json({ message: error instanceof Error ? error.message : "No se ha podido iniciar el pago." }, 502);
