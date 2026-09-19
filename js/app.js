@@ -5575,7 +5575,8 @@ async function init() {
     || location.hostname.endsWith('.local')
     || location.hostname.startsWith('192.168.')
     || location.hostname.startsWith('10.');
-  if ('serviceWorker' in navigator) {
+  const isValidationPreview = location.pathname.endsWith('/validacion-estabilidad.html');
+  if ('serviceWorker' in navigator && !isValidationPreview) {
     if (isLocal) {
       const reloadKey = 'campobase.localServiceWorkerReloaded';
       const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
