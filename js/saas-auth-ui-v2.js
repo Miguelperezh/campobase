@@ -11,6 +11,7 @@ import {
   registerCoachAccount,
   sendPasswordResetEmail,
   setBoundSaasUserId,
+  signInWithCampoBasePin,
   updatePassword,
 } from './auth-manager.js';
 import { verifyPin } from './domain.js';
@@ -443,12 +444,6 @@ async function unlockBoundSession(client) {
   const settingsNav = $('#settings-nav');
   if (settingsNav) settingsNav.hidden = false;
   $('#demo-team-panel')?.classList.add('hidden');
-
-  // Al recuperar una sesión SaaS válida, refresca inmediatamente desde Supabase.
-  // No dejamos la interfaz abierta con una IndexedDB vacía esperando al intervalo.
-  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
-  if (typeof app.refresh === 'function') await app.refresh();
-
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
   return true;
@@ -583,22 +578,30 @@ function bindEvents(client) {
   $('#saas-remembered-pin-form')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const account = rememberedAccount();
-    const session = await getCurrentSession(client).catch(() => null);
-    if (!account || !session?.user || account.userId !== session.user.id) {
-      return setMessage('#saas-remembered-message', 'La sesión segura ha caducado. Inicia sesión una vez con tu correo y contraseña.');
-    }
+    if (!account?.userId) return setMessage('#saas-remembered-message', 'No se ha podido identificar esta cuenta.');
     setMessage('#saas-remembered-message', 'Comprobando…');
     const enteredPin = event.currentTarget.elements.pin.value;
-    const deviceOk = await verifyRememberedPin(account, enteredPin).catch(() => false);
-    let accountOk = false;
-    if (!deviceOk) {
+    let session = await getCurrentSession(client).catch(() => null);
+
+    if (!session?.user || account.userId !== session.user.id) {
       try {
-        accountOk = await verifyOwnerPinFromSupabase(client, session.user.id, enteredPin);
+        session = await signInWithCampoBasePin(client, account.userId, enteredPin);
       } catch (error) {
-        return setMessage('#saas-remembered-message', error.message || 'No se pudo comprobar el PIN en Supabase.');
+        return setMessage('#saas-remembered-message', error.message || 'PIN incorrecto.');
       }
+    } else {
+      const deviceOk = await verifyRememberedPin(account, enteredPin).catch(() => false);
+      let accountOk = false;
+      if (!deviceOk) {
+        try {
+          accountOk = await verifyOwnerPinFromSupabase(client, session.user.id, enteredPin);
+        } catch (error) {
+          return setMessage('#saas-remembered-message', error.message || 'No se pudo comprobar el PIN en Supabase.');
+        }
+      }
+      if (!deviceOk && !accountOk) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
     }
-    if (!deviceOk && !accountOk) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
+
     markBrowserSessionActive(session.user.id);
     try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
     setMessage('#saas-remembered-message', '');
