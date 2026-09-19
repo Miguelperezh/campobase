@@ -4865,7 +4865,7 @@ function toggleWhistleTimer() {
 }
 
 function wireEvents() {
-  $('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
+  $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => {
     const form = $(`#${button.dataset.dialog} form`);
