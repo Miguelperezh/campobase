@@ -2235,3 +2235,64 @@ Estado:
 - correcciones funcionales pendientes en la rama;
 - no fusionar a `main` hasta nueva validación visual de Miguel.
 
+---
+
+# 29. Corrección de fichas familiares y campo real de WhatsApp — 19/09/2026
+
+## 29.1 Fichas familiares
+
+Comprobación directa en Supabase:
+- la plantilla activa sigue teniendo 15 jugadores;
+- los teléfonos/nombres familiares validados siguen guardados en `public.jugadores`;
+- ejemplo comprobado: Diego Andrés Anaya Chaparro conserva a su madre Sheila y el teléfono validado;
+- Antonio Roldán Rendón sigue sin familiares/teléfonos hasta que Miguel aporte sus datos reales.
+
+Causa de riesgo detectada:
+- actualizaciones derivadas de estadísticas pueden generar una escritura completa del jugador;
+- si la copia local está antigua, esa escritura no debe poder sustituir campos personales más recientes de Supabase.
+
+Corrección:
+- una mutación local más antigua que `updated_at` remoto se descarta;
+- además, para cualquier `upsert` de jugadores, los campos personales remotos se preservan cuando `profileUpdatedAt` de Supabase es igual o posterior al de la copia local;
+- campos protegidos: nombre, dorsal, posiciones, pierna, notas, padre, teléfono padre, madre, teléfono madre, foto, createdAt y profileUpdatedAt;
+- una edición manual desde **Editar jugador** sigue pudiendo prevalecer porque actualiza `profileUpdatedAt`.
+
+Archivos:
+- `js/db.js`;
+- `js/supabase-client.js`;
+- `tests/session-data-stability.test.js`.
+
+## 29.2 Campo de WhatsApp
+
+Causa confirmada:
+- el selector guarda el valor como `match:<id>`;
+- el código anterior buscaba ese texto completo como si fuera el ID real;
+- por ello no encontraba el partido y podía mantener el campo anterior/default.
+
+Corrección:
+- se elimina el prefijo `match:` antes de buscar el partido;
+- al abrir un partido en WhatsApp se copia inmediatamente `match.location`;
+- al cambiar de partido se vuelve a copiar `match.location`;
+- Google Maps se regenera desde ese mismo campo;
+- se elimina el fallback silencioso a “Campo Alfonso Silva (La Ballena)” cuando el partido seleccionado no tiene campo;
+- el campo mostrado por WhatsApp debe ser exactamente el guardado en Calendario, salvo edición manual posterior de Miguel.
+
+Archivos:
+- `js/app.js`;
+- `tests/whatsapp-suite.test.js`.
+
+## 29.3 Verificación
+
+Commit funcional probado:
+- `38624716d28088a4fe1322e0badfa3201eb36e70`.
+
+Workflow de PR:
+- run `35440091867`;
+- resultado: **success**.
+
+Estado:
+- pruebas automáticas verdes;
+- datos reales siguen en Supabase;
+- pendiente únicamente de nueva validación visual de Miguel;
+- no fusionar todavía a `main`.
+
