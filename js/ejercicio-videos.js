@@ -1,11 +1,12 @@
 // Vídeos de ejercicios en CampoBase.
-// Los archivos viven en Supabase Storage (bucket público `ejercicio-videos`) y la
-// metadata (ruta, nombre, orden) se guarda como `recordType: 'exerciseVideo'` en el
-// store `settings` (tabla `configuracion`), de modo que se sincroniza entre dispositivos
-// con el mismo mecanismo que ejercicios, sesiones y tácticas.
+// Los MP4 pesados de producción se sirven desde GitHub Releases
+// (tag `campobase-videos-v1`). Supabase conserva datos/metadata sincronizada y
+// copias históricas de rollback, pero no es el destino vigente de nuevos MP4.
 //
-// El reproductor usa la URL pública del bucket, así que cualquier dispositivo con la
-// metadata puede reproducir el vídeo sin descargarlo a IndexedDB.
+// `resolveHostedVideoUrl()` transforma referencias históricas válidas del bucket
+// `ejercicio-videos` al asset equivalente de GitHub Releases. Los MP4 gráficos
+// ligeros que forman parte del código pueden seguir cargando desde `assets/ejercicios`.
+// Así los vídeos son visibles desde cualquier dispositivo sin guardarlos en IndexedDB.
 
 import { SUPABASE_URL, VIDEO_BUCKET } from './supabase-client.js';
 
