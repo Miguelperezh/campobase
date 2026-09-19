@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   cleanPlayerNumber,
   formatWhatsAppPhone,
@@ -608,5 +609,14 @@ test('WhatsApp de torneo avisa del torneo sin convocatoria y conserva los datos 
   assert.ok(msg.includes('Campo Municipal'));
   assert.ok(msg.includes('1.ª Oficial'));
   assert.ok(msg.includes('espinilleras'));
+});
+
+test('el controlador de WhatsApp usa el location real del partido seleccionado', async () => {
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /eventValue\.startsWith\('match:'\)/);
+  assert.match(app, /eventValue\.slice\('match:'\.length\)/);
+  assert.match(app, /const fieldName = String\(match\.location \|\| ''\)\.trim\(\)/);
+  assert.match(app, /populateWhatsAppEvents\(matchId, callupId, sessionId\);\s*if \(waCurrentMode === 'callup'\) syncWhatsAppMatchLocation\(\)/);
+  assert.doesNotMatch(app, /match\.location \|\| 'Campo Alfonso Silva \(La Ballena\)'/);
 });
 
