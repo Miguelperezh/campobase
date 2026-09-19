@@ -443,6 +443,12 @@ async function unlockBoundSession(client) {
   const settingsNav = $('#settings-nav');
   if (settingsNav) settingsNav.hidden = false;
   $('#demo-team-panel')?.classList.add('hidden');
+
+  // Al recuperar una sesión SaaS válida, refresca inmediatamente desde Supabase.
+  // No dejamos la interfaz abierta con una IndexedDB vacía esperando al intervalo.
+  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (typeof app.refresh === 'function') await app.refresh();
+
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
   return true;
