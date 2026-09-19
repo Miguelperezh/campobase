@@ -9,7 +9,7 @@ import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
 import { CLOUD_TABLES } from './sync-core.js';
-import { getBoundSaasUserId } from './auth-manager.js';
+import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -58,7 +58,17 @@ async function requireBoundUser(client) {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
   const user = data?.session?.user;
-  const boundUserId = getBoundSaasUserId();
+  let boundUserId = getBoundSaasUserId();
+
+  // Si Supabase conserva una sesión válida pero se perdió únicamente el
+  // enlace local de la cuenta, reconstruimos ese enlace desde la sesión
+  // autenticada. Así se recupera la base local del usuario y sus datos sin
+  // crear una cuenta vacía ni pedir que borre almacenamiento.
+  if (user?.id && !boundUserId) {
+    setBoundSaasUserId(user.id);
+    boundUserId = user.id;
+  }
+
   if (!user || !boundUserId || user.id !== boundUserId) {
     const authError = new Error('Inicia sesión para sincronizar esta cuenta.');
     authError.code = 'CAMPOBASE_AUTH_REQUIRED';
