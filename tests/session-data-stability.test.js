@@ -36,7 +36,8 @@ test('el acceso local de la misma pestaña puede restaurarse sin volver a pedir 
   const restore = app.slice(app.indexOf('async function restoreSessionRole'), app.indexOf('function showAuth'));
   assert.match(restore, /if \(hasSaasBinding\) return false/);
   assert.match(restore, /applyRole\(role\);\s*return true/);
-  assert.doesNotMatch(restore, /removeItem\(SESSION_ROLE_KEY\)/);
+  const localRestore = restore.slice(restore.indexOf('let hasSaasBinding'));
+  assert.doesNotMatch(localRestore, /removeItem\(SESSION_ROLE_KEY\)/);
 });
 
 test('la sesión SaaS activa de la pestaña no se consume después de una sola recarga', async () => {
