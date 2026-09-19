@@ -305,6 +305,11 @@ async function replaceLocalStore(store, cloudRecords) {
     requestResult(objectStore.getAll()),
     requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
   ]);
+  if (store === 'players' && (!cloudRecords || cloudRecords.length === 0) && localRecords.length > 0) {
+    console.warn('Protección activa: se omite vaciado local de jugadores sin confirmación explícita del servidor.');
+    await completed;
+    return;
+  }
   const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
   objectStore.clear();
   for (const record of reconciledRecords) objectStore.put(record);

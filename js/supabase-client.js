@@ -95,10 +95,18 @@ async function requireBoundUser(client) {
     throw authError;
   }
 
-  const { data: teamContext, error: teamError } = await client.rpc('mi_equipo_contexto');
-  if (teamError) throw teamError;
-  const dataOwnerUserId = teamContext?.data_owner_user_id || user.id;
-  return { user, teamContext: teamContext || null, dataOwnerUserId };
+  let dataOwnerUserId = user.id;
+  let teamContext = null;
+  try {
+    const { data, error: teamError } = await client.rpc('mi_equipo_contexto');
+    if (!teamError && data) {
+      teamContext = data;
+      if (teamContext.data_owner_user_id) dataOwnerUserId = teamContext.data_owner_user_id;
+    }
+  } catch (err) {
+    console.warn('No se pudo resolver el contexto de equipo, usando usuario principal:', err);
+  }
+  return { user, teamContext, dataOwnerUserId };
 }
 
 export function createCampoBaseCloudStore() {
@@ -106,7 +114,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v8'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v9'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())

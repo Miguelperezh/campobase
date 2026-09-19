@@ -147,6 +147,10 @@ export function triggerStandardView(viewId) {
 
   if (viewId === 'hoy') {
     renderTodayDashboard().catch(console.error);
+  } else if (viewId === 'plantilla') {
+    if (window.__campobase && typeof window.__campobase.renderAll === 'function') {
+      window.__campobase.renderAll();
+    }
   } else if (viewId === 'cuerpo-tecnico') {
     refreshStaffView().catch(console.error);
   }
