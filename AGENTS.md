@@ -3712,3 +3712,21 @@ Regla:
 
 
 
+
+
+## Nota de continuidad — 19/09/2026 — recuperación segura de ejercicios y datos
+
+Esta nota documenta la corrección aplicada tras una regresión de caché/cableado. No sustituye reglas anteriores.
+
+- Protección de datos: esta corrección no borra ni migra jugadores, teléfonos, estadísticas, partidos, convocatorias, asistencias, sesiones ni registros de Supabase.
+- Comprobación previa en Supabase: los datos del equipo seguían presentes; el síntoma de app vacía era de arranque/sesión/caché, no de borrado.
+- Arranque: mantener alineada la versión PWA con los imports dinámicos de sesión. No volver a cargar `saas-auth-ui-v2.js` con una versión antigua respecto al bundle principal.
+- Ejercicios nuevos: mantener exactamente 12 actuales y 4 anteriores aislados, según PR #48.
+- Preview: conservar el recorte validado en Biblioteca, Vista rápida, Vista completa, selector de Sesiones y detalle de sesión. Nunca usar el vídeo humano como portada.
+- Orden de medios: preview estática → MP4 gráfico → vídeo humano.
+- Botón `Ver todo` del selector de Sesiones: debe abrir la ficha mediante el visor oficial de CampoBase; no debe depender de un listener ambiguo.
+- `+ Ejercicio`: el creador debe abrir con datos locales inmediatamente y sincronizar en segundo plano; no bloquear la apertura esperando múltiples sincronizaciones.
+- Guardado de `+ Ejercicio`: confirmar primero el registro local, intentar sincronización cloud y no recargar toda la aplicación al terminar. Una latencia o un `pending` ajeno no puede convertir un guardado local correcto en un falso error.
+- Persistencia de ejercicios personales: `recordType: 'exercise'`, `customBoard: true` cuando procede, visibles en `Mis ejercicios` y sincronizados mediante `configuracion`.
+- Vídeos: los MP4 pesados se sirven desde GitHub Releases `campobase-videos-v1`. Supabase Storage conserva únicamente rollback histórico. Los MP4 gráficos ligeros incluidos en `assets/ejercicios` se sirven con la propia app desde GitHub Pages.
+- No borrar las copias históricas de Supabase Storage sin autorización expresa.
