@@ -143,17 +143,17 @@ export function createCampoBaseCloudStore() {
 
   return {
     async prepare() {
-      const user = await requireBoundUser(client);
+      const { user } = await requireBoundUser(client);
       return { userId: user.id };
     },
 
     async shouldApplyMutation(mutation) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       const rows = checkResult(await client
         .from(table)
         .select('updated_at,deleted_at')
-        .eq('user_id', user.id)
+        .eq('user_id', dataOwnerUserId)
         .eq('id', mutation.recordId)
         .limit(1)) ?? [];
       const remote = rows[0];
@@ -178,7 +178,7 @@ export function createCampoBaseCloudStore() {
     },
 
     async upsert(mutation) {
-      const { dataOwnerUserId } = await requireBoundUser(client);
+      const { user, dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       let payload = mutation.payload;
 
@@ -186,7 +186,7 @@ export function createCampoBaseCloudStore() {
         const rows = checkResult(await client
           .from(table)
           .select('payload')
-          .eq('user_id', user.id)
+          .eq('user_id', dataOwnerUserId)
           .eq('id', mutation.recordId)
           .limit(1)) ?? [];
         const remotePayload = rows[0]?.payload;
