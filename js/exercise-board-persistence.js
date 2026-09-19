@@ -349,9 +349,6 @@ async function handlePersistRequest(event, data) {
       host?.setExerciseLibraryMode?.('mine');
       const sourceFrame = [...document.querySelectorAll('iframe')].find((item) => item.contentWindow === event.source);
       if (sourceFrame) closeEmbeddedBoard(sourceFrame);
-      window.dispatchEvent(new CustomEvent('campobase:exercise-saved-local', {
-        detail: { id: record.id, cloudSyncConfirmed: record._cloudSyncConfirmed === true },
-      }));
     }
   } catch (error) {
     console.error('No se pudo persistir el ejercicio:', error);
