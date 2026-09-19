@@ -3035,3 +3035,39 @@ Rama:
 Estado:
 - listo para PR y despliegue.
 
+---
+
+# 43. Tercera solución PIN desplegada en producción — 19/09/2026
+
+Producción:
+- commit funcional: `59c1ed85124e513d73bc0a84d523621b9989f703`;
+- `CampoBase verify` en main: **success**;
+- GitHub Pages: **success**;
+- versión PWA: `20260919-pin-submit-v3`;
+- URL oficial: `https://miguelperezh.github.io/campobase/`.
+
+Verificación de PIN:
+- se comprobaron contra Supabase los dos PIN que Miguel facilitó durante la incidencia;
+- ambos coinciden con los hashes actuales de owner/delegate;
+- los valores en texto claro NO se guardan en AGENTS.md ni en Git.
+
+Causa corregida:
+- la pantalla podía estar visualmente en **Introduce tu PIN** pero `submitAuth()` recalculaba el estado como configuración inicial;
+- entonces intentaba ejecutar `savePins()` usando los campos ocultos de creación y aparecía el mensaje incorrecto “Los PIN deben tener entre 4 y 8 cifras”.
+
+Regla definitiva:
+- el modo del submit se determina por la pantalla que realmente está visible;
+- si el usuario ve **Introduce tu PIN**, el submit solo puede ejecutar validación de PIN;
+- nunca puede saltar a creación de dos PIN durante ese mismo submit;
+- si está en login, valida owner/delegate usando la configuración cargada desde Supabase;
+- una copia local solo se usa como fallback de recuperación;
+- no resetear ni crear PIN nuevos para resolver esta incidencia.
+
+Despliegue:
+- PR #55 fusionado;
+- tests del PR: **success**;
+- tests de main: **success**;
+- Pages completado correctamente.
+
+Esta sección prevalece sobre estados anteriores de la incidencia de PIN.
+
