@@ -89,6 +89,24 @@ test('los 12 actuales separan preview, MP4 gráfico y vídeo humano sin mezclar 
   }
 });
 
+test('los 12 actuales normalizan el vídeo humano pesado a GitHub Releases y conservan crop de portada', () => {
+  for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
+    assert.match(
+      exercise.video_muestra_humanos,
+      /^https:\/\/github\.com\/Miguelperezh\/campobase\/releases\/download\/campobase-videos-v1\//,
+      `${exercise.id}: el vídeo humano debe salir de GitHub Releases`,
+    );
+    assert.doesNotMatch(
+      exercise.video_muestra_humanos,
+      /supabase\.co\/storage/,
+      `${exercise.id}: el vídeo humano normalizado no debe depender de Supabase Storage`,
+    );
+    assert.ok(exercise.preview_crop, `${exercise.id}: falta preview_crop`);
+    assert.ok(Number(exercise.preview_crop.width) > 0, `${exercise.id}: crop sin ancho`);
+    assert.ok(Number(exercise.preview_crop.height) > 0, `${exercise.id}: crop sin alto`);
+  }
+});
+
 test('los 12 actuales anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
   const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
   const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
