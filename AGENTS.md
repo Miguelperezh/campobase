@@ -1815,3 +1815,81 @@ No marcar este bloque como validado hasta:
 5. comprobación de datos reales en Supabase;
 6. validación visual de Miguel.
 
+## 23.10 Paso 5 — 19/09/2026 — historial recuperable para partidos, convocatorias, asistencias y configuración
+
+Estado:
+- migración añadida al repositorio en la rama;
+- migración aplicada correctamente al Supabase de producción;
+- pendiente de validación visual de la app, pero la protección de historial ya está activa.
+
+Archivo añadido:
+- `supabase/09_data_audit_history.sql`.
+
+Nueva tabla de auditoría:
+- `public.campobase_datos_historial`.
+
+Qué protege:
+- `public.partidos`;
+- `public.convocatorias`;
+- `public.asistencias`;
+- `public.configuracion`.
+
+Triggers activos:
+- `trg_auditar_partidos`;
+- `trg_auditar_convocatorias`;
+- `trg_auditar_asistencias`;
+- `trg_auditar_configuracion`.
+
+Cada trigger guarda el registro **anterior** antes de:
+- `UPDATE`;
+- `DELETE`.
+
+Seguridad:
+- RLS activada en `public.campobase_datos_historial`;
+- el usuario solo puede consultar su propio historial mediante `auth.uid() = user_id`;
+- no existe política cliente de escritura/borrado del historial;
+- la escritura la realiza la función de trigger `auditar_campobase_dato()`.
+
+Línea base guardada el 19/09/2026:
+- partidos: 26 registros históricos de base;
+- convocatorias: 27 registros históricos de base;
+- asistencias: 24 registros históricos de base;
+- configuración: 175 registros históricos de base.
+
+La línea base incluye filas activas y tombstones existentes para maximizar capacidad de recuperación. No altera los registros deportivos originales.
+
+## 23.11 Paso 6 — 19/09/2026 — snapshot explícito de la plantilla validada
+
+Estado:
+- completado en Supabase;
+- no modifica las fichas activas.
+
+Ubicación:
+- `public.jugadores_historial`.
+
+Snapshot:
+- motivo: `baseline_validada_20260919`;
+- 15 fichas, correspondientes a la plantilla validada por Miguel el 19/09/2026.
+
+Objetivo:
+- que exista una copia histórica explícita de la última versión validada aunque todavía no se haya realizado una edición posterior;
+- si una sincronización o cambio futuro daña una ficha, esta línea base permite compararla y recuperarla.
+
+La ficha actual sigue estando en:
+- `public.jugadores`.
+
+No copiar el contenido personal del snapshot al repositorio público. Consultarlo únicamente en Supabase cuando sea necesario recuperar una ficha.
+
+## 23.12 Paso 7 — 19/09/2026 — comprobación de propiedad de los datos
+
+Se verificó que la cuenta propietaria de los datos deportivos actuales corresponde al perfil de Miguel / Unión Viera Alevín D.
+
+Los datos deportivos activos verificados tras crear las líneas base:
+- jugadores: 15;
+- partidos: 4;
+- convocatorias: 2;
+- asistencias: 7;
+- configuración activa: 19.
+
+Esto confirma que el estado “app vacía” no debe resolverse creando datos nuevos ni importando una plantilla: los datos reales ya existen y el fallo se debe tratar como problema de sesión/vinculación/carga.
+
