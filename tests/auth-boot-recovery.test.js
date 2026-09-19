@@ -12,16 +12,17 @@ test('CampoBase nunca queda abierto sin login o PIN', async () => {
   assert.match(html, /dialog\.showModal\(\)/);
 });
 
-test('recargar vuelve a pedir PIN y el desbloqueo SaaS solo sirve una vez', async () => {
+test('recargar conserva la sesión segura de la pestaña y evita expulsar al usuario', async () => {
   const [app, auth, sw] = await Promise.all([
     projectFile('js/app.js'),
     projectFile('js/saas-auth-ui-v2.js'),
     projectFile('sw.js'),
   ]);
-  assert.match(app, /Nunca restaurar automáticamente owner\/delegate tras recargar/);
-  assert.match(app, /20260918-emergency-auth-restore-v4/);
-  assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*clearBrowserSessionActive\(\)/);
-  assert.match(sw, /emergency-auth-restore-v4/);
+  assert.match(app, /campobase\.activeView/);
+  assert.match(app, /20260919-session-data-view-v1/);
+  assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*return unlockBoundSession\(client\)/);
+  assert.doesNotMatch(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]{0,120}clearBrowserSessionActive\(\)/);
+  assert.doesNotMatch(sw, /client\.navigate\(client\.url\)/);
 });
 
 
