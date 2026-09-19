@@ -3763,7 +3763,8 @@ async function hydratePinSettingsFromSupabase() {
 
 async function showAuth() {
   await hydratePinSettingsFromSupabase();
-  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistente que limpiar. */ }
+  // Mostrar el diálogo no equivale a cerrar sesión. El sessionRole se conserva
+  // para que la capa SaaS pueda verificar y restaurar una sesión válida tras recarga.
   document.body.classList.add('auth-locked');
   document.body.classList.remove('delegate-mode');
   document.body.classList.remove('demo-mode');
@@ -3868,6 +3869,10 @@ async function submitAuth(event) {
         applyRole(recoveredRole);
         toast('PIN reconocido. Revisa Ajustes → Sincronización.');
       }
+    }
+    if (!isDemoDatabase()) {
+      await synchronizeCloud();
+      await refresh();
     }
     $('#auth-dialog').close();
   } catch (error) {
@@ -5766,7 +5771,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, renderAll, showView, showMatchDetail, setExerciseLibraryMode, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, renderAll, showView, showMatchDetail, setExerciseLibraryMode, get state() { return state; } };
 }
 
 init().catch(handleError);
