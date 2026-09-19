@@ -8,6 +8,7 @@ import './exercise-board-persistence.js?v=2473';
 import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
+import './exercise-view-mode-ui.js?v=20260919-preview-v11';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
