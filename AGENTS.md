@@ -3730,3 +3730,25 @@ Esta nota documenta la corrección aplicada tras una regresión de caché/cablea
 - Persistencia de ejercicios personales: `recordType: 'exercise'`, `customBoard: true` cuando procede, visibles en `Mis ejercicios` y sincronizados mediante `configuracion`.
 - Vídeos: los MP4 pesados se sirven desde GitHub Releases `campobase-videos-v1`. Supabase Storage conserva únicamente rollback histórico. Los MP4 gráficos ligeros incluidos en `assets/ejercicios` se sirven con la propia app desde GitHub Pages.
 - No borrar las copias históricas de Supabase Storage sin autorización expresa.
+
+
+### Verificación obligatoria antes de declarar CampoBase estable
+
+Por petición expresa de Miguel, ningún agente debe responder “solucionado”, “funciona” o equivalente sin distinguir entre lo realmente verificado y lo pendiente.
+
+Antes de fusionar cambios que afecten a navegación, ejercicios, sesión, autenticación o partido, comprobar como mínimo:
+
+- cuenta/PIN de Migue;
+- PIN local del delegado;
+- cuenta SaaS del delegado cuando exista una cuenta real configurada;
+- permisos y navegación del delegado;
+- todos los botones principales y los botones dinámicos afectados por la modificación;
+- `+ Ejercicio`, guardado y reapertura en `Mis ejercicios`;
+- `Ver ejercicio` / `Ver todo` desde Biblioteca, Sesiones y detalle;
+- Preparación de partido → Partido en vivo;
+- comienzo, descanso, segundo tiempo, cambios manuales y automáticos, reparto, marcador e incidencias;
+- Vista Delegado: reloj, cambios, sugerencias, marcador, incidencias y sincronización con la vista de Migue;
+- un delegado no puede finalizar definitivamente el partido ni usar funciones exclusivas de Migue;
+- recarga/sincronización no puede vaciar ni reescribir jugadores, teléfonos, estadísticas, convocatorias, asistencias o sesiones.
+
+La comprobación automática debe incluir `npm run check && npm test`. Cuando el entorno no permita una prueba real de navegador o no exista una cuenta SaaS de delegado configurada, debe indicarse explícitamente como **no verificado en navegador/cuenta real** y nunca presentarlo como éxito confirmado.
