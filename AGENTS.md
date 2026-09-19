@@ -1561,3 +1561,350 @@ La corrección de producción restaura:
 
 No volver a introducir el acoplamiento de una rama no publicada con el backend vivo.
 
+---
+
+# 23. Registro obligatorio por pasos entre chats — no sobrescribir trabajo ajeno
+
+Esta sección es acumulativa. Desde el 19/09/2026, **cada cambio realizado en CampoBase debe quedar documentado aquí antes de considerar terminado el paso**.
+
+Regla de convivencia:
+- no borrar, resumir, fusionar ni reescribir instrucciones añadidas por otros chats/agentes;
+- cada nuevo paso se añade al final bajo un título nuevo y fechado;
+- si una instrucción anterior queda obsoleta, no se elimina: se añade una corrección posterior indicando expresamente qué regla nueva prevalece;
+- un agente nuevo debe leer este archivo completo antes de tocar código, Supabase o datos;
+- nunca asumir que una rama, una prueba o una interfaz está validada porque pase tests;
+- solo Miguel puede dar una validación visual como definitiva.
+
+## 23.1 Plantilla obligatoria para documentar cada paso
+
+Cada paso nuevo debe dejar, como mínimo:
+
+**Título del paso**
+- fecha;
+- rama;
+- objetivo exacto;
+- estado: pendiente / probado técnicamente / pendiente de validación visual / validado por Miguel.
+
+**Qué se ha tocado**
+- archivos modificados;
+- tablas, funciones, políticas o migraciones de Supabase afectadas;
+- claves de almacenamiento local/sesión afectadas, si procede.
+
+**Dónde se guarda la información**
+- fuente canónica;
+- copia local;
+- historial/auditoría disponible;
+- mecanismo de recuperación.
+
+**Qué NO se ha tocado**
+- dejarlo escrito cuando sea relevante para evitar que otro chat haga cambios adicionales por error.
+
+**Pruebas**
+- tests ejecutados;
+- resultado;
+- comprobaciones de datos realizadas;
+- URL real de validación cuando exista.
+
+**Validación**
+- no marcar como validado hasta que Miguel lo diga expresamente.
+
+## 23.2 Mapa vigente de datos reales — dónde se guarda cada cosa
+
+Fuente remota principal: **Supabase del proyecto CampoBase**.
+
+Mapeo cloud vigente:
+- jugadores / fichas → `public.jugadores`;
+- historial de fichas de jugadores → `public.jugadores_historial`;
+- partidos → `public.partidos`;
+- convocatorias → `public.convocatorias`;
+- asistencias y registros de entrenamiento → `public.asistencias`;
+- configuración y otros registros del store `settings` → `public.configuracion`.
+
+Copia local del navegador:
+- IndexedDB base principal: `campobase_<user_id>` cuando existe una cuenta SaaS vinculada;
+- base legado: `campobase` únicamente para datos antiguos/locales que todavía no se hayan vinculado;
+- stores locales: `players`, `callups`, `matches`, `trainings`, `settings`, `syncQueue`.
+
+Identidad de cuenta:
+- `localStorage['campobase.saasUserId']` vincula el navegador con el usuario SaaS;
+- la sesión Supabase es la autoridad de autenticación remota;
+- nunca crear una base local vacía como sustituto de una cuenta existente con datos en Supabase.
+
+## 23.3 Protección de fichas de jugadores
+
+La ficha actual que Miguel guarda desde **Editar jugador** queda en:
+- `public.jugadores.payload`.
+
+Antes de modificar o borrar una ficha, el historial automático vigente usa:
+- tabla: `public.jugadores_historial`;
+- trigger: `trg_proteger_ficha_jugador`;
+- eventos protegidos: `UPDATE` y `DELETE`.
+
+Reglas:
+- no borrar `jugadores_historial`;
+- no borrar tombstones para “limpiar” la base;
+- no reconstruir teléfonos, padres, dorsales, posiciones, DNI, fechas de nacimiento, notas o fotos desde memoria;
+- no guardar datos personales reales dentro del repositorio público ni dentro de este `AGENTS.md`;
+- ante una incidencia, comparar versión actual + historial antes de restaurar;
+- una restauración nunca es masiva ni automática si no se ha identificado la fuente exacta.
+
+Última plantilla validada por Miguel el 19/09/2026:
+- 15 jugadores activos.
+- La identidad y teléfonos validados están guardados en Supabase, no se duplican aquí por privacidad.
+- Antonio Roldán Rendón está creado con dorsal 3 y sus teléfonos/datos familiares permanecen vacíos hasta que Miguel los aporte tras su ficha.
+
+## 23.4 Estadísticas — dónde está la fuente que permite reconstruirlas
+
+Las estadísticas son **derivadas**, no una fuente independiente.
+
+Se deben poder recalcular desde:
+- partidos → `public.partidos`;
+- convocatorias → `public.convocatorias`;
+- asistencias → `public.asistencias`;
+- fichas base → `public.jugadores`;
+- configuración relacionada → `public.configuracion`.
+
+Nunca corregir una estadística escribiendo un total inventado si el dato de origen está mal.
+
+Antes de editar o borrar un partido, convocatoria, asistencia o sesión:
+1. comprobar el registro real en Supabase;
+2. comprobar qué estadísticas derivadas dependen de él;
+3. preservar una versión recuperable;
+4. modificar el origen;
+5. recalcular derivados;
+6. verificar que no quedan registros huérfanos.
+
+## 23.5 Incidencia activa — 19/09/2026 — app vacía, recarga pierde vista y expulsa sesión
+
+Rama de corrección:
+- `fix/estabilidad-datos-sesion-20260919`.
+
+Producción afectada:
+- `https://miguelperezh.github.io/campobase/`.
+
+Síntomas comunicados por Miguel:
+- la app aparece vacía aunque Supabase conserva datos;
+- al actualizar la página no mantiene la pestaña/vista activa;
+- al actualizar expulsa del acceso y obliga a volver a entrar.
+
+Datos verificados antes de tocar código:
+- Supabase conserva 15 jugadores activos;
+- conserva partidos, convocatorias, asistencias y configuración;
+- el historial de jugadores sigue existiendo;
+- por tanto, **no tratar esta incidencia como pérdida de datos ni restaurar masivamente**.
+
+Prioridad:
+1. asegurar que la sesión válida se vincula a la base local correcta antes de cualquier sincronización;
+2. impedir que una cola local legado se suba a la cuenta equivocada;
+3. mantener la vista activa tras recarga;
+4. mantener la sesión del mismo navegador/pestaña sin pedir acceso de nuevo mientras la sesión segura siga válida;
+5. añadir protección de recuperación para partidos, convocatorias, asistencias y configuración;
+6. ejecutar todos los tests;
+7. entregar URL real a Miguel;
+8. no fusionar el arreglo funcional a `main` hasta validación visual expresa.
+
+## 23.6 Paso 1 — 19/09/2026 — creación de rama segura y registro previo
+
+Estado:
+- rama creada: `fix/estabilidad-datos-sesion-20260919`;
+- base de la rama: `main` en commit `d320b84bf7d42f3e2b806594d91965ef2034ac20`;
+- no se han modificado datos deportivos en este paso;
+- no se ha fusionado nada a `main`.
+
+Objetivo del siguiente paso:
+- corregir primero el vínculo sesión → usuario → IndexedDB antes de ejecutar la sincronización.
+
+## 23.7 Paso 2 — 19/09/2026 — vincular usuario antes de abrir la base/cola local
+
+Estado:
+- implementado en rama;
+- pendiente de batería completa de tests;
+- pendiente de validación visual de Miguel.
+
+Archivos modificados:
+- `js/db.js`;
+- `js/supabase-client.js`.
+
+Problema detectado:
+- `activeDatabaseName` podía haberse calculado como base legado `campobase` antes de recuperar `campobase.saasUserId` desde una sesión Supabase válida;
+- `flushSyncQueue()` podía leer la cola local antes de verificar qué usuario SaaS era el dueño real de esa sincronización;
+- esto podía hacer que la app abriese una base local vacía/equivocada o que una cola legado llegase a procesarse con una cuenta recuperada después.
+
+Corrección:
+- `openDatabase()` vuelve a resolver la base real mediante `boundDatabaseName()` antes de cada apertura real;
+- el cloud store expone `prepare()`;
+- `flushSyncQueue()` ejecuta `cloudStore.prepare()` **antes** de leer `syncQueue`;
+- `prepare()` exige sesión Supabase válida y reconstruye el vínculo local si la sesión ya identifica al usuario.
+
+Dónde se guarda:
+- vínculo navegador/cuenta: `localStorage['campobase.saasUserId']`;
+- base local correcta: `campobase_<user_id>`;
+- cola de sincronización correcta: store `syncQueue` dentro de esa misma base;
+- fuente remota: tablas Supabase del usuario protegidas por RLS.
+
+Qué NO se ha tocado:
+- no se han borrado datos;
+- no se han cambiado jugadores, partidos, convocatorias ni asistencias;
+- no se ha fusionado a `main`.
+
+## 23.8 Paso 3 — 19/09/2026 — mantener sesión y pestaña al actualizar
+
+Estado:
+- implementado en rama;
+- pendiente de batería completa de tests;
+- pendiente de validación visual de Miguel.
+
+Archivos modificados:
+- `js/app.js`;
+- `js/saas-auth-ui-v2.js`;
+- `sw.js`.
+
+Vista/pestaña:
+- nueva clave de sesión: `sessionStorage['campobase.activeView']`;
+- `showView()` guarda la vista activa;
+- al arrancar se restaura primero `?view=` si existe y, si no, la última vista guardada;
+- una recarga no debe devolver al usuario automáticamente a Plantilla/Hoy si estaba trabajando en otra pestaña.
+
+Acceso local:
+- `sessionStorage['campobase.sessionRole']` puede restaurar owner/delegate durante la misma pestaña si no existe vínculo SaaS;
+- cerrar la pestaña elimina esa sesión del navegador;
+- no se almacena contraseña en claro.
+
+Acceso SaaS:
+- `sessionStorage['campobase.saasActiveBrowserSession']` deja de consumirse tras una única recarga;
+- mientras la sesión Supabase siga siendo válida, la misma pestaña puede volver a desbloquearse sin expulsar al usuario;
+- cerrar sesión explícitamente sigue limpiando el estado de sesión.
+
+Service Worker:
+- ya no ejecuta `client.navigate(client.url)` para todas las ventanas durante `activate`;
+- `app.js` mantiene un único manejo de `controllerchange`;
+- objetivo: evitar recargas dobles durante una actualización de CampoBase.
+
+Qué NO se ha tocado:
+- RLS;
+- suscripciones;
+- billing;
+- fichas de jugadores;
+- estadísticas;
+- contenido de partidos/asistencias.
+
+## 23.9 Paso 4 — 19/09/2026 — pruebas de regresión añadidas
+
+Estado:
+- tests escritos;
+- ejecución completa pendiente.
+
+Archivos:
+- `tests/auth-boot-recovery.test.js`;
+- `tests/session-data-stability.test.js`.
+
+Cobertura nueva:
+- la sesión cloud se prepara antes de leer `syncQueue`;
+- IndexedDB vuelve a resolver la base del usuario;
+- el cloud store expone `prepare()`;
+- la vista activa se conserva;
+- el acceso local de la misma pestaña puede restaurarse;
+- la sesión SaaS de la pestaña no se consume tras una sola recarga;
+- el service worker no fuerza una segunda navegación.
+
+No marcar este bloque como validado hasta:
+1. `npm ci`;
+2. `npm run check`;
+3. `npm test`;
+4. comparación de rama vs `main`;
+5. comprobación de datos reales en Supabase;
+6. validación visual de Miguel.
+
+## 23.10 Paso 5 — 19/09/2026 — historial recuperable para partidos, convocatorias, asistencias y configuración
+
+Estado:
+- migración añadida al repositorio en la rama;
+- migración aplicada correctamente al Supabase de producción;
+- pendiente de validación visual de la app, pero la protección de historial ya está activa.
+
+Archivo añadido:
+- `supabase/09_data_audit_history.sql`.
+
+Nueva tabla de auditoría:
+- `public.campobase_datos_historial`.
+
+Qué protege:
+- `public.partidos`;
+- `public.convocatorias`;
+- `public.asistencias`;
+- `public.configuracion`.
+
+Triggers activos:
+- `trg_auditar_partidos`;
+- `trg_auditar_convocatorias`;
+- `trg_auditar_asistencias`;
+- `trg_auditar_configuracion`.
+
+Cada trigger guarda el registro **anterior** antes de:
+- `UPDATE`;
+- `DELETE`.
+
+Seguridad:
+- RLS activada en `public.campobase_datos_historial`;
+- el usuario solo puede consultar su propio historial mediante `auth.uid() = user_id`;
+- no existe política cliente de escritura/borrado del historial;
+- la escritura la realiza la función de trigger `auditar_campobase_dato()`.
+
+Línea base guardada el 19/09/2026:
+- partidos: 26 registros históricos de base;
+- convocatorias: 27 registros históricos de base;
+- asistencias: 24 registros históricos de base;
+- configuración: 175 registros históricos de base.
+
+La línea base incluye filas activas y tombstones existentes para maximizar capacidad de recuperación. No altera los registros deportivos originales.
+
+## 23.11 Paso 6 — 19/09/2026 — snapshot explícito de la plantilla validada
+
+Estado:
+- completado en Supabase;
+- no modifica las fichas activas.
+
+Ubicación:
+- `public.jugadores_historial`.
+
+Snapshot:
+- motivo: `baseline_validada_20260919`;
+- 15 fichas, correspondientes a la plantilla validada por Miguel el 19/09/2026.
+
+Objetivo:
+- que exista una copia histórica explícita de la última versión validada aunque todavía no se haya realizado una edición posterior;
+- si una sincronización o cambio futuro daña una ficha, esta línea base permite compararla y recuperarla.
+
+La ficha actual sigue estando en:
+- `public.jugadores`.
+
+No copiar el contenido personal del snapshot al repositorio público. Consultarlo únicamente en Supabase cuando sea necesario recuperar una ficha.
+
+## 23.12 Paso 7 — 19/09/2026 — comprobación de propiedad de los datos
+
+Se verificó que la cuenta propietaria de los datos deportivos actuales corresponde al perfil de Miguel / Unión Viera Alevín D.
+
+Los datos deportivos activos verificados tras crear las líneas base:
+- jugadores: 15;
+- partidos: 4;
+- convocatorias: 2;
+- asistencias: 7;
+- configuración activa: 19.
+
+Esto confirma que el estado “app vacía” no debe resolverse creando datos nuevos ni importando una plantilla: los datos reales ya existen y el fallo se debe tratar como problema de sesión/vinculación/carga.
+
+## 23.13 Paso 8 — 19/09/2026 — batería automática verde
+
+Estado:
+- `CampoBase verify` completado correctamente en la rama;
+- workflow run: `35438760969`;
+- resultado: **success**;
+- todavía pendiente de validación visual de Miguel.
+
+La ejecución incluye el flujo del proyecto definido en `.github/workflows/verify.yml`, que ejecuta la verificación de sintaxis y la batería de tests.
+
+Correcciones de tests realizadas durante este paso:
+- se actualizó la expectativa de versión PWA al identificador `20260919-session-data-view-v1`;
+- se acotó la prueba de restauración local para no confundir la limpieza intencionada de una sesión demo caducada con la sesión owner/delegate real.
+
+No se ha fusionado la rama a `main`.
