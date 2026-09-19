@@ -3212,3 +3212,39 @@ Estado:
 - datos remotos siguen intactos;
 - el siguiente control debe hacerse en la app oficial móvil ya actualizada.
 
+---
+
+# 44. Caché PWA renovada para forzar la restauración cloud en móvil — 19/09/2026
+
+Incidencia:
+- la app móvil podía seguir ejecutando una caché anterior aunque el código de restauración cloud ya estuviera desplegado;
+- el identificador interno de `CACHE` del service worker seguía conservando el sufijo anterior.
+
+Corrección mínima:
+- se renovó la clave de caché del service worker;
+- nuevo sufijo: `cloud-restore-v4`;
+- archivo modificado: únicamente `sw.js`;
+- no se tocaron datos, jugadores, partidos, convocatorias, asistencias ni configuración.
+
+Verificación previa:
+- comparación vs `main`: 1 archivo, 1 línea cambiada;
+- tests de rama: **success**.
+
+Producción:
+- commit: `bba0835b75025d042976cef9981c1a202e06ff18`;
+- tests de `main`: **success**;
+- GitHub Pages: **success**.
+
+Objetivo:
+- al cargar la PWA, el service worker nuevo debe crear una caché distinta;
+- la activación elimina las cachés CampoBase anteriores;
+- el móvil debe recibir los assets `20260919-cloud-restore-v4` y el hotfix que sincroniza/refresca Supabase inmediatamente después del PIN o de restaurar una sesión SaaS válida.
+
+Datos comprobados antes de esta corrección:
+- Supabase seguía conservando 15 jugadores activos, 4 partidos, 2 convocatorias y 7 asistencias;
+- el PIN owner y el PIN delegado configurados por Miguel coinciden con los hashes vigentes de `configuracion/main`.
+
+Regla:
+- si la interfaz vuelve a aparecer vacía pero estos datos siguen en Supabase, no recrear ni borrar datos;
+- comprobar primero sesión, descarga cloud, service worker y versión de caché.
+
