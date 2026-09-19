@@ -157,7 +157,7 @@ test('el PIN actual del móvil puede recuperarse desde IndexedDB si Supabase con
   assert.match(db, /export async function getLocalPinSettingsCandidates\(\)/);
   assert.match(db, /database\.transaction\('settings', 'readonly'\).*\.get\('main'\)/s);
   assert.match(app, /const candidates = await getLocalPinSettingsCandidates\(\)/);
-  assert.match(app, /PIN local reconocido\. Revisa Ajustes → Sincronización/);
+  assert.match(app, /PIN reconocido\. Revisa Ajustes → Sincronización/);
   assert.doesNotMatch(app, /await put\('settings', recoveredSettings\)/);
 });
 
