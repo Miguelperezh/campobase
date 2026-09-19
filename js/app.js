@@ -3808,25 +3808,38 @@ function ensureAuthPromptVisible() {
 async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
-  await hydratePinSettingsFromSupabase();
-  const initial = !state.settings.ownerPinHash || !state.settings.delegatePinHash;
+  const createModeVisible = !$('#initial-pin-fields')?.classList.contains('hidden');
   try {
-    if (initial) {
+    // Si la pantalla ya está en modo "Introduce tu PIN", nunca puede saltar a
+    // "crear PIN" durante el submit por una carrera de sincronización.
+    if (createModeVisible) {
+      const hydrated = await hydratePinSettingsFromSupabase();
+      if (hydrated) {
+        await showAuth();
+        throw new TypeError('La cuenta ya tiene PIN configurados. Introduce tu PIN de CampoBase.');
+      }
       await savePins(form.elements.newOwnerPin.value, form.elements.newDelegatePin.value);
       applyRole('owner');
     } else {
+      await hydratePinSettingsFromSupabase();
       const pin = String(form.elements.pin.value || '').trim();
+      if (!/^\d{4,8}$/.test(pin) && pin.toLowerCase() !== 'demo') {
+        throw new TypeError('El PIN debe tener entre 4 y 8 cifras.');
+      }
+
       if (pin.toLowerCase() === 'demo') {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
-      } else if (await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
+      } else if (state.settings.pinSalt && state.settings.ownerPinHash
+          && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
         applyRole('owner');
-      } else if (await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
+      } else if (state.settings.pinSalt && state.settings.delegatePinHash
+          && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
         applyRole('delegate');
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
       } else {
-        // Recuperación segura: si la sincronización móvil dejó un PIN más reciente
-        // en IndexedDB, lo aceptamos sin sobrescribir automáticamente Supabase.
+        // Último recurso: comprobar copias locales del mismo navegador sin
+        // modificar Supabase. Nunca crear PIN nuevos desde una pantalla de login.
         const candidates = await getLocalPinSettingsCandidates();
         let recoveredRole = '';
         let recoveredSettings = null;
@@ -3844,7 +3857,7 @@ async function submitAuth(event) {
           }
         }
         if (!recoveredRole) {
-          throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
+          throw new TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.');
         }
         state.settings = {
           ...state.settings,
@@ -3853,7 +3866,7 @@ async function submitAuth(event) {
           delegatePinHash: recoveredSettings.delegatePinHash,
         };
         applyRole(recoveredRole);
-        toast('PIN local reconocido. Revisa Ajustes → Sincronización para recuperar cambios pendientes.');
+        toast('PIN reconocido. Revisa Ajustes → Sincronización.');
       }
     }
     $('#auth-dialog').close();
