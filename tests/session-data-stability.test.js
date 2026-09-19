@@ -79,3 +79,12 @@ test('una mutación local obsoleta se descarta si Supabase tiene una versión po
   assert.match(cloud, /localQueuedAt >= remoteUpdatedAt/);
 });
 
+test('una sincronización derivada de jugadores no puede borrar teléfonos o padres más recientes de Supabase', async () => {
+  const cloud = await projectFile('js/supabase-client.js');
+  for (const field of ['fatherName', 'fatherPhone', 'motherName', 'motherPhone', 'name', 'number', 'positions', 'foot', 'notes', 'photo']) {
+    assert.ok(cloud.includes(`'${field}'`), `Debe proteger el campo personal ${field}`);
+  }
+  assert.match(cloud, /remoteProfileUpdatedAt >= localProfileUpdatedAt/);
+  assert.match(cloud, /if \(Object\.hasOwn\(remotePayload, field\)\) payload\[field\] = structuredClone\(remotePayload\[field\]\)/);
+});
+
