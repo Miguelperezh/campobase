@@ -1,5 +1,6 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings } from './supabase-client.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
+import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
@@ -233,9 +234,20 @@ function isUserInteracting() {
 
 
 async function deduplicatePlayers() {
-  // Protección de datos: refresh nunca deduplica, borra ni reescribe jugadores.
-  // Cualquier posible duplicado se resuelve manualmente desde la interfaz.
-  return false;
+  // Protección de datos: nunca borrar/tombstonear jugadores automáticamente
+  // durante refresh. Si aparecen posibles duplicados, se avisa en consola y
+  // se mantienen intactos hasta una decisión manual del usuario.
+  const seen = new Map();
+  const duplicates = [];
+  for (const player of state.players) {
+    const key = normalizePlayerName(player.name);
+    if (!key) continue;
+    if (seen.has(key)) duplicates.push([seen.get(key), player]);
+    else seen.set(key, player);
+  }
+  if (duplicates.length) {
+    console.warn('CampoBase detectó posibles jugadores duplicados y no los ha borrado automáticamente:', duplicates.map(([a, b]) => [a.id, b.id]));
+  }
 }
 
 async function refresh() {
@@ -3752,8 +3764,7 @@ async function hydratePinSettingsFromSupabase() {
 
 async function showAuth() {
   await hydratePinSettingsFromSupabase();
-  // Mostrar el diálogo no equivale a cerrar sesión. El sessionRole se conserva
-  // para que la capa SaaS pueda verificar y restaurar una sesión válida tras recarga.
+  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistente que limpiar. */ }
   document.body.classList.add('auth-locked');
   document.body.classList.remove('delegate-mode');
   document.body.classList.remove('demo-mode');
@@ -3821,7 +3832,13 @@ async function submitAuth(event) {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
       } else if (state.settings.pinSalt && state.settings.ownerPinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
+        const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+        if (userId) {
+          const client = getSupabaseAuthClient();
+          await signInWithCampoBasePin(client, userId, pin);
+        }
         applyRole('owner');
+        if (userId) await synchronizeCloud();
       } else if (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
         applyRole('delegate');
@@ -3847,6 +3864,20 @@ async function submitAuth(event) {
           }
         }
         if (!recoveredRole) {
+          const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+          if (userId) {
+            try {
+              const client = getSupabaseAuthClient();
+              await signInWithCampoBasePin(client, userId, pin);
+              await hydratePinSettingsFromSupabase();
+              applyRole('owner');
+              await synchronizeCloud();
+              $('#auth-dialog').close();
+              return;
+            } catch {
+              // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
+            }
+          }
           throw new TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.');
         }
         state.settings = {
@@ -3858,10 +3889,6 @@ async function submitAuth(event) {
         applyRole(recoveredRole);
         toast('PIN reconocido. Revisa Ajustes → Sincronización.');
       }
-    }
-    if (!isDemoDatabase()) {
-      await synchronizeCloud();
-      await refresh();
     }
     $('#auth-dialog').close();
   } catch (error) {
@@ -5721,7 +5748,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v6').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-pin-cloud-session-v4').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -5760,7 +5787,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, renderAll, showView, showMatchDetail, setExerciseLibraryMode, get state() { return state; } };
+  window.__campobase = { refresh, renderAll, showView, showMatchDetail, setExerciseLibraryMode, get state() { return state; } };
 }
 
 init().catch(handleError);
