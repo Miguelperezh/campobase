@@ -2,7 +2,7 @@ import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileClo
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 
-const REAL_DB_NAME = 'campobase';
+var REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
@@ -23,12 +23,12 @@ function preservePlayerProfileFields(current, incoming) {
 }
 
 function boundDatabaseName() {
-  const userId = getBoundSaasUserId();
-  return userId ? userDatabaseName(userId) : REAL_DB_NAME;
+  const userId = typeof getBoundSaasUserId === 'function' ? getBoundSaasUserId() : '';
+  return userId ? userDatabaseName(userId) : (REAL_DB_NAME || 'campobase');
 }
 
 var databasePromises = new Map();
-var activeDatabaseName = boundDatabaseName();
+var activeDatabaseName = null;
 var demoSession = null;
 var demoStores = null;
 var cloudStore = null;
@@ -279,7 +279,7 @@ export async function flushSyncQueue() {
     try {
       await cloudStore.prepare();
     } catch (authError) {
-      if (authError?.message?.includes('Inicia sesión') || authError?.name === 'TypeError') {
+      if (authError?.message?.includes('Inicia sesión') || authError?.code === 'CAMPOBASE_AUTH_REQUIRED' || authError?.name === 'TypeError') {
         return false;
       }
       throw authError;
@@ -287,18 +287,25 @@ export async function flushSyncQueue() {
   }
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
-    const shouldApply = typeof cloudStore?.shouldApplyMutation === 'function'
-      ? await cloudStore.shouldApplyMutation(mutation)
-      : true;
-    if (!shouldApply) {
-      // Supabase ya tiene una versión posterior. La cola local está obsoleta:
-      // se elimina sin tocar la fila remota y el snapshot cloud la repondrá localmente.
+    try {
+      const shouldApply = typeof cloudStore?.shouldApplyMutation === 'function'
+        ? await cloudStore.shouldApplyMutation(mutation)
+        : true;
+      if (!shouldApply) {
+        // Supabase ya tiene una versión posterior. La cola local está obsoleta:
+        // se elimina sin tocar la fila remota y el snapshot cloud la repondrá localmente.
+        await removeQueuedMutation(mutation.id);
+        continue;
+      }
+      if (mutation.operation === 'delete') await cloudStore.remove(mutation);
+      else await cloudStore.upsert(mutation);
       await removeQueuedMutation(mutation.id);
-      continue;
+    } catch (mutationError) {
+      if (mutationError?.message?.includes('Inicia sesión') || mutationError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
+        return false;
+      }
+      throw mutationError;
     }
-    if (mutation.operation === 'delete') await cloudStore.remove(mutation);
-    else await cloudStore.upsert(mutation);
-    await removeQueuedMutation(mutation.id);
   }
   return true;
 }
@@ -337,45 +344,52 @@ export async function syncFromCloud() {
   if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
   if (syncPromise) return syncPromise;
   syncPromise = (async () => {
-    await flushSyncQueue();
-    let downloaded = 0;
-    for (const store of STORES) {
-      const snapshot = await cloudStore.getSnapshot(store);
-      const localRecords = await localGetAll(store);
-      if (snapshot.rowCount === 0 && localRecords.length) {
-        await queueInitialRecords(store, localRecords);
-        await flushSyncQueue();
-        continue;
-      }
-      if (store === 'players' && localRecords.length && snapshot.records.length) {
-        const localById = new Map(localRecords.map((record) => [record.id, record]));
-        const repaired = [];
-        snapshot.records = snapshot.records.map((cloudRecord) => {
-          const merged = mergeCloudRecord('players', localById.get(cloudRecord.id), cloudRecord);
-          if (JSON.stringify(merged) !== JSON.stringify(cloudRecord)) repaired.push(merged);
-          return merged;
-        });
-        if (repaired.length) {
-          await queueInitialRecords('players', repaired);
+    try {
+      await flushSyncQueue();
+      let downloaded = 0;
+      for (const store of STORES) {
+        const snapshot = await cloudStore.getSnapshot(store);
+        const localRecords = await localGetAll(store);
+        if (snapshot.rowCount === 0 && localRecords.length) {
+          await queueInitialRecords(store, localRecords);
           await flushSyncQueue();
+          continue;
         }
-      }
-      if (store === 'settings') {
-        const localMain = localRecords.find(({ id }) => id === 'main');
-        const cloudMainIndex = snapshot.records.findIndex(({ id }) => id === 'main');
-        if (localMain && cloudMainIndex >= 0) {
-          const mergedMain = mergeCloudRecord(store, localMain, snapshot.records[cloudMainIndex]);
-          if (JSON.stringify(mergedMain) !== JSON.stringify(snapshot.records[cloudMainIndex])) {
-            snapshot.records[cloudMainIndex] = mergedMain;
-            await queueInitialRecords(store, [mergedMain]);
+        if (store === 'players' && localRecords.length && snapshot.records.length) {
+          const localById = new Map(localRecords.map((record) => [record.id, record]));
+          const repaired = [];
+          snapshot.records = snapshot.records.map((cloudRecord) => {
+            const merged = mergeCloudRecord('players', localById.get(cloudRecord.id), cloudRecord);
+            if (JSON.stringify(merged) !== JSON.stringify(cloudRecord)) repaired.push(merged);
+            return merged;
+          });
+          if (repaired.length) {
+            await queueInitialRecords('players', repaired);
             await flushSyncQueue();
           }
         }
+        if (store === 'settings') {
+          const localMain = localRecords.find(({ id }) => id === 'main');
+          const cloudMainIndex = snapshot.records.findIndex(({ id }) => id === 'main');
+          if (localMain && cloudMainIndex >= 0) {
+            const mergedMain = mergeCloudRecord(store, localMain, snapshot.records[cloudMainIndex]);
+            if (JSON.stringify(mergedMain) !== JSON.stringify(snapshot.records[cloudMainIndex])) {
+              snapshot.records[cloudMainIndex] = mergedMain;
+              await queueInitialRecords(store, [mergedMain]);
+              await flushSyncQueue();
+            }
+          }
+        }
+        await replaceLocalStore(store, snapshot.records);
+        downloaded += snapshot.records.length;
       }
-      await replaceLocalStore(store, snapshot.records);
-      downloaded += snapshot.records.length;
+      return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
+    } catch (syncError) {
+      if (syncError?.message?.includes('Inicia sesión') || syncError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
+        return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length, authRequired: true };
+      }
+      throw syncError;
     }
-    return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
   })().finally(() => { syncPromise = null; });
   return syncPromise;
 }

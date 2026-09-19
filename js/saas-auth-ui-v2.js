@@ -634,20 +634,14 @@ async function handlePersistentSession(client) {
   }
   const remembered = rememberedAccount();
   if (bound !== session.user.id) return false;
-  if (browserSessionIsActive(session.user.id)) {
+  if (browserSessionIsActive(session.user.id) || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('campobase.sessionRole'))) {
+    markBrowserSessionActive(session.user.id);
     return unlockBoundSession(client);
   }
   if (remembered?.userId === session.user.id) {
     showRememberedPane(remembered);
     return true;
   }
-
-  try {
-    if (sessionStorage.getItem('campobase.sessionRole')) {
-      markBrowserSessionActive(session.user.id);
-      return unlockBoundSession(client);
-    }
-  } catch { /* Continúa con el acceso normal. */ }
 
   // Conserva la sesión válida para que la sincronización pueda recuperar
   // los datos del equipo. Cuando los PIN ya han llegado desde la base del
@@ -955,8 +949,10 @@ export async function initSaasAuth(client) {
     bound = '';
   }
 
+  const activeBrowserRole = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('campobase.sessionRole') : null;
+
   if (session?.user && bound === session.user.id) {
-    if (browserSessionIsActive(session.user.id)) {
+    if (browserSessionIsActive(session.user.id) || activeBrowserRole) {
       unlockBoundSession(client).catch(() => {});
       return;
     }
@@ -968,6 +964,13 @@ export async function initSaasAuth(client) {
       return;
     }
     handlePersistentSession(client).catch(() => {});
+    return;
+  }
+
+  if (activeBrowserRole) {
+    const dialog = $('#auth-dialog');
+    if (dialog?.open) dialog.close();
+    document.body.classList.remove('auth-locked');
     return;
   }
 

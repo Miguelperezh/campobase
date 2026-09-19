@@ -3832,3 +3832,38 @@ No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas
    - Fase 4: Inicio de partido en vivo y transición al 2.º tiempo ejecuta la rotación de porteros y se sincroniza en la vista de Delegado.
    - Fase 5: Botón `+ Ejercicio` abre de inmediato la pizarra táctica sin demoras.
    - Fase 6: Comprobación en IndexedDB de que "Mis ejercicios" persisten intactos tras la migración y refresco.
+
+## 51. ESTABILIDAD DE SESIÓN EN RECARGA, GUARDADO DE EJERCICIOS SIN ERROR AUTH Y ACTIVACIÓN DE PREPARAR PARTIDO (2026-09-19 v15)
+
+### 51.1 Problemas detectados y resueltos
+1. **Error al guardar en "+ Ejercicios": "No se pudo guardar el ejercicio: Inicia sesión para sincronizar esta cuenta."**:
+   - **Causa raíz**: Al crear un ejercicio personalizado en la pizarra, `persistExercise` invoca `put('settings', record)`, que a su vez llama a `flushSyncQueue()`. Si el usuario opera en modo PIN local o sin token activo de Supabase, `cloudStore.upsert()` llamaba a `requireBoundUser(client)`, lanzando `Error('Inicia sesión para sincronizar esta cuenta.')`. Al no capturarse este error en el bucle de mutaciones, la promesa era rechazada, abortando el guardado local en IndexedDB y disparando un `alert()` de fallo.
+   - **Solución**: En `js/db.js`, `flushSyncQueue()` y `syncFromCloud()` envuelven las llamadas al cloudStore en bloques `try/catch` que interceptan `Inicia sesión` y `CAMPOBASE_AUTH_REQUIRED`. El guardado local en IndexedDB siempre tiene éxito garantizado, conservando las mutaciones en la cola de sincronización para cuando haya sesión remota disponible, sin mostrar alertas de error al usuario.
+
+2. **Botón "Preparar partido" no iniciaba el partido en vivo**:
+   - **Causa raíz**: 
+     - La persistencia del temporizador invocaba `put('settings', { id: 'live', ... })`, sufriendo el mismo bloqueo por `flushSyncQueue()` descrito en el punto anterior.
+     - La variable `format` en la convocatoria o partido podía llegar en minúsculas (`'f7'`), provocando que `FORMATS[format]` resultara `undefined` y abortara con toast "No se reconoce el formato del partido.".
+     - La alineación inicial en campo solo incluía al primer portero (`initialOnField = [firstKeeper]`), dejando las 6 posiciones de campo vacías.
+   - **Solución**: 
+     - `FORMATS` ahora admite tanto mayúsculas como minúsculas (`F7`, `F11`, `f7`, `f11`) con fallback a `FORMATS.F7`.
+     - `prepareLive()` genera la alineación inicial con 7 jugadores (`[firstKeeper, ...initialFieldPlayers]`), seleccionando a los convocados de campo y reservando al segundo portero en el banquillo.
+     - `persistTimer()` y `renderLive()` se ejecutan sin errores y activan el reloj del partido en fase `ready` (00:00).
+
+3. **Al actualizar o recargar, la app expulsaba al usuario y abría el diálogo de autenticación**:
+   - **Causa raíz**: 
+     - En `js/saas-auth-ui-v2.js`, `handlePersistentSession()` y `initSaasAuth()` mostraban el diálogo de login (`#auth-dialog`) y el panel de cuenta recordada si `remembered?.userId === session.user.id` antes de comprobar si la pestaña ya tenía un rol activo.
+     - Si la sesión SaaS no estaba disponible de inmediato, `initSaasAuth()` abría incondicionalmente el modal con `showModal()`.
+     - En `index.html`, la salvaguarda de arranque a los 2.5 segundos comprobaba `if (app?.state?.role) return;` pero no verificaba si existía `sessionStorage.getItem('campobase.sessionRole')`.
+   - **Solución**:
+     - En `js/saas-auth-ui-v2.js`, `initSaasAuth()` y `handlePersistentSession()` comprueban `sessionStorage.getItem('campobase.sessionRole')` y `browserSessionIsActive()`. Si la pestaña ya tiene una sesión validada, se desbloquea directamente (`unlockBoundSession`) o se cierra el modal sin volver a pedir PIN ni credenciales.
+     - En `js/app.js`, `applyRole()` y `submitAuth()` asocian `sessionStorage.setItem('campobase.saasActiveBrowserSession', userId)` para mantener la consistencia entre ambas capas.
+     - En `index.html`, la salvaguarda verifica `sessionStorage.getItem('campobase.sessionRole')` antes de añadir `auth-locked`.
+
+### 51.2 Versión de producción
+- Versión actualizada a `20260919-prod-current-v15` en `index.html`, `sw.js`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y suites de pruebas correspondientes.
+- Tests ejecutados: 445/445 pasados (`npm run check && npm test`).
+- Pruebas reales en Chrome Headless CDP (`scratch/test-user-issues.mjs`):
+  - Guardado de ejercicio de pizarra en "+ ejercicios": Guardado con éxito sin alertas de autenticación.
+  - Clic en "Preparar partido": Inicializa temporizador `ready` a 00:00 con 7 jugadores en campo.
+  - Recarga / actualización de página: Mantiene `isAuthLocked: false`, `sessionRole: "owner"`, `authDialogOpen: false`.

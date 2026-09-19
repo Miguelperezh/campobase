@@ -44,7 +44,7 @@ const localDate = (value) => {
 };
 const localDateKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const empty = (text) => `<div class="panel empty">${escapeHtml(text)}</div>`;
-const FORMATS = { F7: { players: 7, duration: 70, half: 35 }, F11: { players: 11, duration: 90, half: 45 } };
+const FORMATS = { F7: { players: 7, duration: 70, half: 35 }, F11: { players: 11, duration: 90, half: 45 }, f7: { players: 7, duration: 70, half: 35 }, f11: { players: 11, duration: 90, half: 45 } };
 const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo' };
 const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'Sancionado', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', other: 'Otro motivo', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
@@ -1430,8 +1430,8 @@ async function prepareLive() {
   const callup = callupForMatch(match);
   if (!callup) return toast('Ese partido no tiene una convocatoria disponible en este dispositivo.');
   const availableIds = Array.isArray(callup.availableIds) ? callup.availableIds : [];
-  const format = callup.format || match.format || state.format || 'F7';
-  const config = FORMATS[format];
+  const format = String(callup.format || match.format || state.format || 'F7').toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
   if (!config) return toast('No se reconoce el formato del partido.');
   if (availableIds.length < config.players) return toast(`Faltan jugadores: ${format} necesita ${config.players} en campo.`);
   const prep = prepForMatch(match.id);
@@ -1444,7 +1444,10 @@ async function prepareLive() {
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!availableIds.includes(firstKeeper) || !availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
-  const initialOnField = [firstKeeper];
+  const fieldCandidates = availableIds.filter((id) => id !== firstKeeper && id !== secondKeeper);
+  const remainingCandidates = availableIds.filter((id) => id !== firstKeeper && !fieldCandidates.includes(id));
+  const initialFieldPlayers = [...fieldCandidates, ...remainingCandidates].slice(0, config.players - 1);
+  const initialOnField = [firstKeeper, ...initialFieldPlayers];
   state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, delegateUnlocked: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
   await persistTimer(); renderLive();
 }
@@ -3690,6 +3693,10 @@ async function savePins(ownerPin, delegatePin) {
 function applyRole(role) {
   state.role = role;
   try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
+  const userId = getBoundSaasUserId();
+  if (userId) {
+    try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
+  }
   document.body.classList.remove('auth-locked');
   $('#role-label').textContent = role === 'owner' ? 'Migue' : role === 'demo' ? 'Demo temporal' : 'Delegado';
   document.body.classList.toggle('demo-mode', role === 'demo');
@@ -3761,7 +3768,7 @@ async function restoreSessionRole() {
     await startDemoSession(session);
     return true;
   }
-  if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
+  if (!['owner', 'delegate'].includes(role)) return false;
 
   // Si existe una cuenta SaaS vinculada, conserva sessionRole para que la capa
   // SaaS pueda verificar la sesión remota y reabrir la app sin expulsar al
@@ -3830,6 +3837,7 @@ async function showAuth() {
 
 function ensureAuthPromptVisible() {
   if (state.role) return;
+  if (sessionStorage.getItem(SESSION_ROLE_KEY)) return;
   document.body.classList.add('auth-locked');
   const dialog = $('#auth-dialog');
   const saasShell = $('#saas-auth-shell');
@@ -3876,6 +3884,7 @@ async function submitAuth(event) {
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
         const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
         if (userId) {
+          try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
           try {
             const client = getSupabaseAuthClient();
             await signInWithCampoBasePin(client, userId, pin);
@@ -3901,6 +3910,7 @@ async function submitAuth(event) {
             recoveredSettings = local;
             if (candidate.userId) {
               setBoundSaasUserId(candidate.userId);
+              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
               try {
                 const client = getSupabaseAuthClient();
                 await signInWithCampoBasePin(client, candidate.userId, pin);
@@ -3913,6 +3923,7 @@ async function submitAuth(event) {
             recoveredSettings = local;
             if (candidate.userId) {
               setBoundSaasUserId(candidate.userId);
+              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
             }
             break;
           }
@@ -5818,7 +5829,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v14').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v15').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
