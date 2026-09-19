@@ -3981,6 +3981,7 @@ function openWhatsAppDialog({
 
   // Llenar selector de eventos
   populateWhatsAppEvents(matchId, callupId, sessionId);
+  if (waCurrentMode === 'callup') syncWhatsAppMatchLocation();
   // Llenar selector de destinatarios
   populateWhatsAppRecipients(playerId);
 
@@ -3989,6 +3990,30 @@ function openWhatsAppDialog({
 
   updateWhatsAppPreview();
   dialog.showModal();
+}
+
+function selectedWhatsAppMatch() {
+  const eventValue = $('#wa-event-select')?.value || '';
+  if (eventValue.startsWith('match:')) {
+    const matchId = eventValue.slice('match:'.length);
+    return state.matches.find((match) => match.id === matchId) || null;
+  }
+  if (eventValue.startsWith('callup:')) {
+    const callupId = eventValue.slice('callup:'.length);
+    const callup = state.callups.find((item) => item.id === callupId) || null;
+    return state.matches.find((match) => match.id === callup?.matchId || match.callupId === callupId) || null;
+  }
+  return state.matches.find((match) => match.id === eventValue) || null;
+}
+
+function syncWhatsAppMatchLocation() {
+  const match = selectedWhatsAppMatch();
+  if (!match) return;
+  const fieldName = String(match.location || '').trim();
+  const fieldInput = $('#wa-field-name');
+  const mapsInput = $('#wa-maps-url');
+  if (fieldInput) fieldInput.value = fieldName;
+  if (mapsInput) mapsInput.value = fieldName ? getAutoMapsUrl(fieldName) : '';
 }
 
 function populateWhatsAppEvents(matchId, callupId, sessionId) {
@@ -4390,7 +4415,7 @@ function updateWhatsAppPreview() {
     const fieldInput = $('#wa-field-name');
     let fieldName = fieldInput?.value?.trim();
     if (!fieldName) {
-      fieldName = match?.location || 'Campo Alfonso Silva (La Ballena)';
+      fieldName = match?.location || '';
       if (fieldInput) fieldInput.value = fieldName;
     }
 
@@ -4843,11 +4868,7 @@ function wireEvents() {
   // Modificación de campos en el comunicador WhatsApp
   $('#wa-event-select')?.addEventListener('change', () => {
     if (waCurrentMode === 'callup') {
-      const match = state.matches.find((m) => m.id === $('#wa-event-select').value);
-      if (match) {
-        if ($('#wa-field-name')) $('#wa-field-name').value = match.location || 'Campo Alfonso Silva (La Ballena)';
-        if ($('#wa-maps-url')) $('#wa-maps-url').value = getAutoMapsUrl($('#wa-field-name').value);
-      }
+      syncWhatsAppMatchLocation();
     } else if (waCurrentMode === 'training') {
       const session = state.trainingSessions.find((s) => s.id === $('#wa-event-select').value);
       if (session) {
