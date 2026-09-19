@@ -3752,3 +3752,40 @@ Antes de fusionar cambios que afecten a navegación, ejercicios, sesión, autent
 - recarga/sincronización no puede vaciar ni reescribir jugadores, teléfonos, estadísticas, convocatorias, asistencias o sesiones.
 
 La comprobación automática debe incluir `npm run check && npm test`. Cuando el entorno no permita una prueba real de navegador o no exista una cuenta SaaS de delegado configurada, debe indicarse explícitamente como **no verificado en navegador/cuenta real** y nunca presentarlo como éxito confirmado.
+
+
+## Validación aislada activa — botones críticos — 19/09/2026
+
+Incidencia todavía NO cerrada:
+- `Preparar partido` fallaba en producción.
+- `+ Ejercicio` fallaba en producción.
+- Miguel exige que desde `+ Ejercicio` se pueda entrar al creador, guardar y volver a `Mis ejercicios` conservando el ejercicio.
+
+Rama de corrección:
+- `fix/critical-buttons-direct-bind-20260919`.
+
+PR:
+- `#65 fix: restaurar botones críticos y guardado de + Ejercicio`.
+
+Página de validación aislada:
+- `https://miguelperezh.github.io/campobase/validacion-botones.html`.
+
+La página carga el código de la rama sin fusionarlo a la app normal.
+
+Comprobación visual obligatoria antes de merge:
+1. abrir `Partido en vivo`;
+2. seleccionar partido;
+3. confirmar que los selectores de portero responden;
+4. pulsar `Preparar partido` y confirmar que aparece el estado preparado/pizarra sin error;
+5. abrir `Ejercicios`;
+6. pulsar `+ Ejercicio`;
+7. entrar al creador;
+8. crear un ejercicio de prueba;
+9. pulsar guardar;
+10. volver a CampoBase;
+11. comprobar que aparece en `Mis ejercicios`;
+12. abrirlo con `Ver ejercicio`;
+13. recargar y confirmar que sigue existiendo;
+14. comprobar que jugadores, teléfonos, estadísticas, convocatorias y demás datos siguen presentes.
+
+No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas pruebas visuales.
