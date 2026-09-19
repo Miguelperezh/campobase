@@ -119,8 +119,8 @@ test('cada escritura intenta recuperar el vínculo SaaS antes de decidir qué In
   assert.match(db, /await cloudStore\.prepare\(\)/);
   const putArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function putPlayerProfile'));
   const profileArea = db.slice(db.indexOf('export async function putPlayerProfile'), db.indexOf('export async function putBatch'));
-  const batchArea = db.slice(db.indexOf('export async function putBatch'), db.indexOf('export async function remove'));
-  const removeArea = db.slice(db.indexOf('export async function remove'), db.indexOf('export async function flushSyncQueue'));
+  const batchArea = db.slice(db.indexOf('export async function putBatch'), db.indexOf('export async function remove(store'));
+  const removeArea = db.slice(db.indexOf('export async function remove(store'), db.indexOf('export async function flushSyncQueue'));
   for (const area of [putArea, profileArea, batchArea, removeArea]) {
     assert.match(area, /await prepareStorageBindingForWrite\(\)/);
   }
