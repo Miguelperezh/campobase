@@ -3752,3 +3752,28 @@ Antes de fusionar cambios que afecten a navegación, ejercicios, sesión, autent
 - recarga/sincronización no puede vaciar ni reescribir jugadores, teléfonos, estadísticas, convocatorias, asistencias o sesiones.
 
 La comprobación automática debe incluir `npm run check && npm test`. Cuando el entorno no permita una prueba real de navegador o no exista una cuenta SaaS de delegado configurada, debe indicarse explícitamente como **no verificado en navegador/cuenta real** y nunca presentarlo como éxito confirmado.
+
+
+## Verificación funcional obligatoria antes de declarar éxito
+
+Esta regla aplica a cualquier cambio que afecte a CampoBase, aunque la modificación parezca localizada.
+
+Antes de comunicar que una corrección está terminada, el agente debe verificar de forma real, no inferida:
+
+- **Cuenta de delegado:** inicio de sesión/acceso, permisos, navegación y vistas permitidas.
+- **Entrenador/administrador:** mismas funciones críticas verificadas con su propia sesión.
+- **Todos los botones de la app:** al menos una pasada funcional por los botones y acciones visibles de las vistas afectadas y por los controles globales principales. No basta con comprobar que el botón existe en HTML.
+- **Partido en vivo — entrenador:** preparar partido, selección de partido y porteros, inicio, avance de fases/tiempo, sustituciones, controles y salida sin errores.
+- **Partido en vivo — delegado:** comprobar el flujo real con permisos de delegado y que no aparezcan errores, bloqueos ni acciones indebidamente ocultas o permitidas.
+- **Ejercicios:** `Ver ejercicio/Ver todo`, `+ Ejercicio`, guardar, editar, abrir `Mis ejercicios`, añadir a sesión, previews y reproducción de medios.
+- **Sesiones:** crear, editar, guardar, abrir detalle y consultar ejercicios incluidos.
+- **Datos:** confirmar que jugadores, teléfonos, estadísticas, partidos, convocatorias, asistencias y demás registros siguen presentes antes y después de la prueba.
+- **Consola:** revisar errores JavaScript, promesas rechazadas, fallos de red y errores de módulos/caché durante las pruebas.
+- **Sincronización multi-dispositivo:** cuando el cambio afecte persistencia o sesión, comprobar al menos escritorio y móvil o dos sesiones/dispositivos equivalentes.
+- **PWA/caché:** confirmar que la versión publicada realmente es la que ejecuta el navegador y que no hay módulos antiguos mezclados con el bundle actual.
+
+Regla de comunicación:
+- No escribir “solucionado”, “funciona”, “validado”, “todo correcto” ni equivalentes si no se ha ejecutado y comprobado el flujo correspondiente.
+- Si una comprobación no puede ejecutarse en el entorno disponible, indicar exactamente qué parte queda **sin verificar**.
+- Un test unitario, `node --check`, un commit correcto o un workflow verde son condiciones útiles, pero no sustituyen la prueba funcional real de navegador.
+- Si una prueba descubre una regresión, detener la publicación y corregir en la rama antes de fusionar.
