@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta name="robots" content="noindex,nofollow">
-  <!-- VALIDACIÓN AISLADA: usa código de la rama de estabilidad, mismo origen para probar sesión/datos reales. -->
+  <!-- VALIDACIÓN AISLADA: carga código de la rama de estabilidad sin fusionarlo a producción. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
@@ -336,6 +336,15 @@
         <article class="panel"><h3>Copia de seguridad</h3><p>La sincronización en la nube conecta tus dispositivos y la aplicación conserva una copia local para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label></div></article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
         <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
+        <article class="panel" id="sync-status-panel">
+          <h3>Sincronización</h3>
+          <p id="sync-status-text" class="meta">Comprobando estado…</p>
+          <div class="button-row">
+            <button type="button" id="sync-now" class="primary">Sincronizar ahora</button>
+            <button type="button" id="recover-local-pending" class="secondary hidden">Recuperar cambios locales pendientes</button>
+          </div>
+          <p id="sync-status-detail" class="meta"></p>
+        </article>
         <article class="panel">
           <h3>Sesión y sistema</h3>
           <p class="meta">Gestiona tu sesión de usuario o recarga la aplicación para asegurarte de sincronizar la última versión disponible.</p>
@@ -658,8 +667,8 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@d826cc47d0e34c529731bb16291fbbc4670d4674/js/app.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@d826cc47d0e34c529731bb16291fbbc4670d4674/js/redesign-nav.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@e9e484883158bde445f4e9a3dcfd61650cb43590/js/app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@e9e484883158bde445f4e9a3dcfd61650cb43590/js/redesign-nav.js"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {
