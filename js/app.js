@@ -1,4 +1,4 @@
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -5177,6 +5177,45 @@ function wireEvents() {
   $('#settings-reload')?.addEventListener('click', async () => {
     await reloadAppPreservingSession();
   });
+  $('#sync-now')?.addEventListener('click', async () => {
+    const button = $('#sync-now');
+    if (button) button.disabled = true;
+    try {
+      await synchronizeCloud();
+      const info = await getSyncDiagnostics();
+      if (info.pending === 0) toast('Sincronización completada.');
+      else toast(`Quedan ${info.pending} cambios pendientes.`);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      if (button) button.disabled = false;
+      await refreshSyncStatusPanel();
+    }
+  });
+  $('#recover-local-pending')?.addEventListener('click', async () => {
+    const info = await getSyncDiagnostics();
+    if (!info.legacyPending) return refreshSyncStatusPanel();
+    const ok = await askConfirmation({
+      title: 'Recuperar cambios locales',
+      message: `Este dispositivo tiene ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento anterior. Se intentarán vincular a la cuenta con la que has iniciado sesión, sin borrar la copia local hasta que Supabase responda.`,
+      acceptLabel: 'Recuperar y sincronizar',
+    });
+    if (!ok) return;
+    const button = $('#recover-local-pending');
+    if (button) button.disabled = true;
+    try {
+      const result = await recoverLegacyPendingMutations();
+      await synchronizeCloud();
+      toast(result.recovered
+        ? `Recuperados ${result.recovered} cambios locales pendientes.`
+        : 'No había cambios locales pendientes que recuperar.');
+    } catch (error) {
+      handleError(error);
+    } finally {
+      if (button) button.disabled = false;
+      await refreshSyncStatusPanel();
+    }
+  });
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
@@ -5534,12 +5573,45 @@ function networkStatus() {
   }
 }
 
+async function refreshSyncStatusPanel() {
+  const text = $('#sync-status-text');
+  const detail = $('#sync-status-detail');
+  const recover = $('#recover-local-pending');
+  if (!text) return;
+  try {
+    const info = await getSyncDiagnostics();
+    if (!info.online) {
+      text.textContent = 'Sin conexión · los cambios quedan pendientes en este dispositivo.';
+    } else if (state.cloudError) {
+      text.textContent = 'Error de sincronización.';
+    } else if (info.pending > 0) {
+      text.textContent = `Pendiente de sincronizar: ${info.pending} cambio${info.pending === 1 ? '' : 's'}.`;
+    } else {
+      text.textContent = 'Sincronizado con Supabase.';
+    }
+    detail.textContent = info.legacyPending > 0
+      ? `Hay ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento local anterior de este dispositivo.`
+      : (state.cloudError || '');
+    recover?.classList.toggle('hidden', !(info.boundUserId && info.legacyPending > 0));
+  } catch (error) {
+    text.textContent = 'No se pudo comprobar el estado de sincronización.';
+    if (detail) detail.textContent = error.message || '';
+    recover?.classList.add('hidden');
+  }
+}
+
 async function synchronizeCloud() {
   if (isDemoDatabase()) {
     await refresh();
-    return networkStatus();
+    networkStatus();
+    await refreshSyncStatusPanel();
+    return;
   }
-  if (!navigator.onLine) return networkStatus();
+  if (!navigator.onLine) {
+    networkStatus();
+    await refreshSyncStatusPanel();
+    return;
+  }
   try {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
@@ -5551,6 +5623,7 @@ async function synchronizeCloud() {
     console.warn('Sincronización en la nube no disponible:', error.message);
   }
   networkStatus();
+  await refreshSyncStatusPanel();
 }
 
 async function init() {
@@ -5635,6 +5708,7 @@ async function init() {
     }
   }
   await synchronizeCloud();
+  await refreshSyncStatusPanel();
   await ensureLegacyExercisesNotPresent();
   await refresh();
   const live = await getOne('settings', 'live');
