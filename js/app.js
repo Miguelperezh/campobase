@@ -4865,7 +4865,7 @@ function toggleWhistleTimer() {
 }
 
 function wireEvents() {
-  $('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
+  $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => {
     const form = $(`#${button.dataset.dialog} form`);
@@ -5766,7 +5766,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v9').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v12').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
