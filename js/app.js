@@ -233,20 +233,9 @@ function isUserInteracting() {
 
 
 async function deduplicatePlayers() {
-  // Protección de datos: nunca borrar/tombstonear jugadores automáticamente
-  // durante refresh. Si aparecen posibles duplicados, se avisa en consola y
-  // se mantienen intactos hasta una decisión manual del usuario.
-  const seen = new Map();
-  const duplicates = [];
-  for (const player of state.players) {
-    const key = normalizePlayerName(player.name);
-    if (!key) continue;
-    if (seen.has(key)) duplicates.push([seen.get(key), player]);
-    else seen.set(key, player);
-  }
-  if (duplicates.length) {
-    console.warn('CampoBase detectó posibles jugadores duplicados y no los ha borrado automáticamente:', duplicates.map(([a, b]) => [a.id, b.id]));
-  }
+  // Protección de datos: refresh nunca deduplica, borra ni reescribe jugadores.
+  // Cualquier posible duplicado se resuelve manualmente desde la interfaz.
+  return false;
 }
 
 async function refresh() {
