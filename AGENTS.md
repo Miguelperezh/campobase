@@ -2180,3 +2180,58 @@ Siguiente estado permitido:
 - si valida visualmente, entonces se puede fusionar PR #52;
 - si detecta cualquier anomalía, detener merge y corregir únicamente en la rama.
 
+---
+
+# 28. Incidencia de validación — fichas familiares no visibles y campo WhatsApp incorrecto — 19/09/2026
+
+Reporte visual de Miguel:
+- en la URL de validación no aparecen correctamente datos familiares ya guardados de jugadores como Diego Andrés Anaya Chaparro;
+- el WhatsApp de partido no respeta siempre el campo guardado en el partido/calendario y puede mostrar otro campo.
+
+## 28.1 Datos verificados antes de tocar código
+
+Supabase contiene actualmente los datos familiares validados. Ejemplo comprobado:
+- Diego Andrés Anaya Chaparro conserva madre Sheila y su teléfono validado.
+- La plantilla activa sigue teniendo 15 jugadores.
+
+Por tanto:
+- **NO reconstruir ni inventar fichas**;
+- **NO volver a escribir teléfonos desde memoria**;
+- tratar el problema como una carga/sincronización local incorrecta mientras Supabase siga conservando la ficha correcta.
+
+Partidos verificados en Supabase:
+- el campo real está guardado en `payload.location`;
+- los partidos actuales contienen, según cada registro, valores como Alfonso Silva, Mundial 82 y Campo El Calero;
+- WhatsApp debe tomar el campo del partido seleccionado, nunca conservar silenciosamente el campo de otro partido abierto antes.
+
+## 28.2 Causa detectada del campo de WhatsApp
+
+El selector de eventos de WhatsApp guarda partidos como:
+- `match:<id>`.
+
+El manejador de cambio estaba buscando directamente:
+- `state.matches.find(m => m.id === select.value)`.
+
+Eso compara el ID real con `match:<id>` y no encuentra el partido. Como resultado, el campo visible podía conservar un valor anterior o el valor por defecto.
+
+Corrección requerida:
+- resolver primero el ID eliminando el prefijo `match:`;
+- al abrir/cambiar de partido, copiar `match.location` al campo de WhatsApp;
+- regenerar Maps desde ese mismo campo;
+- mantener edición manual posterior solo si Miguel la cambia expresamente.
+
+## 28.3 Protección adicional requerida para datos personales
+
+La sincronización nunca debe permitir que una copia local antigua o una cola pendiente obsoleta sustituya una fila más reciente de Supabase.
+
+Regla:
+- antes de aplicar una mutación pendiente, comparar su `queuedAt` con `updated_at` remoto;
+- si Supabase tiene una versión posterior, descartar la mutación local obsoleta de la cola;
+- después descargar la versión remota y sustituir/reconciliar la copia local;
+- una app vacía o una ficha incompleta no debe provocar subida automática de una versión local antigua.
+
+Estado:
+- diagnóstico documentado;
+- correcciones funcionales pendientes en la rama;
+- no fusionar a `main` hasta nueva validación visual de Miguel.
+
