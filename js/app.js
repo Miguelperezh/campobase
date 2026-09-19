@@ -515,6 +515,13 @@ async function savePlayerStats(event) {
   toast(`Estadísticas de ${values.scope === 'preseason' ? 'Pretemporada' : 'Liga'} guardadas.`);
 }
 
+function callupForMatch(match) {
+  if (!match) return null;
+  const matchId = typeof match === 'string' ? match : match.id;
+  const callupId = typeof match === 'object' ? match.callupId : null;
+  return state.callups.find((item) => (callupId && item.id === callupId) || item.matchId === matchId || item.id === matchId) ?? null;
+}
+
 function exclusionReasonLabel({ reason, note }) {
   const label = EXCLUSION_REASONS[reason] ?? reason;
   return reason === 'other' && note ? `Otro motivo: ${note}` : label;
@@ -666,9 +673,10 @@ async function synchronizeRotationCounters() {
 function renderCallups() {
   const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
-    const exclusions = callup.exclusions ?? callup.excludedIds.map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
+    const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${callup.availableIds.length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="open-whatsapp-callup icon-button accent" data-id="${callup.id}">📱 WhatsApp</button><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${callup.targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</table></details></article>`;
+    const targetRows = (callup.targets || []).map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('');
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${(callup.availableIds || []).length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="open-whatsapp-callup icon-button accent" data-id="${callup.id}">📱 WhatsApp</button><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${targetRows}</table></details></article>`;
   }).join('') : empty('Todavía no hay convocatorias.');
 }
 
@@ -766,13 +774,18 @@ function liveDetailsMarkup(prefix, availableIds, match) {
 
 function renderLive() {
   const root = $('#live-match');
-  const eligible = state.matches.filter((match) => match.callupId && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
+  const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
     root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    const prepBtn = $('#prepare-live');
+    if (prepBtn && !prepBtn.dataset.directBound) {
+      prepBtn.dataset.directBound = '1';
+      prepBtn.addEventListener('click', () => prepareLive().catch(handleError));
+    }
     return;
   }
   const match = state.matches.find((item) => item.id === state.timer.matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!match || !callup) { state.timer = null; return renderLive(); }
   const seconds = timerSeconds(); const config = FORMATS[callup.format];
   state.timer.phase ??= 'ready';
@@ -799,7 +812,7 @@ function renderLive() {
 function liveTacticPlayers() { return state.players; }
 function liveTacticAvailableIds() {
   const match = state.matches.find(({ id }) => id === state.timer?.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   return callup?.availableIds ?? [];
 }
 
@@ -869,7 +882,7 @@ function fieldBenchMarkup(fieldIds, callup, config) {
 // Re-renderiza solo "En campo" y "Banquillo" sin reconstruir la pizarra.
 function renderFieldBench() {
   const match = state.matches.find((item) => item.id === state.timer?.matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!match || !callup) return;
   const grid = $('#live-match .live-grid');
   if (grid) grid.outerHTML = fieldBenchMarkup(state.timer.onField, callup, FORMATS[callup.format]);
@@ -1205,7 +1218,7 @@ function livePlayedSeconds() {
 
 function liveCallup() {
   const match = state.matches.find(({ id }) => id === state.timer?.matchId);
-  return state.callups.find(({ id }) => id === match?.callupId) ?? null;
+  return callupForMatch(match);
 }
 
 function liveKeeperIds() {
@@ -1242,7 +1255,7 @@ function renderDelegate() {
     return;
   }
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!match || !callup) return;
   // El delegado solo ve el partido 20 min antes de la hora programada, o cuando
   // Migue lo desbloquea antes, o cuando ya ha empezado. Migue (owner) siempre lo ve.
@@ -1317,8 +1330,8 @@ async function cancelLiveMatch() {
 
 async function registerDelegateSubstitution(outIds, inIds) {
   const match = state.matches.find((item) => item.id === state.timer?.matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
-  const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup.availableIds, 7);
+  const callup = callupForMatch(match);
+  const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup?.availableIds ?? [], 7);
   state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'delegate' });
   state.timer.onField = nextOnField;
   syncLiveTacticFromTimer();
@@ -1343,7 +1356,7 @@ async function proposeReparto() {
 
 function updateKeeperOptions(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   const called = calledPlayerOptions(state.players, callup?.availableIds ?? []);
   const keepers = [...called].sort((a, b) => {
     const aIsKeeper = normalizePositions(state.players.find((player) => player.id === a.id)).includes('Portero');
@@ -1377,7 +1390,7 @@ async function applyPreparacionToLive(prep) {
   if (!prep?.team?.length) return false;
   if (state.timer && state.timer.phase !== 'ready') return false;
   const match = state.matches.find(({ id }) => id === prep.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!callup) return false;
   const team = prep.team.map((position) => ({
     ...position,
@@ -1411,19 +1424,25 @@ async function reapplyPreparacionToTimer() {
 }
 
 async function prepareLive() {
-  const match = state.matches.find((item) => item.id === $('#live-select').value); const callup = state.callups.find((item) => item.id === match?.callupId);
-  if (!callup) return toast('Selecciona un partido.');
-  const config = FORMATS[callup.format];
-  if (callup.availableIds.length < config.players) return toast(`Faltan jugadores: ${callup.format} necesita ${config.players} en campo.`);
+  const selectedMatchId = $('#live-select')?.value || '';
+  const match = state.matches.find((item) => item.id === selectedMatchId);
+  if (!match) return toast('Selecciona un partido.');
+  const callup = callupForMatch(match);
+  if (!callup) return toast('Ese partido no tiene una convocatoria disponible en este dispositivo.');
+  const availableIds = Array.isArray(callup.availableIds) ? callup.availableIds : [];
+  const format = callup.format || match.format || state.format || 'F7';
+  const config = FORMATS[format];
+  if (!config) return toast('No se reconoce el formato del partido.');
+  if (availableIds.length < config.players) return toast(`Faltan jugadores: ${format} necesita ${config.players} en campo.`);
   const prep = prepForMatch(match.id);
   if (prep?.team?.length) {
     await applyPreparacionToLive(prep);
     return;
   }
-  const firstKeeper = $('#first-keeper').value;
-  const secondKeeper = $('#second-keeper').value;
+  const firstKeeper = $('#first-keeper')?.value;
+  const secondKeeper = $('#second-keeper')?.value;
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
-  if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
+  if (!availableIds.includes(firstKeeper) || !availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
   const initialOnField = [firstKeeper];
   state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, delegateUnlocked: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
@@ -1482,7 +1501,8 @@ function maybeShowMinuteAlert(played, elapsedSeconds) {
   const alertKey = `min-${minute}`;
   if (state.timer.lastMinuteAlert === alertKey) return;
   state.timer.lastMinuteAlert = alertKey;
-  const callup = state.callups.find(({ id }) => id === state.matches.find(({ id }) => id === state.timer.matchId)?.callupId);
+  const match = state.matches.find(({ id }) => id === state.timer.matchId);
+  const callup = callupForMatch(match);
   if (!callup) return;
   const onField = state.timer.onField;
   const bench = callup.availableIds.filter((id) => !onField.includes(id));
@@ -1495,7 +1515,7 @@ function maybeShowMinuteAlert(played, elapsedSeconds) {
 function maybeShowUrgentSubstitution(played, elapsedSeconds) {
   if (!state.delegateMode || !state.timer || state.timer.phase === 'halftime') return;
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!callup) return;
   const config = FORMATS[callup.format];
   const benchIds = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
@@ -1541,7 +1561,8 @@ async function advanceLivePhase() {
       const keeperOut = state.timer.onField.includes(firstKeeper) ? firstKeeper : state.timer.onField.find((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
       if (keeperOut) {
         state.timer.events.push({ second: state.timer.elapsed, outIds: [keeperOut], inIds: [secondKeeper], source: 'goalkeeper_rotation' });
-        state.timer.onField = applySubstitution(state.timer.onField, [keeperOut], [secondKeeper], state.callups.find((callup) => callup.id === state.matches.find((match) => match.id === state.timer.matchId)?.callupId).availableIds, 7);
+        const matchCallup = liveCallup();
+        state.timer.onField = applySubstitution(state.timer.onField, [keeperOut], [secondKeeper], matchCallup?.availableIds ?? [], 7);
         ensureLiveDetails().minuteReasons[keeperOut] = 'goalkeeper_rotation';
         ensureLiveDetails().minuteReasons[secondKeeper] = 'goalkeeper_rotation';
       }
@@ -1560,9 +1581,9 @@ async function advanceLivePhase() {
 async function makeSubstitution() {
   const outIds = checkedValues('sub-out'); const inIds = checkedValues('sub-in');
   const match = state.matches.find((item) => item.id === state.timer.matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   try {
-    const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup.availableIds, 7);
+    const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup?.availableIds ?? [], 7);
     const second = timerSeconds();
     state.timer.events.push({ second, outIds, inIds });
     state.timer.onField = nextOnField;
@@ -1585,7 +1606,9 @@ async function finishMatch() {
   state.finishing = true;
   try {
     const totals = calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, state.timer.elapsed);
-    const match = state.matches.find((item) => item.id === state.timer.matchId); const callup = state.callups.find((item) => item.id === match.callupId);
+    const match = state.matches.find((item) => item.id === state.timer.matchId);
+    const callup = callupForMatch(match);
+    if (!match || !callup) return;
     const details = ensureLiveDetails();
     const maximum = Math.max(...Object.values(totals));
     const missingReason = callup.availableIds.find((id) => (totals[id] ?? 0) < maximum && !details.minuteReasons[id]);
@@ -1621,7 +1644,9 @@ async function saveMatchRatings(event) {
   state.finishing = true;
   try {
   const totals = calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, state.timer.elapsed);
-  const match = state.matches.find((item) => item.id === state.timer.matchId); const callup = state.callups.find((item) => item.id === match.callupId);
+  const match = state.matches.find((item) => item.id === state.timer.matchId);
+  const callup = callupForMatch(match);
+  if (!match || !callup) return;
   const details = ensureLiveDetails();
   const players = state.players.filter(({ id }) => callup.availableIds.includes(id));
   const values = formObject(event.target.closest('form'));
@@ -1654,7 +1679,7 @@ function openRateMatch(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
   if (!match) return;
   if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede puntuar a los jugadores.');
-  const callup = state.callups.find((item) => item.id === match.callupId);
+  const callup = callupForMatch(match);
   const players = state.players.filter(({ id }) => (callup?.availableIds ?? []).includes(id));
   if (!players.length) return toast('Este partido no tiene convocados para puntuar.');
   state.ratingMatchId = matchId;
@@ -1675,7 +1700,7 @@ async function saveRateMatch(event) {
   if (!match) return;
   state.finishing = true;
   try {
-    const callup = state.callups.find((item) => item.id === match.callupId);
+    const callup = callupForMatch(match);
     const players = state.players.filter(({ id }) => (callup?.availableIds ?? []).includes(id));
     const values = formObject(event.target.closest('form'));
     const ratingValues = Object.fromEntries(players.map(({ id }) => [id, values[`rating-${id}`]]));
@@ -1764,7 +1789,7 @@ function editMatch(id) {
 
 function preparableMatches() {
   return state.matches
-    .filter((match) => match.callupId && match.status !== 'finished')
+    .filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished')
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -1791,7 +1816,7 @@ function renderPreparaciones() {
 
 function prepAvailableIds(matchId) {
   const match = state.matches.find(({ id }) => id === matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   return callup?.availableIds ?? [];
 }
 
@@ -2002,8 +2027,15 @@ function wirePrepEditor() {
 }
 
 async function savePreparacion() {
+  if (!prepDraft || !prepMatchId) return toast('No hay preparación activa para guardar.');
+  const keeper1 = $('#prep-keeper1')?.value || '';
+  const keeper2 = $('#prep-keeper2')?.value || keeper1;
+  const formacion = $('#prep-formacion')?.value || '1-3-2-1';
+  const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
+  if (keeperIndex >= 0 && keeper1 && prepDraft[keeperIndex].playerId !== keeper1) {
+    prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1);
+  }
   const onField = prepDraft.map((p) => p.playerId).filter(Boolean);
-  const keeper1 = $('#prep-keeper1').value;
   if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(keeper1)) {
     return toast('Completa la alineación de 7 jugadores con el portero antes de guardar.');
   }
@@ -2014,8 +2046,8 @@ async function savePreparacion() {
     recordType: 'preparacion',
     matchId: prepMatchId,
     firstKeeper: keeper1,
-    secondKeeper: $('#prep-keeper2').value,
-    formacion: $('#prep-formacion').value,
+    secondKeeper: keeper2,
+    formacion,
     team: prepDraft.map((p) => ({ ...p })),
     delegateShown: existing?.delegateShown ?? false,
     savedAt: Date.now(),
@@ -2023,8 +2055,8 @@ async function savePreparacion() {
   await put('settings', record);
   await refresh();
   await applyPreparacionToLive(record);
-  $('#preparacion-editor').classList.add('hidden');
-  $('#preparacion-list').classList.remove('hidden');
+  $('#preparacion-editor')?.classList.add('hidden');
+  $('#preparacion-list')?.classList.remove('hidden');
   prepDraft = null; prepMatchId = null;
   renderPreparaciones();
   toast('Preparación guardada.');
@@ -2151,10 +2183,10 @@ function attendanceBuilder(matchId = '', recordId = '') {
   const kind = existing?.kind ?? (matchId ? 'match' : 'training');
   const selectedMatchId = existing?.matchId ?? matchId;
   const match = state.matches.find((item) => item.id === selectedMatchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   const players = kind === 'match' ? state.players.filter(({ id }) => callup?.availableIds.includes(id)) : state.players;
   const today = localDateKey();
-  const matchOptions = state.matches.filter(({ callupId }) => callupId).sort((a, b) => b.date.localeCompare(a.date)).map((item) => `<option value="${item.id}" ${item.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(item.date))} · ${escapeHtml(item.opponent)}</option>`).join('');
+  const matchOptions = state.matches.filter((item) => item.callupId || callupForMatch(item)).sort((a, b) => b.date.localeCompare(a.date)).map((item) => `<option value="${item.id}" ${item.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(item.date))} · ${escapeHtml(item.opponent)}</option>`).join('');
   const attendanceByPlayer = Object.fromEntries((existing?.attendance ?? []).map((item) => [item.playerId, item]));
   const rows = players.map((player) => {
     const entry = attendanceByPlayer[player.id] ?? { status: 'present', note: '' };
@@ -2169,7 +2201,7 @@ async function saveTraining(event) {
   event.preventDefault(); const form = event.target.closest('form'); const values = formObject(form);
   const existing = values.id ? state.trainings.find(({ id }) => id === values.id) : null;
   const match = values.kind === 'match' ? state.matches.find(({ id }) => id === values.matchId) : null;
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   if (values.kind === 'match' && !callup) return toast('Selecciona un partido con convocatoria.');
   const players = values.kind === 'match' ? state.players.filter(({ id }) => callup.availableIds.includes(id)) : state.players;
   for (const { id } of players) values[`arrivalTime-${id}`] = composeTime24(values[`arrivalTime-${id}Hour`], values[`arrivalTime-${id}Minute`]);
@@ -2976,9 +3008,13 @@ async function ensureSlideshareSeeded() {
 // Elimina de la base todos los ejercicios de la app original. Los 248 ejercicios
 // validados oficiales viven en JS (EJERCICIOS_VALIDADOS) y no se guardan en la base.
 async function ensureLegacyExercisesNotPresent() {
+  const flag = await getOne('settings', 'legacy-exercises-not-present-v2');
+  if (flag) return;
   const current = await getAll('settings');
-  const toRemove = current.filter(({ id, recordType, example, userCreated }) =>
+  const toRemove = current.filter(({ id, recordType, example, userCreated, customBoard, source }) =>
     recordType === 'exercise'
+    && customBoard !== true
+    && source !== 'personal'
     && (
       example === true
       || (
@@ -3863,11 +3899,21 @@ async function submitAuth(event) {
           if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
             recoveredRole = 'owner';
             recoveredSettings = local;
+            if (candidate.userId) {
+              setBoundSaasUserId(candidate.userId);
+              try {
+                const client = getSupabaseAuthClient();
+                await signInWithCampoBasePin(client, candidate.userId, pin);
+              } catch {}
+            }
             break;
           }
           if (await verifyPin(pin, local.pinSalt, local.delegatePinHash)) {
             recoveredRole = 'delegate';
             recoveredSettings = local;
+            if (candidate.userId) {
+              setBoundSaasUserId(candidate.userId);
+            }
             break;
           }
         }
@@ -5397,7 +5443,7 @@ function wireEvents() {
       return;
     }
     if (attendanceForm && event.target.name === 'kind') {
-      const firstMatchId = state.matches.find(({ callupId }) => callupId)?.id ?? '';
+      const firstMatchId = state.matches.find((m) => m.callupId || callupForMatch(m))?.id ?? '';
       return event.target.value === 'match' ? attendanceBuilder(firstMatchId) : attendanceBuilder();
     }
     if (attendanceForm && event.target.name === 'matchId') return attendanceBuilder(event.target.value);
@@ -5594,14 +5640,16 @@ function wireEvents() {
       try { await registerDelegateSubstitution(outIds, inIds); } catch (error) { handleError(error); }
     }
     if (target.id === 'apply-delegate-suggestion' || target.id === 'urgent-change') {
-      const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = state.callups.find(({ id }) => id === match?.callupId);
+      const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
+      if (!callup) return;
       const played = livePlayedSeconds(); const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
       const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, played, 1, liveKeeperIds());
       $('#urgent-dialog')?.close();
       try { await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds); } catch (error) { handleError(error); }
     }
     if (target.id === 'owner-auto-sub' || target.id === 'delegate-auto-sub') {
-      const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = state.callups.find(({ id }) => id === match?.callupId);
+      const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
+      if (!callup) return;
       const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
       const count = Math.min(3, bench.length, state.timer.onField.length);
       if (count < 1) return toast('No hay suficientes jugadores para un cambio automático.');
@@ -5770,13 +5818,14 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v13').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v14').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!window._swReloading) {
-          window._swReloading = true;
-          location.reload();
+        if (typeof refresh === 'function') {
+          refresh().then(() => {
+            if (typeof renderAll === 'function') renderAll();
+          }).catch(() => null);
         }
       });
     }

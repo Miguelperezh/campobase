@@ -3789,3 +3789,46 @@ Comprobación visual obligatoria antes de merge:
 14. comprobar que jugadores, teléfonos, estadísticas, convocatorias y demás datos siguen presentes.
 
 No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas pruebas visuales.
+
+
+## 50. Estabilidad total, guardado de preparación, rotación de porteros y persistencia sin expulsión — 19/09/2026
+
+### 50.1 Diagnóstico de las incidencias reportadas
+1. **Cuelgues al iniciar la aplicación**:
+   - `hydrateCustomExercises()` ejecutaba un bucle de sondeo bloqueante hacia la nube (hasta 30 reintentos de 150ms) antes de leer los ejercicios locales de IndexedDB. Si la red o la autenticación estaban pendientes, la UI se congelaba.
+   - Solución: Se invirtió la prioridad en `runtime-refresh.js` para leer inmediatamente de IndexedDB (`readCustomExercises()`) permitiendo arranque instantáneo de la app y del creador de ejercicios (`+ Ejercicio`), delegando la sincronización en segundo plano.
+2. **Actualizar o recargar expulsaba al usuario y cerraba la pestaña/sesión**:
+   - Al pulsar "Actualizar" en `runtime-refresh.js`, se invocaba `caches.delete()` y un forzado `window.location.reload()`, lo que destruía el contexto local y reiniciaba la vista.
+   - Además, los manejadores del evento `controllerchange` en `app.js` e `index.html` disparaban recargas incondicionales del navegador.
+   - Solución: Se reemplazó por un refresco en caliente (`refreshNow`) en el mismo hilo sin borrar cachés de sesión ni forzar recargas destructivas de ventana; se almacena `campobase.activeView` en `sessionStorage` para restaurar la pestaña exacta tras cualquier ciclo de ciclo de vida del PWA.
+3. **Fallo al guardar "Preparar partido"**:
+   - Al guardar la preparación, la asociación entre el partido y la convocatoria fallaba si `match.callupId` estaba vacío o desalineado respecto al ID de la convocatoria, a pesar de que la convocatoria contenía `callup.matchId === match.id`.
+   - `renderCallups()` lanzaba `TypeError: Cannot read properties of undefined (reading 'map')` si `callup.excludedIds` o `callup.targets` eran `undefined`.
+   - `flushSyncQueue()` en `db.js` lanzaba un error no capturado ("Inicia sesión para sincronizar esta cuenta.") que abortaba operaciones locales como `putBatch()` y `remove()`.
+   - Solución: Creación de la función canónica `callupForMatch(match)` en `app.js` aplicada en todos los flujos de partido, alineación y delegado; guardas contra arrays nulos en convocatorias; manejo seguro y no bloqueante en `flushSyncQueue()`.
+4. **Gestión y rotación de porteros (1.er tiempo y 2.º tiempo) y jugadores de campo**:
+   - Requisito deportivo estricto: Si hay 2 porteros en la convocatoria, se reparten los minutos exclusivamente entre ellos (portero 1T y portero 2T pueden ser el mismo o diferentes), ya que los porteros no pueden jugar en posiciones de campo. Los jugadores de campo reparten sus minutos exclusivamente entre las posiciones de campo.
+   - Solución: En `savePreparacion()`, se validan y guardan los selectores `#prep-keeper1` y `#prep-keeper2`. Al iniciar el partido en vivo, el portero titular se asigna automáticamente. Al alcanzar el descanso (`advanceLivePhase`), el sistema rota automáticamente al portero configurado para el segundo tiempo y notifica la rotación al delegado. En el cálculo de minutos recomendados y reparto equitativo de Fair Play, los porteros se aíslan del grupo de jugadores de campo.
+5. **Partido en vivo y vista del Delegado**:
+   - Se garantizó la sincronización en tiempo real entre el entrenador y el delegado: el delegado visualiza alineación, cambios sugeridos, marcador, incidencias y reloj sin interferir con las decisiones exclusivas del entrenador ni poder finalizar el partido anticipadamente.
+6. **Protección de "Mis ejercicios"**:
+   - `ensureLegacyExercisesNotPresent()` descartaba erróneamente ejercicios creados por el usuario que no tenían la bandera estricta `userCreated: true`. Se corrigió para respetar ejercicios marcados con `customBoard: true` o `source: 'personal'`.
+
+### 50.2 Archivos modificados y versión de producción
+- `js/db.js`: Manejo resiliente de errores en cola de sincronización; vinculación de candidatos de usuario SaaS para desbloqueo por PIN.
+- `js/app.js`: Helper `callupForMatch()`, persistencia completa de preparación de partido y rotación de porteros, guardas en renderizado de convocatorias y eliminación de recargas forzadas.
+- `js/runtime-refresh.js`: Refresco en caliente sin expulsar sesión ni recargar ventana; lectura inmediata de IndexedDB para ejercicios y apertura instantánea del creador.
+- `js/saas-session-guard.js` y `js/saas-auth-ui-v2.js`: Persistencia de usuario vinculado ante pérdidas temporales de conexión.
+- `index.html`: Versión de activos `v=20260919-prod-current-v14` y retención de vista activa en `sessionStorage`.
+- `sw.js`: Caché de service worker `20260919-prod-current-v14` con soporte para activación limpia.
+- `tests/*`: Actualización de aserciones de versión a `v14`.
+
+### 50.3 Verificación técnica y pruebas
+1. `npm run check && npm test`: 445/445 pruebas unitarias e integración pasadas exitosamente sin errores ni avisos pendientes.
+2. Verificación en navegador real mediante Headless Chrome CDP (`browser-verify.mjs`):
+   - Fase 1: Desbloqueo de sesión con PIN y preservación de datos.
+   - Fase 2: Botón "Actualizar" ejecuta sincronización en caliente sin recarga de página ni pérdida de sesión.
+   - Fase 3: "Preparar partido" guarda la alineación y la configuración de porteros 1T/2T correctamente.
+   - Fase 4: Inicio de partido en vivo y transición al 2.º tiempo ejecuta la rotación de porteros y se sincroniza en la vista de Delegado.
+   - Fase 5: Botón `+ Ejercicio` abre de inmediato la pizarra táctica sin demoras.
+   - Fase 6: Comprobación en IndexedDB de que "Mis ejercicios" persisten intactos tras la migración y refresco.

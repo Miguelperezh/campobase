@@ -32,11 +32,11 @@ function allJsText(dir = new URL('../js/', import.meta.url)) {
   return walk(root).join('\n');
 }
 
-test('build v13 está alineado en HTML, app, sesión, auth cloud y service worker', () => {
-  const build = '20260919-prod-current-v13';
+test('build v14 está alineado en HTML, app, sesión, auth cloud y service worker', () => {
+  const build = '20260919-prod-current-v14';
   for (const source of [html, app, demo, sw]) assert.match(source, new RegExp(build));
   assert.match(read('js/supabase-client.js'), new RegExp(build));
-  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v13/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v14/);
 });
 
 test('los botones principales del HTML tienen ruta de interacción o son submit/declarativos', () => {

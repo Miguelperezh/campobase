@@ -627,13 +627,12 @@ async function unlockBoundSession(client) {
 async function handlePersistentSession(client) {
   const session = await getCurrentSession(client).catch(() => null);
   if (!session?.user) return false;
-  const bound = getBoundSaasUserId();
-  const remembered = rememberedAccount();
-
+  let bound = getBoundSaasUserId();
   if (!bound) {
-    await prepareSignedInChoice(client, { session, user: session.user });
-    return true;
+    setBoundSaasUserId(session.user.id);
+    bound = session.user.id;
   }
+  const remembered = rememberedAccount();
   if (bound !== session.user.id) return false;
   if (browserSessionIsActive(session.user.id)) {
     return unlockBoundSession(client);
@@ -948,7 +947,10 @@ export async function initSaasAuth(client) {
 
   const session = await getCurrentSession(client).catch(() => null);
   let bound = getBoundSaasUserId();
-  if (bound && (!session?.user || session.user.id !== bound)) {
+  if (session?.user?.id && !bound) {
+    setBoundSaasUserId(session.user.id);
+    bound = session.user.id;
+  } else if (bound && session?.user && session.user.id !== bound) {
     clearBoundSaasUserId();
     bound = '';
   }

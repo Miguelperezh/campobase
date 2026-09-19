@@ -34,17 +34,34 @@ function buttonMarkup() {
 async function refreshNow(button) {
   if (button) { button.disabled = true; button.textContent = 'Actualizando…'; }
   try {
-    if (typeof caches !== 'undefined') {
-      const keys = await caches.keys().catch(() => []);
-      await Promise.all(keys.map((key) => caches.delete(key)));
-    }
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
       await Promise.all(regs.map((reg) => reg.update().catch(() => null)));
     }
     await syncFromCloud().catch(() => null);
+    await readCustomExercises().catch(() => null);
+    clearPatchedFlags();
+    patchSoon();
+    const app = window.__campobase;
+    if (app && typeof app.refresh === 'function') {
+      await app.refresh().catch(() => null);
+      if (typeof app.renderAll === 'function') {
+        app.renderAll();
+      }
+    }
+    if (button) {
+      button.textContent = 'Actualizado ✓';
+    }
+  } catch (error) {
+    console.warn('Aviso durante actualización en caliente:', error);
+    if (button) button.textContent = 'Actualizar';
   } finally {
-    window.location.reload();
+    if (button) {
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = 'Actualizar';
+      }, 1500);
+    }
   }
 }
 
@@ -238,6 +255,9 @@ function clearPatchedFlags() {
 }
 
 async function hydrateCustomExercises({ attempts = 1 } = {}) {
+  const records = await readCustomExercises();
+  clearPatchedFlags();
+  patchSoon();
   if (hydrationPromise) return hydrationPromise;
   hydrationPromise = (async () => {
     let cloudReady = false;
@@ -246,10 +266,10 @@ async function hydrateCustomExercises({ attempts = 1 } = {}) {
       if (result?.online === true) { cloudReady = true; break; }
       if (attempt < attempts - 1) await delay(150);
     }
-    const records = await readCustomExercises();
+    const refreshed = await readCustomExercises();
     clearPatchedFlags();
     patchSoon();
-    return { records, cloudReady };
+    return { records: refreshed, cloudReady };
   })().finally(() => { hydrationPromise = null; });
   return hydrationPromise;
 }
@@ -363,7 +383,13 @@ function interceptClicks(event) {
   if (createButton) {
     event.preventDefault();
     event.stopImmediatePropagation();
-    openCreator().catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el creador.'); });
+    openCreator().catch((error) => {
+      console.error(error);
+      const dialog = document.getElementById('exercise-dialog');
+      if (dialog && typeof dialog.showModal === 'function') {
+        try { dialog.showModal(); } catch (_) { dialog.setAttribute('open', ''); }
+      }
+    });
     return;
   }
   const legacyMovementButton = event.target.closest('.view-exercise-motion[data-exercise-id]');
@@ -436,6 +462,10 @@ async function install() {
     console.warn('No se pudieron hidratar Mis ejercicios al arrancar:', error.message);
     return readCustomExercises().then(() => patchSoon()).catch(() => null);
   });
+}
+
+if (typeof window !== 'undefined') {
+  window.__campobaseOpenExerciseCreator = openCreator;
 }
 
 if (typeof document !== 'undefined') {

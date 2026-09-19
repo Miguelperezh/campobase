@@ -1,6 +1,6 @@
 import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
-import { getBoundSaasUserId, userDatabaseName } from './auth-manager.js';
+import { getBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 
 const REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
@@ -188,8 +188,6 @@ export async function put(store, value) {
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
-  // Si estamos online y el servidor rechaza la escritura, no ocultamos el fallo:
-  // la mutación queda en syncQueue para reintento y la UI no debe decir "guardado".
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
@@ -277,7 +275,16 @@ export async function flushSyncQueue() {
   // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
   // abrir/leer syncQueue para que una cola de la base legado nunca pueda
   // subirse accidentalmente a una cuenta SaaS recuperada después.
-  if (typeof cloudStore?.prepare === 'function') await cloudStore.prepare();
+  if (typeof cloudStore?.prepare === 'function') {
+    try {
+      await cloudStore.prepare();
+    } catch (authError) {
+      if (authError?.message?.includes('Inicia sesión') || authError?.name === 'TypeError') {
+        return false;
+      }
+      throw authError;
+    }
+  }
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
     const shouldApply = typeof cloudStore?.shouldApplyMutation === 'function'
@@ -383,6 +390,21 @@ export async function getLocalPinSettingsCandidates() {
   const names = [REAL_DB_NAME];
   const userId = getBoundSaasUserId();
   if (userId) names.push(userDatabaseName(userId));
+  const remembered = getRememberedSaasAccount();
+  if (remembered?.id) names.push(userDatabaseName(remembered.id));
+
+  if (typeof indexedDB !== 'undefined' && typeof indexedDB.databases === 'function') {
+    try {
+      const dbs = await indexedDB.databases();
+      for (const info of dbs) {
+        if (info.name && info.name.startsWith('campobase_')) {
+          names.push(info.name);
+        }
+      }
+    } catch {
+      // Ignorar si el navegador no permite enumerar bases.
+    }
+  }
 
   const candidates = [];
   for (const name of [...new Set(names)]) {
@@ -392,7 +414,8 @@ export async function getLocalPinSettingsCandidates() {
         database.transaction('settings', 'readonly').objectStore('settings').get('main')
       );
       if (settings?.pinSalt && (settings.ownerPinHash || settings.delegatePinHash)) {
-        candidates.push({ databaseName: name, settings: structuredClone(settings) });
+        const candidateUserId = name.startsWith('campobase_') ? name.slice('campobase_'.length) : '';
+        candidates.push({ databaseName: name, userId: candidateUserId, settings: structuredClone(settings) });
       }
     } catch {
       // Una base inexistente o inaccesible no debe bloquear el resto de candidatos.
