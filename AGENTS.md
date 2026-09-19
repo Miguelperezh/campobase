@@ -2603,3 +2603,33 @@ Estado:
 - corrección funcional se hace únicamente en `fix/estabilidad-datos-sesion-20260919`;
 - no fusionar a `main` hasta validación visual de Miguel.
 
+---
+
+# 34. Incidencia crítica — móvil no sincroniza cambios con Supabase — 19/09/2026
+
+Reporte de Miguel:
+- cambios realizados desde el móvil no están llegando a Supabase;
+- se han detectado como ejemplo la edición de Antonio Roldán y una convocatoria contra Unión Viera Alevín E que todavía no aparecen en la base remota;
+- esto debe tratarse como incidencia crítica porque un usuario puede creer que ha guardado correctamente cuando el cambio sigue solo en el dispositivo.
+
+Prioridad:
+1. no borrar ni reiniciar almacenamiento local del móvil;
+2. localizar si los cambios quedaron en IndexedDB y/o `syncQueue`;
+3. recuperar y subir esas mutaciones a Supabase;
+4. comprobar que la app móvil usa el mismo `user_id` y la base `campobase_<user_id>`;
+5. comprobar sesión Supabase válida antes de abrir/leer la cola;
+6. hacer que un fallo de sincronización sea visible y nunca se muestre como “guardado” en servidor;
+7. añadir un estado visible de sincronización y una acción manual de reintento;
+8. verificar que cerrar/reabrir, actualizar la PWA o cambiar de red no pierde la cola;
+9. validar en móvil antes de fusionar.
+
+Regla:
+- **no considerar un cambio móvil como guardado y blindado hasta que exista en Supabase y quede versionado en `public.campobase_versiones_datos`**;
+- si está solo en IndexedDB/`syncQueue`, sigue siendo recuperable pero pendiente de sincronización;
+- no eliminar la PWA, borrar datos del sitio, limpiar almacenamiento ni restablecer la app mientras existan cambios pendientes.
+
+Estado:
+- incidencia añadida al plan activo;
+- se investiga y corrige en `fix/estabilidad-datos-sesion-20260919`;
+- no fusionar a `main` hasta validación visual y móvil expresa de Miguel.
+
