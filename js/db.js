@@ -443,6 +443,6 @@ export async function importDatabase(backup) {
     }
   }
   await transactionDone(transaction);
-  await flushSyncQueue().catch(() => false);
+  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(STORES, 'import');
 }
