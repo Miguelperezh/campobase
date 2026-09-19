@@ -15,7 +15,9 @@ import e14 from './ejercicios-nuevo-formato/14-campobase-video-finalizacion-dobl
 import e15 from './ejercicios-nuevo-formato/15-campobase-video-reaccion-espaldas-senales-lateral-giro-cono-balon-v2.js';
 import e16 from './ejercicios-nuevo-formato/16-campobase-video-reaccion-lateral-senal-balon-cono.js';
 
-const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e13, e14, e15, e16];
+// Los 12 primeros son las versiones actuales validadas.
+const RAW_EJERCICIOS_NUEVO_FORMATO = [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12];
+const RAW_EJERCICIOS_NUEVO_FORMATO_ANTERIORES = [e13, e14, e15, e16];
 
 function key(value = '') {
   return String(value)
@@ -209,4 +211,10 @@ function normalizeNewExercise(exercise) {
 export const EJERCICIOS_NUEVO_FORMATO = Object.freeze(
   RAW_EJERCICIOS_NUEVO_FORMATO.map(normalizeNewExercise)
 );
+
+// Se conservan para histórico/compatibilidad, pero no entran en Biblioteca ni selector de sesiones.
+export const EJERCICIOS_NUEVO_FORMATO_ANTERIORES = Object.freeze(
+  RAW_EJERCICIOS_NUEVO_FORMATO_ANTERIORES.map(normalizeNewExercise)
+);
+
 export const NUEVOS_EJERCICIOS_IDS = Object.freeze(EJERCICIOS_NUEVO_FORMATO.map(({ id }) => id));
