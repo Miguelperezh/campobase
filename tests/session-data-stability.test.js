@@ -67,3 +67,15 @@ test('showView recorre colecciones con $$ y no vuelve a provocar forEach sobre u
   assert.doesNotMatch(showView, /(^|[^$])\$\('\.bottom-nav button'\)\.forEach/m);
 });
 
+test('una mutación local obsoleta se descarta si Supabase tiene una versión posterior', async () => {
+  const [db, cloud] = await Promise.all([
+    projectFile('js/db.js'),
+    projectFile('js/supabase-client.js'),
+  ]);
+  assert.match(db, /cloudStore\.shouldApplyMutation\(mutation\)/);
+  assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id\)[\s\S]*continue/);
+  assert.match(cloud, /async shouldApplyMutation\(mutation\)/);
+  assert.match(cloud, /select\('updated_at,deleted_at'\)/);
+  assert.match(cloud, /localQueuedAt >= remoteUpdatedAt/);
+});
+
