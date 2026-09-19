@@ -74,6 +74,10 @@ export async function deleteDemoDatabase(session) {
 }
 
 export function openDatabase() {
+  // La base real se resuelve en cada apertura. Si una sesión Supabase válida
+  // acaba de recuperar campobase.saasUserId durante el arranque, no debemos
+  // seguir usando la base legado "campobase" por haberla calculado antes.
+  if (!demoSession) activeDatabaseName = boundDatabaseName();
   const name = activeDatabaseName;
   if (!databasePromises.has(name)) databasePromises.set(name, new Promise((resolve, reject) => {
     const request = indexedDB.open(name, DB_VERSION);
@@ -249,6 +253,10 @@ export async function remove(store, id) {
 export async function flushSyncQueue() {
   if (isDemoDatabase()) return false;
   if (!canUseCloud()) return false;
+  // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
+  // abrir/leer syncQueue para que una cola de la base legado nunca pueda
+  // subirse accidentalmente a una cuenta SaaS recuperada después.
+  if (typeof cloudStore?.prepare === 'function') await cloudStore.prepare();
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
     if (mutation.operation === 'delete') await cloudStore.remove(mutation);
