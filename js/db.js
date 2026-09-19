@@ -73,12 +73,7 @@ export async function deleteDemoDatabase(session) {
   if (demoSession?.id === session.id) demoStores = Object.fromEntries(STORES.map((store) => [store, new Map()]));
 }
 
-export function openDatabase() {
-  // La base real se resuelve en cada apertura. Si una sesión Supabase válida
-  // acaba de recuperar campobase.saasUserId durante el arranque, no debemos
-  // seguir usando la base legado "campobase" por haberla calculado antes.
-  if (!demoSession) activeDatabaseName = boundDatabaseName();
-  const name = activeDatabaseName;
+function openDatabaseByName(name) {
   if (!databasePromises.has(name)) databasePromises.set(name, new Promise((resolve, reject) => {
     const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
@@ -93,6 +88,14 @@ export function openDatabase() {
     request.onblocked = () => reject(new Error('Cierra otras pestañas de CampoBase para actualizar la base de datos.'));
   }));
   return databasePromises.get(name);
+}
+
+export function openDatabase() {
+  // La base real se resuelve en cada apertura. Si una sesión Supabase válida
+  // acaba de recuperar campobase.saasUserId durante el arranque, no debemos
+  // seguir usando la base legado "campobase" por haberla calculado antes.
+  if (!demoSession) activeDatabaseName = boundDatabaseName();
+  return openDatabaseByName(activeDatabaseName);
 }
 
 function requestResult(request) {
@@ -133,6 +136,18 @@ function canUseCloud() {
   return Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
 }
 
+async function prepareStorageBindingForWrite() {
+  if (isDemoDatabase() || getBoundSaasUserId() || typeof cloudStore?.prepare !== 'function') return;
+  try {
+    // getSession() es local y puede reconstruir el user_id incluso en móvil
+    // antes de decidir qué IndexedDB debe recibir el cambio.
+    await cloudStore.prepare();
+  } catch (error) {
+    if (error?.code !== 'CAMPOBASE_AUTH_REQUIRED') throw error;
+    // Sin sesión SaaS válida seguimos permitiendo el modo local legado.
+  }
+}
+
 export function configureCloudStore(store) {
   cloudStore = store;
 }
@@ -162,6 +177,7 @@ export async function put(store, value) {
     notifyDataChanged(store, 'upsert');
     return value;
   }
+  await prepareStorageBindingForWrite();
   const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
   const genericRecord = mergeLocalRecordForWrite(store, existing, value);
   const recordToStore = store === 'players' && existing
@@ -187,6 +203,7 @@ export async function putPlayerProfile(value) {
     notifyDataChanged('players', 'profile-upsert');
     return recordToStore;
   }
+  await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction(['players', SYNC_QUEUE], 'readwrite');
   transaction.objectStore('players').put(recordToStore);
@@ -210,6 +227,7 @@ export async function putBatch(recordsByStore) {
     notifyDataChanged(storeNames, 'batch');
     return;
   }
+  await prepareStorageBindingForWrite();
   const normalizedRecordsByStore = {};
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
@@ -243,6 +261,7 @@ export async function remove(store, id) {
     notifyDataChanged(store, 'delete');
     return;
   }
+  await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).delete(id);
@@ -347,6 +366,55 @@ export async function syncFromCloud() {
     return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
   })().finally(() => { syncPromise = null; });
   return syncPromise;
+}
+
+async function queueFromDatabaseName(name) {
+  const db = await openDatabaseByName(name);
+  return requestResult(db.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll());
+}
+
+export async function getSyncDiagnostics() {
+  const boundUserId = getBoundSaasUserId();
+  const activeName = boundUserId ? userDatabaseName(boundUserId) : REAL_DB_NAME;
+  const pending = await queueFromDatabaseName(activeName);
+  const legacyPending = activeName === REAL_DB_NAME ? pending : await queueFromDatabaseName(REAL_DB_NAME);
+  return {
+    boundUserId,
+    activeDatabase: activeName,
+    pending: pending.length,
+    legacyPending: activeName === REAL_DB_NAME ? 0 : legacyPending.length,
+    online: typeof navigator === 'undefined' ? true : navigator.onLine,
+  };
+}
+
+export async function recoverLegacyPendingMutations() {
+  const userId = getBoundSaasUserId();
+  if (!userId) throw new Error('Inicia sesión en tu cuenta antes de recuperar cambios locales pendientes.');
+  const targetName = userDatabaseName(userId);
+  if (targetName === REAL_DB_NAME) return { recovered: 0 };
+
+  const legacyDb = await openDatabaseByName(REAL_DB_NAME);
+  const legacyMutations = await requestResult(
+    legacyDb.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll()
+  );
+  if (!legacyMutations.length) return { recovered: 0 };
+
+  const targetDb = await openDatabaseByName(targetName);
+  const writeTx = targetDb.transaction(SYNC_QUEUE, 'readwrite');
+  const targetQueue = writeTx.objectStore(SYNC_QUEUE);
+  for (const mutation of legacyMutations) targetQueue.put(structuredClone(mutation));
+  await transactionDone(writeTx);
+
+  // Solo limpiamos la cola legado después de que Supabase acepte/rechace de forma
+  // segura cada mutación mediante las guardas de versión/stale-write.
+  await flushSyncQueue();
+
+  const cleanupTx = legacyDb.transaction(SYNC_QUEUE, 'readwrite');
+  const legacyQueue = cleanupTx.objectStore(SYNC_QUEUE);
+  for (const mutation of legacyMutations) legacyQueue.delete(mutation.id);
+  await transactionDone(cleanupTx);
+
+  return { recovered: legacyMutations.length };
 }
 
 export async function exportDatabase() {
