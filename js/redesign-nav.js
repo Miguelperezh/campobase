@@ -243,6 +243,15 @@ export function renderSubNav() {
       }).join('')}
     </div>
   `;
+
+  subNav.querySelectorAll('.cb-sub-pill').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const viewId = button.dataset.targetView;
+      if (viewId) triggerStandardView(viewId);
+    });
+  });
 }
 
 export function closeQuickSheet() {

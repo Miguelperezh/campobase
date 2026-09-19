@@ -11,7 +11,8 @@ test('Mis ejercicios se rehidrata, traduce el formato de Supabase y usa visor re
   assert.equal(source.includes("data.type === 'campobase:exercise-saved'"), false, 'runtime-refresh no debe escuchar el guardado');
   assert.equal(source.includes("put('settings'"), false, 'runtime-refresh no debe persistir settings');
   assert.equal(persistence.includes("data.type === 'campobase:exercise-saved'"), true, 'solo persistence debe escuchar el guardado');
-  assert.equal(source.includes('hydrateCustomExercises({ attempts: 30 })'), true, 'debe rehidratar Mis ejercicios tras arrancar');
+  assert.equal(source.includes("await readCustomExercises().catch(() => [])"), true, 'debe cargar Mis ejercicios localmente al arrancar');
+  assert.equal(source.includes('hydrateCustomExercises({ attempts: 1 })'), true, 'debe hacer una única sincronización cloud en segundo plano');
   assert.equal(source.includes('records.map(toBoardExercise)'), true, 'el Creador debe recibir el formato que entiende la pizarra');
   assert.equal(source.includes('exercise: toBoardExercise(pendingViewer.record)'), true, 'el visor debe recibir plano y movimiento en formato de pizarra');
 

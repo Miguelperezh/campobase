@@ -3904,3 +3904,16 @@ No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas
   - Clic en píldoras de subnavegación (`Alineación`, `Convocatoria`, `En Vivo`) con scroll vertical: respuesta inmediata tanto en resolución de escritorio (1280x800) como en móvil (390x844).
   - Flujo de autenticación y sincronización con Supabase para nuevo dispositivo: validación de PIN en Supabase, persistencia de sesión segura y sincronización total de datos de la plantilla sin pérdida de información.
 
+
+
+## 53. Diagnóstico real posterior a v16 — 19/09/2026
+
+- Los tests verdes de v16 eran `node --check` + `node --test`; no sustituyen prueba funcional real de navegador.
+- Se confirmó una desalineación real entre GitHub y Supabase: la Edge Function `pin-login` desplegada seguía en versión 2 antigua mientras `main` esperaba la lógica v16. Se desplegó la función vigente de `main` como versión 3, sin tocar tablas ni datos.
+- Supabase confirma que `miguep15` es owner/admin de `Unión Viera Alevín D` y conserva 15 jugadores, 4 partidos, 2 convocatorias, 7 asistencias y 19 configuraciones. La otra cuenta está vacía.
+- v17 cambia la estrategia de interacción: cada subpestaña superior recibe listener directo además de la delegación existente.
+- `Actualizar` preserva `campobase.sessionRole` y `campobase.activeView`, sincroniza, actualiza el Service Worker y hace una navegación controlada con cache-buster para cargar realmente el JavaScript nuevo.
+- `+ Ejercicio` deja de depender del interceptor global en captura. `app.js` invoca directamente el creador visual y conserva el formulario estándar como respaldo.
+- El arranque de `Mis ejercicios` pasa a local-first: carga IndexedDB inmediatamente y hace una sola sincronización cloud en segundo plano, no 30 intentos.
+- Se elimina el segundo listener de `controllerchange` en `app.js`; la actualización PWA queda centralizada en `index.html`.
+- No declarar v17 solucionado hasta comprobar realmente en ordenador y móvil: pestañas, Preparar partido, + Ejercicio/guardar, persistencia y sincronización entre dispositivos.

@@ -33,10 +33,10 @@ function allJsText(dir = new URL('../js/', import.meta.url)) {
 }
 
 test('build v16 está alineado en HTML, app, sesión, auth cloud y service worker', () => {
-  const build = '20260919-prod-current-v16';
+  const build = '20260919-prod-current-v17';
   for (const source of [html, app, demo, sw]) assert.match(source, new RegExp(build));
   assert.match(read('js/supabase-client.js'), new RegExp(build));
-  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v16/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v17/);
 });
 
 test('los botones principales del HTML tienen ruta de interacción o son submit/declarativos', () => {
@@ -61,10 +61,13 @@ test('wireEvents no repite la regresión querySelector().forEach', () => {
   assert.match(app, /\$\$\('\.bottom-nav button'\)\.forEach/);
 });
 
-test('+ Ejercicio abre sin esperar la nube y su guardado no recarga toda la app', () => {
-  assert.match(runtime, /#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]/);
-  assert.match(runtime, /const records = await readCustomExercises\(\)\.catch/);
-  assert.match(runtime, /hydrateCustomExercises\(\{ attempts: 3 \}\)\.catch/);
+test('+ Ejercicio abre de forma directa, local-first y su guardado no recarga toda la app', () => {
+  assert.doesNotMatch(runtime, /#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]/);
+  assert.match(runtime, /window\.__campobaseOpenExerciseCreator = openCreator/);
+  assert.match(runtime, /await readCustomExercises\(\)\.catch/);
+  assert.match(runtime, /hydrateCustomExercises\(\{ attempts: 1 \}\)\.catch/);
+  assert.match(app, /typeof window\.__campobaseOpenExerciseCreator === 'function'/);
+  assert.match(html, /id="new-exercise"[^>]*data-dialog="exercise-dialog"/);
   const persist = board.slice(board.indexOf('async function persistExercise'), board.indexOf('async function deleteExercise'));
   assert.match(persist, /await put\('settings', record\)/);
   assert.match(persist, /verifiedLocal/);
@@ -157,4 +160,18 @@ test('refresh sigue sin borrar ni reescribir jugadores', () => {
   assert.doesNotMatch(area, /remove\('players'/);
   assert.doesNotMatch(area, /put\('players'/);
   assert.match(area, /return false/);
+});
+
+
+test('subpestañas superiores tienen listener directo y no dependen solo de document', () => {
+  const nav = read('js/redesign-nav.js');
+  assert.match(nav, /subNav\.querySelectorAll\('\.cb-sub-pill'\)\.forEach/);
+  assert.match(nav, /button\.addEventListener\('click'/);
+  assert.match(nav, /triggerStandardView\(viewId\)/);
+});
+
+test('Actualizar hace recarga controlada preservando sesión y vista', () => {
+  assert.match(runtime, /campobase\.activeView/);
+  assert.match(runtime, /campobase\.sessionRole/);
+  assert.match(runtime, /window\.location\.replace/);
 });

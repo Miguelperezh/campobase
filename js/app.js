@@ -4939,15 +4939,29 @@ function toggleWhistleTimer() {
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
-  $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => {
+  $('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
     const form = $(`#${button.dataset.dialog} form`);
     form?.reset();
     if (form?.elements.id) form.elements.id.value = '';
     if (form?.elements.photoRemoved) form.elements.photoRemoved.value = '0';
     if (button.dataset.dialog === 'player-dialog') playerCropper?.setExistingPhoto('');
-    if (button.dataset.dialog === 'exercise-dialog' && form?.elements.formato_juego) {
-      form.elements.formato_juego.value = state.format === 'F7' ? 'futbol_7' : 'futbol_11';
+
+    if (button.dataset.dialog === 'exercise-dialog') {
+      event.preventDefault();
+      if (form?.elements.formato_juego) {
+        form.elements.formato_juego.value = state.format === 'F7' ? 'futbol_7' : 'futbol_11';
+      }
+      if (typeof window.__campobaseOpenExerciseCreator === 'function') {
+        try {
+          await window.__campobaseOpenExerciseCreator();
+          return;
+        } catch (error) {
+          console.error('El creador visual no pudo abrirse; se usa el formulario de respaldo.', error);
+          toast('Abriendo formulario de ejercicio de respaldo.');
+        }
+      }
     }
+
     $(`#${button.dataset.dialog}`).showModal();
   }));
   $$('.exercise-library-tab').forEach((button) => button.addEventListener('click', () => {
@@ -5840,16 +5854,10 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v16').then((reg) => {
+      // index.html gestiona la activación y la recarga controlada del Service Worker.
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v17').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (typeof refresh === 'function') {
-          refresh().then(() => {
-            if (typeof renderAll === 'function') renderAll();
-          }).catch(() => null);
-        }
-      });
     }
   }
   await synchronizeCloud();
