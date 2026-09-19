@@ -3799,6 +3799,8 @@ async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const createModeVisible = !$('#initial-pin-fields')?.classList.contains('hidden');
+  let authenticated = false;
+
   try {
     // Si la pantalla ya está en modo "Introduce tu PIN", nunca puede saltar a
     // "crear PIN" durante el submit por una carrera de sincronización.
@@ -3859,13 +3861,25 @@ async function submitAuth(event) {
         toast('PIN reconocido. Revisa Ajustes → Sincronización.');
       }
     }
-    if (!isDemoDatabase()) {
-      await synchronizeCloud();
-      await refresh();
-    }
-    $('#auth-dialog').close();
+
+    authenticated = Boolean(state.role);
+    if (authenticated && $('#auth-dialog')?.open) $('#auth-dialog').close();
   } catch (error) {
     $('#auth-error').textContent = error.message;
+    return;
+  }
+
+  // Un error posterior de refresco/sincronización nunca debe presentarse como
+  // "fallo de PIN". El acceso ya está validado y la sesión permanece abierta.
+  if (authenticated && !isDemoDatabase()) {
+    try {
+      await synchronizeCloud();
+      await refresh();
+    } catch (error) {
+      state.cloudError = error?.message || 'No se pudieron actualizar los datos.';
+      console.warn('Acceso correcto; fallo posterior al cargar datos:', error);
+      toast('PIN correcto. Hubo un problema al actualizar los datos; reintentaremos la sincronización.');
+    }
   }
 }
 
