@@ -14,6 +14,8 @@ import {
   updatePassword,
 } from './auth-manager.js';
 import { PLAN_PRICES, planFeaturesHTML } from './plan-catalog.js';
+import { verifyPin } from './domain.js';
+import { CLOUD_TABLES } from './sync-core.js';
 
 let initialized = false;
 let localPinMode = false;
@@ -263,7 +265,7 @@ function shellMarkup() {
         </div>
         <div class="cb-auth-actions">
           <button type="button" id="saas-forgot-btn" class="ghost compact">¿Olvidaste la contraseña?</button>
-          <button type="button" id="saas-local-pin-btn" class="ghost compact">Acceso local con PIN</button>
+          <button type="button" id="saas-local-pin-btn" class="ghost compact">Acceder con PIN de CampoBase</button>
         </div>
       </form>
 
@@ -325,7 +327,7 @@ function shellMarkup() {
       <section id="saas-remembered-pane" class="cb-auth-pane hidden cb-remembered-card" aria-live="polite">
         <h2>Cuenta recordada</h2>
         <p id="saas-remembered-label" class="cb-remembered-account"></p>
-        <p class="meta">Introduce el PIN guardado en este dispositivo.</p>
+        <p class="meta">Introduce tu PIN de CampoBase. Se comprueba con la configuración de tu cuenta en Supabase.</p>
         <form id="saas-remembered-pin-form" class="cb-auth-pane">
           <label>PIN<input name="pin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="off" required autofocus></label>
           <p id="saas-remembered-message" class="cb-auth-message error" role="alert"></p>
@@ -453,6 +455,21 @@ function showRememberedPane(account) {
   setMessage('#saas-remembered-message', '');
 }
 
+async function verifyOwnerPinFromSupabase(client, userId, pin) {
+  const cleanPin = String(pin || '').trim();
+  if (!/^\d{4,8}$/.test(cleanPin) || !userId) return false;
+  const { data, error } = await client
+    .from(CLOUD_TABLES.settings)
+    .select('payload')
+    .eq('user_id', userId)
+    .eq('id', 'main')
+    .limit(1);
+  if (error) throw error;
+  const settings = data?.[0]?.payload;
+  if (!settings?.pinSalt || !settings?.ownerPinHash) return false;
+  return verifyPin(cleanPin, settings.pinSalt, settings.ownerPinHash);
+}
+
 async function getProfileOrFallback(client, user) {
   return await getCurrentProfile(client, user?.id).catch(() => null) || {
     id: user?.id || '',
@@ -571,6 +588,9 @@ async function unlockBoundSession(client) {
   const session = await getCurrentSession(client).catch(() => null);
   const bound = getBoundSaasUserId();
   if (!session?.user || !bound || bound !== session.user.id) return false;
+  // Mantiene la autorización de esta pestaña mientras la sesión Supabase siga
+  // siendo válida. sessionStorage desaparece al cerrar la pestaña/navegador.
+  markBrowserSessionActive(session.user.id);
   const profile = await getProfileOrFallback(client, session.user);
   const app = await waitForApp();
   if (!app?.state) return false;
@@ -596,6 +616,11 @@ async function unlockBoundSession(client) {
   } catch (error) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
   }
+
+  // Al recuperar una sesión SaaS válida, refresca inmediatamente desde Supabase.
+  // No dejamos la interfaz abierta con una IndexedDB vacía esperando al intervalo.
+  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (typeof app.refresh === 'function') await app.refresh();
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
   return true;
@@ -612,7 +637,9 @@ async function handlePersistentSession(client) {
     return true;
   }
   if (bound !== session.user.id) return false;
-  if (browserSessionIsActive(session.user.id)) return unlockBoundSession(client);
+  if (browserSessionIsActive(session.user.id)) {
+    return unlockBoundSession(client);
+  }
   if (remembered?.userId === session.user.id) {
     showRememberedPane(remembered);
     return true;
@@ -625,10 +652,23 @@ async function handlePersistentSession(client) {
     }
   } catch { /* Continúa con el acceso normal. */ }
 
-  await client.auth.signOut().catch(() => {});
-  clearBoundSaasUserId();
-  showPane('login');
-  prefillRememberedIdentifier();
+  // Conserva la sesión válida para que la sincronización pueda recuperar
+  // los datos del equipo. Cuando los PIN ya han llegado desde la base del
+  // usuario, pedimos el PIN local en lugar de cerrar sesión y dejar una
+  // base vacía. Si no llegan, mostramos la cuenta preparada como fallback.
+  const app = await waitForApp();
+  const started = Date.now();
+  while (app?.state && Date.now() - started < 6000) {
+    if (app.state.settings?.ownerPinHash && app.state.settings?.delegatePinHash) {
+      const dialog = $('#auth-dialog');
+      if (dialog && !dialog.open) dialog.showModal();
+      showLocalPin();
+      return true;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+  }
+
+  await prepareSignedInChoice(client, { session, user: session.user });
   return true;
 }
 
@@ -754,9 +794,19 @@ function bindEvents(client) {
       return setMessage('#saas-remembered-message', 'La sesión segura ha caducado. Inicia sesión una vez con tu correo y contraseña.');
     }
     setMessage('#saas-remembered-message', 'Comprobando…');
-    const ok = await verifyRememberedPin(account, event.currentTarget.elements.pin.value).catch(() => false);
-    if (!ok) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
+    const enteredPin = event.currentTarget.elements.pin.value;
+    const deviceOk = await verifyRememberedPin(account, enteredPin).catch(() => false);
+    let accountOk = false;
+    if (!deviceOk) {
+      try {
+        accountOk = await verifyOwnerPinFromSupabase(client, session.user.id, enteredPin);
+      } catch (error) {
+        return setMessage('#saas-remembered-message', error.message || 'No se pudo comprobar el PIN en Supabase.');
+      }
+    }
+    if (!deviceOk && !accountOk) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
     markBrowserSessionActive(session.user.id);
+    try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
     setMessage('#saas-remembered-message', '');
     await unlockBoundSession(client);
   });
@@ -891,16 +941,34 @@ export async function initSaasAuth(client) {
   observeDialog(client);
 
   const session = await getCurrentSession(client).catch(() => null);
-  const bound = getBoundSaasUserId();
-  if (bound && (!session?.user || session.user.id !== bound)) clearBoundSaasUserId();
+  let bound = getBoundSaasUserId();
+  if (bound && (!session?.user || session.user.id !== bound)) {
+    clearBoundSaasUserId();
+    bound = '';
+  }
+
   if (session?.user && bound === session.user.id) {
-    if (browserSessionIsActive(session.user.id)) unlockBoundSession(client).catch(() => {});
-    else if (rememberedAccount()?.userId === session.user.id) {
+    if (browserSessionIsActive(session.user.id)) {
+      unlockBoundSession(client).catch(() => {});
+      return;
+    }
+    const remembered = rememberedAccount();
+    if (remembered?.userId === session.user.id) {
       const dialog = $('#auth-dialog');
       if (dialog && !dialog.open) dialog.showModal();
-      showRememberedPane(rememberedAccount());
-    } else {
-      handlePersistentSession(client).catch(() => {});
+      showRememberedPane(remembered);
+      return;
     }
+    handlePersistentSession(client).catch(() => {});
+    return;
   }
+
+  // Sin sesión SaaS válida nunca dejamos la app abierta y vacía:
+  // mostramos siempre el acceso por cuenta, manteniendo disponible
+  // el botón de acceso local con PIN.
+  const dialog = $('#auth-dialog');
+  if (dialog && !dialog.open) dialog.showModal();
+  localPinMode = false;
+  showPane('login');
+  prefillRememberedIdentifier();
 }

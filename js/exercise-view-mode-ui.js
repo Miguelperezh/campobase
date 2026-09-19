@@ -14,6 +14,62 @@ function installStyles() {
       margin: .75rem 1rem .35rem !important;
     }
 
+    .exercise-media-preview,
+    .exercise-media-human {
+      margin: .75rem 1rem !important;
+      padding: .75rem !important;
+      border: 1px solid var(--line, #e2e8f0) !important;
+      border-radius: 14px !important;
+      background: var(--card, #ffffff) !important;
+      box-sizing: border-box !important;
+    }
+
+    .exercise-media-label {
+      margin: 0 0 .5rem !important;
+      color: var(--ink, #0f172a) !important;
+      font-size: .85rem !important;
+      font-weight: 850 !important;
+    }
+
+    .exercise-preview-stage {
+      width: 100% !important;
+      aspect-ratio: 16 / 9 !important;
+      display: grid !important;
+      place-items: center !important;
+      overflow: hidden !important;
+      border-radius: 12px !important;
+      background: #061c14 !important;
+    }
+
+    .exercise-preview-img,
+    .exercise-preview-static-video,
+    .exercise-preview-static-canvas,
+    .card-preview-static-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+      object-fit: contain !important;
+    }
+
+    .exercise-preview-static-video,
+    .card-preview-static-video {
+      pointer-events: none !important;
+    }
+
+    .exercise-media-human .video-item,
+    .exercise-media-human video {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .exercise-media-human video {
+      display: block !important;
+      aspect-ratio: 16 / 9 !important;
+      object-fit: contain !important;
+      border-radius: 12px !important;
+      background: #000 !important;
+    }
+
     .exercise-view-mode-help {
       margin: 0 1rem .75rem !important;
       padding: .55rem .75rem !important;
@@ -38,7 +94,6 @@ function installStyles() {
     .ejercicio-v2-sheet.view-mode-reduced #section-errores,
     .ejercicio-v2-sheet.view-mode-reduced #section-errores-correcciones,
     .ejercicio-v2-sheet.view-mode-reduced #section-variantes,
-    .ejercicio-v2-sheet.view-mode-reduced .real-video-block,
     .ejercicio-v2-sheet.view-mode-reduced .videos {
       display: none !important;
     }
@@ -89,10 +144,119 @@ function updateModeHelp(sheet) {
   const help = sheet.querySelector('.exercise-view-mode-help');
   if (!help) return;
   if (modeForSheet(sheet) === 'full') {
-    help.textContent = 'Ficha completa: montaje, material, fases, rotaciones, correcciones, variantes y vídeos.';
+    help.textContent = 'Ficha completa: preview, MP4 gráfico, vídeo humano, montaje, material, fases, rotaciones, correcciones y variantes.';
   } else {
-    help.textContent = 'Consulta rápida de campo: vídeo, datos clave, pasos y series/descansos.';
+    help.textContent = 'Consulta rápida de campo: preview, MP4 gráfico, vídeo humano, datos clave, pasos y series/descansos.';
   }
+}
+
+function paintStaticPreviewCanvas(canvas) {
+  if (!canvas || canvas.dataset.cbPreviewCanvasPainted === '1') return;
+  const src = String(canvas.dataset.previewVideoSrc || '').trim();
+  if (!src) return;
+
+  canvas.dataset.cbPreviewCanvasPainted = '1';
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'metadata';
+  video.crossOrigin = 'anonymous';
+  video.src = src;
+
+  const fail = () => {
+    canvas.dataset.cbPreviewCanvasPainted = 'error';
+    const wrap = canvas.closest('.card-thumb-wrap, .exercise-preview-stage, .session-block-preview');
+    if (wrap && !wrap.querySelector('.card-thumb-placeholder')) {
+      const fallback = document.createElement('div');
+      fallback.className = 'card-thumb-placeholder';
+      fallback.textContent = '⚽ CampoBase';
+      canvas.replaceWith(fallback);
+    }
+  };
+
+  const paint = () => {
+    try {
+      if (!video.videoWidth || !video.videoHeight) return fail();
+      const width = Math.min(video.videoWidth, 960);
+      const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    } catch {
+      fail();
+    }
+  };
+
+  video.addEventListener('error', fail, { once: true });
+  video.addEventListener('loadeddata', () => {
+    if (!Number.isFinite(video.duration) || video.duration <= 0.05) return paint();
+    try {
+      video.currentTime = 0.05;
+      video.addEventListener('seeked', paint, { once: true });
+    } catch {
+      paint();
+    }
+  }, { once: true });
+  video.load();
+}
+
+function freezePreviewVideo(video) {
+  if (!video || video.dataset.cbPreviewVideoGuard === '1') return;
+  video.dataset.cbPreviewVideoGuard = '1';
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'metadata';
+
+  const freeze = () => {
+    try {
+      if (video.currentTime < 0.04) video.currentTime = 0.05;
+      video.pause();
+    } catch {}
+  };
+  video.addEventListener('loadeddata', freeze);
+  video.addEventListener('seeked', () => video.pause());
+  video.addEventListener('play', () => video.pause());
+}
+
+function guardPreviewImage(img) {
+  if (!img || img.dataset.cbPreviewGuard === '1') return;
+  img.dataset.cbPreviewGuard = '1';
+  img.addEventListener('error', () => {
+    const source = String(img.dataset.previewVideoSrc || '').trim();
+    if (source) {
+      const canvas = document.createElement('canvas');
+      canvas.className = img.classList.contains('card-preview-img')
+        ? 'card-preview-img card-preview-static-canvas'
+        : 'exercise-preview-static-canvas';
+      canvas.dataset.previewVideoSrc = source;
+      canvas.setAttribute('aria-label', img.alt || 'Vista previa del ejercicio');
+      img.replaceWith(canvas);
+      paintStaticPreviewCanvas(canvas);
+      return;
+    }
+
+    const wrap = img.closest('.card-thumb-wrap');
+    if (wrap) {
+      img.remove();
+      if (!wrap.querySelector('.card-thumb-placeholder')) {
+        const fallback = document.createElement('div');
+        fallback.className = 'card-thumb-placeholder';
+        fallback.textContent = '⚽ CampoBase';
+        wrap.insertBefore(fallback, wrap.firstChild);
+      }
+      return;
+    }
+
+    const previewBlock = img.closest('.exercise-media-preview');
+    if (previewBlock) {
+      const stage = previewBlock.querySelector('.exercise-preview-stage');
+      if (stage) stage.innerHTML = '<div class="card-thumb-placeholder">⚽ CampoBase</div>';
+    }
+  }, { once: true });
 }
 
 function enhanceSheet(sheet) {
@@ -104,7 +268,7 @@ function enhanceSheet(sheet) {
   const full = bar.querySelector('[data-view-mode="full"]');
   if (reduced) {
     reduced.textContent = '⚡ Vista rápida';
-    reduced.title = 'Solo lo necesario en campo: vídeo, datos clave, pasos y series';
+    reduced.title = 'Solo lo necesario en campo: preview, MP4 gráfico, vídeo humano, datos clave, pasos y series';
     reduced.setAttribute('aria-label', 'Vista rápida del ejercicio');
   }
   if (full) {
@@ -133,6 +297,15 @@ function enhanceSheet(sheet) {
 function scan(root = document) {
   if (root.matches?.('.ejercicio-v2-sheet')) enhanceSheet(root);
   root.querySelectorAll?.('.ejercicio-v2-sheet').forEach(enhanceSheet);
+
+  if (root.matches?.('[data-preview-image="1"], .exercise-preview-img')) guardPreviewImage(root);
+  root.querySelectorAll?.('[data-preview-image="1"], .exercise-preview-img').forEach(guardPreviewImage);
+
+  if (root.matches?.('.exercise-preview-static-video, .card-preview-static-video')) freezePreviewVideo(root);
+  root.querySelectorAll?.('.exercise-preview-static-video, .card-preview-static-video').forEach(freezePreviewVideo);
+
+  if (root.matches?.('.exercise-preview-static-canvas, .card-preview-static-canvas, .session-preview-static-canvas')) paintStaticPreviewCanvas(root);
+  root.querySelectorAll?.('.exercise-preview-static-canvas, .card-preview-static-canvas, .session-preview-static-canvas').forEach(paintStaticPreviewCanvas);
 }
 
 function install() {

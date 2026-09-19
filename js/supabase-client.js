@@ -9,7 +9,13 @@ import './runtime-refresh.js?v=2473';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
 import { CLOUD_TABLES } from './sync-core.js';
-import { getBoundSaasUserId } from './auth-manager.js';
+import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
+
+const PLAYER_PROFILE_FIELDS = Object.freeze([
+  'name', 'number', 'positions', 'foot', 'notes',
+  'fatherName', 'fatherPhone', 'motherName', 'motherPhone',
+  'photo', 'createdAt', 'profileUpdatedAt',
+]);
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -54,11 +60,35 @@ export function getCampoBaseSupabaseClient() {
 
 export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
 
+export async function getRemoteMainSettings() {
+  const client = getCampoBaseSupabaseClient();
+  const user = await requireBoundUser(client);
+  const rows = checkResult(await client
+    .from(CLOUD_TABLES.settings)
+    .select('payload,updated_at,deleted_at')
+    .eq('user_id', user.id)
+    .eq('id', 'main')
+    .limit(1)) ?? [];
+  const row = rows[0];
+  if (!row || row.deleted_at) return null;
+  return row.payload || null;
+}
+
 async function requireBoundUser(client) {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
   const user = data?.session?.user;
-  const boundUserId = getBoundSaasUserId();
+  let boundUserId = getBoundSaasUserId();
+
+  // Si Supabase conserva una sesión válida pero se perdió únicamente el
+  // enlace local de la cuenta, reconstruimos ese enlace desde la sesión
+  // autenticada. Así se recupera la base local del usuario y sus datos sin
+  // crear una cuenta vacía ni pedir que borre almacenamiento.
+  if (user?.id && !boundUserId) {
+    setBoundSaasUserId(user.id);
+    boundUserId = user.id;
+  }
+
   if (!user || !boundUserId || user.id !== boundUserId) {
     const authError = new Error('Inicia sesión para sincronizar esta cuenta.');
     authError.code = 'CAMPOBASE_AUTH_REQUIRED';
@@ -76,12 +106,21 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=1'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v7'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
     .catch((error) => {
       console.warn('No se pudo cargar el acceso de usuario:', error);
+      // Fallback de emergencia: un fallo del acceso SaaS nunca puede dejar
+      // CampoBase abierto y vacío sin ofrecer el PIN local validado.
+      document.body?.classList.add('auth-locked');
+      const dialog = document.getElementById('auth-dialog');
+      const localForm = document.getElementById('auth-form');
+      const saasShell = document.getElementById('saas-auth-shell');
+      saasShell?.classList.add('hidden');
+      localForm?.classList.remove('hidden');
+      if (dialog && !dialog.open) dialog.showModal();
     });
 
   void import('./promo-codes-admin.js?v=4')
@@ -103,6 +142,27 @@ export function createCampoBaseCloudStore() {
     });
 
   return {
+    async prepare() {
+      const user = await requireBoundUser(client);
+      return { userId: user.id };
+    },
+
+    async shouldApplyMutation(mutation) {
+      const user = await requireBoundUser(client);
+      const table = CLOUD_TABLES[mutation.store];
+      const rows = checkResult(await client
+        .from(table)
+        .select('updated_at,deleted_at')
+        .eq('user_id', user.id)
+        .eq('id', mutation.recordId)
+        .limit(1)) ?? [];
+      const remote = rows[0];
+      if (!remote) return true;
+      const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
+      const localQueuedAt = Number(mutation.queuedAt || 0);
+      return localQueuedAt >= remoteUpdatedAt;
+    },
+
     async getSnapshot(store) {
       const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
@@ -120,10 +180,33 @@ export function createCampoBaseCloudStore() {
     async upsert(mutation) {
       const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
+      let payload = mutation.payload;
+
+      if (mutation.store === 'players' && payload) {
+        const rows = checkResult(await client
+          .from(table)
+          .select('payload')
+          .eq('user_id', user.id)
+          .eq('id', mutation.recordId)
+          .limit(1)) ?? [];
+        const remotePayload = rows[0]?.payload;
+        if (remotePayload) {
+          const remoteProfileUpdatedAt = Number(remotePayload.profileUpdatedAt || 0);
+          const localProfileUpdatedAt = Number(payload.profileUpdatedAt || 0);
+          if (remoteProfileUpdatedAt >= localProfileUpdatedAt) {
+            payload = structuredClone(payload);
+            for (const field of PLAYER_PROFILE_FIELDS) {
+              if (Object.hasOwn(remotePayload, field)) payload[field] = structuredClone(remotePayload[field]);
+              else delete payload[field];
+            }
+          }
+        }
+      }
+
       checkResult(await client.from(table).upsert({
         user_id: dataOwnerUserId,
         id: mutation.recordId,
-        payload: mutation.payload,
+        payload,
         updated_at: mutation.queuedAt,
         deleted_at: null,
       }, { onConflict: 'user_id,id' }));

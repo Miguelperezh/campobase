@@ -1,5 +1,90 @@
 # Especificación de la biblioteca de ejercicios — CampoBase
 
+> **IMPORTANTE PARA AGENTES:** antes de modificar ejercicios, leer también `/AGENTS.md`. Las reglas más recientes de `AGENTS.md` y de la actualización siguiente prevalecen sobre secciones históricas incompatibles de este documento.
+
+## ACTUALIZACIÓN VIGENTE — NUEVO FORMATO DE EJERCICIOS (2026-09-18)
+
+Esta actualización sustituye el formato histórico basado en GIF/PDF cuando exista conflicto.
+
+### Formato nuevo por ejercicio procedente de vídeo
+
+El paquete normal debe contener:
+
+- `preview.png`
+- `ejercicio.mp4`
+- `video_muestra_humanos.mp4`
+- `data.json`
+- `ficha.md`
+- `origen.json`
+- `qa.json`
+
+Puede conservarse `fuente_animacion.gif` por trazabilidad, pero **MP4 es el formato principal de reproducción**.
+
+El storyboard, cuando se utilice para validar, no forma parte del paquete final salvo petición expresa.
+
+### Reglas visuales
+
+- `preview.png`: montaje inicial limpio.
+- `ejercicio.mp4`: animación limpia, sin cabeceras, paneles ni textos explicativos superpuestos.
+- Las flechas aparecen solo durante la acción que representan.
+- No cambiar geometría, rutas, material, número de balones, roles o rotaciones ya validados.
+- Atacante azul, defensor rojo, portero morado, entrenador gris.
+- Conos naranja por defecto, salvo que el color forme parte de la lógica.
+- Balón blanco/negro.
+- Campo base con franjas `#8BC753` y `#84C04D`.
+
+### Vídeo humano
+
+Todo ejercicio creado desde vídeo debe conservar también el vídeo real con personas como `video_muestra_humanos.mp4`.
+
+En CampoBase deben poder coexistir el vídeo gráfico principal y el vídeo de muestra humano. Los registros antiguos deben seguir funcionando aunque solo tengan el campo de vídeo anterior.
+
+### Categorías vigentes
+
+Categoría principal, exactamente una:
+
+`Calentamiento/activación`, `Tecnificación`, `Técnico-táctico`, `Táctica`, `Posesión`, `Juego reducido`, `Finalización`, `Transición`, `Coordinación/motricidad`, `Preparación física`, `Preparación física integrada`, `Porteros`.
+
+`Fútbol 7` y `Fútbol 11` son un filtro/dimensión independiente y nunca sustituyen la categoría principal.
+
+Regla vigente para ejercicios importados desde vídeo:
+- Fútbol 7: ejercicios con niños y ejercicios identificados por señales izquierda/derecha o códigos de color como naranja, verde, blanco, etc.
+- Fútbol 11: el resto.
+- Si `data.json` ya trae `formato_futbol`, respetarlo.
+
+### Qué se trabaja
+
+No copiar automáticamente el objetivo. Debe deducirse de la mecánica real del ejercicio y quedarse, como norma práctica, en aproximadamente 4 contenidos realmente útiles y distintos.
+
+### Terminología
+
+No mostrar “chip” al entrenador. Según el contexto usar `picar el balón`, `balón picado`, `pase picado` o `remate picado`.
+
+Usar español de España: `portero`, `portería`, `cono`, `peto`, `escalera de coordinación`, `valla`, `conducción`, `regate`, `mediapunta` cuando proceda.
+
+Usar `Tecnificación`, no `Técnica`, cuando corresponda a la categoría.
+
+### Integración y seguridad
+
+- Añadir, no rehacer.
+- No borrar ejercicios, vídeos, IDs o datos existentes.
+- Comprobar duplicados por ID, nombre y versión antes de insertar.
+- No sobrescribir automáticamente un ejercicio existente.
+- Las versiones anteriores se conservan, pero no deben aparecer como ejercicios actuales.
+- Mantener compatibilidad hacia atrás en Supabase y la app.
+- No modificar el editor/pizarra ni sus funciones validadas salvo petición expresa.
+
+### QA obligatorio
+
+Revisar siempre:
+
+**fuente → preview → primer frame del MP4 → MP4 completo → data.json/ficha**
+
+Además comprobar categoría, F7/F11, materiales, “Qué se trabaja”, rutas, rotaciones, vídeo humano, filtros, búsqueda, sesiones, persistencia, duplicados y errores nuevos de consola.
+
+---
+
+
 > **Fuente de verdad:** este documento define cómo se representan los ejercicios de fútbol en CampoBase. Fue acordado con Migue a partir de la propuesta de ChatGPT (2026-09-03) y es el estándar canónico.
 >
 > **Principio rector:** el ejercicio es el **dato** (JSON). La pizarra, la ficha visual, el PDF o cualquier animación se **renderizan a partir de esos datos**. Nunca al revés.

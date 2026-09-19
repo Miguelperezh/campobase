@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   cleanPlayerNumber,
   formatWhatsAppPhone,
@@ -543,5 +544,79 @@ test('buildWhatsAppTrainingWeek formatea duraciones como 60 min o 75 min (nunca 
 
   assert.ok(!msg.includes('(15 min)'), 'No debe mostrar 15 min');
   assert.ok(msg.includes('*(75 min)*') || msg.includes('*(60 min)*'), 'Debe mostrar 75 min o 60 min con negrita');
+});
+
+test('WhatsApp de amistoso avisa del partido sin comunicar convocatoria porque va toda la plantilla', () => {
+  const match = { opponent: 'Guiniguada', date: '2026-09-21', type: 'friendly' };
+  const players = [
+    { id: 'p1', name: 'Aitor Navarro', number: '11', fatherName: 'Carlos' },
+    { id: 'p2', name: 'Mateo Moyano', number: '1' },
+  ];
+  const callup = { availableIds: ['p1'], excludedIds: ['p2'] };
+
+  const group = buildWhatsAppMatchConvocatoria({
+    match,
+    callup,
+    players,
+    now: new Date('2026-09-20T10:00:00'),
+  });
+
+  assert.ok(group.includes('PARTIDO AMISTOSO'));
+  assert.ok(group.includes('Amistoso (vs Guiniguada)'));
+  assert.ok(!group.includes('CONVOCATORIA'), 'Un amistoso no debe anunciar convocatoria');
+  assert.ok(!group.includes('JUGADORES CONVOCADOS'), 'No debe listar convocados en amistosos');
+  assert.ok(!group.includes('NO está CONVOCADO'), 'No debe excluir jugadores en amistosos');
+  assert.ok(group.includes('Hora de citación:'));
+  assert.ok(group.includes('espinilleras'));
+
+  const individual = buildWhatsAppMatchConvocatoria({
+    match,
+    callup,
+    players,
+    targetPlayerId: 'p2',
+    recipientType: 'parent',
+    parentType: 'father',
+    callupStatus: 'excluded',
+    now: new Date('2026-09-20T10:00:00'),
+  });
+
+  assert.ok(individual.includes('información del *partido amistoso* para *Mateo*'));
+  assert.ok(!individual.includes('NO está CONVOCADO'));
+  assert.ok(!individual.includes('información de la convocatoria'));
+  assert.ok(individual.includes('Hora de citación:'));
+});
+
+test('WhatsApp de torneo avisa del torneo sin convocatoria y conserva los datos validados del partido', () => {
+  const match = { opponent: 'Arucas', date: '2026-09-27', type: 'tournament' };
+  const players = [{ id: 'p1', name: 'Aitor Navarro', number: '11' }];
+
+  const msg = buildWhatsAppMatchConvocatoria({
+    match,
+    players,
+    fieldName: 'Campo Municipal',
+    callTime: '08:30',
+    gameTime: '09:15',
+    kit: '1.ª Oficial',
+    now: new Date('2026-09-26T18:00:00'),
+  });
+
+  assert.ok(msg.includes('TORNEO'));
+  assert.ok(msg.includes('Torneo (vs Arucas)'));
+  assert.ok(!msg.includes('CONVOCATORIA'));
+  assert.ok(!msg.includes('JUGADORES CONVOCADOS'));
+  assert.ok(msg.includes('08:30 h'));
+  assert.ok(msg.includes('09:15 h'));
+  assert.ok(msg.includes('Campo Municipal'));
+  assert.ok(msg.includes('1.ª Oficial'));
+  assert.ok(msg.includes('espinilleras'));
+});
+
+test('el controlador de WhatsApp usa el location real del partido seleccionado', async () => {
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /eventValue\.startsWith\('match:'\)/);
+  assert.match(app, /eventValue\.slice\('match:'\.length\)/);
+  assert.match(app, /const fieldName = String\(match\.location \|\| ''\)\.trim\(\)/);
+  assert.match(app, /populateWhatsAppEvents\(matchId, callupId, sessionId\);\s*if \(waCurrentMode === 'callup'\) syncWhatsAppMatchLocation\(\)/);
+  assert.doesNotMatch(app, /match\.location \|\| 'Campo Alfonso Silva \(La Ballena\)'/);
 });
 

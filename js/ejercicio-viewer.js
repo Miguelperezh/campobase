@@ -2,7 +2,7 @@
 // Implementa las 17 secciones completas, controles interactivos, zoom táctico con clamping,
 // leyenda visual bajo el vídeo y botones accesibles de cierre (superior con safe-area e inferior fijo).
 
-import { renderVideoSectionHTML } from './ejercicio-videos.js';
+import { renderVideoSectionHTML, resolveHostedVideoUrl } from './ejercicio-videos.js';
 import { attachMediaLightbox } from './media-lightbox.js';
 import { findValidatedExercise } from './ejercicios-validados.js';
 
@@ -159,9 +159,37 @@ export function renderActionVisualSVG(trazo = '') {
  */
 export function renderValidatedExerciseHTML(ex, options = {}) {
   const media = ex.media || {};
-  const videoSrc = media.video || media.mp4 || (ex.animacion?.mp4) || '';
-  const previewSrc = media.preview || (ex.animacion?.preview) || '';
-  const realVideo = ex.video || '';
+  const videoSrc = resolveHostedVideoUrl(String(
+    media.video
+    || media.mp4
+    || ex.video_ejercicio
+    || ex.animacion?.mp4
+    || ''
+  ).trim());
+  const previewSrc = String(
+    media.preview
+    || ex.preview
+    || ex.animacion?.preview
+    || ''
+  ).trim();
+  const previewVideoSrc = resolveHostedVideoUrl(String(
+    ex.preview_video
+    || ex._preview_video_fallback
+    || videoSrc
+    || ''
+  ).trim());
+  const explicitHumanVideo = String(
+    ex.video_muestra_humanos
+    || ex.video_muestra
+    || ex.video_muestra_url
+    || ex.video_humano
+    || ex.video_humanos
+    || ex.video
+    || ''
+  ).trim();
+  const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
+    ? resolveHostedVideoUrl(explicitHumanVideo)
+    : '';
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
@@ -510,6 +538,26 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       </button>
     </div>
 
+    <!-- 1. Preview: siempre antes de cualquier vídeo -->
+    ${isUsablePreview(previewSrc) ? `
+      <div class="exercise-media-preview" data-media-order="1">
+        <div class="exercise-media-label">Vista previa</div>
+        <div class="exercise-preview-stage">
+          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}">
+        </div>
+      </div>` : previewVideoSrc ? `
+      <div class="exercise-media-preview" data-media-order="1">
+        <div class="exercise-media-label">Vista previa</div>
+        <div class="exercise-preview-stage">
+          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
+        </div>
+      </div>` : `
+      <div class="exercise-media-preview" data-media-order="1">
+        <div class="exercise-media-label">Vista previa</div>
+        <div class="exercise-preview-stage"><div class="card-thumb-placeholder">⚽ CampoBase</div></div>
+      </div>`}
+
+    <!-- 2. MP4 gráfico de fichas / animación -->
     <!-- Reproductor de animación con controles y zoom integrado -->
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
@@ -584,6 +632,15 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       </div>
     </div>
 
+    <!-- 3. Vídeo de muestra con humanos -->
+    ${realVideo ? `
+      <div class="section-block real-video-block exercise-media-human" data-media-order="3">
+        <h3>🎥 Vídeo de muestra con humanos</h3>
+        <div class="video-item">
+          <video class="real-video-el" controls preload="none" playsinline src="${esc(realVideo)}"></video>
+        </div>
+      </div>` : ''}
+
     <!-- Leyenda visual (inmediatamente después del vídeo) -->
     ${leyendaHtml}
 
@@ -602,13 +659,6 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       ${consignasHtml}
       ${erroresHtml}
       ${variantesHtml}
-      ${realVideo ? `
-        <div class="section-block real-video-block">
-          <h3>🎥 Demostración real en vídeo</h3>
-          <div class="video-item">
-            <video class="real-video-el" controls preload="none" playsinline src="${esc(realVideo)}"></video>
-          </div>
-        </div>` : ''}
       ${videosHTML}
     </div>
 
@@ -630,14 +680,16 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 export function renderExerciseGridCard(ex) {
   const media = ex.media || {};
   const rawPreview = media.preview || ex.preview || '';
-  // Los ejercicios del nuevo lote no publican todavía preview.png en Storage.
-  // Usamos el primer fotograma del vídeo humano y evitamos cualquier imagen rota.
-  const preview = ex._nuevo_formato ? '' : (isUsablePreview(rawPreview) ? rawPreview : '');
-  // Si falta preview válido en un ejercicio nuevo, mostramos el primer fotograma
-  // del vídeo humano ya publicado. Evita imágenes rotas sin crear otro diseño.
-  const fallbackVideo = !preview && ex._nuevo_formato
-    ? String(ex.video_muestra_humanos || ex.video_muestra || ex.video || '').trim()
-    : '';
+  // La portada de la tarjeta es preview.png cuando existe; si aún no está
+  // publicado, usamos un fotograma PAUSADO del MP4 gráfico, nunca del humano.
+  const preview = isUsablePreview(rawPreview) ? rawPreview : '';
+  const graphicPreviewVideo = resolveHostedVideoUrl(String(
+    ex.preview_video
+    || ex.video_ejercicio
+    || media.video
+    || media.mp4
+    || ''
+  ).trim());
   const dr = ex.datos_rapidos || {};
   const tags = uniqueDisplayTags([ex.categoria, ...(ex.etiquetas || [])]).slice(0, 2);
   const cleanNombre = String(ex.nombre || '').replace(/^--\s*/, '').trim();
@@ -647,9 +699,9 @@ export function renderExerciseGridCard(ex) {
   <article class="panel exercise-card exercise-v2-card" data-exercise-id="${esc(ex.id)}">
     <div class="card-thumb-wrap view-exercise" data-exercise-id="${esc(ex.id)}">
       ${preview
-        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy">`
-        : fallbackVideo
-          ? `<video class="card-preview-img card-preview-video" muted playsinline preload="metadata" src="${esc(fallbackVideo)}#t=0.1" aria-label="${esc(cleanNombre)}"></video>`
+        ? `<img src="${esc(preview)}" alt="${esc(cleanNombre)}" class="card-preview-img" loading="lazy" data-preview-image="1" data-preview-video-src="${esc(graphicPreviewVideo)}">`
+        : graphicPreviewVideo
+          ? `<canvas class="card-preview-img card-preview-static-canvas" data-preview-video-src="${esc(graphicPreviewVideo)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>`
           : `<div class="card-thumb-placeholder">⚽ CampoBase</div>`}
       <span class="card-play-badge">▶</span>
     </div>

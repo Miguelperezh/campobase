@@ -51,11 +51,19 @@ export function toCampoBaseExercise(item) {
   };
 
   if (!NUEVOS_IDS.has(item?.id)) return mapped;
+
+  // Los ejercicios del nuevo formato ya llegan clasificados desde su data.json.
+  // No convertirlos en F7/F11 genérico: respetar exactamente el filtro indicado.
   return {
     ...mapped,
-    formato_juego: 'todos',
-    formatos_juego: ['futbol_7', 'futbol_11'],
-    format: 'F7/F11',
+    formato_juego: item.formato_juego || mapped.formato_juego || 'todos',
+    formatos_juego: Array.isArray(item.formatos_juego) && item.formatos_juego.length
+      ? item.formatos_juego
+      : (mapped.formatos_juego || []),
+    format: item.format || mapped.format || '',
+    preview: item.media?.preview || item.preview || mapped.preview || '',
+    video_muestra: videoMuestra,
+    hasHumanVideo: Boolean(videoMuestra),
     nuevoFormato: true,
   };
 }

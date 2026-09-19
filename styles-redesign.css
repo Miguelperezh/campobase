@@ -767,24 +767,27 @@ body.cb-redesign-active .button {
 }
 
 body.cb-redesign-active .primary {
-  background: var(--cb-red-600);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(200, 16, 46, 0.25);
+  background: var(--cb-brand, var(--brand, #10b981));
+  color: var(--cb-accent-text, #ffffff);
+  border: 1px solid var(--cb-brand, var(--brand, #10b981));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 24%, transparent);
 }
 
 body.cb-redesign-active .primary:hover {
-  background: var(--cb-red-700);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 86%, #000000);
+  border-color: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 86%, #000000);
+  color: var(--cb-accent-text, #ffffff);
 }
 
 body.cb-redesign-active .secondary {
-  background: var(--cb-slate-100);
-  color: var(--cb-slate-800);
-  border: 1px solid var(--cb-slate-200);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 8%, var(--card, #ffffff));
+  color: var(--ink, #0f172a);
+  border: 1px solid color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 28%, var(--line, #e2e8f0));
 }
 
 body.cb-redesign-active .secondary:hover {
-  background: var(--cb-slate-200);
-  color: var(--cb-slate-900);
+  background: color-mix(in srgb, var(--cb-brand, var(--brand, #10b981)) 14%, var(--card, #ffffff));
+  color: var(--ink, #0f172a);
 }
 
 body.cb-redesign-active .danger {
@@ -3486,6 +3489,49 @@ div:has(> .date-24) {
   line-height: 1.2 !important;
 }
 
+/* Pestañas Biblioteca / Mis ejercicios */
+.exercise-library-tabs {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: .35rem !important;
+  margin: 0 0 .85rem !important;
+  padding: .3rem !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  border-radius: 12px !important;
+  background: var(--surface, #f8fafc) !important;
+}
+
+.exercise-library-tab {
+  min-height: 40px !important;
+  padding: .5rem .85rem !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: var(--muted, #64748b) !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+}
+
+.exercise-library-tab.active {
+  background: var(--card, #ffffff) !important;
+  color: var(--ink, #0f172a) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08) !important;
+}
+
+.exercise-library-tab-count {
+  font-variant-numeric: tabular-nums !important;
+}
+
+@media (max-width: 650px) {
+  .exercise-library-tabs {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .exercise-library-tab {
+    flex: 1 1 0 !important;
+  }
+}
+
 /* 2. Tarjetas de ejercicios V2 en la cuadrícula de la biblioteca */
 .exercise-v2-card {
   display: flex !important;
@@ -5661,4 +5707,17 @@ dialog {
   background: #dc2626 !important;
   border-color: #dc2626 !important;
   transform: scale(1.03) !important;
+}
+
+
+/* El texto dentro de botones respeta el contraste del color de acento,
+   incluso cuando el usuario ha elegido un color de fuente personalizado. */
+body.cb-redesign-active[data-has-custom-font-color="true"] .primary,
+body.cb-redesign-active[data-has-custom-font-color="true"] .primary * {
+  color: var(--cb-accent-text, #ffffff) !important;
+}
+
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
+  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
 }

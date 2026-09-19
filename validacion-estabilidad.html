@@ -1,21 +1,22 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <meta name="robots" content="noindex,nofollow">
+  <!-- VALIDACIÓN AISLADA: carga código de la rama de estabilidad sin fusionarlo a producción. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CampoBase</title>
+  <title>CampoBase · Validación estabilidad</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.svg">
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260919-prod-current-v7">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260919-prod-current-v7">
-  <link rel="stylesheet" href="billing.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=2503">
+  <link rel="stylesheet" href="styles-redesign.css?v=2503">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -179,67 +180,9 @@
       <div id="tacticas-interactivas" class="exercise-grid"></div>
     </section>
 
-    <section id="planes" class="view" aria-labelledby="title-planes">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Suscripción y pagos</p>
-          <h2 id="title-planes">Planes</h2>
-        </div>
-      </div>
-      <div id="cb-plans-content" class="stack">
-        <article class="panel">
-          <p class="meta">Cargando planes y estado de la cuenta…</p>
-        </article>
-      </div>
-    </section>
-
     <section id="ajustes" class="view" aria-labelledby="title-settings">
       <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
       <div class="settings-grid">
-        <article id="cb-delegate-account-panel" class="panel cb-delegate-account-panel">
-          <div class="panel-head">
-            <span class="eyebrow">Acceso del mismo equipo</span>
-            <h3>Cuenta de delegado</h3>
-            <p class="meta">Crea una cuenta independiente para tu delegado. Trabajará sobre este mismo equipo y tú decides exactamente qué partes de CampoBase puede ver.</p>
-          </div>
-          <div id="cb-delegate-account-content">
-            <div class="cb-delegate-access-preview">
-              <div class="cb-delegate-account-summary">
-                <div>
-                  <span class="eyebrow">Cuenta asociada</span>
-                  <label>Nombre del delegado
-                    <input type="text" value="" placeholder="Nombre y apellidos" disabled>
-                  </label>
-                </div>
-                <div>
-                  <span class="eyebrow">Acceso propio</span>
-                  <label>Correo del delegado
-                    <input type="email" value="" placeholder="delegado@correo.es" disabled>
-                  </label>
-                </div>
-              </div>
-              <div class="cb-delegate-preview-copy">
-                <h4>¿Qué puede ver el delegado?</h4>
-                <p class="meta">La vista de delegado del partido siempre está incluida. Marca las demás secciones que quieras permitir. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
-              </div>
-              <div class="cb-delegate-permissions-grid" aria-label="Permisos configurables del delegado">
-                <label class="cb-delegate-permission"><input type="checkbox" checked disabled><span>Vista delegado del partido · acceso base</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Inicio / Hoy</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Plantilla</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Cuerpo técnico</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Asistencia</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Convocatorias</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Preparación de partido</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Partido en vivo</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Calendario y resultados</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Sesiones de entrenamiento</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Ejercicios</span></label>
-                <label class="cb-delegate-permission"><input type="checkbox" disabled><span>Pizarra táctica</span></label>
-              </div>
-              <p class="meta cb-delegate-login-note"><strong>Gestión:</strong> al entrar como Administrador o Entrenador podrás indicar el nombre y correo del delegado y activar o quitar estos permisos.</p>
-            </div>
-          </div>
-        </article>
         <article class="panel">
           <h3>Identidad del club</h3>
           <p class="meta">Personaliza el escudo y nombre de tu equipo para toda la aplicación.</p>
@@ -724,29 +667,8 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="vendor/supabase.js"></script>
-  <script>
-    // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
-    // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260919-prod-current-v7';
-    if ('serviceWorker' in navigator) {
-      const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v7')
-        .then((registration) => registration.update().then(() => registration))
-        .then((registration) => {
-          if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        })
-        .catch(() => {});
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        try {
-          if (sessionStorage.getItem(reloadKey) === window.__CAMPOBASE_BUILD) return;
-          sessionStorage.setItem(reloadKey, window.__CAMPOBASE_BUILD);
-        } catch {}
-        location.reload();
-      });
-    }
-  </script>
-  <script type="module" src="js/app.js?v=20260919-prod-current-v7"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260919-prod-current-v7"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@e9e484883158bde445f4e9a3dcfd61650cb43590/js/app.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Miguelperezh/campobase@e9e484883158bde445f4e9a3dcfd61650cb43590/js/redesign-nav.js"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

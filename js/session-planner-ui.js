@@ -1,5 +1,6 @@
 import { getAll } from './db.js';
 import { EJERCICIOS_VALIDADOS } from './ejercicios-validados.js';
+import { resolveHostedVideoUrl } from './ejercicio-videos.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -67,7 +68,12 @@ function cover(item) {
 
 function animationVideo(item) {
   const animation = item?.animacion || {};
-  return String(item?.media?.video || animation.mp4 || (animation.gif || '').replace(/\.gif$/i, '.mp4') || '');
+  return resolveHostedVideoUrl(String(
+    item?.media?.video
+    || animation.mp4
+    || (animation.gif || '').replace(/\.gif$/i, '.mp4')
+    || ''
+  ));
 }
 
 function validatedText(item) {
@@ -104,6 +110,11 @@ function itemFromCard(card) {
   const validated = byId.get(id);
   const quick = validated?.vista_rapida || {};
   const dr = validated?.datos_rapidos || {};
+  const isMine = card.dataset.userCreated === '1';
+  const customCategory = card.dataset.category || pills[0] || 'Otros';
+  const customFormat = card.dataset.formatoJuego || '';
+  const customMaterial = card.dataset.material || '';
+  const customDifficulty = card.dataset.difficulty || '';
 
   const formatos_juego = Array.isArray(validated?.formatos_juego)
     ? validated.formatos_juego.filter((value) => value === 'futbol_7' || value === 'futbol_11')
@@ -116,6 +127,12 @@ function itemFromCard(card) {
     formato_juego = formatos_juego[0];
   } else if (validated?.formato_juego) {
     formato_juego = validated.formato_juego === 'futbol_7' ? 'futbol_7' : 'futbol_11';
+  } else if (customFormat === 'todos') {
+    formato_juego = 'todos';
+  } else if (/f7|futbol_7/i.test(customFormat)) {
+    formato_juego = 'futbol_7';
+  } else if (/f11|futbol_11/i.test(customFormat)) {
+    formato_juego = 'futbol_11';
   } else if (id.startsWith('f7-')) {
     formato_juego = 'futbol_7';
   }
@@ -125,15 +142,18 @@ function itemFromCard(card) {
   const playerCount = numMatch ? parseInt(numMatch[0], 10) : (validated?.organizacion?.participantes_totales || 8);
   const playersText = rawPlayers ? rawPlayers.replace(/^👥\s*/, '') : `${playerCount} jugadores`;
 
-  const rawMat = dr.material || (validated?.materiales ? (Array.isArray(validated.materiales) ? validated.materiales.join(' ') : String(validated.materiales)) : '');
-  const difficulty = validated?.dificultad || validated?.nivel || '';
+  const rawMat = dr.material
+    || (validated?.materiales ? (Array.isArray(validated.materiales) ? validated.materiales.join(' ') : String(validated.materiales)) : '')
+    || customMaterial;
+  const difficulty = validated?.dificultad || validated?.nivel || customDifficulty;
   const cleanTitle = String(validated?.nombre || name).replace(/^--\s*/, '').trim();
 
   return {
     id,
     name: cleanTitle,
-    type: quick.tipo_principal || validated?.categoria || pills[0] || 'Otros',
-    category: validated?.categoria || quick.tipo_principal || pills[0] || 'Otros',
+    type: quick.tipo_principal || validated?.categoria || customCategory,
+    category: validated?.categoria || quick.tipo_principal || customCategory,
+    isMine,
     formato_juego,
     formatos_juego,
     playerCount,
@@ -321,8 +341,29 @@ function captureCoverFromVideo(img) {
   video.load();
 }
 
+function bindStaticPreviewVideos(root) {
+  root.querySelectorAll('.sp-cover-static-video').forEach((video) => {
+    if (video.dataset.spStaticPreviewInit === '1') return;
+    video.dataset.spStaticPreviewInit = '1';
+    video.muted = true;
+    video.playsInline = true;
+    const freeze = () => {
+      try {
+        if (video.currentTime < 0.04) video.currentTime = 0.05;
+        video.pause();
+      } catch {}
+    };
+    video.addEventListener('loadeddata', freeze);
+    video.addEventListener('seeked', () => video.pause());
+    video.addEventListener('play', () => video.pause());
+  });
+}
+
 function bindCoverFallbacks(root) {
-  root.querySelectorAll('.sp-cover img[data-sp-cover-video]').forEach((img) => {
+  root.querySelectorAll('.sp-cover img[data-sp-capture-cover="1"][data-sp-cover-video]').forEach((img) => {
+    captureCoverFromVideo(img);
+  });
+  root.querySelectorAll('.sp-cover img[data-sp-cover-video]:not([data-sp-capture-cover="1"])').forEach((img) => {
     img.addEventListener('error', () => captureCoverFromVideo(img), { once: true });
   });
   root.querySelectorAll('.sp-cover img:not([data-sp-cover-video])').forEach((img) => {
@@ -358,9 +399,12 @@ function hasHumanVideo(item) {
 function card(item, recommended) {
   const favorite = favorites.has(item.id);
   const hasRealVideo = hasHumanVideo(item);
+  const graphicPreviewVideo = resolveHostedVideoUrl(item.animationVideo || '');
   const image = item.cover
-    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(item.animationVideo)}" alt="Portada de ${esc(item.name)}">`
-    : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
+    ? `<img loading="lazy" decoding="async" src="${esc(item.cover)}" data-sp-cover-video="${esc(graphicPreviewVideo)}" alt="Portada de ${esc(item.name)}">`
+    : graphicPreviewVideo
+      ? `<img loading="lazy" decoding="async" data-sp-cover-video="${esc(graphicPreviewVideo)}" data-sp-capture-cover="1" alt="Portada de ${esc(item.name)}">`
+      : `<div class="sp-fallback">CampoBase<br><strong>${esc(item.name)}</strong></div>`;
 
   return `<article class="sp-card ${recommended.has(item.id) ? 'recommended' : ''}">
     <div class="sp-cover">
@@ -397,7 +441,8 @@ function renderLibrary(form) {
   const categories = [...new Set(catalog.map((item) => item.type || item.category))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
   const list = base.filter((item) => {
     if (query && !item.search.includes(norm(query))) return false;
-    if (category && item.type !== category && item.category !== category) return false;
+    if (category === '__mine__' && !item.isMine) return false;
+    if (category && category !== '__mine__' && item.type !== category && item.category !== category) return false;
     if (playersFilter) {
       const c = item.playerCount;
       if (playersFilter === '1-4' && !(c >= 1 && c <= 4)) return false;
@@ -439,6 +484,7 @@ function renderLibrary(form) {
         <span>Categoría</span>
         <select id="sp-category">
           <option value="">Todas las categorías</option>
+          <option value="__mine__" ${category === '__mine__' ? 'selected' : ''}>Mis ejercicios</option>
           ${categories.map((entry) => `<option value="${esc(entry)}" ${category === entry ? 'selected' : ''}>${esc(entry)}</option>`).join('')}
         </select>
       </label>
@@ -708,6 +754,7 @@ function styles() {
 .sp-advanced>summary{cursor:pointer;color:var(--muted);font-size:.75rem;font-weight:700}
 .sp-advanced .session-selected-blocks{margin-top:.5rem;max-height:38vh;overflow:auto;box-shadow:none}
 .sp-source-hidden{display:none!important}
+.sp-cover-static-video{width:100%;height:100%;display:block;object-fit:cover;pointer-events:none;background:#061c14}
 .sp-library-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-bottom:.7rem}
 .sp-library-head h3,.sp-library-head p{margin:0}
 .sp-filters-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.55rem;margin:.55rem 0}

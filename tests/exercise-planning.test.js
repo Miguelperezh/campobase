@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   addExerciseToSession,
+  buildFlexibleTrainingSession,
   completeExercise,
   moveSessionBlock,
   removeSessionBlock,
   renderBoardDiagrams,
+  sessionBlockType,
   sessionDurationStatus,
 } from '../js/exercise-planning.js';
 
@@ -76,10 +78,94 @@ test('añade ejercicios por categoría, permite reordenar y quitar sin mutar la 
   assert.deepEqual(removeSessionBlock(moved, 0).map(({ exerciseId }) => exerciseId), ['e-square']);
 });
 
+test('clasifica correctamente las categorías actuales al añadir ejercicios a una sesión', () => {
+  assert.equal(sessionBlockType('Calentamiento / activación'), 'warmup');
+  assert.equal(sessionBlockType('Calentamiento/activación'), 'warmup');
+  assert.equal(sessionBlockType('Juego reducido'), 'final');
+  assert.equal(sessionBlockType('Partido condicionado / Small-sided games'), 'final');
+  assert.equal(sessionBlockType('Finalización'), 'main');
+});
+
 test('calcula el aviso de sesión hasta sumar exactamente 60 minutos', () => {
   assert.deepEqual(sessionDurationStatus([{ duration: 10 }, { duration: 20 }]), {
     total: 30, difference: 30, exact: false, message: 'Faltan 30 min para llegar a 60.',
   });
   assert.equal(sessionDurationStatus([{ duration: 15 }, { duration: 20 }, { duration: 25 }]).message, 'Sesión completa: 60 min exactos.');
   assert.equal(sessionDurationStatus([{ duration: 40 }, { duration: 25 }]).message, 'Sobran 5 min: ajusta los bloques hasta 60.');
+});
+
+
+test('crea y edita sesiones con ejercicios de Mis ejercicios sin perder identidad ni bloques', () => {
+  const mine = {
+    ...baseExercise,
+    id: 'pdf98-user-test',
+    name: 'Mi ejercicio propio',
+    category: 'Finalización',
+    duration: 14,
+    material: '2 balones y 4 conos',
+  };
+  const second = {
+    ...baseExercise,
+    id: 'e-second',
+    name: 'Segundo ejercicio',
+    category: 'Juego reducido',
+    duration: 16,
+  };
+
+  let draft = addExerciseToSession({ blocks: [] }, mine);
+  draft = addExerciseToSession(draft, second);
+
+  const created = buildFlexibleTrainingSession({
+    date: '2026-09-18',
+    time: '18:30',
+    name: 'Sesión con ejercicio propio',
+    pitch: 'Campo 1',
+    targetDuration: 30,
+    notes: 'Primera versión',
+    blocks: draft.blocks,
+  }, {
+    id: 'session-user-1',
+    availableExerciseIds: [mine.id, second.id],
+    exercises: [mine, second],
+    createdAt: 100,
+    now: 200,
+  });
+
+  assert.equal(created.id, 'session-user-1');
+  assert.equal(created.recordType, 'trainingSession');
+  assert.equal(created.createdAt, 100);
+  assert.equal(created.updatedAt, 200);
+  assert.equal(created.totalDuration, 30);
+  assert.deepEqual(created.blocks.map(({ exerciseId }) => exerciseId), [mine.id, second.id]);
+
+  const reordered = moveSessionBlock(created.blocks, 1, -1).map((block, index) => ({
+    ...block,
+    duration: index === 0 ? 18 : 12,
+    notes: index === 0 ? 'Consigna editada' : block.notes,
+  }));
+
+  const edited = buildFlexibleTrainingSession({
+    ...created,
+    name: 'Sesión editada',
+    notes: 'Segunda versión',
+    blocks: reordered,
+  }, {
+    id: created.id,
+    availableExerciseIds: [mine.id, second.id],
+    exercises: [mine, second],
+    createdAt: created.createdAt,
+    now: 300,
+  });
+
+  assert.equal(edited.id, created.id);
+  assert.equal(edited.createdAt, 100);
+  assert.equal(edited.updatedAt, 300);
+  assert.equal(edited.name, 'Sesión editada');
+  assert.equal(edited.notes, 'Segunda versión');
+  assert.equal(edited.totalDuration, 30);
+  assert.deepEqual(edited.blocks.map(({ exerciseId, duration }) => [exerciseId, duration]), [
+    [second.id, 18],
+    [mine.id, 12],
+  ]);
+  assert.equal(edited.blocks[0].notes, 'Consigna editada');
 });

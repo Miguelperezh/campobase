@@ -389,9 +389,10 @@ function renderTodayTrialBanner(root, context) {
 
   const date = formatBillingDate(sub.expira_en);
   const days = getDaysRemaining(sub);
+  const preview = Boolean(sub?._preview);
   banner.innerHTML = `
     <div class="cb-trial-banner-copy">
-      <span class="eyebrow">Prueba Pro</span>
+      <span class="eyebrow">${preview ? 'Simulación · Prueba Pro' : 'Prueba Pro'}</span>
       <strong>${days === 1 ? 'Queda 1 día' : `Quedan ${days} días`}</strong>
       <span>Termina el ${date}</span>
     </div>
@@ -418,6 +419,7 @@ async function handleCancelSubscription(button, feedback) {
 
   button.disabled = true;
   if (feedback) feedback.textContent = 'Cancelando renovación…';
+
   try {
     const result = await cancelSubscriptionAtPeriodEnd(currentClient);
     if (feedback) feedback.textContent = result.message || 'Renovación cancelada.';
@@ -605,6 +607,7 @@ async function refreshBillingState() {
     currentContext = { user: null, profile: null, subscription: null, source: 'none' };
     updateAccountBillingUI(document, currentContext);
     renderPlansView(document, currentContext);
+    renderTodayTrialBanner(document, currentContext);
     closePaywall(document);
     return currentContext;
   }
@@ -626,6 +629,7 @@ async function refreshBillingState() {
   };
   updateAccountBillingUI(document, currentContext);
   renderPlansView(document, currentContext);
+  renderTodayTrialBanner(document, currentContext);
 
   const canUse = formatSubscriptionStatus(currentContext.subscription).canUseApp;
   const subscriptionChecked = currentContext.source === 'server' || Boolean(currentContext.subscription);
