@@ -3765,6 +3765,7 @@ Corrección en curso:
 - `Preparar partido` debe tener listener directo en el botón renderizado, con captura explícita de errores;
 - la convocatoria debe resolverse por `callupId` y también por `matchId` para tolerar una relación local/cloud incompleta sin inventar datos;
 - `+ Ejercicio` no puede depender de un interceptor global en captura;
+- `+ Ejercicio` debe permitir entrar al creador, guardar, volver a CampoBase y mostrar el ejercicio en `Mis ejercicios`; el guardado debe confirmarse localmente antes de sincronizar y el formulario estándar debe quedar como respaldo si el creador integrado falla;
 - el creador integrado se invoca de forma directa desde `app.js` y, si falla, debe abrir el formulario estándar de respaldo;
 - no tocar jugadores, teléfonos, estadísticas, partidos, convocatorias ni demás datos para resolver este cableado;
 - no declarar esta incidencia cerrada hasta que Miguel pruebe ambos botones en producción y confirme que funcionan.
