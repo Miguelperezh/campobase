@@ -3573,3 +3573,51 @@ Regla:
 - no borrar jugadores ni importar backups automáticamente;
 - si Supabase conserva los datos, tratarlo como problema de arranque/caché/sincronización hasta demostrar lo contrario.
 
+---
+
+# 47. Recuperación definitiva en fase-4-billing-aislada: integración de blindaje de datos, login PIN, eliminación de normalizePlayerName y aislamiento de simulación — 19/09/2026
+
+## 47.1 Diagnóstico de la incidencia
+- El usuario reportó una rotura en el acceso en móvil y producción: app vacía, falta del flujo normal de login o PIN, y aparición en pantalla del error `normalizePlayerName is not defined`.
+- **Comprobación de servidor previa a cualquier acción**: En Supabase (`mdzpygfwugawlmknywxa`), los 15 jugadores activos siguen intactos en `public.jugadores` (payload: Antonio Roldán Rendón #3, Diego Andrés Anaya Chaparro #5, Elías Mederos Valencia #14, Carlos Campillo Rendón #13, Mateo Moyano Santana #1, Pablo Díaz Santana #10, etc.), junto a 4 partidos, 2 convocatorias y 7 asistencias activas. No existe pérdida de datos.
+- **Causa raíz técnica**:
+  1. La rama `fase-4-billing-aislada` se encontraba desincronizada respecto a los hotfixes críticos aplicados hoy en `main`, manteniendo bundles anteriores en service worker y cachés (`v=2502` / `v=20260918-billing-flow-v3`), lo que provocaba que dispositivos móviles ejecutaran bundles obsoletos donde `refresh()` fallaba con `normalizePlayerName is not defined`.
+  2. En `js/saas-auth-ui-v2.js`, si no existía sesión activa en Supabase o se perdía el enlace de cuenta recordada, el diálogo `#auth-dialog` no se abría automáticamente, dejando la aplicación en un estado vacío e inoperativo.
+  3. La función de deduplicación contenía lógica de purga que mutaba la lista de jugadores.
+
+## 47.2 Acciones y cambios implementados
+1. **Fusión integral de `main` en `fase-4-billing-aislada`**:
+   - Se incorporaron las 42 secciones previas de `AGENTS.md` (3575 líneas conservadas al 100%, sin borrar ni editar nada ajeno).
+   - Se integraron las migraciones y auditorías de Supabase (`09_data_audit_history.sql`, `10_immutable_versions_and_stale_write_guard.sql`, `11_block_client_hard_deletes.sql`).
+   - Se adoptó el build forzado `20260919-prod-current-v7` en `index.html`, `sw.js`, `js/app.js` y `js/supabase-client.js`.
+2. **Blindaje de refresh y eliminación de `normalizePlayerName`**:
+   - `deduplicatePlayers()` en `js/app.js` queda definitivamente blindado devolviendo `false` sin borrar ni transformar jugadores.
+   - Ninguna función ni llamada a `normalizePlayerName` existe en la aplicación (verificado por `tests/refresh-no-player-mutation.test.js` y `tests/pwa-current-build.test.js`).
+3. **Restauración del flujo de login y PIN**:
+   - `initSaasAuth()` garantiza que nunca se deje la app abierta y vacía sin sesión: muestra el formulario de inicio de sesión/registro/planes manteniendo siempre disponible el botón de acceso local por PIN.
+   - El formulario de PIN recordado comprueba tanto el PIN de dispositivo como el hash en `configuracion/main` de Supabase.
+   - Tras validar el PIN, se sincroniza inmediatamente con Supabase (`app.synchronizeCloud()`) y se refresca la vista (`app.refresh()`), mostrando la plantilla con sus 15 jugadores.
+4. **Sincronización segura de equipo**:
+   - En `js/supabase-client.js`, se corrigió el destructuring de `requireBoundUser` para obtener correctamente `user` y `dataOwnerUserId` mediante `rpc('mi_equipo_contexto')`, garantizando que delegados y titulares lean y escriban sobre la plantilla del equipo sin errores de ámbito.
+5. **Aislamiento estricto de la simulación**:
+   - Cumpliendo con las secciones 21 y 22 de este manual, la simulación no se ejecuta dentro de la aplicación real mediante parámetros como `?simulacion=prueba`.
+   - La simulación visual de prueba y Stripe se mantiene estrictamente aislada en `billing-preview.html` y `simulacion-fase4.html` sin tocar datos reales ni Supabase.
+
+## 47.3 Pruebas automatizadas y validación técnica
+- Batería completa de tests: **442 tests pasados, 0 fallidos**.
+- Comprobación de sintaxis: `npm run check` completado con éxito (código de salida 0).
+- Pruebas clave validadas:
+  - `tests/refresh-no-player-mutation.test.js`
+  - `tests/pwa-current-build.test.js`
+  - `tests/auth-boot-recovery.test.js`
+  - `tests/saas-pin-unified.test.js`
+  - `tests/session-data-stability.test.js`
+  - `tests/billing-manager.test.js`
+  - `tests/plans-registration-flow.test.js`
+  - `tests/team-access.test.js`
+
+## 47.4 Estado
+- Rama: `fase-4-billing-aislada`.
+- Cambios confirmados y listos para verificación visual mediante URL directa de RawGitHack.
+
+
