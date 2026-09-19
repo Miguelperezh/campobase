@@ -12,10 +12,10 @@ test('la cuenta recordada acepta el PIN owner guardado en Supabase', () => {
   assert.match(source, /verifyPin\(cleanPin, settings\.pinSalt, settings\.ownerPinHash\)/);
 });
 
-test('el formulario de cuenta recordada prueba PIN del dispositivo y después PIN de CampoBase', () => {
+test('la cuenta recordada puede reconstruir una sesión Supabase solo con el PIN de CampoBase', () => {
+  assert.match(source, /session = await signInWithCampoBasePin\(client, account\.userId, enteredPin\)/);
   assert.match(source, /const deviceOk = await verifyRememberedPin\(account, enteredPin\)/);
   assert.match(source, /accountOk = await verifyOwnerPinFromSupabase\(client, session\.user\.id, enteredPin\)/);
-  assert.match(source, /if \(!deviceOk && !accountOk\) return setMessage\('#saas-remembered-message', 'PIN incorrecto\.'\)/);
 });
 
 test('la interfaz deja claro que el PIN se comprueba con la cuenta en Supabase', () => {
