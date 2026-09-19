@@ -5735,7 +5735,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v7').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-runtime-rescue-v8').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
