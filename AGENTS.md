@@ -2994,3 +2994,44 @@ Regla para futuras incidencias:
 - no asumir que “PIN del dispositivo” y “PIN de CampoBase” son el mismo;
 - no pedir al usuario que cree PIN nuevos ni borrar datos para resolverlo.
 
+---
+
+# 42. Tercera solución PIN — evitar carrera entre pantalla de login y configuración inicial — 19/09/2026
+
+Síntoma observado por Miguel:
+- la pantalla visible era **“Introduce tu PIN”**;
+- al enviar un PIN de 4 cifras aparecía el error **“Los PIN deben tener entre 4 y 8 cifras”**;
+- ese mensaje solo pertenece al flujo de creación de dos PIN, no al login normal.
+
+Conclusión:
+- durante el submit, la app podía recalcular `initial=true` por una carrera de carga de `state.settings`;
+- visualmente el usuario estaba en login, pero el handler terminaba ejecutando `savePins(newOwnerPin, newDelegatePin)` con los campos de creación ocultos/vacíos.
+
+Corrección:
+- `submitAuth()` ya no decide el modo por `state.settings` en ese instante;
+- usa el modo que realmente está visible en la interfaz:
+  - si `#initial-pin-fields` está visible → configuración inicial;
+  - si está oculto → login normal;
+- una pantalla visible de “Introduce tu PIN” **nunca puede saltar a crear PIN** durante el submit;
+- el login vuelve a hidratar Supabase y valida owner/delegate contra `pinSalt + hash`;
+- si falla, solo entonces prueba copias locales como recuperación;
+- no resetea ni genera PIN nuevos desde el flujo de login.
+
+Verificación de credenciales:
+- se comprobaron en Supabase los dos PIN facilitados por Miguel contra los hashes remotos;
+- ambos coinciden con sus respectivos hashes owner/delegate;
+- **no guardar los PIN en texto claro en AGENTS.md, Git ni logs**.
+
+Caché móvil:
+- versión forzada: `20260919-pin-submit-v3`.
+
+Pruebas:
+- `tests/pin-supabase-recovery.test.js` añade cobertura para impedir que login salte a creación;
+- batería completa de rama: run `35444808525` → **success**.
+
+Rama:
+- `hotfix/pin-submit-supabase-20260919`.
+
+Estado:
+- listo para PR y despliegue.
+
