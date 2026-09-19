@@ -3917,3 +3917,16 @@ No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas
 - El arranque de `Mis ejercicios` pasa a local-first: carga IndexedDB inmediatamente y hace una sola sincronización cloud en segundo plano, no 30 intentos.
 - Se elimina el segundo listener de `controllerchange` en `app.js`; la actualización PWA queda centralizada en `index.html`.
 - No declarar v17 solucionado hasta comprobar realmente en ordenador y móvil: pestañas, Preparar partido, + Ejercicio/guardar, persistencia y sincronización entre dispositivos.
+
+
+## 54. Medios de los 12 ejercicios nuevos — normalización directa a GitHub Releases
+
+- Los archivos fuente de los 12 ejercicios conservan URLs históricas de Supabase para compatibilidad, pero el objeto activo normalizado debe exponer el vídeo humano pesado directamente desde GitHub Releases.
+- Tag vigente: `campobase-videos-v1`.
+- Los 12 vídeos humanos actuales tienen asset confirmado en el release; dos usan alias históricos:
+  - `CONDUCCION-FRENADA-PLANTA...` -> `CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA__video.mp4`.
+  - `CAMPOBASE-PASE-BALON-ESPACIO...` -> `CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION__video.mp4`.
+- Las copias de Supabase Storage NO se borran: quedan como rollback histórico.
+- Los MP4 gráficos ligeros continúan en `assets/ejercicios` y se sirven con GitHub Pages.
+- La portada de los 12 actuales sigue siendo una preview estática generada desde el MP4 gráfico con `preview_crop/media_crop`; nunca desde el vídeo humano.
+- Dentro de la ficha el orden obligatorio es: preview estática -> MP4 gráfico -> vídeo humano.
