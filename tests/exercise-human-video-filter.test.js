@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
 import { EJERCICIOS_NUEVO_FORMATO, EJERCICIOS_NUEVO_FORMATO_ANTERIORES, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
-import { renderExerciseGridCard } from '../js/ejercicio-viewer.js';
+import { renderExerciseGridCard, renderValidatedExerciseHTML } from '../js/ejercicio-viewer.js';
 
 test('Solo con vídeo considera el vídeo humano y no el MP4 gráfico principal', () => {
   const pool = [
@@ -86,6 +86,41 @@ test('los 12 actuales separan preview, MP4 gráfico y vídeo humano sin mezclar 
     assert.equal(exercise.media?.video, exercise._video_ejercicio_original, `${exercise.id}: el reproductor principal debe ser el MP4 gráfico`);
     assert.ok(exercise.video_muestra_humanos, `${exercise.id}: falta vídeo humano de muestra`);
     assert.notEqual(exercise.media?.video, exercise.video_muestra_humanos, `${exercise.id}: MP4 gráfico y vídeo humano deben permanecer separados`);
+  }
+});
+
+test('los 12 actuales normalizan el vídeo humano pesado a GitHub Releases y conservan crop de portada', () => {
+  for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
+    assert.match(
+      exercise.video_muestra_humanos,
+      /^https:\/\/github\.com\/Miguelperezh\/campobase\/releases\/download\/campobase-videos-v1\//,
+      `${exercise.id}: el vídeo humano debe salir de GitHub Releases`,
+    );
+    assert.doesNotMatch(
+      exercise.video_muestra_humanos,
+      /supabase\.co\/storage/,
+      `${exercise.id}: el vídeo humano normalizado no debe depender de Supabase Storage`,
+    );
+    assert.ok(exercise.preview_crop, `${exercise.id}: falta preview_crop`);
+    assert.ok(Number(exercise.preview_crop.width) > 0, `${exercise.id}: crop sin ancho`);
+    assert.ok(Number(exercise.preview_crop.height) > 0, `${exercise.id}: crop sin alto`);
+  }
+});
+
+test('las portadas de los 12 actuales usan preview estática recortada y la ficha mantiene el orden preview -> gráfico -> humano', () => {
+  for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
+    const card = renderExerciseGridCard(exercise);
+    assert.match(card, /card-preview-static-canvas|data-preview-image="1"/, `${exercise.id}: falta portada estática`);
+    assert.match(card, /data-preview-crop="[^"]+"/, `${exercise.id}: la portada no lleva crop`);
+
+    const detail = renderValidatedExerciseHTML(exercise);
+    const previewPos = detail.indexOf('data-media-order="1"');
+    const graphicPos = detail.indexOf('exercise-video-wrap');
+    const humanPos = detail.indexOf('exercise-media-human');
+    assert.ok(previewPos >= 0, `${exercise.id}: falta preview dentro de la ficha`);
+    assert.ok(graphicPos > previewPos, `${exercise.id}: el MP4 gráfico debe ir después de la preview`);
+    assert.ok(humanPos > graphicPos, `${exercise.id}: el vídeo humano debe ir después del MP4 gráfico`);
+    assert.match(detail, /data-preview-crop="[^"]+"/, `${exercise.id}: la preview interna no lleva crop`);
   }
 });
 

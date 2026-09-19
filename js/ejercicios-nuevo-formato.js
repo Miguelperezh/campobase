@@ -94,13 +94,43 @@ const GRAPHIC_MEDIA_CROP = Object.freeze({
 });
 
 const HUMAN_VIDEO_PATH_ALIAS = Object.freeze({
-  // El vídeo humano de esta conversión ya existe en Storage con su ID histórico.
+  // Alias histórico para conservar compatibilidad con imports anteriores.
   'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
     'CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA/video.mp4',
 });
 
 const HUMAN_VIDEO_PUBLIC_BASE =
   'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/';
+
+const HUMAN_VIDEO_RELEASE_BASE =
+  'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1';
+
+const HUMAN_VIDEO_RELEASE_ASSET = Object.freeze({
+  'CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL':
+    'CAMPOBASE-VIDEO-3-FINALIZACIONES-CENTRO-EXTERIOR-CENTRO-LATERAL__video.mp4',
+  'CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M':
+    'CAMPOBASE-VIDEO-6-SALTOS-LATERALES-KNEE-DRIVE-SPRINT-13-7M__video.mp4',
+  'CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE':
+    'CAMPOBASE-VIDEO-CONDUCCION-DEJAR-BALON-3-CONOS-VUELTA-LATERAL-PASE__video.mp4',
+  'CAMPOBASE-VIDEO-CONDUCCION-FRENADA-PLANTA-SPRINT-IDA-VUELTA-RECUPERACION':
+    'CAMPOBASE-VIDEO-DEJA-BALON-GIRA-CONO-PASA-SIGUIENTE-COLA__video.mp4',
+  'CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO':
+    'CAMPOBASE-VIDEO-DESPLAZAMIENTO-LATERAL-PROGRESIVO-PASILLO__video.mp4',
+  'CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION':
+    'CAMPOBASE-VIDEO-DUELOS-3V2-FINALIZACION-ROBO-ROTACION__video.mp4',
+  'CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2':
+    'CAMPOBASE-VIDEO-FINALIZACION-DOBLE-2-BALONES-TRANSICION-1V1-CAMBIO-CARRIL-V2__video.mp4',
+  'CAMPOBASE-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION-V2':
+    'CAMPOBASE-VIDEO-PASE-BALON-ESPACIO-2-CONOS-1V1-FINALIZACION__video.mp4',
+  'CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES':
+    'CAMPOBASE-VIDEO-PIES-RAPIDOS-SPRINT-3-VARIACIONES__video.mp4',
+  'CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3':
+    'CAMPOBASE-VIDEO-REACCION-GIRO-INICIAL-SENALES-LATERALES-CONO-BALON-V3__video.mp4',
+  'CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES':
+    'CAMPOBASE-VIDEO-REACTIVE-KNEE-DRIVE-SKATER-3-VARIACIONES__video.mp4',
+  'CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT':
+    'CAMPOBASE-VIDEO-RODILLAS-ALTAS-LATERALES-ZIGZAG-COD-SPRINT__video.mp4',
+});
 
 function normalizeNewExercise(exercise) {
   const categoryKey = key(exercise.categoria);
@@ -112,14 +142,17 @@ function normalizeNewExercise(exercise) {
   if (datosRapidos.duracion) datosRapidos.duracion = summarizeNumericRange(datosRapidos.duracion, 'min aprox.');
 
   const originalMedia = exercise.media || {};
-  let humanVideo = String(
-    exercise.video_muestra_humanos
-    || exercise.video_muestra_url
-    || exercise.video_humano
-    || exercise.video_humanos
-    || exercise.video
-    || ''
-  ).trim();
+  const releaseHumanAsset = HUMAN_VIDEO_RELEASE_ASSET[exercise.id] || '';
+  let humanVideo = releaseHumanAsset
+    ? `${HUMAN_VIDEO_RELEASE_BASE}/${encodeURIComponent(releaseHumanAsset)}`
+    : String(
+        exercise.video_muestra_humanos
+        || exercise.video_muestra_url
+        || exercise.video_humano
+        || exercise.video_humanos
+        || exercise.video
+        || ''
+      ).trim();
 
   const graphicVideo = String(
     GRAPHIC_VIDEO_PATH_ALIAS[exercise.id]
