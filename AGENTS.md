@@ -2296,3 +2296,108 @@ Estado:
 - pendiente únicamente de nueva validación visual de Miguel;
 - no fusionar todavía a `main`.
 
+---
+
+# 30. Nueva línea base manual de Miguel — fichas, dorsales, apellidos, posiciones y asistencia — 19/09/2026
+
+Miguel ha actualizado manualmente datos reales en CampoBase después de la incidencia anterior.
+
+Cambios comunicados por Miguel:
+- ha actualizado fichas de jugadores;
+- ha actualizado nombres y teléfonos de padres/madres;
+- ha modificado el dorsal de Elías;
+- ha añadido/corregido segundos apellidos de varios jugadores;
+- ha corregido alguna posición;
+- ha vuelto a corregir la asistencia del día **17/09/2026** porque anteriormente había quedado borrada/alterada.
+
+## 30.1 Fuente canónica desde este momento
+
+La versión vigente y correcta es la que existe ahora mismo en Supabase después de esas ediciones manuales.
+
+Fuente principal:
+- fichas actuales → `public.jugadores`;
+- asistencia actual → `public.asistencias`;
+- partidos → `public.partidos`;
+- convocatorias → `public.convocatorias`;
+- configuración → `public.configuracion`.
+
+No reconstruir ni sustituir esos valores desde:
+- seeds;
+- commits antiguos;
+- otra rama;
+- IndexedDB antiguo;
+- estadísticas derivadas;
+- datos de otro jugador;
+- conversaciones anteriores si contradicen el estado actual de Supabase.
+
+Los teléfonos y demás datos familiares reales **no se copian dentro de AGENTS.md ni del repositorio público**. Se conservan únicamente en Supabase y en su historial protegido.
+
+## 30.2 Snapshot explícito creado tras las ediciones de Miguel
+
+Motivo del snapshot:
+- `baseline_usuario_post_edicion_20260919`.
+
+Copias creadas sin modificar los datos activos:
+- 15 fichas actuales de jugadores → `public.jugadores_historial`;
+- 4 partidos activos → `public.campobase_datos_historial`;
+- 2 convocatorias activas → `public.campobase_datos_historial`;
+- 7 asistencias activas → `public.campobase_datos_historial`;
+- 19 registros activos de configuración → `public.campobase_datos_historial`.
+
+Esta línea base pasa a ser la referencia de recuperación más reciente frente a errores posteriores.
+
+## 30.3 Asistencia del 17/09/2026
+
+Se verificó que existe actualmente en `public.asistencias` un registro activo con:
+- fecha: `2026-09-17`;
+- tipo: entrenamiento;
+- asistencia manual actualizada por Miguel.
+
+Ese registro está incluido en:
+- `baseline_usuario_post_edicion_20260919`.
+
+Regla:
+- no reemplazarlo por una versión histórica anterior;
+- no recalcularlo desde otra fuente;
+- si una sincronización futura lo altera, restaurar primero desde esta línea base y comparar antes de escribir.
+
+## 30.4 Protección obligatoria de fichas
+
+A partir de esta línea base:
+- los campos personales se modifican únicamente desde **Editar jugador**;
+- una actualización de estadísticas no puede reescribir nombre, apellidos, dorsal, posiciones, pierna, padre, madre, teléfonos, notas o foto;
+- una sincronización local más antigua no puede ganar sobre una ficha más reciente de Supabase;
+- antes de cualquier restauración, comparar `public.jugadores` con `public.jugadores_historial`;
+- no borrar snapshots ni tombstones.
+
+Elías:
+- el dorsal vigente es el que está actualmente guardado en `public.jugadores`;
+- no restaurar un dorsal anterior desde historial o seed.
+
+## 30.5 Estadísticas y datos derivados
+
+El snapshot de jugadores contiene el payload completo actual, incluidas las partes derivadas que existan en la ficha.
+
+Aun así:
+- estadísticas de partidos se reconstruyen desde partidos;
+- convocatorias/rotaciones desde convocatorias;
+- asistencia desde asistencias;
+- no sobrescribir campos personales al recalcular estadísticas.
+
+## 30.6 Estado de producción y WhatsApp
+
+La corrección funcional de WhatsApp para distinguir:
+- Liga → convocatoria;
+- Amistoso → aviso para toda la plantilla;
+- Torneo → aviso para toda la plantilla;
+
+**todavía no está fusionada en `main`** mientras Miguel no valide la rama visualmente.
+
+Por eso la app oficial/PWA puede seguir mostrando el comportamiento antiguo en WhatsApp de amistosos.
+
+No confundir:
+- URL oficial → código de `main`;
+- URL de validación → código de la rama `fix/estabilidad-datos-sesion-20260919`.
+
+No fusionar PR #52 hasta validación visual expresa de Miguel.
+
