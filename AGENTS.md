@@ -3158,3 +3158,57 @@ Comparación vs main:
 Estado:
 - hotfix listo para despliegue de producción por incidencia crítica de app vacía.
 
+---
+
+# 43. Producción restauración cloud + PIN verificado contra Supabase — 19/09/2026
+
+Incidencia:
+- Miguel reportó que la app oficial volvía a aparecer sin datos.
+
+Comprobación directa en Supabase:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7;
+- los datos NO estaban borrados;
+- el PIN owner configurado por Miguel coincide con `ownerPinHash`;
+- el PIN de delegado configurado por Miguel coincide con `delegatePinHash`.
+
+No copiar PIN en claro a este archivo ni al repositorio.
+
+## 43.1 Hotfix de carga de datos
+
+Producción:
+- commit funcional: `4cd3fc075d24ba21158b8192c1a3670d2dbc9c50`;
+- `showAuth()` ya no elimina `campobase.sessionRole` al mostrar el diálogo;
+- después de un PIN válido, CampoBase ejecuta inmediatamente `synchronizeCloud()` y `refresh()`;
+- al recuperar una sesión SaaS válida, `unlockBoundSession()` también sincroniza y refresca antes de cerrar el diálogo.
+
+Regla:
+- una pantalla vacía con datos presentes en Supabase se trata como fallo de carga/sesión;
+- no recrear plantilla ni restaurar masivamente;
+- no borrar IndexedDB para “arreglar” una vista vacía.
+
+## 43.2 Forzado de versión móvil
+
+Para evitar que una PWA instalada siga usando la versión anterior:
+- versión PWA/cache: `20260919-cloud-restore-v4`;
+- commit de producción: `5e9fad67324cb43d8c7c405ce1c572524f933bd7`;
+- tests de main: **success**;
+- GitHub Pages: **success**.
+
+Se actualizó:
+- `index.html`;
+- `sw.js`;
+- query de `js/app.js`;
+- carga dinámica de `js/saas-auth-ui-v2.js`;
+- tests de versión PWA.
+
+Producción visible:
+- `https://miguelperezh.github.io/campobase/`.
+
+Estado:
+- hotfix desplegado;
+- datos remotos siguen intactos;
+- el siguiente control debe hacerse en la app oficial móvil ya actualizada.
+
