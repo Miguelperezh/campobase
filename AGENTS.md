@@ -2847,3 +2847,41 @@ La recuperación debe hacerse desde el mismo móvil:
 
 No considerar recuperados esos dos cambios hasta comprobarlos en Supabase.
 
+---
+
+# 38. Hotfix PIN SaaS — Supabase ya tenía PIN distintos pero la app entraba en configuración inicial — 19/09/2026
+
+Incidencia real:
+- Miguel introduce dos PIN distintos;
+- la app muestra erróneamente “Los PIN de Migue y delegado deben ser distintos”;
+- Supabase fue comprobado y contiene `ownerPinHash`, `delegatePinHash` y `pinSalt`;
+- los dos hashes remotos son distintos.
+
+Causa:
+- la interfaz podía decidir que era una instalación “inicial” mirando `state.settings` antes de haber cargado la configuración `main` de Supabase;
+- por eso mostraba los dos campos de creación de PIN aunque la cuenta ya tenía PIN válidos guardados.
+
+Corrección:
+- nueva lectura directa y autenticada de `public.configuracion / id=main` mediante `getRemoteMainSettings()`;
+- antes de decidir si hay que crear PIN, CampoBase hidrata los PIN existentes desde Supabase;
+- si los PIN ya existen remotamente, NO entra en modo “Configurar acceso”;
+- no se modifican ni regeneran los hashes durante esa lectura;
+- al crear PIN nuevos, se limpian espacios y se validan 4–8 cifras antes de comparar.
+
+Archivos:
+- `js/supabase-client.js`;
+- `js/app.js`;
+- `tests/pin-supabase-recovery.test.js`.
+
+Regla:
+- una cuenta SaaS existente con PIN guardados en Supabase nunca debe ser tratada como cuenta nueva por falta temporal de carga local;
+- no pedir crear de nuevo PIN owner/delegate si `configuracion/main` ya contiene ambos hashes;
+- no resetear ni sobrescribir PIN para arreglar una incidencia de carga.
+
+Rama:
+- `hotfix/pin-supabase-20260919`.
+
+Estado:
+- hotfix implementado;
+- pendiente de batería final y despliegue a producción.
+
