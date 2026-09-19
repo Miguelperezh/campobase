@@ -2973,3 +2973,24 @@ Comparación previa con main:
 Estado:
 - listo para desplegar a producción.
 
+---
+
+# 41. Segunda solución PIN desplegada en producción — 19/09/2026
+
+Producción actual:
+- commit: `b90ba1dd5a092652bdb1dc0e122e1a4992fee462`;
+- tests de `main`: **success**;
+- despliegue GitHub Pages: **success**;
+- URL: `https://miguelperezh.github.io/campobase/`.
+
+Cambio clave:
+- la pantalla de cuenta recordada ya no depende únicamente del PIN opcional del dispositivo;
+- acepta también el PIN owner real de CampoBase comprobándolo directamente contra `public.configuracion/main` en Supabase;
+- no resetea ni cambia el PIN;
+- la PWA fuerza versión `20260919-pin-supabase-v2` para evitar seguir usando código antiguo.
+
+Regla para futuras incidencias:
+- si el PIN real de CampoBase funciona en Supabase pero falla en la interfaz, revisar primero qué flujo de PIN está usando la pantalla;
+- no asumir que “PIN del dispositivo” y “PIN de CampoBase” son el mismo;
+- no pedir al usuario que cree PIN nuevos ni borrar datos para resolverlo.
+
