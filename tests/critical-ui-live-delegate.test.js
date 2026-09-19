@@ -16,6 +16,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 const app = read('js/app.js');
 const runtime = read('js/runtime-refresh.js');
 const board = read('js/exercise-board-persistence.js');
+const persistence = board;
 const planner = read('js/session-planner-ui.js');
 const teamAccess = read('js/team-access.js');
 const saas = read('js/saas-auth-ui-v2.js');
@@ -33,10 +34,10 @@ function allJsText(dir = new URL('../js/', import.meta.url)) {
 }
 
 test('build v13 está alineado en HTML, app, sesión, auth cloud y service worker', () => {
-  const build = '20260919-prod-current-v13';
+  const build = '20260919-prod-current-v14';
   for (const source of [html, app, demo, sw]) assert.match(source, new RegExp(build));
   assert.match(read('js/supabase-client.js'), new RegExp(build));
-  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v13/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v14/);
 });
 
 test('los botones principales del HTML tienen ruta de interacción o son submit/declarativos', () => {
@@ -61,8 +62,12 @@ test('wireEvents no repite la regresión querySelector().forEach', () => {
   assert.match(app, /\$\$\('\.bottom-nav button'\)\.forEach/);
 });
 
-test('+ Ejercicio abre sin esperar la nube y su guardado no recarga toda la app', () => {
-  assert.match(runtime, /#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]/);
+test('+ Ejercicio tiene cableado directo con fallback y su guardado no recarga toda la app', () => {
+  assert.match(html, /id="new-exercise"[^>]*data-dialog="exercise-dialog"/);
+  assert.match(runtime, /window\.__campobaseOpenExerciseCreator = openCreator/);
+  assert.doesNotMatch(runtime, /const createButton = event\.target\.closest\('#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]'/);
+  assert.match(app, /typeof window\.__campobaseOpenExerciseCreator === 'function'/);
+  assert.match(app, /Abriendo el formulario de ejercicio de respaldo/);
   assert.match(runtime, /const records = await readCustomExercises\(\)\.catch/);
   assert.match(runtime, /hydrateCustomExercises\(\{ attempts: 3 \}\)\.catch/);
   const persist = board.slice(board.indexOf('async function persistExercise'), board.indexOf('async function deleteExercise'));
@@ -75,6 +80,25 @@ test('+ Ejercicio abre sin esperar la nube y su guardado no recarga toda la app'
   assert.match(afterSave, /setExerciseLibraryMode\?\.\('mine'\)/);
 });
 
+
+test('+ Ejercicio puede guardar desde creador visual y desde formulario de respaldo', () => {
+  assert.match(persistence, /window\.addEventListener\('message'/);
+  assert.match(persistence, /campobase:persist-exercise/);
+  assert.match(persistence, /campobase:exercise-saved/);
+  assert.match(persistence, /await put\('settings', record\)/);
+  assert.match(persistence, /verifiedLocal/);
+  assert.match(persistence, /campobase:exercise-persisted/);
+  assert.match(persistence, /host\?\.showView\?\.\('ejercicios'\)/);
+  assert.match(persistence, /host\?\.setExerciseLibraryMode\?\.\('mine'\)/);
+
+  const fallback = app.slice(app.indexOf('async function saveExercise'), app.indexOf('function exerciseOptions'));
+  assert.match(fallback, /recordType: 'exercise'/);
+  assert.match(fallback, /userCreated: true/);
+  assert.match(fallback, /source: 'personal'/);
+  assert.match(fallback, /await put\('settings'/);
+  assert.match(fallback, /setExerciseLibraryMode\('mine'\)/);
+});
+
 test('Ver todo de Sesiones abre el visor oficial y conserva el crop validado', () => {
   assert.match(planner, /session-exercise-library \.view-exercise\[data-exercise-id\]/);
   assert.match(planner, /window\.__campobase\.showExerciseDetail/);
@@ -82,6 +106,13 @@ test('Ver todo de Sesiones abre el visor oficial y conserva el crop validado', (
   assert.match(planner, /data-sp-preview-crop/);
   assert.match(planner, /parsePreviewCrop/);
   assert.match(app, /data-preview-crop/);
+});
+
+test('Preparar partido tiene listener directo y convocatoria resiliente además del handler delegado', () => {
+  assert.match(app, /prepareButton\.addEventListener\('click'/);
+  assert.match(app, /function callupForMatch\(match\)/);
+  assert.match(app, /item\.matchId === match\.id/);
+  assert.match(app, /prepareLive\(\)\.catch\(handleError\)/);
 });
 
 test('todos los controles críticos de Partido en vivo tienen handler delegado', () => {

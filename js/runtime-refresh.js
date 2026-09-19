@@ -359,13 +359,6 @@ async function handleBoardMessage(event) {
 }
 
 function interceptClicks(event) {
-  const createButton = event.target.closest('#ejercicios .section-head button[data-dialog="exercise-dialog"]');
-  if (createButton) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    openCreator().catch((error) => { console.error(error); alert(error.message || 'No se pudo abrir el creador.'); });
-    return;
-  }
   const legacyMovementButton = event.target.closest('.view-exercise-motion[data-exercise-id]');
   if (legacyMovementButton) {
     const record = customExercises.get(legacyMovementButton.dataset.exerciseId);
@@ -436,6 +429,10 @@ async function install() {
     console.warn('No se pudieron hidratar Mis ejercicios al arrancar:', error.message);
     return readCustomExercises().then(() => patchSoon()).catch(() => null);
   });
+}
+
+if (typeof window !== 'undefined') {
+  window.__campobaseOpenExerciseCreator = openCreator;
 }
 
 if (typeof document !== 'undefined') {

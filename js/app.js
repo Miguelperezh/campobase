@@ -766,13 +766,21 @@ function liveDetailsMarkup(prefix, availableIds, match) {
 
 function renderLive() {
   const root = $('#live-match');
-  const eligible = state.matches.filter((match) => match.callupId && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
+  const eligible = state.matches.filter((match) => callupForMatch(match) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
-    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button type="button" id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    const prepareButton = $('#prepare-live');
+    if (prepareButton) {
+      prepareButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        prepareLive().catch(handleError);
+      });
+    }
     return;
   }
   const match = state.matches.find((item) => item.id === state.timer.matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!match || !callup) { state.timer = null; return renderLive(); }
   const seconds = timerSeconds(); const config = FORMATS[callup.format];
   state.timer.phase ??= 'ready';
@@ -799,7 +807,7 @@ function renderLive() {
 function liveTacticPlayers() { return state.players; }
 function liveTacticAvailableIds() {
   const match = state.matches.find(({ id }) => id === state.timer?.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   return callup?.availableIds ?? [];
 }
 
@@ -1341,9 +1349,16 @@ async function proposeReparto() {
   }
 }
 
+function callupForMatch(match) {
+  if (!match) return null;
+  return state.callups.find((item) => item.id === match.callupId)
+    || state.callups.find((item) => item.matchId === match.id)
+    || null;
+}
+
 function updateKeeperOptions(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
-  const callup = state.callups.find((item) => item.id === match?.callupId);
+  const callup = callupForMatch(match);
   const called = calledPlayerOptions(state.players, callup?.availableIds ?? []);
   const keepers = [...called].sort((a, b) => {
     const aIsKeeper = normalizePositions(state.players.find((player) => player.id === a.id)).includes('Portero');
@@ -1377,7 +1392,7 @@ async function applyPreparacionToLive(prep) {
   if (!prep?.team?.length) return false;
   if (state.timer && state.timer.phase !== 'ready') return false;
   const match = state.matches.find(({ id }) => id === prep.matchId);
-  const callup = state.callups.find(({ id }) => id === match?.callupId);
+  const callup = callupForMatch(match);
   if (!callup) return false;
   const team = prep.team.map((position) => ({
     ...position,
@@ -1411,10 +1426,16 @@ async function reapplyPreparacionToTimer() {
 }
 
 async function prepareLive() {
-  const match = state.matches.find((item) => item.id === $('#live-select').value); const callup = state.callups.find((item) => item.id === match?.callupId);
-  if (!callup) return toast('Selecciona un partido.');
-  const config = FORMATS[callup.format];
-  if (callup.availableIds.length < config.players) return toast(`Faltan jugadores: ${callup.format} necesita ${config.players} en campo.`);
+  const selectedMatchId = $('#live-select')?.value || '';
+  const match = state.matches.find((item) => item.id === selectedMatchId);
+  if (!match) return toast('Selecciona un partido.');
+  const callup = callupForMatch(match);
+  if (!callup) return toast('Ese partido no tiene una convocatoria disponible en este dispositivo.');
+  const availableIds = Array.isArray(callup.availableIds) ? callup.availableIds : [];
+  const format = callup.format || match.format || state.format || 'F7';
+  const config = FORMATS[format];
+  if (!config) return toast('No se reconoce el formato del partido.');
+  if (availableIds.length < config.players) return toast(`Faltan jugadores: ${format} necesita ${config.players} en campo.`);
   const prep = prepForMatch(match.id);
   if (prep?.team?.length) {
     await applyPreparacionToLive(prep);
@@ -1423,7 +1444,7 @@ async function prepareLive() {
   const firstKeeper = $('#first-keeper').value;
   const secondKeeper = $('#second-keeper').value;
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
-  if (!callup.availableIds.includes(firstKeeper) || !callup.availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
+  if (!availableIds.includes(firstKeeper) || !availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
   const initialOnField = [firstKeeper];
   state.timer = { matchId: match.id, elapsed: 0, runningSince: null, phase: 'ready', initialOnField, onField: [...initialOnField], events: [], firstKeeper, secondKeeper, autoPaused: false, delegateUnlocked: false, details: { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [], comments: '', minuteReasons: {} } };
@@ -4871,7 +4892,7 @@ function toggleWhistleTimer() {
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
-  $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => {
+  $('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
     const form = $(`#${button.dataset.dialog} form`);
     form?.reset();
     if (form?.elements.id) form.elements.id.value = '';
@@ -4879,6 +4900,16 @@ function wireEvents() {
     if (button.dataset.dialog === 'player-dialog') playerCropper?.setExistingPhoto('');
     if (button.dataset.dialog === 'exercise-dialog' && form?.elements.formato_juego) {
       form.elements.formato_juego.value = state.format === 'F7' ? 'futbol_7' : 'futbol_11';
+      event.preventDefault();
+      if (typeof window.__campobaseOpenExerciseCreator === 'function') {
+        try {
+          await window.__campobaseOpenExerciseCreator();
+          return;
+        } catch (error) {
+          console.error('No se pudo abrir el creador integrado; se usa el formulario de respaldo.', error);
+          toast('Abriendo el formulario de ejercicio de respaldo.');
+        }
+      }
     }
     $(`#${button.dataset.dialog}`).showModal();
   }));
@@ -5770,7 +5801,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v13').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v14').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
