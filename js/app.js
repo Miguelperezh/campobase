@@ -233,49 +233,19 @@ function isUserInteracting() {
 
 
 async function deduplicatePlayers() {
-  const currentPlayers = await getAll('players');
-  if (!currentPlayers || !currentPlayers.length) return;
-  const canonicalMap = new Map();
-  const toDelete = [];
-
-  for (const player of currentPlayers) {
-    // Purgar cualquier jugador demo filtrado a la base real
-    if (player.id && player.id.startsWith('demo-p') && player.id !== 'demo-p08') {
-      toDelete.push(player.id);
-      continue;
-    }
-    // Si demo-p08 sigue presente localmente pero ya existe p05, descartar demo-p08
-    if (player.id === 'demo-p08') {
-      const hasP05 = currentPlayers.some((p) => p.id === 'p05');
-      if (hasP05) {
-        toDelete.push(player.id);
-        continue;
-      }
-    }
-
-    const rawName = String(player.name || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const isRamiro = rawName === 'ramiro' || rawName === 'ramiro casati';
-    const isNicolas = rawName === 'nicolas diaz-saavedra' || rawName === 'nicolas diaz saavedra';
-    const key = isRamiro ? 'ramiro_casati' : (isNicolas ? 'nicolas_diaz_saavedra' : rawName);
-    if (!canonicalMap.has(key)) {
-      canonicalMap.set(key, player);
-    } else {
-      const existing = canonicalMap.get(key);
-      const preferCurrent = (player.id === 'p12') || (player.id === 'p05') ||
-        (player.number && !existing.number) ||
-        (player.positions?.length && !existing.positions?.length) ||
-        (player.positions?.includes('Portero') && !existing.positions?.includes('Portero')) ||
-        ((player.totalMinutes || 0) > (existing.totalMinutes || 0));
-      const canonical = preferCurrent ? player : existing;
-      const duplicate = preferCurrent ? existing : player;
-      canonicalMap.set(key, canonical);
-      toDelete.push(duplicate.id);
-    }
+  // Protección de datos: nunca borrar/tombstonear jugadores automáticamente
+  // durante refresh. Si aparecen posibles duplicados, se avisa en consola y
+  // se mantienen intactos hasta una decisión manual del usuario.
+  const seen = new Map();
+  const duplicates = [];
+  for (const player of state.players) {
+    const key = normalizePlayerName(player.name);
+    if (!key) continue;
+    if (seen.has(key)) duplicates.push([seen.get(key), player]);
+    else seen.set(key, player);
   }
-
-  for (const removeId of toDelete) {
-    await remove('players', removeId);
-    state.players = state.players.filter((p) => p.id !== removeId);
+  if (duplicates.length) {
+    console.warn('CampoBase detectó posibles jugadores duplicados y no los ha borrado automáticamente:', duplicates.map(([a, b]) => [a.id, b.id]));
   }
 }
 
@@ -283,14 +253,9 @@ async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   await deduplicatePlayers();
 
-  // Limpiar cualquier '#' en los dorsales existentes sin sobreescribir datos del usuario
-  for (const p of state.players) {
-    const cleanNum = cleanPlayerNumber(p.number);
-    if (p.number !== cleanNum) {
-      p.number = cleanNum;
-      put('players', p).catch(() => {});
-    }
-  }
+  // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
+  // se reescriben automáticamente durante refresh. Solo Editar jugador cambia
+  // la ficha personal persistida.
 
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
