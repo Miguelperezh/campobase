@@ -376,19 +376,6 @@ async function handleBoardMessage(event) {
 }
 
 function interceptClicks(event) {
-  const createButton = event.target.closest('#ejercicios .section-head button[data-dialog="exercise-dialog"]');
-  if (createButton) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    openCreator().catch((error) => {
-      console.error(error);
-      const dialog = document.getElementById('exercise-dialog');
-      if (dialog && typeof dialog.showModal === 'function') {
-        try { dialog.showModal(); } catch (_) { dialog.setAttribute('open', ''); }
-      }
-    });
-    return;
-  }
   const legacyMovementButton = event.target.closest('.view-exercise-motion[data-exercise-id]');
   if (legacyMovementButton) {
     const record = customExercises.get(legacyMovementButton.dataset.exerciseId);
@@ -455,9 +442,14 @@ async function install() {
   const list = document.getElementById('exercises-list');
   if (list) new MutationObserver(patchSoon).observe(list, { childList: true, subtree: true });
   restoreExercisesViewAfterSave();
-  hydrateCustomExercises({ attempts: 30 }).catch((error) => {
-    console.warn('No se pudieron hidratar Mis ejercicios al arrancar:', error.message);
-    return readCustomExercises().then(() => patchSoon()).catch(() => null);
+
+  // Arranque local-first: no bloquear la UI esperando Supabase.
+  await readCustomExercises().catch(() => []);
+  patchSoon();
+
+  // Una única sincronización en segundo plano. Si falla, la cola local se mantiene.
+  hydrateCustomExercises({ attempts: 1 }).catch((error) => {
+    console.warn('Sincronización de Mis ejercicios pendiente:', error.message);
   });
 }
 
