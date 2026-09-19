@@ -1,4 +1,4 @@
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -3800,7 +3800,35 @@ async function submitAuth(event) {
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
       } else {
-        throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
+        // Recuperación segura: si la sincronización móvil dejó un PIN más reciente
+        // en IndexedDB, lo aceptamos sin sobrescribir automáticamente Supabase.
+        const candidates = await getLocalPinSettingsCandidates();
+        let recoveredRole = '';
+        let recoveredSettings = null;
+        for (const candidate of candidates) {
+          const local = candidate.settings;
+          if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
+            recoveredRole = 'owner';
+            recoveredSettings = local;
+            break;
+          }
+          if (await verifyPin(pin, local.pinSalt, local.delegatePinHash)) {
+            recoveredRole = 'delegate';
+            recoveredSettings = local;
+            break;
+          }
+        }
+        if (!recoveredRole) {
+          throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
+        }
+        state.settings = {
+          ...state.settings,
+          pinSalt: recoveredSettings.pinSalt,
+          ownerPinHash: recoveredSettings.ownerPinHash,
+          delegatePinHash: recoveredSettings.delegatePinHash,
+        };
+        applyRole(recoveredRole);
+        toast('PIN local reconocido. Revisa Ajustes → Sincronización para recuperar cambios pendientes.');
       }
     }
     $('#auth-dialog').close();
