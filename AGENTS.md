@@ -2885,3 +2885,34 @@ Estado:
 - hotfix implementado;
 - pendiente de batería final y despliegue a producción.
 
+---
+
+# 39. Hotfix PIN SaaS desplegado en producción — 19/09/2026
+
+Verificación previa:
+- Supabase conserva `configuracion/main` con `ownerPinHash`, `delegatePinHash` y `pinSalt`;
+- los hashes de Migue y delegado son distintos;
+- por tanto el mensaje “Los PIN de Migue y delegado deben ser distintos” era una regresión de carga/interfaz, no un dato real de Supabase.
+
+Hotfix:
+- PR #53 fusionado;
+- commit de producción: `2d63b798d4e26b6f57ae155cebc17456f86a8cd4`;
+- tests de `main`: **success**;
+- GitHub Pages: **success**.
+
+Comportamiento correcto desde este despliegue:
+- una cuenta SaaS existente intenta cargar `configuracion/main` directamente desde Supabase antes de decidir si es una configuración inicial;
+- si Supabase ya tiene PIN owner/delegate válidos, CampoBase no debe mostrar los dos campos “Crear PIN…”;
+- debe mostrar el flujo de acceso existente;
+- la lectura remota no resetea ni sobrescribe PIN;
+- no volver a configurar dos PIN para resolver un fallo de carga.
+
+Producción:
+- `https://miguelperezh.github.io/campobase/`.
+
+Si una PWA móvil todavía muestra “Configurar acceso” con dos PIN después de este commit:
+- tratarlo como caché/sesión SaaS no cargada;
+- no crear PIN nuevos;
+- no borrar datos;
+- comprobar primero que el dispositivo está ejecutando el commit de producción y que conserva una sesión Supabase válida.
+
