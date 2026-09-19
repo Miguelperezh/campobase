@@ -2916,3 +2916,60 @@ Si una PWA móvil todavía muestra “Configurar acceso” con dos PIN después 
 - no borrar datos;
 - comprobar primero que el dispositivo está ejecutando el commit de producción y que conserva una sesión Supabase válida.
 
+---
+
+# 40. Segunda solución PIN — unificar PIN de CampoBase y evitar confusión con PIN de dispositivo — 19/09/2026
+
+Incidencia:
+- el PIN seguía sin funcionar aunque Supabase tenía los hashes correctos;
+- la pantalla de **Cuenta recordada** estaba validando exclusivamente un PIN distinto: el “PIN de este dispositivo” guardado en localStorage;
+- el usuario estaba introduciendo su PIN normal de CampoBase/Supabase;
+- por eso podía aparecer “PIN incorrecto” aunque el PIN real de la cuenta fuese correcto.
+
+Causa exacta:
+- existían dos PIN diferentes en la interfaz:
+  1. PIN owner/delegate de CampoBase, guardado como hash en `public.configuracion / id=main`;
+  2. PIN opcional del dispositivo, guardado en `localStorage['campobase.rememberedAccount.v1']`;
+- la pantalla de cuenta recordada solo verificaba el segundo.
+
+Corrección:
+- la pantalla **Cuenta recordada** acepta ahora el PIN owner de CampoBase verificándolo directamente contra Supabase;
+- primero puede aceptar el PIN de dispositivo si coincide;
+- si no coincide, consulta `public.configuracion/main` del usuario autenticado mediante RLS;
+- verifica el PIN introducido contra `pinSalt + ownerPinHash`;
+- si coincide, abre la sesión SaaS;
+- no escribe, resetea ni regenera ningún PIN durante esta comprobación;
+- el botón antes llamado “Acceso local con PIN” pasa a “Acceder con PIN de CampoBase”;
+- el texto de la cuenta recordada deja claro que el PIN se comprueba con la configuración de la cuenta en Supabase.
+
+Seguridad:
+- la consulta exige sesión Supabase válida;
+- filtra por `user_id` de la sesión y `id='main'`;
+- RLS mantiene aislamiento por cuenta;
+- no acepta el PIN delegate en esta pantalla SaaS para evitar elevar un delegado a owner;
+- el delegado sigue usando su flujo de acceso correspondiente.
+
+Caché móvil:
+- versión forzada: `20260919-pin-supabase-v2`;
+- se actualiza query de app/estilos, service worker y carga dinámica de `saas-auth-ui-v2.js`;
+- objetivo: impedir que una PWA instalada siga ejecutando el formulario antiguo del PIN de dispositivo.
+
+Archivos funcionales:
+- `js/saas-auth-ui-v2.js`;
+- `js/supabase-client.js`;
+- `js/app.js`;
+- `index.html`;
+- `sw.js`.
+
+Pruebas:
+- nuevo `tests/saas-pin-unified.test.js`;
+- batería completa de la rama: run `35444157247` → **success**.
+
+Comparación previa con main:
+- rama 10 commits por delante, 0 por detrás;
+- cambios limitados a acceso PIN, invalidación de caché y tests asociados;
+- no se modifican jugadores, partidos, convocatorias, asistencias ni datos reales.
+
+Estado:
+- listo para desplegar a producción.
+
