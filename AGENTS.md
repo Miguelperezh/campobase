@@ -2765,3 +2765,85 @@ URL:
 
 La prueba debe hacerse desde el mismo dispositivo donde están los cambios pendientes.
 
+---
+
+# 37. Producción oficial — estabilización fusionada y desplegada — 19/09/2026
+
+Miguel autorizó expresamente subir las correcciones a la app oficial para poder probarlas directamente en móvil.
+
+## 37.1 Merge a producción
+
+PR:
+- `#52 Estabilizar datos, sesión, vista y WhatsApp por tipo de partido`.
+
+Merge:
+- commit de producción: `dc449d80dc269fbf91440b6e492e24bf141b5cb1`;
+- resultado de tests de `main`: **success**;
+- despliegue GitHub Pages: **success**.
+
+Producción:
+- `https://miguelperezh.github.io/campobase/`.
+
+## 37.2 Recuperación del PIN local
+
+Se detectó un caso real:
+- el móvil puede conservar un PIN más reciente en IndexedDB mientras Supabase todavía conserva un PIN anterior por un fallo de sincronización;
+- en ese caso, validar solo contra la copia cloud provoca un falso “PIN incorrecto”.
+
+Corrección:
+- si el PIN remoto no coincide, CampoBase consulta de forma segura las configuraciones locales del mismo navegador/dispositivo;
+- puede reconocer el PIN owner/delegate conservado localmente;
+- reconocer el PIN local **no sobrescribe automáticamente Supabase**;
+- después del acceso, la recuperación de cambios pendientes se gestiona desde **Ajustes → Sincronización**.
+
+No borrar la base local ni restablecer PIN para resolver este caso antes de intentar la recuperación.
+
+## 37.3 Actualización PWA/móvil forzada
+
+Versión de actualización:
+- `20260919-mobile-sync-pin-v1`.
+
+Se actualizó:
+- query de `js/app.js`;
+- query de estilos;
+- registro de `sw.js`;
+- clave de caché del service worker;
+- precache de la versión nueva.
+
+Objetivo:
+- evitar que la PWA instalada siga ejecutando JavaScript antiguo después de desplegar la corrección;
+- al detectar el nuevo service worker, CampoBase puede hacer una única recarga controlada conservando sesión y vista.
+
+## 37.4 Comportamiento que debe existir ya en producción
+
+- PIN local reciente recuperable si la copia cloud está atrasada;
+- Recargar/Actualizar no debe cerrar la sesión;
+- vista/pestaña activa conservada;
+- panel **Sincronización** en Ajustes;
+- botón **Sincronizar ahora**;
+- botón **Recuperar cambios locales pendientes** cuando proceda;
+- escrituras móviles vinculadas al usuario antes de elegir IndexedDB;
+- colas antiguas no sobrescriben datos nuevos;
+- refresh no borra jugadores ni reescribe dorsales;
+- WhatsApp: Liga con convocatoria; amistoso/torneo como aviso general;
+- WhatsApp usa el campo real del partido seleccionado;
+- versionado inmutable y guardas de Supabase activos.
+
+## 37.5 Incidencia todavía pendiente de recuperar desde el móvil de Miguel
+
+Antes del despliegue oficial se comprobó que todavía no habían llegado a Supabase:
+- la última edición local de Antonio Roldán;
+- la convocatoria creada/editada contra Unión Viera Alevín E.
+
+No inventar ni reconstruir esos cambios desde servidor.
+
+La recuperación debe hacerse desde el mismo móvil:
+1. abrir producción actualizada;
+2. entrar con el PIN actual del móvil;
+3. ir a **Ajustes → Sincronización**;
+4. usar **Recuperar cambios locales pendientes** si aparece;
+5. pulsar **Sincronizar ahora**;
+6. comprobar después en Supabase que los registros han llegado y que aparecen en `campobase_versiones_datos`.
+
+No considerar recuperados esos dos cambios hasta comprobarlos en Supabase.
+
