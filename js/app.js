@@ -4007,7 +4007,9 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       const callup = state.callups.find((c) => c.id === m.callupId || c.matchId === m.id);
       if (callup) processedCallupIds.add(callup.id);
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
-      opt.textContent = `${localDate(m.date)} · vs ${m.opponent}${callup ? ' (Convocatoria lista)' : ''}`;
+      const waTypeLabel = matchTypeLabel(m.type || 'league');
+      const callupSuffix = (m.type || 'league') === 'league' && callup ? ' (Convocatoria lista)' : '';
+      opt.textContent = `${localDate(m.date)} · ${waTypeLabel} vs ${m.opponent}${callupSuffix}`;
       if (isSelected) opt.selected = true;
       select.appendChild(opt);
     });
@@ -4322,8 +4324,15 @@ function updateWhatsAppPreview() {
       callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
     }
 
-    // Determinar si el jugador está marcado como NO convocado
-    const isExcluded = recipientType === 'parent' && effectivePlayer && (
+    const selectedMatchType = match?.type || callup?.matchType || 'league';
+    const isLeagueMatch = selectedMatchType === 'league';
+
+    // En WhatsApp solo Liga usa convocados/no convocados. Amistosos y torneos
+    // son avisos de partido para toda la plantilla.
+    if (callupStatusCol) callupStatusCol.classList.toggle('hidden', !isLeagueMatch);
+
+    // Determinar si el jugador está marcado como NO convocado únicamente en Liga.
+    const isExcluded = isLeagueMatch && recipientType === 'parent' && effectivePlayer && (
       callupStatus === 'excluded' ||
       (callupStatus === 'auto' && callup && (
         (new Set(callup.excludedIds || [])).has(effectivePlayer.id) ||
@@ -4332,7 +4341,7 @@ function updateWhatsAppPreview() {
       ))
     );
 
-    // Ocultar detalles de partido si NO va convocado (para máxima claridad visual)
+    // Ocultar detalles de partido si NO va convocado (solo puede ocurrir en Liga).
     $('#wa-match-details-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-location-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-times-row')?.classList.toggle('hidden', Boolean(isExcluded));
@@ -4412,6 +4421,7 @@ function updateWhatsAppPreview() {
       callupStatus,
       exclusionReason,
       exclusionNote,
+      competition: matchTypeLabel(selectedMatchType),
       tone,
     });
     preview.value = text;
