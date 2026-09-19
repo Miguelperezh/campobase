@@ -88,3 +88,10 @@ test('una sincronización derivada de jugadores no puede borrar teléfonos o pad
   assert.match(cloud, /if \(Object\.hasOwn\(remotePayload, field\)\) payload\[field\] = structuredClone\(remotePayload\[field\]\)/);
 });
 
+test('un fallo de guardado cloud online no se oculta como si hubiera guardado correctamente', async () => {
+  const db = await projectFile('js/db.js');
+  const writeArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function flushSyncQueue'));
+  assert.doesNotMatch(writeArea, /flushSyncQueue\(\)\.catch\(\(\) => false\)/);
+  assert.match(writeArea, /if \(canUseCloud\(\)\) await flushSyncQueue\(\)/);
+});
+
