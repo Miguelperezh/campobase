@@ -3071,3 +3071,90 @@ Despliegue:
 
 Esta sección prevalece sobre estados anteriores de la incidencia de PIN.
 
+---
+
+# 42. Hotfix app vacía tras PIN / sesión restaurada — 19/09/2026
+
+Incidencia comunicada por Miguel:
+- la app oficial volvió a aparecer sin datos;
+- Supabase fue comprobado y **los datos no están borrados**.
+
+Datos reales verificados en Supabase antes del hotfix:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7;
+- configuración activa: 19;
+- historial de jugadores: 67 filas;
+- historial inmutable general: 306 versiones.
+
+Conclusión:
+- si la interfaz aparece vacía con estos recuentos presentes, tratarlo como fallo de carga/sesión/sincronización;
+- **no crear de nuevo plantilla, partidos, convocatorias o asistencias**;
+- **no restaurar masivamente** mientras Supabase conserve los registros.
+
+## 42.1 Causa de sesión detectada
+
+`showAuth()` eliminaba `sessionStorage['campobase.sessionRole']` simplemente por mostrar el diálogo de acceso.
+
+Esto podía provocar una carrera:
+1. Supabase conserva una sesión válida;
+2. la app inicia;
+3. se muestra el diálogo;
+4. `showAuth()` borra `sessionRole`;
+5. la capa SaaS deja de poder reconocer la sesión de la pestaña como ya desbloqueada;
+6. el usuario vuelve a quedar fuera o con una vista sin datos cargados.
+
+Corrección:
+- mostrar el diálogo ya **no borra `sessionRole`**;
+- solo un cierre de sesión explícito debe limpiar el estado de acceso.
+
+## 42.2 Recuperación inmediata de datos después del PIN
+
+Antes:
+- introducir correctamente el PIN podía desbloquear la UI;
+- pero si la sincronización inicial había fallado antes de autenticarse, la app podía abrir con IndexedDB vacío y esperar al intervalo de sincronización.
+
+Ahora:
+- después de un PIN válido, CampoBase ejecuta inmediatamente:
+  - `synchronizeCloud()`;
+  - `refresh()`;
+- después de restaurar una sesión SaaS válida mediante `unlockBoundSession()`, también ejecuta inmediatamente:
+  - `app.synchronizeCloud()`;
+  - `app.refresh()`;
+- el diálogo se cierra después de intentar esa recuperación.
+
+Objetivo:
+- una sesión válida de Supabase debe repoblar la app desde la fuente remota antes de dejar al usuario trabajando con una pantalla vacía.
+
+## 42.3 Cambios limitados
+
+Rama:
+- `hotfix/cloud-restore-after-pin-20260919`.
+
+Archivos modificados:
+- `js/app.js`;
+- `js/saas-auth-ui-v2.js`;
+- `tests/session-data-stability.test.js`.
+
+No se modifican:
+- jugadores;
+- partidos;
+- convocatorias;
+- asistencias;
+- configuración;
+- migraciones;
+- datos reales de Supabase.
+
+Batería:
+- run `35445291894`;
+- resultado: **success**.
+
+Comparación vs main:
+- 3 commits por delante;
+- 0 por detrás;
+- solo los tres archivos indicados arriba.
+
+Estado:
+- hotfix listo para despliegue de producción por incidencia crítica de app vacía.
+
