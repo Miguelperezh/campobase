@@ -4865,22 +4865,6 @@ function toggleWhistleTimer() {
 }
 
 function wireEvents() {
-  // Acciones críticas de ejercicios: se enlazan directamente para que no dependan
-  // de otros listeners globales ni de la vista activa.
-  document.addEventListener('click', (event) => {
-    const button = event.target?.closest?.('.session-exercise-link, .view-exercise');
-    if (!button?.dataset.exerciseId) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    showExerciseDetail(button.dataset.exerciseId);
-  }, true);
-
-  $('#exercise-form')?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    saveExercise(event).catch(handleError);
-  });
-
   $('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', () => {
