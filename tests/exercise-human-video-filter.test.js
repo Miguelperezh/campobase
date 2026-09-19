@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { filterExercises } from '../js/training-domain.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
-import { EJERCICIOS_NUEVO_FORMATO, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
+import { EJERCICIOS_NUEVO_FORMATO, EJERCICIOS_NUEVO_FORMATO_ANTERIORES, NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
 import { renderExerciseGridCard } from '../js/ejercicio-viewer.js';
 
 test('Solo con vídeo considera el vídeo humano y no el MP4 gráfico principal', () => {
@@ -65,8 +65,8 @@ test('un MP4 gráfico repetido en video no se considera vídeo humano', () => {
   assert.equal(mapped.hasHumanVideo, false);
 });
 
-test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
-  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 16);
+test('los 12 actuales separan preview, MP4 gráfico y vídeo humano sin mezclar F7/F11', () => {
+  assert.equal(EJERCICIOS_NUEVO_FORMATO.length, 12);
   for (const exercise of EJERCICIOS_NUEVO_FORMATO) {
     const category = String(exercise.categoria || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const tagKeys = (exercise.etiquetas || []).map((tag) => String(tag).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
@@ -89,14 +89,14 @@ test('los 16 nuevos separan preview, MP4 gráfico y vídeo humano sin mezclar F7
   }
 });
 
-test('los 16 nuevos anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
+test('los 12 actuales anuncian vídeo humano de muestra separado del MP4 gráfico', () => {
   const mapped = EJERCICIOS_NUEVO_FORMATO.map(toCampoBaseExercise);
   const humanIds = filterExercises(mapped, { video: true }).map((item) => item.id);
-  assert.equal(humanIds.length, 16);
+  assert.equal(humanIds.length, 12);
   assert.deepEqual(humanIds, NUEVOS_EJERCICIOS_IDS);
 });
 
-test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 16 nuevos arriba cuando correspondan', () => {
+test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantiene los 12 actuales arriba cuando correspondan', () => {
   const mapped = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
   const expectedIds = mapped.filter((item) => item.hasHumanVideo).map((item) => item.id);
   const filtered = filterExercises(mapped, { video: true });
@@ -108,12 +108,20 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
 
   const f7 = filterExercises(mapped, { formato_juego: 'futbol_7' });
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
-  const expectedF7New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
-  const expectedF11New = mapped.slice(0, 16).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
+  const expectedF7New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
+  const expectedF11New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
   assert.deepEqual(f7.slice(0, expectedF7New.length).map((item) => item.id), expectedF7New);
   assert.deepEqual(f11.slice(0, expectedF11New.length).map((item) => item.id), expectedF11New);
 });
 
+
+test('las 4 versiones anteriores permanecen aisladas del catálogo activo', () => {
+  assert.equal(EJERCICIOS_NUEVO_FORMATO_ANTERIORES.length, 4);
+  const active = new Set(NUEVOS_EJERCICIOS_IDS);
+  for (const previous of EJERCICIOS_NUEVO_FORMATO_ANTERIORES) {
+    assert.equal(active.has(previous.id), false, previous.id);
+  }
+});
 
 test('Solo con vídeo no confunde un MP4 gráfico persistido de un ejercicio validado con vídeo humano', () => {
   const pool = [

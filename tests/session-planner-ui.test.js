@@ -60,10 +60,10 @@ test('el buscador global conserva el formato validado pero no queda fijado', () 
   assert.doesNotMatch(source, /\.search-bar\{position:sticky/);
 });
 
-test('2461 publica el hotfix manteniendo el planificador 2460', () => {
-  assert.match(demo, /session-planner-ui\.js\?v=2460/);
-  assert.match(sw, /sessionplanner-2461/);
-  assert.match(sw, /session-planner-ui\.js\?v=2460/);
+test('el planificador y la PWA cargan la misma revisión actual', () => {
+  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v13/);
+  assert.match(sw, /20260919-prod-current-v13/);
+  assert.match(sw, /session-planner-ui\.js\?v=20260919-prod-current-v13/);
   assert.match(pkg.scripts.check, /node --check js\/session-planner-ui\.js/);
   assert.equal(pkg.version, '2.44.0');
 });

@@ -84,16 +84,30 @@ async function persistExercise(exercise) {
   const settings = await getAll('settings');
   const existing = settings.find((record) => record.id === exercise.id) || null;
   const record = normalizedRecord(exercise, existing);
-  await put('settings', record);
 
-  const syncResult = await syncFromCloud();
-  if (syncResult?.online !== true || Number(syncResult?.pending || 0) !== 0) {
-    throw new Error('El ejercicio no se ha podido confirmar en Supabase. No se cerrará el editor.');
+  // Primero se confirma el guardado local. No se pierde un ejercicio por una
+  // latencia o un pending ajeno del sincronizador.
+  await put('settings', record);
+  const verifiedLocal = (await getAll('settings')).find((item) => item.id === record.id && item.customBoard === true);
+  if (!verifiedLocal) throw new Error('No se pudo confirmar el ejercicio guardado en el dispositivo.');
+
+  let cloudReady = false;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const syncResult = await syncFromCloud().catch(() => null);
+    if (syncResult?.online === true) {
+      cloudReady = true;
+      break;
+    }
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
   }
 
-  const verified = (await getAll('settings')).find((item) => item.id === record.id && item.customBoard === true);
-  if (!verified) throw new Error('Supabase no devolvió el ejercicio después de guardarlo.');
-  return verified;
+  if (!cloudReady) {
+    // El registro ya está guardado y la cola normal de CampoBase volverá a
+    // intentar sincronizarlo. No se marca como fallo ni se fuerza una recarga.
+    setTimeout(() => { syncFromCloud().catch(() => null); }, 1500);
+  }
+
+  return { ...verifiedLocal, _cloudSyncConfirmed: cloudReady };
 }
 
 async function deleteExercise(exerciseId) {
@@ -329,7 +343,12 @@ async function handlePersistRequest(event, data) {
     replyToBoard(event, { type: 'campobase:exercise-persisted', requestId, exercise: toBoardExercise(record) });
     if (!data.stayOpen) {
       try { sessionStorage.setItem(OPEN_AFTER_SAVE_KEY, '1'); } catch { /* no bloquea */ }
-      setTimeout(() => window.location.reload(), 300);
+      const host = window.__campobase;
+      if (host?.refresh) await host.refresh().catch(() => null);
+      host?.showView?.('ejercicios');
+      host?.setExerciseLibraryMode?.('mine');
+      const sourceFrame = [...document.querySelectorAll('iframe')].find((item) => item.contentWindow === event.source);
+      if (sourceFrame) closeEmbeddedBoard(sourceFrame);
     }
   } catch (error) {
     console.error('No se pudo persistir el ejercicio:', error);
