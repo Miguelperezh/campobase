@@ -204,20 +204,23 @@ export function buildWhatsAppMatchConvocatoria({
   if (recipientType === 'parent' && targetPlayerId) {
     const targetPlayer = players.find(p => p.id === targetPlayerId);
     if (targetPlayer) {
-      // Determinar si está convocado o no
+      // Determinar si está convocado o no. Esta lógica solo existe en Liga:
+      // en amistosos y torneos va toda la plantilla.
       let isExcluded = false;
-      if (callupStatus === 'excluded') {
-        isExcluded = true;
-      } else if (callupStatus === 'called') {
-        isExcluded = false;
-      } else if (effectiveCallup) {
-        if (excludedSet.has(targetPlayer.id)) {
+      if (isLeague) {
+        if (callupStatus === 'excluded') {
           isExcluded = true;
-        } else if (availableSet.has(targetPlayer.id)) {
+        } else if (callupStatus === 'called') {
           isExcluded = false;
-        } else if (availableSet.size > 0) {
-          // Si hay convocados oficiales y el jugador no está entre ellos, NO está convocado
-          isExcluded = true;
+        } else if (effectiveCallup) {
+          if (excludedSet.has(targetPlayer.id)) {
+            isExcluded = true;
+          } else if (availableSet.has(targetPlayer.id)) {
+            isExcluded = false;
+          } else if (availableSet.size > 0) {
+            // Si hay convocados oficiales y el jugador no está entre ellos, NO está convocado
+            isExcluded = true;
+          }
         }
       }
 
