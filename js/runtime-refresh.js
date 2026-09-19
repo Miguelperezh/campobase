@@ -34,33 +34,30 @@ function buttonMarkup() {
 async function refreshNow(button) {
   if (button) { button.disabled = true; button.textContent = 'Actualizando…'; }
   try {
+    const activeView = document.querySelector('.view.active')?.id || '';
+    const role = window.__campobase?.state?.role || '';
+    if (activeView) sessionStorage.setItem('campobase.activeView', activeView);
+    if (role) sessionStorage.setItem('campobase.sessionRole', role);
+
+    await syncFromCloud().catch(() => null);
+
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
-      await Promise.all(regs.map((reg) => reg.update().catch(() => null)));
+      await Promise.all(regs.map(async (reg) => {
+        await reg.update().catch(() => null);
+        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }));
     }
-    await syncFromCloud().catch(() => null);
-    await readCustomExercises().catch(() => null);
-    clearPatchedFlags();
-    patchSoon();
-    const app = window.__campobase;
-    if (app && typeof app.refresh === 'function') {
-      await app.refresh().catch(() => null);
-      if (typeof app.renderAll === 'function') {
-        app.renderAll();
-      }
-    }
-    if (button) {
-      button.textContent = 'Actualizado ✓';
-    }
+
+    sessionStorage.setItem('campobase.safeReloadAfterUpdate', '1');
+    const url = new URL(window.location.href);
+    url.searchParams.set('_cb', String(Date.now()));
+    window.location.replace(url.toString());
   } catch (error) {
-    console.warn('Aviso durante actualización en caliente:', error);
-    if (button) button.textContent = 'Actualizar';
-  } finally {
+    console.warn('No se pudo completar la actualización controlada:', error);
     if (button) {
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = 'Actualizar';
-      }, 1500);
+      button.disabled = false;
+      button.textContent = 'Actualizar';
     }
   }
 }
