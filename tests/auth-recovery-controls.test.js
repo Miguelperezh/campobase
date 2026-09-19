@@ -26,8 +26,8 @@ test('submitAuth en js/app.js permite escribir demo y maneja recuperacion de PIN
   assert.match(app, /settings-reload/, 'Debe conectar listener de Recargar en ajustes');
 });
 
-test('sw.js e index.html están sincronizados a v=2503', () => {
+test('sw.js e index.html están sincronizados a v=20260919-mobile-sync-pin-v1', () => {
   assert.match(sw, /duration-2503/, 'sw.js debe tener la clave de caché con 2503');
-  assert.match(html, /styles-redesign\.css\?v=2503/, 'index.html debe cargar estilos con v=2503');
-  assert.match(html, /js\/app\.js\?v=2503/, 'index.html debe cargar app.js con v=2503');
+  assert.match(html, /styles-redesign\.css\?v=20260919-mobile-sync-pin-v1/, 'index.html debe cargar estilos con v=20260919-mobile-sync-pin-v1');
+  assert.match(html, /js\/app\.js\?v=20260919-mobile-sync-pin-v1/, 'index.html debe cargar app.js con v=20260919-mobile-sync-pin-v1');
 });
