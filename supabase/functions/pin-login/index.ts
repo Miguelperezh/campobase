@@ -79,6 +79,19 @@ Deno.serve(async (req) => {
     return json({ message: "Demasiados intentos. Espera unos minutos antes de volver a probar." }, 429);
   }
 
+  const { data: subscription, error: subscriptionError } = await admin
+    .from("suscripciones")
+    .select("estado,expira_en")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (subscriptionError) return json({ message: "No se pudo comprobar el acceso de la cuenta." }, 503);
+  const expiresAt = subscription?.expira_en ? new Date(subscription.expira_en).getTime() : 0;
+  const notExpired = !expiresAt || expiresAt > now;
+  const commercialAccess = Boolean(subscription) && notExpired
+    && ["gift_free", "trial", "active"].includes(String(subscription.estado || ""));
+  if (!commercialAccess) return json({ message: "Esta cuenta no tiene acceso activo." }, 403);
+
   const { data: config, error: configError } = await admin
     .from("configuracion")
     .select("payload")
