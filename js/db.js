@@ -373,6 +373,29 @@ async function queueFromDatabaseName(name) {
   return requestResult(db.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll());
 }
 
+export async function getLocalPinSettingsCandidates() {
+  if (isDemoDatabase()) return [];
+  const names = [REAL_DB_NAME];
+  const userId = getBoundSaasUserId();
+  if (userId) names.push(userDatabaseName(userId));
+
+  const candidates = [];
+  for (const name of [...new Set(names)]) {
+    try {
+      const database = await openDatabaseByName(name);
+      const settings = await requestResult(
+        database.transaction('settings', 'readonly').objectStore('settings').get('main')
+      );
+      if (settings?.pinSalt && (settings.ownerPinHash || settings.delegatePinHash)) {
+        candidates.push({ databaseName: name, settings: structuredClone(settings) });
+      }
+    } catch {
+      // Una base inexistente o inaccesible no debe bloquear el resto de candidatos.
+    }
+  }
+  return candidates;
+}
+
 export async function getSyncDiagnostics() {
   const boundUserId = getBoundSaasUserId();
   const activeName = boundUserId ? userDatabaseName(boundUserId) : REAL_DB_NAME;
