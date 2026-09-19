@@ -13,6 +13,8 @@ import {
   setBoundSaasUserId,
   updatePassword,
 } from './auth-manager.js';
+import { verifyPin } from './domain.js';
+import { CLOUD_TABLES } from './sync-core.js';
 
 let initialized = false;
 let localPinMode = false;
@@ -211,7 +213,7 @@ function shellMarkup() {
         </div>
         <div class="cb-auth-actions">
           <button type="button" id="saas-forgot-btn" class="ghost compact">¿Olvidaste la contraseña?</button>
-          <button type="button" id="saas-local-pin-btn" class="ghost compact">Acceso local con PIN</button>
+          <button type="button" id="saas-local-pin-btn" class="ghost compact">Acceder con PIN de CampoBase</button>
         </div>
       </form>
 
@@ -238,7 +240,7 @@ function shellMarkup() {
       <section id="saas-remembered-pane" class="cb-auth-pane hidden cb-remembered-card" aria-live="polite">
         <h2>Cuenta recordada</h2>
         <p id="saas-remembered-label" class="cb-remembered-account"></p>
-        <p class="meta">Introduce el PIN guardado en este dispositivo.</p>
+        <p class="meta">Introduce tu PIN de CampoBase. Se comprueba con la configuración de tu cuenta en Supabase.</p>
         <form id="saas-remembered-pin-form" class="cb-auth-pane">
           <label>PIN<input name="pin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="off" required autofocus></label>
           <p id="saas-remembered-message" class="cb-auth-message error" role="alert"></p>
@@ -346,6 +348,21 @@ function showRememberedPane(account) {
     window.setTimeout(() => form.elements.pin?.focus(), 50);
   }
   setMessage('#saas-remembered-message', '');
+}
+
+async function verifyOwnerPinFromSupabase(client, userId, pin) {
+  const cleanPin = String(pin || '').trim();
+  if (!/^\d{4,8}$/.test(cleanPin) || !userId) return false;
+  const { data, error } = await client
+    .from(CLOUD_TABLES.settings)
+    .select('payload')
+    .eq('user_id', userId)
+    .eq('id', 'main')
+    .limit(1);
+  if (error) throw error;
+  const settings = data?.[0]?.payload;
+  if (!settings?.pinSalt || !settings?.ownerPinHash) return false;
+  return verifyPin(cleanPin, settings.pinSalt, settings.ownerPinHash);
 }
 
 async function getProfileOrFallback(client, user) {
@@ -565,9 +582,19 @@ function bindEvents(client) {
       return setMessage('#saas-remembered-message', 'La sesión segura ha caducado. Inicia sesión una vez con tu correo y contraseña.');
     }
     setMessage('#saas-remembered-message', 'Comprobando…');
-    const ok = await verifyRememberedPin(account, event.currentTarget.elements.pin.value).catch(() => false);
-    if (!ok) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
+    const enteredPin = event.currentTarget.elements.pin.value;
+    const deviceOk = await verifyRememberedPin(account, enteredPin).catch(() => false);
+    let accountOk = false;
+    if (!deviceOk) {
+      try {
+        accountOk = await verifyOwnerPinFromSupabase(client, session.user.id, enteredPin);
+      } catch (error) {
+        return setMessage('#saas-remembered-message', error.message || 'No se pudo comprobar el PIN en Supabase.');
+      }
+    }
+    if (!deviceOk && !accountOk) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
     markBrowserSessionActive(session.user.id);
+    try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
     setMessage('#saas-remembered-message', '');
     await unlockBoundSession(client);
   });
