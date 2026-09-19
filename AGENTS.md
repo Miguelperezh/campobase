@@ -1714,3 +1714,104 @@ Estado:
 Objetivo del siguiente paso:
 - corregir primero el vínculo sesión → usuario → IndexedDB antes de ejecutar la sincronización.
 
+## 23.7 Paso 2 — 19/09/2026 — vincular usuario antes de abrir la base/cola local
+
+Estado:
+- implementado en rama;
+- pendiente de batería completa de tests;
+- pendiente de validación visual de Miguel.
+
+Archivos modificados:
+- `js/db.js`;
+- `js/supabase-client.js`.
+
+Problema detectado:
+- `activeDatabaseName` podía haberse calculado como base legado `campobase` antes de recuperar `campobase.saasUserId` desde una sesión Supabase válida;
+- `flushSyncQueue()` podía leer la cola local antes de verificar qué usuario SaaS era el dueño real de esa sincronización;
+- esto podía hacer que la app abriese una base local vacía/equivocada o que una cola legado llegase a procesarse con una cuenta recuperada después.
+
+Corrección:
+- `openDatabase()` vuelve a resolver la base real mediante `boundDatabaseName()` antes de cada apertura real;
+- el cloud store expone `prepare()`;
+- `flushSyncQueue()` ejecuta `cloudStore.prepare()` **antes** de leer `syncQueue`;
+- `prepare()` exige sesión Supabase válida y reconstruye el vínculo local si la sesión ya identifica al usuario.
+
+Dónde se guarda:
+- vínculo navegador/cuenta: `localStorage['campobase.saasUserId']`;
+- base local correcta: `campobase_<user_id>`;
+- cola de sincronización correcta: store `syncQueue` dentro de esa misma base;
+- fuente remota: tablas Supabase del usuario protegidas por RLS.
+
+Qué NO se ha tocado:
+- no se han borrado datos;
+- no se han cambiado jugadores, partidos, convocatorias ni asistencias;
+- no se ha fusionado a `main`.
+
+## 23.8 Paso 3 — 19/09/2026 — mantener sesión y pestaña al actualizar
+
+Estado:
+- implementado en rama;
+- pendiente de batería completa de tests;
+- pendiente de validación visual de Miguel.
+
+Archivos modificados:
+- `js/app.js`;
+- `js/saas-auth-ui-v2.js`;
+- `sw.js`.
+
+Vista/pestaña:
+- nueva clave de sesión: `sessionStorage['campobase.activeView']`;
+- `showView()` guarda la vista activa;
+- al arrancar se restaura primero `?view=` si existe y, si no, la última vista guardada;
+- una recarga no debe devolver al usuario automáticamente a Plantilla/Hoy si estaba trabajando en otra pestaña.
+
+Acceso local:
+- `sessionStorage['campobase.sessionRole']` puede restaurar owner/delegate durante la misma pestaña si no existe vínculo SaaS;
+- cerrar la pestaña elimina esa sesión del navegador;
+- no se almacena contraseña en claro.
+
+Acceso SaaS:
+- `sessionStorage['campobase.saasActiveBrowserSession']` deja de consumirse tras una única recarga;
+- mientras la sesión Supabase siga siendo válida, la misma pestaña puede volver a desbloquearse sin expulsar al usuario;
+- cerrar sesión explícitamente sigue limpiando el estado de sesión.
+
+Service Worker:
+- ya no ejecuta `client.navigate(client.url)` para todas las ventanas durante `activate`;
+- `app.js` mantiene un único manejo de `controllerchange`;
+- objetivo: evitar recargas dobles durante una actualización de CampoBase.
+
+Qué NO se ha tocado:
+- RLS;
+- suscripciones;
+- billing;
+- fichas de jugadores;
+- estadísticas;
+- contenido de partidos/asistencias.
+
+## 23.9 Paso 4 — 19/09/2026 — pruebas de regresión añadidas
+
+Estado:
+- tests escritos;
+- ejecución completa pendiente.
+
+Archivos:
+- `tests/auth-boot-recovery.test.js`;
+- `tests/session-data-stability.test.js`.
+
+Cobertura nueva:
+- la sesión cloud se prepara antes de leer `syncQueue`;
+- IndexedDB vuelve a resolver la base del usuario;
+- el cloud store expone `prepare()`;
+- la vista activa se conserva;
+- el acceso local de la misma pestaña puede restaurarse;
+- la sesión SaaS de la pestaña no se consume tras una sola recarga;
+- el service worker no fuerza una segunda navegación.
+
+No marcar este bloque como validado hasta:
+1. `npm ci`;
+2. `npm run check`;
+3. `npm test`;
+4. comparación de rama vs `main`;
+5. comprobación de datos reales en Supabase;
+6. validación visual de Miguel.
+
