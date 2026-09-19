@@ -157,7 +157,20 @@ test('el PIN actual del móvil puede recuperarse desde IndexedDB si Supabase con
   assert.match(db, /export async function getLocalPinSettingsCandidates\(\)/);
   assert.match(db, /database\.transaction\('settings', 'readonly'\).*\.get\('main'\)/s);
   assert.match(app, /const candidates = await getLocalPinSettingsCandidates\(\)/);
-  assert.match(app, /PIN reconocido\. Revisa Ajustes → Sincronización/);
+  assert.match(app, /PIN reconocido\. Revisa Ajustes → Sincronización|PIN local reconocido\. Revisa Ajustes → Sincronización/);
   assert.doesNotMatch(app, /await put\('settings', recoveredSettings\)/);
+});
+
+test('el PIN owner puede reconstruir una sesión Supabase y después sincronizar los datos', async () => {
+  const [app, auth] = await Promise.all([
+    projectFile('js/app.js'),
+    projectFile('js/auth-manager.js'),
+  ]);
+  assert.match(auth, /export async function signInWithCampoBasePin\(client, userId, pin\)/);
+  assert.match(auth, /client\.functions\.invoke\('pin-login'/);
+  assert.match(auth, /client\.auth\.verifyOtp\(\{[\s\S]*token_hash: data\.token_hash[\s\S]*type: data\.type \|\| 'email'/);
+  const submit = app.slice(app.indexOf('async function submitAuth'), app.indexOf('async function changePins'));
+  assert.match(submit, /await signInWithCampoBasePin\(client, userId, pin\)/);
+  assert.match(submit, /await synchronizeCloud\(\)/);
 });
 
