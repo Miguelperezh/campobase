@@ -3779,6 +3779,26 @@ function showAuth() {
   if (!$('#auth-dialog').open) $('#auth-dialog').showModal();
 }
 
+function ensureAuthPromptVisible() {
+  if (state.role) return;
+  document.body.classList.add('auth-locked');
+  const dialog = $('#auth-dialog');
+  const saasShell = $('#saas-auth-shell');
+  const localForm = $('#auth-form');
+
+  if (saasShell) {
+    // La capa SaaS decide si muestra correo/contraseña, PIN recordado o el
+    // acceso local. Nunca dejamos las dos capas ocultas a la vez.
+    if (saasShell.classList.contains('hidden') && localForm?.classList.contains('hidden')) {
+      saasShell.classList.remove('hidden');
+    }
+    if (dialog && !dialog.open) dialog.showModal();
+    return;
+  }
+
+  showAuth();
+}
+
 async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
@@ -5571,7 +5591,14 @@ async function init() {
   await reapplyPreparacionToTimer();
   renderLive();
   renderDelegate();
-  if (!await restoreSessionRole()) showAuth();
+  if (!await restoreSessionRole()) {
+    ensureAuthPromptVisible();
+    // Salvaguarda de arranque: si otro módulo de acceso cambia el diálogo
+    // durante la inicialización, volvemos a comprobar que siga visible.
+    window.setTimeout(() => {
+      if (!state.role) ensureAuthPromptVisible();
+    }, 900);
+  }
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
     const requestedView = params.get('view');
