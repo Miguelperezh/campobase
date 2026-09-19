@@ -455,10 +455,23 @@ async function handlePersistentSession(client) {
     }
   } catch { /* Continúa con el acceso normal. */ }
 
-  await client.auth.signOut().catch(() => {});
-  clearBoundSaasUserId();
-  showPane('login');
-  prefillRememberedIdentifier();
+  // Conserva la sesión válida para que la sincronización pueda recuperar
+  // los datos del equipo. Cuando los PIN ya han llegado desde la base del
+  // usuario, pedimos el PIN local en lugar de cerrar sesión y dejar una
+  // base vacía. Si no llegan, mostramos la cuenta preparada como fallback.
+  const app = await waitForApp();
+  const started = Date.now();
+  while (app?.state && Date.now() - started < 6000) {
+    if (app.state.settings?.ownerPinHash && app.state.settings?.delegatePinHash) {
+      const dialog = $('#auth-dialog');
+      if (dialog && !dialog.open) dialog.showModal();
+      showLocalPin();
+      return true;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+  }
+
+  await prepareSignedInChoice(client, { session, user: session.user });
   return true;
 }
 
