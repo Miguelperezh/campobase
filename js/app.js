@@ -50,6 +50,7 @@ const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'E
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
+const ACTIVE_VIEW_KEY = 'campobase.activeView';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
 const USER_EXERCISE_PREFIX = 'pdf98-user-';
 let toastTimer;
@@ -180,11 +181,19 @@ function keeperIdsFromCallup(callup) {
   return ids.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
 }
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
+function storedActiveView() {
+  try { return String(sessionStorage.getItem(ACTIVE_VIEW_KEY) || ''); }
+  catch { return ''; }
+}
+
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
-  $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
-  $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  const target = document.getElementById(viewId);
+  if (!target?.classList.contains('view')) return;
+  $('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
+  $('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
   if (viewId === 'plantilla') refreshPlantillaStaff().catch(() => {});
@@ -3691,7 +3700,7 @@ function applyRole(role) {
   } else {
     state.delegateMode = false;
     document.body.classList.remove('delegate-mode');
-    showView('plantilla');
+    showView(storedActiveView() || 'plantilla');
   }
   // Re-renderiza el partido en vivo con el rol ya aplicado: el botón "Vista
   // Delegado" (y "Enseñar al delegado") dependen de roleCanUseOwnerFeatures,
@@ -3750,10 +3759,18 @@ async function restoreSessionRole() {
     return true;
   }
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
-  // Nunca restaurar automáticamente owner/delegate tras recargar:
-  // se vuelve a pedir PIN para proteger el acceso.
-  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistida. */ }
-  return false;
+
+  // Si existe una cuenta SaaS vinculada, conserva sessionRole para que la capa
+  // SaaS pueda verificar la sesión remota y reabrir la app sin expulsar al
+  // usuario. No desbloqueamos aquí sin esa verificación.
+  let hasSaasBinding = false;
+  try { hasSaasBinding = Boolean(localStorage.getItem('campobase.saasUserId')); } catch { /* Acceso local puro. */ }
+  if (hasSaasBinding) return false;
+
+  // En acceso local puro, sessionStorage vive solo en esta pestaña y sobrevive
+  // a una recarga. Restaurarlo evita pedir el PIN de nuevo al actualizar.
+  applyRole(role);
+  return true;
 }
 
 function showAuth() {
@@ -5571,7 +5588,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v4').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-session-data-view-v1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -5601,7 +5618,7 @@ async function init() {
   }
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
-    const requestedView = params.get('view');
+    const requestedView = params.get('view') || storedActiveView();
     if (requestedView) showView(requestedView);
   }
   setInterval(() => pollLiveState().catch(handleError), 1000);
