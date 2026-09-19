@@ -1,5 +1,5 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore } from './supabase-client.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
@@ -3642,9 +3642,14 @@ async function saveDemoTeam(event) {
 }
 
 async function savePins(ownerPin, delegatePin) {
-  if (ownerPin === delegatePin) throw new TypeError('Los PIN de Migue y delegado deben ser distintos.');
+  const cleanOwnerPin = String(ownerPin || '').trim();
+  const cleanDelegatePin = String(delegatePin || '').trim();
+  if (!/^\d{4,8}$/.test(cleanOwnerPin) || !/^\d{4,8}$/.test(cleanDelegatePin)) {
+    throw new TypeError('Los PIN deben tener entre 4 y 8 cifras.');
+  }
+  if (cleanOwnerPin === cleanDelegatePin) throw new TypeError('Los PIN de Migue y delegado deben ser distintos.');
   const salt = crypto.randomUUID();
-  const [ownerPinHash, delegatePinHash] = await Promise.all([hashPin(ownerPin, salt), hashPin(delegatePin, salt)]);
+  const [ownerPinHash, delegatePinHash] = await Promise.all([hashPin(cleanOwnerPin, salt), hashPin(cleanDelegatePin, salt)]);
   state.settings = { ...state.settings, id: 'main', format: state.format, pinSalt: salt, ownerPinHash, delegatePinHash };
   await put('settings', state.settings);
 }
@@ -3738,7 +3743,26 @@ async function restoreSessionRole() {
   return true;
 }
 
-function showAuth() {
+async function hydratePinSettingsFromSupabase() {
+  if (state.settings.ownerPinHash && state.settings.delegatePinHash && state.settings.pinSalt) return true;
+  try {
+    const remote = await getRemoteMainSettings();
+    if (!remote?.ownerPinHash || !remote?.delegatePinHash || !remote?.pinSalt) return false;
+    state.settings = {
+      ...state.settings,
+      ...remote,
+      id: 'main',
+    };
+    return true;
+  } catch (error) {
+    // Si hay sesión SaaS pero la configuración no carga, no fabricamos PIN nuevos.
+    state.cloudError = error?.message || 'No se pudo cargar la configuración de acceso.';
+    return false;
+  }
+}
+
+async function showAuth() {
+  await hydratePinSettingsFromSupabase();
   try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistente que limpiar. */ }
   document.body.classList.add('auth-locked');
   document.body.classList.remove('delegate-mode');
@@ -3778,12 +3802,13 @@ function ensureAuthPromptVisible() {
     return;
   }
 
-  showAuth();
+  void showAuth();
 }
 
 async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
+  await hydratePinSettingsFromSupabase();
   const initial = !state.settings.ownerPinHash || !state.settings.delegatePinHash;
   try {
     if (initial) {

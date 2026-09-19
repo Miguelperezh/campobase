@@ -60,6 +60,20 @@ export function getCampoBaseSupabaseClient() {
 
 export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
 
+export async function getRemoteMainSettings() {
+  const client = getCampoBaseSupabaseClient();
+  const user = await requireBoundUser(client);
+  const rows = checkResult(await client
+    .from(CLOUD_TABLES.settings)
+    .select('payload,updated_at,deleted_at')
+    .eq('user_id', user.id)
+    .eq('id', 'main')
+    .limit(1)) ?? [];
+  const row = rows[0];
+  if (!row || row.deleted_at) return null;
+  return row.payload || null;
+}
+
 async function requireBoundUser(client) {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
