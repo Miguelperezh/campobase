@@ -23,3 +23,25 @@ test('recargar vuelve a pedir PIN y el desbloqueo SaaS solo sirve una vez', asyn
   assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*clearBrowserSessionActive\(\)/);
   assert.match(sw, /emergency-auth-restore-v4/);
 });
+
+
+test('una sesión Supabase válida recupera el enlace local sin abrir una base vacía', async () => {
+  const client = await projectFile('js/supabase-client.js');
+  assert.match(client, /if \(user\?\.id && !boundUserId\)[\s\S]*setBoundSaasUserId\(user\.id\)/);
+  assert.match(client, /Recuperamos ese enlace desde la sesión|reconstruimos ese enlace desde la sesión/i);
+});
+
+test('si hay sesión válida y PIN del equipo, se conserva la sesión y se pide PIN', async () => {
+  const auth = await projectFile('js/saas-auth-ui-v2.js');
+  assert.match(auth, /Conserva la sesión válida/);
+  assert.match(auth, /ownerPinHash/);
+  assert.match(auth, /delegatePinHash/);
+  assert.match(auth, /showLocalPin\(\)/);
+  assert.doesNotMatch(auth, /await client\.auth\.signOut\(\)\.catch\(\(\) => \{\}\);\s*clearBoundSaasUserId\(\);\s*showPane\('login'\);\s*prefillRememberedIdentifier\(\);\s*return true;/);
+});
+
+test('el arranque tiene una salvaguarda final para que nunca queden app y acceso ocultos', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /function ensureAuthPromptVisible/);
+  assert.match(app, /if \(!state\.role\) ensureAuthPromptVisible\(\)/);
+});
