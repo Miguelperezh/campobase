@@ -3248,3 +3248,44 @@ Regla:
 - si la interfaz vuelve a aparecer vacía pero estos datos siguen en Supabase, no recrear ni borrar datos;
 - comprobar primero sesión, descarga cloud, service worker y versión de caché.
 
+---
+
+# 42. Hotfix crítico — app vacía tras PIN por `normalizePlayerName is not defined` — 19/09/2026
+
+Incidencia visual confirmada por Miguel:
+- tras introducir el PIN, el diálogo mostraba `normalizePlayerName is not defined`;
+- la app parecía vacía detrás del diálogo;
+- esto NO era una pérdida de datos en Supabase.
+
+Comprobación de datos antes de tocar código:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7.
+
+Causa exacta:
+- `refresh()` llamaba a `deduplicatePlayers()`;
+- `deduplicatePlayers()` llamaba a una función inexistente: `normalizePlayerName()`;
+- la excepción detenía el refresh y dejaba la interfaz sin terminar de cargar;
+- esa deduplicación ya no debía borrar ni modificar jugadores, por lo que mantener ese análisis automático no aportaba una función necesaria.
+
+Corrección:
+- `deduplicatePlayers()` queda como no-op seguro;
+- un refresh nunca deduplica, borra ni reescribe jugadores;
+- desaparece cualquier llamada a `normalizePlayerName()`;
+- se añade test específico para impedir que vuelva a introducirse ese error;
+- versión PWA forzada: `20260919-refreshfix-v5`.
+
+Pruebas:
+- `tests/refresh-no-player-mutation.test.js`;
+- workflow de rama `35446305787` → **success**.
+
+Regla permanente:
+- ninguna comprobación automática de duplicados puede impedir que carguen los datos;
+- nunca borrar/tombstonear jugadores automáticamente durante `refresh()`;
+- si existe un posible duplicado, debe resolverse manualmente y sin modificar fichas durante el arranque.
+
+Estado:
+- hotfix probado en rama `hotfix/refresh-normalize-20260919`;
+- listo para PR y despliegue a producción.
+
