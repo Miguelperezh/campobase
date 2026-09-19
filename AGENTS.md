@@ -2576,3 +2576,30 @@ Paso de recuperación previsto:
 
 No marcar Antonio ni esa convocatoria como protegidos en servidor hasta verificar su llegada.
 
+---
+
+# 33. Incidencia adicional — botón Recargar / Actualizar expulsa de la app — 19/09/2026
+
+Reporte de Miguel:
+- en móvil, al pulsar **Recargar / Actualizar app**, CampoBase vuelve a expulsarlo del acceso;
+- esto se suma a la incidencia ya documentada de recarga/actualización.
+
+Diagnóstico en código:
+- el botón `#auth-reload-btn` elimina explícitamente `campobase.sessionRole` antes de recargar;
+- una actualización manual del service worker puede además disparar `controllerchange` y provocar otra recarga;
+- el botón de actualizar no debe comportarse como cerrar sesión.
+
+Regla obligatoria:
+- **Actualizar/Recargar app NO cierra sesión**;
+- debe conservar la sesión segura de Supabase;
+- debe conservar `campobase.sessionRole` durante la misma pestaña;
+- debe conservar `campobase.saasActiveBrowserSession`;
+- debe conservar la vista activa;
+- solo los botones explícitos **Cerrar sesión** pueden borrar la sesión/vínculo;
+- una actualización del service worker no puede provocar una segunda recarga que consuma o rompa el estado de sesión.
+
+Estado:
+- incidencia documentada;
+- corrección funcional se hace únicamente en `fix/estabilidad-datos-sesion-20260919`;
+- no fusionar a `main` hasta validación visual de Miguel.
+
