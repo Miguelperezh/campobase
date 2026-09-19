@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260919-prod-current-v16">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260919-prod-current-v16">
+  <link rel="stylesheet" href="styles.css?v=20260919-prod-current-v17">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260919-prod-current-v17">
   <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
@@ -669,10 +669,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260919-prod-current-v16';
+    window.__CAMPOBASE_BUILD = '20260919-prod-current-v17';
     if ('serviceWorker' in navigator) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v16')
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v17')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -682,23 +682,17 @@
         try {
           if (sessionStorage.getItem(reloadKey) === window.__CAMPOBASE_BUILD) return;
           sessionStorage.setItem(reloadKey, window.__CAMPOBASE_BUILD);
+          const activeView = document.querySelector('.view.active')?.id;
+          const role = window.__campobase?.state?.role;
+          if (activeView) sessionStorage.setItem('campobase.activeView', activeView);
+          if (role) sessionStorage.setItem('campobase.sessionRole', role);
         } catch {}
-        const activeView = document.querySelector('.view.active')?.id;
-        if (activeView) {
-          try { sessionStorage.setItem('campobase.activeView', activeView); } catch {}
-        }
-        if (window.__campobase && typeof window.__campobase.refresh === 'function') {
-          window.__campobase.refresh().then(() => {
-            if (typeof window.__campobase.renderAll === 'function') window.__campobase.renderAll();
-          }).catch(() => null);
-          return;
-        }
         location.reload();
       });
     }
   </script>
-  <script type="module" src="js/app.js?v=20260919-prod-current-v16"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260919-prod-current-v16"></script>
+  <script type="module" src="js/app.js?v=20260919-prod-current-v17"></script>
+  <script type="module" src="js/redesign-nav.js?v=20260919-prod-current-v17"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {
