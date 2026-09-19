@@ -2022,3 +2022,67 @@ Estado:
 - pendiente de validación visual de Miguel;
 - no fusionar a `main` hasta validación visual expresa.
 
+---
+
+# 25. Continuidad 19/09/2026 — convivencia entre chats, WhatsApp y estado de validación
+
+Esta sección se añade sin borrar ni reescribir las dos secciones numeradas como 24 que fueron creadas por chats distintos casi al mismo tiempo.
+
+## 25.1 Regla de numeración desde este punto
+
+- conservar íntegramente ambas secciones 24;
+- no renumerarlas ni fusionarlas;
+- a partir de aquí continuar con 25, 26, 27…;
+- si dos chats trabajan a la vez y generan instrucciones parecidas, no borrar ninguna: añadir una sección posterior que aclare cuál es el estado más reciente.
+
+## 25.2 Estado técnico del cambio WhatsApp
+
+Último commit funcional de la rama:
+- `ad89f72659d8c6f18f936bb4f3495794d0020a21`.
+
+Última batería automática:
+- workflow: `CampoBase verify`;
+- run: `35439154205`;
+- resultado: **success**.
+
+Regla efectiva:
+- Liga → convocatoria por WhatsApp;
+- Amistoso → aviso de partido para toda la plantilla, sin convocatoria;
+- Torneo → aviso de torneo para toda la plantilla, sin convocatoria;
+- el resto de información validada del mensaje se conserva.
+
+Durante las pruebas se detectó y corrigió un caso en el que `callupStatus='excluded'` todavía podía generar “NO está CONVOCADO” en un amistoso. La corrección vigente limita toda exclusión de WhatsApp exclusivamente a Liga.
+
+## 25.3 Estado de la corrección de app vacía / recarga / sesión
+
+Continúa en:
+- `fix/estabilidad-datos-sesion-20260919`.
+
+Protecciones ya implementadas y con tests verdes:
+- vincular usuario SaaS antes de abrir/leer la cola local;
+- resolver IndexedDB del usuario después de recuperar la sesión;
+- conservar vista activa;
+- conservar sesión de la misma pestaña cuando la sesión segura sigue válida;
+- evitar doble navegación del service worker;
+- historial recuperable de jugadores, partidos, convocatorias, asistencias y configuración.
+
+Todavía NO está validado visualmente por Miguel y por tanto NO debe fusionarse el cambio funcional a `main`.
+
+## 25.4 Main durante la validación
+
+En `main` solo se permite mantener documentación y una página de validación aislada mientras Miguel prueba.
+
+La app de producción normal sigue siendo:
+- `https://miguelperezh.github.io/campobase/`.
+
+La página de validación:
+- `https://miguelperezh.github.io/campobase/validacion-estabilidad.html`.
+
+La página de validación debe:
+- compartir el origen de producción para poder comprobar sesión y datos reales;
+- cargar el código exacto de la rama/commit que se quiere validar;
+- no registrar un service worker nuevo;
+- no sustituir ni modificar el código funcional de producción.
+
+No dar por validado nada hasta que Miguel pruebe esa URL y lo confirme expresamente.
+
