@@ -6,6 +6,7 @@ const REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
+const PLAYER_RECOVERY_KEY_PREFIX = 'campobase.playersRecovery.20260919.v2.';
 const PLAYER_PROFILE_FIELDS = Object.freeze([
   'name', 'number', 'positions', 'foot', 'notes',
   'fatherName', 'fatherPhone', 'motherName', 'motherPhone',
@@ -258,7 +259,42 @@ export async function flushSyncQueue() {
   return true;
 }
 
-async function replaceLocalStore(store, cloudRecords) {
+function playerRecoveryKey() {
+  const userId = getBoundSaasUserId() || 'unbound';
+  return `${PLAYER_RECOVERY_KEY_PREFIX}${userId}`;
+}
+
+function playerRecoveryDone() {
+  if (typeof localStorage === 'undefined') return false;
+  try { return localStorage.getItem(playerRecoveryKey()) === 'done'; }
+  catch { return false; }
+}
+
+function markPlayerRecoveryDone() {
+  if (typeof localStorage === 'undefined') return;
+  try { localStorage.setItem(playerRecoveryKey(), 'done'); }
+  catch { /* La recuperación ya se aplicó aunque el navegador bloquee localStorage. */ }
+}
+
+async function replaceLocalStoreAuthoritatively(store, cloudRecords) {
+  const db = await openDatabase();
+  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+  const completed = transactionDone(transaction);
+  const objectStore = transaction.objectStore(store);
+  const queue = transaction.objectStore(SYNC_QUEUE);
+  const pendingMutations = await requestResult(queue.getAll());
+
+  objectStore.clear();
+  for (const record of cloudRecords) objectStore.put(structuredClone(record));
+  for (const mutation of pendingMutations) {
+    if (mutation.store === store) queue.delete(mutation.id);
+  }
+
+  await completed;
+  notifyDataChanged(store, 'cloud-authoritative-recovery');
+}
+
+async function replaceLocalStore(store, cloudRecords, tombstones = []) {
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   const completed = transactionDone(transaction);
@@ -267,7 +303,23 @@ async function replaceLocalStore(store, cloudRecords) {
     requestResult(objectStore.getAll()),
     requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
   ]);
-  const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
+  let reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
+
+  if (Array.isArray(tombstones) && tombstones.length) {
+    const pendingByRecord = new Map(
+      pendingMutations
+        .filter((mutation) => mutation.store === store)
+        .map((mutation) => [mutation.recordId, mutation]),
+    );
+    const tombstoneById = new Map(tombstones.map((item) => [item.id, Number(item.deletedAt) || 0]));
+    reconciledRecords = reconciledRecords.filter((record) => {
+      const deletedAt = tombstoneById.get(record.id);
+      if (!deletedAt) return true;
+      const pending = pendingByRecord.get(record.id);
+      return Boolean(pending && pending.operation === 'upsert' && Number(pending.queuedAt) > deletedAt);
+    });
+  }
+
   objectStore.clear();
   for (const record of reconciledRecords) objectStore.put(record);
   await completed;
@@ -287,6 +339,20 @@ export async function syncFromCloud() {
   if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
   if (syncPromise) return syncPromise;
   syncPromise = (async () => {
+    let recoveredPlayers = false;
+
+    // Recuperación puntual 19/09/2026:
+    // el servidor contiene la última plantilla validada por el usuario.
+    // Antes de subir cualquier cola local antigua, sustituimos SOLO jugadores por
+    // esa copia autoritativa y eliminamos mutaciones pendientes de jugadores.
+    // Esto evita resucitar eliminados (p. ej. Eidan) o reponer teléfonos antiguos.
+    if (!playerRecoveryDone()) {
+      const playerSnapshot = await cloudStore.getSnapshot('players');
+      await replaceLocalStoreAuthoritatively('players', playerSnapshot.records);
+      markPlayerRecoveryDone();
+      recoveredPlayers = true;
+    }
+
     await flushSyncQueue();
     let downloaded = 0;
     for (const store of STORES) {
@@ -322,7 +388,12 @@ export async function syncFromCloud() {
           }
         }
       }
-      await replaceLocalStore(store, snapshot.records);
+      if (store === 'players' && recoveredPlayers) {
+        // Ya se aplicó arriba el snapshot autoritativo antes de vaciar la cola.
+        downloaded += snapshot.records.length;
+        continue;
+      }
+      await replaceLocalStore(store, snapshot.records, snapshot.tombstones);
       downloaded += snapshot.records.length;
     }
     return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
