@@ -5122,16 +5122,25 @@ function wireEvents() {
       $('#auth-error').textContent = err.message;
     }
   });
-  $('#auth-reload-btn')?.addEventListener('click', async () => {
+  async function reloadAppPreservingSession() {
     try {
-      sessionStorage.removeItem(SESSION_ROLE_KEY);
-      sessionStorage.removeItem(DEMO_SESSION_KEY);
+      const activeView = document.querySelector('.view.active')?.id || storedActiveView();
+      if (activeView) sessionStorage.setItem(ACTIVE_VIEW_KEY, activeView);
+      // Evita que controllerchange provoque una segunda recarga mientras esta
+      // actualización manual ya va a recargar una sola vez.
+      window._swReloading = true;
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.update()));
+        await Promise.all(regs.map((registration) => registration.update().catch(() => null)));
       }
-    } catch {}
+    } catch {
+      // La recarga continúa; no se borra ninguna sesión por un fallo de update.
+    }
     window.location.reload();
+  }
+
+  $('#auth-reload-btn')?.addEventListener('click', async () => {
+    await reloadAppPreservingSession();
   });
   let authResetConfirming = false;
   $('#auth-reset-btn')?.addEventListener('click', () => {
@@ -5166,13 +5175,7 @@ function wireEvents() {
     else showAuth();
   });
   $('#settings-reload')?.addEventListener('click', async () => {
-    try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.update()));
-      }
-    } catch {}
-    window.location.reload();
+    await reloadAppPreservingSession();
   });
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
