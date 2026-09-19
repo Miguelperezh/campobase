@@ -2401,3 +2401,178 @@ No confundir:
 
 No fusionar PR #52 hasta validación visual expresa de Miguel.
 
+---
+
+# 31. Blindaje permanente de todos los datos guardados — 19/09/2026
+
+Objetivo marcado por Miguel:
+- todo dato que un usuario guarda o edita debe quedar registrado;
+- una modificación posterior de la app, una sincronización antigua, una estadística derivada o un cambio de dispositivo no puede borrar silenciosamente datos válidos;
+- esta protección debe servir para Miguel y para cualquier usuario futuro de CampoBase.
+
+## 31.1 Historial inmutable general
+
+Tabla:
+- `public.campobase_versiones_datos`.
+
+Tablas deportivas cubiertas:
+- `public.jugadores`;
+- `public.partidos`;
+- `public.convocatorias`;
+- `public.asistencias`;
+- `public.configuracion`.
+
+Se registra automáticamente cada operación que llega correctamente al servidor:
+- `INSERT`;
+- `UPDATE`;
+- `DELETE`.
+
+Cada versión guarda:
+- tabla de origen;
+- usuario propietario;
+- ID del registro;
+- operación;
+- fila completa guardada;
+- `updated_at` de esa versión;
+- usuario autenticado que realizó la operación cuando existe;
+- transacción;
+- fecha/hora de captura.
+
+La tabla de versiones:
+- tiene RLS;
+- cada usuario solo puede leer su propio historial;
+- clientes `anon` y `authenticated` no pueden insertar, editar, borrar ni truncar este historial;
+- por tanto una versión histórica no puede ser borrada accidentalmente desde la app.
+
+## 31.2 Primera línea base del blindaje
+
+Al activar el sistema se guardó una copia de todas las filas ya existentes, incluidas filas activas y tombstones:
+- jugadores: 53;
+- partidos: 26;
+- convocatorias: 27;
+- asistencias: 24;
+- configuración: 175.
+
+Estas cantidades son filas globales existentes en las tablas en el momento de crear la línea base, no el número de datos activos de una sola cuenta.
+
+## 31.3 Protección contra sincronizaciones antiguas
+
+Función de servidor:
+- `bloquear_escritura_obsoleta_campobase()`.
+
+Regla:
+- si llega una escritura con `updated_at` anterior al registro que ya existe en Supabase, se rechaza;
+- una copia antigua de IndexedDB, una pestaña vieja o una cola pendiente no puede ganar sobre una versión más reciente.
+
+Código de error identificable:
+- `CAMPOBASE_STALE_WRITE`.
+
+Esta barrera existe en:
+- jugadores;
+- partidos;
+- convocatorias;
+- asistencias;
+- configuración.
+
+## 31.4 Segunda barrera específica para fichas de jugadores
+
+Función:
+- `proteger_campos_personales_jugador()`.
+
+Campos protegidos:
+- nombre y apellidos;
+- dorsal;
+- posiciones;
+- pierna;
+- notas;
+- padre;
+- teléfono del padre;
+- madre;
+- teléfono de la madre;
+- foto;
+- fecha de creación;
+- `profileUpdatedAt`.
+
+Regla:
+- si una actualización automática/derivada no aporta un `profileUpdatedAt` posterior al último cambio manual, el servidor conserva los campos personales que ya tenía;
+- editar estadísticas, recalcular minutos, asistencia, convocatorias o sincronizar no puede rebajar la ficha personal;
+- una edición manual válida desde **Editar jugador** sí puede actualizar esos campos porque genera una versión manual más reciente.
+
+## 31.5 Borrado físico bloqueado para clientes
+
+La app debe borrar mediante tombstone para conservar recuperación.
+
+Los clientes autenticados no pueden ejecutar un `DELETE` físico en:
+- jugadores;
+- partidos;
+- convocatorias;
+- asistencias;
+- configuración.
+
+Función:
+- `bloquear_borrado_fisico_campobase()`.
+
+Código:
+- `CAMPOBASE_HARD_DELETE_BLOCKED`.
+
+Esto evita que un fallo de interfaz o una llamada cliente elimine físicamente la única copia del registro.
+
+## 31.6 Guardado local y confirmación de servidor
+
+Regla nueva de cliente:
+- cuando el dispositivo está online y existe conexión cloud, un error de Supabase ya no se oculta con `.catch(() => false)`;
+- si Supabase rechaza el guardado, la operación permanece en `syncQueue` y la UI debe recibir el error en lugar de mostrar un éxito falso;
+- si el dispositivo está offline, el cambio puede quedar en IndexedDB + `syncQueue` hasta volver a tener conexión;
+- al reconectar se reintenta la subida.
+
+Definición:
+- **guardado local** = está en IndexedDB/syncQueue del dispositivo;
+- **guardado y blindado** = Supabase ha aceptado la operación y el trigger la ha registrado en `campobase_versiones_datos`.
+
+No afirmar que un cambio está blindado en servidor si todavía no aparece en Supabase.
+
+## 31.7 Archivos/migraciones de este blindaje
+
+Rama:
+- `fix/estabilidad-datos-sesion-20260919`.
+
+Migraciones:
+- `supabase/10_immutable_versions_and_stale_write_guard.sql`;
+- `supabase/11_block_client_hard_deletes.sql`.
+
+Código cliente:
+- `js/db.js`;
+- `js/supabase-client.js`.
+
+Pruebas:
+- `tests/immutable-data-versions.test.js`;
+- `tests/session-data-stability.test.js`.
+
+Las migraciones de servidor ya están aplicadas en Supabase porque son protecciones de datos. El resto del código cliente sigue en rama hasta validación visual y merge.
+
+---
+
+# 32. Antonio Roldán y convocatoria vs Unión Viera Alevín E — estado de sincronización — 19/09/2026
+
+Miguel comunica que acaba de:
+- completar a Antonio Roldán Rendón con los datos que ya tiene;
+- crear/actualizar la convocatoria frente a Unión Viera Alevín E.
+
+Comprobación realizada inmediatamente después en Supabase:
+- la fila remota de Antonio todavía muestra la versión anterior;
+- la convocatoria de Unión Viera Alevín E todavía no aparece en `public.convocatorias`.
+
+Conclusión:
+- esas dos ediciones **no han llegado todavía a Supabase** en el momento de la comprobación;
+- probablemente siguen en el almacenamiento/cola local del móvil o la app oficial no consiguió sincronizarlas;
+- no reconstruirlas ni inventarlas desde este chat;
+- no sustituir la versión local del móvil mientras se intenta recuperarla.
+
+Paso de recuperación previsto:
+- abrir en el mismo móvil la URL de validación, que comparte el origen de CampoBase y puede acceder al mismo IndexedDB;
+- permitir que la rama corregida procese `syncQueue`;
+- volver a comprobar Supabase;
+- solo cuando aparezcan en Supabase se consideran guardadas y blindadas por el historial inmutable.
+
+No marcar Antonio ni esa convocatoria como protegidos en servidor hasta verificar su llegada.
+
