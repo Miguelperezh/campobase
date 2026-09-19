@@ -1909,3 +1909,40 @@ Correcciones de tests realizadas durante este paso:
 
 No se ha fusionado la rama a `main`.
 
+---
+
+# 24. Partidos — reglas de WhatsApp según tipo de competición
+
+Esta sección añade una regla funcional validada por Miguel para los mensajes de WhatsApp de **Partidos**. No sustituye ni reescribe las reglas anteriores de convocatorias o WhatsApp; las complementa.
+
+## 24.1 Liga
+
+En partidos de **Liga**:
+- sí existe convocatoria;
+- sí se puede comunicar por WhatsApp la convocatoria;
+- se mantienen los demás contenidos, textos, datos y formatos de WhatsApp que ya estén validados en CampoBase;
+- no cambiar el formato validado de esos mensajes salvo petición expresa de Miguel.
+
+## 24.2 Amistoso y torneo
+
+En partidos de tipo:
+- **Amistoso**;
+- **Torneo**;
+
+la regla es:
+- van todos los jugadores;
+- **NO se comunica por WhatsApp una convocatoria de jugadores**;
+- no generar un mensaje que presente a unos jugadores como convocados y a otros como no convocados;
+- el WhatsApp del partido sirve para **avisar/informar del partido**, no para comunicar convocatoria;
+- se mantienen todos los demás contenidos, textos, datos y formatos del mensaje de partido que ya estén validados.
+
+Esta regla afecta específicamente a la **comunicación por WhatsApp**. No borrar, modificar ni reinterpretar automáticamente registros internos de convocatorias, estadísticas, asistencia o partido por aplicar esta regla.
+
+## 24.3 Regla para futuros cambios
+
+Antes de modificar el generador de WhatsApp de Partidos, comprobar siempre el tipo de partido:
+- Liga → flujo de convocatoria validado;
+- Amistoso/Torneo → aviso de partido para todos, sin mensaje de convocatoria.
+
+No unificar ambos casos en un único texto si eso hace reaparecer convocatorias en amistosos o torneos.
+
