@@ -111,6 +111,22 @@ export function createCampoBaseCloudStore() {
       return { userId: user.id };
     },
 
+    async shouldApplyMutation(mutation) {
+      const user = await requireBoundUser(client);
+      const table = CLOUD_TABLES[mutation.store];
+      const rows = checkResult(await client
+        .from(table)
+        .select('updated_at,deleted_at')
+        .eq('user_id', user.id)
+        .eq('id', mutation.recordId)
+        .limit(1)) ?? [];
+      const remote = rows[0];
+      if (!remote) return true;
+      const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
+      const localQueuedAt = Number(mutation.queuedAt || 0);
+      return localQueuedAt >= remoteUpdatedAt;
+    },
+
     async getSnapshot(store) {
       const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
