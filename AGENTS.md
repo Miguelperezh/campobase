@@ -2086,3 +2086,63 @@ La página de validación debe:
 
 No dar por validado nada hasta que Miguel pruebe esa URL y lo confirme expresamente.
 
+---
+
+# 26. Revisión final antes de validación visual — 19/09/2026
+
+## 26.1 Comparación manual rama vs main
+
+Al revisar el diff completo del PR se detectó una regresión que los tests anteriores no cubrían:
+- `showView()` había quedado usando `$('.view').forEach(...)` y `$('.bottom-nav button').forEach(...)`;
+- `$()` usa `querySelector` y devuelve un solo elemento;
+- por tanto podía reproducir el mismo tipo de error `$(...).forEach is not a function` que ya había roto CampoBase anteriormente.
+
+La regresión se detectó **antes de fusionar** gracias a la revisión exacta de archivos exigida por este AGENTS.md.
+
+Corrección:
+- commit funcional: `11af7cc15e51b8fc22afd1a11bbdff2f09b83962`;
+- ambos recorridos vuelven a usar `$$()` / `querySelectorAll`.
+
+Prueba de regresión:
+- commit: `b45c6b4baff6b9cfc92c0a20a6081b11e5c0ef74`;
+- `tests/session-data-stability.test.js` comprueba expresamente que `showView()` nunca vuelva a usar `$().forEach`.
+
+## 26.2 Batería automática definitiva previa a validación visual
+
+Push de la rama:
+- workflow run `35439337308`;
+- resultado: **success**.
+
+PR #52:
+- workflow run `35439339649`;
+- resultado: **success**.
+
+Esto confirma tests/sintaxis, pero **NO sustituye la validación visual de Miguel**.
+
+## 26.3 URL real de validación
+
+URL:
+- `https://miguelperezh.github.io/campobase/validacion-estabilidad.html`.
+
+La página carga el código del commit verde:
+- `b45c6b4baff6b9cfc92c0a20a6081b11e5c0ef74`.
+
+Qué debe comprobar Miguel antes de autorizar merge:
+1. entra a su cuenta y aparecen sus datos reales;
+2. Plantilla muestra los 15 jugadores y sus fichas guardadas;
+3. al recargar no aparece la app vacía;
+4. al recargar no lo expulsa si la sesión segura sigue activa;
+5. al recargar permanece en la pestaña/vista donde estaba;
+6. WhatsApp de Liga conserva convocatoria;
+7. WhatsApp de Amistoso es aviso para todos, sin “convocados/no convocados”;
+8. WhatsApp de Torneo es aviso para todos, sin “convocados/no convocados”.
+
+## 26.4 Merge
+
+PR de trabajo:
+- `#52 Estabilizar datos, sesión, vista y WhatsApp por tipo de partido`.
+
+No fusionar hasta que Miguel diga expresamente que la validación visual está correcta.
+
+La migración de historial de Supabase ya está aplicada porque es una protección aditiva/no destructiva; el código funcional de la rama sigue fuera de producción hasta esa validación.
+
