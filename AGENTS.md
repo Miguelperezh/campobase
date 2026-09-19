@@ -2707,3 +2707,61 @@ Estado:
 - pendiente de batería completa y validación móvil de Miguel;
 - no fusionar a `main` todavía.
 
+---
+
+# 36. Blindaje adicional de refresh y estado final de sincronización móvil — 19/09/2026
+
+## 36.1 Refresh ya no puede borrar fichas por deduplicación automática
+
+Se detectó que `deduplicatePlayers()` podía tombstonear jugadores automáticamente durante `refresh()` si encontraba nombres normalizados iguales.
+
+Regla nueva:
+- un refresh nunca borra jugadores automáticamente;
+- si detecta posibles duplicados, solo deja aviso técnico;
+- la decisión de borrar/combinar jugadores debe ser manual y explícita.
+
+También se eliminó la reescritura automática del dorsal durante `refresh()`:
+- `cleanPlayerNumber()` puede usarse para mostrar el dorsal;
+- la ficha persistida solo cambia desde **Editar jugador**.
+
+## 36.2 Importaciones y guardados
+
+La importación JSON tampoco puede ocultar un error de sincronización:
+- online → si Supabase falla, el error se propaga;
+- offline → queda local y pendiente.
+
+## 36.3 Tests
+
+Último commit de rama con estas correcciones:
+- `e9e484883158bde445f4e9a3dcfd61650cb43590`.
+
+Workflows:
+- push `35442239763` → **success**;
+- PR `35442242462` → **success**.
+
+## 36.4 Estado actual de Antonio y convocatoria Unión Viera Alevín E
+
+Nueva comprobación de Supabase:
+- Antonio Roldán sigue mostrando la versión remota anterior;
+- la convocatoria contra Unión Viera Alevín E todavía no aparece remotamente;
+- no hay nuevas versiones no-baseline registradas todavía para esas ediciones.
+
+Interpretación:
+- los cambios que Miguel realizó en móvil siguen sin haber llegado al servidor;
+- no deben borrarse ni rehacerse desde otro dispositivo;
+- la prioridad es recuperar la cola local del mismo móvil y sincronizarla.
+
+## 36.5 URL de validación móvil
+
+La página de validación se ha actualizado con:
+- corrección de sesión al actualizar;
+- protección de datos;
+- estado de sincronización;
+- botón **Sincronizar ahora**;
+- botón **Recuperar cambios locales pendientes** cuando detecte cola legado.
+
+URL:
+- `https://miguelperezh.github.io/campobase/validacion-estabilidad.html`.
+
+La prueba debe hacerse desde el mismo dispositivo donde están los cambios pendientes.
+
