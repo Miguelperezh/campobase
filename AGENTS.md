@@ -3372,3 +3372,38 @@ Pruebas:
 Estado:
 - listo para merge inmediato a la app oficial por petición expresa de Miguel.
 
+---
+
+# 46. Hotfix PWA actual desplegado en producción — 19/09/2026
+
+Producción:
+- commit funcional: `ba7f8955cbe1c9e3c9b42166172a4ac48a08a531`;
+- tests de `main`: **success**;
+- GitHub Pages: **success**;
+- URL oficial: `https://miguelperezh.github.io/campobase/`;
+- build PWA: `20260919-prod-current-v6`.
+
+Motivo:
+- el móvil seguía ejecutando un bundle antiguo que mostraba `normalizePlayerName is not defined`;
+- el código actual de producción no contiene ninguna referencia a `normalizePlayerName`;
+- el problema era una PWA/caché antigua, no una pérdida de datos.
+
+Cambios ya activos:
+- navegación HTML intenta siempre red con `cache: 'no-store'`;
+- nueva clave de caché del service worker;
+- `index.html` registra y actualiza el service worker actual incluso si un bundle anterior falla;
+- una vez cambia el controlador, se recarga una única vez por build;
+- app, auth SaaS, estilos y service worker comparten el mismo identificador de build.
+
+Comprobación de datos posterior al despliegue:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7;
+- versiones inmutables registradas: 306.
+
+Regla:
+- si vuelve a aparecer `normalizePlayerName is not defined`, el dispositivo sigue ejecutando código anterior;
+- no borrar ni reconstruir datos;
+- comprobar primero el build cargado y forzar actualización del shell PWA sin tocar IndexedDB/localStorage.
+
