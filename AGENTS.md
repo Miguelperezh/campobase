@@ -2146,3 +2146,37 @@ No fusionar hasta que Miguel diga expresamente que la validación visual está c
 
 La migración de historial de Supabase ya está aplicada porque es una protección aditiva/no destructiva; el código funcional de la rama sigue fuera de producción hasta esa validación.
 
+---
+
+# 27. Comprobación final de datos antes de la prueba visual — 19/09/2026
+
+Estado:
+- comprobación de solo lectura completada en Supabase;
+- no se modificaron datos deportivos en este paso.
+
+Recuentos actuales verificados:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7;
+- configuración activa: 19.
+
+Copias de recuperación verificadas:
+- snapshots de la plantilla con motivo `baseline_validada_20260919`: 15;
+- filas de línea base en `public.campobase_datos_historial`: 252.
+
+Antonio Roldán Rendón:
+- dorsal actual: 3;
+- padre/madre/teléfonos: siguen vacíos;
+- no rellenar esos campos hasta que Miguel aporte los datos reales.
+
+Conclusión:
+- los datos reales siguen en Supabase;
+- existe copia histórica explícita de la plantilla validada y línea base de partidos/convocatorias/asistencias/configuración;
+- si la app aparece vacía durante una prueba, tratarlo como problema de carga/sesión/vinculación y **no crear ni restaurar datos nuevos automáticamente**.
+
+Siguiente estado permitido:
+- Miguel prueba `https://miguelperezh.github.io/campobase/validacion-estabilidad.html`;
+- si valida visualmente, entonces se puede fusionar PR #52;
+- si detecta cualquier anomalía, detener merge y corregir únicamente en la rama.
+
