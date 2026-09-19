@@ -62,11 +62,11 @@ export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
 
 export async function getRemoteMainSettings() {
   const client = getCampoBaseSupabaseClient();
-  const user = await requireBoundUser(client);
+  const { dataOwnerUserId } = await requireBoundUser(client);
   const rows = checkResult(await client
     .from(CLOUD_TABLES.settings)
     .select('payload,updated_at,deleted_at')
-    .eq('user_id', user.id)
+    .eq('user_id', dataOwnerUserId)
     .eq('id', 'main')
     .limit(1)) ?? [];
   const row = rows[0];
@@ -94,7 +94,11 @@ async function requireBoundUser(client) {
     authError.code = 'CAMPOBASE_AUTH_REQUIRED';
     throw authError;
   }
-  return user;
+
+  const { data: teamContext, error: teamError } = await client.rpc('mi_equipo_contexto');
+  if (teamError) throw teamError;
+  const dataOwnerUserId = teamContext?.data_owner_user_id || user.id;
+  return { user, teamContext: teamContext || null, dataOwnerUserId };
 }
 
 export function createCampoBaseCloudStore() {
@@ -102,7 +106,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v7'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v8'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -125,19 +129,31 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el módulo de promociones:', error);
     });
 
+  void import('./billing-manager.js?v=1')
+    .then(({ initBillingManager }) => initBillingManager(client))
+    .catch((error) => {
+      console.warn('No se pudo cargar el estado de la cuenta:', error);
+    });
+
+  void import('./team-access.js?v=1')
+    .then(({ initTeamAccess }) => initTeamAccess(client))
+    .catch((error) => {
+      console.warn('No se pudo cargar el acceso del equipo:', error);
+    });
+
   return {
     async prepare() {
-      const user = await requireBoundUser(client);
+      const { user } = await requireBoundUser(client);
       return { userId: user.id };
     },
 
     async shouldApplyMutation(mutation) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       const rows = checkResult(await client
         .from(table)
         .select('updated_at,deleted_at')
-        .eq('user_id', user.id)
+        .eq('user_id', dataOwnerUserId)
         .eq('id', mutation.recordId)
         .limit(1)) ?? [];
       const remote = rows[0];
@@ -148,12 +164,12 @@ export function createCampoBaseCloudStore() {
     },
 
     async getSnapshot(store) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
       const rows = checkResult(await client
         .from(table)
         .select('id,payload,updated_at,deleted_at,user_id')
-        .eq('user_id', user.id)) ?? [];
+        .eq('user_id', dataOwnerUserId)) ?? [];
       return {
         records: rows.filter(({ deleted_at: deletedAt }) => !deletedAt).map(({ payload }) => payload),
         deletedIds: rows.filter(({ deleted_at: deletedAt }) => Boolean(deletedAt)).map(({ id }) => id),
@@ -162,7 +178,7 @@ export function createCampoBaseCloudStore() {
     },
 
     async upsert(mutation) {
-      const user = await requireBoundUser(client);
+      const { user, dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       let payload = mutation.payload;
 
@@ -170,7 +186,7 @@ export function createCampoBaseCloudStore() {
         const rows = checkResult(await client
           .from(table)
           .select('payload')
-          .eq('user_id', user.id)
+          .eq('user_id', dataOwnerUserId)
           .eq('id', mutation.recordId)
           .limit(1)) ?? [];
         const remotePayload = rows[0]?.payload;
@@ -188,7 +204,7 @@ export function createCampoBaseCloudStore() {
       }
 
       checkResult(await client.from(table).upsert({
-        user_id: user.id,
+        user_id: dataOwnerUserId,
         id: mutation.recordId,
         payload,
         updated_at: mutation.queuedAt,
@@ -197,10 +213,10 @@ export function createCampoBaseCloudStore() {
     },
 
     async remove(mutation) {
-      const user = await requireBoundUser(client);
+      const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
-        user_id: user.id,
+        user_id: dataOwnerUserId,
         id: mutation.recordId,
         payload: null,
         updated_at: mutation.queuedAt,

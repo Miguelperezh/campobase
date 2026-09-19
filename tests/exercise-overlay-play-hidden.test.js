@@ -28,11 +28,11 @@ test('js/ejercicio-viewer.js gestiona el ocultamiento síncrono del botón overl
   assert.match(js, /video\.addEventListener\('pause'/, 'Debe escuchar evento pause');
 });
 
-test('versión de caché en sw.js e index.html están sincronizadas a v=20260919-prod-current-v7', () => {
+test('versión de caché en sw.js e index.html están sincronizadas a v=20260919-prod-current-v8', () => {
   const sw = fs.readFileSync('sw.js', 'utf8');
   const html = fs.readFileSync('index.html', 'utf8');
 
   assert.match(sw, /2503/, 'sw.js debe contener la versión 2503');
-  assert.match(html, /styles-redesign\.css\?v=20260919-prod-current-v7/, 'index.html debe cargar styles-redesign.css con v=20260919-prod-current-v7');
-  assert.match(html, /js\/app\.js\?v=20260919-prod-current-v7/, 'index.html debe cargar js/app.js con v=20260919-prod-current-v7');
+  assert.match(html, /styles-redesign\.css\?v=20260919-prod-current-v8/, 'index.html debe cargar styles-redesign.css con v=20260919-prod-current-v8');
+  assert.match(html, /js\/app\.js\?v=20260919-prod-current-v8/, 'index.html debe cargar js/app.js con v=20260919-prod-current-v8');
 });

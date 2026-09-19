@@ -1,5 +1,6 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings } from './supabase-client.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
+import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
@@ -3752,6 +3753,15 @@ async function hydratePinSettingsFromSupabase() {
 
 async function showAuth() {
   await hydratePinSettingsFromSupabase();
+  if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
+    const candidates = await getLocalPinSettingsCandidates().catch(() => []);
+    for (const candidate of candidates) {
+      if (candidate.settings?.ownerPinHash && candidate.settings?.delegatePinHash) {
+        state.settings = { ...state.settings, ...candidate.settings, id: 'main' };
+        break;
+      }
+    }
+  }
   // Mostrar el diálogo no equivale a cerrar sesión. El sessionRole se conserva
   // para que la capa SaaS pueda verificar y restaurar una sesión válida tras recarga.
   document.body.classList.add('auth-locked');
@@ -3821,7 +3831,15 @@ async function submitAuth(event) {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
       } else if (state.settings.pinSalt && state.settings.ownerPinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
+        const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+        if (userId) {
+          try {
+            const client = getSupabaseAuthClient();
+            await signInWithCampoBasePin(client, userId, pin);
+          } catch { /* si ya tiene sesión o falla red, continúa con acceso local */ }
+        }
         applyRole('owner');
+        if (userId) await synchronizeCloud();
       } else if (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
         applyRole('delegate');
@@ -3847,6 +3865,20 @@ async function submitAuth(event) {
           }
         }
         if (!recoveredRole) {
+          const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+          if (userId) {
+            try {
+              const client = getSupabaseAuthClient();
+              await signInWithCampoBasePin(client, userId, pin);
+              await hydratePinSettingsFromSupabase();
+              applyRole('owner');
+              await synchronizeCloud();
+              $('#auth-dialog').close();
+              return;
+            } catch {
+              // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
+            }
+          }
           throw new TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.');
         }
         state.settings = {
@@ -5721,7 +5753,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v7').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v8').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {

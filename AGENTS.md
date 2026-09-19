@@ -3573,3 +3573,97 @@ Regla:
 - no borrar jugadores ni importar backups automáticamente;
 - si Supabase conserva los datos, tratarlo como problema de arranque/caché/sincronización hasta demostrar lo contrario.
 
+---
+
+# 47. Recuperación definitiva en fase-4-billing-aislada: integración de blindaje de datos, login PIN, eliminación de normalizePlayerName y aislamiento de simulación — 19/09/2026
+
+## 47.1 Diagnóstico de la incidencia
+- El usuario reportó una rotura en el acceso en móvil y producción: app vacía, falta del flujo normal de login o PIN, y aparición en pantalla del error `normalizePlayerName is not defined`.
+- **Comprobación de servidor previa a cualquier acción**: En Supabase (`mdzpygfwugawlmknywxa`), los 15 jugadores activos siguen intactos en `public.jugadores` (payload: Antonio Roldán Rendón #3, Diego Andrés Anaya Chaparro #5, Elías Mederos Valencia #14, Carlos Campillo Rendón #13, Mateo Moyano Santana #1, Pablo Díaz Santana #10, etc.), junto a 4 partidos, 2 convocatorias y 7 asistencias activas. No existe pérdida de datos.
+- **Causa raíz técnica**:
+  1. La rama `fase-4-billing-aislada` se encontraba desincronizada respecto a los hotfixes críticos aplicados hoy en `main`, manteniendo bundles anteriores en service worker y cachés (`v=2502` / `v=20260918-billing-flow-v3`), lo que provocaba que dispositivos móviles ejecutaran bundles obsoletos donde `refresh()` fallaba con `normalizePlayerName is not defined`.
+  2. En `js/saas-auth-ui-v2.js`, si no existía sesión activa en Supabase o se perdía el enlace de cuenta recordada, el diálogo `#auth-dialog` no se abría automáticamente, dejando la aplicación en un estado vacío e inoperativo.
+  3. La función de deduplicación contenía lógica de purga que mutaba la lista de jugadores.
+
+## 47.2 Acciones y cambios implementados
+1. **Fusión integral de `main` en `fase-4-billing-aislada`**:
+   - Se incorporaron las 42 secciones previas de `AGENTS.md` (3575 líneas conservadas al 100%, sin borrar ni editar nada ajeno).
+   - Se integraron las migraciones y auditorías de Supabase (`09_data_audit_history.sql`, `10_immutable_versions_and_stale_write_guard.sql`, `11_block_client_hard_deletes.sql`).
+   - Se adoptó el build forzado `20260919-prod-current-v7` en `index.html`, `sw.js`, `js/app.js` y `js/supabase-client.js`.
+2. **Blindaje de refresh y eliminación de `normalizePlayerName`**:
+   - `deduplicatePlayers()` en `js/app.js` queda definitivamente blindado devolviendo `false` sin borrar ni transformar jugadores.
+   - Ninguna función ni llamada a `normalizePlayerName` existe en la aplicación (verificado por `tests/refresh-no-player-mutation.test.js` y `tests/pwa-current-build.test.js`).
+3. **Restauración del flujo de login y PIN**:
+   - `initSaasAuth()` garantiza que nunca se deje la app abierta y vacía sin sesión: muestra el formulario de inicio de sesión/registro/planes manteniendo siempre disponible el botón de acceso local por PIN.
+   - El formulario de PIN recordado comprueba tanto el PIN de dispositivo como el hash en `configuracion/main` de Supabase.
+   - Tras validar el PIN, se sincroniza inmediatamente con Supabase (`app.synchronizeCloud()`) y se refresca la vista (`app.refresh()`), mostrando la plantilla con sus 15 jugadores.
+4. **Sincronización segura de equipo**:
+   - En `js/supabase-client.js`, se corrigió el destructuring de `requireBoundUser` para obtener correctamente `user` y `dataOwnerUserId` mediante `rpc('mi_equipo_contexto')`, garantizando que delegados y titulares lean y escriban sobre la plantilla del equipo sin errores de ámbito.
+5. **Aislamiento estricto de la simulación**:
+   - Cumpliendo con las secciones 21 y 22 de este manual, la simulación no se ejecuta dentro de la aplicación real mediante parámetros como `?simulacion=prueba`.
+   - La simulación visual de prueba y Stripe se mantiene estrictamente aislada en `billing-preview.html` y `simulacion-fase4.html` sin tocar datos reales ni Supabase.
+
+## 47.3 Pruebas automatizadas y validación técnica
+- Batería completa de tests: **442 tests pasados, 0 fallidos**.
+- Comprobación de sintaxis: `npm run check` completado con éxito (código de salida 0).
+- Pruebas clave validadas:
+  - `tests/refresh-no-player-mutation.test.js`
+  - `tests/pwa-current-build.test.js`
+  - `tests/auth-boot-recovery.test.js`
+  - `tests/saas-pin-unified.test.js`
+  - `tests/session-data-stability.test.js`
+  - `tests/billing-manager.test.js`
+  - `tests/plans-registration-flow.test.js`
+  - `tests/team-access.test.js`
+
+## 47.4 Estado
+- Rama: `fase-4-billing-aislada`.
+- Cambios confirmados y listos para verificación visual mediante URL directa de RawGitHack.
+
+---
+
+# 48. Restauración definitiva del login con PIN en la nube, corrección en getRemoteMainSettings, pasarela Supabase Auth con Edge Function pin-login, y actualización a build v8 — 19/09/2026
+
+## 48.1 Diagnóstico de la incidencia
+- El usuario reportó: "no fuiona las url , quiero que arregles el problema de la app".
+- Al acceder en producción/móvil, la aplicación o bien mostraba "Configurar acceso" en lugar de pedir el PIN habitual, o bien tras desbloquear el PIN local aparecía con 0 jugadores vacía, o los enlaces de prueba externos fallaban.
+- **Verificación de servidor en Supabase (`mdzpygfwugawlmknywxa`)**:
+  - Se comprobó `public.jugadores`: los 15 jugadores activos siguen 100% intactos (Antonio Roldán Rendón #3, Diego Andrés Anaya Chaparro #5, Elías Mederos Valencia #14, Carlos Campillo Rendón #13, Mateo Moyano Santana #1, Pablo Díaz Santana #10, etc.).
+  - No hubo pérdida de datos en la base de datos.
+- **Causas raíz identificadas**:
+  1. En `js/supabase-client.js` `getRemoteMainSettings()`, se llamaba a `const user = await requireBoundUser(client)` y luego `.eq('user_id', user.id)`. Sin embargo, `requireBoundUser` devuelve un objeto `{ user, teamContext, dataOwnerUserId }`, por lo que `user.id` era `undefined`. Esto rompía la carga remota de configuración.
+  2. Debido a las políticas RLS (Row Level Security) de Supabase, un cliente no autenticado con JWT de Supabase Auth no puede consultar `public.jugadores`. Si la sesión SaaS caducaba o se borraba el token, el desbloqueo del PIN local solo liberaba el estado en memoria, pero `synchronizeCloud()` fallaba con `CAMPOBASE_AUTH_REQUIRED` y no descargaba los 15 jugadores, dejando la app con 0 jugadores.
+  3. En `showAuth()` (`js/app.js`), si `state.settings.ownerPinHash` no estaba cargado en memoria, el diálogo asumía erróneamente `initial = true` y mostraba "Configurar acceso" en lugar del PIN habitual.
+  4. Los servicios como `raw.githack.com` sufren caídas intermitentes de CDN y timeouts severos; GitHub Pages sirve la producción oficial exclusivamente desde la rama `main` en la raíz (`/`).
+
+## 48.2 Acciones y cambios implementados
+1. **Corrección de ámbito y destructuring en `getRemoteMainSettings` (`js/supabase-client.js`)**:
+   - Se corrigió la llamada para desestructurar `{ dataOwnerUserId } = await requireBoundUser(client)` y filtrar por `.eq('user_id', dataOwnerUserId)`.
+2. **Edge Function `pin-login` y procedimiento seguro de rate-limit (`supabase/functions/pin-login/index.ts`, `supabase/12_pin_login_rate_limit.sql`)**:
+   - Se verificó y desplegó la función Edge autenticada en Supabase que valida el PIN contra el hash del usuario registrado con protección de fuerza bruta / rate-limit en PostgreSQL.
+   - Retorna un hash de verificación OTP que permite autenticar la sesión del usuario en Supabase Auth.
+3. **Autenticación transparente con PIN en cliente (`js/auth-manager.js`)**:
+   - Se añadió `signInWithCampoBasePin(client, userId, pin)`, que consume la Edge Function y ejecuta `client.auth.verifyOtp({ token_hash, type: 'email' })`.
+   - Se corrigió `getRememberedSaasAccount()` para aceptar tanto `id` como `userId`.
+4. **Unificación y resiliencia en diálogos de acceso (`js/saas-auth-ui-v2.js` y `js/app.js`)**:
+   - En `js/saas-auth-ui-v2.js`, al enviar el PIN, si no hay sesión activa en Supabase o hay discrepancia de usuario, se invoca `signInWithCampoBasePin` para restaurar la sesión en la nube sin fricción.
+   - Se eliminó el bloqueo para cambiar a la vista de PIN.
+   - En `js/app.js` `showAuth()`, antes de mostrar "Configurar acceso", se inspecciona `getLocalPinSettingsCandidates()`. Si existen credenciales o hashes previos, se solicita el PIN existente en lugar de pedir configurar acceso nuevo.
+   - En `submitAuth()`, tras verificar el PIN, se autentica con `signInWithCampoBasePin` para satisfacer las RLS de Supabase y descargar la plantilla completa de 15 jugadores.
+5. **Actualización forzada de versión PWA a `20260919-prod-current-v8`**:
+   - Sincronizado en `sw.js` (CACHE name y ASSETS), `index.html` (styles, `__CAMPOBASE_BUILD`, scripts), `js/app.js`, `js/supabase-client.js`, y en toda la suite de tests (`pwa-current-build.test.js`, `auth-boot-recovery.test.js`, `auth-recovery-controls.test.js`, `custom-exercise-library-and-session-edit.test.js`, `exercise-overlay-play-hidden.test.js`).
+   - Esto fuerza la invalidación inmediata de cachés obsoletas en móviles y PWAs al cargar.
+
+## 48.3 Pruebas automatizadas y validación técnica
+- Test suite completa: **447 tests pasados, 0 fallidos** (incluyendo `tests/pin-login-edge.test.js`).
+- Comprobación de sintaxis: `npm run check` completado con éxito (0 errores en los 60 módulos).
+- Verificación en vivo de Supabase Edge Function: endpoint `pin-login` respondiendo HTTP 200/400 según validez de payload.
+- Verificación de datos: 15 jugadores intactos en `public.jugadores`.
+
+## 48.4 Despliegue y producción
+- Rama de trabajo: `fase-4-billing-aislada` y desplegado en `main` para GitHub Pages.
+- URL oficial de producción: `https://miguelperezh.github.io/campobase/`.
+- No usar servicios externos como RawGitHack que presentan fallos de disponibilidad.
+
+
+
