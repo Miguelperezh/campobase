@@ -5689,7 +5689,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-session-data-view-v1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-mobile-sync-pin-v1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
