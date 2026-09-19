@@ -149,3 +149,15 @@ test('Ajustes muestra estado de sincronización y acciones manuales de recuperac
   assert.match(app, /await synchronizeCloud\(\)/);
 });
 
+test('el PIN actual del móvil puede recuperarse desde IndexedDB si Supabase conserva uno anterior', async () => {
+  const [db, app] = await Promise.all([
+    projectFile('js/db.js'),
+    projectFile('js/app.js'),
+  ]);
+  assert.match(db, /export async function getLocalPinSettingsCandidates\(\)/);
+  assert.match(db, /database\.transaction\('settings', 'readonly'\).*\.get\('main'\)/s);
+  assert.match(app, /const candidates = await getLocalPinSettingsCandidates\(\)/);
+  assert.match(app, /PIN local reconocido\. Revisa Ajustes → Sincronización/);
+  assert.doesNotMatch(app, /await put\('settings', recoveredSettings\)/);
+});
+
