@@ -259,6 +259,15 @@ export async function flushSyncQueue() {
   if (typeof cloudStore?.prepare === 'function') await cloudStore.prepare();
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
+    const shouldApply = typeof cloudStore?.shouldApplyMutation === 'function'
+      ? await cloudStore.shouldApplyMutation(mutation)
+      : true;
+    if (!shouldApply) {
+      // Supabase ya tiene una versión posterior. La cola local está obsoleta:
+      // se elimina sin tocar la fila remota y el snapshot cloud la repondrá localmente.
+      await removeQueuedMutation(mutation.id);
+      continue;
+    }
     if (mutation.operation === 'delete') await cloudStore.remove(mutation);
     else await cloudStore.upsert(mutation);
     await removeQueuedMutation(mutation.id);
