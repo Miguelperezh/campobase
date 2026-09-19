@@ -1,4 +1,4 @@
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, uploadVideo, removeVideo } from './db.js';
+import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore } from './supabase-client.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -50,6 +50,7 @@ const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'E
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
+const ACTIVE_VIEW_KEY = 'campobase.activeView';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
 const USER_EXERCISE_PREFIX = 'pdf98-user-';
 let toastTimer;
@@ -180,11 +181,19 @@ function keeperIdsFromCallup(callup) {
   return ids.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
 }
 function playerCardPhoto(player) { return safePhoto(player.photo) ? `<img class="avatar" src="${safePhoto(player.photo)}" alt="Foto de ${escapeHtml(player.name)}">` : `<div class="avatar" aria-hidden="true">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</div>`; }
+function storedActiveView() {
+  try { return String(sessionStorage.getItem(ACTIVE_VIEW_KEY) || ''); }
+  catch { return ''; }
+}
+
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
+  const target = document.getElementById(viewId);
+  if (!target?.classList.contains('view')) return;
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
   if (viewId === 'plantilla') refreshPlantillaStaff().catch(() => {});
@@ -224,49 +233,19 @@ function isUserInteracting() {
 
 
 async function deduplicatePlayers() {
-  const currentPlayers = await getAll('players');
-  if (!currentPlayers || !currentPlayers.length) return;
-  const canonicalMap = new Map();
-  const toDelete = [];
-
-  for (const player of currentPlayers) {
-    // Purgar cualquier jugador demo filtrado a la base real
-    if (player.id && player.id.startsWith('demo-p') && player.id !== 'demo-p08') {
-      toDelete.push(player.id);
-      continue;
-    }
-    // Si demo-p08 sigue presente localmente pero ya existe p05, descartar demo-p08
-    if (player.id === 'demo-p08') {
-      const hasP05 = currentPlayers.some((p) => p.id === 'p05');
-      if (hasP05) {
-        toDelete.push(player.id);
-        continue;
-      }
-    }
-
-    const rawName = String(player.name || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const isRamiro = rawName === 'ramiro' || rawName === 'ramiro casati';
-    const isNicolas = rawName === 'nicolas diaz-saavedra' || rawName === 'nicolas diaz saavedra';
-    const key = isRamiro ? 'ramiro_casati' : (isNicolas ? 'nicolas_diaz_saavedra' : rawName);
-    if (!canonicalMap.has(key)) {
-      canonicalMap.set(key, player);
-    } else {
-      const existing = canonicalMap.get(key);
-      const preferCurrent = (player.id === 'p12') || (player.id === 'p05') ||
-        (player.number && !existing.number) ||
-        (player.positions?.length && !existing.positions?.length) ||
-        (player.positions?.includes('Portero') && !existing.positions?.includes('Portero')) ||
-        ((player.totalMinutes || 0) > (existing.totalMinutes || 0));
-      const canonical = preferCurrent ? player : existing;
-      const duplicate = preferCurrent ? existing : player;
-      canonicalMap.set(key, canonical);
-      toDelete.push(duplicate.id);
-    }
+  // Protección de datos: nunca borrar/tombstonear jugadores automáticamente
+  // durante refresh. Si aparecen posibles duplicados, se avisa en consola y
+  // se mantienen intactos hasta una decisión manual del usuario.
+  const seen = new Map();
+  const duplicates = [];
+  for (const player of state.players) {
+    const key = normalizePlayerName(player.name);
+    if (!key) continue;
+    if (seen.has(key)) duplicates.push([seen.get(key), player]);
+    else seen.set(key, player);
   }
-
-  for (const removeId of toDelete) {
-    await remove('players', removeId);
-    state.players = state.players.filter((p) => p.id !== removeId);
+  if (duplicates.length) {
+    console.warn('CampoBase detectó posibles jugadores duplicados y no los ha borrado automáticamente:', duplicates.map(([a, b]) => [a.id, b.id]));
   }
 }
 
@@ -274,14 +253,9 @@ async function refresh() {
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   await deduplicatePlayers();
 
-  // Limpiar cualquier '#' en los dorsales existentes sin sobreescribir datos del usuario
-  for (const p of state.players) {
-    const cleanNum = cleanPlayerNumber(p.number);
-    if (p.number !== cleanNum) {
-      p.number = cleanNum;
-      put('players', p).catch(() => {});
-    }
-  }
+  // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
+  // se reescriben automáticamente durante refresh. Solo Editar jugador cambia
+  // la ficha personal persistida.
 
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
@@ -3691,7 +3665,7 @@ function applyRole(role) {
   } else {
     state.delegateMode = false;
     document.body.classList.remove('delegate-mode');
-    showView('plantilla');
+    showView(storedActiveView() || 'plantilla');
   }
   // Re-renderiza el partido en vivo con el rol ya aplicado: el botón "Vista
   // Delegado" (y "Enseñar al delegado") dependen de roleCanUseOwnerFeatures,
@@ -3750,10 +3724,18 @@ async function restoreSessionRole() {
     return true;
   }
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash || !['owner', 'delegate'].includes(role)) return false;
-  // Nunca restaurar automáticamente owner/delegate tras recargar:
-  // se vuelve a pedir PIN para proteger el acceso.
-  try { sessionStorage.removeItem(SESSION_ROLE_KEY); } catch { /* Sin sesión persistida. */ }
-  return false;
+
+  // Si existe una cuenta SaaS vinculada, conserva sessionRole para que la capa
+  // SaaS pueda verificar la sesión remota y reabrir la app sin expulsar al
+  // usuario. No desbloqueamos aquí sin esa verificación.
+  let hasSaasBinding = false;
+  try { hasSaasBinding = Boolean(localStorage.getItem('campobase.saasUserId')); } catch { /* Acceso local puro. */ }
+  if (hasSaasBinding) return false;
+
+  // En acceso local puro, sessionStorage vive solo en esta pestaña y sobrevive
+  // a una recarga. Restaurarlo evita pedir el PIN de nuevo al actualizar.
+  applyRole(role);
+  return true;
 }
 
 function showAuth() {
@@ -3818,7 +3800,35 @@ async function submitAuth(event) {
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
         await startDemoSession(createDemoSession(crypto.randomUUID()));
       } else {
-        throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
+        // Recuperación segura: si la sincronización móvil dejó un PIN más reciente
+        // en IndexedDB, lo aceptamos sin sobrescribir automáticamente Supabase.
+        const candidates = await getLocalPinSettingsCandidates();
+        let recoveredRole = '';
+        let recoveredSettings = null;
+        for (const candidate of candidates) {
+          const local = candidate.settings;
+          if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
+            recoveredRole = 'owner';
+            recoveredSettings = local;
+            break;
+          }
+          if (await verifyPin(pin, local.pinSalt, local.delegatePinHash)) {
+            recoveredRole = 'delegate';
+            recoveredSettings = local;
+            break;
+          }
+        }
+        if (!recoveredRole) {
+          throw new TypeError('PIN incorrecto. Puedes probar con el botón "Modo Demo" o pulsar "¿Olvidaste el PIN?".');
+        }
+        state.settings = {
+          ...state.settings,
+          pinSalt: recoveredSettings.pinSalt,
+          ownerPinHash: recoveredSettings.ownerPinHash,
+          delegatePinHash: recoveredSettings.delegatePinHash,
+        };
+        applyRole(recoveredRole);
+        toast('PIN local reconocido. Revisa Ajustes → Sincronización para recuperar cambios pendientes.');
       }
     }
     $('#auth-dialog').close();
@@ -3964,6 +3974,7 @@ function openWhatsAppDialog({
 
   // Llenar selector de eventos
   populateWhatsAppEvents(matchId, callupId, sessionId);
+  if (waCurrentMode === 'callup') syncWhatsAppMatchLocation();
   // Llenar selector de destinatarios
   populateWhatsAppRecipients(playerId);
 
@@ -3972,6 +3983,30 @@ function openWhatsAppDialog({
 
   updateWhatsAppPreview();
   dialog.showModal();
+}
+
+function selectedWhatsAppMatch() {
+  const eventValue = $('#wa-event-select')?.value || '';
+  if (eventValue.startsWith('match:')) {
+    const matchId = eventValue.slice('match:'.length);
+    return state.matches.find((match) => match.id === matchId) || null;
+  }
+  if (eventValue.startsWith('callup:')) {
+    const callupId = eventValue.slice('callup:'.length);
+    const callup = state.callups.find((item) => item.id === callupId) || null;
+    return state.matches.find((match) => match.id === callup?.matchId || match.callupId === callupId) || null;
+  }
+  return state.matches.find((match) => match.id === eventValue) || null;
+}
+
+function syncWhatsAppMatchLocation() {
+  const match = selectedWhatsAppMatch();
+  if (!match) return;
+  const fieldName = String(match.location || '').trim();
+  const fieldInput = $('#wa-field-name');
+  const mapsInput = $('#wa-maps-url');
+  if (fieldInput) fieldInput.value = fieldName;
+  if (mapsInput) mapsInput.value = fieldName ? getAutoMapsUrl(fieldName) : '';
 }
 
 function populateWhatsAppEvents(matchId, callupId, sessionId) {
@@ -3990,7 +4025,9 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       const callup = state.callups.find((c) => c.id === m.callupId || c.matchId === m.id);
       if (callup) processedCallupIds.add(callup.id);
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
-      opt.textContent = `${localDate(m.date)} · vs ${m.opponent}${callup ? ' (Convocatoria lista)' : ''}`;
+      const waTypeLabel = matchTypeLabel(m.type || 'league');
+      const callupSuffix = (m.type || 'league') === 'league' && callup ? ' (Convocatoria lista)' : '';
+      opt.textContent = `${localDate(m.date)} · ${waTypeLabel} vs ${m.opponent}${callupSuffix}`;
       if (isSelected) opt.selected = true;
       select.appendChild(opt);
     });
@@ -4305,8 +4342,15 @@ function updateWhatsAppPreview() {
       callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
     }
 
-    // Determinar si el jugador está marcado como NO convocado
-    const isExcluded = recipientType === 'parent' && effectivePlayer && (
+    const selectedMatchType = match?.type || callup?.matchType || 'league';
+    const isLeagueMatch = selectedMatchType === 'league';
+
+    // En WhatsApp solo Liga usa convocados/no convocados. Amistosos y torneos
+    // son avisos de partido para toda la plantilla.
+    if (callupStatusCol) callupStatusCol.classList.toggle('hidden', !isLeagueMatch);
+
+    // Determinar si el jugador está marcado como NO convocado únicamente en Liga.
+    const isExcluded = isLeagueMatch && recipientType === 'parent' && effectivePlayer && (
       callupStatus === 'excluded' ||
       (callupStatus === 'auto' && callup && (
         (new Set(callup.excludedIds || [])).has(effectivePlayer.id) ||
@@ -4315,7 +4359,7 @@ function updateWhatsAppPreview() {
       ))
     );
 
-    // Ocultar detalles de partido si NO va convocado (para máxima claridad visual)
+    // Ocultar detalles de partido si NO va convocado (solo puede ocurrir en Liga).
     $('#wa-match-details-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-location-row')?.classList.toggle('hidden', Boolean(isExcluded));
     $('#wa-times-row')?.classList.toggle('hidden', Boolean(isExcluded));
@@ -4364,7 +4408,7 @@ function updateWhatsAppPreview() {
     const fieldInput = $('#wa-field-name');
     let fieldName = fieldInput?.value?.trim();
     if (!fieldName) {
-      fieldName = match?.location || 'Campo Alfonso Silva (La Ballena)';
+      fieldName = match?.location || '';
       if (fieldInput) fieldInput.value = fieldName;
     }
 
@@ -4395,6 +4439,7 @@ function updateWhatsAppPreview() {
       callupStatus,
       exclusionReason,
       exclusionNote,
+      competition: matchTypeLabel(selectedMatchType),
       tone,
     });
     preview.value = text;
@@ -4816,11 +4861,7 @@ function wireEvents() {
   // Modificación de campos en el comunicador WhatsApp
   $('#wa-event-select')?.addEventListener('change', () => {
     if (waCurrentMode === 'callup') {
-      const match = state.matches.find((m) => m.id === $('#wa-event-select').value);
-      if (match) {
-        if ($('#wa-field-name')) $('#wa-field-name').value = match.location || 'Campo Alfonso Silva (La Ballena)';
-        if ($('#wa-maps-url')) $('#wa-maps-url').value = getAutoMapsUrl($('#wa-field-name').value);
-      }
+      syncWhatsAppMatchLocation();
     } else if (waCurrentMode === 'training') {
       const session = state.trainingSessions.find((s) => s.id === $('#wa-event-select').value);
       if (session) {
@@ -5074,16 +5115,25 @@ function wireEvents() {
       $('#auth-error').textContent = err.message;
     }
   });
-  $('#auth-reload-btn')?.addEventListener('click', async () => {
+  async function reloadAppPreservingSession() {
     try {
-      sessionStorage.removeItem(SESSION_ROLE_KEY);
-      sessionStorage.removeItem(DEMO_SESSION_KEY);
+      const activeView = document.querySelector('.view.active')?.id || storedActiveView();
+      if (activeView) sessionStorage.setItem(ACTIVE_VIEW_KEY, activeView);
+      // Evita que controllerchange provoque una segunda recarga mientras esta
+      // actualización manual ya va a recargar una sola vez.
+      window._swReloading = true;
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.update()));
+        await Promise.all(regs.map((registration) => registration.update().catch(() => null)));
       }
-    } catch {}
+    } catch {
+      // La recarga continúa; no se borra ninguna sesión por un fallo de update.
+    }
     window.location.reload();
+  }
+
+  $('#auth-reload-btn')?.addEventListener('click', async () => {
+    await reloadAppPreservingSession();
   });
   let authResetConfirming = false;
   $('#auth-reset-btn')?.addEventListener('click', () => {
@@ -5118,13 +5168,46 @@ function wireEvents() {
     else showAuth();
   });
   $('#settings-reload')?.addEventListener('click', async () => {
+    await reloadAppPreservingSession();
+  });
+  $('#sync-now')?.addEventListener('click', async () => {
+    const button = $('#sync-now');
+    if (button) button.disabled = true;
     try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.update()));
-      }
-    } catch {}
-    window.location.reload();
+      await synchronizeCloud();
+      const info = await getSyncDiagnostics();
+      if (info.pending === 0) toast('Sincronización completada.');
+      else toast(`Quedan ${info.pending} cambios pendientes.`);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      if (button) button.disabled = false;
+      await refreshSyncStatusPanel();
+    }
+  });
+  $('#recover-local-pending')?.addEventListener('click', async () => {
+    const info = await getSyncDiagnostics();
+    if (!info.legacyPending) return refreshSyncStatusPanel();
+    const ok = await askConfirmation({
+      title: 'Recuperar cambios locales',
+      message: `Este dispositivo tiene ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento anterior. Se intentarán vincular a la cuenta con la que has iniciado sesión, sin borrar la copia local hasta que Supabase responda.`,
+      acceptLabel: 'Recuperar y sincronizar',
+    });
+    if (!ok) return;
+    const button = $('#recover-local-pending');
+    if (button) button.disabled = true;
+    try {
+      const result = await recoverLegacyPendingMutations();
+      await synchronizeCloud();
+      toast(result.recovered
+        ? `Recuperados ${result.recovered} cambios locales pendientes.`
+        : 'No había cambios locales pendientes que recuperar.');
+    } catch (error) {
+      handleError(error);
+    } finally {
+      if (button) button.disabled = false;
+      await refreshSyncStatusPanel();
+    }
   });
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
@@ -5483,12 +5566,45 @@ function networkStatus() {
   }
 }
 
+async function refreshSyncStatusPanel() {
+  const text = $('#sync-status-text');
+  const detail = $('#sync-status-detail');
+  const recover = $('#recover-local-pending');
+  if (!text) return;
+  try {
+    const info = await getSyncDiagnostics();
+    if (!info.online) {
+      text.textContent = 'Sin conexión · los cambios quedan pendientes en este dispositivo.';
+    } else if (state.cloudError) {
+      text.textContent = 'Error de sincronización.';
+    } else if (info.pending > 0) {
+      text.textContent = `Pendiente de sincronizar: ${info.pending} cambio${info.pending === 1 ? '' : 's'}.`;
+    } else {
+      text.textContent = 'Sincronizado con Supabase.';
+    }
+    detail.textContent = info.legacyPending > 0
+      ? `Hay ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento local anterior de este dispositivo.`
+      : (state.cloudError || '');
+    recover?.classList.toggle('hidden', !(info.boundUserId && info.legacyPending > 0));
+  } catch (error) {
+    text.textContent = 'No se pudo comprobar el estado de sincronización.';
+    if (detail) detail.textContent = error.message || '';
+    recover?.classList.add('hidden');
+  }
+}
+
 async function synchronizeCloud() {
   if (isDemoDatabase()) {
     await refresh();
-    return networkStatus();
+    networkStatus();
+    await refreshSyncStatusPanel();
+    return;
   }
-  if (!navigator.onLine) return networkStatus();
+  if (!navigator.onLine) {
+    networkStatus();
+    await refreshSyncStatusPanel();
+    return;
+  }
   try {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
@@ -5500,6 +5616,7 @@ async function synchronizeCloud() {
     console.warn('Sincronización en la nube no disponible:', error.message);
   }
   networkStatus();
+  await refreshSyncStatusPanel();
 }
 
 async function init() {
@@ -5558,7 +5675,8 @@ async function init() {
     || location.hostname.endsWith('.local')
     || location.hostname.startsWith('192.168.')
     || location.hostname.startsWith('10.');
-  if ('serviceWorker' in navigator) {
+  const isValidationPreview = location.pathname.endsWith('/validacion-estabilidad.html');
+  if ('serviceWorker' in navigator && !isValidationPreview) {
     if (isLocal) {
       const reloadKey = 'campobase.localServiceWorkerReloaded';
       const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
@@ -5571,7 +5689,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260918-emergency-auth-restore-v4').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-mobile-sync-pin-v1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -5583,6 +5701,7 @@ async function init() {
     }
   }
   await synchronizeCloud();
+  await refreshSyncStatusPanel();
   await ensureLegacyExercisesNotPresent();
   await refresh();
   const live = await getOne('settings', 'live');
@@ -5601,7 +5720,7 @@ async function init() {
   }
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
-    const requestedView = params.get('view');
+    const requestedView = params.get('view') || storedActiveView();
     if (requestedView) showView(requestedView);
   }
   setInterval(() => pollLiveState().catch(handleError), 1000);

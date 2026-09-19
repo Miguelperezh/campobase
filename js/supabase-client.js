@@ -11,6 +11,12 @@ import './exercise-viewer-layout.js?v=2475';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
+const PLAYER_PROFILE_FIELDS = Object.freeze([
+  'name', 'number', 'positions', 'foot', 'notes',
+  'fatherName', 'fatherPhone', 'motherName', 'motherPhone',
+  'photo', 'createdAt', 'profileUpdatedAt',
+]);
+
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
 export const VIDEO_BUCKET = 'ejercicio-videos';
@@ -106,6 +112,27 @@ export function createCampoBaseCloudStore() {
     });
 
   return {
+    async prepare() {
+      const user = await requireBoundUser(client);
+      return { userId: user.id };
+    },
+
+    async shouldApplyMutation(mutation) {
+      const user = await requireBoundUser(client);
+      const table = CLOUD_TABLES[mutation.store];
+      const rows = checkResult(await client
+        .from(table)
+        .select('updated_at,deleted_at')
+        .eq('user_id', user.id)
+        .eq('id', mutation.recordId)
+        .limit(1)) ?? [];
+      const remote = rows[0];
+      if (!remote) return true;
+      const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
+      const localQueuedAt = Number(mutation.queuedAt || 0);
+      return localQueuedAt >= remoteUpdatedAt;
+    },
+
     async getSnapshot(store) {
       const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
@@ -123,10 +150,33 @@ export function createCampoBaseCloudStore() {
     async upsert(mutation) {
       const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
+      let payload = mutation.payload;
+
+      if (mutation.store === 'players' && payload) {
+        const rows = checkResult(await client
+          .from(table)
+          .select('payload')
+          .eq('user_id', user.id)
+          .eq('id', mutation.recordId)
+          .limit(1)) ?? [];
+        const remotePayload = rows[0]?.payload;
+        if (remotePayload) {
+          const remoteProfileUpdatedAt = Number(remotePayload.profileUpdatedAt || 0);
+          const localProfileUpdatedAt = Number(payload.profileUpdatedAt || 0);
+          if (remoteProfileUpdatedAt >= localProfileUpdatedAt) {
+            payload = structuredClone(payload);
+            for (const field of PLAYER_PROFILE_FIELDS) {
+              if (Object.hasOwn(remotePayload, field)) payload[field] = structuredClone(remotePayload[field]);
+              else delete payload[field];
+            }
+          }
+        }
+      }
+
       checkResult(await client.from(table).upsert({
         user_id: user.id,
         id: mutation.recordId,
-        payload: mutation.payload,
+        payload,
         updated_at: mutation.queuedAt,
         deleted_at: null,
       }, { onConflict: 'user_id,id' }));

@@ -409,6 +409,9 @@ async function unlockBoundSession(client) {
   const session = await getCurrentSession(client).catch(() => null);
   const bound = getBoundSaasUserId();
   if (!session?.user || !bound || bound !== session.user.id) return false;
+  // Mantiene la autorización de esta pestaña mientras la sesión Supabase siga
+  // siendo válida. sessionStorage desaparece al cerrar la pestaña/navegador.
+  markBrowserSessionActive(session.user.id);
   const profile = await getProfileOrFallback(client, session.user);
   const app = await waitForApp();
   if (!app?.state) return false;
@@ -440,7 +443,6 @@ async function handlePersistentSession(client) {
   }
   if (bound !== session.user.id) return false;
   if (browserSessionIsActive(session.user.id)) {
-    clearBrowserSessionActive();
     return unlockBoundSession(client);
   }
   if (remembered?.userId === session.user.id) {
@@ -702,7 +704,6 @@ export async function initSaasAuth(client) {
 
   if (session?.user && bound === session.user.id) {
     if (browserSessionIsActive(session.user.id)) {
-      clearBrowserSessionActive();
       unlockBoundSession(client).catch(() => {});
       return;
     }
