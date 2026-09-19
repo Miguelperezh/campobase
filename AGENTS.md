@@ -3323,3 +3323,52 @@ Regla permanente:
 Producción:
 - `https://miguelperezh.github.io/campobase/`.
 
+---
+
+# 45. Hotfix crítico PWA — móvil ejecutaba JavaScript antiguo aunque producción ya estaba corregida — 19/09/2026
+
+Incidencia observada por Miguel en la app oficial:
+- tras introducir el PIN aparecía `normalizePlayerName is not defined`;
+- la app quedaba visualmente vacía;
+- Miguel estaba usando la URL oficial/PWA, no una preview.
+
+Comprobación objetiva:
+- Supabase conserva los datos: 15 jugadores activos, 4 partidos activos, 2 convocatorias activas y 7 asistencias activas;
+- el `js/app.js` actual de `main` ya NO contiene ninguna referencia a `normalizePlayerName`;
+- por tanto el error visible solo puede proceder de un bundle JavaScript anterior retenido por la PWA/caché del dispositivo.
+
+Regla:
+- cuando producción ya no contiene un símbolo que el móvil sigue ejecutando, tratarlo como **runtime/caché PWA antigua**, no como pérdida de datos;
+- no restaurar ni recrear jugadores;
+- no borrar IndexedDB/localStorage para resolverlo.
+
+Corrección aplicada en rama:
+- `hotfix/force-current-pwa-20260919`.
+
+Build forzado:
+- `20260919-prod-current-v6`.
+
+Cambios:
+- `index.html` registra/comprueba el service worker actual antes de que el módulo principal termine de arrancar;
+- si cambia el controlador del service worker, hace una única recarga por build;
+- `sw.js` usa una clave de caché nueva para que la activación elimine cachés anteriores;
+- las navegaciones HTML usan red con `cache: 'no-store'` y solo caen al HTML cacheado si no hay red;
+- `index.html`, `js/app.js`, `js/supabase-client.js` y `sw.js` comparten el mismo identificador de build;
+- la carga dinámica de `saas-auth-ui-v2.js` también usa ese build.
+
+Protección:
+- este hotfix no modifica jugadores, partidos, convocatorias, asistencias ni configuración de Supabase;
+- no borra IndexedDB, localStorage ni la PWA;
+- solo fuerza a ejecutar el código de producción actual.
+
+Pruebas:
+- nuevo `tests/pwa-current-build.test.js`;
+- verifica build consistente;
+- verifica actualización del service worker desde HTML;
+- verifica navegación network-first/no-store;
+- verifica que el área de refresh no contiene `normalizePlayerName`, ni borrados ni escrituras automáticas de jugadores;
+- workflow de rama `35446998594` → **success**.
+
+Estado:
+- listo para merge inmediato a la app oficial por petición expresa de Miguel.
+
