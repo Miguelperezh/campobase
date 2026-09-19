@@ -161,3 +161,20 @@ test('el PIN actual del móvil puede recuperarse desde IndexedDB si Supabase con
   assert.doesNotMatch(app, /await put\('settings', recoveredSettings\)/);
 });
 
+test('mostrar el diálogo de acceso no consume sessionRole y el login PIN restaura datos cloud inmediatamente', async () => {
+  const app = await projectFile('js/app.js');
+  const showAuth = app.slice(app.indexOf('async function showAuth'), app.indexOf('function ensureAuthPromptVisible'));
+  assert.doesNotMatch(showAuth, /removeItem\(SESSION_ROLE_KEY\)/);
+
+  const submit = app.slice(app.indexOf('async function submitAuth'), app.indexOf('async function changePins'));
+  assert.match(submit, /if \(!isDemoDatabase\(\)\) \{\s*await synchronizeCloud\(\);\s*await refresh\(\);\s*\}/);
+  assert.match(app, /window\.__campobase = \{ refresh, synchronizeCloud,/);
+});
+
+test('restaurar una sesión SaaS válida descarga Supabase antes de cerrar el diálogo', async () => {
+  const auth = await projectFile('js/saas-auth-ui-v2.js');
+  const unlock = auth.slice(auth.indexOf('async function unlockBoundSession'), auth.indexOf('async function handlePersistentSession'));
+  assert.match(unlock, /if \(typeof app\.synchronizeCloud === 'function'\) await app\.synchronizeCloud\(\)/);
+  assert.match(unlock, /if \(typeof app\.refresh === 'function'\) await app\.refresh\(\)/);
+});
+
