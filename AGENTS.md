@@ -3407,3 +3407,130 @@ Regla:
 - no borrar ni reconstruir datos;
 - comprobar primero el build cargado y forzar actualización del shell PWA sin tocar IndexedDB/localStorage.
 
+---
+
+# 42. Causa real de app vacía / 29 cambios pendientes / expulsión tras recarga — 19/09/2026
+
+Incidencia visual confirmada por Miguel:
+- la app muestra plantilla vacía o incompleta;
+- Ajustes → Sincronización muestra “Error de sincronización”;
+- muestra “Inicia sesión para sincronizar esta cuenta”;
+- existen 29 cambios pendientes en el dispositivo;
+- al recargar/actualizar vuelve a pedir acceso;
+- en una versión cacheada llegó a aparecer `normalizePlayerName is not defined`.
+
+## 42.1 Verificación de servidor
+
+Supabase conserva los datos reales:
+- jugadores activos: 15;
+- partidos activos: 4;
+- convocatorias activas: 2;
+- asistencias activas: 7;
+- configuración activa: 19.
+
+Por tanto:
+- la app vacía **no significa pérdida de datos**;
+- no crear de nuevo jugadores ni restaurar masivamente por este síntoma.
+
+Comprobación crítica:
+- `auth.sessions` no tenía ninguna sesión activa para la cuenta propietaria en el momento del diagnóstico.
+
+Conclusión:
+- el PIN local podía desbloquear la interfaz;
+- pero sin una sesión real de Supabase, RLS no permite descargar ni subir los datos;
+- eso explica simultáneamente:
+  - app vacía;
+  - “Inicia sesión para sincronizar esta cuenta”;
+  - 29 cambios pendientes;
+  - expulsión/rebloqueo tras actualizar.
+
+## 42.2 Solución nueva: PIN crea una sesión Supabase real
+
+Se abandona la idea de que el PIN solo desbloquee la interfaz cuando falta la sesión cloud.
+
+Nueva Edge Function:
+- `pin-login`.
+
+Archivo:
+- `supabase/functions/pin-login/index.ts`.
+
+Flujo:
+1. el dispositivo ya conoce el `user_id` vinculado/recordado;
+2. el usuario introduce su PIN de CampoBase;
+3. la Edge Function verifica en servidor el hash de `configuracion/main`;
+4. si coincide, genera un token de autenticación de Supabase;
+5. el cliente lo canjea mediante `auth.verifyOtp()`;
+6. se crea una sesión Supabase real y persistente;
+7. se ejecuta `synchronizeCloud()`;
+8. se procesan las mutaciones pendientes y se descargan los datos reales protegidos por RLS.
+
+No se guarda el PIN en texto plano.
+
+## 42.3 Seguridad del login por PIN
+
+La Edge Function:
+- no requiere una sesión previa porque su objetivo es precisamente reconstruirla;
+- usa service role solo dentro del servidor/Edge Function;
+- nunca expone service role al navegador;
+- verifica únicamente el PIN owner para crear una sesión owner;
+- exige que la cuenta tenga acceso comercial activo: `gift_free`, `trial` o `active`;
+- mantiene la regla comercial de CampoBase;
+- tiene rate limit:
+  - máximo 5 fallos por usuario+IP en 15 minutos;
+  - máximo 20 fallos por usuario en una hora;
+- registra intentos en `public.pin_login_attempts`;
+- esa tabla tiene RLS y los clientes `anon/authenticated` no tienen permisos directos.
+
+Migración:
+- `supabase/12_pin_login_rate_limit.sql`.
+
+La migración ya está aplicada en Supabase.
+La Edge Function `pin-login` ya está desplegada en Supabase.
+
+## 42.4 Cuenta recordada y acceso local
+
+Nueva función cliente:
+- `signInWithCampoBasePin(client, userId, pin)`.
+
+Se utiliza en dos rutas:
+- pantalla SaaS de cuenta recordada;
+- modal local “Introduce tu PIN”.
+
+Si no existe sesión Supabase:
+- el PIN owner intenta reconstruirla mediante `pin-login`;
+- tras crear sesión se vuelve a sincronizar automáticamente.
+
+El PIN delegate no se eleva a owner por esta vía.
+
+## 42.5 Error `normalizePlayerName is not defined`
+
+Se comprobó el código actual:
+- `deduplicatePlayers()` ya no llama a `normalizePlayerName`;
+- refresh no deduplica/borrar jugadores automáticamente.
+
+La aparición del error en móvil corresponde a JavaScript antiguo retenido por PWA/caché.
+
+Corrección:
+- nueva versión forzada: `20260919-pin-cloud-session-v4`;
+- se cambia la URL versionada de app/estilos/módulos;
+- se cambia también el nombre real del CACHE del service worker;
+- al activar el nuevo service worker se elimina la caché anterior.
+
+Objetivo:
+- no mezclar `app.js` nuevo con módulos antiguos;
+- impedir que vuelva a ejecutarse la versión que contenía `normalizePlayerName`.
+
+## 42.6 Estado
+
+Rama:
+- `hotfix/pin-submit-supabase-20260919`.
+
+Servidor:
+- rate limit aplicado;
+- Edge Function `pin-login` desplegada.
+
+Cliente:
+- implementación terminada en rama;
+- pruebas automáticas en ejecución;
+- no marcar como resuelto en producción hasta tests verdes + merge + Pages verde + comprobación posterior de `auth.sessions` y datos.
+
