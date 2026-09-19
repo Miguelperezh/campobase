@@ -62,11 +62,11 @@ export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
 
 export async function getRemoteMainSettings() {
   const client = getCampoBaseSupabaseClient();
-  const user = await requireBoundUser(client);
+  const { dataOwnerUserId } = await requireBoundUser(client);
   const rows = checkResult(await client
     .from(CLOUD_TABLES.settings)
     .select('payload,updated_at,deleted_at')
-    .eq('user_id', user.id)
+    .eq('user_id', dataOwnerUserId)
     .eq('id', 'main')
     .limit(1)) ?? [];
   const row = rows[0];
@@ -106,7 +106,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v7'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260919-prod-current-v8'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())

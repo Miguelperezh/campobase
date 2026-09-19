@@ -3620,4 +3620,50 @@ Regla:
 - Rama: `fase-4-billing-aislada`.
 - Cambios confirmados y listos para verificación visual mediante URL directa de RawGitHack.
 
+---
+
+# 48. Restauración definitiva del login con PIN en la nube, corrección en getRemoteMainSettings, pasarela Supabase Auth con Edge Function pin-login, y actualización a build v8 — 19/09/2026
+
+## 48.1 Diagnóstico de la incidencia
+- El usuario reportó: "no fuiona las url , quiero que arregles el problema de la app".
+- Al acceder en producción/móvil, la aplicación o bien mostraba "Configurar acceso" en lugar de pedir el PIN habitual, o bien tras desbloquear el PIN local aparecía con 0 jugadores vacía, o los enlaces de prueba externos fallaban.
+- **Verificación de servidor en Supabase (`mdzpygfwugawlmknywxa`)**:
+  - Se comprobó `public.jugadores`: los 15 jugadores activos siguen 100% intactos (Antonio Roldán Rendón #3, Diego Andrés Anaya Chaparro #5, Elías Mederos Valencia #14, Carlos Campillo Rendón #13, Mateo Moyano Santana #1, Pablo Díaz Santana #10, etc.).
+  - No hubo pérdida de datos en la base de datos.
+- **Causas raíz identificadas**:
+  1. En `js/supabase-client.js` `getRemoteMainSettings()`, se llamaba a `const user = await requireBoundUser(client)` y luego `.eq('user_id', user.id)`. Sin embargo, `requireBoundUser` devuelve un objeto `{ user, teamContext, dataOwnerUserId }`, por lo que `user.id` era `undefined`. Esto rompía la carga remota de configuración.
+  2. Debido a las políticas RLS (Row Level Security) de Supabase, un cliente no autenticado con JWT de Supabase Auth no puede consultar `public.jugadores`. Si la sesión SaaS caducaba o se borraba el token, el desbloqueo del PIN local solo liberaba el estado en memoria, pero `synchronizeCloud()` fallaba con `CAMPOBASE_AUTH_REQUIRED` y no descargaba los 15 jugadores, dejando la app con 0 jugadores.
+  3. En `showAuth()` (`js/app.js`), si `state.settings.ownerPinHash` no estaba cargado en memoria, el diálogo asumía erróneamente `initial = true` y mostraba "Configurar acceso" en lugar del PIN habitual.
+  4. Los servicios como `raw.githack.com` sufren caídas intermitentes de CDN y timeouts severos; GitHub Pages sirve la producción oficial exclusivamente desde la rama `main` en la raíz (`/`).
+
+## 48.2 Acciones y cambios implementados
+1. **Corrección de ámbito y destructuring en `getRemoteMainSettings` (`js/supabase-client.js`)**:
+   - Se corrigió la llamada para desestructurar `{ dataOwnerUserId } = await requireBoundUser(client)` y filtrar por `.eq('user_id', dataOwnerUserId)`.
+2. **Edge Function `pin-login` y procedimiento seguro de rate-limit (`supabase/functions/pin-login/index.ts`, `supabase/12_pin_login_rate_limit.sql`)**:
+   - Se verificó y desplegó la función Edge autenticada en Supabase que valida el PIN contra el hash del usuario registrado con protección de fuerza bruta / rate-limit en PostgreSQL.
+   - Retorna un hash de verificación OTP que permite autenticar la sesión del usuario en Supabase Auth.
+3. **Autenticación transparente con PIN en cliente (`js/auth-manager.js`)**:
+   - Se añadió `signInWithCampoBasePin(client, userId, pin)`, que consume la Edge Function y ejecuta `client.auth.verifyOtp({ token_hash, type: 'email' })`.
+   - Se corrigió `getRememberedSaasAccount()` para aceptar tanto `id` como `userId`.
+4. **Unificación y resiliencia en diálogos de acceso (`js/saas-auth-ui-v2.js` y `js/app.js`)**:
+   - En `js/saas-auth-ui-v2.js`, al enviar el PIN, si no hay sesión activa en Supabase o hay discrepancia de usuario, se invoca `signInWithCampoBasePin` para restaurar la sesión en la nube sin fricción.
+   - Se eliminó el bloqueo para cambiar a la vista de PIN.
+   - En `js/app.js` `showAuth()`, antes de mostrar "Configurar acceso", se inspecciona `getLocalPinSettingsCandidates()`. Si existen credenciales o hashes previos, se solicita el PIN existente en lugar de pedir configurar acceso nuevo.
+   - En `submitAuth()`, tras verificar el PIN, se autentica con `signInWithCampoBasePin` para satisfacer las RLS de Supabase y descargar la plantilla completa de 15 jugadores.
+5. **Actualización forzada de versión PWA a `20260919-prod-current-v8`**:
+   - Sincronizado en `sw.js` (CACHE name y ASSETS), `index.html` (styles, `__CAMPOBASE_BUILD`, scripts), `js/app.js`, `js/supabase-client.js`, y en toda la suite de tests (`pwa-current-build.test.js`, `auth-boot-recovery.test.js`, `auth-recovery-controls.test.js`, `custom-exercise-library-and-session-edit.test.js`, `exercise-overlay-play-hidden.test.js`).
+   - Esto fuerza la invalidación inmediata de cachés obsoletas en móviles y PWAs al cargar.
+
+## 48.3 Pruebas automatizadas y validación técnica
+- Test suite completa: **447 tests pasados, 0 fallidos** (incluyendo `tests/pin-login-edge.test.js`).
+- Comprobación de sintaxis: `npm run check` completado con éxito (0 errores en los 60 módulos).
+- Verificación en vivo de Supabase Edge Function: endpoint `pin-login` respondiendo HTTP 200/400 según validez de payload.
+- Verificación de datos: 15 jugadores intactos en `public.jugadores`.
+
+## 48.4 Despliegue y producción
+- Rama de trabajo: `fase-4-billing-aislada` y desplegado en `main` para GitHub Pages.
+- URL oficial de producción: `https://miguelperezh.github.io/campobase/`.
+- No usar servicios externos como RawGitHack que presentan fallos de disponibilidad.
+
+
 

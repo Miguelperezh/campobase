@@ -35,8 +35,9 @@ export function getRememberedSaasAccount() {
     const raw = localStorage.getItem(REMEMBERED_ACCOUNT_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed?.id) return null;
-    return parsed;
+    const id = parsed?.id || parsed?.userId || '';
+    if (!id) return null;
+    return { ...parsed, id: String(id) };
   } catch {
     return null;
   }
@@ -111,6 +112,50 @@ async function legacyOwnerPasswordFromPin(pin) {
   } finally {
     try { db?.close(); } catch { /* noop */ }
   }
+}
+
+async function edgeFunctionErrorMessage(error, fallback = 'No se pudo iniciar la sesión con PIN.') {
+  try {
+    const response = error?.context;
+    if (response && typeof response.clone === 'function') {
+      const payload = await response.clone().json();
+      if (payload?.message) return String(payload.message);
+    }
+  } catch { /* Usar mensaje genérico. */ }
+  return error?.message || fallback;
+}
+
+export async function signInWithCampoBasePin(client, userId, pin) {
+  if (!client?.auth || !client?.functions) throw new Error('No se ha podido abrir el acceso por PIN.');
+  const cleanUserId = String(userId || '').trim();
+  const cleanPin = String(pin || '').trim();
+  if (!/^[0-9a-f-]{36}$/i.test(cleanUserId)) throw new Error('No se ha podido identificar esta cuenta.');
+  if (!/^\d{4,8}$/.test(cleanPin)) throw new Error('El PIN debe tener entre 4 y 8 cifras.');
+
+  const current = await getCurrentSession(client).catch(() => null);
+  if (current?.user?.id === cleanUserId) {
+    setBoundSaasUserId(cleanUserId);
+    return current;
+  }
+
+  const { data, error } = await client.functions.invoke('pin-login', {
+    body: { user_id: cleanUserId, pin: cleanPin },
+  });
+  if (error) throw new Error(await edgeFunctionErrorMessage(error));
+  if (!data?.token_hash) throw new Error(data?.message || 'No se pudo crear la sesión segura.');
+
+  const { data: verified, error: verifyError } = await client.auth.verifyOtp({
+    token_hash: data.token_hash,
+    type: data.type || 'email',
+  });
+  if (verifyError || !verified?.session?.user) throw verifyError || new Error('No se pudo crear la sesión segura.');
+  if (verified.session.user.id !== cleanUserId) {
+    await client.auth.signOut().catch(() => {});
+    throw new Error('La sesión creada no corresponde a esta cuenta.');
+  }
+
+  setBoundSaasUserId(cleanUserId);
+  return verified.session;
 }
 
 export async function loginWithEmailOrUsername(client, identifier, password) {
