@@ -3289,3 +3289,37 @@ Estado:
 - hotfix probado en rama `hotfix/refresh-normalize-20260919`;
 - listo para PR y despliegue a producción.
 
+---
+
+# 43. Hotfix de app vacía desplegado en producción — 19/09/2026
+
+Incidencia confirmada visualmente:
+- tras introducir el PIN, CampoBase mostraba `normalizePlayerName is not defined`;
+- el fallo detenía `refresh()` y hacía parecer que la app se había quedado sin datos.
+
+Corrección desplegada:
+- PR #59 fusionado;
+- commit de producción: `364479b37c3d8180723664e4437faeea4bf5af0e`;
+- `deduplicatePlayers()` ya no ejecuta ninguna deduplicación automática;
+- `refresh()` no borra ni reescribe jugadores;
+- desaparece la llamada a `normalizePlayerName()`;
+- nueva versión PWA: `20260919-refreshfix-v5`.
+
+Verificación:
+- tests de `main`: **success**;
+- GitHub Pages: **success**;
+- producción verificada sin referencia a `normalizePlayerName()`;
+- Supabase sigue conservando:
+  - 15 jugadores activos;
+  - 4 partidos activos;
+  - 2 convocatorias activas;
+  - 7 asistencias activas.
+
+Regla permanente:
+- si una excepción de render/refresh hace parecer la app vacía, comprobar primero Supabase antes de restaurar o recrear datos;
+- ningún proceso de refresh puede deduplicar, borrar, tombstonear ni modificar fichas de jugadores automáticamente;
+- toda operación destructiva sobre plantilla debe ser manual y explícita.
+
+Producción:
+- `https://miguelperezh.github.io/campobase/`.
+
