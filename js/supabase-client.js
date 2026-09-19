@@ -116,6 +116,9 @@ export function createCampoBaseCloudStore() {
       return {
         records: rows.filter(({ deleted_at: deletedAt }) => !deletedAt).map(({ payload }) => payload),
         deletedIds: rows.filter(({ deleted_at: deletedAt }) => Boolean(deletedAt)).map(({ id }) => id),
+        tombstones: rows
+          .filter(({ deleted_at: deletedAt }) => Boolean(deletedAt))
+          .map(({ id, deleted_at: deletedAt }) => ({ id, deletedAt: Number(deletedAt) || 0 })),
         rowCount: rows.length,
       };
     },
