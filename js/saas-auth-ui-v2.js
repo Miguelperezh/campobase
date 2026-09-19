@@ -614,12 +614,13 @@ async function unlockBoundSession(client) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
   }
 
-  // Al recuperar una sesión SaaS válida, refresca inmediatamente desde Supabase.
+  // Al recuperar una sesión SaaS válida, cierra el diálogo primero y refresca inmediatamente desde Supabase.
   // No dejamos la interfaz abierta con una IndexedDB vacía esperando al intervalo.
-  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
-  if (typeof app.refresh === 'function') await app.refresh();
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
+  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (typeof app.refresh === 'function') await app.refresh();
+  if (typeof app.renderAll === 'function') app.renderAll();
   return true;
 }
 

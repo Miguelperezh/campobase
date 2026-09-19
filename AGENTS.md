@@ -3665,5 +3665,50 @@ Regla:
 - URL oficial de producción: `https://miguelperezh.github.io/campobase/`.
 - No usar servicios externos como RawGitHack que presentan fallos de disponibilidad.
 
+---
+
+# 49. Corrección del renderizado de plantilla tras login/PIN, desbloqueo de isUserInteracting, repintado reactivo de vista Plantilla, protección contra vaciado local y actualización a build v9 — 19/09/2026
+
+## 49.1 Diagnóstico de la incidencia
+- **Síntoma reportado por el usuario**: "todo vacio joder", adjuntando captura de pantalla de la pestaña Plantilla (`#plantilla`).
+- **Análisis visual de la captura**:
+  - En la parte superior aparecía la tarjeta de "CUERPO TÉCNICO 1: 1º ENTRENADOR Miguel Pérez".
+  - Debajo de esa tarjeta, la sección de estadísticas (`#squad-stats`) y la lista de jugadores (`#players-list`) estaban completamente en blanco (sin texto ni tarjetas de jugadores, ni siquiera el badge "0 jugadores").
+- **Causas raíz confirmadas**:
+  1. **Bloqueo en `isUserInteracting()`**: Durante el arranque o el proceso de introducción del PIN en `#auth-dialog`, `isUserInteracting()` comprobaba `document.querySelector('dialog[open]')` y `active.matches('select, input, textarea')`. Debido a que `#auth-dialog` estaba abierto y el foco estaba en el campo PIN, `isUserInteracting()` devolvía `true`. En consecuencia, cuando `refresh()` se ejecutaba, **`renderAll()` era completamente descartado** (`if (!isUserInteracting()) renderAll();`).
+  2. **Secuencia de cierre en `unlockBoundSession()`**: En `js/saas-auth-ui-v2.js`, se llamaba a `app.refresh()` *antes* de `dialog.close()`. Al estar el diálogo abierto, `renderAll()` se omitía, luego se cerraba el diálogo y ningún proceso invocaba `renderAll()`.
+  3. **`showView('plantilla')` no llamaba a `renderPlayers()`**: En `js/app.js`, al entrar o pulsar en la pestaña Plantilla, `showView('plantilla')` solo llamaba a `refreshPlantillaStaff().catch(...)` (lo que explicaba por qué aparecía la tarjeta del cuerpo técnico pero nada de los jugadores). En `js/redesign-nav.js`, `triggerStandardView('plantilla')` tampoco llamaba a `renderPlayers()` ni a `renderAll()`.
+  4. **Ausencia de evento `close` en `#auth-dialog`**: No existía ningún listener para que el cierre del diálogo de autenticación forzara un repintado de los datos si la sesión ya estaba autenticada.
+  5. **Tolerancia a fallos en `requireBoundUser()`**: Si el RPC `mi_equipo_contexto` devolvía error en Postgres o fallo de red, se lanzaba una excepción que abortaba la sincronización de Supabase en lugar de utilizar el `user.id` del titular como fallback.
+  6. **Protección de datos locales**: En `replaceLocalStore()` de `js/db.js`, si el servidor devolvía un array vacío de jugadores por anomalía de permisos o consulta RLS, se corría el riesgo de vaciar la tabla local sin confirmación explícita.
+
+## 49.2 Acciones y cambios implementados
+1. **Desbloqueo de `isUserInteracting()` (`js/app.js`)**:
+   - Se ajustó para ignorar `#auth-dialog`: `dialog[open]:not(#auth-dialog)` y `!active.closest('#auth-dialog')`. El diálogo de acceso y sus campos de texto nunca bloquean el repintado de la aplicación en segundo plano.
+2. **Repintado explícito en `showView('plantilla')` y `triggerStandardView` (`js/app.js` y `js/redesign-nav.js`)**:
+   - Al navegar a la vista `plantilla`, se invoca inmediatamente `renderPlayers()` y `refreshPlantillaStaff()`.
+   - En `redesign-nav.js`, la navegación estándar invoca `window.__campobase.renderAll()`.
+3. **Secuencia garantizada en `unlockBoundSession` (`js/saas-auth-ui-v2.js`) y `submitAuth` (`js/app.js`)**:
+   - En `unlockBoundSession()`, se cierra `#auth-dialog` antes de la sincronización y se invoca explícitamente `app.renderAll()`.
+   - En `submitAuth()`, se añade `renderAll()` tras cerrar el diálogo en todas las ramas de autenticación (PIN Supabase y fallback local).
+4. **Listener del evento `close` en `#auth-dialog` (`js/app.js`)**:
+   - Cualquier cierre del diálogo con rol activo desencadena `refresh().then(() => renderAll()).catch(() => renderAll())`.
+5. **Fallback tolerante en `requireBoundUser` (`js/supabase-client.js`)**:
+   - `mi_equipo_contexto` se resuelve dentro de un bloque try/catch seguro; si no devuelve datos de delegación, se asume directamente `dataOwnerUserId = user.id`.
+6. **Protección activa contra vaciado local en `replaceLocalStore` (`js/db.js`)**:
+   - Si `store === 'players'` y el servidor devuelve 0 registros mientras existen registros locales, se omite el vaciado preventivamente para proteger la plantilla.
+7. **Actualización forzada de versión PWA a `20260919-prod-current-v9`**:
+   - Sincronizado en `sw.js` (CACHE name y ASSETS con query string v9), `index.html` (CSS, scripts y `__CAMPOBASE_BUILD`), `js/app.js`, `js/supabase-client.js` y batería de tests.
+
+## 49.3 Pruebas automatizadas y validación técnica
+- Test suite: **454 tests pasados, 0 fallidos** (añadidos 7 tests en `tests/squad-render-protection.test.js`).
+- Comprobación de sintaxis: `npm run check` completado con éxito (0 errores en 60 módulos).
+- Datos en Supabase: los 15 jugadores activos siguen 100% intactos en `public.jugadores`.
+
+## 49.4 Estado y despliegue
+- Rama de trabajo: `fase-4-billing-aislada` y desplegado en `main` para GitHub Pages.
+- Producción oficial: `https://miguelperezh.github.io/campobase/`.
+
+
 
 

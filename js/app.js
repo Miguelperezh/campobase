@@ -197,7 +197,10 @@ function showView(viewId) {
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
-  if (viewId === 'plantilla') refreshPlantillaStaff().catch(() => {});
+  if (viewId === 'plantilla') {
+    renderPlayers();
+    refreshPlantillaStaff().catch(() => {});
+  }
 }
 
 // Buscador global: filtra los elementos de la vista activa por nombre o palabra.
@@ -216,10 +219,10 @@ function applyGlobalSearch() {
 }
 
 function isUserInteracting() {
-  if (document.querySelector('dialog[open]')) return true;
+  if (document.querySelector('dialog[open]:not(#auth-dialog)')) return true;
   if (document.querySelector('details[open]')) return true;
   const active = document.activeElement;
-  if (active && active.matches('select, input, textarea')) return true;
+  if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
   // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
   if ((window.__viewersPlaying || 0) > 0) return true;
@@ -3872,8 +3875,10 @@ async function submitAuth(event) {
               await signInWithCampoBasePin(client, userId, pin);
               await hydratePinSettingsFromSupabase();
               applyRole('owner');
-              await synchronizeCloud();
               $('#auth-dialog').close();
+              await synchronizeCloud();
+              await refresh();
+              renderAll();
               return;
             } catch {
               // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
@@ -3896,6 +3901,7 @@ async function submitAuth(event) {
       await refresh();
     }
     $('#auth-dialog').close();
+    renderAll();
   } catch (error) {
     $('#auth-error').textContent = error.message;
   }
@@ -5170,11 +5176,18 @@ function wireEvents() {
     if (state.role) return;
     event.preventDefault();
   });
+  $('#auth-dialog').addEventListener('close', () => {
+    if (state.role) {
+      refresh().then(() => renderAll()).catch(() => renderAll());
+    }
+  });
   $('#auth-demo-btn')?.addEventListener('click', async () => {
     try {
       $('#auth-error').textContent = 'Iniciando modo demo…';
       await startDemoSession(createDemoSession(crypto.randomUUID()));
       $('#auth-dialog').close();
+      await refresh();
+      renderAll();
     } catch (err) {
       $('#auth-error').textContent = err.message;
     }
@@ -5753,7 +5766,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v8').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v9').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
