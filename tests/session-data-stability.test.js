@@ -95,3 +95,21 @@ test('un fallo de guardado cloud online no se oculta como si hubiera guardado co
   assert.match(writeArea, /if \(canUseCloud\(\)\) await flushSyncQueue\(\)/);
 });
 
+test('Actualizar app conserva sesión, vista y evita una segunda recarga del service worker', async () => {
+  const app = await projectFile('js/app.js');
+  const helper = app.slice(app.indexOf('async function reloadAppPreservingSession'), app.indexOf("$('#auth-reload-btn')"));
+  assert.match(helper, /sessionStorage\.setItem\(ACTIVE_VIEW_KEY, activeView\)/);
+  assert.match(helper, /window\._swReloading = true/);
+  assert.match(helper, /registration\.update\(\)\.catch/);
+  assert.match(helper, /window\.location\.reload\(\)/);
+  assert.doesNotMatch(helper, /removeItem\(SESSION_ROLE_KEY\)/);
+  assert.doesNotMatch(helper, /removeItem\(DEMO_SESSION_KEY\)/);
+
+  const authHandler = app.slice(app.indexOf("$('#auth-reload-btn')"), app.indexOf('let authResetConfirming'));
+  assert.match(authHandler, /await reloadAppPreservingSession\(\)/);
+  assert.doesNotMatch(authHandler, /removeItem\(SESSION_ROLE_KEY\)/);
+
+  const settingsHandler = app.slice(app.indexOf("$('#settings-reload')"), app.indexOf("$('#pin-settings-form')"));
+  assert.match(settingsHandler, /await reloadAppPreservingSession\(\)/);
+});
+
