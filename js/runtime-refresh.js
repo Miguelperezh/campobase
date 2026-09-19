@@ -312,7 +312,7 @@ function patchSoon() {
 }
 
 async function openCreator() {
-  const { records } = await hydrateCustomExercises({ attempts: 20 });
+  const records = await readCustomExercises().catch(() => []);
   ensureOverlay();
   overlay.classList.remove('viewer-mode');
   overlay.classList.add('open');
@@ -324,6 +324,7 @@ async function openCreator() {
   boardObjectUrl = URL.createObjectURL(new Blob([boardHtml], { type: 'text/html' }));
   frame.dataset.creatorExerciseCount = String(records.length);
   frame.src = `${boardObjectUrl}#embedded=1&mode=create`;
+  hydrateCustomExercises({ attempts: 3 }).catch(() => null);
 }
 
 async function openViewer(record, version = 'static') {
