@@ -113,3 +113,39 @@ test('Actualizar app conserva sesión, vista y evita una segunda recarga del ser
   assert.match(settingsHandler, /await reloadAppPreservingSession\(\)/);
 });
 
+test('cada escritura intenta recuperar el vínculo SaaS antes de decidir qué IndexedDB usar', async () => {
+  const db = await projectFile('js/db.js');
+  assert.match(db, /async function prepareStorageBindingForWrite\(\)/);
+  assert.match(db, /await cloudStore\.prepare\(\)/);
+  const putArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function putPlayerProfile'));
+  const profileArea = db.slice(db.indexOf('export async function putPlayerProfile'), db.indexOf('export async function putBatch'));
+  const batchArea = db.slice(db.indexOf('export async function putBatch'), db.indexOf('export async function remove'));
+  const removeArea = db.slice(db.indexOf('export async function remove'), db.indexOf('export async function flushSyncQueue'));
+  for (const area of [putArea, profileArea, batchArea, removeArea]) {
+    assert.match(area, /await prepareStorageBindingForWrite\(\)/);
+  }
+});
+
+test('la app puede diagnosticar y recuperar una cola legacy pendiente sin borrarla antes de sincronizar', async () => {
+  const db = await projectFile('js/db.js');
+  assert.match(db, /export async function getSyncDiagnostics\(\)/);
+  assert.match(db, /export async function recoverLegacyPendingMutations\(\)/);
+  const recover = db.slice(db.indexOf('export async function recoverLegacyPendingMutations'), db.indexOf('export async function exportDatabase'));
+  const flushAt = recover.indexOf('await flushSyncQueue()');
+  const cleanupAt = recover.indexOf("legacyDb.transaction(SYNC_QUEUE, 'readwrite')");
+  assert.ok(flushAt >= 0 && cleanupAt > flushAt, 'La cola legacy solo debe limpiarse después de sincronizar');
+});
+
+test('Ajustes muestra estado de sincronización y acciones manuales de recuperación', async () => {
+  const [html, app] = await Promise.all([
+    projectFile('index.html'),
+    projectFile('js/app.js'),
+  ]);
+  assert.match(html, /id="sync-status-panel"/);
+  assert.match(html, /id="sync-now"/);
+  assert.match(html, /id="recover-local-pending"/);
+  assert.match(app, /async function refreshSyncStatusPanel\(\)/);
+  assert.match(app, /await recoverLegacyPendingMutations\(\)/);
+  assert.match(app, /await synchronizeCloud\(\)/);
+});
+
