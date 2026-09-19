@@ -106,6 +106,11 @@ export function createCampoBaseCloudStore() {
     });
 
   return {
+    async prepare() {
+      const user = await requireBoundUser(client);
+      return { userId: user.id };
+    },
+
     async getSnapshot(store) {
       const user = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
