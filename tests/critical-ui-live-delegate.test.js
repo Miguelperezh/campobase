@@ -61,10 +61,13 @@ test('wireEvents no repite la regresión querySelector().forEach', () => {
   assert.match(app, /\$\$\('\.bottom-nav button'\)\.forEach/);
 });
 
-test('+ Ejercicio abre sin esperar la nube y su guardado no recarga toda la app', () => {
-  assert.match(runtime, /#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]/);
-  assert.match(runtime, /const records = await readCustomExercises\(\)\.catch/);
-  assert.match(runtime, /hydrateCustomExercises\(\{ attempts: 3 \}\)\.catch/);
+test('+ Ejercicio abre de forma directa, local-first y su guardado no recarga toda la app', () => {
+  assert.doesNotMatch(runtime, /#ejercicios \.section-head button\[data-dialog="exercise-dialog"\]/);
+  assert.match(runtime, /window\.__campobaseOpenExerciseCreator = openCreator/);
+  assert.match(runtime, /await readCustomExercises\(\)\.catch/);
+  assert.match(runtime, /hydrateCustomExercises\(\{ attempts: 1 \}\)\.catch/);
+  assert.match(app, /typeof window\.__campobaseOpenExerciseCreator === 'function'/);
+  assert.match(html, /id="new-exercise"[^>]*data-dialog="exercise-dialog"/);
   const persist = board.slice(board.indexOf('async function persistExercise'), board.indexOf('async function deleteExercise'));
   assert.match(persist, /await put\('settings', record\)/);
   assert.match(persist, /verifiedLocal/);
