@@ -191,8 +191,8 @@ function showView(viewId) {
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   const target = document.getElementById(viewId);
   if (!target?.classList.contains('view')) return;
-  $('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
-  $('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
+  $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
