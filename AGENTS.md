@@ -3534,3 +3534,42 @@ Cliente:
 - pruebas automáticas en ejecución;
 - no marcar como resuelto en producción hasta tests verdes + merge + Pages verde + comprobación posterior de `auth.sessions` y datos.
 
+---
+
+# 42. Hotfix móvil — app vacía por bundle PWA antiguo con normalizePlayerName indefinido — 19/09/2026
+
+Incidencia visual confirmada por Miguel:
+- la app aparecía sin datos;
+- al introducir PIN se mostraba el error `normalizePlayerName is not defined`;
+- la pantalla de Plantilla quedaba vacía detrás del modal.
+
+Comprobación de datos antes de tocar código:
+- Supabase conserva 15 jugadores activos;
+- 4 partidos activos;
+- 2 convocatorias activas;
+- 7 asistencias activas.
+- Por tanto, esta incidencia NO es una pérdida real de datos.
+
+Causa:
+- el móvil/PWA estaba ejecutando un bundle JavaScript anterior que todavía llamaba a `normalizePlayerName()`;
+- el `main` actual ya no contiene esa llamada y `deduplicatePlayers()` no borra ni transforma jugadores;
+- el fallo era de caché/bundle obsoleto en el dispositivo.
+
+Corrección:
+- nueva versión PWA forzada: `20260919-prod-current-v7`;
+- se actualizan de forma coordinada:
+  - `index.html`;
+  - `sw.js`;
+  - `js/app.js`;
+  - `js/supabase-client.js`;
+- se actualizan también los tests que verifican que index/app/cloud/service worker apuntan al mismo build;
+- navegación sigue siendo network-first y el service worker elimina cachés antiguas al activar.
+
+Pruebas:
+- workflow `35448748218` → **success**.
+
+Regla:
+- ante una app visualmente vacía con error JavaScript, comprobar primero Supabase antes de restaurar o recrear datos;
+- no borrar jugadores ni importar backups automáticamente;
+- si Supabase conserva los datos, tratarlo como problema de arranque/caché/sincronización hasta demostrar lo contrario.
+
