@@ -37,3 +37,10 @@ test('el endpoint genera token hash y no envía correo', () => {
   assert.match(edge, /hashed_token/);
   assert.doesNotMatch(edge, /signInWithOtp/);
 });
+
+test('el endpoint permite resolver la cuenta por PIN o identificador cuando no se pasa user_id', () => {
+  assert.match(edge, /body\.identifier/);
+  assert.match(edge, /from\("configuracion"\)/);
+  assert.match(edge, /user_id: userId/);
+});
+

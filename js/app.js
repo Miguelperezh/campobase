@@ -3801,7 +3801,7 @@ async function hydratePinSettingsFromSupabase() {
   }
 }
 
-async function showAuth() {
+async function showAuth(forceInitial = false) {
   await hydratePinSettingsFromSupabase();
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
     const candidates = await getLocalPinSettingsCandidates().catch(() => []);
@@ -3820,7 +3820,8 @@ async function showAuth() {
   $('#settings-nav').hidden = false;
   $('#demo-team-panel').classList.add('hidden');
   state.role = null;
-  const initial = !state.settings.ownerPinHash || !state.settings.delegatePinHash;
+  const hasLocalPins = Boolean(state.settings.ownerPinHash && state.settings.delegatePinHash);
+  const initial = forceInitial && !hasLocalPins;
   $('#auth-title').textContent = initial ? 'Configurar acceso' : 'Acceso a CampoBase';
   $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado o el PIN temporal de demo.';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
@@ -3838,21 +3839,7 @@ async function showAuth() {
 function ensureAuthPromptVisible() {
   if (state.role) return;
   if (sessionStorage.getItem(SESSION_ROLE_KEY)) return;
-  document.body.classList.add('auth-locked');
-  const dialog = $('#auth-dialog');
-  const saasShell = $('#saas-auth-shell');
-  const localForm = $('#auth-form');
-
-  if (saasShell) {
-    // La capa SaaS decide si muestra correo/contraseña, PIN recordado o el
-    // acceso local. Nunca dejamos las dos capas ocultas a la vez.
-    if (saasShell.classList.contains('hidden') && localForm?.classList.contains('hidden')) {
-      saasShell.classList.remove('hidden');
-    }
-    if (dialog && !dialog.open) dialog.showModal();
-    return;
-  }
-
+  if (isDemoDatabase()) return;
   void showAuth();
 }
 
@@ -3868,6 +3855,26 @@ async function submitAuth(event) {
       if (hydrated) {
         await showAuth();
         throw new TypeError('La cuenta ya tiene PIN configurados. Introduce tu PIN de CampoBase.');
+      }
+      const enteredOwnerPin = String(form.elements.newOwnerPin?.value || '').trim();
+      if (/^\d{4,8}$/.test(enteredOwnerPin)) {
+        try {
+          const client = getSupabaseAuthClient();
+          const session = await signInWithCampoBasePin(client, '', enteredOwnerPin);
+          if (session?.user?.id) {
+            setBoundSaasUserId(session.user.id);
+            configureRealDatabase();
+            try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
+            await hydratePinSettingsFromSupabase();
+            applyRole('owner');
+            $('#auth-dialog').close();
+            await synchronizeCloud();
+            await refresh();
+            renderAll();
+            toast('Sincronizado con CampoBase en la nube.');
+            return;
+          }
+        } catch {}
       }
       await savePins(form.elements.newOwnerPin.value, form.elements.newDelegatePin.value);
       applyRole('owner');
@@ -3930,20 +3937,24 @@ async function submitAuth(event) {
         }
         if (!recoveredRole) {
           const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
-          if (userId) {
-            try {
-              const client = getSupabaseAuthClient();
-              await signInWithCampoBasePin(client, userId, pin);
+          try {
+            const client = getSupabaseAuthClient();
+            const session = await signInWithCampoBasePin(client, userId || '', pin);
+            if (session?.user?.id) {
+              setBoundSaasUserId(session.user.id);
+              configureRealDatabase();
+              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
               await hydratePinSettingsFromSupabase();
               applyRole('owner');
               $('#auth-dialog').close();
               await synchronizeCloud();
               await refresh();
               renderAll();
+              toast('Sincronizado con CampoBase en la nube.');
               return;
-            } catch {
-              // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
             }
+          } catch {
+            // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
           }
           throw new TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.');
         }
@@ -5829,7 +5840,7 @@ async function init() {
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v15').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v16').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
       navigator.serviceWorker.addEventListener('controllerchange', () => {

@@ -3867,3 +3867,40 @@ No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas
   - Guardado de ejercicio de pizarra en "+ ejercicios": Guardado con éxito sin alertas de autenticación.
   - Clic en "Preparar partido": Inicializa temporizador `ready` a 00:00 con 7 jugadores en campo.
   - Recarga / actualización de página: Mantiene `isAuthLocked: false`, `sessionRole: "owner"`, `authDialogOpen: false`.
+
+## 52. CLICABILIDAD TOTAL DE PESTAÑAS SUPERIORES Y SINCRONIZACIÓN AUTOMÁTICA MÓVIL-ORDENADOR VÍA SUPABASE (2026-09-19 v16)
+
+### 52.1 Problemas detectados y resueltos
+1. **Pestañas y subpestañas superiores no respondían al clic ("no puedo pinchar en ninguna pestaña de las que aparecen arriba, ni ejercicio ni nada")**:
+   - **Causa raíz**: 
+     - La barra superior `.topbar` tenía `position: sticky; top: 0; z-index: 30;` con altura de 61px a 140px.
+     - La barra de subnavegación `#cb-sub-nav` tenía `top: 54px; z-index: 25;`. Al hacer scroll vertical, `#cb-sub-nav` se deslizaba por debajo del área translúcida invisible de `.topbar`, haciendo que los clics fueran interceptados por el fondo del encabezado en lugar de llegar a las píldoras de navegación.
+     - En `styles-redesign.css`, `html, body.cb-redesign-active` tenían `overflow-x: hidden !important;`. En los motores de renderizado modernos (Chromium, WebKit, Gecko), `overflow-x: hidden` en el elemento body fuerza computar `overflow-y: auto`, rompiendo el contexto de scroll viewport y desactivando por completo el comportamiento de `position: sticky` en los hijos directos.
+     - En `js/redesign-nav.js`, un `MutationObserver` re-renderizaba todo el HTML interno de `#cb-sub-nav` destruyendo y recreando los botones en cada microcambio del DOM, cancelando eventos `click` en curso si el ratón o dedo se movía ligeramente.
+   - **Solución**:
+     - En `styles-redesign.css`, se sustituyó `overflow-x: hidden` por `overflow-x: clip !important;`, preservando el scroll viewport nativo y reactivando `position: sticky`.
+     - `#cb-sub-nav` ahora se posiciona dinámicamente con `position: sticky !important; top: var(--cb-topbar-height, 66px) !important; z-index: 35 !important;` (por encima de `.topbar`).
+     - Se añadió `syncTopbarHeight()` mediante un `ResizeObserver` sobre `.topbar` y oyentes en `resize` y `orientationchange` para asegurar que el offset sea siempre matemáticamente exacto en ordenador y móvil.
+     - Las píldoras `.cb-sub-pill` tienen `touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important; cursor: pointer !important; user-select: none !important;` y sus hijos internos tienen `pointer-events: none !important;` para que los clics impacten directamente en el botón.
+     - `renderSubNav()` ahora realiza actualizaciones selectivas de clases (`active` y `aria-selected`) cuando el módulo no cambia, sin destruir el DOM ni los listeners. Se añadió delegación de eventos a nivel de documento (`installSubNavDelegation`) como salvaguarda infalible.
+
+2. **Falta de sincronización entre el móvil y el ordenador ("no se sincroniza con mi móvil la versión de ordenador! pero para esto estaba supabase")**:
+   - **Causa raíz**:
+     - Al abrir CampoBase en un móvil por primera vez, el IndexedDB local está vacío y `state.settings.pinSalt` es nulo.
+     - `submitAuth()` intentaba cargar la configuración desde Supabase mediante `hydratePinSettingsFromSupabase()`, pero requería una sesión de Supabase ya activa (`requireBoundUser(client)`). Al no haber sesión iniciada en el móvil, fallaba silenciosamente.
+     - El código comprobaba `getBoundSaasUserId() || getRememberedSaasAccount()?.id`. En el móvil nuevo este valor era una cadena vacía, por lo que nunca se llamaba a `signInWithCampoBasePin()`, lanzando directamente la excepción `TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.')`.
+     - En `supabase/functions/pin-login/index.ts`, la Edge Function exigía estrictamente que `user_id` fuera un UUID válido de 36 caracteres, impidiendo la autenticación autónoma con PIN.
+   - **Solución**:
+     - En `supabase/functions/pin-login/index.ts`, la función Edge ahora permite llamadas con `pin` (y opcionalmente `user_id` o `identifier`). Si no se proporciona `user_id`, busca en `configuracion` (donde `id = 'main'` y `deleted_at is null`), calcula `sha256Hex(pinSalt:pin)` en tiempo constante, verifica el acceso comercial de la cuenta, genera un token OTP tipo magiclink y devuelve `{ token_hash, type: "email", user_id: userId }`.
+     - En `js/auth-manager.js`, `signInWithCampoBasePin(client, userIdOrIdentifier, pin)` admite tanto UUID como identificador o cadena vacía. Al verificar el OTP generado, asocia de inmediato la cuenta mediante `setBoundSaasUserId(authenticatedUserId)`.
+     - `loginWithEmailOrUsername()` integra fallback automático: si la autenticación por contraseña falla con credenciales inválidas y la entrada coincide con el formato PIN (4 a 8 cifras), autentica automáticamente mediante `signInWithCampoBasePin`.
+     - En `js/app.js`, `showAuth()` muestra por defecto el campo de introducción de PIN ("Introduce el PIN de Migue, del delegado o demo") en dispositivos nuevos en lugar de exigir crear PIN nuevos vacíos.
+     - En `submitAuth()`, cuando no hay coincidencias locales, invoca `signInWithCampoBasePin(client, userId || '', pin)`. En cuanto Supabase valida el PIN, asigna `setBoundSaasUserId`, activa la base de datos `configureRealDatabase()`, hidrata la configuración remota, cierra el modal y ejecuta `await synchronizeCloud()`, descargando instantáneamente todos los jugadores (los 15 futbolistas), partidos, convocatorias y entrenamientos en el móvil.
+
+### 52.2 Versión de producción
+- Versión actualizada a `20260919-prod-current-v16` en `index.html`, `sw.js`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y suites de pruebas correspondientes.
+- Tests ejecutados: 449/449 pasados (`npm run check && npm test`).
+- Pruebas reales en navegador automatizado vía Chrome CDP:
+  - Clic en píldoras de subnavegación (`Alineación`, `Convocatoria`, `En Vivo`) con scroll vertical: respuesta inmediata tanto en resolución de escritorio (1280x800) como en móvil (390x844).
+  - Flujo de autenticación y sincronización con Supabase para nuevo dispositivo: validación de PIN en Supabase, persistencia de sesión segura y sincronización total de datos de la plantilla sin pérdida de información.
+

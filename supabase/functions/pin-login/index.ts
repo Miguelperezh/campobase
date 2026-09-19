@@ -40,19 +40,34 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceKey) return json({ message: "Servicio no disponible." }, 503);
 
-  let body: { user_id?: string; pin?: string } = {};
+  let body: { user_id?: string; pin?: string; identifier?: string } = {};
   try { body = await req.json(); } catch {}
-  const userId = String(body.user_id || "").trim();
+  let userId = String(body.user_id || "").trim();
   const pin = String(body.pin || "").trim();
+  const identifier = String(body.identifier || "").trim().toLowerCase();
 
-  if (!/^[0-9a-f-]{36}$/i.test(userId) || !/^\d{4,8}$/.test(pin)) {
+  if (!/^\d{4,8}$/.test(pin)) {
     return json({ message: "Acceso no válido." }, 400);
+  }
+
+  if (userId && !/^[0-9a-f-]{36}$/i.test(userId)) {
+    userId = "";
   }
 
   const rawIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown")
     .split(",")[0].trim();
   const ipHash = await sha256Hex(rawIp);
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+  if (!userId && identifier) {
+    const cleanId = identifier.replace(/^@/, "").trim();
+    const { data: profile } = await admin
+      .from("perfiles")
+      .select("id")
+      .or(`email.eq.${identifier},username.eq.${cleanId}`)
+      .maybeSingle();
+    if (profile?.id) userId = profile.id;
+  }
 
   const now = Date.now();
   const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000).toISOString();
@@ -62,21 +77,79 @@ Deno.serve(async (req) => {
     admin
       .from("pin_login_attempts")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
       .eq("ip_hash", ipHash)
       .eq("success", false)
       .gte("attempted_at", fifteenMinutesAgo),
-    admin
-      .from("pin_login_attempts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("success", false)
-      .gte("attempted_at", oneHourAgo),
+    userId
+      ? admin
+          .from("pin_login_attempts")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("success", false)
+          .gte("attempted_at", oneHourAgo)
+      : Promise.resolve({ count: 0, error: null }),
   ]);
 
   if (ipCountError || userCountError) return json({ message: "No se pudo comprobar el acceso." }, 503);
   if ((ipFailures || 0) >= 5 || (userFailures || 0) >= 20) {
     return json({ message: "Demasiados intentos. Espera unos minutos antes de volver a probar." }, 429);
+  }
+
+  let config: { payload?: { pinSalt?: string; ownerPinHash?: string } } | null = null;
+  if (!userId) {
+    const { data: configs, error: configsError } = await admin
+      .from("configuracion")
+      .select("user_id,payload")
+      .eq("id", "main")
+      .is("deleted_at", null);
+
+    if (configsError || !configs?.length) {
+      await admin.from("pin_login_attempts").insert({ user_id: "00000000-0000-0000-0000-000000000000", ip_hash: ipHash, success: false });
+      return json({ message: "PIN incorrecto o cuenta no disponible." }, 401);
+    }
+
+    const matchedUsers: Array<{ user_id: string; payload: { pinSalt?: string; ownerPinHash?: string } }> = [];
+    for (const item of configs) {
+      if (item?.payload?.pinSalt && item?.payload?.ownerPinHash) {
+        const cand = await sha256Hex(`${item.payload.pinSalt}:${pin}`);
+        if (safeEqual(cand, String(item.payload.ownerPinHash || ""))) {
+          matchedUsers.push(item);
+        }
+      }
+    }
+
+    if (matchedUsers.length === 0) {
+      await admin.from("pin_login_attempts").insert({ user_id: "00000000-0000-0000-0000-000000000000", ip_hash: ipHash, success: false });
+      return json({ message: "PIN incorrecto." }, 401);
+    }
+
+    if (matchedUsers.length > 1) {
+      return json({ message: "Hay varias cuentas con este PIN. Inicia sesión con tu correo o usuario en Ajustes." }, 409);
+    }
+
+    userId = matchedUsers[0].user_id;
+    config = matchedUsers[0];
+  } else {
+    const { data: userConfig, error: configError } = await admin
+      .from("configuracion")
+      .select("payload")
+      .eq("user_id", userId)
+      .eq("id", "main")
+      .is("deleted_at", null)
+      .maybeSingle();
+    config = userConfig;
+  }
+
+  if (!config?.payload?.pinSalt || !config?.payload?.ownerPinHash) {
+    await admin.from("pin_login_attempts").insert({ user_id: userId, ip_hash: ipHash, success: false });
+    return json({ message: "PIN incorrecto o cuenta no disponible." }, 401);
+  }
+
+  const candidate = await sha256Hex(`${config.payload.pinSalt}:${pin}`);
+  const pinOk = safeEqual(candidate, String(config.payload.ownerPinHash || ""));
+  if (!pinOk) {
+    await admin.from("pin_login_attempts").insert({ user_id: userId, ip_hash: ipHash, success: false });
+    return json({ message: "PIN incorrecto." }, 401);
   }
 
   const { data: subscription, error: subscriptionError } = await admin
@@ -91,26 +164,6 @@ Deno.serve(async (req) => {
   const commercialAccess = Boolean(subscription) && notExpired
     && ["gift_free", "trial", "active"].includes(String(subscription.estado || ""));
   if (!commercialAccess) return json({ message: "Esta cuenta no tiene acceso activo." }, 403);
-
-  const { data: config, error: configError } = await admin
-    .from("configuracion")
-    .select("payload")
-    .eq("user_id", userId)
-    .eq("id", "main")
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (configError || !config?.payload?.pinSalt || !config?.payload?.ownerPinHash) {
-    await admin.from("pin_login_attempts").insert({ user_id: userId, ip_hash: ipHash, success: false });
-    return json({ message: "PIN incorrecto o cuenta no disponible." }, 401);
-  }
-
-  const candidate = await sha256Hex(`${config.payload.pinSalt}:${pin}`);
-  const pinOk = safeEqual(candidate, String(config.payload.ownerPinHash || ""));
-  if (!pinOk) {
-    await admin.from("pin_login_attempts").insert({ user_id: userId, ip_hash: ipHash, success: false });
-    return json({ message: "PIN incorrecto." }, 401);
-  }
 
   const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
   const email = userData?.user?.email || "";
@@ -133,5 +186,5 @@ Deno.serve(async (req) => {
     .eq("success", false)
     .lt("attempted_at", new Date(now - 60 * 1000).toISOString());
 
-  return json({ token_hash: tokenHash, type: "email" });
+  return json({ token_hash: tokenHash, type: "email", user_id: userId });
 });

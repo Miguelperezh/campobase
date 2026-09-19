@@ -159,6 +159,31 @@ export function triggerStandardView(viewId) {
   updateNavState();
 }
 
+export function syncTopbarHeight() {
+  if (typeof document === 'undefined') return;
+  const header = $('.topbar');
+  if (!header) return;
+  const h = header.offsetHeight || 66;
+  document.documentElement.style.setProperty('--cb-topbar-height', `${h}px`);
+}
+
+let subNavDelegationInstalled = false;
+export function installSubNavDelegation() {
+  if (subNavDelegationInstalled || typeof document === 'undefined') return;
+  subNavDelegationInstalled = true;
+
+  const handleAction = (event) => {
+    const pill = event.target?.closest?.('.cb-sub-pill, [data-target-view]');
+    if (!pill) return;
+    const viewId = pill.dataset.targetView;
+    if (!viewId) return;
+    event.preventDefault();
+    triggerStandardView(viewId);
+  };
+
+  document.addEventListener('click', handleAction);
+}
+
 export function renderSubNav() {
   let subNav = $('#cb-sub-nav');
   if (!subNav) {
@@ -173,6 +198,9 @@ export function renderSubNav() {
     }
   }
 
+  syncTopbarHeight();
+  installSubNavDelegation();
+
   const activeViewId = getActiveViewId();
   const activeModuleKey = getActiveModule(activeViewId);
   const activeModule = MODULE_CONFIG[activeModuleKey];
@@ -181,12 +209,25 @@ export function renderSubNav() {
     subNav.hidden = true;
     subNav.classList.add('cb-hidden');
     subNav.style.setProperty('display', 'none', 'important');
+    subNav.dataset.renderedModule = '';
     return;
   }
 
   subNav.hidden = false;
   subNav.classList.remove('cb-hidden');
   subNav.style.setProperty('display', 'flex', 'important');
+
+  // Si el módulo ya está pintado, solo actualizamos las clases activas sin destruir el DOM
+  if (subNav.dataset.renderedModule === activeModuleKey) {
+    subNav.querySelectorAll('.cb-sub-pill').forEach((btn) => {
+      const isActive = btn.dataset.targetView === activeViewId;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    });
+    return;
+  }
+
+  subNav.dataset.renderedModule = activeModuleKey;
   const count = activeModule.subTabs.length;
 
   subNav.innerHTML = `
@@ -202,10 +243,6 @@ export function renderSubNav() {
       }).join('')}
     </div>
   `;
-
-  subNav.querySelectorAll('.cb-sub-pill').forEach((btn) => {
-    btn.addEventListener('click', () => triggerStandardView(btn.dataset.targetView));
-  });
 }
 
 export function closeQuickSheet() {
@@ -556,11 +593,24 @@ function initForwardFiveSecondFix() {
 
 export function initRedesign() {
   document.body.classList.add('cb-redesign-active');
+  syncTopbarHeight();
+  installSubNavDelegation();
   renderBottomNav();
   renderSubNav();
   initStaffManagement();
   initBottomCloseControls();
   initForwardFiveSecondFix();
+
+  const topbar = $('.topbar');
+  if (topbar && typeof ResizeObserver !== 'undefined') {
+    try {
+      new ResizeObserver(() => syncTopbarHeight()).observe(topbar);
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', syncTopbarHeight, { passive: true });
+    window.addEventListener('orientationchange', syncTopbarHeight, { passive: true });
+  }
 
   const main = $('#app');
   if (main) {
