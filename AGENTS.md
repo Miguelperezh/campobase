@@ -3752,3 +3752,19 @@ Antes de fusionar cambios que afecten a navegación, ejercicios, sesión, autent
 - recarga/sincronización no puede vaciar ni reescribir jugadores, teléfonos, estadísticas, convocatorias, asistencias o sesiones.
 
 La comprobación automática debe incluir `npm run check && npm test`. Cuando el entorno no permita una prueba real de navegador o no exista una cuenta SaaS de delegado configurada, debe indicarse explícitamente como **no verificado en navegador/cuenta real** y nunca presentarlo como éxito confirmado.
+
+
+## Incidencia abierta — 19/09/2026 — botones Preparar partido y + Ejercicio
+
+Reporte visual real de Miguel:
+- `Preparar partido` no responde en producción.
+- `+ Ejercicio` tampoco responde correctamente.
+- Las pruebas estáticas anteriores NO se consideran validación funcional.
+
+Corrección en curso:
+- `Preparar partido` debe tener listener directo en el botón renderizado, con captura explícita de errores;
+- la convocatoria debe resolverse por `callupId` y también por `matchId` para tolerar una relación local/cloud incompleta sin inventar datos;
+- `+ Ejercicio` no puede depender de un interceptor global en captura;
+- el creador integrado se invoca de forma directa desde `app.js` y, si falla, debe abrir el formulario estándar de respaldo;
+- no tocar jugadores, teléfonos, estadísticas, partidos, convocatorias ni demás datos para resolver este cableado;
+- no declarar esta incidencia cerrada hasta que Miguel pruebe ambos botones en producción y confirme que funcionan.
