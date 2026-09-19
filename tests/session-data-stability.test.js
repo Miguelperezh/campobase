@@ -51,3 +51,10 @@ test('el service worker no fuerza una segunda navegación de todas las pestañas
   assert.doesNotMatch(sw, /client\.navigate\(client\.url\)/);
   assert.match(sw, /self\.clients\.claim\(\)/);
 });
+
+test('la URL de validación no registra ni sustituye el service worker de producción', async () => {
+  const app = await projectFile('js/app.js');
+  assert.match(app, /isValidationPreview = location\.pathname\.endsWith\('\/validacion-estabilidad\.html'\)/);
+  assert.match(app, /'serviceWorker' in navigator && !isValidationPreview/);
+});
+
