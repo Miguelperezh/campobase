@@ -1893,3 +1893,19 @@ Los datos deportivos activos verificados tras crear las líneas base:
 
 Esto confirma que el estado “app vacía” no debe resolverse creando datos nuevos ni importando una plantilla: los datos reales ya existen y el fallo se debe tratar como problema de sesión/vinculación/carga.
 
+## 23.13 Paso 8 — 19/09/2026 — batería automática verde
+
+Estado:
+- `CampoBase verify` completado correctamente en la rama;
+- workflow run: `35438760969`;
+- resultado: **success**;
+- todavía pendiente de validación visual de Miguel.
+
+La ejecución incluye el flujo del proyecto definido en `.github/workflows/verify.yml`, que ejecuta la verificación de sintaxis y la batería de tests.
+
+Correcciones de tests realizadas durante este paso:
+- se actualizó la expectativa de versión PWA al identificador `20260919-session-data-view-v1`;
+- se acotó la prueba de restauración local para no confundir la limpieza intencionada de una sesión demo caducada con la sesión owner/delegate real.
+
+No se ha fusionado la rama a `main`.
+
