@@ -1946,3 +1946,79 @@ Antes de modificar el generador de WhatsApp de Partidos, comprobar siempre el ti
 
 No unificar ambos casos en un único texto si eso hace reaparecer convocatorias en amistosos o torneos.
 
+---
+
+# 24. WhatsApp de partidos — Liga con convocatoria; amistosos y torneos como aviso general
+
+Regla añadida y validada funcionalmente por petición de Miguel el 19/09/2026.
+
+## 24.1 Regla deportiva/comunicativa
+
+En la sección de Partidos → WhatsApp existen tres tipos de partido:
+
+- **Liga**:
+  - sí existe convocatoria;
+  - WhatsApp puede comunicar convocados y no convocados;
+  - se mantienen los motivos de exclusión, rotación y todos los textos ya validados.
+
+- **Amistoso**:
+  - no se comunica una convocatoria por WhatsApp;
+  - se trata como **aviso de partido amistoso**;
+  - se considera que va toda la plantilla;
+  - no mostrar ni enviar “NO está CONVOCADO”;
+  - no mostrar una lista titulada “JUGADORES CONVOCADOS”.
+
+- **Torneo**:
+  - no se comunica una convocatoria por WhatsApp;
+  - se trata como **aviso de torneo**;
+  - se considera que va toda la plantilla;
+  - no mostrar ni enviar “NO está CONVOCADO”;
+  - no mostrar una lista titulada “JUGADORES CONVOCADOS”.
+
+En amistosos y torneos se siguen comunicando todos los demás datos ya validados:
+- rival;
+- fecha;
+- hora de citación;
+- hora de inicio;
+- campo;
+- ubicación;
+- equipación;
+- material obligatorio;
+- petos si procede;
+- nota personalizada si existe;
+- puntualidad;
+- aviso de contratiempos o molestias físicas;
+- tono y saludo seleccionados;
+- envío individual a padre/madre/familia cuando proceda.
+
+No cambiar el resto de la suite de WhatsApp salvo petición expresa.
+
+## 24.2 Implementación — 19/09/2026
+
+Rama:
+- `fix/estabilidad-datos-sesion-20260919`.
+
+Archivos modificados:
+- `js/whatsapp-suite.js`;
+- `js/app.js`;
+- `tests/whatsapp-suite.test.js`.
+
+Comportamiento implementado:
+- `buildWhatsAppMatchConvocatoria()` deriva el tipo real del partido;
+- en Liga conserva el flujo de convocatoria;
+- en Amistoso ignora cualquier convocatoria antigua para el texto de WhatsApp y genera un aviso de partido para toda la plantilla;
+- en Torneo ignora cualquier convocatoria antigua para el texto de WhatsApp y genera un aviso de torneo para toda la plantilla;
+- el selector de estado convocado/no convocado se oculta en WhatsApp cuando el partido no es de Liga;
+- el listado de eventos identifica Liga/Amistoso/Torneo.
+
+Pruebas añadidas:
+- amistoso no contiene “CONVOCATORIA”, “JUGADORES CONVOCADOS” ni “NO está CONVOCADO”;
+- torneo no contiene convocatoria y mantiene hora, campo, equipación y material;
+- el flujo de Liga existente debe permanecer sin cambios.
+
+Estado:
+- implementación terminada en rama;
+- pendiente de batería automática tras este cambio;
+- pendiente de validación visual de Miguel;
+- no fusionar a `main` hasta validación visual expresa.
+
