@@ -148,7 +148,7 @@ export function buildWhatsAppMatchConvocatoria({
   callup = null,
   players = [],
   kit = '1.ª Oficial (Roja y Negra)',
-  competition = 'Liga',
+  competition = '',
   callTime = '08:15',
   gameTime = '09:00',
   fieldName = 'Campo Alfonso Silva (La Ballena)',
@@ -171,13 +171,22 @@ export function buildWhatsAppMatchConvocatoria({
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
   const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
   const verbs = getToneVerbs({ tone, parentType, recipientType });
+  const matchType = match?.type || callup?.matchType || 'league';
+  const isLeague = matchType === 'league';
+  const competitionLabel = competition || ({
+    league: 'Liga',
+    friendly: 'Amistoso',
+    tournament: 'Torneo',
+  }[matchType] || 'Liga');
+  const nonLeagueDescriptor = matchType === 'friendly' ? 'partido amistoso' : 'torneo';
 
-  // Determinar convocados y excluidos
-  const availableSet = new Set(callup?.availableIds || []);
-  const excludedSet = new Set(callup?.excludedIds || []);
+  // Solo Liga usa convocatorias. En amistosos y torneos va toda la plantilla.
+  const effectiveCallup = isLeague ? callup : null;
+  const availableSet = new Set(effectiveCallup?.availableIds || []);
+  const excludedSet = new Set(effectiveCallup?.excludedIds || []);
   const exclusionMap = new Map();
-  if (callup?.exclusions && Array.isArray(callup.exclusions)) {
-    callup.exclusions.forEach(e => {
+  if (effectiveCallup?.exclusions && Array.isArray(effectiveCallup.exclusions)) {
+    effectiveCallup.exclusions.forEach(e => {
       const pid = typeof e === 'object' && e ? (e.playerId || e.id) : e;
       if (pid) {
         excludedSet.add(pid);
@@ -187,7 +196,7 @@ export function buildWhatsAppMatchConvocatoria({
   }
   
   // Si no hay callup específico, todos los jugadores recibidos se asumen convocados
-  const calledPlayers = callup
+  const calledPlayers = effectiveCallup
     ? players.filter(p => availableSet.has(p.id))
     : players;
 
@@ -201,7 +210,7 @@ export function buildWhatsAppMatchConvocatoria({
         isExcluded = true;
       } else if (callupStatus === 'called') {
         isExcluded = false;
-      } else if (callup) {
+      } else if (effectiveCallup) {
         if (excludedSet.has(targetPlayer.id)) {
           isExcluded = true;
         } else if (availableSet.has(targetPlayer.id)) {
@@ -254,19 +263,24 @@ export function buildWhatsAppMatchConvocatoria({
 
         return `${salutation}
 
-${verbs.comunico} que *${playerName}* *NO está CONVOCADO* para el partido *${competition} (vs ${opponent})* del *${dateFormatted}*${reasonSuffix}.
+${verbs.comunico} que *${playerName}* *NO está CONVOCADO* para el partido *${competitionLabel} (vs ${opponent})* del *${dateFormatted}*${reasonSuffix}.
 
 ${encouragement}
 
 ${closing}`.trim();
       }
 
-      // SI SÍ ESTÁ CONVOCADO:
+      // En Liga se comunica convocatoria. En amistosos/torneos se avisa del
+      // partido a toda la plantilla, sin lenguaje de convocados/no convocados.
+      const intro = isLeague
+        ? `${verbs.comparto} la información de la convocatoria para *${playerName}*:`
+        : `${verbs.comparto} la información del *${nonLeagueDescriptor}* para *${playerName}*:`;
+
       return `${salutation}
 
-${verbs.comparto} la información de la convocatoria para *${playerName}*:
+${intro}
 
-🏆 *Competición:* *${competition} (vs ${opponent})*
+🏆 *Competición:* *${competitionLabel} (vs ${opponent})*
 📅 *Fecha:* *${dateFormatted}*
 ⏰ *Hora de citación:* *${callTime} h*
 ⏱️ *Inicio de partido:* *${gameTime} h*
@@ -292,13 +306,39 @@ ${closing}`.trim();
     materialBlock += `\n• 🎽 *Petos:* Se llevarán petos de juego (${bibsConfig})`;
   }
 
+  if (!isLeague) {
+    const header = matchType === 'friendly'
+      ? `⚽ *PARTIDO AMISTOSO — ${teamName.toUpperCase()}* ⚽`
+      : `🏆 *TORNEO — ${teamName.toUpperCase()}* 🏆`;
+    return `${header}
+
+${greeting} a todos/as,
+
+${verbs.comparto} la información del próximo ${nonLeagueDescriptor}:
+
+🏆 *Competición:* ${competitionLabel} (vs ${opponent})
+📅 *Fecha:* ${dateFormatted}
+⏰ *Hora de citación:* ${callTime} h
+⏱️ *Inicio de partido:* ${gameTime} h
+🏟️ *Campo:* ${fieldName}
+📍 *Ubicación en Google Maps:* ${resolvedMapsUrl}
+
+🎒 *Material y equipación:*
+${materialBlock}
+${customNote ? `\n⚠️ *Nota importante:* ${customNote}` : ''}
+• Rogamos puntualidad en la hora de citación para realizar un buen calentamiento.
+• Ante cualquier contratiempo o molestia física, por favor avisad con antelación.
+
+¡Muchas gracias a todos/as!`.trim();
+  }
+
   return `⚽ *CONVOCATORIA — ${teamName.toUpperCase()}* ⚽
 
 ${greeting} a todos/as,
 
 ${verbs.comparto} la convocatoria para el próximo encuentro:
 
-🏆 *Competición:* ${competition} (vs ${opponent})
+🏆 *Competición:* ${competitionLabel} (vs ${opponent})
 📅 *Fecha:* ${dateFormatted}
 ⏰ *Hora de citación:* ${callTime} h
 ⏱️ *Inicio de partido:* ${gameTime} h
