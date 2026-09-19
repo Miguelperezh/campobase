@@ -2633,3 +2633,77 @@ Estado:
 - se investiga y corrige en `fix/estabilidad-datos-sesion-20260919`;
 - no fusionar a `main` hasta validación visual y móvil expresa de Miguel.
 
+---
+
+# 35. Corrección de sincronización móvil — enlace previo, estado visible y recuperación — 19/09/2026
+
+## 35.1 Causa de riesgo corregida
+
+Antes de una escritura local, CampoBase podía decidir la base IndexedDB cuando todavía no se había reconstruido `campobase.saasUserId` desde una sesión Supabase válida.
+
+Caso peligroso:
+1. el móvil conserva sesión Supabase;
+2. se pierde el vínculo local `campobase.saasUserId`;
+3. el usuario edita una ficha/convocatoria;
+4. la escritura se guarda primero en la base legado `campobase`;
+5. después la sincronización recupera el usuario y cambia a `campobase_<user_id>`;
+6. la mutación recién guardada puede quedar varada en la cola de la base legado.
+
+Corrección:
+- todas las escrituras críticas llaman ahora a `prepareStorageBindingForWrite()` **antes** de abrir la base donde se va a guardar;
+- si existe una sesión Supabase válida, se reconstruye el vínculo del usuario antes de escribir;
+- se aplica a:
+  - `put()`;
+  - `putPlayerProfile()`;
+  - `putBatch()`;
+  - `remove()`.
+
+## 35.2 Diagnóstico visible en Ajustes
+
+Nuevo bloque:
+- **Sincronización**.
+
+Muestra:
+- sincronizado con Supabase;
+- sin conexión;
+- número de cambios pendientes de la cuenta actual;
+- error de sincronización;
+- existencia de cambios pendientes en almacenamiento local anterior.
+
+Botones:
+- **Sincronizar ahora**;
+- **Recuperar cambios locales pendientes** cuando existe cola legado y hay una cuenta vinculada.
+
+## 35.3 Recuperación de cambios móviles varados
+
+Funciones:
+- `getSyncDiagnostics()`;
+- `recoverLegacyPendingMutations()`.
+
+Reglas de recuperación:
+- no se borra la cola legado antes de intentar la subida;
+- las mutaciones se copian primero a la cola de `campobase_<user_id>`;
+- Supabase aplica las guardas anti-sobrescritura;
+- solo después de que `flushSyncQueue()` termine correctamente se eliminan de la cola legado;
+- si Supabase rechaza/falla, la copia local antigua permanece para poder reintentar;
+- esta recuperación requiere una cuenta SaaS vinculada y confirmación explícita del usuario desde la interfaz.
+
+## 35.4 Estado de guardado
+
+A partir de esta corrección:
+- una escritura online con error cloud propaga el error a la interfaz;
+- una escritura offline queda localmente en cola;
+- el panel permite comprobar pendientes;
+- el usuario puede forzar reintento sin borrar almacenamiento.
+
+Archivos:
+- `js/db.js`;
+- `js/app.js`;
+- `index.html`;
+- `tests/session-data-stability.test.js`.
+
+Estado:
+- implementado en rama;
+- pendiente de batería completa y validación móvil de Miguel;
+- no fusionar a `main` todavía.
+
