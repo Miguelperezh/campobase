@@ -16,6 +16,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 const app = read('js/app.js');
 const runtime = read('js/runtime-refresh.js');
 const board = read('js/exercise-board-persistence.js');
+const persistence = board;
 const planner = read('js/session-planner-ui.js');
 const teamAccess = read('js/team-access.js');
 const saas = read('js/saas-auth-ui-v2.js');
@@ -77,6 +78,25 @@ test('+ Ejercicio tiene cableado directo con fallback y su guardado no recarga t
   assert.doesNotMatch(afterSave, /window\.location\.reload/);
   assert.match(afterSave, /host\?\.refresh/);
   assert.match(afterSave, /setExerciseLibraryMode\?\.\('mine'\)/);
+});
+
+
+test('+ Ejercicio puede guardar desde creador visual y desde formulario de respaldo', () => {
+  assert.match(persistence, /window\.addEventListener\('message'/);
+  assert.match(persistence, /campobase:persist-exercise/);
+  assert.match(persistence, /campobase:exercise-saved/);
+  assert.match(persistence, /await put\('settings', record\)/);
+  assert.match(persistence, /verifiedLocal/);
+  assert.match(persistence, /campobase:exercise-persisted/);
+  assert.match(persistence, /host\?\.showView\?\.\('ejercicios'\)/);
+  assert.match(persistence, /host\?\.setExerciseLibraryMode\?\.\('mine'\)/);
+
+  const fallback = app.slice(app.indexOf('async function saveExercise'), app.indexOf('function exerciseOptions'));
+  assert.match(fallback, /recordType: 'exercise'/);
+  assert.match(fallback, /userCreated: true/);
+  assert.match(fallback, /source: 'personal'/);
+  assert.match(fallback, /await put\('settings'/);
+  assert.match(fallback, /setExerciseLibraryMode\('mine'\)/);
 });
 
 test('Ver todo de Sesiones abre el visor oficial y conserva el crop validado', () => {
