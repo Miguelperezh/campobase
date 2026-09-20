@@ -177,6 +177,105 @@ export function renderActionVisualSVG(trazo = '') {
 }
 
 /**
+ * Convenciones visuales y roles oficiales de CampoBase (Sección 2.9):
+ * - Portero: `P` — NEGRO (#111827)
+ * - Defensa: `D1`, `D2`, `D3`… — ROJO (#DC2626)
+ * - Atacante: `A1`, `A2`, `A3`… — AZUL (#2563EB)
+ * - Neutro / Apoyo: `N` — AMARILLO (#FACC15)
+ * - Entrenador: `E` — GRIS CLARO (#CBD5E1)
+ */
+export function roleVisualMeta(roleItemOrId) {
+  const rawId = typeof roleItemOrId === 'string'
+    ? roleItemOrId.trim()
+    : String(roleItemOrId?.id || roleItemOrId?.letra || roleItemOrId?.rol || '').trim();
+  const rawRole = typeof roleItemOrId === 'object' ? String(roleItemOrId?.rol || '').trim() : '';
+  const rawFunc = typeof roleItemOrId === 'object' ? String(roleItemOrId?.funcion || roleItemOrId?.descripcion || '').trim() : '';
+
+  const idUpper = rawId.toUpperCase();
+  const textCombined = `${idUpper} ${rawRole.toUpperCase()} ${rawFunc.toUpperCase()}`;
+
+  // 1. Portero: P, P1, P2... — NEGRO
+  if (/^P\d*$/.test(idUpper) || /PORTERO|ARQUERO|GOALKEEPER/.test(textCombined)) {
+    const num = idUpper.replace(/\D/g, '');
+    const code = num ? `P${num}` : 'P';
+    return {
+      code,
+      label: num ? `Portero ${num}` : 'Portero',
+      category: 'portero',
+      bg: '#111827',
+      color: '#FFFFFF',
+      border: '#000000',
+    };
+  }
+
+  // 2. Defensa: D1, D2, D3... — ROJO
+  if (/^D\d*$/.test(idUpper) || /DEFENSA|DEFENSOR|OPOSICION|OPOSICIÓN/.test(textCombined)) {
+    const num = idUpper.replace(/\D/g, '');
+    const code = num ? `D${num}` : 'D1';
+    return {
+      code,
+      label: num ? `Defensa ${num}` : 'Defensa',
+      category: 'defensa',
+      bg: '#DC2626',
+      color: '#FFFFFF',
+      border: '#B91C1C',
+    };
+  }
+
+  // 3. Atacante: A1, A2, A3... — AZUL
+  if (/^A\d*$/.test(idUpper) || /ATACANTE|DELANTERO|JUGADOR DE CAMPO/.test(textCombined)) {
+    const num = idUpper.replace(/\D/g, '');
+    const code = num ? `A${num}` : 'A1';
+    return {
+      code,
+      label: num ? `Atacante ${num}` : 'Atacante',
+      category: 'atacante',
+      bg: '#2563EB',
+      color: '#FFFFFF',
+      border: '#1D4ED8',
+    };
+  }
+
+  // 4. Neutro / Apoyo: N, N1, C, C1... — AMARILLO
+  if (/^[NC]\d*$/.test(idUpper) || /NEUTRO|APOYO|COMODIN|COMODÍN/.test(textCombined)) {
+    const num = idUpper.replace(/\D/g, '');
+    const code = num ? `N${num}` : (idUpper.startsWith('C') ? 'C' : 'N');
+    return {
+      code,
+      label: num ? `Neutro / Apoyo ${num}` : 'Neutro / Apoyo',
+      category: 'neutro',
+      bg: '#FACC15',
+      color: '#000000',
+      border: '#EAB308',
+    };
+  }
+
+  // 5. Entrenador: E, E1... — GRIS CLARO
+  if (/^E\d*$/.test(idUpper) || /ENTRENADOR|TECNICO|TÉCNICO|MISTER|EVALUADOR/.test(textCombined)) {
+    const num = idUpper.replace(/\D/g, '');
+    const code = num ? `E${num}` : 'E';
+    return {
+      code,
+      label: num ? `Entrenador ${num}` : 'Entrenador',
+      category: 'entrenador',
+      bg: '#CBD5E1',
+      color: '#0F172A',
+      border: '#94A3B8',
+    };
+  }
+
+  // Default: Atacante / Jugador de campo — AZUL
+  return {
+    code: idUpper || 'A1',
+    label: rawRole || rawId || 'Atacante',
+    category: 'atacante',
+    bg: '#2563EB',
+    color: '#FFFFFF',
+    border: '#1D4ED8',
+  };
+}
+
+/**
  * Renderiza la ficha completa V2 (17 secciones) para el visor modal o detalle.
  */
 export function renderValidatedExerciseHTML(ex, options = {}) {
@@ -212,7 +311,9 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
   const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
     ? resolveHostedVideoUrl(explicitHumanVideo)
     : '';
-  const graphicCrop = normalizeMediaCrop(ex.media_crop || ex.preview_crop);
+  const graphicCrop = normalizeMediaCrop(ex.media_crop);
+  const previewCrop = normalizeMediaCrop(ex.preview_crop || ex.media_crop);
+  const previewCropToken = mediaCropToken(previewCrop);
   const graphicCropToken = mediaCropToken(graphicCrop);
   const dr = ex.datos_rapidos || {};
   const org = ex.organizacion || {};
@@ -267,6 +368,60 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       </div>`;
   }
 
+  // 3b. Organización y roles
+  let organizacionHtml = '';
+  const orgRoles = [];
+  if (Array.isArray(org.roles) && org.roles.length) {
+    org.roles.forEach((r) => orgRoles.push({ ...roleVisualMeta(r), funcion: r.funcion || r.descripcion || '' }));
+  } else if (ex.leyenda_visual?.jugadores?.length) {
+    ex.leyenda_visual.jugadores.forEach((j) => orgRoles.push({ ...roleVisualMeta(j), funcion: j.funcion || '' }));
+  }
+
+  // Fallback si la fuente no trae lista explícita de roles (ej. ejercicios nuevos o importados)
+  if (!orgRoles.length) {
+    const rawText = `${ex.nombre || ''} ${ex.categoria || ''} ${JSON.stringify(ex.materiales || '')} ${JSON.stringify(ex.como_se_hace || '')}`.toLowerCase();
+    const hasKeeper = rawText.includes('portero') || org.porteros > 0;
+    const hasDefender = rawText.includes('defens') || rawText.includes('1v1') || rawText.includes('duelo') || rawText.includes('oposic') || rawText.includes('intercep');
+    const hasNeutral = rawText.includes('comod') || rawText.includes('apoyo') || rawText.includes('neutro');
+    const hasCoach = rawText.includes('entrenador') || rawText.includes('servidor') || rawText.includes('pasador') || org.entrenadores > 0;
+
+    orgRoles.push({ ...roleVisualMeta('A1'), funcion: 'Jugador / Atacante de la tarea' });
+    if (hasDefender) orgRoles.push({ ...roleVisualMeta('D1'), funcion: 'Defensa / Oposición activa' });
+    if (hasNeutral) orgRoles.push({ ...roleVisualMeta('N'), funcion: 'Jugador neutro / Apoyo' });
+    if (hasKeeper) orgRoles.push({ ...roleVisualMeta('P'), funcion: 'Portero en portería' });
+    if (hasCoach) orgRoles.push({ ...roleVisualMeta('E'), funcion: 'Entrenador / Servidor de balón' });
+  } else {
+    if (org.porteros > 0 && !orgRoles.some(r => r.category === 'portero')) {
+      orgRoles.push({ ...roleVisualMeta('P'), funcion: 'Portero de la tarea' });
+    }
+    if (org.entrenadores > 0 && !orgRoles.some(r => r.category === 'entrenador')) {
+      orgRoles.push({ ...roleVisualMeta('E'), funcion: 'Entrenador / Guía de la tarea' });
+    }
+  }
+
+  const resumenJugadores = org.resumen_jugadores || (dr.jugadores ? formatExercisePlayers(dr.jugadores) : '');
+  if (orgRoles.length || resumenJugadores) {
+    organizacionHtml = `
+      <div id="section-organizacion" class="section-block">
+        <div class="section-head-mini" style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;">
+          <h3>👥 Organización y roles</h3>
+          ${resumenJugadores ? `<span class="pill-org-count">${esc(resumenJugadores)}</span>` : ''}
+        </div>
+        ${org.oposicion ? `<p class="section-text" style="margin:0.4rem 0 0.5rem;font-size:0.86rem;"><strong>Oposición:</strong> ${esc(org.oposicion)}</p>` : ''}
+        <div class="roles-chips-grid">
+          ${orgRoles.map(r => `
+            <div class="role-badge-card">
+              <span class="role-token" style="background:${r.bg};color:${r.color};border:1px solid ${r.border};">${esc(r.code)}</span>
+              <div class="role-desc-group">
+                <span class="role-name">${esc(r.label)}</span>
+                ${r.funcion ? `<span class="role-func" title="${esc(r.funcion)}">${esc(r.funcion)}</span>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
   // 4. Montaje
   let montajeHtml = '';
   if (ex.montaje && (ex.montaje.dimensiones || ex.montaje.espacio_tipo || ex.montaje.explicacion)) {
@@ -299,17 +454,52 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
 
   // 6. Cómo se hace (Paso a paso)
   let comoSeHaceHtml = '';
-  if (ex.como_se_hace && ex.como_se_hace.length) {
+  const quickSummary = ex.vista_rapida?.explicacion_breve || ex.resumen || '';
+
+  const renderStepsList = (steps = []) => {
+    if (!steps || !steps.length) return '';
+    return `
+      <div class="numbered-steps">
+        ${steps.map((step, idx) => `
+          <div class="step-item">
+            <span class="step-num">${idx + 1}</span>
+            <div class="step-text">${esc(String(step).replace(/^\d+\.\s*/, ''))}</div>
+          </div>`).join('')}
+      </div>`;
+  };
+
+  let stepsBodyHtml = '';
+  if (Array.isArray(ex.como_se_hace) && ex.como_se_hace.length) {
+    stepsBodyHtml = renderStepsList(ex.como_se_hace);
+  } else if (ex.como_se_hace && typeof ex.como_se_hace === 'object') {
+    const entries = Object.entries(ex.como_se_hace);
+    if (entries.length) {
+      stepsBodyHtml = entries.map(([groupKey, val]) => {
+        const label = groupKey === 'base' ? 'Fase Base' : groupKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const stepItems = Array.isArray(val) ? val : [val];
+        return `
+          <div class="como-se-hace-group" style="margin-bottom:1rem;">
+            <div class="group-title" style="font-weight:750;font-size:0.92rem;margin:0.5rem 0 0.35rem;color:var(--ink,#0f172a);display:flex;align-items:center;gap:0.4rem;">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cb-accent,#00b074);"></span>
+              ${esc(label)}
+            </div>
+            ${renderStepsList(stepItems)}
+          </div>`;
+      }).join('');
+    }
+  } else if (typeof ex.como_se_hace === 'string' && ex.como_se_hace.trim()) {
+    stepsBodyHtml = `<p class="section-text">${esc(ex.como_se_hace)}</p>`;
+  }
+
+  if (stepsBodyHtml || quickSummary) {
     comoSeHaceHtml = `
       <div id="section-como-se-hace" class="section-block">
-        <h3>⚙️ Cómo se hace (Paso a paso)</h3>
-        <div class="numbered-steps">
-          ${ex.como_se_hace.map((step, idx) => `
-            <div class="step-item">
-              <span class="step-num">${idx + 1}</span>
-              <div class="step-text">${esc(step)}</div>
-            </div>`).join('')}
+        <div class="section-head-mini" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+          <h3 style="margin:0;">⚙️ Cómo se hace (Paso a paso)</h3>
+          ${ex.datos_rapidos?.duracion ? `<span class="pill-org-count">⏱ ${esc(ex.datos_rapidos.duracion)}</span>` : ''}
         </div>
+        ${quickSummary ? `<div class="quick-summary-lead" style="margin:0 0 0.85rem;padding:0.6rem 0.85rem;border-radius:10px;background:var(--surface,#f8fafc);border-left:3px solid var(--cb-accent,#00b074);font-size:0.88rem;color:var(--ink,#0f172a);line-height:1.4;"><strong style="color:var(--cb-accent,#00b074);">⚡ Clave rápida:</strong> ${esc(quickSummary)}</div>` : ''}
+        ${stepsBodyHtml}
       </div>`;
   }
 
@@ -470,14 +660,17 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
         <div class="legend-category">
           <div class="legend-subtitle">Jugadores y roles</div>
           <div class="legend-items-grid">
-            ${ley.jugadores.map(j => `
+            ${ley.jugadores.map(j => {
+              const meta = roleVisualMeta(j);
+              return `
               <div class="legend-card">
-                <div class="legend-player-token" style="background:${j.color || '#3477DB'};">${esc(j.letra || 'J')}</div>
+                <div class="legend-player-token" style="background:${meta.bg};color:${meta.color};border:1px solid ${meta.border};font-weight:900;">${esc(meta.code)}</div>
                 <div class="legend-info">
-                  <div class="legend-title">${esc(j.rol)}</div>
+                  <div class="legend-title">${esc(meta.label)}</div>
                   ${j.funcion ? `<div class="legend-detail">${esc(j.funcion)}</div>` : ''}
                 </div>
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>
         </div>`;
     }
@@ -567,13 +760,13 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(graphicCropToken)}">
+          <img src="${esc(previewSrc)}" alt="Vista previa de ${esc(cleanNombre)}" class="exercise-preview-img" loading="eager" data-preview-image="1" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(previewCropToken)}">
         </div>
       </div>` : previewVideoSrc ? `
       <div class="exercise-media-preview" data-media-order="1">
         <div class="exercise-media-label">Vista previa</div>
         <div class="exercise-preview-stage">
-          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(graphicCropToken)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
+          <canvas class="exercise-preview-static-canvas" data-preview-video-src="${esc(previewVideoSrc)}" data-preview-crop="${esc(previewCropToken)}" aria-label="Vista previa de ${esc(cleanNombre)}"></canvas>
         </div>
       </div>` : `
       <div class="exercise-media-preview" data-media-order="1">
@@ -659,7 +852,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <!-- 3. Vídeo de muestra con humanos -->
     ${realVideo ? `
       <div class="section-block real-video-block exercise-media-human" data-media-order="3">
-        <h3>🎥 Vídeo de muestra con humanos</h3>
+        <h3>🎥 Vídeo de muestra con humanos (en caso de disponer de él)</h3>
         <div class="video-item">
           <video class="real-video-el" controls preload="none" playsinline src="${esc(realVideo)}"></video>
         </div>
@@ -673,6 +866,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       ${queTrabajaHtml}
       ${objHtml}
       ${datosRapidosHtml}
+      ${organizacionHtml}
       ${montajeHtml}
       ${materialHtml}
       ${comoSeHaceHtml}
@@ -1019,6 +1213,9 @@ export function initValidatedExerciseViewer(root) {
   if (btnZoomOut) btnZoomOut.addEventListener('click', () => applyZoom(zoom - 0.25));
   if (btnZoomReset) btnZoomReset.addEventListener('click', () => applyZoom(1.0));
 
+  const viewerAbortController = new AbortController();
+  const { signal } = viewerAbortController;
+
   // Panning al arrastrar cuando hay zoom
   if (stage) {
     stage.addEventListener('mousedown', (e) => {
@@ -1035,13 +1232,13 @@ export function initValidatedExerciseViewer(root) {
       panX = e.clientX - startX;
       panY = e.clientY - startY;
       updateTransform();
-    });
+    }, { signal });
 
     window.addEventListener('mouseup', () => {
       if (!isDragging) return;
       isDragging = false;
       if (stage) stage.style.cursor = zoom > 1.0 ? 'grab' : 'default';
-    });
+    }, { signal });
 
     // Soporte táctil móvil (pinch-to-zoom y pan)
     let initialPinchDist = 0;
@@ -1108,11 +1305,29 @@ export function initValidatedExerciseViewer(root) {
   if (theaterExitBtn) theaterExitBtn.addEventListener('click', () => toggleTheater(false));
   if (theaterBottomCloseBtn) theaterBottomCloseBtn.addEventListener('click', () => toggleTheater(false));
 
-  const parentDialog = root.closest('dialog');
+  const parentDialog = root.closest('dialog') || document.querySelector('#exercise-detail-dialog');
   if (parentDialog) {
-    parentDialog.addEventListener('close', () => {
+    const handleDialogClose = () => {
       toggleTheater(false);
-    });
+      try {
+        if (video) {
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        }
+        const realVideo = root.querySelector('.real-video-el');
+        if (realVideo) {
+          realVideo.pause();
+          realVideo.removeAttribute('src');
+          realVideo.load();
+        }
+      } catch {}
+      try {
+        viewerAbortController.abort();
+      } catch {}
+      parentDialog.removeEventListener('close', handleDialogClose);
+    };
+    parentDialog.addEventListener('close', handleDialogClose);
   }
 
   window.addEventListener('keydown', (e) => {
@@ -1120,5 +1335,5 @@ export function initValidatedExerciseViewer(root) {
       const wrap = root.querySelector('.exercise-video-wrap.theater-fullscreen');
       if (wrap) toggleTheater(false);
     }
-  });
+  }, { signal });
 }

@@ -5500,13 +5500,18 @@ details[open].session-block-accordion .toggle-icon {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* En vista reducida, ocultar bloques largos de teoría y dejar solo animación, objetivos, series, repeticiones y pasos */
+/* En vista reducida, ocultar bloques largos de teoría y dejar solo animación, datos rápidos, cómo se hace y carga */
 .ejercicio-v2-sheet.view-mode-reduced #section-que-se-trabaja,
+.ejercicio-v2-sheet.view-mode-reduced #section-objetivo,
+.ejercicio-v2-sheet.view-mode-reduced #section-organizacion,
 .ejercicio-v2-sheet.view-mode-reduced #section-montaje,
 .ejercicio-v2-sheet.view-mode-reduced #section-material,
+.ejercicio-v2-sheet.view-mode-reduced #section-fases,
+.ejercicio-v2-sheet.view-mode-reduced #section-rotacion,
 .ejercicio-v2-sheet.view-mode-reduced #section-que-observar,
 .ejercicio-v2-sheet.view-mode-reduced #section-consignas,
 .ejercicio-v2-sheet.view-mode-reduced #section-errores,
+.ejercicio-v2-sheet.view-mode-reduced #section-errores-correcciones,
 .ejercicio-v2-sheet.view-mode-reduced #section-variantes,
 .ejercicio-v2-sheet.view-mode-reduced .section-leyenda-subvideo {
   display: none !important;
@@ -5680,11 +5685,106 @@ dialog {
   color: #ffffff !important;
 }
 
-/* Ocultar la 'x' pequeña de la esquina superior derecha en favor del botón grande inferior */
-.dialog-head button[data-close],
+/* Botón '✕' superior de cierre siempre visible, accesible y con área táctil cómoda (44x44px) */
 .sheet-top-close-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 50 !important;
+}
+
+/* Si el diálogo de ejercicio tiene su propia barra de acciones inferior (.sheet-bottom-bar),
+   ocultamos el .dialog-sticky-footer duplicado para evitar colisión de botones y bloqueos en móvil */
+#exercise-detail-dialog:has(.sheet-bottom-bar) > .dialog-sticky-footer,
+#exercise-detail-dialog.has-sheet-bottom-bar > .dialog-sticky-footer {
   display: none !important;
 }
+
+/* Estilos de Sección Organización y Roles oficiales (Sección 2.9) */
+#section-organizacion {
+  margin-top: 0.85rem !important;
+}
+
+.pill-org-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0.2rem 0.65rem !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  background: var(--surface, #f1f5f9) !important;
+  color: var(--ink, #0f172a) !important;
+  border: 1px solid var(--line, #cbd5e1) !important;
+}
+
+.roles-chips-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  gap: 0.6rem !important;
+  margin-top: 0.6rem !important;
+}
+
+.role-badge-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  background: var(--card, #ffffff) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.role-token {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  border-radius: 999px !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.role-desc-group {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+
+.role-name {
+  font-size: 0.86rem !important;
+  font-weight: 800 !important;
+  color: var(--ink, #0f172a) !important;
+  line-height: 1.2 !important;
+}
+
+.role-func {
+  font-size: 0.74rem !important;
+  color: var(--muted, #64748b) !important;
+  line-height: 1.25 !important;
+  margin-top: 0.15rem !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 480px) {
+  .roles-chips-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem !important;
+  }
+  .role-badge-card {
+    padding: 0.4rem 0.55rem !important;
+    gap: 0.45rem !important;
+  }
+}
+
 
 /* En el acordeón de sesión, no duplicar cabecera dentro de la ficha desplegada */
 .session-block-accordion-body .sheet-head {

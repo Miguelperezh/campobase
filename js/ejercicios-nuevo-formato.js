@@ -232,7 +232,7 @@ function normalizeNewExercise(exercise) {
     preview,
     preview_video: graphicVideo,
     preview_crop: graphicCrop,
-    media_crop: graphicCrop,
+    media_crop: null, // El MP4 gráfico se reproduce íntegro (100%) sin recortar porterías ni desbordar
     video_ejercicio: graphicVideo,
     video: humanVideo,
     video_muestra_humanos: humanVideo,

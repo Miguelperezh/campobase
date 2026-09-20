@@ -198,6 +198,11 @@ function showView(viewId) {
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   const target = document.getElementById(viewId);
   if (!target?.classList.contains('view')) return;
+  // Cerrar modales abiertos al cambiar de vista para evitar estados huérfanos o bloqueos
+  try {
+    const openModals = document.querySelectorAll('dialog[open]:not(#auth-dialog)');
+    openModals.forEach((d) => d.close());
+  } catch {}
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
@@ -2748,8 +2753,72 @@ async function handleVideoDelete(videoId) {
   toast('Vídeo eliminado.');
 }
 
+function wireExerciseDialogLifecycle(dialog) {
+  if (!dialog || dialog._lifecycleWired) return;
+  dialog._lifecycleWired = true;
+
+  // Cierre por clic en el backdrop exterior del modal o en cualquier botón con data-close
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+      dialog.close();
+      return;
+    }
+    const closeBtn = event.target.closest('[data-close]');
+    if (closeBtn) {
+      dialog.close();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  dialog.addEventListener('pointerup', (event) => {
+    const closeBtn = event.target.closest('[data-close]');
+    if (closeBtn) {
+      dialog.close();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  // Teardown completo al cerrar: previene bloqueos en móviles, libera decodificadores y memoria
+  dialog.addEventListener('close', () => {
+    // 1. Pausar y forzar descarga inmediata de todos los vídeos (libera recursos de hardware y de red)
+    const videos = dialog.querySelectorAll('video');
+    videos.forEach((video) => {
+      try {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      } catch {}
+    });
+
+    // 2. Desactivar modo teatro si estaba activo
+    dialog.classList.remove('is-theater-active');
+
+    // 3. Vaciar el contenido DOM del diálogo para que el recolector de basura libere memoria y nodos
+    const body = dialog.querySelector('#exercise-detail-body');
+    if (body) body.innerHTML = '';
+
+    // 4. Asegurar scroll y pointer-events desbloqueados en el documento
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.pointerEvents = '';
+  });
+}
+
 function showExerciseDetail(exerciseId) {
+  const dialog = $('#exercise-detail-dialog');
+  if (dialog) wireExerciseDialogLifecycle(dialog);
+
   const validated = findValidatedExercise(exerciseId);
+  const stickyFooter = dialog?.querySelector('.dialog-sticky-footer');
+  if (stickyFooter) {
+    stickyFooter.style.display = validated ? 'none' : '';
+  }
+  if (dialog) {
+    dialog.classList.toggle('has-sheet-bottom-bar', Boolean(validated));
+  }
+
   if (validated) {
     $('#exercise-detail-title').textContent = validated.nombre;
     const body = $('#exercise-detail-body');
@@ -2758,18 +2827,16 @@ function showExerciseDetail(exerciseId) {
     initValidatedExerciseViewer(sheet);
     attachLightbox(body);
     initVideoSection(body.querySelector('.videos'), { onUpload: handleVideoUpload, onDelete: handleVideoDelete });
-    const dialog = $('#exercise-detail-dialog');
-    dialog.showModal();
-    dialog.scrollTop = 0;
+    if (dialog && !dialog.open) dialog.showModal();
+    if (dialog) dialog.scrollTop = 0;
     return;
   }
   const item = state.exercises.find(({ id }) => id === exerciseId);
   if (!item) return toast('El ejercicio ya no está disponible.');
   $('#exercise-detail-title').textContent = item.name;
   $('#exercise-detail-body').innerHTML = exerciseCardHTML(item);
-  const dialog = $('#exercise-detail-dialog');
-  dialog.showModal();
-  dialog.scrollTop = 0;
+  if (dialog && !dialog.open) dialog.showModal();
+  if (dialog) dialog.scrollTop = 0;
 }
 
 function renderTrainingSessions() {
@@ -6133,7 +6200,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v24').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v27').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

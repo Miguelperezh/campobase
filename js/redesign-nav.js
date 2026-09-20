@@ -381,7 +381,7 @@ export function updateNavState() {
 // tienen un botón inferior visible llamado exactamente «Cerrar».
 // Esta capa no lee ni escribe datos y no altera la lógica de negocio.
 const BOTTOM_CLOSE_STYLE_ID = 'cb-bottom-close-controls-style';
-const BOTTOM_CLOSE_EXCLUDED_DIALOGS = new Set(['auth-dialog']);
+const BOTTOM_CLOSE_EXCLUDED_DIALOGS = new Set(['auth-dialog', 'exercise-detail-dialog']);
 let bottomCloseSyncQueued = false;
 
 function installBottomCloseStyles() {

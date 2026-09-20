@@ -85,6 +85,7 @@ function installStyles() {
     .ejercicio-v2-sheet.view-mode-reduced .section-leyenda-subvideo,
     .ejercicio-v2-sheet.view-mode-reduced #section-que-se-trabaja,
     .ejercicio-v2-sheet.view-mode-reduced #section-objetivo,
+    .ejercicio-v2-sheet.view-mode-reduced #section-organizacion,
     .ejercicio-v2-sheet.view-mode-reduced #section-montaje,
     .ejercicio-v2-sheet.view-mode-reduced #section-material,
     .ejercicio-v2-sheet.view-mode-reduced #section-fases,

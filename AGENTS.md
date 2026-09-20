@@ -4094,5 +4094,123 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - Pruebas añadidas para `getNextWeekDateRange`, `isWeekend`, `formatWeekSpanLabel`, filtrado de entrenamientos pasados en WhatsApp, soporte para 2 partidos en días distintos, soporte para 2 partidos el mismo día, y comprobación de reactividad sin bloqueo por `<details>`.
 - Verificado mediante Chrome CDP automatizado: conmutación de semanas, inclusión simultánea de 2 partidos en la semana y persistencia reactiva.
 
+## 58. Desbloqueo del Visor de Ejercicios y Regla Oficial de Roles y Colores (2026-09-20 - Build v25)
+
+### 58.1 Problemas detectados
+1. **Bloqueo de la app al entrar en cualquier ejercicio:**
+   - Al pulsar sobre un ejercicio en la Biblioteca o en una Sesión, el diálogo modal de detalle (`#exercise-detail-dialog`) se abría pero el usuario no podía cerrarlo ni volver a la aplicación, teniendo la sensación de congelación o bloqueo total.
+   - *Causas raíz:*
+     - En `styles-redesign.css` (línea 5683), la regla `.sheet-top-close-btn { display: none !important; }` ocultaba deliberadamente el botón superior de aspa ('✕').
+     - El elemento modal `<dialog id="exercise-detail-dialog">` carecía de un gestor de eventos de clic en el fondo oscurecido (`backdrop`), impidiendo cerrarlo pulsando fuera.
+     - En `js/redesign-nav.js`, la inyección global de `.cb-global-close-footer` agregaba un botón secundario sticky al pie que tapaba la barra de acciones inferior (`.sheet-bottom-bar`), impidiendo usar los botones reales «+ Añadir a sesión» y «✕ Cerrar Ejercicio».
+2. **Ausencia de los roles oficiales de jugadores y colores no canónicos:**
+   - La ficha del ejercicio no mostraba la sección explícita de organización y roles (portero, defensas, atacantes, neutro/apoyo y entrenador).
+   - En la leyenda visual no se aplicaban los códigos oficiales ni los colores reglamentarios.
+3. **Falta de aclaración en vídeos de muestra con humanos:**
+   - Los ejercicios que cuentan con vídeo real no aclaraban que se trata de un recurso opcional presente únicamente en caso de disponer de él.
+
+### 58.2 Soluciones implementadas
+1. **Desbloqueo completo y accesibilidad del modal de ejercicio:**
+   - En `styles-redesign.css`, se restauró `.sheet-top-close-btn` con `display: flex !important; visibility: visible !important; pointer-events: auto !important; z-index: 50;` (botón circular táctil de 44×44px siempre visible arriba a la derecha).
+   - En `js/redesign-nav.js`, se añadió `'exercise-detail-dialog'` a `BOTTOM_CLOSE_EXCLUDED_DIALOGS`, eliminando el pie duplicado superpuesto y dejando limpios los botones de acción inferior.
+   - En `js/app.js`, se implementó `ensureExerciseDialogBackdropClose(dialog)` que cierra el diálogo al pulsar en el fondo exterior (backdrop), y se protegió la llamada con `if (dialog && !dialog.open) dialog.showModal()`.
+2. **Regla Oficial de Roles y Colores:**
+   - Se estableció la norma canónica estricta para todos los ejercicios:
+     - **Portero:** `P` — **NEGRO** (`#111827`, texto `#FFFFFF`)
+     - **Defensa:** `D1`, `D2`, `D3`… — **ROJO** (`#DC2626`, texto `#FFFFFF`)
+     - **Atacante:** `A1`, `A2`, `A3`… — **AZUL** (`#2563EB`, texto `#FFFFFF`)
+     - **Neutro / Apoyo:** `N` — **AMARILLO** (`#FACC15`, texto `#000000`)
+     - **Entrenador:** `E` — **GRIS CLARO** (`#CBD5E1`, texto `#0F172A`)
+   - En `js/ejercicio-viewer.js`, se implementó y exportó `roleVisualMeta(roleItemOrId)`.
+   - Se añadió la sección `👥 Organización y roles` (`#section-organizacion`) en la ficha de ejercicio con tarjetas visuales para cada rol, su abreviatura con token coloreado y su función táctica.
+   - Para ejercicios de nuevo formato sin bloque explícito de organización, se implementó derivación táctica automática.
+   - Se actualizó `leyenda_visual` en la ficha para renderizar los tokens de jugadores con estos colores oficiales.
+3. **Vídeos de humanos y almacenamiento 0 €:**
+   - El bloque de vídeo humano se titula: `🎥 Vídeo de muestra con humanos (en caso de disponer de él)`.
+   - Si no hay vídeo humano, la sección no se renderiza.
+   - Se documentó en `agente.md` que ningún vídeo ni portada va a Supabase Storage: las portadas se sirven como assets estáticos en el repositorio / GitHub Pages y los vídeos en GitHub Releases.
+4. **Actualización de versión PWA:**
+   - Incrementado a `20260920-prod-current-v25` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `agente.md`, `AGENTS.md` y suite de pruebas.
+
+### 58.3 Verificación y validación
+- 475 tests unitarios y de integración ejecutados y pasados (`npm run check && npm test`).
+- Test permanente añadido: `tests/exercise-roles-official-and-modal-close.test.js`.
+- Verificado: roles oficiales, colores contrastados, cierre por botón '✕', cierre por backdrop, y sin colisión de footers.
+
+---
+
+## 59. Desbloqueo definitivo al salir de ejercicios, auditoría de Supabase y regla de formato F7/F11 (v26)
+
+### 59.1 Contexto y problemas detectados
+1. **Bloqueo/congelación de la app al SALIR de un ejercicio («entro en 1 ejercicio, salgo y se bloquea la app»):**
+   - El usuario reportó que tras entrar en un ejercicio y cerrarlo, la aplicación se congelaba y dejaba de responder a clics y toques táctiles.
+   - *Causas raíz identificadas:*
+     - **Falta de ciclo de vida / teardown de vídeo:** Al cerrar el modal (`dialog.close()`), los elementos `<video>` (el MP4 gráfico interactivo y el vídeo humano) permanecían vivos en el DOM dentro de `#exercise-detail-body`. Si se estaban reproduciendo o almacenando en búfer desde GitHub Releases, los decodificadores de hardware de vídeo y los hilos multimedia continuaban ocupados en segundo plano. En móviles (iOS Safari WebKit y Android Chrome Blink), esto provoca un bloqueo de sesión de medios (*media session lock*), congelando el hilo de eventos táctiles de la página.
+     - **Fuga de listeners en `window`:** `initValidatedExerciseViewer` añadía listeners globales anónimos a `window` (`mousemove`, `mouseup`, `keydown`) que nunca se retiraban al cerrar, acumulando controladores huérfanos tras cada ejercicio abierto.
+     - **Colisión y solapamiento de footers flotantes:** Coexistían en el DOM `.dialog-sticky-footer` (pie nativo del diálogo) y `.sheet-bottom-bar` (barra inferior de la ficha del ejercicio con «+ Añadir a sesión» y «✕ Cerrar Ejercicio»), interfiriendo con el área táctil inferior.
+2. **Duda sobre saturación de Supabase por MP4s:**
+   - Se evaluó si Supabase Storage estaba saturado o ralentizando la aplicación por alojar vídeos pesados.
+3. **Regla de asignación de formato para nuevos ejercicios:**
+   - Definición de cómo catalogar nuevos ejercicios procedentes de un archivo ZIP o listado:
+     - Si la tarea indica regla de Fútbol 7 -> asignar únicamente a Fútbol 7 (`futbol_7`).
+     - Si no indica regla de formato -> asignar simultáneamente a Fútbol 7 y Fútbol 11 (`['futbol_7', 'futbol_11']`).
+     - Si no especifica «Qué se trabaja», se debe analizar y extraer tácticamente junto con los roles canónicos oficiales (`P` Negro, `D` Rojo, `A` Azul, `N` Amarillo, `E` Gris claro).
+
+### 59.2 Soluciones implementadas
+1. **Teardown multimedia y de eventos en `exercise-detail-dialog` (`js/app.js` y `js/ejercicio-viewer.js`):**
+   - Se implementó `wireExerciseDialogLifecycle(dialog)` en `js/app.js`:
+     - Al dispararse el evento `'close'`, se iteran todos los elementos `<video>`, se pausan inmediatamente (`video.pause()`), se retira el atributo `src` (`video.removeAttribute('src')`) y se fuerza la descarga del decodificador con `video.load()`.
+     - Se limpia por completo el contenido del modal: `#exercise-detail-body.innerHTML = ''`, liberando memoria y nodos del recolector de basura.
+     - Se desbloquea el scroll del documento (`document.body.style.overflow = ''`).
+   - En `js/ejercicio-viewer.js`, los listeners de `window` (`mousemove`, `mouseup`, `keydown`) se gestionan con un `AbortController` local (`viewerAbortController`), cuya señal se aborta automáticamente al recibir el evento `'close'` del diálogo.
+2. **Eliminación de la barra flotante duplicada (`styles-redesign.css` y `js/app.js`):**
+   - Regla CSS `#exercise-detail-dialog:has(.sheet-bottom-bar) > .dialog-sticky-footer { display: none !important; }` y control JavaScript para que cuando una ficha tenga su propia barra interactiva (`.sheet-bottom-bar`), el footer genérico quede oculto sin interferencias.
+3. **Auditoría completa de Supabase Storage:**
+   - Se comprobó mediante la API oficial de Supabase que el bucket `ejercicio-videos` está a 0 archivos y 0 bytes (no existe en Storage). Supabase no alberga ningún vídeo pesado ni incurre en costes de almacenamiento.
+   - Todos los vídeos pesados están alojados en GitHub Releases tag `campobase-videos-v1` y se resuelven a través de `resolveHostedVideoUrl()`.
+4. **Sincronización de versión PWA:**
+   - Se actualizó el build a `20260920-prod-current-v26` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `agente.md`, `AGENTS.md` y todos los tests.
+
+### 59.3 Verificación y resultados
+- Se ejecutó un test de estrés automatizado en Google Chrome (`test-exercise-exit-freeze.mjs`) realizando 5 ciclos consecutivos rápidos de apertura y cierre de ejercicios:
+  - Tiempo medio por ciclo: < 470 ms.
+  - Vídeos activos tras salir: 0.
+  - Contenido `#exercise-detail-body` tras salir: vacío.
+  - Respuesta táctil posterior al cierre: 100% inmediata y sin congelamiento.
+- Suite completa de 480 tests unitarios y de integración pasando en verde (`npm run check && npm test`).
+
+## 60. Corrección Definitiva: MP4 Íntegro Sin Cortes, Textos Duales (Vista Rápida / Completa), Roles Oficiales, Cierre Directo y Sincronización v27
+
+### 60.1 Problemas abordados
+1. **Vídeo MP4 táctico recortado y portería oculta:**
+   - En el reproductor modal (tanto en vista normal como en pantalla completa / teatro), el vídeo se desplazaba un 38.9% hacia arriba recortando la portería superior y dejando bandas negras vacías abajo.
+   - Causa: `media_crop` aplicaba traslación CSS destructiva al elemento `<video>`.
+2. **Textos incompletos o ausentes en los 12 ejercicios autorizados:**
+   - Ejercicio 09 (`como_se_hace` formateado como objeto, no se renderizaba).
+   - Ejercicio 11 (`como_se_hace`, `montaje`, `rotacion`, `errores_correcciones` vacíos).
+   - Ejercicios 02, 03, 04, 07, 08, 10 con campos en blanco o sin correcciones técnicas.
+   - Incompatibilidad entre el modo Vista Rápida (`view-mode-reduced`) y Vista Completa (`view-mode-full`).
+3. **Persistencia del congelamiento al salir del ejercicio reportado por el usuario:**
+   - La versión anterior aún no se había comiteado ni desplegado en producción, y faltaba cerrar diálogos huérfanos al cambiar de pestaña (`showView`) y escuchar directamente eventos `pointerup` en botones de cierre.
+
+### 60.2 Soluciones implementadas
+1. **Vídeo táctico MP4 íntegro al 100% (`media_crop: null`):**
+   - En `js/ejercicios-nuevo-formato.js`, `normalizeNewExercise` asigna `media_crop: null`.
+   - El vídeo se reproduce íntegro al 100% con `object-fit: contain` mostrando porterías, leyendas y el campo completo.
+   - El recorte `preview_crop` (`data-preview-crop`) se reserva exclusivamente para la miniatura/portada estática en `<canvas>` o `<img>`.
+2. **Soporte robusto para textos duales y formato flexible de `como_se_hace`:**
+   - En `js/ejercicio-viewer.js`, `comoSeHaceHtml` procesa arrays, objetos estructurados por variantes (Base, Variación 1, Variación 2) o texto continuo, agregando el resumen `⚡ Clave rápida`.
+   - En `styles-redesign.css` y `js/exercise-view-mode-ui.js`, la clase `.view-mode-reduced` oculta todos los bloques teóricos extensos (montaje, organización, materiales, fases, rotación, consignas, errores, variantes) y muestra únicamente los datos esenciales para el campo (Media, `#section-datos-rapidos`, `#section-como-se-hace` y `#section-carga`).
+   - La clase `.view-mode-full` expone las 17 secciones detalladas.
+   - Se completaron al 100% todos los textos de los 12 ejercicios autorizados (`01` a `12`).
+3. **Refuerzo de navegación y cierre:**
+   - En `js/app.js` (`showView`), al cambiar de pestaña se cierran automáticamente todos los modales abiertos (`dialog[open].close()`).
+   - En `wireExerciseDialogLifecycle`, se añadieron listeners a `click` y `pointerup` en `[data-close]` y se restablece `document.body.style.pointerEvents = ''`.
+4. **Sincronización PWA a `v27`:**
+   - Bump de versión `20260920-prod-current-v27` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y tests.
+
+
+
+
 
 
