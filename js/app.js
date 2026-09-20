@@ -5855,7 +5855,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v17').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v19').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
