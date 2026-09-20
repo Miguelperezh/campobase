@@ -928,7 +928,7 @@ export function renderExerciseGridCard(ex) {
 
     <div class="card-content">
       <div class="card-head-line">
-        <div class="card-tags">${tags.map(t => `<span class="pill">${esc(t)}</span>`).join('')}</div>
+        <div class="card-tags"><span class="pill pill-id" style="font-weight:700;letter-spacing:0.5px;background:rgba(255,255,255,0.08);">${esc(String(ex.id).toUpperCase())}</span>${tags.map(t => `<span class="pill">${esc(t)}</span>`).join('')}</div>
         <button type="button" class="favorite-exercise ${ex.favorite ? 'active' : ''}" data-id="${esc(ex.id)}" aria-label="Favorito">
           ${ex.favorite ? '★' : '☆'}
         </button>

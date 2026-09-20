@@ -4236,3 +4236,45 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 6. **Actualización PWA a v28:**
    - Incrementado a `20260920-prod-current-v28` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y tests.
    - 480 tests pasando al 100%. Verificado en navegador real headless Chrome.
+
+## 62. Subida e Integración de 25 Nuevos Ejercicios (Lote 126 a 150), Posición Superior Absoluta, PWA v29 y Verificación en Vivo
+
+### 62.1 Alcance y Tareas Realizadas
+1. **Detección e Ingesta de los Ejercicios 126 a 150:**
+   - Localizados 25 nuevos ejercicios en `/outputs/CampoBase_Documentos/101-150/` (carpetas `126` a `150`), añadidos recientemente por el usuario.
+   - Todas las tareas corresponden a ejercicios de posesión y conservación 5x5 con variantes tácticas avanzadas.
+   - Total de nuevos lotes ampliado de 75 a **100 ejercicios** (`f7-126` a `f7-150` + `f7-051` a `f7-125`).
+   - Catálogo total ampliado de 385 a **410 ejercicios**.
+
+2. **Orden en Biblioteca («los últimos siempre en la punta de arriba»):**
+   - Siguiendo la directriz del usuario, los 25 más recientes (`f7-126` a `f7-150`) se colocan en las posiciones 1 a 25 del catálogo.
+   - A continuación se sitúan los 75 del lote anterior (`f7-051` a `f7-125`), seguidos de los 12 específicos y los 298 históricos base.
+   - Respetado rigurosamente en la ordenación inicial y en la vista de biblioteca.
+
+3. **Regla Oficial F7 / F11:**
+   - Al tratarse de ejercicios 5x5 de conservación general aplicables tanto a etapa F7 como F11, se asignan a ambos formatos (`formato_juego: 'todos'`, `formatos_juego: ['futbol_7', 'futbol_11']`).
+   - Visibles y filtrables tanto en la pestaña de Fútbol 7 como en la de Fútbol 11.
+
+4. **Alojamiento Multimedia y Coste Cero (0 €):**
+   - 25 imágenes `preview.png` copiadas en `library-v2/assets/previews/` (`f7-126.png` a `f7-150.png`).
+   - 25 archivos MP4 subidos a **GitHub Releases** (`campobase-videos-v1`) con prefijo `library-v2-preview__f7-{num}__ejercicio.mp4`.
+   - `scripts/github-release-video-manifest.json` actualizado con los 25 nuevos vídeos (total 423 items).
+   - 0 € de coste en Supabase Storage (todo servido desde GitHub Releases y GitHub Pages).
+
+5. **Doble Vista y Roles Oficiales:**
+   - Vista rápida: clave rápida `explicacion_breve`, material, jugadores, duración y contenidos.
+   - Vista completa: 17 secciones CampoBase normalizadas con roles oficiales (`P` Negro `#111827`, `D` Rojo `#DC2626`, `A` Azul `#2563EB`, `N` Amarillo `#FACC15`, `E` Gris claro `#CBD5E1`).
+
+6. **Pill de Código F7-XXX y Búsqueda por ID:**
+   - En la tarjeta del visor de ejercicios se incluye la pill con el identificador en mayúsculas (`F7-126`, `F7-150`, etc.).
+   - La búsqueda rápida de texto en `js/app.js` y `js/training-domain-base.js` permite buscar directamente por ID (ej. teclear "126" o "f7-126" para encontrar de inmediato el ejercicio).
+
+7. **Resiliencia de Caché PWA y Bump a v29:**
+   - Bump de versión a `20260920-prod-current-v29` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y todos los tests.
+   - Eliminadas peticiones a fuentes inexistentes en `sw.js` (`rajdhani-*.woff2`) que podían bloquear la instalación del Service Worker.
+   - Instalación del Service Worker protegida con `Promise.allSettled`.
+   - Purga de caché controlada en `reloadAppPreservingSession()` y auto-sanación de catálogo si se detectan menos de 400 ejercicios por caché obsoleta.
+
+8. **Verificación:**
+   - `npm run check && npm test`: 480 tests pasando al 100% (0 fallos).
+

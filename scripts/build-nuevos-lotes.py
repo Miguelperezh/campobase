@@ -41,8 +41,12 @@ base_dir = '/Users/miguelperez/Documents/Codex/2026-09-09/files-mentioned-by-the
 dirs_051 = sorted([d for d in glob.glob(os.path.join(base_dir, '051-100', '*')) if os.path.isdir(d)])
 dirs_101 = sorted([d for d in glob.glob(os.path.join(base_dir, '101-150', '*')) if os.path.isdir(d)])
 
-all_dirs = dirs_051 + dirs_101
-assert len(all_dirs) == 75, f"Expected 75 folders, found {len(all_dirs)}"
+dirs_new_25 = [d for d in dirs_101 if int(os.path.basename(d)[:3]) >= 126]
+dirs_prev_75 = dirs_051 + [d for d in dirs_101 if int(os.path.basename(d)[:3]) < 126]
+
+# Los últimos 25 (126-150) van en la punta de arriba absoluta, seguidos de 051-125
+all_dirs = dirs_new_25 + dirs_prev_75
+assert len(all_dirs) == 100, f"Expected 100 folders, found {len(all_dirs)}"
 
 exercises = []
 
@@ -371,7 +375,7 @@ print(f"Last exercise ID: {exercises[-1]['id']} ({exercises[-1]['nombre']})")
 # Write to js/ejercicios-nuevos-lotes.js
 out_js = '/Users/miguelperez/.gemini/antigravity/scratch/campobase/js/ejercicios-nuevos-lotes.js'
 with open(out_js, 'w', encoding='utf-8') as f:
-    f.write("// Lotes 051-100 y 101-125 (75 nuevos ejercicios certificados CampoBase V2)\n")
+    f.write("// Lotes 051-100 y 101-150 (100 nuevos ejercicios certificados CampoBase V2)\n")
     f.write("// Clasificación canónica, F7/F11 según reglas oficiales y orden superior.\n\n")
     f.write("export const NUEVOS_LOTES_IDS = Object.freeze([\n")
     for ex in exercises:

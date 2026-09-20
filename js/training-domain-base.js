@@ -348,7 +348,7 @@ export function filterExercises(exercises, filters = {}) {
 
     // Filtro por texto si se especifica
     if (queryText) {
-      const haystack = `${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.material || ''} ${item.space || ''}`.toLocaleLowerCase('es');
+      const haystack = `${item.id || ''} ${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.material || ''} ${item.space || ''}`.toLocaleLowerCase('es');
       if (!haystack.includes(queryText)) return false;
     }
 

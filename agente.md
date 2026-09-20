@@ -226,7 +226,7 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
    - Al pulsar «Guardar y sincronizar», los minutos jugados y la nota del partido impactan de inmediato en la ficha individual del jugador en Plantilla (calculando su nueva media de temporada).
 
 ### 3.4 Actualizaciones PWA y Service Worker
-- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v28`).
+- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v29`).
 - Para forzar la actualización en los teléfonos de los entrenadores:
   - Se incrementa la versión en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js` y `js/demo-session.js`.
   - El Service Worker detecta la nueva versión, la descarga en segundo plano y avisa o activa la versión nueva en la siguiente visita sin desloguear ni borrar datos locales.

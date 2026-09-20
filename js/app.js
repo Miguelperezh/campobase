@@ -236,7 +236,9 @@ function applyGlobalSearch() {
   containers.forEach((container) => {
     [...container.children].forEach((child) => {
       const text = (child.textContent || '').toLocaleLowerCase('es');
-      child.style.display = (!query || text.includes(query)) ? '' : 'none';
+      const idText = (child.dataset?.exerciseId || child.getAttribute?.('data-exercise-id') || '').toLocaleLowerCase('es');
+      const matches = !query || text.includes(query) || idText.includes(query);
+      child.style.display = matches ? '' : 'none';
     });
   });
 }
@@ -301,6 +303,24 @@ async function refresh() {
     }));
 
   state.exercises = [...validatedExercises, ...myExercises];
+  if (state.exercises.length < 400 && typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine) {
+    const healKey = 'campobase.auto_catalog_heal_v29';
+    try {
+      if (!sessionStorage.getItem(healKey)) {
+        sessionStorage.setItem(healKey, '1');
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        window.location.reload();
+        return;
+      }
+    } catch {}
+  }
   state.trainingSessions = settingRecords
     .filter(({ recordType }) => recordType === 'trainingSession')
     .map((session) => {
@@ -2434,7 +2454,10 @@ function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
 
+  const allExerciseCount = state.exercises.length;
   const myExerciseCount = state.exercises.filter((item) => item.userCreated === true).length;
+  const allCountEl = $('#all-exercises-count');
+  if (allCountEl) allCountEl.textContent = `(${allExerciseCount})`;
   const countEl = $('#my-exercises-count');
   if (countEl) countEl.textContent = `(${myExerciseCount})`;
   $$('.exercise-library-tab').forEach((button) => {
@@ -5625,9 +5648,11 @@ function wireEvents() {
     try {
       const activeView = document.querySelector('.view.active')?.id || storedActiveView();
       if (activeView) sessionStorage.setItem(ACTIVE_VIEW_KEY, activeView);
-      // Evita que controllerchange provoque una segunda recarga mientras esta
-      // actualización manual ya va a recargar una sola vez.
       window._swReloading = true;
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map((registration) => registration.update().catch(() => null)));
@@ -6200,7 +6225,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v28').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v29').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
