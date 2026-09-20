@@ -169,7 +169,7 @@ export function partitionAndSortMatches(matches) {
     .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
   const played = matches
     .filter(isPlayed)
-    .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
+    .sort((a, b) => String(b?.date || '').localeCompare(String(a?.date || '')) || (b?.createdAt ?? 0) - (a?.createdAt ?? 0));
   return { upcoming, played };
 }
 

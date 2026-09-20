@@ -130,6 +130,12 @@ function groupPlayedMatchesFallback() {
     node.matches?.('article.match-card[data-match-id]') && playedIds.has(String(node.dataset.matchId)),
   );
   if (!cards.length) return;
+  const byId = new Map(matches.map((m) => [String(m.id), m]));
+  cards.sort((a, b) => {
+    const ma = byId.get(String(a.dataset.matchId));
+    const mb = byId.get(String(b.dataset.matchId));
+    return String(mb?.date || '').localeCompare(String(ma?.date || '')) || (mb?.createdAt ?? 0) - (ma?.createdAt ?? 0);
+  });
 
   const group = makeAccordion({ id: MATCH_GROUP_ID, title: 'Partidos jugados', count: cards.length });
   const stack = group.querySelector('.completed-events-cards');

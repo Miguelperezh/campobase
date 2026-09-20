@@ -49,7 +49,7 @@ test('las posiciones explícitas guardadas en Calendario tienen prioridad sobre 
   assert.deepEqual(event.inPositions, ['Pivote']);
 });
 
-test('partitionAndSortMatches separa próximos de jugados con los más próximos arriba en orden de fecha', () => {
+test('partitionAndSortMatches separa próximos de jugados con los más próximos arriba y los jugados con el último por fecha arriba', () => {
   const matches = [
     { id: 'm-upcoming-2', date: '2026-09-26T10:00', status: 'planned' },
     { id: 'm-played-1', date: '2026-09-05T09:00', status: 'finished', goalsFor: 1, goalsAgainst: 6 },
@@ -58,7 +58,7 @@ test('partitionAndSortMatches separa próximos de jugados con los más próximos
   ];
   const { upcoming, played } = partitionAndSortMatches(matches);
   assert.deepEqual(upcoming.map((m) => m.id), ['m-upcoming-1', 'm-upcoming-2']);
-  assert.deepEqual(played.map((m) => m.id), ['m-played-1', 'm-played-2']);
+  assert.deepEqual(played.map((m) => m.id), ['m-played-2', 'm-played-1']);
   // Asegura inmutabilidad
   assert.equal(matches[0].id, 'm-upcoming-2');
 });

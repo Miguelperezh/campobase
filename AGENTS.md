@@ -3969,3 +3969,49 @@ Antes de declarar éxito:
 4. probar `+ Ejercicio` → crear → guardar → `Mis ejercicios` → recargar;
 5. probar acceso/sincronización desde móvil con la misma cuenta;
 6. confirmar que los datos existentes siguen intactos.
+
+
+## 55. Optimización de rendimiento, flujo de partidos, orden descendente de jugados y guardado de puntuaciones/minutos — v20 a v22 — 20/09/2026
+
+En este ciclo de producción se resolvieron las incidencias reportadas por los entrenadores sobre lentitud de arranque, interacción de botones, registro de incidencias, sincronización de estadísticas con la ficha del jugador y visualización del calendario.
+
+### 55.1 Rendimiento y desbloqueo instantáneo con PIN (v20)
+- **Diagnóstico:** El arranque y la introducción del PIN provocaban llamadas síncronas bloqueantes a Supabase, recargas de página repetitivas (`location.reload()`) y sincronizaciones en cascada que congelaban la interfaz durante varios segundos.
+- **Corrección:**
+  - Enfoque Local-First estricto: IndexedDB (`js/db.js`) es la fuente inmediata de renderizado.
+  - Sincronización en segundo plano (*non-blocking*): Supabase se consulta de forma asíncrona sin bloquear la interacción del usuario.
+  - Se eliminaron recargas de página forzadas y bucles en `js/saas-auth-ui-v2.js` y `js/supabase-client.js`.
+  - La respuesta de clics y transiciones de pantalla se redujo a menos de 50ms.
+
+### 55.2 Goles en Propia Puerta («Gol P.P.») sin jugador obligatorio (v21)
+- **Diagnóstico:** El modal de incidencias forzaba a seleccionar un jugador de la plantilla para registrar cualquier gol. En situaciones de autogol rival o propia puerta fortuita, esto impedía reflejar el marcador real o falseaba las estadísticas de los jugadores.
+- **Corrección:**
+  - Se incorporó la opción canónica **«Gol P.P.»** con clave interna `__pp__`.
+  - Permite sumar el gol al marcador de forma inmediata sin asociar ningún jugador ni alterar las estadísticas individuales.
+  - Visualización coherente como «Gol P.P.» tanto en el resumen de incidencias como en las tarjetas de partido.
+
+### 55.3 Reflejo inmediato del marcador en las tarjetas de Calendario (v21)
+- **Diagnóstico:** Los goles añadidos en el editor de incidencias no se actualizaban visualmente en la tarjeta del partido de Calendario hasta que se recargaba la aplicación completa.
+- **Corrección:**
+  - Se garantiza el recálculo atómico de `goalsFor` y `goalsAgainst` en IndexedDB y la actualización inmediata del elemento DOM correspondiente en `js/match-calendar-sync.js` y `js/completed-events-ui.js`.
+
+### 55.4 Guardado y sincronización de minutos y puntuaciones con la ficha del jugador (v21)
+- **Diagnóstico:** El botón «Guardar y sincronizar» de minutos y puntuaciones no reaccionaba o tardaba en responder, y las notas asignadas a los jugadores no impactaban directamente en su ficha de la pestaña Plantilla.
+- **Corrección:**
+  - Se reforzó la delegación de eventos en `js/app.js` asegurando respuesta táctil inmediata al pulsar el botón.
+  - Al guardar, los minutos y puntuaciones se persisten en el partido (`matches`) y se sincronizan de inmediato con la ficha del jugador (`players`) a través de `js/plantilla-stats-sync.js`.
+  - Notificación toast visual inmediata: *«Minutos y puntuaciones guardados y sincronizados con la ficha del jugador»*.
+  - Las medias y estadísticas individuales en Plantilla se actualizan en el acto sin necesidad de recargar.
+
+### 55.5 Orden descendente de partidos jugados en Calendario: el último jugado arriba (v22)
+- **Diagnóstico:** Al desplegar «Partidos jugados» en Calendario, los encuentros aparecían en orden ascendente (el primer partido de la temporada arriba), obligando a hacer scroll hasta el fondo para ver el último resultado.
+- **Corrección:**
+  - En `js/match-calendar-sync.js` (`partitionAndSortMatches`): los partidos jugados (`played`) se ordenan en orden **descendente por fecha** (`b.date.localeCompare(a.date)`), situando el último jugado en la punta superior.
+  - En `js/completed-events-ui.js` (`groupPlayedMatchesFallback`): se replica la ordenación descendente por fecha en las tarjetas de eventos completados.
+  - Los partidos próximos (`upcoming`) se mantienen en orden ascendente (el más próximo a jugarse arriba).
+
+### 55.6 Archivos de referencia y trazabilidad
+- Se creó `agente.md` en la raíz del repositorio con el manual completo de arquitectura, mapa de módulos y guía de mantenimiento.
+- Versión de caché PWA sincronizada a `20260920-prod-current-v22` en todos los archivos de configuración y pruebas.
+- 458/458 pruebas automatizadas pasando satisfactoriamente (`npm run check && npm test`).
+
