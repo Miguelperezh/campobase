@@ -4939,7 +4939,7 @@ function toggleWhistleTimer() {
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
-  $('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
+  $$('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
     const form = $(`#${button.dataset.dialog} form`);
     form?.reset();
     if (form?.elements.id) form.elements.id.value = '';
@@ -5855,7 +5855,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v17').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v19').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

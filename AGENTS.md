@@ -3930,3 +3930,42 @@ No escribir “solucionado” ni fusionar PR #65 hasta que Miguel confirme estas
 - Los MP4 gráficos ligeros continúan en `assets/ejercicios` y se sirven con GitHub Pages.
 - La portada de los 12 actuales sigue siendo una preview estática generada desde el MP4 gráfico con `preview_crop/media_crop`; nunca desde el vídeo humano.
 - Dentro de la ficha el orden obligatorio es: preview estática -> MP4 gráfico -> vídeo humano.
+
+
+## 54. Causa raíz global de botones muertos — v19 — 20/09/2026
+
+Incidencia confirmada tras los reportes reales de Miguel de que seguían sin funcionar pestañas, `Preparar partido` y `+ Ejercicio`.
+
+### Causa raíz real
+En `js/app.js`, dentro de `wireEvents()`, existía esta regresión:
+
+```js
+$('[data-dialog]').forEach(...)
+```
+
+`$()` usa `querySelector()` y devuelve un solo elemento. Un elemento DOM no implementa `.forEach()`. La excepción detenía `wireEvents()` al principio del arranque y dejaba sin conectar muchos listeners posteriores. Esto explica que múltiples botones de zonas distintas parecieran muertos a la vez.
+
+### Corrección
+- Usar siempre `$$('[data-dialog]').forEach(...)` para colecciones.
+- Se añadió una prueba que prohíbe específicamente volver a introducir `$('[data-dialog]').forEach(...)`.
+- v19 fuerza un bundle PWA nuevo para que no permanezca en memoria el JavaScript roto anterior.
+- Mantener los cambios de v18 de previews y GitHub Releases: no revertirlos.
+
+### Ejercicios
+- `+ Ejercicio` no debe ser interceptado globalmente con `stopImmediatePropagation()`.
+- `runtime-refresh.js` carga primero ejercicios locales y solo hace una sincronización cloud en segundo plano.
+- Un ejercicio guardado localmente no debe considerarse fallido porque Supabase todavía no tenga sesión; la mutación debe permanecer en cola.
+
+### Móvil
+- Se comprobó en Supabase que `miguep15` es owner/admin de `Unión Viera Alevín D` y que sus datos siguen presentes.
+- La Edge Function `pin-login` desplegada estaba atrasada respecto a v16; se actualizó a la implementación actual de `main` sin tocar tablas.
+- Ordenador y móvil deben resolver la misma cuenta/user_id. No copiar datos ni recrear jugadores para “sincronizar”.
+
+### Regla de QA
+Antes de declarar éxito:
+1. comprobar que `wireEvents()` no lanza ninguna excepción;
+2. probar clic real en todas las subpestañas superiores;
+3. probar `Preparar partido`;
+4. probar `+ Ejercicio` → crear → guardar → `Mis ejercicios` → recargar;
+5. probar acceso/sincronización desde móvil con la misma cuenta;
+6. confirmar que los datos existentes siguen intactos.
