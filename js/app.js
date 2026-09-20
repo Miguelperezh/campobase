@@ -4939,7 +4939,7 @@ function toggleWhistleTimer() {
 function wireEvents() {
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
-  $('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
+  $$('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
     const form = $(`#${button.dataset.dialog} form`);
     form?.reset();
     if (form?.elements.id) form.elements.id.value = '';
