@@ -4209,8 +4209,30 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 4. **Sincronización PWA a `v27`:**
    - Bump de versión `20260920-prod-current-v27` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y tests.
 
+## 61. Integración de 75 Nuevos Ejercicios Certificados (Lotes 051-100 y 101-125), Posición Superior, Regla F7/F11 y Versión v28
 
-
-
-
-
+### 61.1 Alcance y Tareas Realizadas
+1. **Auditoría y Descarte de Duplicados:**
+   - Se analizaron los lotes disponibles en `/outputs/CampoBase_Documentos/`:
+     - `001-050`: 50 ejercicios ya presentes en la app (`f7-001` a `f7-050`).
+     - `051-100`: 50 ejercicios totalmente nuevos (`f7-051` a `f7-100`).
+     - `101-150`: 25 ejercicios preparados y nuevos (`f7-101` a `f7-125`).
+   - Total incorporados: **75 ejercicios nuevos** (`f7-051` a `f7-125`).
+2. **Posición en Biblioteca («en la punta de arriba»):**
+   - Siguiendo la instrucción expresa del usuario («los ultimos que vamos introduciendo en la app siempre en la punta de arriba»), los 75 ejercicios de `EJERCICIOS_NUEVOS_LOTES` se sitúan al inicio absoluto de `EJERCICIOS_VALIDADOS`.
+   - Aparecen en primer lugar nada más entrar a la biblioteca de ejercicios.
+3. **Regla Oficial de Formatos F7, Alevín, F8 y F11:**
+   - Tareas con indicación de **Fútbol 7**, **Alevín** o **Fútbol 8** -> `formatos_juego: ['futbol_7']`, `formato_juego: 'futbol_7'`.
+     - En lotes nuevos: `f7-068`, `f7-069`, `f7-070` (Adaptables F7), `f7-109`, `f7-110` (Alevín B), `f7-111` (Benjamín E), `f7-115` (Fútbol 7 específico).
+     - En lote base (`001-050`): las 12 tareas de categoría Alevín quedan exclusivas de Fútbol 7.
+   - Tareas específicas de **Fútbol 11** -> `formatos_juego: ['futbol_11']`, `formato_juego: 'futbol_11'` (ej. `f7-116`: 8x8 + porteros).
+   - Tareas sin indicación específica (**General / Adaptable**) -> asignadas simultáneamente a **Fútbol 7 y Fútbol 11** (`formatos_juego: ['futbol_7', 'futbol_11']`, `formato_juego: 'todos'`), visibles y operativas en ambas pestañas/filtros (67 de los nuevos lotes y 38 de la base histórica).
+4. **Alojamiento Multimedia y Coste 0 €:**
+   - 75 imágenes `preview.png` integradas en `library-v2/assets/previews/` (`f7-051.png` a `f7-125.png`).
+   - 75 archivos MP4 subidos a **GitHub Releases** (`campobase-videos-v1`) y registrados en `scripts/github-release-video-manifest.json`.
+   - Supabase Storage libre de archivos pesados (0 € de coste).
+5. **Textos Duales (Vista Rápida y Vista Completa):**
+   - Cada ejercicio incluye bloque de texto de **Vista Rápida** (`vista_rapida` con clave rápida, contenidos trabajados, material, jugadores y tiempo estimado) y la **Vista Completa** con las 17 secciones CampoBase normalizadas y roles oficiales (`P` Negro, `D` Rojo, `A` Azul, `N` Amarillo, `E` Gris claro).
+6. **Actualización PWA a v28:**
+   - Incrementado a `20260920-prod-current-v28` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y tests.
+   - 480 tests pasando al 100%. Verificado en navegador real headless Chrome.

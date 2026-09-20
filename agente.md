@@ -226,7 +226,7 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
    - Al pulsar «Guardar y sincronizar», los minutos jugados y la nota del partido impactan de inmediato en la ficha individual del jugador en Plantilla (calculando su nueva media de temporada).
 
 ### 3.4 Actualizaciones PWA y Service Worker
-- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v25`).
+- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v28`).
 - Para forzar la actualización en los teléfonos de los entrenadores:
   - Se incrementa la versión en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js` y `js/demo-session.js`.
   - El Service Worker detecta la nueva versión, la descarga en segundo plano y avisa o activa la versión nueva en la siguiente visita sin desloguear ni borrar datos locales.
@@ -251,6 +251,16 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
    - Diálogo cerrable mediante clic en el fondo oscurecido exterior (backdrop).
    - Sin footer duplicado que tape la barra de acciones inferior.
 
+### 3.6 Reglas Oficiales de Nuevos Lotes de Ejercicios y Formato F7/F11
+1. **Orden en Biblioteca («en la punta de arriba»):**
+   - Los últimos ejercicios introducidos en la app (`EJERCICIOS_NUEVOS_LOTES`) deben figurar siempre al inicio absoluto del catálogo (`EJERCICIOS_VALIDADOS`) para aparecer los primeros al entrar a la biblioteca.
+2. **Regla de Formato F7 / Alevín / F8 vs F11:**
+   - Si la tarea indica expresamente **Fútbol 7**, **Alevín** o **Fútbol 8** -> asignación exclusiva a Fútbol 7 (`['futbol_7']`).
+   - Si la tarea es específica de **Fútbol 11** (ej. 8x8 + porteros) -> asignación exclusiva a Fútbol 11 (`['futbol_11']`).
+   - Si la tarea **no indica regla específica** (General / Adaptable) -> asignación simultánea a **Fútbol 7 y Fútbol 11** (`['futbol_7', 'futbol_11']`, `formato_juego: 'todos'`), visible en ambos filtros y pestañas.
+3. **Vista Rápida y Vista Completa:**
+   - Todo ejercicio dispone de una versión de texto de **Vista Rápida** (`vista_rapida` con clave rápida `explicacion_breve`, material, jugadores, duración) y la **Vista Completa** con las 17 secciones oficiales normalizadas.
+
 ---
 
 ## 4. Guía de Buenas Prácticas para Futuros Agentes
@@ -259,6 +269,6 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
   ```bash
   npm run check && npm test
   ```
-  Todos los 475+ tests deben pasar en verde sin errores.
+  Todos los 480 tests deben pasar en verde sin errores.
 - **Acumular en `AGENTS.md`:** No sustituir ni reordenar las secciones históricas de `AGENTS.md`. Añadir siempre una nueva sección explicativa al final del archivo.
 - **Verificar en navegador real:** Validar siempre visualmente o mediante scripts automatizados que los botones responden, los modales abren/cierran y los datos persisten tras recargar.

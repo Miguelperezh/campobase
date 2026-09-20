@@ -64864,14 +64864,17 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "7a8ad9df1259443b3fecd9ff3072fa1c8507d964162183bef86d0777e3d27f06",
       "hash_preview": "bad294a139d2c86f630af878769726c9339a3c146fb729f0e0a2c8b622988d22",
       "hash_mp4": "d4ddc992d7c72fb8e2558f4e44a3d1317ce23202ba3c77b703efe4d2c6b630c6"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-002",
     "nombre": "Colocación del portero ante pases laterales",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "portero",
@@ -65105,14 +65108,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "3709abf3ca81302b05c2f77eef6cda56e1a98239c3492d3b7d1423afb5d3f19a",
       "hash_preview": "70048e46f1661fe35eedf81e5d599bbd3ee91c4e366467fb75387855381c4f52",
       "hash_mp4": "abdaa4aebdb60fda62d2961d0504a6642684c33186d6454e2572229370fec856"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-003",
     "nombre": "Rondo 3x1 con apoyos para conservar",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "3x1",
@@ -65356,7 +65363,11 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "e3f642e349468117542e1dd11ac47d5133a0474762936c714766a4196ae7efbe",
       "hash_preview": "6eed41254c4c536bd5dfff3f26dbe60ccb1b856a8153bbfd77b036a709e9c319",
       "hash_mp4": "36e60fa9bcc9ef3df661666c7161317670656bef0229a5458f066c4860951968"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-004",
@@ -65600,7 +65611,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "6f69fb96595480fea17591a341fa7e81b0a8a773ccab5cb613a1abc18cc261bd",
       "hash_preview": "f7b428973ff114fae96c9e991c024fab3e71594a8251dd5f8222e03d5891cb41",
       "hash_mp4": "861181830dba0f13414b650790b4dd966ccc3120ddaf9980b6741597f1f12fd9"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-005",
@@ -65833,7 +65847,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "eaa2e5ced1dae67205c2ccea90db165dcaa01f0462d1252d908d82abb80d8f81",
       "hash_preview": "5d6c27d773e01ae48e7b800519e2a923d162694258efefb836638eca3914ed6e",
       "hash_mp4": "68126633b6a8daf77e87da9cbdde9d3cb91e7dbcde65a304de8d159d223fe280"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-006",
@@ -66120,14 +66137,17 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "ba33f25676e3f3aba6eefa10514d23df559f4f38cce4e2bce1064e9f0e2929af",
       "hash_preview": "29bf354384d023f3590cc17344939cc51c846b7132b4b04eee484880e7386299",
       "hash_mp4": "a3b152722a0d75454ae960bf4780672ffc559124a7deb3925cb3ea1d68196b33"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-007",
     "nombre": "Pase contra pared y control con el pie",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase corto",
@@ -66307,14 +66327,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "bad3c301a231112056cc87b654bd58c333e1b1b95fbff1480679e4d2cdb24f14",
       "hash_preview": "2b92d0d8e86d20cd68f4f410b56b12c7ccc5fe762f374d98af5bdbf8c59312a4",
       "hash_mp4": "8a8be7b652ef9f78c0ff89bacfed7db2e5ca8716c912f21a3d2e3c5ea8ecd5e0"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-008",
     "nombre": "Remate corto entre dos conos",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "remate",
@@ -66486,14 +66510,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "d8ab1883d6c687706f239f7df8c46049d6fe58660e6838493c3a5d0492851be7",
       "hash_preview": "5a06ee6557b224a83841046bcb1b8ab797fe87e072626234b33d51dca87cfc0c",
       "hash_mp4": "392e9b6f4908ce239fb500fa35819940589853b99e006036502de824d8e034a1"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-009",
     "nombre": "Control y remate tras pase del portero",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "control",
@@ -66702,14 +66730,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "e6bae1f71623d8a9445cf237dc68cf336b21e159847162177cd2bbb5da68422c",
       "hash_preview": "c1354e6fda96f6290cb1eee5609bcff68f9d0bec2249da866427ee3840e4c0ab",
       "hash_mp4": "d2860345ad14ddc544f59f7483314dbb2d6120f9972b6ed7a50d9f32b48bc90f"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-010",
     "nombre": "Conducción y autopase alrededor de un cono",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -66888,14 +66920,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "ece8cf9bb37455fd1d924604ad9ad8872e04dec74516be54e9c4aac1e8733c8f",
       "hash_preview": "0b89d558324ac702c8367491aba472fc547b38908133a803f704f8a3f459eb74",
       "hash_mp4": "9c37ef287795cb70cd9e764a22cfea414a0964a8f4925dc78df88a19a5e13543"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-011",
     "nombre": "1x1 para proteger la posesión en un cuadrado",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "1v1",
@@ -67086,14 +67122,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "1fc673ce8056b30545520224878885ee6cd44a7d3037d60813fee69891650b56",
       "hash_preview": "4f1592dfaeb2464a78234e7dc1d51cc20476df2ab3bbf46fdd5093338d95af5a",
       "hash_mp4": "2183ea279373a31d7e1e63508b35e9864bff2d99423cdfd65496ef1f4d3535ab"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-012",
     "nombre": "1x1 hacia una puerta sin portero",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "1v1",
@@ -67288,14 +67328,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "3d5ab7ab70911f33637c21353bac4b43eea17be10bf1df863cfc624ff1c3423b",
       "hash_preview": "a86654323a921fc6ef789472452bb71bdadc42141958033ff69f6b566b202b65",
       "hash_mp4": "b94cfe1bec2f509639065d0ac59f6e190e93682147d569b28fb51c70c0ce16c0"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-013",
     "nombre": "Conducción y remate entre dos porterías",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -67531,14 +67575,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "fe6e6d316e8e6200e760e348150eb691cb3c06dd08e8aa48a3887ee01cc497e6",
       "hash_preview": "6332701f4966fbfdddfb8094f2f8c5a3cfc7859fad5f51a217e896991f59e151",
       "hash_mp4": "bd30092be0fcbb88fa31788039cde60669c63167a8ace7e8ce9f679fb93b968b"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-014",
     "nombre": "2x2 con un jugador de campo y un portero por equipo",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "1v1",
@@ -67761,7 +67809,11 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "b59d4b5fba4d2955f487f880b266020a468b1118aaa72f44f777fb65d9212be4",
       "hash_preview": "6edaa749f0a69c79c2308a7bcca39ae195e3670be70da2ab35e5a61380bfbc03",
       "hash_mp4": "3dfbf985cbaa835513458697f1c056462b1f68aa8127f543ae099c9598510f0c"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-015",
@@ -67976,7 +68028,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "26e7c39e1fd28e1a8eca9a4e0d7c017d6cf71637f840c0e7e5faf04397ef2075",
       "hash_preview": "fb1e93889a9ad0da54ca961d6bdff31f38216cb3d3637e5806ab8e035f90cfea",
       "hash_mp4": "815d971502c2f516deae16afdd703214c5656022861bf176d1a5cf794f7441d8"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-016",
@@ -68203,7 +68258,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "a5a6f8e2de29c66996e4f8197394b0cc5bbdb1c751a852dc6a37756b4bcaffc7",
       "hash_preview": "2b3e84d0d5f32bb536ac3ec727ce19759d80784a34146ec0b1ba256a71ce303b",
       "hash_mp4": "50a0040b08be747704f1a7daadaddee9fe39789851fe152f505f18a02ec9cd50"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-017",
@@ -68415,7 +68473,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "c24ee6f64d984d998d85a2f50c4a58f9be5d9145f34dbb20f630ef423064b600",
       "hash_preview": "da66c99a7e8fff59a8b624ebe94bdb024f073fba4f5a598796e8dd333cd73752",
       "hash_mp4": "268a4df6e4f5f0bd91a474c46b37c3247b586a1e88119c1bf17a2553df7373e3"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-018",
@@ -68684,7 +68745,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "9e55294e3221741b15648ea549f343353354d82b39de4cd0bce014c2a60ae23a",
       "hash_preview": "be1c4f4940a9bb4e157354b38f0c7db37766017280331b2873bf94079ce7f338",
       "hash_mp4": "0ecdcb74bf66d49f8efba6157a9d25d0deebaed9aed69475027bae42b2e5fc24"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-019",
@@ -68946,7 +69010,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "0ea3b44b575c036a5470c84d120d94b45b35a4f04d164f8e1d1a495ec832d7f1",
       "hash_preview": "8e333badc61733de95398f9434d86424995feaeec01ce0ce9a8795388ced2608",
       "hash_mp4": "f6c61c31b08d8af5d16186a32f844b26bc3f198e4d92873c43b2c2276b51026b"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-020",
@@ -69177,7 +69244,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "872e2981f5d5abea2c8120aa7820da3204453a9f767ecb05a9c28d83b3f38078",
       "hash_preview": "6203a93d357a2e714120af35fb2e79df2b234bf7f3c05161f3ed402bc4342299",
       "hash_mp4": "4a689779266cadb94c2f96c72a9eaa307aab93d0713bc566c07bf96d089d5850"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-021",
@@ -69473,7 +69543,10 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "dfcf9bd8f4c07a9c462c8ef4a9dd8e3e32cf04e6fc2208b5d70ae37559428ce5",
       "hash_preview": "f43a1c510353ca54c99640154820f1b96a0e2aded2963cb040117b3ad96f6011",
       "hash_mp4": "e2dc78552066173b27f136c6f0e13ee84af2b61f43c24a0cf425875e1e0b18eb"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-022",
@@ -69786,14 +69859,17 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "98ecf61c15390f8c9aaa8f5dc55b43570fdcaa57f94f155e7ab581b024a372e3",
       "hash_preview": "fc8e143aa04e3f06b21867ff885dfac95ef1f1b6cd161d9bd9e81440cee6f0e2",
       "hash_mp4": "155e1238d51e7b0cec0e42efa48861f8951c10ff5e5cb889dd7556e7241f6b52"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7"
+    ]
   },
   {
     "id": "f7-023",
     "nombre": "Pase largo por parejas con amortiguamiento y control orientado",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase largo",
@@ -69983,14 +70059,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "c38320420014f94dbe0f2a8a1dd0dab6246de1e0d601f6b9121aa303c73818e8",
       "hash_preview": "30f0d6d369636bce55b66024964f4443cef61eb321ad8dde3fea2e8b62cc06f0",
       "hash_mp4": "12e6e58b657dd2b55a2c0b2f7f58059e623dfee11f1332cdb62dbc3727fecdb8"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-024",
     "nombre": "Pase a banda y remate tras pase atrás",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase largo",
@@ -70221,14 +70301,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "14aa9c54942e135e1e54f5b094f2783a2cf57a48a6bde0116603495b8fe6e308",
       "hash_preview": "edfadd4597a9f233c27405b8350284a96f91911366519cd1fc02c0e7a9f97ae5",
       "hash_mp4": "29cb45529d7f93d2bf12f548382fdf499fecfa2cda3c31bca0d7a8531c47b94f"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-025",
     "nombre": "Relevo en conducción con giro y pared",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -70448,14 +70532,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "52281370190e312677129f5e25167c909def8e086fd9f6bd570499c4575bae12",
       "hash_preview": "958a9d07c74bc23e7c14459bb650681dba72dacb8c98fc468fd618197a72a396",
       "hash_mp4": "6b61975e7d32ff5aa567719944c9338a8d5ebb5c1b8c7c3eb2828f4f38c6dda3"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-026",
     "nombre": "Contraataque 2x1 tras saque del portero",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Transiciones",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "contraataque",
@@ -70687,14 +70775,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "8c7d4941b9d5083757ce6904476486758e4ab6399e46467a6e52a31551c7d2f7",
       "hash_preview": "41e596250da97a1e1ad9745179b0146740f480fbf3423a1dfb718987271ab416",
       "hash_mp4": "6c455eea4fb0bf70431b3e256eec6bf966129e96e6ef95ccf0b77af3e61b27a0"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-027",
     "nombre": "Posesión 3x3 con marcajes individuales fijos",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "3v3",
@@ -70951,14 +71043,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "4d031d3a05e06c6bdf375cb4d7daa50801be2b1bdb2534e638c2b3ff868f9b9e",
       "hash_preview": "d9b2900622b00ccd36f5db1dae52c106a120c8bfd23df23f8849a384e167c60f",
       "hash_mp4": "37ecae4daa2bb3a8fdd0642d8ed6a9cb47e82a7870f02954809e3941bc90c157"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-028",
     "nombre": "Cobertura y permuta defensiva en 1x2",
     "titulo_original_fuente": "JUEGO",
     "categoria": "Táctica",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "cobertura",
@@ -71172,14 +71268,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "e9f1fc9e89f5a8b7c56280af520a35c6671b7331fea750fabff00fd3120ccaff",
       "hash_preview": "48426e50c01e0630cb53b714cd63d8c17e83a9e942a007714280a6234dbcf74b",
       "hash_mp4": "1334e3918f41062862f326dc3dae47fc298cab88bf76655e716cab101ef0f9a7"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-029",
     "nombre": "Conservación de cinco o seis jugadores frente a dos",
     "titulo_original_fuente": "JUEGO",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "5v2",
@@ -71448,14 +71548,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "7743eac260f65ace3a9f8a9a8af26baa4739830cb528025734d6e078fc23e4e5",
       "hash_preview": "a71875e4f2eb3f3b7fa55cf48b4e887e80cdcfe3f0a387cc6670dea0f85fa070",
       "hash_mp4": "b4e86964563abc6d18524d9b773adaa85029e4e388a4abae8b48d370abccc79e"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-030",
     "nombre": "Posesión entre dos bandas con zona central prohibida",
     "titulo_original_fuente": "JUEGO",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase largo",
@@ -71722,14 +71826,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "c605a53badac2657e173fa598cfe37a7ba0759b489eba4b74bf7d371e268e4fa",
       "hash_preview": "dd6905bd56e4fb8dea4f09193fa3a615ce6f2db393102d3f6ac8be2ac9232b31",
       "hash_mp4": "8cfb92e60b0c5221e24773e144193ea57c4d131e9951d879ec0b148450b67ec3"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-031",
     "nombre": "5x5 con cuatro puertas y zonas que no se pueden pisar",
     "titulo_original_fuente": "JUEGO",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "5v5",
@@ -72042,14 +72150,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "6f35da4313c80a7094627b0cded87a34df38ab2c7380d2b0145898f05666bfbc",
       "hash_preview": "8c537761730184c1df385ca1d41b74bee9ad03cd26c3206076823469c3cade2a",
       "hash_mp4": "1fe4d302ff5756e0b870791d42d40f7557998a804dfb152f9019eb879712c995"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-032",
     "nombre": "6x6 con líneas separadas en dos mitades",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "6v6",
@@ -72393,14 +72505,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "412680881064c65067dc68de5f97c7481e95d370c6754c2d311d08abb942729b",
       "hash_preview": "be55f8cb75f0aef5b25bcb0eedf683cbfe8b5cc08a1337fd03e72fc42bddc451",
       "hash_mp4": "e5fec5d0959557ad14b6fb713a9206d7e9feabcc64984ca952190f8f4ee99458"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-033",
     "nombre": "Pase, devolución y apoyo adelantado en un cuadrado",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase medio",
@@ -72635,14 +72751,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "d9e1594c831656c4c8e9121d8a8e0d239d98d31b52ee92dac7ec34d3b199b471",
       "hash_preview": "f9345f3268059c848bb76722b4e41618d340bce46d62178c3815d0f836fd5b64",
       "hash_mp4": "28fb74b1172dd3972f5115c5da58268bd32be46a9c42389322e8c65dfef11f2f"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-034",
     "nombre": "Salida del portero, cambio de banda y centro con tres rematadores",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pase",
@@ -72910,14 +73030,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "fb45ce468d7243583a28f0cf4400e102fbb92a2396def5c89803be3966aef442",
       "hash_preview": "20dd0d67f94f8a28369b63356d5e61eac2b99f621f82fb0117aade599b924246",
       "hash_mp4": "485b16da4c52c945da8274dfbc572c77d5f957866f6db430e463e212945024ce"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-035",
     "nombre": "4x4 con incorporación colectiva al campo contrario",
     "titulo_original_fuente": "JUEGO",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "4v4",
@@ -73203,14 +73327,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "77cd38faff57989eab1c0192dbb8b7f6a1af84906e6205aac03d6df86b362dc1",
       "hash_preview": "105e286e295771b86d1e34a995587017aebe80c67563a4ed654ff35de99fa229",
       "hash_mp4": "c6a0bbaf39116d1cee1db24bf6a6b0152e7466d1ca6b2a5ec80a9ab91b810272"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-036",
     "nombre": "4x4 con puertas anchas y goles rasos",
     "titulo_original_fuente": "POR TEMAS",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "4v4",
@@ -73495,14 +73623,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "bc786af870f84eddb077c87b3eb72532a1e3fc48afd35d6e8accc8f35761abce",
       "hash_preview": "a25a3ae40e5625786a3a55e020fc63f0e5b138ac4352426bc6198e0351db3dfe",
       "hash_mp4": "1d4cfeebbc51e8431f2c2021358d51f4d7a5225544d69972278f119a92b65100"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-037",
     "nombre": "Conducción libre con distintas superficies del pie",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -73661,14 +73793,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "9b0547d303a15e7c1e77392ba9985e0f5267b3f914f4a3e4e2c978d33c1e1571",
       "hash_preview": "ae7f1ece07479082f917248911fdcf1ac4b9e1b8d8af9d41046153b323793570",
       "hash_mp4": "09d484c61a214a70b438f2c67a0547686ba7fce8d852246241e2aac2c3d79ac5"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-038",
     "nombre": "Conducción con cambio de balón a la señal",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -73924,14 +74060,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "349d78cad68886fcf555084db17158aafaa4ca9f52fc4625507ece2d2bc0b583",
       "hash_preview": "6dab751c92107f7d38299cf478af12b54a9a3a9cc834275cca6e740658d0a7b4",
       "hash_mp4": "1cc3857715af9037452dcd0ebbcd5cbe232203b6106ecdf05c6a90f6938c8022"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-039",
     "nombre": "Enviar los balones del campo propio al contrario",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "golpeo",
@@ -74178,14 +74318,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "261e4716811cb436d972a1b021aa1021b36e6129cad9afab7f961edb20d45114",
       "hash_preview": "a5c527dfa987057453610fd2ff276c5b10bf3fd6d5efe763b917a3c8a60697cb",
       "hash_mp4": "55fde191ae3bdf145cc66469d2fba6bd9d6bef01b470954702de5d277c6093c4"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-040",
     "nombre": "Carrera al balón, remate y relevo desde el centro",
     "titulo_original_fuente": "EJERCICIO",
     "categoria": "Finalización",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "carrera",
@@ -74443,14 +74587,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "0ba4045d738ae3bf915d77fa4f66434552fca661c14e8e19ae943158646ba5bd",
       "hash_preview": "66cc4b413ac4a3bc95c49739c1a494532aaf38a4d93ebd56ee793f0ea10af6cf",
       "hash_mp4": "06bc89f60498a708f57db706dc0251693f82e37b8945f8bb4de797c4e474aa57"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-041",
     "nombre": "Rondo 4v2 clásico",
     "titulo_original_fuente": "Rondo 4v2 clásico",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "4v2",
@@ -74722,14 +74870,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "08b35a2a4bc9bb321627611d3845d147a76415d64ab501801373bbc350abedf2",
       "hash_preview": "2cb61c7f45d5995ddf65d5490c065316a9caf102c1518fac35eada5fcc80c039",
       "hash_mp4": "8f8a661304e058912ff3a8928ba2536bc39b23a7f1c65a368d383ea983f90c4d"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-042",
     "nombre": "Pase y va con pared (2 jugadores)",
     "titulo_original_fuente": "Pase y va con pared (2 jugadores)",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "pared",
@@ -74940,14 +75092,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "79fcb4223ffc1b28878566d6815d811a048bf86defaa28a2ce666b0093c72b14",
       "hash_preview": "d34869fe1525d6574e537a540d6d95aac737eaf141b1100084d0f6fc4071e032",
       "hash_mp4": "d21083d08225d45982dc05a8c24cc8002cc27410641be822ddc337c1da16630a"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-043",
     "nombre": "Juego reducido 3v3 con 4 mini porterías",
     "titulo_original_fuente": "Juego reducido 3v3 con 4 mini porterías",
     "categoria": "Juego reducido",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "3v3",
@@ -75218,14 +75374,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "2626a7facd159ff04cb7af48bee3dd552b54cae45a0bebdc50b46cf6ec9f2080",
       "hash_preview": "6a15c45388c99fb33f95c794b903ee526724d6cefe6934df9d9314bc01874be4",
       "hash_mp4": "0a13cf64c091da6a2d3a88a288537b5b8e6d8598a79f58adf3544ffb33c387d1"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-044",
     "nombre": "Rondo 5v2 con pivote interior",
     "titulo_original_fuente": "Rondo 5v2 con pivote interior",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "5v2",
@@ -75511,14 +75671,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "c94acca354498fe9c67d64af5c3ad931cb84f375bea4247cbf7ccdf86b02aec5",
       "hash_preview": "10a4eee37a5b1bec751e3febc7ac72f7bde02787b006d9f7e9af0e4359e0fbfd",
       "hash_mp4": "241b46f151097536011fb5aff7f64db5344decb97bd5fd2a772bf439700630ef"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-045",
     "nombre": "Rondo posicional 6v3 (medio campo)",
     "titulo_original_fuente": "Rondo posicional 6v3 (medio campo)",
     "categoria": "Pase y posesión",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "6v3",
@@ -75822,14 +75986,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "46d0f31f8e52f44f3bbdafe6fd2bc1744d65c30f272449c25782cdefbedc8501",
       "hash_preview": "d2ef1df0be11d2eb888bfb85dbf26b196caa825c357b5ab1ea15e898c281088d",
       "hash_mp4": "1642fb03b5634ce2940edefd07da5182bd3040ab675ffc8c63ca5f746ce7bb8e"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-046",
     "nombre": "Salida de balón jugada desde el portero",
     "titulo_original_fuente": "Salida de balón jugada desde el portero",
     "categoria": "Táctica",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "salida de balón",
@@ -76118,14 +76286,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "914f39b19521a3ee06838e56a7760f320fa28b3bb2db2b65124071652efe125f",
       "hash_preview": "e8ea940f1b5c48ccfb7b19e737c7cbd9e8b4444b8312092ec0578f97bf7677db",
       "hash_mp4": "c7399d51ea80e7a78d5e066c12612f3e09506b36ffac99a0dcfdaf1c3f8005fe"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-047",
     "nombre": "Presión en banda 3v2",
     "titulo_original_fuente": "Presión en banda 3v2",
     "categoria": "Defensa y duelos",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "3v2",
@@ -76382,14 +76554,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "2fd3740728b1d27c34fc4d08d425cce38256fba3d50798ff0354c9b6768235fb",
       "hash_preview": "7b833ebef87ced2fd6cee435a197369666060966fa4c84e3504c4c8a37b63f1f",
       "hash_mp4": "0a8bff932b432de771c65065dd39c5f6e5a4b3161ac466f89e4418ca3fb3c9d0"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-048",
     "nombre": "Porteros: 1v1 dentro del área",
     "titulo_original_fuente": "Porteros: 1v1 dentro del área",
     "categoria": "Porteros",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "portero",
@@ -76594,14 +76770,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "285350ba6aa7e60c09a6f6e0b75058f79563ad40c270ad453e89b3ba2fd37d59",
       "hash_preview": "d60e387357f94ea9f574263185477f4ab66bf5a575e292dc5b5f0f90a08ee1d3",
       "hash_mp4": "7307afccae6bbdecd56c24a0b2398a6cc8162ad62795806efb62ee01347247df"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-049",
     "nombre": "Resistencia con conducción cambios de ritmo",
     "titulo_original_fuente": "Resistencia con conducción cambios de ritmo",
     "categoria": "Físico con balón",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -76786,14 +76966,18 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "976d6774364d205319751c25ae5c0654de6c0657146cf6f064fdf6bbd1311cd6",
       "hash_preview": "86de4977c43855483e22a02f44e3b8227558bfdc14010c7ecd88be075699a99c",
       "hash_mp4": "16232a32ff23a7d0777a607b9ecd3232f48730c998ae61c10222b319c8a90129"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   },
   {
     "id": "f7-050",
     "nombre": "Circuito de conducción con cambios de dirección",
     "titulo_original_fuente": "Circuito de conducción con cambios de dirección",
     "categoria": "Técnico-táctico",
-    "formato_juego": "futbol_7",
+    "formato_juego": "todos",
     "subcategoria": null,
     "etiquetas": [
       "conducción",
@@ -76982,10 +77166,15 @@ export const EJERCICIOS_VALIDADOS = Object.freeze(
       "hash_data_json": "f92458d6e0d566a77aa9a7ba6641f932d4106960d9347f5c6425b5261df723d8",
       "hash_preview": "1e5d88eefaecc41962edb133379b33e7ba44b03aabe68631ec21d8e1f2a9ef7f",
       "hash_mp4": "d09036378b65fcbc3900f9c509f8fc2ef8bdaeef48bbd2a9b4bb34e7b0677e03"
-    }
+    },
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ]
   }
 ]
 );
+
 
 // Convierte un ejercicio validado al formato interno de CampoBase (para sesiones, filtros, etc.).
 export function toCampoBaseExercise(item) {
@@ -77012,6 +77201,7 @@ export function toCampoBaseExercise(item) {
     name: item.nombre,
     category: item.categoria || 'Técnico-táctico',
     formato_juego,
+    formatos_juego: Array.isArray(item.formatos_juego) && item.formatos_juego.length ? item.formatos_juego : (formato_juego === 'futbol_7' ? ['futbol_7'] : (formato_juego === 'futbol_11' ? ['futbol_11'] : ['futbol_7', 'futbol_11'])),
     format: formato_juego === 'futbol_7' ? 'F7' : 'F11',
     players: playersStr,
     material: materialStr,
