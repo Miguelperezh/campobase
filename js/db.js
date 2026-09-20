@@ -350,6 +350,7 @@ export async function syncFromCloud() {
     try {
       await flushSyncQueue();
       let downloaded = 0;
+      let hasChanges = false;
       for (const store of STORES) {
         const snapshot = await cloudStore.getSnapshot(store);
         const localRecords = await localGetAll(store);
@@ -383,10 +384,15 @@ export async function syncFromCloud() {
             }
           }
         }
-        await replaceLocalStore(store, snapshot.records);
+        const localJson = JSON.stringify(localRecords);
+        const cloudJson = JSON.stringify(snapshot.records);
+        if (localJson !== cloudJson) {
+          hasChanges = true;
+          await replaceLocalStore(store, snapshot.records);
+        }
         downloaded += snapshot.records.length;
       }
-      return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded };
+      return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded, changed: hasChanges };
     } catch (syncError) {
       if (syncError?.message?.includes('Inicia sesión') || syncError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length, authRequired: true };

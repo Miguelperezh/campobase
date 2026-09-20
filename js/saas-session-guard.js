@@ -38,6 +38,7 @@ export async function guardSaasSession(client) {
   // Si hay una sesión activa con otro usuario diferente, actualizamos/limpiamos el enlace.
   // Si la sesión ha expirado o el móvil está desconectado, conservamos el vínculo
   // para que el PIN local pueda renovar la sesión en Supabase con signInWithCampoBasePin.
+  const session = await getCurrentSession(client).catch(() => null);
   if (session?.user?.id && session.user.id !== boundUserId) {
     clearBoundSaasUserId();
   }

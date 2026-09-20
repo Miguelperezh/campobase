@@ -657,7 +657,66 @@ async function saveCallup(event) {
     matches: matchesToSave,
     players: updateRotationCounters(state.players, nextCallups),
   });
-  $('#callup-builder').classList.add('hidden'); await refresh(); showView('convocatorias'); toast(existing ? 'Convocatoria actualizada.' : 'Convocatoria guardada.');
+
+  // Sincronizar preparación y partido en vivo con los nuevos convocados
+  const prep = prepForMatch(match.id);
+  if (prep?.team?.length) {
+    const safeFirstKeeper = availableIds.includes(prep.firstKeeper) ? prep.firstKeeper : (availableIds[0] || '');
+    const safeSecondKeeper = availableIds.includes(prep.secondKeeper) ? prep.secondKeeper : safeFirstKeeper;
+    const assignedIds = new Set([safeFirstKeeper]);
+    for (const slot of prep.team) {
+      if (slot.playerId && availableIds.includes(slot.playerId) && slot.playerId !== safeFirstKeeper) {
+        assignedIds.add(slot.playerId);
+      }
+    }
+    const unassigned = availableIds.filter((id) => !assignedIds.has(id) && id !== safeFirstKeeper);
+    const updatedTeam = prep.team.map((slot) => {
+      if (slot.pos === 'Portero') return { ...slot, playerId: safeFirstKeeper };
+      if (slot.playerId && availableIds.includes(slot.playerId)) return slot;
+      const replacement = unassigned.shift() || '';
+      return { ...slot, playerId: replacement };
+    });
+    const updatedPrep = {
+      ...prep,
+      firstKeeper: safeFirstKeeper,
+      secondKeeper: safeSecondKeeper,
+      team: updatedTeam,
+      savedAt: Date.now(),
+    };
+    await put('settings', updatedPrep);
+    if (state.timer && state.timer.matchId === match.id && state.timer.phase === 'ready') {
+      await applyPreparacionToLive(updatedPrep);
+    }
+  } else if (state.timer && state.timer.matchId === match.id) {
+    if (state.timer.phase === 'ready') {
+      const safeFirstKeeper = availableIds.includes(state.timer.firstKeeper) ? state.timer.firstKeeper : (availableIds[0] || '');
+      const safeSecondKeeper = availableIds.includes(state.timer.secondKeeper) ? state.timer.secondKeeper : safeFirstKeeper;
+      const filteredField = (state.timer.onField || []).filter((id) => availableIds.includes(id));
+      if (!filteredField.includes(safeFirstKeeper)) filteredField.unshift(safeFirstKeeper);
+      const remainingForField = availableIds.filter((id) => !filteredField.includes(id));
+      while (filteredField.length < config.players && remainingForField.length > 0) {
+        filteredField.push(remainingForField.shift());
+      }
+      state.timer.firstKeeper = safeFirstKeeper;
+      state.timer.secondKeeper = safeSecondKeeper;
+      state.timer.onField = filteredField;
+      state.timer.initialOnField = [...filteredField];
+      liveTactic = null;
+      await persistTimer();
+    } else {
+      liveTactic = null;
+    }
+  } else {
+    liveTactic = null;
+  }
+
+  $('#callup-builder').classList.add('hidden');
+  await refresh();
+  renderLive();
+  renderDelegate();
+  renderPreparaciones();
+  showView('convocatorias');
+  toast(existing ? 'Convocatoria actualizada.' : 'Convocatoria guardada.');
 }
 
 async function synchronizeRotationCounters() {
@@ -787,8 +846,29 @@ function renderLive() {
   const match = state.matches.find((item) => item.id === state.timer.matchId);
   const callup = callupForMatch(match);
   if (!match || !callup) { state.timer = null; return renderLive(); }
-  const seconds = timerSeconds(); const config = FORMATS[callup.format];
+  const seconds = timerSeconds(); const config = FORMATS[callup.format] || FORMATS.F7;
   state.timer.phase ??= 'ready';
+
+  // Si la convocatoria cambió mientras el partido estaba preparado, limpiar excluidos
+  if (state.timer.phase === 'ready') {
+    const available = callup.availableIds || [];
+    const validOnField = (state.timer.onField || []).filter((id) => available.includes(id));
+    if (validOnField.length < config.players) {
+      const remaining = available.filter((id) => !validOnField.includes(id));
+      while (validOnField.length < config.players && remaining.length > 0) {
+        validOnField.push(remaining.shift());
+      }
+    }
+    state.timer.onField = validOnField;
+    state.timer.initialOnField = [...validOnField];
+    if (!available.includes(state.timer.firstKeeper)) {
+      state.timer.firstKeeper = available[0] || '';
+    }
+    if (!available.includes(state.timer.secondKeeper)) {
+      state.timer.secondKeeper = state.timer.firstKeeper;
+    }
+  }
+
   // Durante la preparación, la pizarra es la fuente de la alineación.
   ensureLiveTactic();
   if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
@@ -853,7 +933,15 @@ function syncTimerFromLiveTactic() {
 // Garantiza que la pizarra en vivo exista (la construye si aún no está), para
 // poder sincronizar "En campo/Banquillo" con ella desde el primer render.
 function ensureLiveTactic() {
-  if (liveTactic) return liveTactic;
+  if (liveTactic) {
+    const available = liveTacticAvailableIds();
+    const hasInvalidPlayer = liveTactic.team?.some((p) => p.playerId && !available.includes(p.playerId));
+    if (hasInvalidPlayer) {
+      liveTactic = null;
+    } else {
+      return liveTactic;
+    }
+  }
   if (!state.timer) return null;
   const availableIds = liveTacticAvailableIds();
   if (!availableIds.length) return null;
@@ -1208,12 +1296,16 @@ function wireTacticsBoard(sc) {
 
 function livePlayerSeconds(id) {
   if (!state.timer) return 0;
-  return calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, timerSeconds())[id] ?? 0;
+  const secs = timerSeconds();
+  const safeSecs = Number.isFinite(secs) && secs >= 0 ? secs : 0;
+  return calculatePlayedSeconds(state.timer.initialOnField || [], state.timer.events || [], safeSecs)[id] ?? 0;
 }
 
 function livePlayedSeconds() {
   if (!state.timer) return {};
-  return calculatePlayedSeconds(state.timer.initialOnField, state.timer.events, timerSeconds());
+  const secs = timerSeconds();
+  const safeSecs = Number.isFinite(secs) && secs >= 0 ? secs : 0;
+  return calculatePlayedSeconds(state.timer.initialOnField || [], state.timer.events || [], safeSecs);
 }
 
 function liveCallup() {
@@ -1396,7 +1488,7 @@ async function applyPreparacionToLive(prep) {
     ...position,
     playerId: callup.availableIds.includes(position.playerId) ? position.playerId : '',
   }));
-  state.timer = buildReadyTimerFromPreparation({
+  const readyTimer = buildReadyTimerFromPreparation({
     matchId: prep.matchId,
     team,
     availableIds: callup.availableIds,
@@ -1404,14 +1496,15 @@ async function applyPreparacionToLive(prep) {
     secondKeeper: prep.secondKeeper,
     delegateShown: prep.delegateShown,
   });
+  state.timer = readyTimer;
   liveTactic = buildLiveState(
     state.players,
     callup.availableIds,
     prep.formacion ?? '1-3-2-1',
     'F7',
-    prep.firstKeeper,
+    readyTimer.firstKeeper,
   );
-  liveTactic.team = team;
+  syncLiveTacticFromTimer();
   await persistTimer();
   renderLive();
   renderDelegate();
@@ -3879,42 +3972,52 @@ async function submitAuth(event) {
       await savePins(form.elements.newOwnerPin.value, form.elements.newDelegatePin.value);
       applyRole('owner');
     } else {
-      await hydratePinSettingsFromSupabase();
+      if (!state.settings.ownerPinHash) await hydratePinSettingsFromSupabase();
       const pin = String(form.elements.pin.value || '').trim();
       if (!/^\d{4,8}$/.test(pin) && pin.toLowerCase() !== 'demo') {
         throw new TypeError('El PIN debe tener entre 4 y 8 cifras.');
       }
 
       if (pin.toLowerCase() === 'demo') {
+        $('#auth-dialog')?.close();
         await startDemoSession(createDemoSession(crypto.randomUUID()));
+        return;
       } else if (state.settings.pinSalt && state.settings.ownerPinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
-        const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
-        if (userId) {
-          try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
-          try {
-            const client = getSupabaseAuthClient();
-            await signInWithCampoBasePin(client, userId, pin);
-          } catch { /* si ya tiene sesión o falla red, continúa con acceso local */ }
-        } else {
-          try {
-            const client = getSupabaseAuthClient();
-            const session = await signInWithCampoBasePin(client, '', pin);
-            if (session?.user?.id) {
-              setBoundSaasUserId(session.user.id);
-              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
-            }
-          } catch (err) {
-            console.warn('Auto-enlace con Supabase fallido:', err);
-          }
-        }
+        $('#auth-dialog')?.close();
         applyRole('owner');
-        if (getBoundSaasUserId()) await synchronizeCloud();
+        const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+        void (async () => {
+          if (userId) {
+            try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
+            try {
+              const client = getSupabaseAuthClient();
+              await signInWithCampoBasePin(client, userId, pin);
+            } catch { /* si ya tiene sesión o falla red, continúa con acceso local */ }
+          } else {
+            try {
+              const client = getSupabaseAuthClient();
+              const session = await signInWithCampoBasePin(client, '', pin);
+              if (session?.user?.id) {
+                setBoundSaasUserId(session.user.id);
+                try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
+              }
+            } catch (err) {
+              console.warn('Auto-enlace con Supabase fallido:', err);
+            }
+          }
+          if (getBoundSaasUserId()) await synchronizeCloud();
+        })();
+        return;
       } else if (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
+        $('#auth-dialog')?.close();
         applyRole('delegate');
+        return;
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
+        $('#auth-dialog')?.close();
         await startDemoSession(createDemoSession(crypto.randomUUID()));
+        return;
       } else {
         // Último recurso: comprobar copias locales del mismo navegador sin
         // modificar Supabase. Nunca crear PIN nuevos desde una pantalla de login.
@@ -3926,24 +4029,31 @@ async function submitAuth(event) {
           if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
             recoveredRole = 'owner';
             recoveredSettings = local;
+            $('#auth-dialog')?.close();
+            applyRole('owner');
             if (candidate.userId) {
               setBoundSaasUserId(candidate.userId);
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
-              try {
-                const client = getSupabaseAuthClient();
-                await signInWithCampoBasePin(client, candidate.userId, pin);
-              } catch {}
+              void (async () => {
+                try {
+                  const client = getSupabaseAuthClient();
+                  await signInWithCampoBasePin(client, candidate.userId, pin);
+                  await synchronizeCloud();
+                } catch {}
+              })();
             }
-            break;
+            return;
           }
           if (await verifyPin(pin, local.pinSalt, local.delegatePinHash)) {
             recoveredRole = 'delegate';
             recoveredSettings = local;
+            $('#auth-dialog')?.close();
+            applyRole('delegate');
             if (candidate.userId) {
               setBoundSaasUserId(candidate.userId);
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
             }
-            break;
+            return;
           }
         }
         if (!recoveredRole) {
@@ -3957,12 +4067,14 @@ async function submitAuth(event) {
               configureRealDatabase();
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
               await hydratePinSettingsFromSupabase();
+              $('#auth-dialog')?.close();
               applyRole('owner');
-              $('#auth-dialog').close();
-              await synchronizeCloud();
-              await refresh();
-              renderAll();
               toast('Sincronizado con CampoBase en la nube.');
+              void (async () => {
+                await synchronizeCloud();
+                await refresh();
+                renderAll();
+              })();
               return;
             }
           } catch (err) {
@@ -5790,7 +5902,9 @@ async function synchronizeCloud() {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
     state.cloudError = '';
-    await refresh();
+    if (result?.changed !== false) {
+      await refresh();
+    }
   } catch (error) {
     state.cloudConnected = false;
     state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
@@ -5871,7 +5985,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260919-prod-current-v19').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v20').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -5904,7 +6018,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, renderAll, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, get state() { return state; } };
 }
 
 init().catch(handleError);

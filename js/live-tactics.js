@@ -196,13 +196,41 @@ export function buildReadyTimerFromPreparation({
   secondKeeper,
   delegateShown = false,
 }) {
-  const onField = team.map(({ playerId }) => playerId).filter((id) => availableIds.includes(id));
-  if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(firstKeeper)) {
-    throw new TypeError('La preparación necesita 7 jugadores únicos con el portero del primer tiempo.');
+  const safeFirstKeeper = availableIds.includes(firstKeeper)
+    ? firstKeeper
+    : (availableIds[0] || '');
+  const safeSecondKeeper = availableIds.includes(secondKeeper)
+    ? secondKeeper
+    : safeFirstKeeper;
+
+  const assigned = new Set();
+  if (safeFirstKeeper) assigned.add(safeFirstKeeper);
+  for (const pos of team) {
+    if (pos.playerId && availableIds.includes(pos.playerId) && pos.playerId !== safeFirstKeeper) {
+      assigned.add(pos.playerId);
+    }
   }
-  if (!availableIds.includes(secondKeeper)) {
-    throw new TypeError('El portero del segundo tiempo debe estar convocado.');
+
+  const unassigned = availableIds.filter((id) => !assigned.has(id) && id !== safeFirstKeeper);
+  const onField = [];
+  if (safeFirstKeeper) onField.push(safeFirstKeeper);
+
+  for (const pos of team) {
+    if (pos.pos === 'Portero') continue;
+    let pid = pos.playerId;
+    if (!pid || !availableIds.includes(pid) || pid === safeFirstKeeper || onField.includes(pid)) {
+      pid = unassigned.shift() || '';
+    }
+    if (pid && !onField.includes(pid)) {
+      onField.push(pid);
+    }
   }
+
+  while (onField.length < 7 && unassigned.length > 0) {
+    const extra = unassigned.shift();
+    if (extra && !onField.includes(extra)) onField.push(extra);
+  }
+
   return {
     matchId,
     elapsed: 0,
@@ -211,8 +239,8 @@ export function buildReadyTimerFromPreparation({
     initialOnField: [...onField],
     onField: [...onField],
     events: [],
-    firstKeeper,
-    secondKeeper,
+    firstKeeper: safeFirstKeeper,
+    secondKeeper: safeSecondKeeper,
     autoPaused: false,
     delegateUnlocked: Boolean(delegateShown),
     details: {

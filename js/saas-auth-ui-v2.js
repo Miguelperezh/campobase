@@ -971,6 +971,11 @@ export async function initSaasAuth(client) {
     const dialog = $('#auth-dialog');
     if (dialog?.open) dialog.close();
     document.body.classList.remove('auth-locked');
+    const app = await waitForApp();
+    if (app?.state) {
+      app.state.role = activeBrowserRole;
+      try { if (typeof app.renderAll === 'function') app.renderAll(); } catch {}
+    }
     return;
   }
 
