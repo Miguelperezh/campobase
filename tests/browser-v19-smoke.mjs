@@ -176,13 +176,22 @@ try {
   await waitServer();
   browser = await chromium.launch({ headless: true, executablePath: chrome, args: ['--no-sandbox'] });
 
-  const desktop = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const desktopContext = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    serviceWorkers: 'block',
+  });
+  const desktop = await desktopContext.newPage();
   await testDesktop(desktop);
-  await desktop.close();
+  await desktopContext.close();
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true });
+  const mobileContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    serviceWorkers: 'block',
+  });
+  const mobile = await mobileContext.newPage();
   await testMobile(mobile);
-  await mobile.close();
+  await mobileContext.close();
 
   if (browserErrors.length) {
     throw new Error('Errores de navegador detectados:\n' + browserErrors.join('\n'));
