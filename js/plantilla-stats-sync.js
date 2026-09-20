@@ -6,6 +6,7 @@ import {
   derivePlayerMatchStats,
   isPreseasonMatch,
   seasonKey,
+  calculatePlayerCallupMinutes,
 } from './domain.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -170,6 +171,29 @@ async function syncPlantillaStats() {
       if (media) media.textContent = Number.isFinite(leagueAverage) ? leagueAverage : '—';
       const mediaBox = card.querySelector('.liga-media');
       if (mediaBox) mediaBox.title = 'Media de Liga';
+
+      const minuteBar = card.querySelector('.player-minute-bar');
+      if (minuteBar) {
+        const playerTotalMinutes = league.minutes + preseason.minutes;
+        const playerTotalCallups = (league.callups ?? 0) + (preseason.callups ?? 0);
+        const callupMinutesInfo = calculatePlayerCallupMinutes({
+          playerId,
+          matches,
+          callups: currentCallups,
+          defaultDuration: 70,
+          totalCallups: playerTotalCallups,
+          playedMinutes: playerTotalMinutes,
+        });
+        const minutePercent = callupMinutesInfo.percent;
+        const possibleMinutes = callupMinutesInfo.possibleMinutes;
+        minuteBar.title = possibleMinutes > 0
+          ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%)`
+          : `${playerTotalMinutes} min disputados (sin convocatorias registradas)`;
+        const metaSpan = minuteBar.querySelector('.player-minute-meta span:last-child');
+        if (metaSpan) metaSpan.textContent = `${playerTotalMinutes} min (${minutePercent}%)`;
+        const fill = minuteBar.querySelector('.player-minute-fill');
+        if (fill) fill.style.width = `${minutePercent}%`;
+      }
 
       const performance = card.querySelector('.player-performance');
       if (!performance) continue;

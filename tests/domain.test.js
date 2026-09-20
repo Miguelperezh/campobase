@@ -37,6 +37,7 @@ import {
   removeMatchFromPlayerStats,
   derivePlayerMatchStats,
   buildPlayerRecord,
+  calculatePlayerCallupMinutes,
 } from '../js/domain.js';
 
 test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acentos', () => {
@@ -799,3 +800,81 @@ test('reconstruye minutos y puntuaciones solo desde los partidos que todavía ex
   ]);
   assert.deepEqual(derived.minuteReasons, [{ matchId: 'liga', date: '2026-09-12T13:00', season: '2026-2027', reason: 'sin_indicar' }]);
 });
+
+test('calculatePlayerCallupMinutes calcula el porcentaje real sobre convocatorias y no sobre el máximo del equipo', () => {
+  // Caso de usuario: 1 convocatoria de 70 min, 70 min jugados -> 100% (antes salía 57% por compararse con otro compañero)
+  const userCase = calculatePlayerCallupMinutes({
+    playerId: 'p1',
+    matches: [
+      { id: 'm1', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { p1: 4200 } },
+    ],
+    callups: [
+      { matchId: 'm1', availableIds: ['p1'] },
+    ],
+    playedMinutes: 70,
+    totalCallups: 1,
+  });
+  assert.equal(userCase.playedMinutes, 70);
+  assert.equal(userCase.possibleMinutes, 70);
+  assert.equal(userCase.percent, 100);
+
+  // Jugador convocado a 2 partidos de 70 min que juega 70 min en total -> 50%
+  const twoMatches = calculatePlayerCallupMinutes({
+    playerId: 'p1',
+    matches: [
+      { id: 'm1', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { p1: 4200 } },
+      { id: 'm2', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { p1: 0 } },
+    ],
+    callups: [
+      { matchId: 'm1', availableIds: ['p1'] },
+      { matchId: 'm2', availableIds: ['p1'] },
+    ],
+    playedMinutes: 70,
+    totalCallups: 2,
+  });
+  assert.equal(twoMatches.possibleMinutes, 140);
+  assert.equal(twoMatches.percent, 50);
+
+  // Jugador que se incorpora tarde: el equipo lleva 5 partidos (350 min), pero él solo ha ido a 1 (70 min) y juega 70 min
+  const latePlayer = calculatePlayerCallupMinutes({
+    playerId: 'late',
+    matches: [
+      { id: 'm1', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { other: 4200 } },
+      { id: 'm2', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { other: 4200 } },
+      { id: 'm3', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { other: 4200 } },
+      { id: 'm4', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { other: 4200 } },
+      { id: 'm5', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { late: 4200, other: 4200 } },
+    ],
+    callups: [
+      { matchId: 'm5', availableIds: ['late', 'other'] },
+    ],
+    playedMinutes: 70,
+    totalCallups: 1,
+  });
+  assert.equal(latePlayer.possibleMinutes, 70);
+  assert.equal(latePlayer.percent, 100);
+
+  // Jugador sin convocatorias
+  const noCallups = calculatePlayerCallupMinutes({
+    playerId: 'none',
+    matches: [],
+    callups: [],
+    playedMinutes: 0,
+    totalCallups: 0,
+  });
+  assert.equal(noCallups.possibleMinutes, 0);
+  assert.equal(noCallups.percent, 0);
+
+  // Convocatorias manuales (statAdjustments) sin partidos en base de datos
+  const manualOnly = calculatePlayerCallupMinutes({
+    playerId: 'manual',
+    matches: [],
+    callups: [],
+    defaultDuration: 70,
+    playedMinutes: 140,
+    totalCallups: 2,
+  });
+  assert.equal(manualOnly.possibleMinutes, 140);
+  assert.equal(manualOnly.percent, 100);
+});
+

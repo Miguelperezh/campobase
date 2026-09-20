@@ -1,7 +1,7 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
@@ -403,8 +403,21 @@ function renderPlayers() {
     }).join('');
     const incidentRows = playerIncidentRows(player.id).map((item) => `<li><strong>${escapeHtml(localDate(item.date))}</strong> · ${escapeHtml(item.label)}${item.note ? `: ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-player-incident" data-key="${escapeHtml(item.key)}" aria-label="Borrar incidencia">×</button></li>`).join('');
     const playerTotalMinutes = summary.minutes + preseasonSummary.minutes;
-    const maxMinutes = Math.max(1, ...Array.from(playerSummaryTotals.values()).map((v) => v.summary.minutes + v.preseasonSummary.minutes));
-    const minutePercent = Math.min(100, Math.round((playerTotalMinutes / maxMinutes) * 100));
+    const playerTotalCallups = (summary.callups ?? 0) + (preseasonSummary.callups ?? 0);
+    const defaultDuration = FORMATS[state.format]?.duration || 70;
+    const callupMinutesInfo = calculatePlayerCallupMinutes({
+      playerId: player.id,
+      matches: state.matches,
+      callups: currentCallups,
+      defaultDuration,
+      totalCallups: playerTotalCallups,
+      playedMinutes: playerTotalMinutes,
+    });
+    const minutePercent = callupMinutesInfo.percent;
+    const possibleMinutes = callupMinutesInfo.possibleMinutes;
+    const minuteBarTitle = possibleMinutes > 0
+      ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%)`
+      : `${playerTotalMinutes} min disputados (sin convocatorias registradas)`;
 
     const ratingNum = summary.averageRating ? Number(summary.averageRating) : null;
     const ratingTier = ratingNum >= 4.0 ? 'rating-tier-top' : (ratingNum >= 3.0 ? 'rating-tier-good' : (ratingNum > 0 ? 'rating-tier-fair' : 'rating-tier-none'));
@@ -428,7 +441,7 @@ function renderPlayers() {
       </div>
     </div>
     <div class="player-body">
-      <div class="player-minute-bar" title="${playerTotalMinutes} min disputados (${minutePercent}% sobre el máximo)">
+      <div class="player-minute-bar" title="${escapeHtml(minuteBarTitle)}">
         <div class="player-minute-meta"><span>Minutos disputados</span><span>${playerTotalMinutes} min (${minutePercent}%)</span></div>
         <div class="player-minute-track"><div class="player-minute-fill" style="width:${minutePercent}%"></div></div>
       </div>
@@ -6225,7 +6238,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v29').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v30').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

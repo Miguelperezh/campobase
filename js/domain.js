@@ -399,6 +399,58 @@ export function derivePlayerMatchStats(playerId, matches) {
   return { totalMinutes, seasonMinutes, preseasonMinutes, ratingHistory, minuteReasons };
 }
 
+export function calculatePlayerCallupMinutes({
+  playerId,
+  matches = [],
+  callups = [],
+  defaultDuration = 70,
+  totalCallups = null,
+  playedMinutes = 0,
+}) {
+  let possibleMinutes = 0;
+  const countedMatchIds = new Set();
+
+  if (Array.isArray(matches)) {
+    for (const match of matches) {
+      if (!match || match.status === 'planned' || (match.status !== 'finished' && !match.minuteTotals)) {
+        continue;
+      }
+      const relatedCallup = Array.isArray(callups) ? callups.find((c) => c?.matchId === match.id) : null;
+      const wasCalled = Boolean(
+        (relatedCallup?.availableIds && relatedCallup.availableIds.includes(playerId)) ||
+        (match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]))
+      );
+
+      if (wasCalled) {
+        countedMatchIds.add(match.id);
+        const matchDuration = Number.isFinite(match.playedSeconds) && match.playedSeconds > 0
+          ? Math.round(match.playedSeconds / 60)
+          : (match.format === 'F11' ? 90 : (match.format === 'F7' ? 70 : defaultDuration));
+        possibleMinutes += matchDuration;
+      }
+    }
+  }
+
+  if (Number.isFinite(totalCallups) && totalCallups > countedMatchIds.size) {
+    const remainingCallups = totalCallups - countedMatchIds.size;
+    possibleMinutes += remainingCallups * defaultDuration;
+  }
+
+  const safePlayedMinutes = Math.max(0, Math.round(Number(playedMinutes) || 0));
+  possibleMinutes = Math.max(possibleMinutes, safePlayedMinutes);
+
+  const percent = possibleMinutes > 0
+    ? Math.min(100, Math.round((safePlayedMinutes / possibleMinutes) * 100))
+    : 0;
+
+  return {
+    possibleMinutes,
+    playedMinutes: safePlayedMinutes,
+    percent,
+    matchesCounted: countedMatchIds.size,
+  };
+}
+
 export function removeMatchFromPlayerStats(player, match, matches = null) {
   if (Array.isArray(matches)) {
     return { ...player, ...derivePlayerMatchStats(player.id, matches.filter((item) => item.id !== match.id)) };

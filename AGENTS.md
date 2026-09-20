@@ -4278,3 +4278,29 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 8. **Verificación:**
    - `npm run check && npm test`: 480 tests pasando al 100% (0 fallos).
 
+## 63. Corrección Estadística de Minutos Disputados por Convocatorias (PWA v30)
+
+### 63.1 Contexto y Diagnóstico
+- El usuario reportó una inconsistencia en la estadística visible de la ficha de jugador:
+  - *«Minutos disputados: 70 min (57%). estas estadísticas no son reales en todos... para saber porcentajes debería ser según sus convocatorias, no puede computar un jugador 10% si realmente solo ha ido una vez convocado o jugadores que se han incorporado después»*.
+- **Causa raíz identificada**:
+  - En `renderPlayers()` (`js/app.js`), el porcentaje `minutePercent` se calculaba erróneamente como `Math.round((playerTotalMinutes / maxMinutes) * 100)`, donde `maxMinutes` era el máximo de minutos jugados por cualquier compañero de la plantilla completa.
+  - Esto penalizaba injustamente a jugadores recién incorporados, lesionados o con pocas convocatorias, mostrándoles porcentajes artificialmente bajos (ej. 70 min jugados en su único partido convocado de 70 min aparecía como 57% o 10% en vez de 100%).
+
+### 63.2 Solución Implementada
+1. **Función `calculatePlayerCallupMinutes` en `js/domain.js`**:
+   - Calcula los minutos posibles sumando la duración de cada partido finalizado donde el jugador estuvo convocado (`availableIds`) o disputó minutos (`minuteTotals`).
+   - Si existen convocatorias manuales adicionales (desde `statAdjustments`), se computan a razón de la duración de partido del formato (`FORMATS[format].duration`, 70 min en F7 / 90 min en F11).
+   - Calcula el porcentaje real: `(minutosJugados / minutosPosiblesConvocatorias) * 100`.
+   - Si no tiene convocatorias registradas, devuelve 0%.
+2. **Actualización de la Interfaz en `js/app.js` y `js/plantilla-stats-sync.js`**:
+   - `Minutos disputados`: muestra `70 min (100%)` cuando ha jugado el partido completo al que fue convocado.
+   - En el tooltip / título de la barra: *`70 min disputados de 70 min posibles en sus convocatorias (100%)`* (o *`sin convocatorias registradas`* si tiene 0).
+   - Blindaje: las fichas de jugador, fotos, datos personales, inputs y estructura HTML se conservan intactos al 100% sin alteraciones.
+3. **Despliegue y PWA v30**:
+   - Bump a `20260920-prod-current-v30` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js` y tests.
+4. **Batería de Pruebas**:
+   - Añadidos tests unitarios específicos en `tests/domain.test.js`.
+   - Total tests pasando: **481/481 tests (100% pass)**.
+
+
