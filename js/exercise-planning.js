@@ -328,11 +328,10 @@ export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
   const available = new Set(metadata.availableExerciseIds || []);
   const blocks = (values.blocks || []).map((block) => {
     if (!available.has(block.exerciseId)) throw new TypeError('La sesión contiene un ejercicio que ya no está disponible.');
-    const duration = Number(block.duration);
-    if (!Number.isInteger(duration) || duration < 1 || duration > 60) throw new RangeError('Cada bloque debe durar entre 1 y 60 minutos.');
+    const rawDuration = Number(block.duration);
+    const duration = Math.max(1, Math.min(240, Number.isInteger(rawDuration) ? rawDuration : (Math.round(rawDuration) || 10)));
     return { type: block.type, exerciseId: block.exerciseId, duration, notes: clean(block.notes) };
   });
-  if (!blocks.length) throw new RangeError('Añade al menos un ejercicio a la sesión.');
   const target = Number(values.targetDuration) > 0 ? Number(values.targetDuration) : 60;
   const status = sessionDurationStatus(blocks, target);
   const autoMaterial = calculateSessionTotalMaterial(blocks, metadata.exercises || metadata.exercisesLookup || metadata.availableExerciseIds);

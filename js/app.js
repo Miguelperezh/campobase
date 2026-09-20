@@ -2506,7 +2506,7 @@ function syncSessionDraft() {
   if (!targetVal || targetVal <= 0) {
     targetVal = Number(form.elements.targetDuration?.value);
   }
-  if ((!targetVal || targetVal === 60) && pitchInput.toLowerCase().includes('pilar')) {
+  if (!targetVal && pitchInput.toLowerCase().includes('pilar')) {
     targetVal = 75;
   }
   if (targetVal > 0) {
@@ -2514,11 +2514,14 @@ function syncSessionDraft() {
     if (form.elements.targetDuration) form.elements.targetDuration.value = targetVal;
     if (planTarget && document.activeElement !== planTarget) planTarget.value = targetVal;
   }
+  if (!values.name?.trim()) {
+    values.name = sessionDraftMeta.name?.trim() || 'Entrenamiento';
+  }
   sessionDraftMeta = { ...sessionDraftMeta, ...values };
   sessionDraftBlocks = $$('.session-block', form).map((row) => ({
     type: row.querySelector('[name="blockType"]').value,
     exerciseId: row.querySelector('[name="blockExerciseId"]').value,
-    duration: Number(row.querySelector('[name="blockDuration"]').value) || 1,
+    duration: Math.max(1, Math.min(240, Number(row.querySelector('[name="blockDuration"]').value) || 10)),
     notes: row.querySelector('[name="blockNotes"]').value.trim(),
   }));
 }
@@ -2561,7 +2564,7 @@ function renderSessionDraft() {
       <button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button>
     </article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form"><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" required maxlength="120" value="${escapeHtml(sessionDraftMeta?.name ?? '')}" placeholder="Ej. Pase, apoyo y finalización"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="60" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo.</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit" ${sessionDraftBlocks.length ? '' : 'disabled'}>Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `<form id="session-form" novalidate><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" maxlength="120" value="${escapeHtml(sessionDraftMeta?.name || 'Entrenamiento')}" placeholder="Ej. Pase, apoyo y finalización (o Entrenamiento)"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="240" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo (o guarda la sesión ahora y añade los ejercicios más tarde).</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
@@ -2569,7 +2572,7 @@ function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   const defaultTarget = Number(seedMeta.targetDuration) > 0
     ? Number(seedMeta.targetDuration)
     : ((seedMeta.pitch && seedMeta.pitch.toLowerCase().includes('pilar')) ? 75 : 60);
-  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || localDateKey(), time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || '', targetDuration: defaultTarget, sessionKind: 'training', material: '', notes: '' };
+  sessionDraftMeta = existing ? { ...existing } : { id: '', date: seedMeta.date || localDateKey(), time: seedMeta.time || '', pitch: seedMeta.pitch || '', name: seedMeta.name || 'Entrenamiento', targetDuration: defaultTarget, sessionKind: 'training', material: '', notes: '' };
   sessionDraftBlocks = (existing?.blocks ?? []).map((block) => ({ ...block }));
   if (seedExerciseId) {
     const exercise = state.exercises.find(({ id }) => id === seedExerciseId);
@@ -6010,7 +6013,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v22').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v23').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

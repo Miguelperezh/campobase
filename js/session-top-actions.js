@@ -87,9 +87,20 @@ export function syncSessionTopActions() {
     save.addEventListener('click', () => {
       const currentForm = document.querySelector('#session-builder #session-form');
       const submit = currentForm?.querySelector('button[type="submit"]');
-      if (!currentForm || !submit || submit.disabled) return;
-      if (typeof currentForm.requestSubmit === 'function') currentForm.requestSubmit(submit);
-      else submit.click();
+      if (!currentForm) return;
+      if (submit && submit.disabled) return;
+      if (typeof currentForm.requestSubmit === 'function') {
+        try {
+          currentForm.requestSubmit(submit || undefined);
+        } catch {
+          if (submit) submit.click();
+          else currentForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+      } else if (submit) {
+        submit.click();
+      } else {
+        currentForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      }
     });
     newSession.insertAdjacentElement('afterend', save);
   }

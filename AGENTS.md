@@ -4015,3 +4015,41 @@ En este ciclo de producción se resolvieron las incidencias reportadas por los e
 - Versión de caché PWA sincronizada a `20260920-prod-current-v22` en todos los archivos de configuración y pruebas.
 - 458/458 pruebas automatizadas pasando satisfactoriamente (`npm run check && npm test`).
 
+
+## 56. Guardado de sesiones de entrenamiento sin ejercicios y con duraciones flexibles — v23 — 20/09/2026
+
+Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto si tenían ejercicios como si no los tenían, o si se excedía la duración programada.
+
+### 56.1 Causa raíz identificada
+1. **Bloqueo por falta de ejercicios:**
+   - En `js/app.js`, el botón `<button class="primary" type="submit">` se renderizaba con el atributo `disabled` cuando `sessionDraftBlocks.length === 0`.
+   - En `js/session-top-actions.js`, el botón `#session-top-save` copiaba el estado `disabled` del botón original y retornaba sin hacer nada.
+   - En `js/exercise-planning.js`, `buildFlexibleTrainingSession` lanzaba una excepción `RangeError('Añade al menos un ejercicio a la sesión.')`.
+2. **Error de DOM en bucle por `MutationObserver`:**
+   - En `js/session-reorder-ui.js`, al haber 2 o más ejercicios, se ejecutaba `root.insertBefore(help, firstBlock)`. Al ser `root` el contenedor `#session-builder` y no el padre directo de `firstBlock`, el navegador lanzaba `NotFoundError: The node before which the new node is to be inserted is not a child of this node.`
+   - Al estar observado con `{ childList: true, subtree: true }`, cada mutación disparaba de nuevo el observer, provocando miles de excepciones no capturadas que congelaban y bloqueaban la interacción de la app.
+3. **Validación nativa en campos ocultos:**
+   - Ciertos campos requeridos quedaban ocultos o dentro de secciones colapsadas, haciendo que el navegador abortara silenciosamente el envío del formulario con `An invalid form control is not focusable`.
+
+### 56.2 Soluciones aplicadas
+1. **Guardado sin ejercicios habilitado:**
+   - Se eliminó la restricción en `buildFlexibleTrainingSession`, permitiendo guardar sesiones vacías de ejercicios (`blocks: []`) con su fecha, hora, campo de juego y nombre.
+   - Se eliminó el atributo `disabled` del botón `Guardar sesión` y se aseguró que `#session-top-save` despache el evento `submit` de forma robusta.
+   - El estado de duración informa correctamente de los minutos faltantes para el objetivo sin impedir el guardado.
+2. **Corrección de `session-reorder-ui.js`:**
+   - Se corrigió `firstBlock.parentElement.insertBefore(help, firstBlock)`, erradicando el 100% de las excepciones de DOM.
+3. **Duraciones flexibles y sin bloqueo por tiempo excedido:**
+   - Las duraciones de bloques y de sesión admiten libremente de 1 a 240 minutos.
+   - Si la suma de minutos supera el objetivo, se muestra el aviso «Sobran X min» y se permite guardar normalmente.
+4. **Formulario con `novalidate`:**
+   - `<form id="session-form" novalidate>` asegura que los clics en «Guardar» se procesen siempre mediante la lógica de negocio y proporcionen feedback visual al usuario.
+
+### 56.3 Verificación y trazabilidad
+- Verificado mediante Chrome CDP automatizado:
+  - Guardado de sesión sin ejercicios (solo fecha/hora/campo): éxito, tarjeta creada y mensaje toast.
+  - Guardado de sesión con 2 ejercicios excediendo tiempo: éxito, tarjeta creada y badge de tiempo sobrante.
+  - Cero excepciones de consola o de DOM detectadas.
+- Suite de pruebas completa: 461/461 tests pasados (`npm run check && npm test`).
+- Versión sincronizada a `20260920-prod-current-v23`.
+
+

@@ -149,3 +149,56 @@ test('formatSessionDurationInfo con pitch Pilar y sin targetDuration usa 75 min 
   assert.equal(infoPilar.badgeText, 'Quedan 60 min');
 });
 
+test('buildFlexibleTrainingSession permite guardar una sesión sin ejercicios para enviar fechas a padres', () => {
+  const session = buildFlexibleTrainingSession({
+    date: '2026-09-22',
+    time: '18:00',
+    pitch: 'Campo Pepe Gonçalvez',
+    name: 'Entrenamiento de martes',
+    targetDuration: 60,
+    blocks: [],
+  }, {
+    id: 'session-empty-test',
+    availableExerciseIds: [],
+    exercises: [],
+    createdAt: 1000,
+    now: 2000,
+  });
+
+  assert.equal(session.id, 'session-empty-test');
+  assert.equal(session.date, '2026-09-22');
+  assert.equal(session.time, '18:00');
+  assert.equal(session.name, 'Entrenamiento de martes');
+  assert.equal(session.pitch, 'Campo Pepe Gonçalvez');
+  assert.equal(session.totalDuration, 0);
+  assert.deepEqual(session.blocks, []);
+});
+
+test('buildFlexibleTrainingSession permite guardar sesiones que exceden el tiempo objetivo sin bloquear', () => {
+  const session = buildFlexibleTrainingSession({
+    date: '2026-09-24',
+    time: '17:30',
+    name: 'Sesión intensiva',
+    targetDuration: 60,
+    blocks: [
+      { type: 'warmup', exerciseId: 'ex-1', duration: 35 },
+      { type: 'main', exerciseId: 'ex-2', duration: 45 },
+    ],
+  }, {
+    id: 'session-exceeded-test',
+    availableExerciseIds: ['ex-1', 'ex-2'],
+    exercises: [],
+    createdAt: 1000,
+    now: 2000,
+  });
+
+  assert.equal(session.totalDuration, 80);
+  assert.equal(session.targetDuration, 60);
+  assert.equal(session.blocks.length, 2);
+});
+
+test('el formulario de sesión no deshabilita el botón de guardar por falta de bloques', () => {
+  assert.doesNotMatch(appSource, /<button class="primary" type="submit" \$\{sessionDraftBlocks\.length \? '' : 'disabled'\}>Guardar sesión<\/button>/);
+  assert.match(appSource, /<button class="primary" type="submit">Guardar sesión<\/button>/);
+});
+

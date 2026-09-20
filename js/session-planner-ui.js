@@ -610,7 +610,7 @@ function renderPlan(form) {
   strip.innerHTML = items.length
     ? items.map((item) => `<div class="sp-chip">
         <strong title="${esc(item.name)}">${item.index + 1}. ${esc(item.name)}</strong>
-        <label><input data-sp-time="${item.index}" type="number" min="1" max="60" value="${item.duration}"><span>min</span></label>
+        <label><input data-sp-time="${item.index}" type="number" min="1" max="240" value="${item.duration}"><span>min</span></label>
         <button type="button" class="view-exercise secondary compact" data-exercise-id="${esc(item.id)}">Ver</button>
         <button type="button" class="remove-session-block danger compact" data-index="${item.index}">×</button>
       </div>`).join('')

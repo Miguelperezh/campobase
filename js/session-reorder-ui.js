@@ -44,7 +44,7 @@ function enhanceBuilder(root) {
     help.className = 'cb-session-order-help';
     help.textContent = '↕ Orden manual: usa Subir y Bajar para colocar los ejercicios en el orden que quieras.';
     const firstBlock = root.querySelector('.session-block');
-    if (firstBlock) root.insertBefore(help, firstBlock);
+    if (firstBlock && firstBlock.parentElement) firstBlock.parentElement.insertBefore(help, firstBlock);
     else root.prepend(help);
   }
 }

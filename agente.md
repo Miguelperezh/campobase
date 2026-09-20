@@ -4,7 +4,7 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ---
 
-## 1. Resumen de Mejoras Recientes (v20 — v22)
+## 1. Resumen de Mejoras Recientes (v20 — v23)
 
 ### 1.1 Rendimiento Inmediato y Eliminación de Lentitud al Entrar y Poner PIN (v20)
 - **Causa anterior:** Al arrancar o introducir el PIN se encadenaban múltiples llamadas bloqueantes a la nube (Supabase), recargas forzadas (`location.reload()`) y sincronizaciones redundantes que congelaban el hilo de JavaScript y la respuesta de la pantalla táctil.
@@ -40,6 +40,18 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
   - En `js/match-calendar-sync.js` (`partitionAndSortMatches`) los partidos jugados se ordenan en orden **descendente por fecha** (`b.date` antes que `a.date`). El último partido jugado aparece en la parte superior del acordeón.
   - En `js/completed-events-ui.js` (`groupPlayedMatchesFallback`) se aplica idéntica ordenación descendente.
   - Los partidos próximos (*upcoming*) se mantienen ordenados cronológicamente de más cercano a más lejano (el siguiente partido a jugar queda siempre arriba).
+
+### 1.6 Guardado de Sesiones de Entrenamiento y Planificación Flexible (v23)
+- **Causa anterior:**
+  - No permitía guardar sesiones sin ejercicios (el botón aparecía deshabilitado y el dominio arrojaba una excepción), impidiendo guardar con antelación la fecha, hora y campo para enviar las convocatorias a los padres por WhatsApp.
+  - Si se excedía el tiempo objetivo o se editaban tiempos, ciertas condiciones de validación o excepciones en listeners bloqueaban el guardado.
+  - En `js/session-reorder-ui.js`, al añadir 2 o más ejercicios, un fallo en `insertBefore` provocaba un bucle de excepciones continuas en el MutationObserver.
+- **Solución implementada:**
+  - **Guardado sin ejercicios permitido:** Se puede guardar una sesión solo con fecha, hora, campo y observaciones. Se muestra el estado de tiempo restante y la sesión queda lista para añadirle ejercicios más tarde o enviar el mensaje a las familias.
+  - **Avisos sin bloqueo:** Se conservan todos los avisos de minutos faltantes o sobrantes («Sobran X min» o «Quedan X min») sin impedir que el entrenador guarde la sesión.
+  - **Edición libre de duraciones:** Permite ajustar tanto el tiempo total de la sesión como la duración individual de cada ejercicio (de 1 a 240 minutos).
+  - Se corrigió `js/session-reorder-ui.js` para insertar las ayudas en el contenedor correcto sin provocar errores de DOM.
+  - El formulario cuenta con `novalidate` y respaldo de envío en las acciones superiores para garantizar que el botón «Guardar» responda siempre al instante.
 
 ---
 
@@ -95,7 +107,7 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
    - Al pulsar «Guardar y sincronizar», los minutos jugados y la nota del partido impactan de inmediato en la ficha individual del jugador en Plantilla (calculando su nueva media de temporada).
 
 ### 3.4 Actualizaciones PWA y Service Worker
-- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v22`).
+- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v23`).
 - Para forzar la actualización en los teléfonos de los entrenadores:
   - Se incrementa la versión en `sw.js`, `index.html`, `js/app.js` y `js/supabase-client.js`.
   - El Service Worker detecta la nueva versión, la descarga en segundo plano y avisa o activa la versión nueva en la siguiente visita sin desloguear ni borrar datos locales.
