@@ -340,11 +340,13 @@ async function saveMatchPerformance(event) {
     await putBatch({ matches: [updatedMatch], players: updatedPlayers });
     dialog.close();
     if (typeof window.__campobase?.refresh === 'function') {
-      await window.__campobase.refresh();
+      await window.__campobase.refresh(true);
     }
     if (typeof window.__campobase?.renderAll === 'function') {
       window.__campobase.renderAll();
     }
+    window.__campobase?.renderMatches?.();
+    window.__campobase?.renderPlayers?.();
     const toastEl = document.getElementById('toast');
     if (toastEl) {
       toastEl.textContent = 'Minutos y puntuaciones guardados y sincronizados.';

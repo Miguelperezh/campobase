@@ -11,6 +11,9 @@ import {
   formatExclusionReasonText,
   getExclusionEncouragement,
   getWeekDateRange,
+  getNextWeekDateRange,
+  isWeekend,
+  formatWeekSpanLabel,
   buildWhatsAppMatchConvocatoria,
   buildWhatsAppTrainingDay,
   buildWhatsAppTrainingWeek,
@@ -448,6 +451,61 @@ test('getWeekDateRange calcula lunes a domingo de forma precisa', () => {
   assert.equal(rangeMonday.end, '2026-09-20');
 });
 
+test('getNextWeekDateRange calcula correctamente el rango lunes-domingo de la siguiente semana', () => {
+  // Desde un domingo (ej. 2026-09-20), la próxima semana debe ser del lunes 21 al domingo 27
+  const fromSunday = getNextWeekDateRange('2026-09-20');
+  assert.equal(fromSunday.start, '2026-09-21');
+  assert.equal(fromSunday.end, '2026-09-27');
+
+  // Desde un sábado (ej. 2026-09-19), la próxima semana debe ser del lunes 21 al domingo 27
+  const fromSaturday = getNextWeekDateRange('2026-09-19');
+  assert.equal(fromSaturday.start, '2026-09-21');
+  assert.equal(fromSaturday.end, '2026-09-27');
+
+  // Desde mitad de semana (ej. miércoles 2026-09-16), la próxima semana es 21 al 27
+  const fromWednesday = getNextWeekDateRange('2026-09-16');
+  assert.equal(fromWednesday.start, '2026-09-21');
+  assert.equal(fromWednesday.end, '2026-09-27');
+});
+
+test('isWeekend detecta correctamente sábados y domingos', () => {
+  assert.equal(isWeekend('2026-09-19'), true, 'Sábado 19 debe ser fin de semana');
+  assert.equal(isWeekend('2026-09-20'), true, 'Domingo 20 debe ser fin de semana');
+  assert.equal(isWeekend('2026-09-21'), false, 'Lunes 21 no es fin de semana');
+  assert.equal(isWeekend('2026-09-18'), false, 'Viernes 18 no es fin de semana');
+});
+
+test('formatWeekSpanLabel genera la etiqueta legible del rango de semana', () => {
+  const label = formatWeekSpanLabel('2026-09-21', '2026-09-27');
+  assert.ok(label.toLowerCase().includes('del 21 al 27 de septiembre'), `Esperaba "del 21 al 27 de septiembre", obtuvo: ${label}`);
+});
+
+test('buildWhatsAppTrainingWeek con rango de próxima semana omite días pasados de la semana anterior', () => {
+  const nextWeekRange = getNextWeekDateRange('2026-09-20');
+  assert.equal(nextWeekRange.start, '2026-09-21');
+  assert.equal(nextWeekRange.end, '2026-09-27');
+
+  const upcomingSessions = [
+    { date: '2026-09-22', time: '17:00', field: 'Alfonso Silva' },
+    { date: '2026-09-24', time: '17:00', field: 'Alfonso Silva' },
+  ];
+
+  const msg = buildWhatsAppTrainingWeek({
+    sessions: upcomingSessions,
+    match: { date: '2026-09-26', time: '10:00', opponent: 'Arucas' },
+    weekRangeLabel: formatWeekSpanLabel(nextWeekRange.start, nextWeekRange.end),
+    tacticalGoal: 'Presión tras pérdida',
+    now: new Date('2026-09-20T11:00:00'),
+  });
+
+  assert.ok(msg.includes('22 de Septiembre') || msg.includes('22 de septiembre'), 'Debe incluir entreno del 22');
+  assert.ok(msg.includes('24 de Septiembre') || msg.includes('24 de septiembre'), 'Debe incluir entreno del 24');
+  assert.ok(msg.includes('SÁBADO') && msg.includes('Arucas'), 'Debe incluir partido del sábado vs Arucas');
+  assert.ok(!msg.includes('14 de Septiembre') && !msg.includes('14 de septiembre'), 'No debe incluir el 14 de septiembre pasado');
+  assert.ok(!msg.includes('17 de Septiembre') && !msg.includes('17 de septiembre'), 'No debe incluir el 17 de septiembre pasado');
+  assert.ok(msg.includes('21 AL 27') || msg.includes('21 al 27'), 'Debe mencionar el rango del 21 al 27');
+});
+
 test('tono peninsular_plural usa Os comunicamos / Os compartimos y omite apellidos y dorsal', () => {
   const match = { opponent: 'Gran Canaria Alevín', date: '2026-09-20' };
   const players = [
@@ -619,4 +677,24 @@ test('el controlador de WhatsApp usa el location real del partido seleccionado',
   assert.match(app, /populateWhatsAppEvents\(matchId, callupId, sessionId\);\s*if \(waCurrentMode === 'callup'\) syncWhatsAppMatchLocation\(\)/);
   assert.doesNotMatch(app, /match\.location \|\| 'Campo Alfonso Silva \(La Ballena\)'/);
 });
+
+test('index.html y app.js integran selector de semana para WhatsApp con proxima semana por defecto en fin de semana', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+
+  assert.match(html, /id="wa-week-select"/, 'index.html debe contener el selector #wa-week-select');
+  assert.match(app, /populateWhatsAppWeekSelector/, 'app.js debe tener función para poblar el selector de semana');
+  assert.match(app, /getSelectedWhatsAppWeekRange/, 'app.js debe calcular el rango de semana seleccionado');
+  assert.match(app, /isWeekend\(today\)/, 'app.js debe comprobar si hoy es fin de semana para preseleccionar la próxima semana');
+});
+
+test('isUserInteracting no bloquea renderAll por details[open] y refresh admite force=true', async () => {
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  const isInteractingFn = app.slice(app.indexOf('function isUserInteracting()'), app.indexOf('async function deduplicatePlayers()'));
+
+  assert.doesNotMatch(isInteractingFn, /document\.querySelector\(['"]details\[open\]['"]\)/, 'isUserInteracting no debe considerar details[open] como interacción bloqueante');
+  assert.match(app, /const force = arguments\[0\] === true;/, 'refresh debe leer el flag force');
+  assert.match(app, /if \(force \|\| !isUserInteracting\(\)\) renderAll\(\);/, 'refresh debe ejecutar renderAll si force es true o si no hay interacción');
+});
+
 

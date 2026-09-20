@@ -170,8 +170,10 @@ async function completeSessionManually(sessionId, button) {
   try {
     const now = Date.now();
     await put('settings', { ...session, status: 'closed', closedAt: now, updatedAt: now });
-    if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
-    else window.location.reload();
+    if (typeof window.__campobase?.refresh === 'function') {
+      await window.__campobase.refresh(true);
+      window.__campobase.renderTrainingSessions?.();
+    } else window.location.reload();
   } catch (error) {
     console.warn('No se pudo marcar la sesión como realizada:', error);
     button.disabled = false;
@@ -190,8 +192,10 @@ async function completeMatchManually(matchId, button) {
   try {
     const now = Date.now();
     await put('matches', { ...match, status: 'finished', closedAt: now, updatedAt: now });
-    if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
-    else window.location.reload();
+    if (typeof window.__campobase?.refresh === 'function') {
+      await window.__campobase.refresh(true);
+      window.__campobase.renderMatches?.();
+    } else window.location.reload();
   } catch (error) {
     console.warn('No se pudo marcar el partido como realizado:', error);
     button.disabled = false;

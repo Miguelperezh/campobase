@@ -4052,4 +4052,40 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - Suite de pruebas completa: 461/461 tests pasados (`npm run check && npm test`).
 - Versión sincronizada a `20260920-prod-current-v23`.
 
+## 57. Actualización Reactiva Automática Sin Botón «Actualizar» y Planificación Semanal WhatsApp para la Próxima Semana (2026-09-20 - Build v24)
+
+### 57.1 Problemas detectados
+1. **Necesidad manual de pulsar «Actualizar» para ver cambios:**
+   - Cada vez que el entrenador guardaba un jugador, modificaba estadísticas, creaba una sesión, guardaba un partido o editaba una táctica, los cambios no se reflejaban de inmediato en pantalla. Tenía que pulsar obligatoriamente el botón «Actualizar».
+   - Causa raíz: en `js/app.js`, la función `isUserInteracting()` comprobaba `if (document.querySelector('details[open]')) return true;`. Sin embargo, elementos estáticos de la interfaz (`.diagram-details[open]`, `.match-log[open]`, `.tactic-guide[open]`) tienen el atributo HTML `open` por defecto en sus plantillas. Como consecuencia, `isUserInteracting()` devolvía `true` el 100% del tiempo, y `refresh()` ignoraba sistemáticamente la llamada a `renderAll()`.
+2. **Planificación semanal de WhatsApp en fin de semana mostraba la semana pasada:**
+   - Al redactar el mensaje de «Planificación semanal» por WhatsApp un domingo (o sábado), el sistema calculaba la semana en curso (del lunes 14 al domingo 20 de septiembre), mostrando entrenamientos de días pasados (14 y 17 de septiembre) que ya no tenían sentido comunicar a los padres.
+   - En fin de semana, el entrenador necesita planificar y comunicar la **semana entrante** (lunes 21 al domingo 27 de septiembre) con sus entrenamientos futuros y el partido oficial del próximo fin de semana.
+
+### 57.2 Soluciones implementadas
+1. **Actualización automática e instantánea (Reactividad sin botón):**
+   - Se eliminó la comprobación de `details[open]` en `isUserInteracting()` de `js/app.js`.
+   - Se implementó en `refresh()` el flag de forzado mediante `const force = arguments[0] === true; if (force || !isUserInteracting()) renderAll();` y el despacho del evento `campobase:data-updated`.
+   - Se actualizaron todos los métodos de guardado y eliminación en `js/app.js`, `js/completed-events-ui.js`, `js/plantilla-stats-sync.js`, `js/match-postgame-editor.js` y `js/custom-exercise-persistence.js` para ejecutar `await refresh(true)` y llamar a los renderizadores específicos de cada vista.
+   - En `renderPlayers()`, se añadió preservación del estado abierto de las fichas de rendimiento de jugadores y sus sub-acordeones (`Minutos`, `Puntuaciones`, etc.) mediante `Set` de identificadores abiertos, evitando que se cierren durante la reactualización.
+2. **Selector y lógica de semana para WhatsApp:**
+   - En `js/whatsapp-suite.js` se añadieron las funciones utilitarias:
+     - `getNextWeekDateRange(dateOrStr)`: calcula con exactitud matemática el rango lunes–domingo de la siguiente semana.
+     - `isWeekend(dateOrStr)`: detecta sábados y domingos de forma robusta.
+     - `formatWeekSpanLabel(startKey, endKey)`: genera la etiqueta legible (ej. `'del 21 al 27 de septiembre'`).
+   - En `index.html`, se añadió el selector `#wa-week-select` dentro de la fila de planificación semanal.
+   - En `js/app.js`:
+     - Se integró `populateWhatsAppWeekSelector()` y `getSelectedWhatsAppWeekRange()`.
+     - Si es fin de semana (`isWeekend(today)`), preselecciona por defecto la «Próxima semana» (ej. del 21 al 27 de septiembre).
+     - Si es día entre semana, preselecciona «Esta semana».
+     - El selector permite al usuario alternar entre ambas opciones en cualquier momento.
+     - El preview de WhatsApp filtra estrictamente las sesiones y partidos dentro del rango seleccionado y formatea la cabecera `📅 PLANIFICACIÓN SEMANAL (DEL 21 AL 27 DE SEPTIEMBRE) — EQUIPO`.
+3. **Control de versiones PWA:**
+   - Incrementado a `20260920-prod-current-v24` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `agente.md` y tests.
+
+### 57.3 Verificación y validación
+- 467 tests unitarios y de integración ejecutados y pasados (`npm run check && npm test`).
+- Pruebas añadidas para `getNextWeekDateRange`, `isWeekend`, `formatWeekSpanLabel`, filtrado de entrenamientos pasados en WhatsApp, y comprobación de reactividad sin bloqueo por `<details>`.
+
+
 

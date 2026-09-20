@@ -28,6 +28,9 @@ import {
   buildWhatsAppTrainingDay,
   buildWhatsAppTrainingWeek,
   getWeekDateRange,
+  getNextWeekDateRange,
+  isWeekend,
+  formatWeekSpanLabel,
 } from './whatsapp-suite.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -203,6 +206,18 @@ function showView(viewId) {
   if (viewId === 'plantilla') {
     renderPlayers();
     refreshPlantillaStaff().catch(() => {});
+  } else if (viewId === 'partido' || viewId === 'partidos') {
+    renderMatches();
+  } else if (viewId === 'asistencia') {
+    renderTrainings();
+  } else if (viewId === 'sesiones') {
+    renderTrainingSessions();
+  } else if (viewId === 'convocatorias') {
+    renderCallups();
+  } else if (viewId === 'ejercicios') {
+    renderExercises();
+  } else if (viewId === 'tacticas') {
+    renderTactics();
   }
 }
 
@@ -223,7 +238,6 @@ function applyGlobalSearch() {
 
 function isUserInteracting() {
   if (document.querySelector('dialog[open]:not(#auth-dialog)')) return true;
-  if (document.querySelector('details[open]')) return true;
   const active = document.activeElement;
   if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
@@ -246,6 +260,7 @@ async function deduplicatePlayers() {
 }
 
 async function refresh() {
+  const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   await deduplicatePlayers();
 
@@ -303,7 +318,7 @@ async function refresh() {
   $('#demo-team-form').elements.format.value = state.format;
   applyTeamIdentity();
   applyCustomTheme();
-  if (!isUserInteracting()) renderAll();
+  if (force || !isUserInteracting()) renderAll();
 }
 
 function renderAll() {
@@ -312,6 +327,7 @@ function renderAll() {
   renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics(); renderPreparaciones();
   refreshPlantillaStaff().catch(() => {});
   applyGlobalSearch();
+  try { window.dispatchEvent(new CustomEvent('campobase:data-updated')); } catch {}
 }
 
 function renderPlayers() {
@@ -336,6 +352,16 @@ function renderPlayers() {
   }, 0);
   $('#squad-stats').innerHTML = `<div class="stat"><strong>${state.players.length}</strong><span>jugadores</span></div><div class="stat"><strong>${totalMinutes}</strong><span>minutos acumulados</span></div><div class="stat"><strong>${totalRotations}</strong><span>ausencias por rotación</span></div>`;
   const sorted = sortPlayersBySquadNumber(state.players);
+  const openPerfPlayerIds = new Set(
+    Array.from(document.querySelectorAll('#players-list .player[data-player-id] details.player-performance[open]'))
+      .map((el) => el.closest('.player')?.dataset.playerId)
+      .filter(Boolean)
+  );
+  const openSubSectionKeys = new Set(
+    Array.from(document.querySelectorAll('#players-list .player[data-player-id] details.player-performance[open] details[open] > summary'))
+      .map((s) => `${s.closest('.player')?.dataset.playerId}::${s.textContent.trim().split(' ')[0]}`)
+      .filter(Boolean)
+  );
   $('#players-list').innerHTML = sorted.length ? sorted.map((player, index) => {
     const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación' };
     const history = buildPlayerHistory(player.id, currentTrainings, currentCallups, state.matches);
@@ -392,7 +418,7 @@ function renderPlayers() {
         <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
         <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
       </div>
-      <details class="player-performance"><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
+      <details class="player-performance"${openPerfPlayerIds.has(player.id) ? ' open' : ''}><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Minutos`) ? ' open' : ''}><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details${openSubSectionKeys.has(`${player.id}::Puntuaciones`) ? ' open' : ''}><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details${openSubSectionKeys.has(`${player.id}::Media`) ? ' open' : ''}><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Motivos`) ? ' open' : ''}><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details${openSubSectionKeys.has(`${player.id}::Incidencias`) ? ' open' : ''}><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"${openSubSectionKeys.has(`${player.id}::Historial`) ? ' open' : ''}><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
   </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
 }
@@ -466,7 +492,7 @@ async function savePlayer(event) {
   form.reset();
   if (form.elements.photoRemoved) form.elements.photoRemoved.value = '0';
   playerCropper?.setExistingPhoto('');
-  await refresh();
+  await refresh(true);
   renderPlayers();
   toast('Jugador guardado.');
 }
@@ -514,7 +540,8 @@ async function savePlayerStats(event) {
   const totals = Object.fromEntries(EDITABLE_PLAYER_STATS.map((field) => [field, values[field]]));
   await put('players', setPlayerStatTotals(player, values.scope, automatic, totals));
   form.closest('dialog').close();
-  await refresh();
+  await refresh(true);
+  renderPlayers();
   toast(`Estadísticas de ${values.scope === 'preseason' ? 'Pretemporada' : 'Liga'} guardadas.`);
 }
 
@@ -714,7 +741,10 @@ async function saveCallup(event) {
   }
 
   $('#callup-builder').classList.add('hidden');
-  await refresh();
+  await refresh(true);
+  renderCallups();
+  renderMatches();
+  renderPlayers();
   renderLive();
   renderDelegate();
   renderPreparaciones();
@@ -745,7 +775,7 @@ function renderCallups() {
 async function deleteCallup(id) {
   const callup = state.callups.find((item) => item.id === id); if (!callup || !await askConfirmation({ title: 'Borrar convocatoria', message: 'Se borrará esta convocatoria y se recalcularán sus contadores de rotación.', acceptLabel: 'Borrar', danger: true })) return;
   const match = state.matches.find((item) => item.callupId === id); if (match) await put('matches', { ...match, callupId: null });
-  await remove('callups', id); await synchronizeRotationCounters(); await refresh(); renderPlayers(); toast('Convocatoria borrada.');
+  await remove('callups', id); await synchronizeRotationCounters(); await refresh(true); renderCallups(); renderMatches(); renderPlayers(); toast('Convocatoria borrada.');
 }
 
 async function deleteTrainingSession(id) {
@@ -767,7 +797,8 @@ async function deleteTrainingSession(id) {
 
   for (const record of relatedAttendance) await remove('trainings', record.id);
   await remove('settings', session.id);
-  await refresh();
+  await refresh(true);
+  renderTrainingSessions();
   renderPlayers();
   renderTrainings();
   toast('Sesión, asistencia y estadísticas relacionadas eliminadas.');
@@ -788,7 +819,8 @@ async function deleteMatch(id) {
   await remove('matches', match.id);
   if (updatedPlayers.length) await putBatch({ players: updatedPlayers });
   await synchronizeRotationCounters();
-  await refresh();
+  await refresh(true);
+  renderMatches();
   renderPlayers();
   renderTrainings();
   toast('Partido y todos sus datos asociados borrados.');
@@ -1766,7 +1798,10 @@ async function saveMatchRatings(event) {
   }
   await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
   $('#rating-dialog').close();
-  state.timer = null; clearInterval(state.tick); await refresh();
+  state.timer = null; clearInterval(state.tick); await refresh(true);
+  renderMatches();
+  renderPlayers();
+  renderTrainings();
   closeDelegateMode(); showView('partido');
   toast(`Partido y puntuaciones guardados. Temporada ${seasonKey(match.date)} actualizada.`);
   } finally {
@@ -1808,7 +1843,8 @@ async function saveRateMatch(event) {
     await putBatch({ players: rated.players, matches: [updatedMatch] });
     $('#rating-dialog').close();
     state.ratingMatchId = null;
-    await refresh();
+    await refresh(true);
+    renderMatches();
     renderPlayers();
     toast('Puntuaciones guardadas.');
   } finally {
@@ -1831,7 +1867,7 @@ async function saveMatch(event) {
       if (String(callup.date || '').slice(0, 10) !== day) await put('callups', { ...callup, date: day, matchType: savedMatch.type, updatedAt: Date.now() });
     }
   }
-  form.closest('dialog').close(); form.reset(); await refresh(); renderPlayers(); renderTrainings(); toast('Partido guardado.');
+  form.closest('dialog').close(); form.reset(); await refresh(true); renderMatches(); renderPlayers(); renderTrainings(); toast('Partido guardado.');
 }
 
 function renderMatchCard(match) {
@@ -2238,7 +2274,9 @@ async function reopenMatch(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
   if (!await askConfirmation({ title: 'Reabrir partido', message: 'Se limpiarán los goles, tarjetas, lesiones y puntuaciones de este partido para poder volver a jugarlo. Los minutos y puntuaciones ya acumulados en las fichas de los jugadores no se revierten.', acceptLabel: 'Reabrir', danger: true })) return;
   await put('matches', { ...match, status: 'planned', goalsFor: null, goalsAgainst: null, goals: [], cards: [], injuries: [], incidents: [], ratings: null, minuteTotals: null, substitutionEvents: [], comments: '', minuteReasons: {} });
-  await refresh();
+  await refresh(true);
+  renderMatches();
+  renderPlayers();
   $('#match-detail-dialog').close();
   toast('Partido reabierto. Ya puedes prepararlo en vivo.');
 }
@@ -2266,7 +2304,7 @@ async function addDetailEvent(matchId) {
     next.cards = [...(next.cards ?? []), { playerId, note, type: kind }];
   }
   await put('matches', next);
-  await refresh();
+  await refresh(true);
   renderPlayers();
   renderMatches();
   showMatchDetail(matchId);
@@ -2282,7 +2320,7 @@ async function removeMatchEvent(matchId, kind, index) {
   next[field] = items;
   if (kind === 'goal' && removed) next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
   await put('matches', next);
-  await refresh();
+  await refresh(true);
   renderPlayers();
   renderMatches();
   showMatchDetail(matchId);
@@ -2319,7 +2357,7 @@ async function saveTraining(event) {
   for (const { id } of players) values[`arrivalTime-${id}`] = composeTime24(values[`arrivalTime-${id}Hour`], values[`arrivalTime-${id}Minute`]);
   values.date = composeDate(values.dateDay, values.dateMonth, values.dateYear);
   const record = buildAttendanceRecord(players, values, { id: existing?.id ?? uid(), kind: values.kind, matchId: values.matchId, createdAt: existing?.createdAt ?? Date.now() });
-  await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(); renderPlayers(); renderTrainings(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
+  await put('trainings', record); $('#training-builder').classList.add('hidden'); await refresh(true); renderPlayers(); renderTrainings(); showView('asistencia'); toast('Asistencia guardada y ordenada por fecha.');
 }
 
 function renderTrainings() {
@@ -2330,8 +2368,9 @@ function renderTrainings() {
     return `<article class="panel attendance-player"><h3>${escapeHtml(player.name)}</h3><div class="mini-stats"><span><strong>${item.totalAbsences}</strong> ausencias</span><span><strong>${item.currentTrainingAbsenceStreak}</strong> racha actual</span><span><strong>${item.longestTrainingAbsenceStreak}</strong> racha máxima</span><span class="${item.oftenLate ? 'alert' : ''}"><strong>${item.lateCount}</strong> tardanzas${item.oftenLate ? ' · frecuente' : ''}</span></div><details><summary>Historial (${item.totalRecords})</summary><table class="minute-table"><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr>${history.map(({ record, entry }) => `<tr><td>${escapeHtml(localDate(record.date))}</td><td>${record.kind === 'match' ? `Partido · ${escapeHtml(state.matches.find(({ id }) => id === record.matchId)?.opponent ?? 'eliminado')}` : 'Entrenamiento'}</td><td>${labels[entry.status]}${entry.arrivalTime ? ` · ${escapeHtml(entry.arrivalTime)}` : ''}${entry.note ? ` · ${escapeHtml(entry.note)}` : ''}</td></tr>`).join('')}</table></details></article>`;
   }).join('')}</div>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
   const list = sortAttendanceRecords(state.trainings);
+  const wasAttendanceHistoryOpen = $('#attendance-history-collapsible')?.open ?? false;
   $('#trainings-list').innerHTML = list.length ? `
-    <details class="panel attendance-history-details">
+    <details class="panel attendance-history-details" id="attendance-history-collapsible"${wasAttendanceHistoryOpen ? ' open' : ''}>
       <summary class="history-summary">
         <div class="attendance-completed-title">
           <span class="toggle-icon">▶</span>
@@ -2661,7 +2700,8 @@ async function saveTrainingSession(event) {
     }
   }
   form.closest('#session-builder').classList.add('hidden');
-  await refresh();
+  await refresh(true);
+  renderTrainingSessions();
   renderPlayers();
   renderTrainings();
   showView('sesiones');
@@ -2926,7 +2966,8 @@ async function saveTactic(event) {
   });
   await put('settings', { ...existing, ...saved, recordType: 'tactic' });
   form.closest('#tactic-builder').classList.add('hidden');
-  await refresh();
+  await refresh(true);
+  renderTactics();
   showView('tacticas');
   toast(existing ? 'Táctica actualizada.' : 'Táctica creada.');
 }
@@ -4240,6 +4281,46 @@ let waCallupStatus = 'auto'; // 'auto' | 'called' | 'excluded'
 let waLastExclusionPlayerId = null;
 let waLastContactPlayerId = null;
 
+function getSelectedWhatsAppWeekRange() {
+  const select = $('#wa-week-select');
+  const today = localDateKey();
+  const currentRange = getWeekDateRange(today);
+  const nextRange = getNextWeekDateRange(today);
+  const choice = select?.value || (isWeekend(today) ? 'next' : 'current');
+  if (choice === 'next') return { ...nextRange, mode: 'next' };
+  return { ...currentRange, mode: 'current' };
+}
+
+function populateWhatsAppWeekSelector() {
+  const select = $('#wa-week-select');
+  if (!select) return;
+  const today = localDateKey();
+  const currentRange = getWeekDateRange(today);
+  const nextRange = getNextWeekDateRange(today);
+  const weekend = isWeekend(today);
+
+  const prevValue = select.value;
+  select.innerHTML = '';
+
+  const optNext = document.createElement('option');
+  optNext.value = 'next';
+  optNext.textContent = `Próxima semana (${formatWeekSpanLabel(nextRange.start, nextRange.end)})`;
+
+  const optCurrent = document.createElement('option');
+  optCurrent.value = 'current';
+  optCurrent.textContent = `${weekend ? 'Semana anterior' : 'Esta semana'} (${formatWeekSpanLabel(currentRange.start, currentRange.end)})`;
+
+  if (weekend) {
+    select.appendChild(optNext);
+    select.appendChild(optCurrent);
+    select.value = prevValue || 'next';
+  } else {
+    select.appendChild(optCurrent);
+    select.appendChild(optNext);
+    select.value = prevValue || 'current';
+  }
+}
+
 function openWhatsAppDialog({
   mode = 'callup',
   matchId = null,
@@ -4270,6 +4351,7 @@ function openWhatsAppDialog({
   $('#wa-times-row')?.classList.toggle('hidden', waCurrentMode === 'week');
   $('#wa-week-tactical-row')?.classList.toggle('hidden', waCurrentMode !== 'week');
 
+  if (waCurrentMode === 'week') populateWhatsAppWeekSelector();
   // Llenar selector de eventos
   populateWhatsAppEvents(matchId, callupId, sessionId);
   if (waCurrentMode === 'callup') syncWhatsAppMatchLocation();
@@ -4357,10 +4439,9 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     }
   } else if (waCurrentMode === 'week') {
     if (label) label.firstChild.textContent = 'Partido fin de semana (opcional) ';
-    const today = localDateKey();
-    const weekRange = getWeekDateRange(today);
+    const weekRange = getSelectedWhatsAppWeekRange();
 
-    // Encontrar partidos programados estrictamente dentro de ESTA semana (lunes a domingo)
+    // Encontrar partidos programados estrictamente dentro de la semana seleccionada (lunes a domingo)
     const matchesThisWeek = state.matches.filter((m) => {
       const d = (m.date || '').slice(0, 10);
       return d >= weekRange.start && d <= weekRange.end;
@@ -4378,14 +4459,14 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     optAuto.value = 'auto';
     optAuto.textContent = autoMatch
       ? `⚡ Automático: ${localDate(autoMatch.date)} · vs ${autoMatch.opponent}`
-      : '⚡ Automático: Sin partido esta semana';
+      : '⚡ Automático: Sin partido esa semana';
     optAuto.selected = true;
     select.appendChild(optAuto);
 
     matchesThisWeek.forEach((m) => {
       const opt = document.createElement('option');
       opt.value = `match:${m.id}`;
-      opt.textContent = `📅 Esta semana: ${localDate(m.date)} · vs ${m.opponent}`;
+      opt.textContent = `📅 Partido de esa semana: ${localDate(m.date)} · vs ${m.opponent}`;
       select.appendChild(opt);
     });
 
@@ -4774,23 +4855,45 @@ function updateWhatsAppPreview() {
   } else if (waCurrentMode === 'week') {
     $('#wa-exclusion-reason-row')?.classList.add('hidden');
     const tacticalGoal = $('#wa-week-tactical')?.value || '';
-    const today = localDateKey();
-    const weekRange = getWeekDateRange(today);
+    const weekRange = getSelectedWhatsAppWeekRange();
+    const weekRangeLabel = formatWeekSpanLabel(weekRange.start, weekRange.end);
 
-    // Priorizar sesiones de la semana actual
-    const thisWeekSessions = state.trainingSessions.filter((s) => s.date && s.date >= weekRange.start && s.date <= weekRange.end);
-    const candidateSessions = thisWeekSessions.length ? thisWeekSessions : state.trainingSessions.filter((s) => s.date && s.date >= today);
-    const sessionsToUse = candidateSessions.length ? candidateSessions : state.trainingSessions;
-    const sorted = sortTrainingSessions(sessionsToUse, today);
-    const sessions = sorted.map((s) => {
-      let dur = s.totalDuration || s.targetDuration || 75;
-      if (dur < 45) dur = 75; // Duración completa de sesión (nunca bloques sueltos de 15 min)
-      return {
-        date: s.date,
-        time: s.time || '16:30',
-        field: s.pitch || 'Alfonso Silva',
-        duration: dur,
-      };
+    // Obtener sesiones y entrenamientos de la semana seleccionada
+    const weekSessionsMap = new Map();
+
+    // 1. Sesiones de entrenamiento planificadas en esa semana
+    state.trainingSessions
+      .filter((s) => s.date && s.date >= weekRange.start && s.date <= weekRange.end)
+      .forEach((s) => {
+        let dur = s.totalDuration || s.targetDuration || 75;
+        if (dur < 45) dur = 75;
+        weekSessionsMap.set(String(s.date).slice(0, 10), {
+          date: s.date,
+          time: s.time || '16:30',
+          field: s.pitch || 'Alfonso Silva',
+          duration: dur,
+        });
+      });
+
+    // 2. Asistencias de tipo entrenamiento registradas para esa semana (si no tenían sesión creada)
+    state.trainings
+      .filter((t) => (t.kind ?? 'training') === 'training' && t.date && t.date >= weekRange.start && t.date <= weekRange.end)
+      .forEach((t) => {
+        const dateKey = String(t.date).slice(0, 10);
+        if (!weekSessionsMap.has(dateKey)) {
+          weekSessionsMap.set(dateKey, {
+            date: t.date,
+            time: '16:30',
+            field: 'Alfonso Silva',
+            duration: 75,
+          });
+        }
+      });
+
+    const sessions = Array.from(weekSessionsMap.values()).sort((a, b) => {
+      const cmp = String(a.date || '').localeCompare(String(b.date || ''));
+      if (cmp !== 0) return cmp;
+      return String(a.time || '').localeCompare(String(b.time || ''));
     });
 
     const eventVal = $('#wa-event-select')?.value || 'auto';
@@ -4801,12 +4904,12 @@ function updateWhatsAppPreview() {
       const mId = eventVal.replace('match:', '');
       upcomingMatch = state.matches.find((m) => m.id === mId) || null;
     } else {
-      // 'auto': Solo partido programado estrictamente dentro de ESTA semana (lunes a domingo)
-      const matchesThisWeek = state.matches.filter((m) => {
+      // 'auto': Partido programado dentro de la semana seleccionada
+      const matchesTargetWeek = state.matches.filter((m) => {
         const d = (m.date || '').slice(0, 10);
         return d >= weekRange.start && d <= weekRange.end;
       }).sort((a, b) => a.date.localeCompare(b.date));
-      upcomingMatch = matchesThisWeek[0] || null;
+      upcomingMatch = matchesTargetWeek[0] || null;
     }
 
     const text = buildWhatsAppTrainingWeek({
@@ -4820,6 +4923,7 @@ function updateWhatsAppPreview() {
       } : null,
       tacticalGoal,
       includeTacticalGoal: Boolean(tacticalGoal),
+      weekRangeLabel,
       tone,
     });
     preview.value = text;
@@ -5165,6 +5269,7 @@ function wireEvents() {
       $('#wa-location-row')?.classList.toggle('hidden', waCurrentMode === 'week');
       $('#wa-times-row')?.classList.toggle('hidden', waCurrentMode === 'week');
       $('#wa-week-tactical-row')?.classList.toggle('hidden', waCurrentMode !== 'week');
+      if (waCurrentMode === 'week') populateWhatsAppWeekSelector();
       populateWhatsAppEvents();
       updateWhatsAppPreview();
     });
@@ -5213,6 +5318,10 @@ function wireEvents() {
   $('#wa-call-time')?.addEventListener('input', updateWhatsAppPreview);
   $('#wa-game-time')?.addEventListener('input', updateWhatsAppPreview);
   $('#wa-week-tactical')?.addEventListener('input', updateWhatsAppPreview);
+  $('#wa-week-select')?.addEventListener('change', () => {
+    populateWhatsAppEvents();
+    updateWhatsAppPreview();
+  });
   $('#wa-field-name')?.addEventListener('input', () => {
     const val = $('#wa-field-name').value.trim();
     if (val && $('#wa-maps-url')) {
@@ -5733,13 +5842,13 @@ function wireEvents() {
     if (target.matches('.edit-tactica-manual')) tacticBuilder('', target.dataset.formacion);
     if (target.matches('#tactica-interactiva-close')) closeTacticaInteractiva();
     if (target.matches('.edit-tactic')) tacticBuilder(target.dataset.id);
-    if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
+    if (target.matches('.delete-tactic') && await askConfirmation({ title: 'Borrar táctica', message: 'Se eliminará esta táctica de la base.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(true); renderTactics(); }
     const editPlayerBtn = target.closest('.edit-player');
     if (editPlayerBtn) editPlayer(editPlayerBtn.dataset.id);
     const editPlayerStatsBtn = target.closest('.edit-player-stats');
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
-    if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(); }
+    if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
@@ -5754,7 +5863,7 @@ function wireEvents() {
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
-    if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(); renderPlayers(); renderTrainings(); }
+    if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {
       if (!$('#session-builder').classList.contains('hidden')) {
@@ -5772,8 +5881,8 @@ function wireEvents() {
         }
       } else openAddToSession(target.dataset.id);
     }
-    if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(); } }
-    if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(); }
+    if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(true); renderExercises(); } }
+    if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(true); renderExercises(); }
     if (target.matches('.edit-session')) {
       target.closest('dialog')?.close();
       showView('sesiones');
@@ -6013,7 +6122,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v23').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v24').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -6049,7 +6158,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, get state() { return state; } };
 }
 
 init().catch(handleError);

@@ -522,3 +522,40 @@ export function getWeekDateRange(dateOrStr = new Date()) {
   const toKey = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
   return { start: toKey(mon), end: toKey(sun) };
 }
+
+/**
+ * Calcula el rango de fechas (lunes a domingo) de la semana siguiente a una fecha dada.
+ */
+export function getNextWeekDateRange(dateOrStr = new Date()) {
+  const cur = getWeekDateRange(dateOrStr);
+  const mon = new Date(`${cur.start}T12:00:00`);
+  mon.setDate(mon.getDate() + 7);
+  return getWeekDateRange(mon);
+}
+
+/**
+ * Determina si una fecha corresponde a fin de semana (sábado = 6 o domingo = 0).
+ */
+export function isWeekend(dateOrStr = new Date()) {
+  const d = new Date(typeof dateOrStr === 'string' && !dateOrStr.includes('T') ? `${dateOrStr}T12:00:00` : dateOrStr);
+  const day = d.getDay();
+  return day === 0 || day === 6;
+}
+
+const MONTH_NAMES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/**
+ * Formatea un rango YYYY-MM-DD en texto legible en español.
+ * Ej: '2026-09-21', '2026-09-27' -> 'del 21 al 27 de septiembre'
+ */
+export function formatWeekSpanLabel(startKey, endKey) {
+  if (!startKey || !endKey) return 'esta semana';
+  const [, m1, d1] = String(startKey).slice(0, 10).split('-').map(Number);
+  const [, m2, d2] = String(endKey).slice(0, 10).split('-').map(Number);
+  if (!m1 || !d1 || !m2 || !d2) return 'esta semana';
+  if (m1 === m2) {
+    return `del ${d1} al ${d2} de ${MONTH_NAMES_ES[m1 - 1] || 'este mes'}`;
+  }
+  return `del ${d1} de ${MONTH_NAMES_ES[m1 - 1] || ''} al ${d2} de ${MONTH_NAMES_ES[m2 - 1] || ''}`;
+}
+

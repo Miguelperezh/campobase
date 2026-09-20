@@ -53,6 +53,18 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
   - Se corrigió `js/session-reorder-ui.js` para insertar las ayudas en el contenedor correcto sin provocar errores de DOM.
   - El formulario cuenta con `novalidate` y respaldo de envío en las acciones superiores para garantizar que el botón «Guardar» responda siempre al instante.
 
+### 1.7 Actualización Automática Sin Botón «Actualizar» y Planificación Semanal WhatsApp para la Próxima Semana (v24)
+- **Actualización reactiva automática sin botón «Actualizar»:**
+  - Se eliminó `document.querySelector('details[open]')` de `isUserInteracting()` en `js/app.js`: las etiquetas `<details open>` estáticas en plantillas (diagramas, bitácora de partido, guías tácticas) provocaban que `isUserInteracting()` devolviera siempre `true`, impidiendo que `refresh()` ejecutara `renderAll()`.
+  - `refresh()` admite ahora parámetro de fuerza (`arguments[0] === true`) para repintar garantizado tras operaciones de guardado y eliminación, despachando el evento `campobase:data-updated`.
+  - Todas las operaciones de guardado y borrado (jugadores, estadísticas, convocatorias, partidos, entrenamientos, sesiones, ejercicios y tácticas) ejecutan `await refresh(true)` y repintan sus vistas de forma instantánea y automática sin requerir pulsar «Actualizar».
+  - Se preserva el estado desplegado (`open`) de las fichas de rendimiento y estadísticas de jugadores en Plantilla para evitar colapsos visuales molestos.
+- **Planificación semanal por WhatsApp orientada a la próxima semana:**
+  - Cuando el entrenador abre el diálogo de WhatsApp en fin de semana (sábado o domingo), el sistema detecta mediante `isWeekend()` que se va a enviar la planificación de la siguiente semana y selecciona automáticamente el rango de lunes a domingo siguiente (ej. del 21 al 27 de septiembre).
+  - Se omiten los entrenamientos de días pasados de la semana que termina (ej. 14 y 17 de septiembre).
+  - Se añade un selector de semana (`#wa-week-select`) dentro de la interfaz de WhatsApp para permitir al entrenador conmutar libremente entre la «Próxima semana» y «Esta semana».
+  - Se enlazan y muestran correctamente las sesiones y el partido oficial del fin de semana dentro del mensaje generado.
+
 ---
 
 ## 2. Mapa de Archivos: Dónde está Todo
@@ -107,7 +119,7 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
    - Al pulsar «Guardar y sincronizar», los minutos jugados y la nota del partido impactan de inmediato en la ficha individual del jugador en Plantilla (calculando su nueva media de temporada).
 
 ### 3.4 Actualizaciones PWA y Service Worker
-- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v23`).
+- Las versiones de caché se gestionan en `sw.js` mediante la variable global de build (`20260920-prod-current-v24`).
 - Para forzar la actualización en los teléfonos de los entrenadores:
   - Se incrementa la versión en `sw.js`, `index.html`, `js/app.js` y `js/supabase-client.js`.
   - El Service Worker detecta la nueva versión, la descarga en segundo plano y avisa o activa la versión nueva en la siguiente visita sin desloguear ni borrar datos locales.

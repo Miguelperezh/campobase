@@ -192,7 +192,7 @@ async function savePostgame(event) {
   await putBatch({ matches: [updatedMatch], players: updatedPlayers });
   dialog.close();
   if (typeof window.__campobase?.refresh === 'function') {
-    await window.__campobase.refresh();
+    await window.__campobase.refresh(true);
   }
   if (typeof window.__campobase?.renderAll === 'function') {
     window.__campobase.renderAll();

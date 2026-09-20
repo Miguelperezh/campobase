@@ -48,7 +48,7 @@ async function saveCustomExercise(form) {
 
   document.getElementById('exercise-dialog')?.close();
   form.reset();
-  if (window.__campobase?.refresh) await window.__campobase.refresh();
+  if (window.__campobase?.refresh) await window.__campobase.refresh(true);
   window.__campobase?.showView?.('ejercicios');
   window.__campobase?.setExerciseLibraryMode?.('mine');
   showToast(existing ? 'Ejercicio actualizado en Mis ejercicios.' : 'Ejercicio creado y guardado en Mis ejercicios.');
