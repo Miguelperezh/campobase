@@ -304,7 +304,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
     || match.ratings?.[playerId] !== undefined
     || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
   const ratings = playerMatches
-    .filter((match) => (match.minuteTotals?.[playerId] ?? 0) >= 5 * 60)
+    .filter((match) => (match.minuteTotals?.[playerId] ?? 0) >= 5 * 60 || (match.minuteTotals?.[playerId] === undefined && Number.isFinite(match.ratings?.[playerId])))
     .map((match) => match.ratings?.[playerId])
     .filter(Number.isFinite);
   const attendanceInScope = attendanceRecords.filter((record) => {
@@ -381,7 +381,8 @@ export function derivePlayerMatchStats(playerId, matches) {
     const playedSeconds = match.minuteTotals?.[playerId];
     if (Number.isFinite(playedSeconds)) {
       const minutes = Math.round(playedSeconds / 60);
-      const season = seasonKey(match.date);
+      let season;
+      try { season = seasonKey(match.date); } catch { season = '2026-2027'; }
       const bucket = isPreseasonMatch(match) ? preseasonMinutes : seasonMinutes;
       bucket[season] = (bucket[season] ?? 0) + minutes;
       totalMinutes += minutes;
@@ -389,7 +390,11 @@ export function derivePlayerMatchStats(playerId, matches) {
     const rating = match.ratings?.[playerId];
     if (Number.isFinite(rating)) ratingHistory.push({ matchId: match.id, date: match.date, opponent: match.opponent ?? '', rating });
     const reason = match.minuteReasons?.[playerId];
-    if (reason) minuteReasons.push({ matchId: match.id, date: match.date, season: seasonKey(match.date), reason });
+    if (reason) {
+      let season;
+      try { season = seasonKey(match.date); } catch { season = '2026-2027'; }
+      minuteReasons.push({ matchId: match.id, date: match.date, season, reason });
+    }
   }
   return { totalMinutes, seasonMinutes, preseasonMinutes, ratingHistory, minuteReasons };
 }
@@ -431,11 +436,11 @@ export function adjustLiveScore(details, team, delta) {
 }
 
 export function addPlayerMatchEvent(details, event) {
-  if (!event?.playerId || !['goal', 'yellow', 'red', 'injury', 'incident'].includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
+  if (!event?.playerId || !['goal', 'own_goal', 'yellow', 'red', 'injury', 'incident'].includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
   const next = structuredClone(details);
   for (const field of ['goals', 'cards', 'injuries', 'incidents']) next[field] ??= [];
   const { kind, ...entry } = event;
-  if (kind === 'goal') {
+  if (kind === 'goal' || kind === 'own_goal') {
     next.goals.push(entry);
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
   } else if (kind === 'injury') next.injuries.push(entry);

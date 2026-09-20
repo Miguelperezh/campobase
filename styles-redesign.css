@@ -383,6 +383,11 @@ body.cb-redesign-active .search-bar input:focus {
   pointer-events: none !important;
 }
 
+button, input[type="button"], input[type="submit"], [role="button"], select, a, .icon-button {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 .cb-sub-pill:hover {
   color: var(--cb-slate-950) !important;
   background: rgba(255, 255, 255, 0.6) !important;

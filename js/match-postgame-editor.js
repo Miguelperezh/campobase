@@ -191,7 +191,18 @@ async function savePostgame(event) {
   });
   await putBatch({ matches: [updatedMatch], players: updatedPlayers });
   dialog.close();
-  window.setTimeout(() => window.location.reload(), 120);
+  if (typeof window.__campobase?.refresh === 'function') {
+    await window.__campobase.refresh();
+  }
+  if (typeof window.__campobase?.renderAll === 'function') {
+    window.__campobase.renderAll();
+  }
+  const toastEl = document.getElementById('toast');
+  if (toastEl) {
+    toastEl.textContent = 'Datos del partido guardados y sincronizados.';
+    toastEl.classList.remove('hidden');
+    setTimeout(() => toastEl.classList.add('hidden'), 3000);
+  }
 }
 
 function minuteText(second) {

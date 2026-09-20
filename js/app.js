@@ -169,7 +169,10 @@ function toast(message) {
 
 function formObject(form) { return Object.fromEntries(new FormData(form)); }
 function checkedValues(name, root = document) { return $$(`input[name="${name}"]:checked`, root).map((input) => input.value); }
-function playerName(id) { return state.players.find((player) => player.id === id)?.name ?? 'Jugador eliminado'; }
+function playerName(id) {
+  if (id === '__pp__' || id === 'pp' || id === '__own_goal__') return 'Gol P.P.';
+  return state.players.find((player) => player.id === id)?.name ?? 'Jugador eliminado';
+}
 function matchTypeLabel(type) { return MATCH_TYPES[type] ?? MATCH_TYPES.league; }
 function myTeamName() { return state.settings.teamName?.trim() || 'Mi equipo'; }
 function matchTeams(match) {
@@ -818,7 +821,7 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   const awayScore = teams.mySide === 'away' ? details.goalsFor : details.goalsAgainst;
   const homeTeam = teams.mySide === 'home' ? 'for' : 'against';
   const awayTeam = teams.mySide === 'away' ? 'for' : 'against';
-  const options = availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
+  const options = `<option value="__pp__">⚽ Gol P.P. (Propia puerta)</option>` + availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
   const minuteReasons = availableIds.map((id) => `<label>${escapeHtml(playerName(id))}<select data-minute-reason="${id}"><option value="">Sin motivo</option>${Object.entries(MINUTE_REASONS).map(([value, label]) => `<option value="${value}" ${details.minuteReasons[id] === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`).join('');
   const events = [
     ...details.goals.map((item) => `${formatMatchClock(item.second)} · Gol: ${playerName(item.playerId)}`),
@@ -828,7 +831,7 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
   const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
-  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="own_goal">Gol P.P. (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
 function renderLive() {
@@ -1833,9 +1836,12 @@ async function saveMatch(event) {
 
 function renderMatchCard(match) {
   const teams = matchTeams(match);
-  const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst;
-  const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst;
-  const hasScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst);
+  const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
+  const hasScore = Number.isFinite(match.goalsFor) || Number.isFinite(match.goalsAgainst) || hasGoalsList;
+  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (hasGoalsList ? match.goals.length : 0);
+  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
+  const homeScore = teams.mySide === 'home' ? gf : ga;
+  const awayScore = teams.mySide === 'away' ? gf : ga;
   return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
 }
 
@@ -2201,11 +2207,14 @@ async function togglePrepDelegate() {
 function showMatchDetail(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
   const teams = matchTeams(match);
-  const homeScore = teams.mySide === 'home' ? match.goalsFor : match.goalsAgainst;
-  const awayScore = teams.mySide === 'away' ? match.goalsFor : match.goalsAgainst;
-  const callup = state.callups.find((item) => item.id === match.callupId);
-  const availableIds = callup?.availableIds ?? [];
-  const playerOptions = availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
+  const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
+  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (hasGoalsList ? match.goals.length : 0);
+  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
+  const homeScore = teams.mySide === 'home' ? gf : ga;
+  const awayScore = teams.mySide === 'away' ? gf : ga;
+  const callup = state.callups.find((item) => item.id === match.callupId || item.matchId === match.id);
+  const availableIds = callup?.availableIds ?? state.players.map((p) => p.id);
+  const playerOptions = `<option value="__pp__">⚽ Gol P.P. (Propia puerta)</option>` + availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
   const eventList = (items, label, kind) => {
     const list = (items ?? []).map((item, i) => `<li>${escapeHtml(playerName(item.playerId))}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`).join('');
     return `<section><h4>${label}</h4>${list ? `<ul class="plain-list">${list}</ul>` : '<p class="meta">Sin registros.</p>'}</section>`;
@@ -2215,7 +2224,7 @@ function showMatchDetail(id) {
   $('#match-detail-body').innerHTML = `
     <p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(matchTypeLabel(match.type))} · ${match.venue === 'away' ? 'Visitante' : 'Local'}</p>
     <div class="stadium-score"><section class="score-team"><span>${escapeHtml(teams.home)}</span><strong>${homeScore ?? 0}</strong></section><span class="score-separator">—</span><section class="score-team"><span>${escapeHtml(teams.away)}</span><strong>${awayScore ?? 0}</strong></section></div>
-    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions || '<option value="">Sin convocados</option>'}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
+    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="own_goal">Gol P.P. (Propia puerta)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
     ${eventList(match.goals, 'Goles', 'goal')}
     ${eventList(match.cards, 'Tarjetas', 'card')}
     ${eventList(match.injuries, 'Lesiones', 'injury')}
@@ -2236,14 +2245,19 @@ async function reopenMatch(id) {
 
 async function addDetailEvent(matchId) {
   const match = state.matches.find((item) => item.id === matchId); if (!match) return;
-  const playerId = $('#detail-event-player').value;
+  let playerId = $('#detail-event-player').value;
   const kind = $('#detail-event-kind').value;
   const note = $('#detail-event-note').value.trim();
-  if (!playerId) return toast('Selecciona un jugador.');
+  if (kind === 'own_goal') playerId = '__pp__';
+  if (!playerId) return toast('Selecciona un jugador o Gol P.P.');
   const next = { ...match };
-  if (kind === 'goal') {
-    next.goals = [...(next.goals ?? []), { playerId, note, second: 0 }];
+  const isGoal = kind === 'goal' || kind === 'own_goal' || playerId === '__pp__';
+  if (isGoal) {
+    const isPp = kind === 'own_goal' || playerId === '__pp__';
+    const effectivePlayerId = isPp ? '__pp__' : playerId;
+    next.goals = [...(next.goals ?? []), { playerId: effectivePlayerId, note, second: 0, isOwnGoal: isPp }];
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+    if (!Number.isFinite(next.goalsAgainst)) next.goalsAgainst = 0;
   } else if (kind === 'injury') {
     next.injuries = [...(next.injuries ?? []), { playerId, note }];
   } else if (kind === 'incident') {
@@ -2254,8 +2268,9 @@ async function addDetailEvent(matchId) {
   await put('matches', next);
   await refresh();
   renderPlayers();
+  renderMatches();
   showMatchDetail(matchId);
-  toast('Incidencia añadida.');
+  toast(isGoal ? (playerId === '__pp__' || kind === 'own_goal' ? 'Gol en propia puerta añadido.' : 'Gol añadido al marcador.') : 'Incidencia añadida.');
 }
 
 async function removeMatchEvent(matchId, kind, index) {
@@ -2269,6 +2284,7 @@ async function removeMatchEvent(matchId, kind, index) {
   await put('matches', next);
   await refresh();
   renderPlayers();
+  renderMatches();
   showMatchDetail(matchId);
   toast('Incidencia eliminada.');
 }
@@ -4142,12 +4158,21 @@ async function changeLiveScore(team, delta) {
 }
 
 async function addLiveEvent(prefix) {
-  const playerId = $(`#${prefix}-event-player`).value;
+  let playerId = $(`#${prefix}-event-player`).value;
   const kind = $(`#${prefix}-event-kind`).value;
   const note = $(`#${prefix}-event-note`).value.trim();
-  if (!playerId) return toast('Selecciona un jugador.');
-  state.timer.details = addPlayerMatchEvent(ensureLiveDetails(), { id: uid(), kind, playerId, second: timerSeconds(), note });
-  await persistTimer(); renderLive(); renderDelegate(); toast('Incidencia registrada.');
+  if (kind === 'own_goal') playerId = '__pp__';
+  if (!playerId) return toast('Selecciona un jugador o Gol P.P.');
+  const isOwnGoal = kind === 'own_goal' || playerId === '__pp__';
+  state.timer.details = addPlayerMatchEvent(ensureLiveDetails(), {
+    id: uid(),
+    kind: isOwnGoal ? 'goal' : kind,
+    playerId: isOwnGoal ? '__pp__' : playerId,
+    second: timerSeconds(),
+    note,
+    isOwnGoal
+  });
+  await persistTimer(); renderLive(); renderDelegate(); toast(isOwnGoal ? 'Gol en propia puerta registrado.' : 'Incidencia registrada.');
 }
 
 async function pollLiveState() {
@@ -5684,7 +5709,7 @@ function wireEvents() {
     else if (formId === 'kit-settings-form') saveKitSettings(event).catch(handleError);
   });
   document.addEventListener('click', async (event) => {
-    const target = event.target;
+    const target = event.target.closest('button, a, input, select, summary, [role="button"], [data-action], .icon-button, [data-tactic-tool], [data-close], [data-id], .view-exercise, .session-exercise-link') || event.target;
     if (target.matches('.open-whatsapp-callup')) openWhatsAppDialog({ mode: 'callup', callupId: target.dataset.id });
     if (target.matches('.open-whatsapp-match')) openWhatsAppDialog({ mode: 'callup', matchId: target.dataset.id });
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
@@ -5985,13 +6010,11 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v20').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v21').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
   }
-  await synchronizeCloud();
-  await refreshSyncStatusPanel();
   await ensureLegacyExercisesNotPresent();
   await refresh();
   const live = await getOne('settings', 'live');
@@ -6013,6 +6036,11 @@ async function init() {
     const requestedView = params.get('view') || storedActiveView();
     if (requestedView) showView(requestedView);
   }
+  // Sincronización en segundo plano sin bloquear el arranque ni la interacción inmediata
+  synchronizeCloud().then(async () => {
+    await refreshSyncStatusPanel();
+    await refresh();
+  }).catch(handleError);
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }

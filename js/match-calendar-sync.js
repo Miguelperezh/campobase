@@ -54,6 +54,7 @@ export function inferSubstitutionPositions(events = [], initialLineup = []) {
 }
 
 function playerName(byId, id) {
+  if (id === '__pp__' || id === 'pp' || id === '__own_goal__') return 'Gol P.P.';
   return byId.get(id)?.name ?? 'Jugador eliminado';
 }
 

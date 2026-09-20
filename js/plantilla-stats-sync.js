@@ -209,7 +209,7 @@ function ensurePerformanceDialog() {
   if (dialog) return dialog;
   dialog = document.createElement('dialog');
   dialog.id = 'match-performance-dialog';
-  dialog.innerHTML = `<form id="match-performance-form">
+  dialog.innerHTML = `<form id="match-performance-form" novalidate>
     <div class="dialog-head"><h2 id="match-performance-title">Minutos y puntuaciones</h2><button type="button" data-close-performance aria-label="Cerrar">×</button></div>
     <p class="meta">Edita los minutos reales de cada convocado y, si quieres, su puntuación 1–5. Al guardar se recalculan Plantilla, Liga/Pretemporada, temporadas e historial.</p>
     <div id="match-performance-players" class="stack"></div>
@@ -232,12 +232,13 @@ async function openMatchPerformanceEditor(matchId) {
   const match = matches.find((item) => item.id === matchId);
   if (!match) throw new TypeError('No se encontró el partido.');
   const callup = callups.find((item) => item.id === match.callupId || item.matchId === match.id);
-  const ids = [...new Set([
+  let ids = [...new Set([
     ...(callup?.availableIds ?? []),
     ...Object.keys(match.minuteTotals ?? {}),
     ...Object.keys(match.ratings ?? {}),
   ])];
-  if (!ids.length) throw new TypeError('El partido no tiene jugadores vinculados.');
+  if (!ids.length) ids = players.map((player) => player.id);
+  if (!ids.length) throw new TypeError('No hay jugadores disponibles para puntuar.');
   const byId = new Map(players.map((player) => [player.id, player]));
   const duration = match.format === 'F11' ? 90 : 70;
   const dialog = ensurePerformanceDialog();
@@ -249,7 +250,7 @@ async function openMatchPerformanceEditor(matchId) {
     const player = byId.get(playerId);
     const minutes = Number.isFinite(match.minuteTotals?.[playerId]) ? Math.round(match.minuteTotals[playerId] / 60) : 0;
     const rating = Number.isFinite(match.ratings?.[playerId]) ? Number(match.ratings[playerId]) : '';
-    return `<fieldset class="panel match-performance-row" data-player-id="${esc(playerId)}"><legend>${esc(player?.name ?? 'Jugador eliminado')}</legend><div class="form-row"><label>Minutos<input name="minutes-${esc(playerId)}" type="number" min="0" max="${duration}" step="1" value="${minutes}" required></label><label>Puntuación 1–5<select name="rating-${esc(playerId)}"><option value="">Sin puntuación</option>${[1,2,3,4,5].map((value) => `<option value="${value}" ${rating === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label></div></fieldset>`;
+    return `<fieldset class="panel match-performance-row" data-player-id="${esc(playerId)}"><legend>${esc(player?.name ?? 'Jugador')}</legend><div class="form-row"><label>Minutos<input name="minutes-${esc(playerId)}" type="number" min="0" max="${duration}" step="1" value="${minutes}"></label><label>Puntuación 1–5<select name="rating-${esc(playerId)}"><option value="">Sin puntuación</option>${[1,2,3,4,5].map((value) => `<option value="${value}" ${rating === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label></div></fieldset>`;
   }).join('');
   dialog.showModal();
 }
@@ -280,56 +281,82 @@ function migrateManualScopeAdjustments(player, scope, oldAutomatic, oldDisplayed
 async function saveMatchPerformance(event) {
   event.preventDefault();
   const dialog = event.currentTarget.closest('dialog');
-  const matchId = dialog.dataset.matchId;
-  const duration = Number(dialog.dataset.duration) || 70;
-  const [players, matches, trainings, callups] = await Promise.all(['players', 'matches', 'trainings', 'callups'].map(getAll));
-  const match = matches.find((item) => item.id === matchId);
-  if (!match) throw new TypeError('El partido ya no existe.');
-  const scope = scopeForMatch(match);
-  const rows = $$('.match-performance-row', dialog);
-  const minuteTotals = { ...(match.minuteTotals ?? {}) };
-  const ratings = { ...(match.ratings ?? {}) };
-  let totalPlayerMinutes = 0;
+  const submitBtn = dialog.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando...';
+  }
+  try {
+    const matchId = dialog.dataset.matchId;
+    const duration = Number(dialog.dataset.duration) || 70;
+    const [players, matches, trainings, callups] = await Promise.all(['players', 'matches', 'trainings', 'callups'].map(getAll));
+    const match = matches.find((item) => item.id === matchId);
+    if (!match) throw new TypeError('El partido ya no existe.');
+    const scope = scopeForMatch(match);
+    const rows = $$('.match-performance-row', dialog);
+    const minuteTotals = { ...(match.minuteTotals ?? {}) };
+    const ratings = { ...(match.ratings ?? {}) };
+    let totalPlayerMinutes = 0;
 
-  for (const row of rows) {
-    const playerId = row.dataset.playerId;
-    const minutes = Number(row.querySelector(`[name="minutes-${CSS.escape(playerId)}"]`)?.value);
-    const ratingRaw = row.querySelector(`[name="rating-${CSS.escape(playerId)}"]`)?.value ?? '';
-    if (!Number.isInteger(minutes) || minutes < 0 || minutes > duration) throw new RangeError(`Los minutos deben estar entre 0 y ${duration}.`);
-    minuteTotals[playerId] = minutes * 60;
-    totalPlayerMinutes += minutes;
-    if (ratingRaw === '') delete ratings[playerId];
-    else {
-      const rating = Number(ratingRaw);
-      if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new RangeError('Las puntuaciones deben estar entre 1 y 5.');
-      ratings[playerId] = rating;
+    for (const row of rows) {
+      const playerId = row.dataset.playerId;
+      const minInput = row.querySelector('input[type="number"]') || row.querySelector(`[name="minutes-${CSS.escape(playerId)}"]`);
+      const ratingSelect = row.querySelector('select') || row.querySelector(`[name="rating-${CSS.escape(playerId)}"]`);
+      const minutes = Number(minInput?.value || 0);
+      const ratingRaw = ratingSelect?.value ?? '';
+      const safeMinutes = Number.isInteger(minutes) && minutes >= 0 ? Math.min(minutes, duration) : 0;
+      minuteTotals[playerId] = safeMinutes * 60;
+      totalPlayerMinutes += safeMinutes;
+      if (ratingRaw === '') delete ratings[playerId];
+      else {
+        const rating = Number(ratingRaw);
+        if (Number.isInteger(rating) && rating >= 1 && rating <= 5) {
+          ratings[playerId] = rating;
+        } else {
+          delete ratings[playerId];
+        }
+      }
+    }
+
+    const updatedMatch = { ...match, minuteTotals, ratings, status: 'finished', updatedAt: Date.now() };
+    const updatedMatches = matches.map((item) => item.id === match.id ? updatedMatch : item);
+    const affectedIds = new Set(rows.map((row) => row.dataset.playerId));
+    const updatedPlayers = players.filter((player) => affectedIds.has(player.id)).map((player) => {
+      try {
+        const oldAutomatic = buildPlayerSummary(player.id, matches, trainings, callups, scope);
+        const oldDisplayed = applyPlayerStatAdjustments(oldAutomatic, player.statAdjustments?.[scope]);
+        const newAutomatic = buildPlayerSummary(player.id, updatedMatches, trainings, callups, scope);
+        const statAdjustments = migrateManualScopeAdjustments(player, scope, oldAutomatic, oldDisplayed, newAutomatic);
+        const derived = derivePlayerMatchStats(player.id, updatedMatches);
+        const next = { ...player, ...derived };
+        if (statAdjustments) next.statAdjustments = statAdjustments;
+        else delete next.statAdjustments;
+        return next;
+      } catch {
+        return player;
+      }
+    });
+
+    await putBatch({ matches: [updatedMatch], players: updatedPlayers });
+    dialog.close();
+    if (typeof window.__campobase?.refresh === 'function') {
+      await window.__campobase.refresh();
+    }
+    if (typeof window.__campobase?.renderAll === 'function') {
+      window.__campobase.renderAll();
+    }
+    const toastEl = document.getElementById('toast');
+    if (toastEl) {
+      toastEl.textContent = 'Minutos y puntuaciones guardados y sincronizados.';
+      toastEl.classList.remove('hidden');
+      setTimeout(() => toastEl.classList.add('hidden'), 3000);
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Guardar y sincronizar';
     }
   }
-
-  const playersOnField = match.format === 'F11' ? 11 : 7;
-  const maximumPlayerMinutes = duration * playersOnField;
-  if (totalPlayerMinutes > maximumPlayerMinutes) {
-    throw new RangeError(`La suma de minutos no puede superar ${maximumPlayerMinutes} (${duration} min × ${playersOnField} jugadores en campo).`);
-  }
-
-  const updatedMatch = { ...match, minuteTotals, ratings, status: 'finished', updatedAt: Date.now() };
-  const updatedMatches = matches.map((item) => item.id === match.id ? updatedMatch : item);
-  const affectedIds = new Set(rows.map((row) => row.dataset.playerId));
-  const updatedPlayers = players.filter((player) => affectedIds.has(player.id)).map((player) => {
-    const oldAutomatic = buildPlayerSummary(player.id, matches, trainings, callups, scope);
-    const oldDisplayed = applyPlayerStatAdjustments(oldAutomatic, player.statAdjustments?.[scope]);
-    const newAutomatic = buildPlayerSummary(player.id, updatedMatches, trainings, callups, scope);
-    const statAdjustments = migrateManualScopeAdjustments(player, scope, oldAutomatic, oldDisplayed, newAutomatic);
-    const derived = derivePlayerMatchStats(player.id, updatedMatches);
-    const next = { ...player, ...derived };
-    if (statAdjustments) next.statAdjustments = statAdjustments;
-    else delete next.statAdjustments;
-    return next;
-  });
-
-  await putBatch({ matches: [updatedMatch], players: updatedPlayers });
-  dialog.close();
-  window.setTimeout(() => window.location.reload(), 120);
 }
 
 async function enhanceCalendar() {
