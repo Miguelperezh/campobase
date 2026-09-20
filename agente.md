@@ -59,11 +59,11 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
   - `refresh()` admite ahora parámetro de fuerza (`arguments[0] === true`) para repintar garantizado tras operaciones de guardado y eliminación, despachando el evento `campobase:data-updated`.
   - Todas las operaciones de guardado y borrado (jugadores, estadísticas, convocatorias, partidos, entrenamientos, sesiones, ejercicios y tácticas) ejecutan `await refresh(true)` y repintan sus vistas de forma instantánea y automática sin requerir pulsar «Actualizar».
   - Se preserva el estado desplegado (`open`) de las fichas de rendimiento y estadísticas de jugadores en Plantilla para evitar colapsos visuales molestos.
-- **Planificación semanal por WhatsApp orientada a la próxima semana:**
+- **Planificación semanal por WhatsApp orientada a la próxima semana y múltiples partidos:**
   - Cuando el entrenador abre el diálogo de WhatsApp en fin de semana (sábado o domingo), el sistema detecta mediante `isWeekend()` que se va a enviar la planificación de la siguiente semana y selecciona automáticamente el rango de lunes a domingo siguiente (ej. del 21 al 27 de septiembre).
   - Se omiten los entrenamientos de días pasados de la semana que termina (ej. 14 y 17 de septiembre).
   - Se añade un selector de semana (`#wa-week-select`) dentro de la interfaz de WhatsApp para permitir al entrenador conmutar libremente entre la «Próxima semana» y «Esta semana».
-  - Se enlazan y muestran correctamente las sesiones y el partido oficial del fin de semana dentro del mensaje generado.
+  - **Soporte para múltiples partidos en la misma semana:** Si en la misma semana hay dos o más partidos programados (ej. sábado y domingo, o dos partidos el sábado), el sistema los incluye todos automáticamente por orden cronológico con sus horarios, rivales y campos correspondientes (ej. `⚡ Automático: Incluir los 2 partidos`), y permite al entrenador conmutar en el selector para incluir todos o elegir solo uno si así lo prefiere.
 
 ---
 

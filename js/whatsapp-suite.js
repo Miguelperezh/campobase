@@ -431,6 +431,7 @@ ${closing}`.trim();
 export function buildWhatsAppTrainingWeek({
   teamName = 'C.F. Unión Viera Alevín D',
   sessions = [],
+  matches = [],
   match = null,
   tacticalGoal = '',
   includeTacticalGoal = true,
@@ -474,20 +475,36 @@ export function buildWhatsAppTrainingWeek({
     scheduleLines = '• *Lunes y Martes 16:30 h* · Alfonso Silva *(75 min)*\n• *Jueves 16:30 h* · Campo del Pilar *(75 min)*';
   }
 
-  let matchLine = '';
-  if (match) {
-    const rawDate = match.date || '';
-    let dayUpper = 'DOMINGO';
-    if (rawDate) {
-      try {
-        const d = new Date(rawDate.slice(0, 10) + 'T12:00:00');
-        const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
-        dayUpper = dayNames[d.getDay()] || 'DOMINGO';
-      } catch {}
-    }
-    const mt = match.time || '09:00';
-    const mf = match.field || (match.venue === 'away' ? 'Campo rival' : 'Alfonso Silva');
-    matchLine = `\n• *${dayUpper}:* *${mt} h* · *PARTIDO* vs *${match.opponent || 'Rival'}* (${mf})`;
+  // Partidos (soporta 1, 2 o más partidos en la misma semana)
+  const allMatches = [];
+  if (Array.isArray(matches) && matches.length) {
+    allMatches.push(...matches);
+  } else if (match) {
+    allMatches.push(match);
+  }
+
+  const sortedMatches = allMatches.filter(Boolean).sort((a, b) => {
+    const cmp = String(a.date || '').localeCompare(String(b.date || ''));
+    if (cmp !== 0) return cmp;
+    return String(a.time || '').localeCompare(String(b.time || ''));
+  });
+
+  let matchLines = '';
+  if (sortedMatches.length) {
+    matchLines = '\n' + sortedMatches.map((m) => {
+      const rawDate = m.date || '';
+      let dayUpper = 'DOMINGO';
+      if (rawDate) {
+        try {
+          const d = new Date(rawDate.slice(0, 10) + 'T12:00:00');
+          const dayNames = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+          dayUpper = dayNames[d.getDay()] || 'DOMINGO';
+        } catch {}
+      }
+      const mt = m.time || '09:00';
+      const mf = m.field || (m.venue === 'away' ? 'Campo rival' : 'Alfonso Silva');
+      return `• *${dayUpper}:* *${mt} h* · *PARTIDO* vs *${m.opponent || 'Rival'}* (${mf})`;
+    }).join('\n');
   }
 
   return `📅 *PLANIFICACIÓN SEMANAL (${weekRangeLabel.toUpperCase()}) — ${teamName.toUpperCase()}* ⚽
@@ -496,7 +513,7 @@ ${greeting} a todos/as,
 
 ${verbs.comparto} la planificación de entrenamientos para organizar la semana:
 
-${goalBlock}${scheduleLines}${matchLine}
+${goalBlock}${scheduleLines}${matchLines}
 
 🎒 *Recordatorio para todos los entrenamientos:*
 Llevar camiseta oficial de entreno, botella de agua individual y balón reglamentario T4.

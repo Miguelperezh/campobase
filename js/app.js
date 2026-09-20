@@ -4438,7 +4438,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       select.innerHTML = '<option value="">No hay sesiones creadas</option>';
     }
   } else if (waCurrentMode === 'week') {
-    if (label) label.firstChild.textContent = 'Partido fin de semana (opcional) ';
+    if (label) label.firstChild.textContent = 'Partidos de la semana (opcional) ';
     const weekRange = getSelectedWhatsAppWeekRange();
 
     // Encontrar partidos programados estrictamente dentro de la semana seleccionada (lunes a domingo)
@@ -4453,22 +4453,32 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       return d > weekRange.end && m.status !== 'finished';
     }).sort((a, b) => a.date.localeCompare(b.date));
 
-    const autoMatch = matchesThisWeek[0] || null;
-
     const optAuto = document.createElement('option');
     optAuto.value = 'auto';
-    optAuto.textContent = autoMatch
-      ? `⚡ Automático: ${localDate(autoMatch.date)} · vs ${autoMatch.opponent}`
-      : '⚡ Automático: Sin partido esa semana';
+    if (matchesThisWeek.length > 1) {
+      const opps = matchesThisWeek.map((m) => m.opponent).filter(Boolean).join(' y ');
+      optAuto.textContent = `⚡ Automático: Incluir los ${matchesThisWeek.length} partidos (${opps})`;
+    } else if (matchesThisWeek.length === 1) {
+      optAuto.textContent = `⚡ Automático: ${localDate(matchesThisWeek[0].date)} · vs ${matchesThisWeek[0].opponent}`;
+    } else {
+      optAuto.textContent = '⚡ Automático: Sin partidos esa semana';
+    }
     optAuto.selected = true;
     select.appendChild(optAuto);
 
-    matchesThisWeek.forEach((m) => {
+    if (matchesThisWeek.length > 1) {
+      matchesThisWeek.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = `match:${m.id}`;
+        opt.textContent = `📅 Solo este partido: ${localDate(m.date)} · vs ${m.opponent}`;
+        select.appendChild(opt);
+      });
+    } else if (matchesThisWeek.length === 1) {
       const opt = document.createElement('option');
-      opt.value = `match:${m.id}`;
-      opt.textContent = `📅 Partido de esa semana: ${localDate(m.date)} · vs ${m.opponent}`;
+      opt.value = `match:${matchesThisWeek[0].id}`;
+      opt.textContent = `📅 Partido de esa semana: ${localDate(matchesThisWeek[0].date)} · vs ${matchesThisWeek[0].opponent}`;
       select.appendChild(opt);
-    });
+    }
 
     otherMatches.slice(0, 4).forEach((m) => {
       const opt = document.createElement('option');
@@ -4479,7 +4489,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
 
     const optNone = document.createElement('option');
     optNone.value = 'none';
-    optNone.textContent = '❌ Sin partido este fin de semana';
+    optNone.textContent = '❌ Sin partidos en la planificación';
     select.appendChild(optNone);
   }
 }
@@ -4897,30 +4907,31 @@ function updateWhatsAppPreview() {
     });
 
     const eventVal = $('#wa-event-select')?.value || 'auto';
-    let upcomingMatch = null;
+    let targetMatches = [];
     if (eventVal === 'none') {
-      upcomingMatch = null;
+      targetMatches = [];
     } else if (eventVal.startsWith('match:')) {
-      const mId = eventVal.replace('match:', '');
-      upcomingMatch = state.matches.find((m) => m.id === mId) || null;
+      const mId = eventVal.slice('match:'.length);
+      const single = state.matches.find((m) => m.id === mId) || null;
+      if (single) targetMatches = [single];
     } else {
-      // 'auto': Partido programado dentro de la semana seleccionada
-      const matchesTargetWeek = state.matches.filter((m) => {
+      // 'auto': Todos los partidos programados dentro de la semana seleccionada
+      targetMatches = state.matches.filter((m) => {
         const d = (m.date || '').slice(0, 10);
         return d >= weekRange.start && d <= weekRange.end;
       }).sort((a, b) => a.date.localeCompare(b.date));
-      upcomingMatch = matchesTargetWeek[0] || null;
     }
 
     const text = buildWhatsAppTrainingWeek({
       teamName,
       sessions,
-      match: upcomingMatch ? {
-        date: upcomingMatch.date,
-        time: upcomingMatch.date && upcomingMatch.date.includes('T') ? upcomingMatch.date.split('T')[1].slice(0, 5) : '09:00',
-        opponent: upcomingMatch.opponent,
-        field: upcomingMatch.location || (upcomingMatch.venue === 'away' ? 'Campo rival' : 'Alfonso Silva'),
-      } : null,
+      matches: targetMatches.map((m) => ({
+        date: m.date,
+        time: m.date && m.date.includes('T') ? m.date.split('T')[1].slice(0, 5) : (m.time || '09:00'),
+        opponent: m.opponent,
+        field: m.location || (m.venue === 'away' ? 'Campo rival' : 'Alfonso Silva'),
+        type: m.type,
+      })),
       tacticalGoal,
       includeTacticalGoal: Boolean(tacticalGoal),
       weekRangeLabel,

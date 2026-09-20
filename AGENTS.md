@@ -4080,12 +4080,19 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
      - Si es día entre semana, preselecciona «Esta semana».
      - El selector permite al usuario alternar entre ambas opciones en cualquier momento.
      - El preview de WhatsApp filtra estrictamente las sesiones y partidos dentro del rango seleccionado y formatea la cabecera `📅 PLANIFICACIÓN SEMANAL (DEL 21 AL 27 DE SEPTIEMBRE) — EQUIPO`.
+  - **Soporte para múltiples partidos en la misma semana:**
+    - `buildWhatsAppTrainingWeek` en `js/whatsapp-suite.js` acepta `matches: [...]` (y compatibilidad hacia atrás con `match`).
+    - Ordena los partidos cronológicamente por fecha y hora (sábado antes de domingo, o por hora si son el mismo día).
+    - Muestra cada partido con su viñeta correspondiente, hora, rival y campo.
+    - `populateWhatsAppEvents()` en `js/app.js` detecta si hay más de 1 partido en la semana y configura la opción por defecto `⚡ Automático: Incluir los X partidos (Rival 1 y Rival 2)`, además de permitir seleccionar partidos individuales o ninguno.
+    - `updateWhatsAppPreview()` mapea todos los partidos encontrados dentro de la semana seleccionada.
 3. **Control de versiones PWA:**
    - Incrementado a `20260920-prod-current-v24` en `sw.js`, `index.html`, `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `agente.md` y tests.
 
 ### 57.3 Verificación y validación
-- 467 tests unitarios y de integración ejecutados y pasados (`npm run check && npm test`).
-- Pruebas añadidas para `getNextWeekDateRange`, `isWeekend`, `formatWeekSpanLabel`, filtrado de entrenamientos pasados en WhatsApp, y comprobación de reactividad sin bloqueo por `<details>`.
+- 470 tests unitarios y de integración ejecutados y pasados (`npm run check && npm test`).
+- Pruebas añadidas para `getNextWeekDateRange`, `isWeekend`, `formatWeekSpanLabel`, filtrado de entrenamientos pasados en WhatsApp, soporte para 2 partidos en días distintos, soporte para 2 partidos el mismo día, y comprobación de reactividad sin bloqueo por `<details>`.
+- Verificado mediante Chrome CDP automatizado: conmutación de semanas, inclusión simultánea de 2 partidos en la semana y persistencia reactiva.
 
 
 

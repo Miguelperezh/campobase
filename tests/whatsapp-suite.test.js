@@ -506,6 +506,55 @@ test('buildWhatsAppTrainingWeek con rango de próxima semana omite días pasados
   assert.ok(msg.includes('21 AL 27') || msg.includes('21 al 27'), 'Debe mencionar el rango del 21 al 27');
 });
 
+test('buildWhatsAppTrainingWeek incluye dos partidos si se juegan en la misma semana (días distintos)', () => {
+  const sessions = [
+    { date: '2026-09-22', time: '17:00', field: 'Alfonso Silva' },
+    { date: '2026-09-24', time: '17:00', field: 'Alfonso Silva' },
+  ];
+
+  const matches = [
+    { date: '2026-09-26', time: '10:00', opponent: 'Barriche', field: 'Campo Municipal' },
+    { date: '2026-09-27', time: '11:30', opponent: 'Arucas C.F.', field: 'Alfonso Silva' },
+  ];
+
+  const msg = buildWhatsAppTrainingWeek({
+    sessions,
+    matches,
+    weekRangeLabel: 'del 21 al 27 de septiembre',
+    tacticalGoal: 'Transición ofensiva rápida',
+    now: new Date('2026-09-20T12:00:00'),
+  });
+
+  assert.ok(msg.includes('SÁBADO') && msg.includes('Barriche'), 'Debe incluir el partido del sábado vs Barriche');
+  assert.ok(msg.includes('10:00 h'), 'Debe incluir la hora del partido del sábado');
+  assert.ok(msg.includes('Campo Municipal'), 'Debe incluir el campo del sábado');
+
+  assert.ok(msg.includes('DOMINGO') && msg.includes('Arucas C.F.'), 'Debe incluir el partido del domingo vs Arucas');
+  assert.ok(msg.includes('11:30 h'), 'Debe incluir la hora del partido del domingo');
+  assert.ok(msg.includes('Alfonso Silva'), 'Debe incluir el campo del domingo');
+
+  const idxBarriche = msg.indexOf('Barriche');
+  const idxArucas = msg.indexOf('Arucas C.F.');
+  assert.ok(idxBarriche < idxArucas, 'El partido del sábado debe aparecer antes que el del domingo');
+});
+
+test('buildWhatsAppTrainingWeek incluye dos partidos si se juegan el mismo día', () => {
+  const matches = [
+    { date: '2026-09-26', time: '09:30', opponent: 'Barriche', field: 'Alfonso Silva' },
+    { date: '2026-09-26', time: '12:00', opponent: 'Veteranos', field: 'Alfonso Silva' },
+  ];
+
+  const msg = buildWhatsAppTrainingWeek({
+    matches,
+    weekRangeLabel: 'del 21 al 27 de septiembre',
+    now: new Date('2026-09-20T12:00:00'),
+  });
+
+  assert.ok(msg.includes('09:30 h') && msg.includes('Barriche'), 'Debe incluir primer partido');
+  assert.ok(msg.includes('12:00 h') && msg.includes('Veteranos'), 'Debe incluir segundo partido');
+  assert.ok(msg.indexOf('Barriche') < msg.indexOf('Veteranos'), 'El partido de las 09:30 debe ir antes que el de las 12:00');
+});
+
 test('tono peninsular_plural usa Os comunicamos / Os compartimos y omite apellidos y dorsal', () => {
   const match = { opponent: 'Gran Canaria Alevín', date: '2026-09-20' };
   const players = [
@@ -696,5 +745,16 @@ test('isUserInteracting no bloquea renderAll por details[open] y refresh admite 
   assert.match(app, /const force = arguments\[0\] === true;/, 'refresh debe leer el flag force');
   assert.match(app, /if \(force \|\| !isUserInteracting\(\)\) renderAll\(\);/, 'refresh debe ejecutar renderAll si force es true o si no hay interacción');
 });
+
+test('app.js permite incluir múltiples partidos en la planificación semanal de WhatsApp', async () => {
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+
+  // Comprueba que updateWhatsAppPreview mapea targetMatches como array de matches
+  assert.match(app, /matches:\s*targetMatches\.map/, 'updateWhatsAppPreview debe enviar todos los partidos de la semana a buildWhatsAppTrainingWeek');
+  // Comprueba que populateWhatsAppEvents maneja matchesThisWeek.length > 1
+  assert.match(app, /matchesThisWeek\.length > 1/, 'populateWhatsAppEvents debe detectar cuando hay más de un partido en la semana');
+  assert.match(app, /Incluir los \$\{matchesThisWeek\.length\} partidos/, 'Debe ofrecer la opción automática de incluir todos los partidos');
+});
+
 
 
