@@ -33,10 +33,10 @@ function allJsText(dir = new URL('../js/', import.meta.url)) {
 }
 
 test('build v16 está alineado en HTML, app, sesión, auth cloud y service worker', () => {
-  const build = '20260919-prod-current-v17';
+  const build = '20260919-prod-current-v19';
   for (const source of [html, app, demo, sw]) assert.match(source, new RegExp(build));
   assert.match(read('js/supabase-client.js'), new RegExp(build));
-  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v17/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260919-prod-current-v19/);
 });
 
 test('los botones principales del HTML tienen ruta de interacción o son submit/declarativos', () => {
@@ -58,7 +58,9 @@ test('wireEvents no repite la regresión querySelector().forEach', () => {
   assert.doesNotMatch(app, /(^|[^$])\$\('\.bottom-nav button'\)\.forEach/m);
   assert.doesNotMatch(app, /(^|[^$])\$\('\.exercise-library-tab'\)\.forEach/m);
   assert.doesNotMatch(app, /(^|[^$])\$\('\[data-close\]'\)\.forEach/m);
+  assert.doesNotMatch(app, /(^|[^$])\$\('\[data-dialog\]'\)\.forEach/m);
   assert.match(app, /\$\$\('\.bottom-nav button'\)\.forEach/);
+  assert.match(app, /\$\$\('\[data-dialog\]'\)\.forEach/);
 });
 
 test('+ Ejercicio abre de forma directa, local-first y su guardado no recarga toda la app', () => {
