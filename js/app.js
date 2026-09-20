@@ -3896,9 +3896,20 @@ async function submitAuth(event) {
             const client = getSupabaseAuthClient();
             await signInWithCampoBasePin(client, userId, pin);
           } catch { /* si ya tiene sesión o falla red, continúa con acceso local */ }
+        } else {
+          try {
+            const client = getSupabaseAuthClient();
+            const session = await signInWithCampoBasePin(client, '', pin);
+            if (session?.user?.id) {
+              setBoundSaasUserId(session.user.id);
+              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
+            }
+          } catch (err) {
+            console.warn('Auto-enlace con Supabase fallido:', err);
+          }
         }
         applyRole('owner');
-        if (userId) await synchronizeCloud();
+        if (getBoundSaasUserId()) await synchronizeCloud();
       } else if (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
         applyRole('delegate');
@@ -3937,6 +3948,7 @@ async function submitAuth(event) {
         }
         if (!recoveredRole) {
           const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
+          let supabaseError = null;
           try {
             const client = getSupabaseAuthClient();
             const session = await signInWithCampoBasePin(client, userId || '', pin);
@@ -3953,8 +3965,12 @@ async function submitAuth(event) {
               toast('Sincronizado con CampoBase en la nube.');
               return;
             }
-          } catch {
-            // Mantener mensaje de PIN incorrecto si tampoco lo acepta Supabase.
+          } catch (err) {
+            supabaseError = err;
+            console.warn('Fallo al validar PIN en Supabase:', err);
+          }
+          if (supabaseError?.message && !supabaseError.message.includes('PIN incorrecto')) {
+            throw supabaseError;
           }
           throw new TypeError('PIN incorrecto. Comprueba que estás usando el PIN de CampoBase de esta cuenta.');
         }

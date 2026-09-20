@@ -15,6 +15,11 @@ test('wireEvents usa selectores de colección para pestañas y cierres', () => {
     /\$\$\('\[data-close\]'\)\.forEach/,
     'Los botones data-close deben usar $$() porque se recorren con forEach',
   );
+  assert.match(
+    appSource,
+    /\$\$\('\[data-dialog\]'\)\.forEach/,
+    'Los botones data-dialog deben usar $$() porque se recorren con forEach',
+  );
   assert.doesNotMatch(
     appSource,
     /(^|[^$])\$\('\.exercise-library-tab'\)\.forEach/m,
@@ -22,5 +27,9 @@ test('wireEvents usa selectores de colección para pestañas y cierres', () => {
   assert.doesNotMatch(
     appSource,
     /(^|[^$])\$\('\[data-close\]'\)\.forEach/m,
+  );
+  assert.doesNotMatch(
+    appSource,
+    /(^|[^$])\$\('\[data-dialog\]'\)\.forEach/m,
   );
 });

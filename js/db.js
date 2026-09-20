@@ -143,7 +143,9 @@ async function prepareStorageBindingForWrite() {
     // antes de decidir qué IndexedDB debe recibir el cambio.
     await cloudStore.prepare();
   } catch (error) {
-    if (error?.code !== 'CAMPOBASE_AUTH_REQUIRED') throw error;
+    if (error?.code !== 'CAMPOBASE_AUTH_REQUIRED' && !error?.message?.includes('Inicia sesión')) {
+      console.warn('No se pudo preparar el almacenamiento SaaS para escritura:', error);
+    }
     // Sin sesión SaaS válida seguimos permitiendo el modo local legado.
   }
 }
@@ -304,7 +306,8 @@ export async function flushSyncQueue() {
       if (mutationError?.message?.includes('Inicia sesión') || mutationError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return false;
       }
-      throw mutationError;
+      console.warn('Error aplicando mutación cloud; se reintentará luego:', mutationError);
+      return false;
     }
   }
   return true;

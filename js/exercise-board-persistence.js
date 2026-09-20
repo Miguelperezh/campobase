@@ -71,10 +71,9 @@ function normalizedRecord(exercise, existing = null) {
 
 async function customExerciseRecords({ sync = false } = {}) {
   if (sync) {
-    const result = await syncFromCloud();
-    if (result?.online !== true || Number(result?.pending || 0) !== 0) {
-      throw new Error('No se ha podido confirmar la sincronización con Supabase.');
-    }
+    try {
+      await syncFromCloud();
+    } catch { /* no bloquea lectura local */ }
   }
   const settings = await getAll('settings');
   return settings.filter((record) => record.recordType === 'exercise' && record.customBoard === true);
@@ -116,9 +115,10 @@ async function deleteExercise(exerciseId) {
   const existing = settings.find((record) => record.id === exerciseId && record.customBoard === true);
   if (!existing) throw new Error('El ejercicio ya no está disponible.');
   await remove('settings', exerciseId);
-  const syncResult = await syncFromCloud();
-  if (syncResult?.online !== true || Number(syncResult?.pending || 0) !== 0) {
-    throw new Error('No se ha podido confirmar el borrado en Supabase.');
+  try {
+    await syncFromCloud();
+  } catch (syncErr) {
+    console.warn('Sincronización cloud de borrado pospuesta:', syncErr);
   }
   const remains = (await getAll('settings')).some((record) => record.id === exerciseId && record.customBoard === true);
   if (remains) throw new Error('El ejercicio sigue presente después del borrado.');
@@ -353,7 +353,13 @@ async function handlePersistRequest(event, data) {
   } catch (error) {
     console.error('No se pudo persistir el ejercicio:', error);
     replyToBoard(event, { type: 'campobase:exercise-persist-failed', requestId, message: error?.message || String(error) });
-    alert(`No se pudo guardar el ejercicio: ${error?.message || error}`);
+    const msg = error?.message || String(error);
+    const toastElem = document.getElementById('toast');
+    if (toastElem) {
+      toastElem.textContent = `No se pudo guardar el ejercicio: ${msg}`;
+      toastElem.classList.add('show');
+      setTimeout(() => toastElem.classList.remove('show'), 3500);
+    }
   }
 }
 
