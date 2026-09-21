@@ -6285,7 +6285,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260920-prod-current-v30').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260921-realtime-shadow-v31').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
