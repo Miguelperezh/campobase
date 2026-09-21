@@ -69,6 +69,10 @@ let liveTacticsDocBound = false; // evita acumular el listener global de cierre 
 let prepDraft = null; // borrador de la pizarra de preparación de partido
 let prepMatchId = null; // partido que se está preparando
 let playerCropper = null;
+let realtimeCloudStore = null;
+let realtimeSubscriptionStarting = false;
+let realtimeSubscriptionActive = false;
+let realtimeSyncTimer = null;
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -6139,6 +6143,47 @@ async function refreshSyncStatusPanel() {
   }
 }
 
+function scheduleRealtimeCloudSync() {
+  if (isDemoDatabase() || !navigator.onLine) return;
+  if (realtimeSyncTimer) window.clearTimeout(realtimeSyncTimer);
+  realtimeSyncTimer = window.setTimeout(() => {
+    realtimeSyncTimer = null;
+    synchronizeCloud().catch(handleError);
+  }, 250);
+}
+
+async function ensureRealtimeSubscription() {
+  if (
+    isDemoDatabase()
+    || !navigator.onLine
+    || realtimeSubscriptionActive
+    || realtimeSubscriptionStarting
+    || typeof realtimeCloudStore?.subscribeToChanges !== 'function'
+  ) return;
+
+  realtimeSubscriptionStarting = true;
+  try {
+    await realtimeCloudStore.subscribeToChanges(
+      scheduleRealtimeCloudSync,
+      (status, error) => {
+        if (status === 'SUBSCRIBED') {
+          realtimeSubscriptionActive = true;
+          return;
+        }
+        if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+          realtimeSubscriptionActive = false;
+          if (error) console.warn('Realtime no disponible; se mantiene el polling de seguridad:', error);
+        }
+      },
+    );
+  } catch (error) {
+    realtimeSubscriptionActive = false;
+    console.warn('No se pudo iniciar Realtime; se mantiene el polling de seguridad:', error?.message || error);
+  } finally {
+    realtimeSubscriptionStarting = false;
+  }
+}
+
 async function synchronizeCloud() {
   if (isDemoDatabase()) {
     await refresh();
@@ -6155,6 +6200,7 @@ async function synchronizeCloud() {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
     state.cloudError = '';
+    void ensureRealtimeSubscription();
     if (result?.changed !== false) {
       await refresh();
     }
@@ -6213,7 +6259,8 @@ async function init() {
     });
   }
   wireEvents(); networkStatus();
-  configureCloudStore(createCampoBaseCloudStore());
+  realtimeCloudStore = createCampoBaseCloudStore();
+  configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
   // En desarrollo local (localhost) NO usamos el service worker: cachea el código
