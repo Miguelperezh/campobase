@@ -311,3 +311,22 @@ Esta sección corrige y prevalece sobre cualquier afirmación anterior de este d
 ### Cuota
 
 La causa principal del egress no era el tamaño almacenado (unos 302 MiB), sino la descarga repetida de archivos y la sincronización completa periódica de datos. Tener los objetos almacenados no equivale por sí mismo a consumir esa cantidad de egress. La reducción de cuota depende de que la reproducción siga saliendo por GitHub y de corregir por separado el polling completo de Supabase.
+
+
+### Estado del borrado histórico de Storage — 21/09/2026
+
+- Miguel confirma que conserva respaldo local completo de estos ejercicios y vídeos y autoriza eliminar las copias históricas de Supabase Storage.
+- Antes de borrar se volvió a verificar el inventario:
+  - Supabase Storage: **323 objetos**, **316.509.123 bytes**.
+  - GitHub Release `campobase-videos-v1`: copia correspondiente de los **323/323**.
+  - Faltantes en GitHub: **0**.
+  - Diferencias de tamaño: **0**.
+  - Referencias activas en datos a `/storage/v1/object/public/ejercicio-videos/`: **0**.
+- **No se ha borrado ningún archivo todavía** porque la API oficial de Storage responde **HTTP 402**: el proyecto está restringido por exceso de egress/cached egress.
+- No borrar mediante SQL: Supabase indica expresamente que eliminar filas de `storage.objects` por SQL deja los blobs huérfanos.
+- Cuando Storage vuelva a estar operativo, el borrado debe hacerse con la **Storage API** (`remove` / `emptyBucket`) y después comprobar:
+  1. bucket `ejercicio-videos` con 0 objetos;
+  2. biblioteca y ejercicios siguen presentes;
+  3. reproducción desde GitHub Releases;
+  4. 0 referencias activas a Supabase Storage.
+- El intento de soporte temporal con la extensión PostgreSQL `http` se retiró completamente tras detectar el 402; el proyecto quedó sin esa extensión instalada.
