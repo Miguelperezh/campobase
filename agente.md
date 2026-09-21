@@ -272,3 +272,42 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
   Todos los 480 tests deben pasar en verde sin errores.
 - **Acumular en `AGENTS.md`:** No sustituir ni reordenar las secciones históricas de `AGENTS.md`. Añadir siempre una nueva sección explicativa al final del archivo.
 - **Verificar en navegador real:** Validar siempre visualmente o mediante scripts automatizados que los botones responden, los modales abren/cierran y los datos persisten tras recargar.
+
+
+---
+
+## 5. Auditoría real de vídeos y Supabase — 21/09/2026
+
+Esta sección corrige y prevalece sobre cualquier afirmación anterior de este documento que diga que el bucket `ejercicio-videos` está vacío o que ningún flujo de vídeo toca Supabase.
+
+### Estado verificado
+
+- Proyecto Supabase: `campobase` (`mdzpygfwugawlmknywxa`).
+- El bucket `ejercicio-videos` conserva **323 MP4 históricos**, con **316.509.123 bytes** en total.
+- El release de GitHub `campobase-videos-v1` contiene **423 MP4**.
+- Los **323 objetos que existen en Supabase tienen copia correspondiente en GitHub Releases**.
+- Verificación realizada por nombre de asset y tamaño:
+  - faltantes en GitHub: **0**;
+  - diferencias de tamaño: **0**;
+  - assets del release en estado distinto de `uploaded`: **0**.
+- GitHub contiene además **100 MP4** que no forman parte de esos 323 objetos históricos de Supabase.
+- La biblioteca validada utiliza `resolveHostedVideoUrl()` para transformar referencias históricas de Supabase al asset equivalente de GitHub Releases antes de reproducir el MP4.
+- El registro `pdf150-022` era la última referencia activa encontrada en datos de producción con URL completa de Supabase; el 21/09/2026 se migra a la URL equivalente de GitHub Releases.
+- En la auditoría había **0 registros activos `recordType: exerciseVideo`**, por lo que ningún vídeo manual existente dependía en ese momento de Supabase Storage.
+
+### Regla de seguridad
+
+- **No borrar todavía los 323 objetos históricos de Supabase** solo porque exista copia en GitHub.
+- Antes de borrar Storage deben cumplirse conjuntamente:
+  1. no quedar referencias activas de producción a esos objetos;
+  2. comprobar reproducción real desde GitHub;
+  3. disponer de una estrategia segura para futuras subidas;
+  4. mantener una copia de respaldo recuperable.
+- El botón **«Añadir vídeo»** conserva por ahora su flujo legacy de Supabase para no romper una función existente.
+- No migrar esa subida directamente desde el navegador a GitHub usando un PAT/token: **un secreto de GitHub nunca debe estar en JavaScript cliente**.
+- La migración futura de «Añadir vídeo» a GitHub Releases debe hacerse mediante backend autenticado/servidor, y solo después de probar subida, reproducción, borrado y sincronización en ordenador y móvil.
+- Hasta entonces, los MP4 del catálogo validado deben servirse desde GitHub Releases y el flujo manual legacy debe considerarse deuda técnica controlada.
+
+### Cuota
+
+La causa principal del egress no era el tamaño almacenado (unos 302 MiB), sino la descarga repetida de archivos y la sincronización completa periódica de datos. Tener los objetos almacenados no equivale por sí mismo a consumir esa cantidad de egress. La reducción de cuota depende de que la reproducción siga saliendo por GitHub y de corregir por separado el polling completo de Supabase.
