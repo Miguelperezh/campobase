@@ -4,11 +4,11 @@ import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
-import './exercise-board-persistence.js?v=20260920-prod-current-v30';
-import './runtime-refresh.js?v=20260920-prod-current-v30';
+import './exercise-board-persistence.js?v=20260921-realtime-shadow-v31';
+import './runtime-refresh.js?v=20260921-realtime-shadow-v31';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
-import './exercise-view-mode-ui.js?v=20260920-prod-current-v30';
+import './exercise-view-mode-ui.js?v=20260921-realtime-shadow-v31';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
@@ -17,6 +17,8 @@ const PLAYER_PROFILE_FIELDS = Object.freeze([
   'fatherName', 'fatherPhone', 'motherName', 'motherPhone',
   'photo', 'createdAt', 'profileUpdatedAt',
 ]);
+
+export const CAMPOBASE_REALTIME_TABLES = Object.freeze(Object.values(CLOUD_TABLES));
 
 export const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -112,10 +114,76 @@ async function requireBoundUser(client) {
 
 export function createCampoBaseCloudStore() {
   const client = getCampoBaseSupabaseClient();
+  let realtimeChannel = null;
+  let realtimeOwnerUserId = '';
+  let realtimeChangeHandler = null;
+  let realtimeStatusHandler = null;
+
+  async function stopRealtimeChanges() {
+    const channel = realtimeChannel;
+    realtimeChannel = null;
+    realtimeOwnerUserId = '';
+    realtimeChangeHandler = null;
+    realtimeStatusHandler = null;
+    if (channel) await client.removeChannel(channel).catch(() => null);
+  }
+
+  async function subscribeToChanges(onChange, onStatus) {
+    if (typeof onChange !== 'function') {
+      throw new TypeError('La sincronización Realtime necesita un manejador de cambios.');
+    }
+
+    realtimeChangeHandler = onChange;
+    realtimeStatusHandler = typeof onStatus === 'function' ? onStatus : null;
+
+    const { dataOwnerUserId } = await requireBoundUser(client);
+    if (realtimeChannel && realtimeOwnerUserId === dataOwnerUserId) {
+      return { ownerUserId: dataOwnerUserId, reused: true };
+    }
+
+    await stopRealtimeChanges();
+    realtimeChangeHandler = onChange;
+    realtimeStatusHandler = typeof onStatus === 'function' ? onStatus : null;
+
+    const channel = client.channel(`campobase-db:${dataOwnerUserId}`);
+    for (const table of CAMPOBASE_REALTIME_TABLES) {
+      channel.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table },
+        (payload) => {
+          const nextRow = payload?.new && Object.keys(payload.new).length ? payload.new : null;
+          const previousRow = payload?.old && Object.keys(payload.old).length ? payload.old : null;
+          const row = nextRow ?? previousRow;
+          // Postgres Changes respeta RLS. Esta comprobación adicional evita
+          // procesar una fila ajena si el payload incluye user_id.
+          if (row?.user_id && row.user_id !== dataOwnerUserId) return;
+          realtimeChangeHandler?.({
+            table,
+            eventType: payload?.eventType ?? '',
+            id: row?.id ?? null,
+          });
+        },
+      );
+    }
+
+    realtimeChannel = channel;
+    realtimeOwnerUserId = dataOwnerUserId;
+
+    channel.subscribe((status, error) => {
+      realtimeStatusHandler?.(status, error ?? null);
+      if (!['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) return;
+      if (realtimeChannel !== channel) return;
+      realtimeChannel = null;
+      realtimeOwnerUserId = '';
+      void client.removeChannel(channel).catch(() => null);
+    });
+
+    return { ownerUserId: dataOwnerUserId, reused: false };
+  }
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260920-prod-current-v30'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260921-realtime-shadow-v31'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -151,6 +219,9 @@ export function createCampoBaseCloudStore() {
     });
 
   return {
+    subscribeToChanges,
+    stopRealtimeChanges,
+
     async prepare() {
       const { user } = await requireBoundUser(client);
       return { userId: user.id };
