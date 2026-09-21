@@ -6199,7 +6199,9 @@ async function synchronizeCloud() {
   try {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
-    state.cloudError = '';
+    state.cloudError = result?.cloudRestricted
+      ? 'Supabase está temporalmente restringido por cuota. CampoBase mantiene los datos locales de este dispositivo.'
+      : '';
     void ensureRealtimeSubscription();
     if (result?.changed !== false) {
       await refresh();
