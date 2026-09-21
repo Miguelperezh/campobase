@@ -14,7 +14,9 @@ test('un 402 de Supabase no sustituye ni vacía la base local', () => {
 
 test('la recuperación legacy solo añade IDs ausentes y nunca limpia el destino', () => {
   assert.match(db, /existingIds = new Set/);
-  assert.match(db, /missing = legacyRecords\.filter/);
+  assert.match(db, /targetRecords\.length > 0\) continue/);
+  assert.match(db, /targetHasUserContent/);
+  assert.match(db, /missing = sourceRecords\.filter/);
   assert.match(db, /store\.put\(structuredClone\(record\)\)/);
   const recoveryStart = db.indexOf('async function mergeMissingLegacyRecordsIntoBoundDatabase');
   const recoveryEnd = db.indexOf('function isCloudServiceRestricted', recoveryStart);
