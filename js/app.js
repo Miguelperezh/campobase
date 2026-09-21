@@ -6199,7 +6199,9 @@ async function synchronizeCloud() {
   try {
     const result = await syncFromCloud();
     state.cloudConnected = result.online;
-    state.cloudError = '';
+    state.cloudError = result?.cloudRestricted
+      ? 'Supabase está temporalmente restringido por cuota. CampoBase mantiene los datos locales de este dispositivo.'
+      : '';
     void ensureRealtimeSubscription();
     if (result?.changed !== false) {
       await refresh();
@@ -6285,7 +6287,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260921-realtime-shadow-v31').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260921-cloud-recovery-v32').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
