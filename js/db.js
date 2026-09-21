@@ -421,6 +421,18 @@ async function queueFromDatabaseName(name) {
   return requestResult(db.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll());
 }
 
+function isRecoverableLegacySetting(record) {
+  if (!record?.id) return false;
+  if (record.id === 'main' || record.id === 'teamName') return true;
+  if (['trainingSession', 'preparacion', 'tactic', 'staffMember'].includes(record.recordType)) return true;
+  if (record.recordType !== 'exercise') return false;
+  return record.userCreated === true
+    || record.customBoard === true
+    || record.source === 'personal'
+    || String(record.id).startsWith('mine-')
+    || String(record.id).startsWith('pdf98-user-');
+}
+
 async function mergeMissingLegacyRecordsIntoBoundDatabase() {
   const userId = getBoundSaasUserId();
   if (!userId) return { recovered: 0 };
@@ -438,8 +450,26 @@ async function mergeMissingLegacyRecordsIntoBoundDatabase() {
     ]);
     if (!legacyRecords.length) continue;
 
+    // Nunca mezclar silenciosamente una base histórica con una base actual que
+    // ya contiene datos. La recuperación automática solo sirve para el caso
+    // de un namespace nuevo/vacío que no puede bajar Supabase por el 402.
+    if (storeName !== 'settings' && targetRecords.length > 0) continue;
+
+    let sourceRecords = legacyRecords;
+    if (storeName === 'settings') {
+      const targetHasUserContent = targetRecords.some((record) => (
+        record?.recordType === 'trainingSession'
+        || record?.recordType === 'preparacion'
+        || record?.recordType === 'tactic'
+        || record?.recordType === 'staffMember'
+        || (record?.recordType === 'exercise' && isRecoverableLegacySetting(record))
+      ));
+      if (targetHasUserContent) continue;
+      sourceRecords = legacyRecords.filter(isRecoverableLegacySetting);
+    }
+
     const existingIds = new Set(targetRecords.map((record) => record?.id).filter(Boolean));
-    const missing = legacyRecords.filter((record) => record?.id && !existingIds.has(record.id));
+    const missing = sourceRecords.filter((record) => record?.id && !existingIds.has(record.id));
     if (!missing.length) continue;
 
     const tx = targetDb.transaction(storeName, 'readwrite');
