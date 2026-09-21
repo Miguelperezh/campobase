@@ -409,7 +409,8 @@ Por tanto, un móvil/ordenador que no tuviera ya esos registros en su IndexedDB 
 
 Cuando `syncFromCloud()` detecta una restricción 402:
 - nunca limpia ni sustituye los stores locales;
-- intenta recuperar únicamente registros **ausentes** desde la base local heredada `campobase` hacia la base `campobase_<userId>`;
+- intenta recuperar registros desde la base local heredada `campobase` hacia `campobase_<userId>` **solo cuando el almacén nuevo está vacío**;
+- en `settings`, solo recupera contenido personal operativo si todavía no existe contenido personal/sesiones en la base nueva;
 - nunca sobrescribe un ID que ya exista en la base del usuario;
 - nunca ejecuta `clear()` ni `delete()` durante esa recuperación;
 - repinta la interfaz si recupera registros;
