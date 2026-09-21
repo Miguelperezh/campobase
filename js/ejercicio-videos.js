@@ -59,7 +59,10 @@ export function videoPath(exerciseId, videoId, extension) {
   return `${safeExercise}/${safeVideo}.${safeExt}`;
 }
 
-// URL pública de reproducción (sin token, bucket público).
+// URL pública del flujo manual legacy. No usar esta función para los MP4 del
+// catálogo validado: esos se resuelven mediante resolveHostedVideoUrl() hacia
+// GitHub Releases. Se mantiene para no romper «Añadir vídeo» hasta migrar su
+// subida a un backend autenticado.
 export function videoPublicUrl(path) {
   const segments = String(path ?? '').split('/').map((segment) => encodeURIComponent(segment)).join('/');
   return `${SUPABASE_URL}/storage/v1/object/public/${VIDEO_BUCKET}/${segments}`;
