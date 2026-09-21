@@ -330,3 +330,50 @@ La causa principal del egress no era el tamaño almacenado (unos 302 MiB), sino 
   3. reproducción desde GitHub Releases;
   4. 0 referencias activas a Supabase Storage.
 - El intento de soporte temporal con la extensión PostgreSQL `http` se retiró completamente tras detectar el 402; el proyecto quedó sin esa extensión instalada.
+
+
+---
+
+## 6. Realtime en modo sombra — 21/09/2026
+
+Primera fase de sustitución segura del polling intensivo, diseñada para no repetir los problemas previos de sincronización entre ordenador y móvil.
+
+### Estado implementado
+
+- Se mantienen **sin cambios**:
+  - el polling cloud existente cada **10 segundos**;
+  - el reloj/local polling del Partido en vivo cada **1 segundo**;
+  - la cola offline, IndexedDB y el proceso `syncFromCloud()` existente.
+- Se añade Supabase Postgres Changes como **segunda vía paralela**:
+  - `jugadores`;
+  - `convocatorias`;
+  - `partidos`;
+  - `asistencias`;
+  - `configuracion`.
+- Las cinco tablas están añadidas a la publicación `supabase_realtime`.
+- Un evento Realtime **no escribe directamente ni sustituye datos locales**. Solo dispara, con debounce de 250 ms, la misma sincronización `synchronizeCloud() -> syncFromCloud()` ya utilizada por CampoBase.
+- Si el canal Realtime falla, se cierra o agota tiempo, CampoBase conserva el polling de 10 s como respaldo.
+- No se han modificado fórmulas de minutos, sustituciones, goles, tarjetas, convocatorias ni lógica del partido.
+
+### Regla obligatoria antes de la fase 2
+
+**NO retirar ni espaciar el polling de 10 segundos todavía.**
+
+Solo puede reducirse después de verificar en condiciones reales, con Supabase operativo y al menos ordenador + móvil:
+
+1. editar/guardar jugador en un dispositivo y verlo en el otro;
+2. crear/editar convocatoria y partido;
+3. cambios de asistencia;
+4. preparar e iniciar Partido en vivo;
+5. reloj avanzando segundo a segundo localmente en ambos;
+6. sustitución, gol, tarjeta/incidencia, descanso, segunda parte y final;
+7. pérdida y recuperación de conexión;
+8. cierre/reapertura de PWA y reconciliación correcta.
+
+El reloj del partido sigue avanzando localmente cada segundo; Realtime solo debe transportar cambios reales de estado. No enviar un write a Supabase por cada segundo.
+
+### QA realizado
+
+- Sintaxis y batería completa de tests: **correctos** en el PR de esta fase.
+- Smoke de navegador: bloqueado únicamente por respuestas HTTP 402 del proyecto Supabase debido a la cuota de egress ya excedida. Este 402 era preexistente y no procede del código Realtime.
+- Mientras Supabase siga restringido por cuota, no puede certificarse una prueba end-to-end real de WebSocket entre dos dispositivos. Por ello se conserva el sistema anterior como fallback.
