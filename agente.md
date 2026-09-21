@@ -377,3 +377,64 @@ El reloj del partido sigue avanzando localmente cada segundo; Realtime solo debe
 - Sintaxis y batería completa de tests: **correctos** en el PR de esta fase.
 - Smoke de navegador: bloqueado únicamente por respuestas HTTP 402 del proyecto Supabase debido a la cuota de egress ya excedida. Este 402 era preexistente y no procede del código Realtime.
 - Mientras Supabase siga restringido por cuota, no puede certificarse una prueba end-to-end real de WebSocket entre dos dispositivos. Por ello se conserva el sistema anterior como fallback.
+
+
+---
+
+## 7. Incidente de sincronización por cuota 402 — 21/09/2026
+
+### Síntoma observado
+
+El usuario abrió CampoBase en un dispositivo y no veía datos que sí estaban guardados:
+- sesión del 21/09/2026 a las 16:30 en Alfonso Silva;
+- 5 bloques / 75 minutos;
+- ejercicio personal `mine-1789931776588-ijet2` (“Pared- Profunidad y Centro”);
+- partidos próximos del 24/09 y 26/09.
+
+### Causa verificada
+
+La información **no había desaparecido de Supabase**. Se verificó directamente en Postgres que seguía activa.
+
+La API pública que usa CampoBase estaba bloqueada por cuota:
+- REST: **HTTP 402**;
+- Auth: **HTTP 402**;
+- Realtime: intento real de WebSocket terminó en **TIMED_OUT**.
+
+Mensaje de Supabase:
+`Service for this project is restricted due to ... exceed_cached_egress_quota, exceed_egress_quota`.
+
+Por tanto, un móvil/ordenador que no tuviera ya esos registros en su IndexedDB local no podía descargarlos aunque existieran en servidor.
+
+### Salvaguarda añadida
+
+Cuando `syncFromCloud()` detecta una restricción 402:
+- nunca limpia ni sustituye los stores locales;
+- intenta recuperar únicamente registros **ausentes** desde la base local heredada `campobase` hacia la base `campobase_<userId>`;
+- nunca sobrescribe un ID que ya exista en la base del usuario;
+- nunca ejecuta `clear()` ni `delete()` durante esa recuperación;
+- repinta la interfaz si recupera registros;
+- muestra que Supabase está temporalmente restringido y que CampoBase mantiene los datos locales.
+
+Se mantienen:
+- polling cloud de 10 s como respaldo;
+- reloj/estado local del partido cada 1 s;
+- cola offline;
+- IndexedDB local-first.
+
+### Regla permanente
+
+Un error remoto (402, caída de Supabase, Auth no disponible, Realtime caído) **jamás puede interpretarse como “servidor vacío”** ni provocar que CampoBase borre, sustituya o esconda datos locales existentes.
+
+No restaurar tombstones a ciegas. Dos IDs de `configuracion` aparecieron eliminados recientemente (`e38a3ac3-...` y `8e0481a6-...`), pero su payload ya era null y no pudo demostrarse qué contenido representaban.
+
+### Estado conocido de la semana 21–27/09/2026 en Supabase
+
+Sesiones activas verificadas:
+- 21/09/2026 · 16:30 · Alfonso Silva · 5 bloques · 75 min.
+- 22/09/2026 · 17:30 · Alfonso Silva · 1 bloque · 15/60 min.
+
+El usuario esperaba tres sesiones esa semana. La tercera no puede reconstruirse de forma fiable solo desde los tombstones actuales y no debe inventarse.
+
+Partidos activos próximos verificados:
+- 24/09/2026 · 17:45 · Alevín Inter/Pilar · Campo del Pilar.
+- 26/09/2026 · 09:30 · El Calero Alevín B · Campo El Calero.
