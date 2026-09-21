@@ -39,7 +39,7 @@ test('crear y editar sesiones usa el mismo builder y confirma el guardado', () =
 
 test('la PWA fuerza la actualización de esta corrección', () => {
   assert.match(sw, /force2508-final-preview-own-sessions/);
-  assert.match(app, /20260920-prod-current-v30/);
+  assert.match(app, /20260921-realtime-shadow-v31/);
 });
 
 
