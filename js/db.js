@@ -397,6 +397,19 @@ export async function syncFromCloud() {
       if (syncError?.message?.includes('Inicia sesión') || syncError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length, authRequired: true };
       }
+      if (isCloudServiceRestricted(syncError)) {
+        const recovery = await mergeMissingLegacyRecordsIntoBoundDatabase().catch((error) => {
+          console.warn('No se pudo recuperar la base local anterior:', error);
+          return { recovered: 0 };
+        });
+        return {
+          online: false,
+          pending: (await localGetAll(SYNC_QUEUE)).length,
+          cloudRestricted: true,
+          localRecovered: recovery.recovered,
+          changed: recovery.recovered > 0,
+        };
+      }
       throw syncError;
     }
   })().finally(() => { syncPromise = null; });
@@ -406,6 +419,48 @@ export async function syncFromCloud() {
 async function queueFromDatabaseName(name) {
   const db = await openDatabaseByName(name);
   return requestResult(db.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll());
+}
+
+async function mergeMissingLegacyRecordsIntoBoundDatabase() {
+  const userId = getBoundSaasUserId();
+  if (!userId) return { recovered: 0 };
+  const targetName = userDatabaseName(userId);
+  if (targetName === REAL_DB_NAME) return { recovered: 0 };
+
+  const legacyDb = await openDatabaseByName(REAL_DB_NAME);
+  const targetDb = await openDatabaseByName(targetName);
+  let recovered = 0;
+
+  for (const storeName of STORES) {
+    const [legacyRecords, targetRecords] = await Promise.all([
+      requestResult(legacyDb.transaction(storeName, 'readonly').objectStore(storeName).getAll()),
+      requestResult(targetDb.transaction(storeName, 'readonly').objectStore(storeName).getAll()),
+    ]);
+    if (!legacyRecords.length) continue;
+
+    const existingIds = new Set(targetRecords.map((record) => record?.id).filter(Boolean));
+    const missing = legacyRecords.filter((record) => record?.id && !existingIds.has(record.id));
+    if (!missing.length) continue;
+
+    const tx = targetDb.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    for (const record of missing) {
+      store.put(structuredClone(record));
+      recovered += 1;
+    }
+    await transactionDone(tx);
+  }
+
+  if (recovered > 0) notifyDataChanged(STORES, 'legacy-local-recovery');
+  return { recovered };
+}
+
+function isCloudServiceRestricted(error) {
+  const status = Number(error?.status || error?.statusCode || error?.context?.status || 0);
+  const message = String(error?.message || '');
+  return status === 402
+    || /exceed_(cached_)?egress_quota/i.test(message)
+    || /service for this project is restricted/i.test(message);
 }
 
 export async function getLocalPinSettingsCandidates() {
