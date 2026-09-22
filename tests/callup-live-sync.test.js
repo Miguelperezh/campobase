@@ -75,3 +75,12 @@ test('syncFromCloud comprueba si los datos cambiaron antes de sustituir el almac
     'syncFromCloud debe devolver si hubo cambios en los datos descargados',
   );
 });
+
+
+test('el segundo a segundo del partido sigue siendo local y no genera sync cloud cada segundo', async () => {
+  const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(appJs, /setInterval\(\(\) => pollLiveState\(\)\.catch\(handleError\),\s*1000\)/);
+  assert.doesNotMatch(appJs, /setInterval\(\(\) => synchronizeCloud\(\)\.catch\(handleError\),\s*1000\)/);
+  const ticks = appJs.slice(appJs.indexOf('function startTicks'), appJs.indexOf('async function pollLiveState'));
+  assert.doesNotMatch(ticks, /synchronizeCloud\(/);
+});
