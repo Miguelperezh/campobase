@@ -221,7 +221,10 @@ function scheduleAppRefresh() {
   const attempt = () => {
     if (uiBusy()) return window.setTimeout(attempt, 120);
     appRefreshQueued = false;
-    if (navigator.onLine) window.dispatchEvent(new Event('online'));
+    const refresh = window.__campobase?.refresh;
+    if (typeof refresh === 'function') {
+      Promise.resolve(refresh()).catch((error) => console.warn('No se pudo refrescar CampoBase tras el cambio local:', error));
+    }
   };
   window.setTimeout(attempt, 120);
 }
