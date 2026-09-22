@@ -6,11 +6,17 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install --no-save playwright@1.55.0
-      - run: node scripts/f7-126-mobile-asset-probe.mjs
+      - name: CampoBase local viewer probe
+        run: node scripts/f7-126-mobile-asset-probe.mjs
+      - name: CampoBase deployed production probe
+        env:
+          CAMPOBASE_BASE_URL: https://miguelperezh.github.io/campobase
+          CAMPOBASE_ALLOW_SW: "1"
+        run: node scripts/f7-126-mobile-asset-probe.mjs
