@@ -1,0 +1,12 @@
+name: Video range behavior probe
+on:
+  push:
+    branches:
+      - test/iphone-release-video
+jobs:
+  range-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/video-range-probe.sh
