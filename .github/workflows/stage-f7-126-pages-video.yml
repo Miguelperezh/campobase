@@ -1,0 +1,33 @@
+name: Stage f7-126 Pages video
+on:
+  push:
+    branches:
+      - fix/mobile-video-fallback-v34
+permissions:
+  contents: write
+jobs:
+  stage:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mobile-video-fallback-v34
+          fetch-depth: 0
+      - name: Prepare faststart MP4
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          mkdir -p assets/video-mobile
+          curl -L --fail --retry 3             -o /tmp/f7-126-source.mp4             "https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4"
+          ffmpeg -y -i /tmp/f7-126-source.mp4 -map 0 -c copy -movflags +faststart assets/video-mobile/f7-126.mp4
+          test -s assets/video-mobile/f7-126.mp4
+      - name: Commit staged video
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/video-mobile/f7-126.mp4
+          git diff --cached --quiet && exit 0
+          git commit -m "test(video): stage f7-126 for Pages playback"
+          git push origin HEAD:fix/mobile-video-fallback-v34
