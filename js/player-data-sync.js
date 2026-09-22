@@ -221,7 +221,9 @@ function scheduleAppRefresh() {
   const attempt = () => {
     if (uiBusy()) return window.setTimeout(attempt, 120);
     appRefreshQueued = false;
-    if (navigator.onLine) window.dispatchEvent(new Event('online'));
+    // Las mutaciones ya se suben inmediatamente desde db.js. No fingimos un
+    // evento "online", porque eso disparaba un snapshot completo adicional.
+    scheduleCardSync(true);
   };
   window.setTimeout(attempt, 120);
 }
