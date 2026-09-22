@@ -36,12 +36,18 @@ async function probe(page,{mobile}){
     ua:navigator.userAgent,
   }));
 
-  await page.evaluate(()=>window.__campobase.showExerciseDetail('f7-126'));
-  await page.waitForSelector('#exercise-detail-dialog[open] .frame-video',{timeout:15000});
-  await page.waitForSelector('#exercise-detail-dialog[open] .v-btn-play',{timeout:15000});
+  await page.evaluate(()=>window.__campobase.showView('ejercicios'));
+  const preview = await page.waitForSelector('article.exercise-v2-card img[src*="f7-126.png"]',{timeout:20000});
+  const exerciseId = await preview.evaluate((img)=>img.closest('article[data-exercise-id]')?.dataset.exerciseId || '');
+  if(!exerciseId) throw new Error('No se pudo resolver el ID interno asociado a f7-126.png');
+  console.log('f7-126 internal exercise id:', exerciseId);
+
+  await page.evaluate((id)=>window.__campobase.showExerciseDetail(id), exerciseId);
+  await page.waitForSelector('#exercise-detail-dialog .frame-video',{timeout:15000,state:'attached'});
+  await page.waitForSelector('#exercise-detail-dialog .v-btn-play',{timeout:15000,state:'attached'});
 
   const before=await page.evaluate(()=>{
-    const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
+    const v=document.querySelector('#exercise-detail-dialog .frame-video');
     return {dataSrc:v?.dataset?.src || '',src:v?.getAttribute('src') || '',paused:v?.paused,currentTime:v?.currentTime || 0};
   });
 
@@ -50,14 +56,14 @@ async function probe(page,{mobile}){
     throw new Error(`URL incorrecta (${mobile?'móvil':'escritorio'}): ${before.dataSrc} != ${expected}`);
   }
 
-  await page.click('#exercise-detail-dialog[open] .v-btn-play');
+  await page.click('#exercise-detail-dialog .v-btn-play');
   await page.waitForFunction(()=>{
-    const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
+    const v=document.querySelector('#exercise-detail-dialog .frame-video');
     return Boolean(v && !v.paused && Number(v.currentTime||0)>1);
   },null,{timeout:20000});
 
   const after=await page.evaluate(()=>{
-    const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
+    const v=document.querySelector('#exercise-detail-dialog .frame-video');
     return {
       dataSrc:v?.dataset?.src || '',
       src:v?.currentSrc || v?.src || '',
