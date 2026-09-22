@@ -64,19 +64,28 @@ test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar o
   );
 });
 
-test('los vídeos validados permanecen en Releases y f7-126 usa variante móvil compatible', () => {
-  const legacy126 = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
-  const release126 = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
-  const mobile126 = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio-mobile.mp4';
-  assert.equal(resolveHostedVideoUrl(legacy126, { mobile: false }), release126);
-  assert.equal(resolveHostedVideoUrl(legacy126, { mobile: true }), mobile126);
-  assert.equal(resolveHostedVideoUrl(release126, { mobile: true }), mobile126);
+test('en móvil todos los MP4 de Releases usan su variante -mobile y escritorio conserva el original', () => {
+  const cases = [
+    ['library-v2-preview/f7-082/ejercicio.mp4', 'library-v2-preview__f7-082__ejercicio.mp4'],
+    ['library-v2-preview/f7-126/ejercicio.mp4', 'library-v2-preview__f7-126__ejercicio.mp4'],
+    ['library-v2-preview/pdf150-022/ejercicio.mp4', 'library-v2-preview__pdf150-022__ejercicio.mp4'],
+    ['CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2/video.mp4', 'CAMPOBASE-VIDEO-DOBLE-DEVOLUCION-PICA-RETORNO-CONOS-V2__video.mp4'],
+  ];
 
-  for (const id of ['082', '084']) {
-    const legacy = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-${id}/ejercicio.mp4`;
-    const release = `https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-${id}__ejercicio.mp4`;
-    assert.equal(resolveHostedVideoUrl(legacy, { mobile: true }), release);
+  for (const [path, asset] of cases) {
+    const legacy = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${path}`;
+    const original = `https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/${asset}`;
+    const mobileAsset = asset.replace(/\.mp4$/, '-mobile.mp4');
+    const mobileUrl = `https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/${mobileAsset}`;
+
+    assert.equal(resolveHostedVideoUrl(legacy, { mobile: false }), original);
+    assert.equal(resolveHostedVideoUrl(legacy, { mobile: true }), mobileUrl);
+    assert.equal(resolveHostedVideoUrl(original, { mobile: true }), mobileUrl);
+    assert.equal(resolveHostedVideoUrl(mobileUrl, { mobile: true }), mobileUrl);
   }
+
+  assert.equal(resolveHostedVideoUrl('https://example.test/video.mp4', { mobile: true }), 'https://example.test/video.mp4');
+  assert.equal(resolveHostedVideoUrl('assets/ejercicios/demo.mp4', { mobile: true }), 'assets/ejercicios/demo.mp4');
 });
 
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
