@@ -489,3 +489,15 @@ Partidos activos próximos verificados:
 - No se modifican IDs de ejercicios, sesiones, jugadores, convocatorias, Supabase, Realtime ni partido en vivo.
 - No borrar todavía las copias históricas de Supabase hasta validar reproducción física en el móvil y completar la estrategia para el resto de vídeos.
 
+### Biblioteca móvil completa en GitHub Releases — 22/09/2026
+
+- El Release `campobase-videos-v1` contiene 423 MP4 originales y 423 variantes móviles compatibles; faltan 0.
+- Las variantes móviles usan el mismo nombre que el original con sufijo `-mobile.mp4`.
+- Perfil de compatibilidad: H.264 Constrained Baseline, máximo aproximado 1152×720, 30 fps, yuv420p y fast-start; se conserva audio en AAC cuando existe.
+- Los originales de Releases no se borran ni se reemplazan.
+- En escritorio CampoBase usa el MP4 original; en móvil, cualquier MP4 del Release usa automáticamente su variante `-mobile.mp4`.
+- Esta regla sustituye la excepción temporal exclusiva de `f7-126`.
+- GitHub Releases sigue siendo el origen de los vídeos; Pages y Supabase no son el destino de reproducción de la biblioteca.
+- Build de invalidación: `20260922-releases-mobile-all-v37`.
+- No se modifican IDs de ejercicios, sesiones, jugadores, convocatorias, Realtime ni partido en vivo.
+
