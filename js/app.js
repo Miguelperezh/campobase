@@ -6172,13 +6172,13 @@ async function ensureRealtimeSubscription() {
         }
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           realtimeSubscriptionActive = false;
-          if (error) console.warn('Realtime no disponible; se mantiene el polling de seguridad:', error);
+          if (error) console.warn('Realtime no disponible; se sincronizará al reconectar o volver a primer plano:', error);
         }
       },
     );
   } catch (error) {
     realtimeSubscriptionActive = false;
-    console.warn('No se pudo iniciar Realtime; se mantiene el polling de seguridad:', error?.message || error);
+    console.warn('No se pudo iniciar Realtime; se sincronizará al reconectar o volver a primer plano:', error?.message || error);
   } finally {
     realtimeSubscriptionStarting = false;
   }
@@ -6265,6 +6265,14 @@ async function init() {
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      synchronizeCloud().catch(handleError);
+    }
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted && navigator.onLine) synchronizeCloud().catch(handleError);
+  });
   // En desarrollo local (localhost) NO usamos el service worker: cachea el código
   // y hace que los cambios no se vean. Desregistramos el que ya esté activo y, en
   // producción (GitHub Pages), sí se registra para el modo offline.
@@ -6318,8 +6326,9 @@ async function init() {
     await refreshSyncStatusPanel();
     await refresh();
   }).catch(handleError);
+  // El reloj del partido sigue revisando IndexedDB/estado local cada segundo.
+  // La nube se sincroniza por Realtime, arranque, reconexión y retorno a primer plano.
   setInterval(() => pollLiveState().catch(handleError), 1000);
-  setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }
 
 if (typeof window !== 'undefined') {
