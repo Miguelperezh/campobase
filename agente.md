@@ -450,3 +450,17 @@ Partidos activos próximos verificados:
 - La instalación móvil real puede estar conservando una mezcla/caché antigua. Se prepara `20260922-mobile-video-cache-v33` únicamente para invalidar caché y cargar un conjunto coherente de HTML/JS/SW, sin modificar datos, sesiones, Realtime, ejercicios ni vídeos.
 - Si v33 no resuelve el móvil físico, la siguiente prueba debe ser comparar el mismo vídeo en navegador normal vs PWA instalada en ese dispositivo antes de cambiar alojamiento o recodificar en masa.
 
+## Vídeo móvil f7-126 — diagnóstico y prueba v34 (22/09/2026)
+
+- El fallo reportado en móvil no se reproduce en Chrome de escritorio.
+- `f7-126` original: H.264 High, 1440×900, yuv420p, nivel 4.0, 17 s.
+- GitHub Releases reproduce el original correctamente en Google Chrome real con soporte H.264.
+- Una prueba previa con Chromium de Playwright devolvió `MEDIA_ERR_SRC_NOT_SUPPORTED`, pero ese binario no incluye H.264 propietario; no usar ese resultado como diagnóstico del MP4.
+- Se creó una variante independiente y no destructiva: `library-v2-preview__f7-126__ejercicio-mobile.mp4`.
+- Variante móvil: H.264 Constrained Baseline, 1152×720, 30 fps, yuv420p, nivel 3.1, fast-start, 17 s, ~238 KB.
+- Chrome real reproduce tanto el original como la variante móvil sin error.
+- La prueba `v34` hace que solo `f7-126` use la variante compatible cuando el navegador se identifica como móvil; escritorio conserva el MP4 original.
+- No se modifica el ID del ejercicio, sus datos, sesiones, Realtime, jugadores ni sincronización.
+- La PWA cambia a `20260922-mobile-video-f7-126-v34` para evitar que el móvil conserve módulos de `v33`.
+- Antes de extender la conversión a otros vídeos, validar `f7-126` en el teléfono físico del entrenador.
+- No borrar todavía los vídeos históricos de Supabase mientras siga abierta esta validación móvil.
