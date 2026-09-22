@@ -68,8 +68,8 @@ test('la cadena real Movimiento -> animated -> viewPlay llega a playPhases', () 
 test('2475 publica solo la corrección del visor y mantiene la integración validada', () => {
   assert.match(supabaseClient, /exercise-viewer-controls\.js\?v=2475/);
   assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=2475/);
-  assert.match(supabaseClient, /exercise-board-persistence\.js\?v=20260922-releases-mobile-v36/);
-  assert.match(supabaseClient, /runtime-refresh\.js\?v=20260922-releases-mobile-v36/);
+  assert.match(supabaseClient, /exercise-board-persistence\.js\?v=20260922-mobile-library-v37/);
+  assert.match(supabaseClient, /runtime-refresh\.js\?v=20260922-mobile-library-v37/);
   assert.match(serviceWorker, /exerciseboard-2475/);
   assert.match(serviceWorker, /exercise-viewer-controls\.js\?v=2475/);
   assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=2475/);
