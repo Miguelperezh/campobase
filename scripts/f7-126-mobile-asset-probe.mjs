@@ -4,13 +4,15 @@ import { spawn } from 'node:child_process';
 const ORIGINAL='https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
 const MOBILE='https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio-mobile.mp4';
 
-const server=spawn('python3',['-m','http.server','4174','--bind','127.0.0.1'],{stdio:['ignore','ignore','inherit']});
+const REMOTE_BASE=String(process.env.CAMPOBASE_BASE_URL || '').replace(/\/$/,'');
+const BASE=REMOTE_BASE || 'http://127.0.0.1:4174';
+const server=REMOTE_BASE ? null : spawn('python3',['-m','http.server','4174','--bind','127.0.0.1'],{stdio:['ignore','ignore','inherit']});
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 
 async function waitServer(){
   for(let i=0;i<60;i+=1){
     try{
-      const res=await fetch('http://127.0.0.1:4174/index.html',{cache:'no-store'});
+      const res=await fetch(`${BASE}/index.html`,{cache:'no-store'});
       if(res.ok) return;
     }catch{}
     await sleep(250);
@@ -19,7 +21,7 @@ async function waitServer(){
 }
 
 async function enterDemo(page){
-  await page.goto('http://127.0.0.1:4174/index.html?f7126probe=1',{waitUntil:'domcontentloaded'});
+  await page.goto(`${BASE}/index.html?f7126probe=1`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>Boolean(window.__campobase?.state),null,{timeout:20000});
   const role=await page.evaluate(()=>window.__campobase?.state?.role || '');
   if(role!=='demo'){
@@ -87,12 +89,12 @@ try{
   await waitServer();
   browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
 
-  const desktopContext=await browser.newContext({viewport:{width:1280,height:800},serviceWorkers:'block'});
+  const desktopContext=await browser.newContext({viewport:{width:1280,height:800},serviceWorkers:(process.env.CAMPOBASE_ALLOW_SW==='1'?'allow':'block')});
   const desktopPage=await desktopContext.newPage();
   const desktop=await probe(desktopPage,{mobile:false});
   await desktopContext.close();
 
-  const mobileContext=await browser.newContext({...devices['Pixel 7'],serviceWorkers:'block'});
+  const mobileContext=await browser.newContext({...devices['Pixel 7'],serviceWorkers:(process.env.CAMPOBASE_ALLOW_SW==='1'?'allow':'block')});
   const mobilePage=await mobileContext.newPage();
   const mobile=await probe(mobilePage,{mobile:true});
   await mobileContext.close();
@@ -102,5 +104,5 @@ try{
   if(!desktop.codec.h264 || !mobile.codec.h264) process.exit(11);
 }finally{
   if(browser) await browser.close().catch(()=>{});
-  server.kill('SIGTERM');
+  if(server) server.kill('SIGTERM');
 }
