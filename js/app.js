@@ -6287,7 +6287,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260921-cloud-recovery-v32').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260922-mobile-video-cache-v33').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
