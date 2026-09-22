@@ -459,3 +459,12 @@ Partidos activos próximos verificados:
 - Objetivo: comprobar en el móvil físico si una respuesta `video/mp4` de Pages elimina el fallo observado con GitHub Releases (`application/octet-stream` + attachment).
 - No ampliar esta migración a los otros 99 vídeos hasta validar `f7-126` en el dispositivo real.
 
+### Build v34 para prueba física de vídeo — 22/09/2026
+
+- Se fuerza el build `20260922-pages-video-test-v34` para que móvil y PWA no reutilicen JavaScript/cache de v33.
+- Cambio funcional deliberadamente mínimo: solo `f7-126` se sirve desde `./assets/video-mobile/f7-126.mp4` en GitHub Pages.
+- El MP4 se reempaquetó con `faststart` sin recodificar; el contenido visual no cambia.
+- Los otros vídeos siguen exactamente en sus rutas anteriores.
+- No se modifica Supabase, Realtime, sesiones, jugadores, convocatorias, partido en vivo ni datos locales.
+- Antes de ampliar el cambio a `f7-051`–`f7-150`, hay que validar `f7-126` en el teléfono físico.
+
