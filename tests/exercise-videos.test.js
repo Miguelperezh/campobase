@@ -164,3 +164,22 @@ test('el visor renderiza los MP4 migrados desde GitHub Releases y no desde Supab
     /storage\/v1\/object\/public\/ejercicio-videos\/library-v2-preview\/pdf150-022\/ejercicio\.mp4/,
   );
 });
+
+
+test('solo f7-126 usa variante móvil y el resto conserva el asset original', () => {
+  const f126 = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
+  const f127 = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-127/ejercicio.mp4';
+
+  assert.equal(
+    resolveHostedVideoUrl(f126, { mobile: true }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio-mobile.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl(f127, { mobile: true }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-127__ejercicio.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl(f126, { mobile: false }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4',
+  );
+});
