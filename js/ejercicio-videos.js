@@ -16,10 +16,6 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
 
-const MOBILE_RELEASE_OVERRIDES = Object.freeze({
-  'library-v2-preview/f7-126/ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
-});
-
 function isMobileVideoEnvironment() {
   if (typeof navigator === 'undefined') return false;
   if (navigator.userAgentData?.mobile === true) return true;
@@ -30,18 +26,31 @@ function releaseUrlForAsset(asset) {
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
 
-// Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
-// ya migrado a GitHub Releases. En móvil puede usar una variante compatible dentro
-// del mismo Release, sin mover el vídeo a Pages ni volver a Supabase.
+function mobileReleaseAsset(asset) {
+  const name = String(asset || '');
+  if (!/\.mp4$/i.test(name) || /-mobile\.mp4$/i.test(name)) return name;
+  return name.replace(/\.mp4$/i, '-mobile.mp4');
+}
+
+// Los 423 MP4 originales del Release tienen una variante móvil compatible
+// con el mismo nombre más el sufijo "-mobile". En escritorio conservamos
+// siempre el original; en móvil usamos la variante H.264 compatible.
 export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
   const source = String(value ?? '').trim();
   if (!source) return '';
 
   const cleanSource = source.split(/[?#]/, 1)[0];
-  const mobilePath = 'library-v2-preview/f7-126/ejercicio.mp4';
-  const originalF7126 = releaseUrlForAsset(mobilePath.replaceAll('/', '__'));
-  if (mobile && cleanSource === originalF7126) {
-    return releaseUrlForAsset(MOBILE_RELEASE_OVERRIDES[mobilePath]);
+  const releasePrefix = `${GITHUB_VIDEO_RELEASE_BASE}/`;
+  if (cleanSource.startsWith(releasePrefix)) {
+    const rawAsset = cleanSource.slice(releasePrefix.length);
+    let asset;
+    try {
+      asset = decodeURIComponent(rawAsset);
+    } catch {
+      asset = rawAsset;
+    }
+    if (!/\.mp4$/i.test(asset)) return source;
+    return mobile ? releaseUrlForAsset(mobileReleaseAsset(asset)) : source;
   }
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
@@ -61,10 +70,8 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
   const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
   if (!isLibraryV2 && !isCampoBaseHuman) return source;
 
-  const asset = mobile && MOBILE_RELEASE_OVERRIDES[path]
-    ? MOBILE_RELEASE_OVERRIDES[path]
-    : path.replaceAll('/', '__');
-  return releaseUrlForAsset(asset);
+  const originalAsset = path.replaceAll('/', '__');
+  return releaseUrlForAsset(mobile ? mobileReleaseAsset(originalAsset) : originalAsset);
 }
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
