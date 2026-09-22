@@ -23,7 +23,7 @@ test('añadir, quitar o mover ejercicios vuelve a preparar el catálogo sin ocul
 
 test('la compatibilidad carga antes del planificador y queda publicada en PWA', () => {
   const compatIndex = demo.indexOf("session-picker-compat.js?v=2461");
-  const plannerIndex = demo.indexOf("session-planner-ui.js?v=20260922-mobile-video-cache-v33");
+  const plannerIndex = demo.indexOf("session-planner-ui.js?v=20260922-mobile-video-f7-126-v34");
   assert.ok(compatIndex >= 0);
   assert.ok(plannerIndex > compatIndex);
   assert.match(sw, /sessionplanner-2461/);
