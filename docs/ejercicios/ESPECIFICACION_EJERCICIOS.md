@@ -28,7 +28,12 @@ El storyboard, cuando se utilice para validar, no forma parte del paquete final 
 - `ejercicio.mp4`: animación limpia, sin cabeceras, paneles ni textos explicativos superpuestos.
 - Las flechas aparecen solo durante la acción que representan.
 - No cambiar geometría, rutas, material, número de balones, roles o rotaciones ya validados.
-- Atacante azul, defensor rojo, portero morado, entrenador gris.
+- Roles oficiales:
+  - Portero: `P` — relleno `#000000` (negro), texto `#FFFFFF` (blanco).
+  - Defensa: `D1`, `D2`, `D3`… — relleno `#E95852` (rojo), texto `#FFFFFF` (blanco).
+  - Atacante: `A1`, `A2`, `A3`… — relleno `#429FE2` (azul), texto `#FFFFFF` (blanco).
+  - Neutro / Apoyo: `N` — relleno `#FACC15` (amarillo), texto `#FFFFFF` (blanco).
+  - Entrenador: `E` — relleno `#CBD5E1` (gris claro), texto `#FFFFFF` (blanco).
 - Conos naranja por defecto, salvo que el color forme parte de la lógica.
 - Balón blanco/negro.
 - Campo base con franjas `#8BC753` y `#84C04D`.
