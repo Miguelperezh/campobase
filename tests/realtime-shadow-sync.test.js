@@ -27,8 +27,10 @@ test('sin polling continuo se conserva reconciliación al arrancar, reconectar y
   assert.match(app, /Sincronización en segundo plano[\s\S]*synchronizeCloud\(\)/);
 });
 
-test('si Realtime falla no se reactiva un bucle cloud: queda la reconciliación por eventos de navegador', () => {
-  assert.match(app, /Realtime no disponible; se sincronizará al reconectar o volver a primer plano/);
-  assert.match(app, /No se pudo iniciar Realtime; se sincronizará al reconectar o volver a primer plano/);
+test('si Realtime falla se reintenta por evento de fallo sin reactivar un polling continuo', () => {
+  assert.match(app, /function scheduleRealtimeReconnect\(\)/);
+  assert.match(app, /realtimeReconnectTimer = window\.setTimeout\([\s\S]*synchronizeCloud\(\)\.catch\(handleError\);[\s\S]*3000\)/);
+  assert.match(app, /Realtime no disponible; se reintentará automáticamente/);
+  assert.match(app, /No se pudo iniciar Realtime; se reintentará automáticamente/);
   assert.doesNotMatch(app, /polling de seguridad/);
 });
