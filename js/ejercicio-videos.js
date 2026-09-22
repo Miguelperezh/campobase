@@ -15,23 +15,33 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
-export const PAGES_VIDEO_OVERRIDES = Object.freeze({
-  'library-v2-preview/f7-082/ejercicio.mp4': './assets/video-mobile/f7-082.mp4',
-  'library-v2-preview/f7-084/ejercicio.mp4': './assets/video-mobile/f7-084.mp4',
-  'library-v2-preview/f7-126/ejercicio.mp4': './assets/video-mobile/f7-126.mp4',
+
+const MOBILE_RELEASE_OVERRIDES = Object.freeze({
+  'library-v2-preview/f7-126/ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
 });
 
+function isMobileVideoEnvironment() {
+  if (typeof navigator === 'undefined') return false;
+  if (navigator.userAgentData?.mobile === true) return true;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
+}
+
+function releaseUrlForAsset(asset) {
+  return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
+}
+
 // Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
-// ya migrado a GitHub Releases. Otras URLs (assets locales, previews, fuentes externas)
-// se conservan sin cambios.
-export function resolveHostedVideoUrl(value) {
+// ya migrado a GitHub Releases. En móvil puede usar una variante compatible dentro
+// del mismo Release, sin mover el vídeo a Pages ni volver a Supabase.
+export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
   const source = String(value ?? '').trim();
   if (!source) return '';
 
   const cleanSource = source.split(/[?#]/, 1)[0];
-  for (const [path, pagesUrl] of Object.entries(PAGES_VIDEO_OVERRIDES)) {
-    const releaseUrl = `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(path.replaceAll('/', '__'))}`;
-    if (cleanSource === releaseUrl) return pagesUrl;
+  const mobilePath = 'library-v2-preview/f7-126/ejercicio.mp4';
+  const originalF7126 = releaseUrlForAsset(mobilePath.replaceAll('/', '__'));
+  if (mobile && cleanSource === originalF7126) {
+    return releaseUrlForAsset(MOBILE_RELEASE_OVERRIDES[mobilePath]);
   }
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
@@ -47,19 +57,14 @@ export function resolveHostedVideoUrl(value) {
   }
   if (!/\.mp4$/i.test(path)) return source;
 
-  if (PAGES_VIDEO_OVERRIDES[path]) return PAGES_VIDEO_OVERRIDES[path];
-
-  // Solo migramos los objetos que existen realmente en el bucket origen:
-  // - biblioteca V2: library-v2-preview/.../ejercicio.mp4
-  // - vídeos humanos históricos: CAMPOBASE-VIDEO-.../video.mp4
-  // Algunos ejercicios nuevos referencian además .../ejercicio.mp4 bajo CAMPOBASE-VIDEO-...,
-  // pero esos objetos no existen en Storage y no deben convertirse en URLs 404 del release.
   const isLibraryV2 = path.startsWith('library-v2-preview/');
   const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
   if (!isLibraryV2 && !isCampoBaseHuman) return source;
 
-  const asset = path.replaceAll('/', '__');
-  return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
+  const asset = mobile && MOBILE_RELEASE_OVERRIDES[path]
+    ? MOBILE_RELEASE_OVERRIDES[path]
+    : path.replaceAll('/', '__');
+  return releaseUrlForAsset(asset);
 }
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
