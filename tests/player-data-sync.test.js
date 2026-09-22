@@ -74,3 +74,10 @@ test('la nueva sincronización y Asistencia 2453 se cargan en la app y en la PWA
   assert.match(sw, /player-data-sync\.js\?v=2453/);
   assert.match(sw, /campobase-v2\.44\.0-player-sync-attendance-2453/);
 });
+
+
+test('player-data-sync no simula una reconexión para refrescar cambios locales', async () => {
+  const sync = await projectFile('js/player-data-sync.js');
+  assert.doesNotMatch(sync, /window\.dispatchEvent\(new Event\('online'\)\)/);
+  assert.match(sync, /window\.__campobase\?\.refresh/);
+});
