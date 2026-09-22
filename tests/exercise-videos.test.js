@@ -112,12 +112,7 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
         if (resolved !== value) {
           migratedRefs.add(path);
           assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
-          if (['library-v2-preview/f7-082/ejercicio.mp4', 'library-v2-preview/f7-084/ejercicio.mp4', 'library-v2-preview/f7-126/ejercicio.mp4'].includes(path)) {
-            const id = path.match(/f7-(\d{3})/)?.[1];
-            assert.equal(resolved, `./assets/video-mobile/f7-${id}.mp4`);
-          } else {
-            assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
-          }
+          assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
         }
       }
       return;
@@ -136,12 +131,7 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
     const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
     const resolved = resolveHostedVideoUrl(synthetic);
     assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
-    if (['library-v2-preview/f7-082/ejercicio.mp4', 'library-v2-preview/f7-084/ejercicio.mp4', 'library-v2-preview/f7-126/ejercicio.mp4'].includes(name)) {
-      const id = name.match(/f7-(\d{3})/)?.[1];
-      assert.equal(resolved, `./assets/video-mobile/f7-${id}.mp4`);
-    } else {
-      assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
-    }
+    assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
   }
 });
 
