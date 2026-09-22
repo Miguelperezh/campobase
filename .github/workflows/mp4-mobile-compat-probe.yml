@@ -1,0 +1,13 @@
+name: MP4 mobile compatibility probe
+on:
+  push:
+    branches:
+      - test/iphone-release-video
+jobs:
+  ffprobe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect release MP4 codecs
+        run: bash scripts/mp4-mobile-compat-probe.sh
