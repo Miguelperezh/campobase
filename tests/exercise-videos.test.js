@@ -142,9 +142,14 @@ test('el visor renderiza los MP4 migrados desde GitHub Releases y no desde Supab
 });
 
 
-test('f7-126 conserva el original en Node/escritorio y publica una variante móvil dedicada', () => {
-  const source = readFileSync(new URL('../js/ejercicio-videos.js', import.meta.url), 'utf8');
-  assert.match(source, /library-v2-preview\/f7-126\/ejercicio\.mp4/);
-  assert.match(source, /library-v2-preview__f7-126__ejercicio-mobile\.mp4/);
-  assert.match(source, /Android\|iPhone\|iPad\|iPod\|Mobile/);
+test('f7-126 usa variante compatible solo en móvil y conserva el original en escritorio', () => {
+  const source = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
+  assert.equal(
+    resolveHostedVideoUrl(source, { mobile: false }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4',
+  );
+  assert.equal(
+    resolveHostedVideoUrl(source, { mobile: true }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio-mobile.mp4',
+  );
 });
