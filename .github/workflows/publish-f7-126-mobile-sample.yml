@@ -1,0 +1,24 @@
+name: Publish f7-126 mobile sample
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Build compatible sample
+        run: |
+          set -euo pipefail
+          URL="https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4"
+          curl -L --fail --retry 3 -o /tmp/original.mp4 "$URL"
+          ffmpeg -y -i /tmp/original.mp4 -map 0:v:0 -vf "scale=1152:720:flags=lanczos,fps=30"             -c:v libx264 -profile:v baseline -level:v 3.1 -pix_fmt yuv420p -preset medium -crf 22             -x264-params "bframes=0:ref=2:keyint=60:min-keyint=30:scenecut=40"             -movflags +faststart -an /tmp/library-v2-preview__f7-126__ejercicio-mobile.mp4
+          ffprobe -v error -show_entries stream=codec_name,profile,level,pix_fmt,width,height,r_frame_rate -show_entries format=duration,size -of json /tmp/library-v2-preview__f7-126__ejercicio-mobile.mp4
+      - name: Upload sample asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload campobase-videos-v1 /tmp/library-v2-preview__f7-126__ejercicio-mobile.mp4 --clobber
