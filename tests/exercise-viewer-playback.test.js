@@ -36,3 +36,13 @@ test('el visor prioriza el Play de fases real', () => {
   assert.equal(source.includes('attempt < 14'), true);
   assert.equal(source.includes('90)'), true);
 });
+
+
+test('el visor tiene fallback Supabase cuando una reproducción GitHub falla o queda clavada', () => {
+  const source = fs.readFileSync(new URL('../js/ejercicio-viewer.js', import.meta.url), 'utf8');
+  assert.match(source, /resolveSupabaseVideoFallbackUrl/);
+  assert.match(source, /trySupabasePlaybackFallback/);
+  assert.match(source, /initialTime/);
+  assert.match(source, /currentTime/);
+  assert.match(source, /1800/);
+});
