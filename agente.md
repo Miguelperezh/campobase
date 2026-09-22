@@ -477,3 +477,15 @@ Partidos activos próximos verificados:
 - Build de caché: `20260922-pages-video-today-v35`.
 - No se modifican IDs de ejercicios, sesiones, Supabase, Realtime, jugadores ni partido en vivo.
 - Validar reproducción física en el teléfono antes de extender Pages a más vídeos.
+
+### Corrección definitiva de arquitectura de vídeo móvil — 22/09/2026
+
+- Se mantiene **GitHub Releases** como origen de reproducción de los MP4 pesados. No usar GitHub Pages ni Supabase como destino de reproducción para la biblioteca.
+- La activación temporal de `assets/video-mobile/f7-082.mp4`, `f7-084.mp4` y `f7-126.mp4` en Pages queda **anulada/superseded** por esta corrección.
+- `f7-082` y `f7-084` vuelven a sus assets originales del Release `campobase-videos-v1`.
+- `f7-126` conserva el original en Releases para escritorio y usa en móvil una variante compatible también almacenada en el mismo Release: `library-v2-preview__f7-126__ejercicio-mobile.mp4`.
+- La variante móvil de `f7-126` es H.264 Constrained Baseline, 1152×720, 30 fps, level 3.1, yuv420p, fast-start; el original no se reemplaza.
+- Build de invalidación de caché: `20260922-releases-mobile-v36`.
+- No se modifican IDs de ejercicios, sesiones, jugadores, convocatorias, Supabase, Realtime ni partido en vivo.
+- No borrar todavía las copias históricas de Supabase hasta validar reproducción física en el móvil y completar la estrategia para el resto de vídeos.
+
