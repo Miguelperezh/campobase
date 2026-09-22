@@ -64,11 +64,13 @@ test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar o
   );
 });
 
-test('f7-126 usa temporalmente el MP4 de GitHub Pages con MIME de vídeo', () => {
-  const legacy = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
-  const release = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
-  assert.equal(resolveHostedVideoUrl(legacy), './assets/video-mobile/f7-126.mp4');
-  assert.equal(resolveHostedVideoUrl(release), './assets/video-mobile/f7-126.mp4');
+test('los vídeos Pages validados resuelven igual desde referencias Supabase y Release', () => {
+  for (const id of ['082', '084', '126']) {
+    const legacy = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-${id}/ejercicio.mp4`;
+    const release = `https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-${id}__ejercicio.mp4`;
+    assert.equal(resolveHostedVideoUrl(legacy), `./assets/video-mobile/f7-${id}.mp4`);
+    assert.equal(resolveHostedVideoUrl(release), `./assets/video-mobile/f7-${id}.mp4`);
+  }
 });
 
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
@@ -104,8 +106,9 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
         if (resolved !== value) {
           migratedRefs.add(path);
           assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
-          if (path === 'library-v2-preview/f7-126/ejercicio.mp4') {
-            assert.equal(resolved, './assets/video-mobile/f7-126.mp4');
+          if (['library-v2-preview/f7-082/ejercicio.mp4', 'library-v2-preview/f7-084/ejercicio.mp4', 'library-v2-preview/f7-126/ejercicio.mp4'].includes(path)) {
+            const id = path.match(/f7-(\d{3})/)?.[1];
+            assert.equal(resolved, `./assets/video-mobile/f7-${id}.mp4`);
           } else {
             assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
           }
@@ -127,8 +130,9 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
     const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
     const resolved = resolveHostedVideoUrl(synthetic);
     assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
-    if (name === 'library-v2-preview/f7-126/ejercicio.mp4') {
-      assert.equal(resolved, './assets/video-mobile/f7-126.mp4');
+    if (['library-v2-preview/f7-082/ejercicio.mp4', 'library-v2-preview/f7-084/ejercicio.mp4', 'library-v2-preview/f7-126/ejercicio.mp4'].includes(name)) {
+      const id = name.match(/f7-(\d{3})/)?.[1];
+      assert.equal(resolved, `./assets/video-mobile/f7-${id}.mp4`);
     } else {
       assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
     }
