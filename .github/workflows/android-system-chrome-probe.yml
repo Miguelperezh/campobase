@@ -1,0 +1,19 @@
+name: Android system Chrome H264 probe
+on:
+  push:
+    branches:
+      - fix/mobile-video-fallback-v34
+jobs:
+  chrome-h264:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: |
+          which google-chrome || which google-chrome-stable
+          google-chrome --version || google-chrome-stable --version
+      - run: npm install --no-save playwright@1.55.0
+      - run: node scripts/android-system-chrome-probe.mjs
