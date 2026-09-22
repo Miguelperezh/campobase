@@ -1,0 +1,19 @@
+name: Realtime no-polling browser smoke
+on:
+  push:
+    branches:
+      - test/realtime-without-polling
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Detect Chrome
+        run: |
+          echo "CHROME_BIN=$(which google-chrome || which google-chrome-stable)" >> "$GITHUB_ENV"
+      - run: node tests/browser-v19-smoke.mjs
