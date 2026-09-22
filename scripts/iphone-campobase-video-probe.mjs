@@ -30,21 +30,21 @@ if(!isDemo){
 await page.evaluate(()=>window.__campobase.showView('ejercicios'));
 await page.waitForSelector('[data-exercise-id="f7-126"]',{timeout:20000});
 await page.evaluate(()=>window.__campobase.showExerciseDetail('f7-126'));
-await page.waitForSelector('#exercise-dialog[open] .frame-video',{timeout:20000});
+await page.waitForSelector('#exercise-detail-dialog[open] .frame-video',{timeout:20000});
 
 const before=await page.evaluate(()=>{
- const v=document.querySelector('#exercise-dialog[open] .frame-video');
+ const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
  return {src:v?.src||'',dataSrc:v?.dataset.src||'',readyState:v?.readyState,paused:v?.paused,currentTime:v?.currentTime};
 });
-await page.click('#exercise-dialog[open] .v-btn-play');
+await page.click('#exercise-detail-dialog[open] .v-btn-play');
 await page.waitForTimeout(8000);
 const after=await page.evaluate(()=>{
- const v=document.querySelector('#exercise-dialog[open] .frame-video');
+ const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
  return {
    src:v?.src||'',dataSrc:v?.dataset.src||'',readyState:v?.readyState,
    networkState:v?.networkState,paused:v?.paused,currentTime:v?.currentTime,
    duration:v?.duration,error:v?.error?{code:v.error.code,message:v.error.message}:null,
-   button:document.querySelector('#exercise-dialog[open] .v-btn-play')?.textContent
+   button:document.querySelector('#exercise-detail-dialog[open] .v-btn-play')?.textContent
  };
 });
 console.log(JSON.stringify({before,after,errors},null,2));
