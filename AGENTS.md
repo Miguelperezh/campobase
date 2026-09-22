@@ -251,6 +251,18 @@ Usar representación corporal más detallada solo cuando el gesto corporal sea r
 
 No numerar visiblemente los ejercicios como “Ejercicio 001”, salvo petición específica.
 
+## 2.9.1 Roles oficiales y colores en ejercicios
+
+Regla vigente y obligatoria para la representación de roles en ejercicios:
+
+- Portero: `P` — NEGRO
+- Defensa: `D1`, `D2`, `D3`… — ROJO
+- Atacante: `A1`, `A2`, `A3`… — AZUL
+- Neutro / Apoyo: `N` — AMARILLO
+- Entrenador: `E` — GRIS CLARO
+
+Esta nomenclatura y estos colores deben mantenerse de forma consistente en previews, MP4 gráficos, leyendas, fichas y cualquier representación visual del ejercicio.
+
 ## 2.10 Integración en la app
 
 Los ejercicios nuevos deben integrarse en la estructura existente de CampoBase, no en una biblioteca paralela.
