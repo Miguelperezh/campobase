@@ -104,7 +104,11 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
         if (resolved !== value) {
           migratedRefs.add(path);
           assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
-          assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+          if (path === 'library-v2-preview/f7-126/ejercicio.mp4') {
+            assert.equal(resolved, './assets/video-mobile/f7-126.mp4');
+          } else {
+            assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+          }
         }
       }
       return;
