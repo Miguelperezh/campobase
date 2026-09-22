@@ -48,6 +48,56 @@ export function resolveHostedVideoUrl(value) {
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
 
+
+function isMigratedVideoPath(path = '') {
+  return path.startsWith('library-v2-preview/')
+    || (path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path));
+}
+
+export function resolveSupabaseVideoFallbackUrl(value) {
+  const source = String(value ?? '').trim();
+  if (!source) return '';
+
+  const publicMarker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
+  const publicIndex = source.indexOf(publicMarker);
+  if (publicIndex >= 0) {
+    const rawPath = source.slice(publicIndex + publicMarker.length).split(/[?#]/, 1)[0];
+    let path;
+    try {
+      path = rawPath.split('/').map((segment) => decodeURIComponent(segment)).join('/');
+    } catch {
+      path = rawPath;
+    }
+    return /\.mp4$/i.test(path) && isMigratedVideoPath(path) ? videoPublicUrl(path) : '';
+  }
+
+  const releasePrefix = `${GITHUB_VIDEO_RELEASE_BASE}/`;
+  if (!source.startsWith(releasePrefix)) return '';
+  const rawAsset = source.slice(releasePrefix.length).split(/[?#]/, 1)[0];
+  let asset;
+  try {
+    asset = decodeURIComponent(rawAsset);
+  } catch {
+    asset = rawAsset;
+  }
+  if (!/\.mp4$/i.test(asset) || !asset.includes('__')) return '';
+
+  const path = asset.replaceAll('__', '/');
+  return isMigratedVideoPath(path) ? videoPublicUrl(path) : '';
+}
+
+export function isMobileVideoEnvironment() {
+  if (typeof navigator === 'undefined') return false;
+  if (navigator.userAgentData?.mobile === true) return true;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
+}
+
+export function resolvePlaybackVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
+  const hosted = resolveHostedVideoUrl(value);
+  if (!mobile) return hosted;
+  return resolveSupabaseVideoFallbackUrl(hosted) || hosted;
+}
+
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
 // Ruta del archivo dentro del bucket: <exerciseId>/<videoId>.<ext>.
