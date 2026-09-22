@@ -27,6 +27,10 @@ if(!isDemo){
   await page.evaluate(()=>document.getElementById('auth-demo-btn')?.click());
   await page.waitForFunction(()=>window.__campobase?.state?.role==='demo',null,{timeout:20000});
 }
+// El objeto __campobase existe antes de que init() termine. Esperamos a que
+// finalicen arranque, restoreSessionRole y selección de vista para no cerrar
+// artificialmente el modal durante la sonda.
+await page.waitForTimeout(5000);
 await page.evaluate(()=>window.__campobase.showView('ejercicios'));
 await page.waitForSelector('[data-exercise-id="f7-126"]',{timeout:20000});
 await page.evaluate(()=>window.__campobase.showExerciseDetail('f7-126'));
