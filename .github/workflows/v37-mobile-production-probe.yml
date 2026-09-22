@@ -1,0 +1,16 @@
+name: v37 mobile production probe
+on:
+  push:
+    branches:
+      - diag/v37-mobile-production
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - run: node scripts/v37-mobile-production-probe.mjs
