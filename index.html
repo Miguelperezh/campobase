@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260922-releases-mobile-v36">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260922-releases-mobile-v36">
+  <link rel="stylesheet" href="styles.css?v=20260922-mobile-library-v37">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260922-mobile-library-v37">
   <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
@@ -672,10 +672,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260922-releases-mobile-v36';
+    window.__CAMPOBASE_BUILD = '20260922-mobile-library-v37';
     if ('serviceWorker' in navigator) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260922-releases-mobile-v36')
+      navigator.serviceWorker.register('./sw.js?v=20260922-mobile-library-v37')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -694,8 +694,8 @@
       });
     }
   </script>
-  <script type="module" src="js/app.js?v=20260922-releases-mobile-v36"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260922-releases-mobile-v36"></script>
+  <script type="module" src="js/app.js?v=20260922-mobile-library-v37"></script>
+  <script type="module" src="js/redesign-nav.js?v=20260922-mobile-library-v37"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {
