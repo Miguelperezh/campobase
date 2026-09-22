@@ -140,3 +140,11 @@ test('el visor renderiza los MP4 migrados desde GitHub Releases y no desde Supab
     /storage\/v1\/object\/public\/ejercicio-videos\/library-v2-preview\/pdf150-022\/ejercicio\.mp4/,
   );
 });
+
+
+test('f7-126 conserva el original en Node/escritorio y publica una variante móvil dedicada', () => {
+  const source = readFileSync(new URL('../js/ejercicio-videos.js', import.meta.url), 'utf8');
+  assert.match(source, /library-v2-preview\/f7-126\/ejercicio\.mp4/);
+  assert.match(source, /library-v2-preview__f7-126__ejercicio-mobile\.mp4/);
+  assert.match(source, /Android\|iPhone\|iPad\|iPod\|Mobile/);
+});
