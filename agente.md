@@ -439,3 +439,14 @@ El usuario esperaba tres sesiones esa semana. La tercera no puede reconstruirse 
 Partidos activos próximos verificados:
 - 24/09/2026 · 17:45 · Alevín Inter/Pilar · Campo del Pilar.
 - 26/09/2026 · 09:30 · El Calero Alevín B · Campo El Calero.
+
+## Diagnóstico vídeo móvil — 22/09/2026
+
+- No borrar todavía los MP4 de Supabase hasta cerrar la validación móvil.
+- Los 323 vídeos históricos ya tienen copia verificada en GitHub Releases con tamaño coincidente; GitHub es el destino actual de lectura para las rutas históricas transformadas.
+- El caso `f7-126` reproduce correctamente desde GitHub Releases en Chrome de escritorio y en pruebas automatizadas WebKit/iPhone, incluida la PWA publicada con Service Worker v32.
+- GitHub Releases responde a rangos HTTP correctamente (`206 Partial Content`, `Accept-Ranges: bytes`), aunque entrega los MP4 como `application/octet-stream` y `Content-Disposition: attachment`.
+- Los MP4 nuevos muestreados (`f7-120`, `f7-126`, `f7-127`, `f7-135`) usan H.264 High / yuv420p y son compatibles; su átomo `moov` está al final, no en fast-start. Es un posible factor de robustez móvil, pero no explica por sí solo el fallo porque las pruebas limpias reproducen.
+- La instalación móvil real puede estar conservando una mezcla/caché antigua. Se prepara `20260922-mobile-video-cache-v33` únicamente para invalidar caché y cargar un conjunto coherente de HTML/JS/SW, sin modificar datos, sesiones, Realtime, ejercicios ni vídeos.
+- Si v33 no resuelve el móvil físico, la siguiente prueba debe ser comparar el mismo vídeo en navegador normal vs PWA instalada en ese dispositivo antes de cambiar alojamiento o recodificar en masa.
+
