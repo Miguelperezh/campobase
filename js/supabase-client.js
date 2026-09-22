@@ -4,11 +4,11 @@ import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
-import './exercise-board-persistence.js?v=20260922-mobile-video-cache-v33';
-import './runtime-refresh.js?v=20260922-mobile-video-cache-v33';
+import './exercise-board-persistence.js?v=20260922-mobile-video-f7-126-v34';
+import './runtime-refresh.js?v=20260922-mobile-video-f7-126-v34';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
-import './exercise-view-mode-ui.js?v=20260922-mobile-video-cache-v33';
+import './exercise-view-mode-ui.js?v=20260922-mobile-video-f7-126-v34';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
@@ -183,7 +183,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260922-mobile-video-cache-v33'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260922-mobile-video-f7-126-v34'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
