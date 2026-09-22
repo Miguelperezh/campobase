@@ -11,6 +11,11 @@ for(let i=0;i<60;i++){
 const browser=await webkit.launch();
 const context=await browser.newContext({...devices['iPhone 15']});
 const page=await context.newPage();
+await page.addInitScript(() => {
+  try {
+    sessionStorage.setItem('campobase.forceCurrentBuild', '20260921-cloud-recovery-v32');
+  } catch {}
+});
 const errors=[];
 page.on('pageerror',e=>errors.push('pageerror:'+e.message));
 page.on('console',m=>{ if(m.type()==='error') errors.push('console:'+m.text()); });
