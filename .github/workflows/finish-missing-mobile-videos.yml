@@ -1,0 +1,19 @@
+name: Finish missing mobile videos
+on:
+  push:
+    branches:
+      - fix/mobile-video-library-v37
+permissions:
+  contents: write
+jobs:
+  finish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Build only missing mobile variants
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/finish-missing-mobile-videos.sh
