@@ -1,0 +1,19 @@
+name: Production v37 mobile video probe
+on:
+  push:
+    branches:
+      - fix/mobile-video-library-v37
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: |
+          which google-chrome || which google-chrome-stable
+          google-chrome --version || google-chrome-stable --version
+      - run: npm install --no-save playwright@1.55.0
+      - run: node scripts/production-v37-mobile-video-probe.mjs
