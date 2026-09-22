@@ -44,9 +44,12 @@ async function probe(page,{mobile}){
   if(!exerciseId) throw new Error('No se pudo resolver el ID interno asociado a f7-126.png');
   console.log('f7-126 internal exercise id:', exerciseId);
 
+  await page.waitForTimeout(3500);
   await page.evaluate((id)=>window.__campobase.showExerciseDetail(id), exerciseId);
-  await page.waitForSelector('#exercise-detail-dialog .frame-video',{timeout:15000,state:'attached'});
-  await page.waitForSelector('#exercise-detail-dialog .v-btn-play',{timeout:15000,state:'attached'});
+  await page.waitForFunction(()=>Boolean(
+    document.querySelector('#exercise-detail-dialog .frame-video') &&
+    document.querySelector('#exercise-detail-dialog .v-btn-play')
+  ),null,{timeout:15000});
 
   const before=await page.evaluate(()=>{
     const v=document.querySelector('#exercise-detail-dialog .frame-video');
