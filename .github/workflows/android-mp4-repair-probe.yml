@@ -1,0 +1,19 @@
+name: Android MP4 repair probe
+on:
+  push:
+    branches:
+      - fix/mobile-video-fallback-v34
+jobs:
+  repair-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: bash scripts/build-mobile-video-probe.sh
+      - run: node scripts/android-mp4-repair-probe.mjs
