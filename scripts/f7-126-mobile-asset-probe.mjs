@@ -40,7 +40,9 @@ async function probe(page,{mobile}){
 
   await page.evaluate(()=>window.__campobase.showView('ejercicios'));
   const preview = await page.waitForSelector('article.exercise-v2-card img[src*="f7-126.png"]',{timeout:20000});
-  const exerciseId = await preview.evaluate((img)=>img.closest('article[data-exercise-id]')?.dataset.exerciseId || '');
+  const exerciseInfo = await preview.evaluate((img)=>{ const card=img.closest('article[data-exercise-id]'); return { id:card?.dataset.exerciseId || '', title:card?.querySelector('.card-title')?.textContent?.trim() || '', text:card?.innerText?.trim() || '' }; });
+  const exerciseId = exerciseInfo.id;
+  console.log('f7-126 exercise info:', JSON.stringify(exerciseInfo));
   if(!exerciseId) throw new Error('No se pudo resolver el ID interno asociado a f7-126.png');
   console.log('f7-126 internal exercise id:', exerciseId);
 
