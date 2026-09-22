@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: npm install --no-save playwright-core@1.55.0
       - name: Detect Chrome
         run: |
           echo "CHROME_BIN=$(which google-chrome || which google-chrome-stable)" >> "$GITHUB_ENV"
