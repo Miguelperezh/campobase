@@ -489,3 +489,14 @@ Partidos activos próximos verificados:
 - No se modifican IDs de ejercicios, sesiones, jugadores, convocatorias, Supabase, Realtime ni partido en vivo.
 - No borrar todavía las copias históricas de Supabase hasta validar reproducción física en el móvil y completar la estrategia para el resto de vídeos.
 
+### Solución general de vídeo móvil — 22/09/2026
+
+- Se generaron variantes móviles compatibles para **398/398** vídeos `library-v2-preview/.../ejercicio.mp4`.
+- Las variantes móviles se publican como assets nuevos `*-mobile.mp4` en el Release `campobase-videos-v1`; los originales permanecen intactos.
+- Perfil móvil usado: H.264 Constrained Baseline, `yuv420p`, hasta 1152×720, 30 fps, level 3.1, sin B-frames y `faststart`.
+- En escritorio CampoBase mantiene los MP4 originales; en móvil el resolver transforma automáticamente cualquier `library-v2-preview/.../ejercicio.mp4` a su correspondiente `*-mobile.mp4`.
+- Build PWA preparado: `20260922-mobile-library-v37`.
+- Suite completa de CampoBase validada en verde antes de publicar.
+- Los workflows/scripts usados para la transcodificación son temporales de diagnóstico y no deben formar parte del despliegue final de producción.
+- **No borrar todavía las copias históricas de Supabase** hasta confirmar reproducción real en el móvil físico después del despliegue v37.
+
