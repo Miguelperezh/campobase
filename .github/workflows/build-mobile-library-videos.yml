@@ -1,8 +1,6 @@
 name: Build mobile library videos
 on:
-  push:
-    branches:
-      - fix/mobile-video-library-v37
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
