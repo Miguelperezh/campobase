@@ -2,7 +2,7 @@
 // Implementa las 17 secciones completas, controles interactivos, zoom táctico con clamping,
 // leyenda visual bajo el vídeo y botones accesibles de cierre (superior con safe-area e inferior fijo).
 
-import { renderVideoSectionHTML, resolveHostedVideoUrl } from './ejercicio-videos.js';
+import { renderVideoSectionHTML, resolvePlaybackVideoUrl, resolveSupabaseVideoFallbackUrl } from './ejercicio-videos.js?v=mobile-fallback-v34';
 import { attachMediaLightbox } from './media-lightbox.js';
 import { findValidatedExercise } from './ejercicios-validados.js';
 
@@ -280,7 +280,7 @@ export function roleVisualMeta(roleItemOrId) {
  */
 export function renderValidatedExerciseHTML(ex, options = {}) {
   const media = ex.media || {};
-  const videoSrc = resolveHostedVideoUrl(String(
+  const videoSrc = resolvePlaybackVideoUrl(String(
     media.video
     || media.mp4
     || ex.video_ejercicio
@@ -293,7 +293,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     || ex.animacion?.preview
     || ''
   ).trim();
-  const previewVideoSrc = resolveHostedVideoUrl(String(
+  const previewVideoSrc = resolvePlaybackVideoUrl(String(
     ex.preview_video
     || ex._preview_video_fallback
     || videoSrc
@@ -308,8 +308,8 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     || ex.video
     || ''
   ).trim();
-  const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
-    ? resolveHostedVideoUrl(explicitHumanVideo)
+  const realVideo = explicitHumanVideo && resolvePlaybackVideoUrl(explicitHumanVideo) !== videoSrc
+    ? resolvePlaybackVideoUrl(explicitHumanVideo)
     : '';
   const graphicCrop = normalizeMediaCrop(ex.media_crop);
   const previewCrop = normalizeMediaCrop(ex.preview_crop || ex.media_crop);
@@ -901,7 +901,7 @@ export function renderExerciseGridCard(ex) {
   // La portada de la tarjeta es preview.png cuando existe; si aún no está
   // publicado, usamos un fotograma PAUSADO del MP4 gráfico, nunca del humano.
   const preview = isUsablePreview(rawPreview) ? rawPreview : '';
-  const graphicPreviewVideo = resolveHostedVideoUrl(String(
+  const graphicPreviewVideo = resolvePlaybackVideoUrl(String(
     ex.preview_video
     || ex.video_ejercicio
     || media.video
@@ -1054,6 +1054,25 @@ export function initValidatedExerciseViewer(root) {
     if (wrap) wrap.classList.toggle('is-playing', isPlaying);
   }
 
+  async function trySupabasePlaybackFallback() {
+    const current = video.currentSrc || video.getAttribute('src') || video.dataset.src || '';
+    const fallback = resolveSupabaseVideoFallbackUrl(current);
+    if (!fallback || fallback === current || video.dataset.supabaseFallbackUsed === '1') return false;
+
+    video.dataset.supabaseFallbackUsed = '1';
+    video.src = fallback;
+    video.preload = 'auto';
+    video.load();
+    try {
+      const p = video.play();
+      if (p !== undefined) await p;
+      return !video.paused;
+    } catch (err) {
+      console.warn('Fallback de vídeo en Supabase no pudo reproducirse:', err);
+      return false;
+    }
+  }
+
   async function togglePlay() {
     const src = video.dataset.src;
     if (!video.getAttribute('src')) video.src = src;
@@ -1061,12 +1080,25 @@ export function initValidatedExerciseViewer(root) {
     if (video.paused) {
       // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
+      const initialTime = Number(video.currentTime || 0);
       try {
         const p = video.play();
         if (p !== undefined) await p;
+
+        // Algunos navegadores móviles aceptan play() pero quedan clavados en 0:00.
+        // Si la fuente activa es GitHub, damos una segunda oportunidad con la copia
+        // histórica de Supabase. En móviles normales data-src ya apunta a Supabase.
+        window.setTimeout(async () => {
+          if (!video.isConnected) return;
+          const advanced = Number(video.currentTime || 0) > initialTime + 0.05;
+          if (advanced || !video.paused) return;
+          const recovered = await trySupabasePlaybackFallback();
+          if (!recovered && video.paused) updatePlayState(false);
+        }, 1800);
       } catch (err) {
         console.warn('Error al reproducir vídeo:', err);
-        if (video.paused) updatePlayState(false);
+        const recovered = await trySupabasePlaybackFallback();
+        if (!recovered && video.paused) updatePlayState(false);
       }
     } else {
       video.pause();
