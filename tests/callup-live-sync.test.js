@@ -81,6 +81,12 @@ test('el segundo a segundo del partido sigue siendo local y no genera sync cloud
   const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(appJs, /setInterval\(\(\) => pollLiveState\(\)\.catch\(handleError\),\s*1000\)/);
   assert.doesNotMatch(appJs, /setInterval\(\(\) => synchronizeCloud\(\)\.catch\(handleError\),\s*1000\)/);
-  const ticks = appJs.slice(appJs.indexOf('function startTicks'), appJs.indexOf('async function pollLiveState'));
+  const start = appJs.indexOf('function startTicks');
+  const nextFunction = appJs.indexOf('\nfunction ', start + 1);
+  const nextAsyncFunction = appJs.indexOf('\nasync function ', start + 1);
+  const candidates = [nextFunction, nextAsyncFunction].filter((index) => index > start);
+  const end = Math.min(...candidates);
+  const ticks = appJs.slice(start, end);
+  assert.match(ticks, /state\.tick = setInterval/);
   assert.doesNotMatch(ticks, /synchronizeCloud\(/);
 });
