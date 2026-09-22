@@ -501,3 +501,12 @@ Partidos activos próximos verificados:
 - Build de invalidación: `20260922-releases-mobile-all-v37`.
 - No se modifican IDs de ejercicios, sesiones, jugadores, convocatorias, Realtime ni partido en vivo.
 
+## Corrección vídeo móvil — 22/09/2026
+
+- Causa confirmada del fallo móvil: `main` estaba resolviendo todos los MP4 de GitHub Releases a un nombre con sufijo `-mobile.mp4`, aunque esas variantes no existían para todos los assets. En móvil esto provocaba URLs inexistentes y vídeos que no arrancaban.
+- Corrección aplicada: solo `library-v2-preview__f7-126__ejercicio.mp4` usa de momento la variante validada `library-v2-preview__f7-126__ejercicio-mobile.mp4`.
+- Todos los demás vídeos conservan su asset original de GitHub Releases.
+- La variante móvil de `f7-126` está validada como H.264 Constrained Baseline, 1152×720, 30 fps, nivel 3.1, yuv420p, fast-start.
+- No se han borrado vídeos de Supabase en esta corrección y no se han modificado sesiones, jugadores, partidos, Realtime ni datos de usuario.
+- Mantener esta regla: no generalizar sufijos `-mobile` a todo el catálogo hasta que existan y se validen realmente esas variantes.
+
