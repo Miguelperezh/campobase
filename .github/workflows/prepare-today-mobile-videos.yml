@@ -1,0 +1,38 @@
+name: Prepare today mobile videos
+on:
+  push:
+    branches:
+      - prep/mobile-video-today-082-084
+permissions:
+  contents: write
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: prep/mobile-video-today-082-084
+          fetch-depth: 0
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Prepare faststart MP4s
+        run: |
+          set -euo pipefail
+          mkdir -p assets/video-mobile
+          BASE="https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1"
+          for id in 082 084; do
+            curl -L --fail --retry 3               -o "/tmp/f7-${id}-source.mp4"               "${BASE}/library-v2-preview__f7-${id}__ejercicio.mp4"
+            ffmpeg -y -i "/tmp/f7-${id}-source.mp4" -map 0 -c copy -movflags +faststart               "assets/video-mobile/f7-${id}.mp4"
+            test -s "assets/video-mobile/f7-${id}.mp4"
+            ffprobe -v error               -show_entries stream=codec_name,profile,pix_fmt,level,width,height,r_frame_rate               -show_entries format=duration,size               -of json "assets/video-mobile/f7-${id}.mp4"
+          done
+      - name: Commit prepared videos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/video-mobile/f7-082.mp4 assets/video-mobile/f7-084.mp4
+          git diff --cached --quiet && exit 0
+          git commit -m "prep(video): stage f7-082 and f7-084 for Pages"
+          git push origin HEAD:prep/mobile-video-today-082-084
