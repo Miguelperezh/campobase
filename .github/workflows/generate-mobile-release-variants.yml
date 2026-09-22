@@ -1,0 +1,91 @@
+name: Generate mobile Release variants
+on:
+  push:
+    branches:
+      - maintenance/mobile-release-variants
+    paths:
+      - .github/workflows/generate-mobile-release-variants.yml
+
+permissions:
+  contents: write
+
+jobs:
+  transcode:
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: campobase-videos-v1
+      RELEASE_ID: "391449607"
+      SHARDS: "8"
+      SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Generate compatible mobile variants
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t ALL < <(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?per_page=100"               --jq '.[] | select(.name | endswith(".mp4")) | .name'
+          )
+
+          declare -A EXISTING=()
+          for name in "${ALL[@]}"; do
+            EXISTING["$name"]=1
+          done
+
+          processed=0
+          skipped=0
+          failed=0
+
+          for name in "${ALL[@]}"; do
+            [[ "$name" == *-mobile.mp4 ]] && continue
+
+            checksum=$(printf '%s' "$name" | cksum | awk '{print $1}')
+            shard=$(( checksum % SHARDS ))
+            [[ "$shard" -ne "$SHARD" ]] && continue
+
+            mobile="${name%.mp4}-mobile.mp4"
+            if [[ -n "${EXISTING[$mobile]+x}" ]]; then
+              echo "SKIP existing: $mobile"
+              skipped=$((skipped+1))
+              continue
+            fi
+
+            work="/tmp/campobase-mobile-${SHARD}"
+            rm -rf "$work"
+            mkdir -p "$work"
+            input="$work/$name"
+            output="$work/$mobile"
+
+            echo "DOWNLOAD: $name"
+            gh release download "$TAG" -p "$name" -D "$work"
+
+            echo "TRANSCODE: $name -> $mobile"
+            ffmpeg -hide_banner -loglevel error -y               -i "$input"               -map 0:v:0 -map 0:a?               -vf "scale=w='min(1152,iw*min(1,720/ih))':h=-2:flags=lanczos,fps=30"               -c:v libx264 -profile:v baseline -level:v 3.1               -pix_fmt yuv420p -preset veryfast -crf 22               -x264-params "bframes=0:ref=2:keyint=60:min-keyint=30:scenecut=40"               -c:a aac -b:a 96k               -movflags +faststart               "$output"
+
+            codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=nw=1:nk=1 "$output")
+            pix=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of default=nw=1:nk=1 "$output")
+            profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of default=nw=1:nk=1 "$output")
+            test "$codec" = "h264"
+            test "$pix" = "yuv420p"
+            echo "VALID: codec=$codec profile=$profile pix=$pix"
+
+            echo "UPLOAD: $mobile"
+            gh release upload "$TAG" "$output" --clobber
+            processed=$((processed+1))
+          done
+
+          echo "SHARD $SHARD COMPLETE processed=$processed skipped=$skipped failed=$failed"
