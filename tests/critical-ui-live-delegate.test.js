@@ -33,10 +33,10 @@ function allJsText(dir = new URL('../js/', import.meta.url)) {
 }
 
 test('build actual está alineado en HTML, app, sesión, auth cloud y service worker', () => {
-  const build = '20260922-pages-video-test-v34';
+  const build = '20260922-pages-video-today-v35';
   for (const source of [html, app, demo, sw]) assert.match(source, new RegExp(build));
   assert.match(read('js/supabase-client.js'), new RegExp(build));
-  assert.match(demo, /session-planner-ui\.js\?v=20260922-pages-video-test-v34/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260922-pages-video-today-v35/);
 });
 
 test('los botones principales del HTML tienen ruta de interacción o son submit/declarativos', () => {

@@ -6287,7 +6287,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260922-pages-video-test-v34').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260922-pages-video-today-v35').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

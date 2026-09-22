@@ -16,6 +16,8 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
 export const PAGES_VIDEO_OVERRIDES = Object.freeze({
+  'library-v2-preview/f7-082/ejercicio.mp4': './assets/video-mobile/f7-082.mp4',
+  'library-v2-preview/f7-084/ejercicio.mp4': './assets/video-mobile/f7-084.mp4',
   'library-v2-preview/f7-126/ejercicio.mp4': './assets/video-mobile/f7-126.mp4',
 });
 
@@ -26,8 +28,11 @@ export function resolveHostedVideoUrl(value) {
   const source = String(value ?? '').trim();
   if (!source) return '';
 
-  const f7126Release = `${GITHUB_VIDEO_RELEASE_BASE}/library-v2-preview__f7-126__ejercicio.mp4`;
-  if (source.split(/[?#]/, 1)[0] === f7126Release) return PAGES_VIDEO_OVERRIDES['library-v2-preview/f7-126/ejercicio.mp4'];
+  const cleanSource = source.split(/[?#]/, 1)[0];
+  for (const [path, pagesUrl] of Object.entries(PAGES_VIDEO_OVERRIDES)) {
+    const releaseUrl = `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(path.replaceAll('/', '__'))}`;
+    if (cleanSource === releaseUrl) return pagesUrl;
+  }
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
   const markerIndex = source.indexOf(marker);
