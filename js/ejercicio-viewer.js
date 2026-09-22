@@ -1091,7 +1091,7 @@ export function initValidatedExerciseViewer(root) {
         window.setTimeout(async () => {
           if (!video.isConnected) return;
           const advanced = Number(video.currentTime || 0) > initialTime + 0.05;
-          if (advanced || !video.paused) return;
+          if (advanced) return;
           const recovered = await trySupabasePlaybackFallback();
           if (!recovered && video.paused) updatePlayState(false);
         }, 1800);
