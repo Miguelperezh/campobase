@@ -237,10 +237,11 @@ Usar español de España:
 ## 2.9 Convenciones visuales nuevas
 
 Por defecto:
-- atacante: azul;
-- defensor: rojo;
-- portero: morado;
-- entrenador: gris;
+- portero: negro `#000000`, texto blanco `#FFFFFF`;
+- defensa: rojo `#E95852`, texto blanco `#FFFFFF`;
+- atacante: azul `#429FE2`, texto blanco `#FFFFFF`;
+- neutro / apoyo: amarillo `#FACC15`, texto blanco `#FFFFFF`;
+- entrenador: gris claro `#CBD5E1`, texto blanco `#FFFFFF`;
 - cono: naranja salvo que la fuente necesite distinguir colores;
 - balón: blanco/negro;
 - campo: franjas `#8BC753` y `#84C04D`.
@@ -255,13 +256,16 @@ No numerar visiblemente los ejercicios como “Ejercicio 001”, salvo petición
 
 Regla vigente y obligatoria para la representación de roles en ejercicios:
 
-- Portero: `P` — NEGRO
-- Defensa: `D1`, `D2`, `D3`… — ROJO
-- Atacante: `A1`, `A2`, `A3`… — AZUL
-- Neutro / Apoyo: `N` — AMARILLO
-- Entrenador: `E` — GRIS CLARO
+| Rol | Etiqueta | Relleno | Texto |
+| --- | --- | --- | --- |
+| Portero | `P` | `#000000` (negro) | `#FFFFFF` (blanco) |
+| Defensa | `D1`, `D2`, `D3`… | `#E95852` (rojo) | `#FFFFFF` (blanco) |
+| Atacante | `A1`, `A2`, `A3`… | `#429FE2` (azul) | `#FFFFFF` (blanco) |
+| Neutro / Apoyo | `N` | `#FACC15` (amarillo) | `#FFFFFF` (blanco) |
+| Entrenador | `E` | `#CBD5E1` (gris claro) | `#FFFFFF` (blanco) |
 
-Esta nomenclatura y estos colores deben mantenerse de forma consistente en previews, MP4 gráficos, leyendas, fichas y cualquier representación visual del ejercicio.
+Estas etiquetas, colores de relleno y colores de texto deben mantenerse de forma consistente en `preview.png`, MP4 gráficos, leyendas, fichas y cualquier representación visual del ejercicio.
+
 
 ## 2.10 Integración en la app
 
