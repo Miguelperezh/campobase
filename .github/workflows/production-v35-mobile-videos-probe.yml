@@ -1,0 +1,28 @@
+name: Production v35 mobile videos probe
+on:
+  push:
+    branches:
+      - test/production-v35-video-082-084
+jobs:
+  chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - run: ENGINE=chrome node scripts/production-v35-mobile-videos-probe.mjs
+
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps webkit
+      - run: ENGINE=webkit node scripts/production-v35-mobile-videos-probe.mjs
