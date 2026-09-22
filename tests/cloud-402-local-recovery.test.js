@@ -30,7 +30,9 @@ test('la interfaz avisa de cuota restringida y sigue refrescando datos locales r
   assert.match(app, /if \(result\?\.changed !== false\)\s*\{\s*await refresh\(\);/);
 });
 
-test('se mantienen los respaldos de sincronización actuales', () => {
+test('se mantienen respaldos de sincronización sin polling cloud continuo', () => {
   assert.match(app, /setInterval\(\(\) => pollLiveState\(\)\.catch\(handleError\),\s*1000\)/);
-  assert.match(app, /setInterval\(\(\) => synchronizeCloud\(\)\.catch\(handleError\),\s*10000\)/);
+  assert.doesNotMatch(app, /setInterval\(\(\) => synchronizeCloud\(\)\.catch\(handleError\),\s*10000\)/);
+  assert.match(app, /window\.addEventListener\('online',[\s\S]*synchronizeCloud/);
+  assert.match(app, /document\.addEventListener\('visibilitychange',[\s\S]*synchronizeCloud/);
 });
