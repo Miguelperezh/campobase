@@ -9,7 +9,7 @@ const [html, app, sw, cloud] = await Promise.all([
   readFile(new URL('../js/supabase-client.js', import.meta.url), 'utf8'),
 ]);
 
-const BUILD = '20260922-releases-mobile-v36';
+const BUILD = '20260922-mobile-library-v37';
 
 test('index app cloud y service worker apuntan al mismo build actual', () => {
   assert.match(html, new RegExp(BUILD));
