@@ -19,7 +19,13 @@ export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campob
 // Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
 // ya migrado a GitHub Releases. Otras URLs (assets locales, previews, fuentes externas)
 // se conservan sin cambios.
-export function resolveHostedVideoUrl(value) {
+function isMobileVideoEnvironment() {
+  if (typeof navigator === 'undefined') return false;
+  return navigator.userAgentData?.mobile === true
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
+}
+
+export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
   const source = String(value ?? '').trim();
   if (!source) return '';
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
@@ -49,9 +55,6 @@ export function resolveHostedVideoUrl(value) {
   // Prueba de compatibilidad móvil acotada: f7-126 conserva el MP4 original en
   // escritorio y usa una variante H.264 Baseline/720p/faststart en móviles.
   // No afecta a ningún otro ejercicio ni cambia sus IDs o datos.
-  const mobile = typeof navigator !== 'undefined'
-    && (navigator.userAgentData?.mobile === true
-      || /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || '')));
   if (mobile && path === 'library-v2-preview/f7-126/ejercicio.mp4') {
     asset = 'library-v2-preview__f7-126__ejercicio-mobile.mp4';
   }
