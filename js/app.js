@@ -73,6 +73,7 @@ let realtimeCloudStore = null;
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
+let realtimeReconnectTimer = null;
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -6172,13 +6173,23 @@ async function ensureRealtimeSubscription() {
         }
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           realtimeSubscriptionActive = false;
-          if (error) console.warn('Realtime no disponible; se mantiene el polling de seguridad:', error);
+          if (realtimeReconnectTimer) window.clearTimeout(realtimeReconnectTimer);
+          realtimeReconnectTimer = window.setTimeout(() => {
+            realtimeReconnectTimer = null;
+            ensureRealtimeSubscription().catch(handleError);
+          }, 5000);
+          if (error) console.warn('Realtime no disponible; se reintentará la suscripción automáticamente:', error);
         }
       },
     );
   } catch (error) {
     realtimeSubscriptionActive = false;
-    console.warn('No se pudo iniciar Realtime; se mantiene el polling de seguridad:', error?.message || error);
+    if (realtimeReconnectTimer) window.clearTimeout(realtimeReconnectTimer);
+    realtimeReconnectTimer = window.setTimeout(() => {
+      realtimeReconnectTimer = null;
+      ensureRealtimeSubscription().catch(handleError);
+    }, 5000);
+    console.warn('No se pudo iniciar Realtime; se reintentará la suscripción automáticamente:', error?.message || error);
   } finally {
     realtimeSubscriptionStarting = false;
   }
@@ -6265,6 +6276,11 @@ async function init() {
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
   window.addEventListener('offline', networkStatus);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      synchronizeCloud().catch(handleError);
+    }
+  });
   // En desarrollo local (localhost) NO usamos el service worker: cachea el código
   // y hace que los cambios no se vean. Desregistramos el que ya esté activo y, en
   // producción (GitHub Pages), sí se registra para el modo offline.
@@ -6318,8 +6334,9 @@ async function init() {
     await refreshSyncStatusPanel();
     await refresh();
   }).catch(handleError);
+  // El reloj de partido sigue siendo local y se refresca cada segundo.
+  // La nube se sincroniza por Realtime, no mediante snapshots completos periódicos.
   setInterval(() => pollLiveState().catch(handleError), 1000);
-  setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }
 
 if (typeof window !== 'undefined') {
