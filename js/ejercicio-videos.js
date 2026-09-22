@@ -44,7 +44,18 @@ export function resolveHostedVideoUrl(value) {
   const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
   if (!isLibraryV2 && !isCampoBaseHuman) return source;
 
-  const asset = path.replaceAll('/', '__');
+  let asset = path.replaceAll('/', '__');
+
+  // Prueba de compatibilidad móvil acotada: f7-126 conserva el MP4 original en
+  // escritorio y usa una variante H.264 Baseline/720p/faststart en móviles.
+  // No afecta a ningún otro ejercicio ni cambia sus IDs o datos.
+  const mobile = typeof navigator !== 'undefined'
+    && (navigator.userAgentData?.mobile === true
+      || /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || '')));
+  if (mobile && path === 'library-v2-preview/f7-126/ejercicio.mp4') {
+    asset = 'library-v2-preview__f7-126__ejercicio-mobile.mp4';
+  }
+
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
 
