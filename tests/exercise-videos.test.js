@@ -10,6 +10,8 @@ import {
   videoPath,
   videoPublicUrl,
   resolveHostedVideoUrl,
+  resolveSupabaseVideoFallbackUrl,
+  resolvePlaybackVideoUrl,
   renderVideoSectionHTML,
 } from '../js/ejercicio-videos.js';
 
@@ -62,6 +64,22 @@ test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar o
     resolveHostedVideoUrl('https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png'),
     'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/pdf150-022/preview.png',
   );
+});
+
+
+test('en móvil los MP4 históricos usan la copia Supabase y en escritorio mantienen GitHub Releases', () => {
+  const legacy = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
+  const github = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
+
+  assert.equal(resolvePlaybackVideoUrl(legacy, { mobile: false }), github);
+  assert.equal(resolvePlaybackVideoUrl(legacy, { mobile: true }), legacy);
+  assert.equal(resolvePlaybackVideoUrl(github, { mobile: true }), legacy);
+  assert.equal(resolveSupabaseVideoFallbackUrl(github), legacy);
+});
+
+test('el fallback móvil no transforma vídeos ajenos ni assets locales', () => {
+  assert.equal(resolveSupabaseVideoFallbackUrl('https://example.test/video.mp4'), '');
+  assert.equal(resolvePlaybackVideoUrl('assets/ejercicios/demo.mp4', { mobile: true }), 'assets/ejercicios/demo.mp4');
 });
 
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
