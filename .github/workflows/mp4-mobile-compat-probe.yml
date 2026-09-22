@@ -9,5 +9,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Inspect release MP4 codecs
         run: bash scripts/mp4-mobile-compat-probe.sh
