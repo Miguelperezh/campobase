@@ -34,9 +34,30 @@ await page.waitForSelector('#exercise-detail-dialog[open] .frame-video',{timeout
 
 const before=await page.evaluate(()=>{
  const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
+ window.__probeVideo=v;
+ window.__probeTimeline=[];
+ const snap=(label)=>{
+   const current=document.querySelector('#exercise-detail-dialog[open] .frame-video');
+   window.__probeTimeline.push({
+     label,
+     savedConnected:Boolean(window.__probeVideo?.isConnected),
+     sameElement:current===window.__probeVideo,
+     savedPaused:window.__probeVideo?.paused,
+     savedTime:window.__probeVideo?.currentTime,
+     currentPaused:current?.paused,
+     currentTime:current?.currentTime,
+     currentSrc:current?.src||'',
+   });
+ };
+ snap('before-click');
+ document.querySelector('#exercise-detail-dialog[open] .v-btn-play')?.click();
+ setTimeout(()=>snap('50ms'),50);
+ setTimeout(()=>snap('250ms'),250);
+ setTimeout(()=>snap('1s'),1000);
+ setTimeout(()=>snap('3s'),3000);
+ setTimeout(()=>snap('7s'),7000);
  return {src:v?.src||'',dataSrc:v?.dataset.src||'',readyState:v?.readyState,paused:v?.paused,currentTime:v?.currentTime};
 });
-await page.click('#exercise-detail-dialog[open] .v-btn-play');
 await page.waitForTimeout(8000);
 const after=await page.evaluate(()=>{
  const v=document.querySelector('#exercise-detail-dialog[open] .frame-video');
@@ -44,11 +65,16 @@ const after=await page.evaluate(()=>{
    src:v?.src||'',dataSrc:v?.dataset.src||'',readyState:v?.readyState,
    networkState:v?.networkState,paused:v?.paused,currentTime:v?.currentTime,
    duration:v?.duration,error:v?.error?{code:v.error.code,message:v.error.message}:null,
-   button:document.querySelector('#exercise-detail-dialog[open] .v-btn-play')?.textContent
+   button:document.querySelector('#exercise-detail-dialog[open] .v-btn-play')?.textContent,
+   savedConnected:Boolean(window.__probeVideo?.isConnected),
+   savedPaused:window.__probeVideo?.paused,
+   savedTime:window.__probeVideo?.currentTime,
+   sameElement:v===window.__probeVideo,
+   timeline:window.__probeTimeline||[],
  };
 });
 console.log(JSON.stringify({before,after,errors},null,2));
 
 await browser.close();
 server.kill('SIGTERM');
-if(after.error || after.currentTime<1 || after.paused) process.exit(2);
+if(after.error || after.currentTime<1 || after.paused || !after.sameElement) process.exit(2);
