@@ -16,9 +16,10 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
 
-const MOBILE_RELEASE_OVERRIDES = Object.freeze({
-  'library-v2-preview/f7-126/ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
-});
+function mobileAssetForPath(path = '') {
+  if (!path.startsWith('library-v2-preview/') || !/\/ejercicio\.mp4$/i.test(path)) return '';
+  return `${path.replaceAll('/', '__').replace(/\.mp4$/i, '')}-mobile.mp4`;
+}
 
 function isMobileVideoEnvironment() {
   if (typeof navigator === 'undefined') return false;
@@ -38,10 +39,14 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
   if (!source) return '';
 
   const cleanSource = source.split(/[?#]/, 1)[0];
-  const mobilePath = 'library-v2-preview/f7-126/ejercicio.mp4';
-  const originalF7126 = releaseUrlForAsset(mobilePath.replaceAll('/', '__'));
-  if (mobile && cleanSource === originalF7126) {
-    return releaseUrlForAsset(MOBILE_RELEASE_OVERRIDES[mobilePath]);
+  const releasePrefix = `${GITHUB_VIDEO_RELEASE_BASE}/`;
+  if (mobile && cleanSource.startsWith(releasePrefix)) {
+    const rawAsset = cleanSource.slice(releasePrefix.length);
+    let asset;
+    try { asset = decodeURIComponent(rawAsset); } catch { asset = rawAsset; }
+    if (/^library-v2-preview__.+__ejercicio\.mp4$/i.test(asset) && !/-mobile\.mp4$/i.test(asset)) {
+      return releaseUrlForAsset(asset.replace(/\.mp4$/i, '-mobile.mp4'));
+    }
   }
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
@@ -61,9 +66,8 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
   const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
   if (!isLibraryV2 && !isCampoBaseHuman) return source;
 
-  const asset = mobile && MOBILE_RELEASE_OVERRIDES[path]
-    ? MOBILE_RELEASE_OVERRIDES[path]
-    : path.replaceAll('/', '__');
+  const mobileAsset = mobile ? mobileAssetForPath(path) : '';
+  const asset = mobileAsset || path.replaceAll('/', '__');
   return releaseUrlForAsset(asset);
 }
 
