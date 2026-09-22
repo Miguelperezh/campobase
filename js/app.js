@@ -73,6 +73,7 @@ let realtimeCloudStore = null;
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
+let realtimeReconnectTimer = null;
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -6152,6 +6153,14 @@ function scheduleRealtimeCloudSync() {
   }, 250);
 }
 
+function scheduleRealtimeReconnect() {
+  if (isDemoDatabase() || !navigator.onLine || realtimeReconnectTimer) return;
+  realtimeReconnectTimer = window.setTimeout(() => {
+    realtimeReconnectTimer = null;
+    synchronizeCloud().catch(handleError);
+  }, 3000);
+}
+
 async function ensureRealtimeSubscription() {
   if (
     isDemoDatabase()
@@ -6168,17 +6177,23 @@ async function ensureRealtimeSubscription() {
       (status, error) => {
         if (status === 'SUBSCRIBED') {
           realtimeSubscriptionActive = true;
+          if (realtimeReconnectTimer) {
+            window.clearTimeout(realtimeReconnectTimer);
+            realtimeReconnectTimer = null;
+          }
           return;
         }
         if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
           realtimeSubscriptionActive = false;
-          if (error) console.warn('Realtime no disponible; se sincronizará al reconectar o volver a primer plano:', error);
+          if (error) console.warn('Realtime no disponible; se reintentará automáticamente:', error);
+          scheduleRealtimeReconnect();
         }
       },
     );
   } catch (error) {
     realtimeSubscriptionActive = false;
-    console.warn('No se pudo iniciar Realtime; se sincronizará al reconectar o volver a primer plano:', error?.message || error);
+    console.warn('No se pudo iniciar Realtime; se reintentará automáticamente:', error?.message || error);
+    scheduleRealtimeReconnect();
   } finally {
     realtimeSubscriptionStarting = false;
   }
