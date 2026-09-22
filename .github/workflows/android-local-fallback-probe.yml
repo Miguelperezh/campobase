@@ -1,0 +1,17 @@
+name: Android local fallback probe
+on:
+  push:
+    branches:
+      - fix/mobile-video-fallback-v34
+jobs:
+  probe-android-fallback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/android-local-fallback-probe.mjs
