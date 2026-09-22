@@ -468,3 +468,12 @@ Partidos activos próximos verificados:
 - No se modifica Supabase, Realtime, sesiones, jugadores, convocatorias, partido en vivo ni datos locales.
 - Antes de ampliar el cambio a `f7-051`–`f7-150`, hay que validar `f7-126` en el teléfono físico.
 
+### Activación Pages f7-082 y f7-084 — 22/09/2026
+
+- La sesión del 22/09/2026 usa `f7-082` y `f7-084`, ambos del grupo `f7-051`–`f7-150`.
+- Se prepararon copias no destructivas en `assets/video-mobile/f7-082.mp4` y `assets/video-mobile/f7-084.mp4`.
+- Ambos conservan el vídeo original H.264 High 1440×900/24 fps, pero con `moov` al principio mediante `faststart`.
+- CampoBase resuelve temporalmente `f7-082`, `f7-084` y `f7-126` desde GitHub Pages; el resto de vídeos continúa sin cambios.
+- Build de caché: `20260922-pages-video-today-v35`.
+- No se modifican IDs de ejercicios, sesiones, Supabase, Realtime, jugadores ni partido en vivo.
+- Validar reproducción física en el teléfono antes de extender Pages a más vídeos.
