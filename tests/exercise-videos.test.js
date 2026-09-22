@@ -64,6 +64,13 @@ test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar o
   );
 });
 
+test('f7-126 usa temporalmente el MP4 de GitHub Pages con MIME de vídeo', () => {
+  const legacy = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
+  const release = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
+  assert.equal(resolveHostedVideoUrl(legacy), './assets/video-mobile/f7-126.mp4');
+  assert.equal(resolveHostedVideoUrl(release), './assets/video-mobile/f7-126.mp4');
+});
+
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
   const videos = [{ id: 'v1', nombre: 'Demo', path: 'EX-1/v1.mp4', orden: 0, createdAt: 1 }];
   const owner = renderVideoSectionHTML(videos, { role: 'owner', exerciseId: 'EX-1' });
@@ -116,7 +123,11 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
     const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
     const resolved = resolveHostedVideoUrl(synthetic);
     assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
-    assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+    if (name === 'library-v2-preview/f7-126/ejercicio.mp4') {
+      assert.equal(resolved, './assets/video-mobile/f7-126.mp4');
+    } else {
+      assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+    }
   }
 });
 

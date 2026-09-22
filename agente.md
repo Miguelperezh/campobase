@@ -450,3 +450,12 @@ Partidos activos próximos verificados:
 - La instalación móvil real puede estar conservando una mezcla/caché antigua. Se prepara `20260922-mobile-video-cache-v33` únicamente para invalidar caché y cargar un conjunto coherente de HTML/JS/SW, sin modificar datos, sesiones, Realtime, ejercicios ni vídeos.
 - Si v33 no resuelve el móvil físico, la siguiente prueba debe ser comparar el mismo vídeo en navegador normal vs PWA instalada en ese dispositivo antes de cambiar alojamiento o recodificar en masa.
 
+### Prueba aislada f7-126 en GitHub Pages — 22/09/2026
+
+- El móvil físico del usuario sigue sin reproducir varios MP4 del catálogo.
+- Las pruebas válidas con Google Chrome real (con soporte H.264) reproducen `f7-126` desde GitHub Releases; las pruebas con Chromium de Playwright sin códecs propietarios no son válidas para diagnosticar H.264.
+- `f7-126` forma parte de los 100 assets extra del release (`f7-051` a `f7-150`, 42,50 MiB en total) y no existe en Supabase Storage; por tanto Supabase no puede actuar como fallback para ese grupo.
+- Se publica de forma aislada `assets/video-mobile/f7-126.mp4`, reempaquetado con `faststart` sin recodificar, y solo ese ejercicio se resuelve temporalmente a GitHub Pages.
+- Objetivo: comprobar en el móvil físico si una respuesta `video/mp4` de Pages elimina el fallo observado con GitHub Releases (`application/octet-stream` + attachment).
+- No ampliar esta migración a los otros 99 vídeos hasta validar `f7-126` en el dispositivo real.
+

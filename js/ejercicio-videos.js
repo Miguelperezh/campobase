@@ -15,6 +15,9 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
+export const PAGES_VIDEO_OVERRIDES = Object.freeze({
+  'library-v2-preview/f7-126/ejercicio.mp4': './assets/video-mobile/f7-126.mp4',
+});
 
 // Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
 // ya migrado a GitHub Releases. Otras URLs (assets locales, previews, fuentes externas)
@@ -22,6 +25,10 @@ export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campob
 export function resolveHostedVideoUrl(value) {
   const source = String(value ?? '').trim();
   if (!source) return '';
+
+  const f7126Release = `${GITHUB_VIDEO_RELEASE_BASE}/library-v2-preview__f7-126__ejercicio.mp4`;
+  if (source.split(/[?#]/, 1)[0] === f7126Release) return PAGES_VIDEO_OVERRIDES['library-v2-preview/f7-126/ejercicio.mp4'];
+
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
   const markerIndex = source.indexOf(marker);
   if (markerIndex < 0) return source;
@@ -34,6 +41,8 @@ export function resolveHostedVideoUrl(value) {
     path = rawPath;
   }
   if (!/\.mp4$/i.test(path)) return source;
+
+  if (PAGES_VIDEO_OVERRIDES[path]) return PAGES_VIDEO_OVERRIDES[path];
 
   // Solo migramos los objetos que existen realmente en el bucket origen:
   // - biblioteca V2: library-v2-preview/.../ejercicio.mp4
