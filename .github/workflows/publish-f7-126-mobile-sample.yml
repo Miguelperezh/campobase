@@ -1,6 +1,8 @@
 name: Publish f7-126 mobile sample
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - fix/mobile-video-fallback-v34
 permissions:
   contents: write
 jobs:
