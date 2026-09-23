@@ -64,7 +64,7 @@ test('resuelve los MP4 históricos de Supabase hacia GitHub Releases sin tocar o
   );
 });
 
-test('en móvil solo f7-126 usa la variante compatible y escritorio conserva el original', () => {
+test('en móvil todos los MP4 usan su variante compatible y escritorio conserva el original', () => {
   const f126 = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio.mp4';
   const f127 = 'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-127__ejercicio.mp4';
 
@@ -72,7 +72,10 @@ test('en móvil solo f7-126 usa la variante compatible y escritorio conserva el 
     resolveHostedVideoUrl(f126, { mobile: true }),
     'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-126__ejercicio-mobile.mp4',
   );
-  assert.equal(resolveHostedVideoUrl(f127, { mobile: true }), f127);
+  assert.equal(
+    resolveHostedVideoUrl(f127, { mobile: true }),
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-127__ejercicio-mobile.mp4',
+  );
   assert.equal(resolveHostedVideoUrl(f126, { mobile: false }), f126);
 });
 test('la sección de vídeos muestra reproductor y solo Migue puede subir o borrar', () => {
@@ -153,7 +156,7 @@ test('el visor renderiza los MP4 migrados desde GitHub Releases y no desde Supab
 });
 
 
-test('solo f7-126 usa variante móvil y el resto conserva el asset original', () => {
+test('todos los MP4 migrados usan variante móvil y escritorio conserva el asset original', () => {
   const f126 = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-126/ejercicio.mp4';
   const f127 = 'https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-127/ejercicio.mp4';
 
