@@ -16,6 +16,33 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
 
+const MOBILE_COMPATIBLE_RELEASE_ASSETS = Object.freeze({
+  'library-v2-preview__f7-126__ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
+});
+
+export function isMobileVideoEnvironment() {
+  if (typeof navigator === 'undefined') return false;
+  if (navigator.userAgentData?.mobile === true) return true;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
+}
+
+export function resolveMobileCompatibleVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
+  const hosted = resolveHostedVideoUrl(value);
+  if (!mobile || !hosted.startsWith(`${GITHUB_VIDEO_RELEASE_BASE}/`)) return hosted;
+
+  const rawAsset = hosted.slice(GITHUB_VIDEO_RELEASE_BASE.length + 1).split(/[?#]/, 1)[0];
+  let asset;
+  try {
+    asset = decodeURIComponent(rawAsset);
+  } catch {
+    asset = rawAsset;
+  }
+  const mobileAsset = MOBILE_COMPATIBLE_RELEASE_ASSETS[asset];
+  return mobileAsset
+    ? `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(mobileAsset)}`
+    : hosted;
+}
+
 function isMobileVideoEnvironment() {
   if (typeof navigator === 'undefined') return false;
   if (navigator.userAgentData?.mobile === true) return true;
