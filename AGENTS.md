@@ -4319,4 +4319,29 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
    - Añadidos tests unitarios específicos en `tests/domain.test.js`.
    - Total tests pasando: **481/481 tests (100% pass)**.
 
+# 64. Validación Definitiva en Producción (v46+) — Sincronización Supabase Pro, Reproducción de Vídeo Móvil y Protección de Arquitectura — 23/09/2026
+
+## 64.1 Blindaje Obligatorio de Arquitectura
+- ⚠️ **REGLA ESTRICTA:** Todo lo documentado en este apartado ha sido validado expresamente por el usuario en sus dispositivos móviles y en el servidor de producción. Ningún agente ni modificación futura debe alterar, revertir o eliminar estos patrones.
+
+## 64.2 Sincronización Cloud Supabase Pro
+- **Causa raíz del error 503/521:** Tras actualizar al plan Pro, Supabase conservó la base de datos en una instancia `t3.nano` (512 MB de RAM). Un bucle interno de replicación/introspección generó más de 7,4 millones de errores en PostgreSQL, consumiendo todos los créditos de CPU de AWS y dejando la base de datos en estado `Unhealthy`.
+- **Solución implementada:** Se actualizó la computación a tamaño **`MICRO` (`t3a.micro`)** (cubierto por el crédito mensual de 10 $ incluido en el plan Pro).
+- **Resultado:**
+  - Estado del proyecto en Supabase: **`Healthy`** (Verde).
+  - CPU y memoria RAM totalmente estabilizadas.
+  - Endpoints de Supabase REST (`/jugadores`, `/partidos`, `/configuracion`, `/asistencias`, `/convocatorias`) respondiendo en ~200ms con HTTP 200 OK.
+  - Plantilla, lanzadores y actas de partidos sincronizados en el móvil al instante.
+- **Detalle crítico SQL:** PostgREST únicamente reconoce la recarga mediante `'reload schema'` (con espacio) o `'reload config'` (con espacio). Nunca usar guiones.
+
+## 64.3 Reproducción de Vídeo en Móvil iOS y Android
+- En `js/ejercicio-viewer.js`, la etiqueta `<video>` debe usar exclusivamente elementos `<source src="..." type="video/mp4">` y **nunca** el atributo `src` directo cuando los vídeos provengan de GitHub Releases (evita el bloqueo por `application/octet-stream` en iOS WebKit).
+- En `togglePlay()` jamás reasignar destructivamente `video.src = src`.
+- Soporte táctil asegurado mediante listeners de `pointerup` y `touchend` en los controles de reproducción.
+
+## 64.4 Interfaz Móvil y Eliminación de Copias Locales
+- Nombres de jugadores a ancho completo en alineaciones, cambios tácticos, actas de goles y tablas estadísticas.
+- Retirados todos los botones no deseados de importación de copias locales o carga de PC. El flujo es 100% cloud a través de Supabase y GitHub Releases.
+
+
 

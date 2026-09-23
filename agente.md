@@ -809,4 +809,28 @@ Partidos activos próximos verificados:
    - **Diagnóstico y activación de Supabase Pro:** La actualización a plan de pago Pro elimina las pausas para siempre. Para desbloquear el estado transitorio `503 PGRST002`, se proporcionan los pasos exactos de reinicio de PostgREST (`NOTIFY pgrst, 'reload schema';`).
    - **Cache versioning:** Incrementada la versión a `20260923-v46-videomobile-syncpro-cleanup`.
 
+3. **Validación Final Definitiva en Producción (v46+) — Blindaje de Arquitectura y Sincronización Supabase Pro:**
+   - ⚠️ **REGLA ESTRICTA DE NO MODIFICACIÓN / NO REVERSIÓN:**
+     Todos los puntos siguientes han sido **validados expresamente por el usuario en sus dispositivos móviles y en el servidor de producción**. Ningún agente ni modificación futura debe alterar, revertir o eliminar estos patrones.
+   
+   - **A. Sincronización Cloud Supabase Pro (Validada 100% en Móvil):**
+     - **Causa raíz descubierta del 503 / 521 y CPU 100%:** Al pasar de Free a Pro, Supabase conservó la instancia en `t3.nano` (512 MB RAM). Un bucle interno de réplica/introspección generó más de 7,4 millones de errores en PostgreSQL en 24 horas, consumiendo todos los créditos de ráfaga de CPU de AWS y dejando la base de datos en estado `Unhealthy`.
+     - **Solución definitiva aplicada:** Upgrade del cómputo a tamaño **`MICRO` (`t3a.micro`)** en Supabase Dashboard. Este tamaño está cubierto al 100% por los 10 $/mes de crédito de computación incluidos en el plan Pro de Supabase.
+     - **Resultado verificado:**
+       - Estado del proyecto: **`Healthy`** (verde).
+       - Memoria RAM y CPU desahogadas.
+       - Endpoints de API REST (`/jugadores`, `/partidos`, `/configuracion`, `/asistencias`, `/convocatorias`) respondiendo con **HTTP 200 OK en ~200ms**.
+       - Los datos de plantilla (54 jugadores), lanzadores (`setPieces` de penaltis, faltas, córners y capitanes) y partidos (goleadores y actas) se sincronizan de inmediato en el móvil.
+     - **Aviso de CPU alta en el panel:** El banner de *"High CPU usage"* en Supabase Dashboard es un cálculo de la media móvil de la última hora en AWS; no refleja el estado en tiempo real tras la migración a Micro y se disipa automáticamente cuando la ventana temporal expira.
+     - **Comando SQL de recarga de esquema:** PostgREST en PostgreSQL únicamente reconoce `'reload schema'` (con espacio) o `'reload config'` (con espacio). **Nunca** usar guion (`'reload-schema'`), ya que PostgREST lo ignora de forma silenciosa.
+
+   - **B. Reproducción de Vídeo en Móvil iOS / Android (Validada 100% en Móvil):**
+     - Las etiquetas `<video>` **nunca** deben incluir el atributo `src="..."` directo cuando el origen devuelva `application/octet-stream`. Deben utilizar siempre el hijo `<source src="..." type="video/mp4">` para que WebKit/Blink decodifique nativamente el contenedor MP4.
+     - En `togglePlay()` jamás debe hacerse `video.src = src` destructivo.
+     - Interacción táctil asegurada mediante eventos `pointerup` y `touchend` en `.v-btn-play`, `.video-stage`, `.video-overlay-play` y el visor de ejercicios tácticos.
+
+   - **C. Interfaz y Experiencia Móvil (Validada 100%):**
+     - Nombres a ancho completo en selectores tácticos, editor de goles/asistencias en columna y tablas estadísticas sin recortes.
+     - Supresión total de opciones o botones de importación manual / copia local. La arquitectura es 100% Cloud-First con Supabase y GitHub Releases.
+
 
