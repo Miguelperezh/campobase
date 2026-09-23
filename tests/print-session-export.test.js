@@ -58,6 +58,7 @@ test('buildSingleExerciseHtml genera estructura compacta de 1 sola página A4', 
     id: 'ex-a4-test',
     name: 'Rueda de pase y tercer hombre',
     category: 'Pases',
+    objective: 'Automatizar la descarga del tercer hombre.',
     duration: 15,
     space: '25x20m',
     players: '10 jugadores',
@@ -67,6 +68,7 @@ test('buildSingleExerciseHtml genera estructura compacta de 1 sola página A4', 
     rules: 'Orientación corporal siempre hacia adelante.',
     tips: 'Asegurar la velocidad del pase tenso.',
     organization: 'Grupos de 5 en cada rombo.',
+    rotation: 'El pasador sigue la trayectoria de su balón.',
   };
 
   const html = buildSingleExerciseHtml(exercise, state);
@@ -77,15 +79,20 @@ test('buildSingleExerciseHtml genera estructura compacta de 1 sola página A4', 
   assert.match(html, /Cadete A CD Laguna/);
   assert.match(html, /FICHA TÉCNICA DE ENTRENAMIENTO/);
   assert.match(html, /Rueda de pase y tercer hombre/);
+  assert.match(html, /🎯 Objetivo de la Tarea/);
+  assert.match(html, /Automatizar la descarga del tercer hombre/);
   assert.match(html, /15 min/);
   assert.match(html, /25x20m/);
   assert.match(html, /10 jugadores/);
   assert.match(html, /8 conos, 4 balones/);
   assert.match(html, /src="https:\/\/example\.com\/pitch\.png"/);
+  assert.match(html, /📋 Desarrollo de la Tarea \(Paso a paso\)/);
   assert.match(html, /Secuencia de pases en rombo/);
   assert.match(html, /Orientación corporal siempre hacia adelante/);
   assert.match(html, /Asegurar la velocidad del pase tenso/);
   assert.match(html, /Grupos de 5 en cada rombo/);
+  assert.match(html, /🔁 Rotación de Jugadores/);
+  assert.match(html, /El pasador sigue la trayectoria de su balón/);
 });
 
 test('buildSingleExerciseHtml genera diagrama de pizarra de campo CSS si no hay preview disponible', () => {
@@ -142,7 +149,7 @@ test('buildTrainingSessionHtml genera hoja de sesión ultra-compacta (2 tareas p
     notes: 'Priorizar ritmo de circulación y apoyo en bandas.',
     blocks: [
       { type: 'warmup', exerciseId: 'e1', duration: 15 },
-      { type: 'main', exerciseId: 'e2', duration: 25 },
+      { type: 'main', exerciseId: 'e2', duration: 25, notes: 'Insistir en transiciones' },
       { type: 'final', exerciseId: 'e3', duration: 30 },
     ],
   };
@@ -167,6 +174,10 @@ test('buildTrainingSessionHtml genera hoja de sesión ultra-compacta (2 tareas p
   assert.match(html, /Parte Principal/);
   assert.match(html, /Posesión 6v6\+2/);
   assert.match(html, /Gol tras 6 pases/);
+  // Explicación de la tarea presente y rotulada, NUNCA sobreescrita por las notas
+  assert.match(html, /📋 Explicación y Dinámica:/);
+  assert.match(html, /Conservación en espacio reducido con comodines interiores/);
+  assert.match(html, /📝 Nota del entrenador en la sesión:[\s\S]*?Insistir en transiciones/);
 
   assert.match(html, /#3/);
   assert.match(html, /Juego \/ Vuelta a la Calma/);

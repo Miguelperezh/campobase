@@ -19,11 +19,14 @@ function isUsableImage(url = '') {
 }
 
 export function resolveExerciseData(exerciseOrId, state) {
-  let ex = exerciseOrId;
+  let ex = typeof exerciseOrId === 'object' && exerciseOrId !== null ? exerciseOrId : null;
   const id = typeof exerciseOrId === 'string' ? exerciseOrId : exerciseOrId?.id;
   
-  const validated = id ? findValidatedExercise(id) : null;
-  if (typeof exerciseOrId === 'string' && !validated && state?.exercises) {
+  let validated = id ? findValidatedExercise(id) : null;
+  if (!validated && ex?.id) {
+    validated = findValidatedExercise(ex.id);
+  }
+  if (!ex && id && state?.exercises) {
     ex = state.exercises.find((item) => item.id === id);
   }
 
@@ -34,6 +37,21 @@ export function resolveExerciseData(exerciseOrId, state) {
   const space = validated?.vista_rapida?.espacio || validated?.datos_rapidos?.espacio || ex?.space || ex?.espacio || '';
   const players = validated?.vista_rapida?.jugadores || validated?.datos_rapidos?.jugadores || ex?.players || ex?.jugadores || '';
   
+  // Objective & Work Contents
+  let objective = validated?.objetivo_principal || ex?.objective || ex?.objetivo || '';
+  if (!objective && validated?.resumen) {
+    objective = validated.resumen;
+  }
+
+  let works = '';
+  if (Array.isArray(validated?.que_se_trabaja) && validated.que_se_trabaja.length) {
+    works = validated.que_se_trabaja.join(', ');
+  } else if (Array.isArray(ex?.works) && ex.works.length) {
+    works = ex.works.join(', ');
+  } else if (Array.isArray(ex?.que_se_trabaja) && ex.que_se_trabaja.length) {
+    works = ex.que_se_trabaja.join(', ');
+  }
+
   // Material
   let material = validated?.vista_rapida?.material || validated?.datos_rapidos?.material || ex?.material || '';
   if (!material && Array.isArray(validated?.materiales) && validated.materiales.length) {
@@ -47,34 +65,72 @@ export function resolveExerciseData(exerciseOrId, state) {
     preview = rawPreview;
   }
 
-  // Dynamic / Description
+  // Dynamic / Explanation / Steps
   let description = '';
   if (Array.isArray(validated?.como_se_hace) && validated.como_se_hace.length) {
-    description = validated.como_se_hace.join('\n');
+    description = validated.como_se_hace.map((step, idx) => {
+      const cleanStep = String(step).replace(/^\d+[\.\)]\s*/, '').trim();
+      return `${idx + 1}. ${cleanStep}`;
+    }).join('\n');
+  } else if (validated?.como_se_hace && typeof validated.como_se_hace === 'object') {
+    description = Object.entries(validated.como_se_hace).map(([grp, val]) => {
+      const label = grp === 'base' ? 'Fase Base' : grp.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const items = Array.isArray(val) ? val : [val];
+      return `[${label}]\n` + items.map((step, idx) => `• ${String(step).replace(/^\d+[\.\)]\s*/, '').trim()}`).join('\n');
+    }).join('\n\n');
+  } else if (typeof validated?.como_se_hace === 'string' && validated.como_se_hace.trim()) {
+    description = validated.como_se_hace.trim();
+  } else if (Array.isArray(validated?.fases) && validated.fases.length) {
+    description = validated.fases.map((f, idx) => {
+      const title = f.titulo || `Fase ${idx + 1}`;
+      const desc = f.descripcion || '';
+      return `${idx + 1}. ${title}: ${desc}`.trim();
+    }).join('\n');
+  } else if (Array.isArray(validated?.detalle?.desarrollo) && validated.detalle.desarrollo.length) {
+    description = validated.detalle.desarrollo.map((s, idx) => `${idx + 1}. ${String(s).trim()}`).join('\n');
   } else if (validated?.explicacion) {
     description = validated.explicacion;
   } else if (validated?.descripcion) {
     description = validated.descripcion;
+  } else if (Array.isArray(ex?.como_se_hace) && ex.como_se_hace.length) {
+    description = ex.como_se_hace.map((step, idx) => {
+      const cleanStep = String(step).replace(/^\d+[\.\)]\s*/, '').trim();
+      return `${idx + 1}. ${cleanStep}`;
+    }).join('\n');
   } else if (ex?.description) {
     description = ex.description;
+  } else if (ex?.descripcion) {
+    description = ex.descripcion;
   } else if (ex?.notes) {
     description = ex.notes;
+  }
+
+  // Si la descripción está vacía o solo coincide con el objetivo, enriquecer con explicacion_breve / leyenda
+  if ((!description || description.trim() === objective.trim()) && validated?.vista_rapida?.explicacion_breve) {
+    description = validated.vista_rapida.explicacion_breve;
+    if (validated.vista_rapida.leyenda && validated.vista_rapida.leyenda !== description) {
+      description += '\n' + validated.vista_rapida.leyenda;
+    }
   }
 
   // Rules / Provocation
   let rules = '';
   if (Array.isArray(validated?.reglas) && validated.reglas.length) {
-    rules = validated.reglas.join('\n');
+    rules = validated.reglas.map(r => `• ${String(r).replace(/^[•\-\*]\s*/, '').trim()}`).join('\n');
   } else if (validated?.reglas) {
     rules = String(validated.reglas);
+  } else if (Array.isArray(validated?.detalle?.reglas) && validated.detalle.reglas.length) {
+    rules = validated.detalle.reglas.map(r => `• ${String(r).replace(/^[•\-\*]\s*/, '').trim()}`).join('\n');
   } else if (ex?.rules) {
-    rules = ex.rules;
+    rules = Array.isArray(ex.rules) ? ex.rules.join('\n') : String(ex.rules);
+  } else if (ex?.reglas) {
+    rules = Array.isArray(ex.reglas) ? ex.reglas.join('\n') : String(ex.reglas);
   }
 
   // Consignas / Tips
   let tips = '';
   if (Array.isArray(validated?.consignas) && validated.consignas.length) {
-    tips = validated.consignas.slice(0, 4).join('\n');
+    tips = validated.consignas.slice(0, 4).map(c => `• ${String(c).replace(/^[•\-\*]\s*/, '').trim()}`).join('\n');
   } else if (validated?.consignas) {
     tips = String(validated.consignas);
   } else if (ex?.tips) {
@@ -93,6 +149,18 @@ export function resolveExerciseData(exerciseOrId, state) {
     organization = ex.organization;
   } else if (ex?.organizacion) {
     organization = ex.organizacion;
+  } else if (ex?.montaje) {
+    organization = typeof ex.montaje === 'string' ? ex.montaje : ex.montaje.explicacion;
+  }
+
+  // Rotation
+  let rotation = '';
+  if (validated?.rotacion?.explicacion) {
+    rotation = validated.rotacion.explicacion;
+  } else if (ex?.rotation) {
+    rotation = ex.rotation;
+  } else if (ex?.rotacion) {
+    rotation = ex.rotacion;
   }
 
   return {
@@ -104,10 +172,13 @@ export function resolveExerciseData(exerciseOrId, state) {
     players,
     material,
     preview,
+    objective,
+    works,
     description,
     rules,
     tips,
     organization,
+    rotation,
   };
 }
 
@@ -154,6 +225,13 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
         <!-- Parte inferior: 2 columnas equilibradas para no saltar de página -->
         <div class="cb-print-columns-grid">
           <div class="cb-print-col">
+            ${data.objective ? `
+            <div class="cb-print-card">
+              <h3 class="cb-print-card-title">🎯 Objetivo de la Tarea</h3>
+              <p class="cb-print-card-text">${esc(data.objective)}</p>
+              ${data.works ? `<p class="cb-print-card-subtext"><strong>Contenidos:</strong> ${esc(data.works)}</p>` : ''}
+            </div>` : ''}
+
             ${data.material ? `
             <div class="cb-print-card">
               <h3 class="cb-print-card-title">📦 Material Necesario</h3>
@@ -165,11 +243,17 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
               <h3 class="cb-print-card-title">👥 Organización y Espacio</h3>
               <p class="cb-print-card-text">${esc(data.organization)}</p>
             </div>` : ''}
+
+            ${data.rotation ? `
+            <div class="cb-print-card">
+              <h3 class="cb-print-card-title">🔁 Rotación de Jugadores</h3>
+              <p class="cb-print-card-text">${esc(data.rotation)}</p>
+            </div>` : ''}
           </div>
 
           <div class="cb-print-col">
             <div class="cb-print-card">
-              <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea</h3>
+              <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea (Paso a paso)</h3>
               <p class="cb-print-card-text pre-line">${esc(data.description || 'Sin descripción detallada.')}</p>
             </div>
 
@@ -181,7 +265,7 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
 
             ${data.tips ? `
             <div class="cb-print-card">
-              <h3 class="cb-print-card-title">💡 Consignas del Entrenador</h3>
+              <h3 class="cb-print-card-title">💡 Consignas Clave del Entrenador</h3>
               <p class="cb-print-card-text pre-line">${esc(data.tips)}</p>
             </div>` : ''}
           </div>
@@ -254,13 +338,20 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
         <div class="cb-print-task-body">
           <div class="cb-print-task-media">
             ${previewHtml}
-            ${data.space ? `<div class="cb-print-task-submeta">📐 ${esc(data.space)}</div>` : ''}
-            ${data.players ? `<div class="cb-print-task-submeta">👥 ${esc(data.players)}</div>` : ''}
+            ${data.space ? `<div class="cb-print-task-submeta">📐 <strong>Espacio:</strong> ${esc(data.space)}</div>` : ''}
+            ${data.players ? `<div class="cb-print-task-submeta">👥 <strong>Jugadores:</strong> ${esc(data.players)}</div>` : ''}
           </div>
           <div class="cb-print-task-info">
+            ${data.objective ? `<div class="cb-print-task-objective"><strong>🎯 Objetivo:</strong> ${esc(data.objective)}</div>` : ''}
             ${data.material ? `<div class="cb-print-task-material"><strong>📦 Material:</strong> ${esc(data.material)}</div>` : ''}
-            <div class="cb-print-task-desc">${esc(block.notes || data.description || 'Sin descripción.')}</div>
+            <div class="cb-print-task-desc">
+              <strong class="cb-print-task-desc-title">📋 Explicación y Dinámica:</strong>
+              <div class="cb-print-task-desc-body">${esc(data.description || 'Sin explicación detallada.')}</div>
+            </div>
             ${data.rules ? `<div class="cb-print-task-rules"><strong>⚡ Reglas:</strong> ${esc(data.rules)}</div>` : ''}
+            ${data.rotation ? `<div class="cb-print-task-rotation"><strong>🔁 Rotación:</strong> ${esc(data.rotation)}</div>` : ''}
+            ${data.tips ? `<div class="cb-print-task-tips"><strong>💡 Consignas:</strong> ${esc(data.tips)}</div>` : ''}
+            ${block.notes ? `<div class="cb-print-task-session-note"><strong>📝 Nota del entrenador en la sesión:</strong> ${esc(block.notes)}</div>` : ''}
           </div>
         </div>
       </article>
