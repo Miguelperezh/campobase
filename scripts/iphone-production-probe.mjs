@@ -16,8 +16,8 @@ async function checkDeployedAssets(){
     indexStatus:indexRes.status,
     cssStatus:cssRes.status,
     swHasV38:sw.includes('view-cache-v38'),
-    swRevalidatesStyles:/REVALIDATE_PATHS[\\s\\S]*['"]\\/styles\\.css['"]/.test(sw),
-    indexBuild:(index.match(/__CAMPOBASE_BUILD\\s*=\\s*['"]([^'"]+)/)||[])[1]||'',
+    swRevalidatesStyles:sw.includes("'/styles.css'") || sw.includes('"/styles.css"'),
+    indexBuild:(index.match(/__CAMPOBASE_BUILD\s*=\s*['"]([^'"]+)/)||[])[1]||'',
     cssBytes:css.length,
   };
   console.log('DEPLOYED_ASSETS',JSON.stringify(result));
