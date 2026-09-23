@@ -15,13 +15,13 @@ async function checkDeployedAssets(){
     swStatus:swRes.status,
     indexStatus:indexRes.status,
     cssStatus:cssRes.status,
-    swHasV38:sw.includes('view-cache-v38'),
+    swHasV40:sw.includes('20260923-pwa-force-refresh-v40'),
     swRevalidatesStyles:sw.includes("'/styles.css'") || sw.includes('"/styles.css"'),
     indexBuild:(index.match(/__CAMPOBASE_BUILD\s*=\s*['"]([^'"]+)/)||[])[1]||'',
     cssBytes:css.length,
   };
   console.log('DEPLOYED_ASSETS',JSON.stringify(result));
-  if(!swRes.ok||!indexRes.ok||!cssRes.ok||!result.swHasV38||!result.swRevalidatesStyles||css.length<1000){
+  if(!swRes.ok||!indexRes.ok||!cssRes.ok||!result.swHasV40||result.indexBuild!=='20260923-pwa-force-refresh-v40'||!result.swRevalidatesStyles||css.length<1000){
     throw new Error('Producción no sirve aún el hotfix visual: '+JSON.stringify(result));
   }
 }
