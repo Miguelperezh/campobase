@@ -54,7 +54,11 @@
   }
 
   async function readTable(client, table) {
-    const { data, error } = await client.from(table).select('id,payload,updated_at,deleted_at');
+    const query = client.from(table).select('id,payload,updated_at,deleted_at');
+    if (typeof query.abortSignal === 'function' && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+      query.abortSignal(AbortSignal.timeout(8000));
+    }
+    const { data, error } = await query;
     if (error) throw new Error(`${table}: ${error.message || error.code || 'error de lectura'}`);
     return (data || []).filter((row) => !row.deleted_at && row.payload).map((row) => row.payload);
   }
@@ -365,9 +369,12 @@
       sync.textContent = 'Error Supabase';
       const msg = error?.message || String(error);
       const isAuth = msg.includes('permission denied') || msg.includes('401') || msg.includes('42501') || msg.includes('JWT');
+      const isStarting = msg.includes('schema cache') || msg.includes('PGRST002') || msg.includes('503') || msg.includes('connection pool') || msg.includes('504');
       const authHint = isAuth
         ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Debes iniciar sesión en CampoBase antes de abrir Modo Campo.</p><p><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Ir a CampoBase / Iniciar sesión</a></p>'
-        : '<button class="btn primary" onclick="location.reload()">Reintentar</button>';
+        : (isStarting
+          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">El servidor en la nube se está activando tras una pausa. Pulsa Reintentar en unos segundos.</p><p><button class="btn primary" onclick="location.reload()">Reintentar conexión</button></p>'
+          : '<button class="btn primary" onclick="location.reload()">Reintentar</button>');
       $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos</h2><p>${esc(msg)}</p>${authHint}</div>`;
       console.error('[Modo Campo directo]', error);
     }

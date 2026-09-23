@@ -779,7 +779,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"></video>
+        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"><source src="${esc(videoSrc)}" type="video/mp4"></video>
         <div class="video-overlay-play" title="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </div>
@@ -1187,10 +1187,21 @@ export function initValidatedExerciseViewer(root) {
     videoDebugger?.render();
   }
 
+  let lastToggleTime = 0;
   async function togglePlay() {
-    const src = video.dataset.src;
+    const now = Date.now();
+    if (now - lastToggleTime < 350) return;
+    lastToggleTime = now;
+
+    const src = video.dataset.src || video.currentSrc || video.src;
     if (!video.src || !video.getAttribute('src')) {
       video.src = src;
+    }
+    if (!video.querySelector('source') && src) {
+      const s = document.createElement('source');
+      s.src = src;
+      s.type = 'video/mp4';
+      video.appendChild(s);
     }
     video.playsInline = true;
     video.setAttribute('playsinline', '');
@@ -1212,9 +1223,17 @@ export function initValidatedExerciseViewer(root) {
     }
   }
 
-  if (btnPlay) btnPlay.addEventListener('click', togglePlay);
-  if (overlayPlay) overlayPlay.addEventListener('click', togglePlay);
-  if (video) video.addEventListener('click', togglePlay);
+  const handleToggle = (ev) => {
+    if (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+    togglePlay();
+  };
+
+  if (btnPlay) btnPlay.addEventListener('click', handleToggle);
+  if (overlayPlay) overlayPlay.addEventListener('click', handleToggle);
+  if (video) video.addEventListener('click', handleToggle);
 
   video.addEventListener('play', () => updatePlayState(true));
   video.addEventListener('playing', () => updatePlayState(true));

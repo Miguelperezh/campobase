@@ -1,7 +1,7 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
@@ -749,7 +749,7 @@ function renderSquadLeaderboards() {
     tableContent = `
       <div class="lb-help-box">
         <span class="info-icon">💡</span>
-        <span>Ordenado de menor a mayor promedio por partido convocado para identificar de inmediato a quién le toca jugar más en la próxima jornada.</span>
+        <span>Ordenado de mayor a menor promedio de minutos por partido convocado en este ámbito (${scopeLabels[scope]}).</span>
       </div>
       <div class="lb-table-wrapper">
         <table class="lb-table">
@@ -771,8 +771,9 @@ function renderSquadLeaderboards() {
               const avg = item.callupInfo.averageMinutesPerCallup;
               const pct = item.callupInfo.percent;
               const badgeClass = avg >= 50 ? 'badge-good' : (avg >= 30 ? 'badge-mid' : 'badge-low');
-              return `<tr>
-                <td class="col-rank"><strong>${idx + 1}.º</strong></td>
+              const rankClass = idx === 0 ? 'lb-podium-1' : (idx === 1 ? 'lb-podium-2' : (idx === 2 ? 'lb-podium-3' : ''));
+              return `<tr class="${rankClass}">
+                <td class="col-rank"><strong>${medal(idx)}</strong></td>
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
@@ -1292,6 +1293,11 @@ function ensureLiveDetails() {
     comments: existing.comments ?? '',
     minuteReasons: existing.minuteReasons ?? {},
   };
+  ['goals', 'cards', 'injuries', 'incidents'].forEach((k) => {
+    (state.timer.details[k] || []).forEach((item) => {
+      if (!item.id) item.id = uid();
+    });
+  });
   return state.timer.details;
 }
 
@@ -1309,21 +1315,37 @@ function liveDetailsMarkup(prefix, availableIds, match) {
     ...details.goals.map((item) => {
       const assist = item.assistantId ? ` (asist. ${playerName(item.assistantId)})` : '';
       const label = item.isPenalty ? '🎯 Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : '⚽ Gol');
-      return `${formatMatchClock(item.second)} · ${label}: ${playerName(item.playerId)}${assist}${item.note ? ` · ${item.note}` : ''}`;
+      return {
+        id: item.id,
+        second: item.second || 0,
+        text: `${formatMatchClock(item.second)} · ${label}: ${playerName(item.playerId)}${assist}${item.note ? ` · ${item.note}` : ''}`,
+      };
     }),
-    ...details.cards.map((item) => `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? '🟥 roja' : '🟨 amarilla'}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
-    ...details.injuries.map((item) => `${formatMatchClock(item.second)} · 🩹 Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
+    ...details.cards.map((item) => ({
+      id: item.id,
+      second: item.second || 0,
+      text: `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? '🟥 roja' : '🟨 amarilla'}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
+    })),
+    ...details.injuries.map((item) => ({
+      id: item.id,
+      second: item.second || 0,
+      text: `${formatMatchClock(item.second)} · 🩹 Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
+    })),
     ...details.incidents.map((item) => {
       let iconLabel = '📋 Incidencia';
       if (item.type === 'penalty_miss') iconLabel = '❌🎯 Penalti fallado';
       else if (item.type === 'penalty_saved') iconLabel = '🧤🚫 Penalti parado';
       else if (item.type === 'penalty_conceded') iconLabel = '🧤⚽ Penalti encajado';
-      return `${formatMatchClock(item.second)} · ${iconLabel}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`;
+      return {
+        id: item.id,
+        second: item.second || 0,
+        text: `${formatMatchClock(item.second)} · ${iconLabel}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
+      };
     }),
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
   const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
-  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
 function renderLive() {
@@ -4793,6 +4815,15 @@ async function addLiveEvent(prefix) {
   toast(toastMsg);
 }
 
+async function removeLiveEvent(prefix, eventId) {
+  if (!eventId) return;
+  state.timer.details = removePlayerMatchEvent(ensureLiveDetails(), eventId);
+  await persistTimer();
+  renderLive();
+  renderDelegate();
+  toast('Incidencia anulada.');
+}
+
 async function pollLiveState() {
   if (!state.role) return;
   if (state.role === 'demo' && !isDemoSessionActive(state.demoSession)) {
@@ -6598,6 +6629,7 @@ function wireEvents() {
     }
     if (target.matches('.score-step')) await changeLiveScore(target.dataset.scoreTeam, Number(target.dataset.delta));
     if (target.matches('.add-live-event')) await addLiveEvent(target.dataset.prefix);
+    if (target.matches('.remove-live-event-btn')) await removeLiveEvent(target.dataset.prefix, target.dataset.id);
     if (target.matches('.save-live-comments')) {
       if (!roleCanUseOwnerFeatures(state.role)) return toast('Los comentarios son solo de Migue.');
       ensureLiveDetails().comments = $(`#${target.dataset.prefix}-comments`).value.trim();

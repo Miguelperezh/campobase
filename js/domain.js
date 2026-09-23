@@ -535,6 +535,43 @@ export function addPlayerMatchEvent(details, event) {
   return next;
 }
 
+export function removePlayerMatchEvent(details, eventId) {
+  if (!details || !eventId) return details;
+  const next = structuredClone(details);
+  for (const field of ['goals', 'cards', 'injuries', 'incidents']) next[field] ??= [];
+
+  const goalIdx = next.goals.findIndex((g) => g.id === eventId);
+  if (goalIdx >= 0) {
+    next.goals.splice(goalIdx, 1);
+    next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
+    return next;
+  }
+
+  const incidentIdx = next.incidents.findIndex((i) => i.id === eventId);
+  if (incidentIdx >= 0) {
+    const item = next.incidents[incidentIdx];
+    if (item.type === 'penalty_conceded') {
+      next.goalsAgainst = Math.max(0, (Number(next.goalsAgainst) || 0) - 1);
+    }
+    next.incidents.splice(incidentIdx, 1);
+    return next;
+  }
+
+  const cardIdx = next.cards.findIndex((c) => c.id === eventId);
+  if (cardIdx >= 0) {
+    next.cards.splice(cardIdx, 1);
+    return next;
+  }
+
+  const injuryIdx = next.injuries.findIndex((inj) => inj.id === eventId);
+  if (injuryIdx >= 0) {
+    next.injuries.splice(injuryIdx, 1);
+    return next;
+  }
+
+  return next;
+}
+
 export function applySubstitution(onFieldIds, outIds, inIds, availableIds, maxChanges = 3) {
   if (outIds.length !== inIds.length) throw new RangeError('Debe salir y entrar el mismo número de jugadores.');
   if (!Number.isInteger(maxChanges) || maxChanges < 1 || outIds.length < 1 || outIds.length > maxChanges) {
@@ -962,9 +999,12 @@ export function buildSquadLeaderboards({
       return (a.coefficient - b.coefficient) || (b.keeperMatches - a.keeperMatches);
     });
 
-  // Reparto equitativo de minutos: ordenado de menor a mayor promedio min/partido
+  // Reparto equitativo de minutos: ordenado de más a menos promedio min/partido
   const minuteDistribution = [...statsList]
-    .sort((a, b) => (a.callupInfo.averageMinutesPerCallup - b.callupInfo.averageMinutesPerCallup) || (a.summary.minutes - b.summary.minutes) || (b.summary.callups - a.summary.callups));
+    .sort((a, b) => (b.callupInfo.averageMinutesPerCallup - a.callupInfo.averageMinutesPerCallup)
+      || (b.summary.minutes - a.summary.minutes)
+      || (b.summary.callups - a.summary.callups)
+      || String(a.player.name).localeCompare(String(b.player.name)));
 
   // Fair Play (tarjetas)
   const fairPlay = [...statsList]

@@ -230,12 +230,16 @@ export function createCampoBaseCloudStore() {
     async shouldApplyMutation(mutation) {
       const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[mutation.store];
-      const rows = checkResult(await client
+      const query = client
         .from(table)
         .select('updated_at,deleted_at')
         .eq('user_id', dataOwnerUserId)
         .eq('id', mutation.recordId)
-        .limit(1)) ?? [];
+        .limit(1);
+      if (typeof query.abortSignal === 'function' && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+        query.abortSignal(AbortSignal.timeout(6000));
+      }
+      const rows = checkResult(await query) ?? [];
       const remote = rows[0];
       if (!remote) return true;
       const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
@@ -246,10 +250,14 @@ export function createCampoBaseCloudStore() {
     async getSnapshot(store) {
       const { dataOwnerUserId } = await requireBoundUser(client);
       const table = CLOUD_TABLES[store];
-      const rows = checkResult(await client
+      const query = client
         .from(table)
         .select('id,payload,updated_at,deleted_at,user_id')
-        .eq('user_id', dataOwnerUserId)) ?? [];
+        .eq('user_id', dataOwnerUserId);
+      if (typeof query.abortSignal === 'function' && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+        query.abortSignal(AbortSignal.timeout(7000));
+      }
+      const rows = checkResult(await query) ?? [];
       return {
         records: rows.filter(({ deleted_at: deletedAt }) => !deletedAt).map(({ payload }) => payload),
         deletedIds: rows.filter(({ deleted_at: deletedAt }) => Boolean(deletedAt)).map(({ id }) => id),

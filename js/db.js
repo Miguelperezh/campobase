@@ -384,9 +384,13 @@ export async function syncFromCloud() {
             }
           }
         }
-        const localJson = JSON.stringify(localRecords);
-        const cloudJson = JSON.stringify(snapshot.records);
-        if (localJson !== cloudJson) {
+        const areEquivalent = (() => {
+          if (localRecords.length !== snapshot.records.length) return false;
+          if (localRecords.length === 0) return true;
+          const sortById = (list) => [...list].sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+          return JSON.stringify(sortById(localRecords)) === JSON.stringify(sortById(snapshot.records));
+        })();
+        if (!areEquivalent) {
           hasChanges = true;
           await replaceLocalStore(store, snapshot.records);
         }

@@ -31,6 +31,7 @@ import {
   calledPlayerOptions,
   adjustLiveScore,
   addPlayerMatchEvent,
+  removePlayerMatchEvent,
   buildPlayerSummary,
   applyPlayerStatAdjustments,
   setPlayerStatTotals,
@@ -987,10 +988,10 @@ test('buildSquadLeaderboards genera las tablas de goleadores, asistencias, porte
   assert.equal(leaderboards.goalkeepers[0].goalsAgainst, 2);
   assert.equal(leaderboards.goalkeepers[0].coefficient, 2.0);
 
-  // Reparto de minutos: ordenado de menor a mayor promedio
-  assert.equal(leaderboards.minuteDistribution[0].player.id, 'p2'); // 30 min
+  // Reparto de minutos: ordenado de más a menos promedio
+  assert.equal(leaderboards.minuteDistribution[0].player.id, 'p3'); // 70 min
   assert.equal(leaderboards.minuteDistribution[1].player.id, 'p1'); // 53 min
-  assert.equal(leaderboards.minuteDistribution[2].player.id, 'p3'); // 70 min
+  assert.equal(leaderboards.minuteDistribution[2].player.id, 'p2'); // 30 min
 });
 
 test('addPlayerMatchEvent registra assistantId en goles y se refleja en buildPlayerSummary', () => {
@@ -1020,5 +1021,37 @@ test('addPlayerMatchEvent registra assistantId en goles y se refleja en buildPla
   assert.equal(summaryP1.assists, 0);
   assert.equal(summaryP2.goals, 0);
   assert.equal(summaryP2.assists, 1);
+});
+
+test('removePlayerMatchEvent anula goles, penaltis, tarjetas e incidencias recalculando el marcador', () => {
+  let details = { goals: [], cards: [], injuries: [], incidents: [], goalsFor: 0, goalsAgainst: 0 };
+
+  // 1. Añadir gol propio y gol de penalti
+  details = addPlayerMatchEvent(details, { id: 'g1', kind: 'goal', playerId: 'p1', second: 60 });
+  details = addPlayerMatchEvent(details, { id: 'g2', kind: 'penalty_goal', playerId: 'p2', second: 120 });
+  assert.equal(details.goalsFor, 2);
+  assert.equal(details.goals.length, 2);
+
+  // Anular gol g1
+  details = removePlayerMatchEvent(details, 'g1');
+  assert.equal(details.goalsFor, 1);
+  assert.equal(details.goals.length, 1);
+  assert.equal(details.goals[0].id, 'g2');
+
+  // 2. Penalti encajado (suma gol rival)
+  details = addPlayerMatchEvent(details, { id: 'pc1', kind: 'penalty_conceded', playerId: 'gk', second: 180 });
+  assert.equal(details.goalsAgainst, 1);
+  assert.equal(details.incidents.length, 1);
+
+  // Anular penalti encajado
+  details = removePlayerMatchEvent(details, 'pc1');
+  assert.equal(details.goalsAgainst, 0);
+  assert.equal(details.incidents.length, 0);
+
+  // 3. Tarjeta y anulación
+  details = addPlayerMatchEvent(details, { id: 'c1', kind: 'yellow', playerId: 'p1', second: 240 });
+  assert.equal(details.cards.length, 1);
+  details = removePlayerMatchEvent(details, 'c1');
+  assert.equal(details.cards.length, 0);
 });
 

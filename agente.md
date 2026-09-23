@@ -689,6 +689,32 @@ Partidos activos próximos verificados:
 
 ### 9. Verificación y Batería de Pruebas
 - Sincronización completa de la versión `20260923-stats-setpieces-modocampo-v44` en Service Worker, aplicación cliente y suites de tests.
-- **505/505 tests unitarios y de integración superados con éxito** (`npm test`).
+- **506/506 tests unitarios y de integración superados con éxito** (`npm test`).
 - Sintaxis y tipado validados con `npm run check` al 100%.
+
+### 10. Actualización Crítica: Protección de Datos, Rendimiento, Marcador en Vivo y Móvil (2026-09-23)
+1. **Protección Absoluta de Datos del Usuario (INMUTABLES):**
+   - **Jugadores y lanzadores:** Actualizados directamente por el usuario. PROHIBIDO modificarlos, reiniciarlos, sobrescribirlos o borrarlos en cualquier sincronización o migración.
+   - **Convocatoria contra El Pilar:** Actualizada por el usuario de forma provisional. PROHIBIDO modificarla o alterarla; se preserva íntegramente.
+2. **Borrado 100% de MP4 en Supabase Storage:**
+   - Se eliminaron con éxito los **323 archivos MP4** alojados en el bucket `ejercicio-videos` de Supabase (25 en `CAMPOBASE-VIDEO-.../video.mp4` y 298 en `library-v2-preview/.../ejercicio.mp4`).
+   - El bucket `ejercicio-videos` se conserva limpio para futuras subidas sin consumir almacenamiento en la cuota gratuita de Supabase, ya que los vídeos del catálogo se sirven desde GitHub Releases (`campobase-videos-v1`).
+3. **Anulación de Goles e Incidencias en Partido en Vivo:**
+   - Implementada la función `removePlayerMatchEvent(details, eventId)` en `js/domain.js` y `removeLiveEvent(prefix, eventId)` en `js/app.js`.
+   - Permite al entrenador o delegado anular cualquier gol (propio, de penalti o en propia puerta), penalti encajado, tarjeta, lesión o incidencia desde la lista de eventos en vivo mediante un botón individual «✕ Anular».
+   - Al anular un gol, el marcador (`goalsFor` o `goalsAgainst`) se recalcula y decrementa inmediatamente, persistiendo en el timer y refrescando la pantalla del míster y del delegado al instante.
+4. **Rediseño del Marcador en Vivo y Corrección Móvil:**
+   - Se eliminó el fondo verde oscuro `#0f2d20` y los números negros forzados que no habían sido configurados por el usuario.
+   - Marcador rediseñado con estilo tarjeta limpia (`var(--cb-surface-card)`), nombres de equipos en texto de alto contraste (`--cb-slate-800`), números en verde corporativo (`--cb-brand`), y botones contenidos de 38×38 px que nunca se desbordan en pantallas móviles (pantallazo 2 solucionado).
+   - Se corrigió el colapso visual de los botones de la pizarra táctica en móvil (`.tactic-tool` y `.tactic-tool-label` con `white-space: nowrap; word-break: normal`), impidiendo que las letras se apilen verticalmente una a una (pantallazo 1 solucionado).
+5. **Solución a la Lentitud Extrema y Falta de Sincronización:**
+   - **Causa identificada:** En `js/db.js`, `localJson !== cloudJson` comparaba arrays no ordenados por ID devueltos por PostgREST, resultando en `true` constantemente y forzando a vaciar y repoblar IndexedDB cada 10 segundos, destruyendo y recreando todo el DOM con `refresh()`. Además, las peticiones sin timeout saturaban el pool de conexiones de Supabase (error 503/504 `PGRST002/PGRST003`).
+   - **Solución aplicada:**
+     - En `js/db.js`, comparación de registros ordenada por ID (`areEquivalent`). Cuando no hay cambios reales, no se tocan los almacenes locales ni se re-renderiza la interfaz.
+     - En `js/supabase-client.js`, incorporación de `AbortSignal.timeout(6000)` en consultas `getSnapshot` y mutaciones para evitar bloqueos del navegador.
+6. **Reproductor de Ejercicios en Móvil:**
+   - Solucionado el problema por el cual el vídeo se quedaba en pausa a 0:00: al pulsar sobre el overlay de reproducción en móvil, la ocultación instantánea de este causaba un segundo evento de clic fantasma sobre la etiqueta `<video>` subyacente, pausándolo inmediatamente. Se añadió debounce de 350 ms y `stopPropagation()`.
+   - Añadida etiqueta hija explícita `<source src="..." type="video/mp4">` para que el motor AVPlayer de iOS WebKit reconozca el stream MP4 de forma nativa sin depender del `Content-Type` de GitHub Releases.
+7. **Modo Campo:**
+   - Incorporado timeout de seguridad en `readTable` y mensaje informativo con botón de reintento automático si el servidor Supabase se encuentra despertando tras una pausa.
 
