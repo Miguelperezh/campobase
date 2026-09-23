@@ -26,61 +26,19 @@ export function isMobileVideoEnvironment() {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
 }
 
-export function resolveMobileCompatibleVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
-  const hosted = resolveHostedVideoUrl(value);
-  if (!mobile || !hosted.startsWith(`${GITHUB_VIDEO_RELEASE_BASE}/`)) return hosted;
-
-  const rawAsset = hosted.slice(GITHUB_VIDEO_RELEASE_BASE.length + 1).split(/[?#]/, 1)[0];
-  let asset;
-  try {
-    asset = decodeURIComponent(rawAsset);
-  } catch {
-    asset = rawAsset;
-  }
-  const mobileAsset = MOBILE_COMPATIBLE_RELEASE_ASSETS[asset];
-  return mobileAsset
-    ? `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(mobileAsset)}`
-    : hosted;
-}
-
-function isMobileVideoEnvironment() {
-  if (typeof navigator === 'undefined') return false;
-  if (navigator.userAgentData?.mobile === true) return true;
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(String(navigator.userAgent || ''));
-}
-
 function releaseUrlForAsset(asset) {
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
 
-const MOBILE_RELEASE_ASSETS = Object.freeze({
-  'library-v2-preview__f7-126__ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
-});
-
-function mobileReleaseAsset(asset) {
-  const name = String(asset || '');
-  return MOBILE_RELEASE_ASSETS[name] || name;
-}
-
-// Solo f7-126 tiene, de momento, una variante móvil validada.
-// Todos los demás MP4 conservan exactamente su asset original.
-export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
+// Convierte únicamente URLs antiguas del bucket público de vídeos al asset equivalente
+// ya migrado a GitHub Releases. Otras URLs se conservan sin cambios.
+export function resolveHostedVideoUrl(value) {
   const source = String(value ?? '').trim();
   if (!source) return '';
 
   const cleanSource = source.split(/[?#]/, 1)[0];
   const releasePrefix = `${GITHUB_VIDEO_RELEASE_BASE}/`;
-  if (cleanSource.startsWith(releasePrefix)) {
-    const rawAsset = cleanSource.slice(releasePrefix.length);
-    let asset;
-    try {
-      asset = decodeURIComponent(rawAsset);
-    } catch {
-      asset = rawAsset;
-    }
-    if (!/\.mp4$/i.test(asset)) return source;
-    return mobile ? releaseUrlForAsset(mobileReleaseAsset(asset)) : source;
-  }
+  if (cleanSource.startsWith(releasePrefix)) return source;
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;
   const markerIndex = source.indexOf(marker);
@@ -99,8 +57,25 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
   const isCampoBaseHuman = path.startsWith('CAMPOBASE-VIDEO-') && /\/video\.mp4$/i.test(path);
   if (!isLibraryV2 && !isCampoBaseHuman) return source;
 
-  const originalAsset = path.replaceAll('/', '__');
-  return releaseUrlForAsset(mobile ? mobileReleaseAsset(originalAsset) : originalAsset);
+  return releaseUrlForAsset(path.replaceAll('/', '__'));
+}
+
+// En móvil, usa una variante recodificada solo cuando existe y ha sido validada.
+// En escritorio y para el resto de vídeos conserva exactamente la URL normal.
+export function resolveMobileCompatibleVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
+  const hosted = resolveHostedVideoUrl(value);
+  if (!mobile || !hosted.startsWith(`${GITHUB_VIDEO_RELEASE_BASE}/`)) return hosted;
+
+  const rawAsset = hosted.slice(GITHUB_VIDEO_RELEASE_BASE.length + 1).split(/[?#]/, 1)[0];
+  let asset;
+  try {
+    asset = decodeURIComponent(rawAsset);
+  } catch {
+    asset = rawAsset;
+  }
+
+  const compatible = MOBILE_COMPATIBLE_RELEASE_ASSETS[asset];
+  return compatible ? releaseUrlForAsset(compatible) : hosted;
 }
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
