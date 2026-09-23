@@ -519,3 +519,19 @@ Partidos activos próximos verificados:
 - Corrección v39: cualquier asset `*.mp4` del Release se resuelve en móvil como `*-mobile.mp4`; si ya es `-mobile.mp4`, no se vuelve a transformar.
 - El Service Worker revalida explícitamente `/js/ejercicio-videos.js` y usa una caché nueva v39 para impedir que la PWA conserve la regla antigua.
 - Esta corrección no modifica ejercicios, IDs, sesiones, partidos, jugadores, Supabase ni Realtime. Tampoco borra los vídeos originales.
+
+## Vídeo móvil — validación final v40 (23/09/2026)
+
+- Producción activa: `20260923-pwa-force-refresh-v40`.
+- GitHub Pages y `CampoBase verify` están en verde para el commit de producción `b6de98d2903c0ffa2fade708c6c922a2c954cbee`.
+- Release `campobase-videos-v1`: **423 MP4 originales + 423 variantes `-mobile.mp4` = 846 assets**, con **0 parejas ausentes**.
+- En móvil, CampoBase resuelve automáticamente cada MP4 del Release a su pareja `-mobile.mp4`; en escritorio conserva el original.
+- Prueba real contra la PWA pública con Google Chrome + perfil móvil y soporte H.264:
+  - `f7-120`: reproduce y avanza a 2,326 s, `readyState=4`, sin error.
+  - `f7-126`: reproduce y avanza a 2,394 s, `readyState=4`, sin error.
+  - `f7-127`: reproduce y avanza a 2,392 s, `readyState=4`, sin error.
+  - `f7-135`: reproduce y avanza a 2,350 s, `readyState=4`, sin error.
+- El Service Worker activo en la prueba fue `sw.js?v=20260923-pwa-force-refresh-v40`.
+- No se modificaron ejercicios, sesiones, jugadores, convocatorias, Realtime, partido en vivo ni datos de usuario para esta validación.
+- Si un teléfono físico siguiera mostrando el fallo después de v40, tratarlo como estado local de esa instalación/PWA y verificar que haya cargado v40 antes de cambiar de nuevo la arquitectura de vídeo.
+
