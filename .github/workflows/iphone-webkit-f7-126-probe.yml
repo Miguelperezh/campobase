@@ -1,0 +1,18 @@
+name: iPhone WebKit f7-126 production probe
+on:
+  push:
+    branches:
+      - test/iphone-webkit-f7-126-v38
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps webkit
+      - run: node scripts/iphone-production-probe.mjs
