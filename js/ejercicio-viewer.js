@@ -2,7 +2,7 @@
 // Implementa las 17 secciones completas, controles interactivos, zoom táctico con clamping,
 // leyenda visual bajo el vídeo y botones accesibles de cierre (superior con safe-area e inferior fijo).
 
-import { renderVideoSectionHTML, resolveHostedVideoUrl } from './ejercicio-videos.js';
+import { renderVideoSectionHTML, resolveMobileCompatibleVideoUrl } from './ejercicio-videos.js';
 import { attachMediaLightbox } from './media-lightbox.js';
 import { findValidatedExercise } from './ejercicios-validados.js';
 
@@ -280,7 +280,7 @@ export function roleVisualMeta(roleItemOrId) {
  */
 export function renderValidatedExerciseHTML(ex, options = {}) {
   const media = ex.media || {};
-  const videoSrc = resolveHostedVideoUrl(String(
+  const videoSrc = resolveMobileCompatibleVideoUrl(String(
     media.video
     || media.mp4
     || ex.video_ejercicio
@@ -293,7 +293,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     || ex.animacion?.preview
     || ''
   ).trim();
-  const previewVideoSrc = resolveHostedVideoUrl(String(
+  const previewVideoSrc = resolveMobileCompatibleVideoUrl(String(
     ex.preview_video
     || ex._preview_video_fallback
     || videoSrc
@@ -308,8 +308,8 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     || ex.video
     || ''
   ).trim();
-  const realVideo = explicitHumanVideo && resolveHostedVideoUrl(explicitHumanVideo) !== videoSrc
-    ? resolveHostedVideoUrl(explicitHumanVideo)
+  const realVideo = explicitHumanVideo && resolveMobileCompatibleVideoUrl(explicitHumanVideo) !== videoSrc
+    ? resolveMobileCompatibleVideoUrl(explicitHumanVideo)
     : '';
   const graphicCrop = normalizeMediaCrop(ex.media_crop);
   const previewCrop = normalizeMediaCrop(ex.preview_crop || ex.media_crop);
@@ -901,7 +901,7 @@ export function renderExerciseGridCard(ex) {
   // La portada de la tarjeta es preview.png cuando existe; si aún no está
   // publicado, usamos un fotograma PAUSADO del MP4 gráfico, nunca del humano.
   const preview = isUsablePreview(rawPreview) ? rawPreview : '';
-  const graphicPreviewVideo = resolveHostedVideoUrl(String(
+  const graphicPreviewVideo = resolveMobileCompatibleVideoUrl(String(
     ex.preview_video
     || ex.video_ejercicio
     || media.video
