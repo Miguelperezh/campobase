@@ -6,6 +6,7 @@ import {
   getPlayerSetPieceRoles,
   buildSquadLeaderboards,
   buildPlayerSummary,
+  addPlayerMatchEvent,
 } from '../js/domain.js';
 
 const root = new URL('../', import.meta.url);
@@ -153,4 +154,79 @@ test('diagnóstico seguro ?videoDebug=1 y botón en Ajustes están disponibles',
   assert.match(viewer, /readyState/);
   assert.match(viewer, /networkState/);
 });
+
+test('partidos disputados sin convocatoria formal previa se computan como convocatorias y minutos reales (caso Aitor)', () => {
+  const matches = [
+    { id: 'm1', type: 'league', status: 'finished', minuteTotals: { 'p-aitor': 35 * 60 } },
+    { id: 'm2', type: 'league', status: 'finished', minuteTotals: { 'p-aitor': 40 * 60 } },
+    { id: 'm3', type: 'league', status: 'finished', minuteTotals: { 'p-aitor': 30 * 60 } },
+  ];
+  // Solo se creó convocatoria previa para el partido 1
+  const callups = [
+    { id: 'c1', matchId: 'm1', availableIds: ['p-aitor'], exclusions: [] },
+  ];
+
+  const summary = buildPlayerSummary('p-aitor', matches, [], callups, 'league');
+  assert.equal(summary.callups, 3);
+  assert.equal(summary.minutes, 105);
+
+  const callupMinutes = calculatePlayerCallupMinutes({
+    playerId: 'p-aitor',
+    matches,
+    callups,
+    defaultDuration: 70,
+    totalCallups: summary.callups,
+    playedMinutes: summary.minutes,
+  });
+  assert.equal(callupMinutes.totalCallups, 3);
+  assert.equal(callupMinutes.possibleMinutes, 210);
+  assert.equal(callupMinutes.playedMinutes, 105);
+  assert.equal(callupMinutes.percent, 50);
+});
+
+test('addPlayerMatchEvent gestiona goles de penalti, fallados, parados y encajados correctamente', () => {
+  const initial = { goalsFor: 0, goalsAgainst: 0, goals: [], cards: [], injuries: [], incidents: [] };
+
+  // 1. Gol de penalti propio
+  const afterPenGoal = addPlayerMatchEvent(initial, { id: 'e1', kind: 'penalty_goal', playerId: 'p1', second: 120, note: '' });
+  assert.equal(afterPenGoal.goalsFor, 1);
+  assert.equal(afterPenGoal.goals[0].isPenalty, true);
+
+  // 2. Penalti fallado
+  const afterMiss = addPlayerMatchEvent(afterPenGoal, { id: 'e2', kind: 'penalty_miss', playerId: 'p1', second: 240, note: '' });
+  assert.equal(afterMiss.goalsFor, 1);
+  assert.equal(afterMiss.incidents[0].type, 'penalty_miss');
+
+  // 3. Penalti parado por nuestro portero
+  const afterSave = addPlayerMatchEvent(afterMiss, { id: 'e3', kind: 'penalty_saved', playerId: 'gk1', second: 360, note: '' });
+  assert.equal(afterSave.goalsAgainst, 0);
+  assert.equal(afterSave.incidents[1].type, 'penalty_saved');
+
+  // 4. Penalti encajado
+  const afterConceded = addPlayerMatchEvent(afterSave, { id: 'e4', kind: 'penalty_conceded', playerId: 'gk1', second: 480, note: '' });
+  assert.equal(afterConceded.goalsAgainst, 1);
+  assert.equal(afterConceded.incidents[2].type, 'penalty_conceded');
+});
+
+test('tablas clasificatorias y balón parado no contienen prefijo # en dorsales y tienen toggle dinámico', async () => {
+  const app = await read('js/app.js');
+
+  // No debe existir #${cleanPlayerNumber en app.js
+  assert.doesNotMatch(app, /#\$\{cleanPlayerNumber/);
+  // Toggle conmutable de tablas clasificatorias
+  assert.match(app, /Desplegar tablas clasificatorias ▾/);
+  assert.match(app, /Cerrar tablas clasificatorias ▴/);
+  assert.match(app, /lb-toggle-text/);
+});
+
+test('reproducción de vídeo en iOS WebKit usa webkit-playsinline y no llama a video.load() destructivo al pulsar play', async () => {
+  const viewer = await read('js/ejercicio-viewer.js');
+
+  assert.match(viewer, /webkit-playsinline/);
+  // togglePlay no debe llamar a video.load()
+  const togglePlayMatch = viewer.match(/async function togglePlay\(\) \{([\s\S]*?)\n {2}\}/);
+  assert.ok(togglePlayMatch, 'togglePlay exists');
+  assert.doesNotMatch(togglePlayMatch[1], /video\.load\(\)/);
+});
+
 

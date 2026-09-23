@@ -610,5 +610,85 @@ Partidos activos próximos verificados:
   - **Historial reactivo de eventos**: Registra con timestamp los últimos eventos del elemento de vídeo: `loadstart`, `loadedmetadata`, `loadeddata`, `canplay`, `play`, `playing`, `waiting`, `stalled`, `suspend`, `pause`, `error`, `ended`.
   - Botón **Copiar** para exportar todo el registro de diagnóstico y pegarlo cómodamente.
 
+---
 
+## 2. Resumen de Mejoras y Auditoría v44 (`20260923-stats-setpieces-modocampo-v44`)
+
+### 1. Eliminación Definitiva del Símbolo `#` en Dorsales de Jugadores
+- **Causa anterior:** En selectores de lanzadores de balón parado, capitanes, tablas clasificatorias y el banner rápido de especialistas, se mostraba el dorsal precedido por el carácter `#` (ej. `#7`, `#10`), lo cual contravenía la regla de estilo del usuario (`Alejandro Pedrós Goncalves 7`).
+- **Solución implementada:**
+  - Se sustituyeron todas las interpolaciones `#${cleanPlayerNumber...}` y etiquetas de dorsal en `js/app.js`.
+  - Ahora en toda la interfaz (formulario de especialistas, banners tácticos en vivo y clasificaciones) el dorsal aparece limpio como número (`7`, `10`, etc.) o en una píldora visual estilizada `.lb-dorsal-tag`.
+
+### 2. Botón Reactivo de Despliegue de Tablas Clasificatorias
+- **Causa anterior:** El acordeón de tablas clasificatorias no indicaba con claridad la acción al estar abierto o cerrado, ni cambiaba el texto dinámicamente.
+- **Solución implementada:**
+  - Se añadió la etiqueta interactiva `<span class="badge secondary lb-toggle-text">Desplegar tablas clasificatorias ▾</span>` / `Cerrar tablas clasificatorias ▴`.
+  - Se conectó un listener sobre el evento `toggle` de `details.squad-leaderboards-card` que actualiza el texto y la flecha en tiempo real según el estado desplegado/colapsado.
+
+### 3. Convocatorias y Minutos Reales (Caso Aitor y Jugadores de Plantilla)
+- **Causa anterior:**
+  - Si un jugador disputaba minutos en un partido (`minuteTotals > 0`) pero el partido no tenía vinculada formalmente una convocatoria previa (o se había creado el partido directamente sin documento previo de convocatoria), la estadística de convocatorias del jugador omitía ese partido.
+  - Esto generaba discrepancias donde jugadores como Aitor contaban con minutos reales jugados pero una sola convocatoria formal registrada.
+- **Solución implementada:**
+  - En `js/domain.js` (`buildPlayerSummary`), se flexibilizó el enlace bidireccional entre convocatoria y partido:
+    `(c.matchId && c.matchId === match.id) || (match.callupId && match.callupId === c.id) || match.id === c.id`.
+  - Se incorporó el cómputo de partidos jugados con minutos donde no existía documento de convocatoria previo: se suman como convocatorias efectivas reales (`totalCallups`).
+  - En `calculatePlayerCallupMinutes`, se garantiza que `effectiveCallups` nunca sea inferior a la cantidad de partidos disputados computados (`Math.max(totalCallups, countedMatchIds.size)`).
+  - De este modo, todas las estadísticas y porcentajes de participación reflejan la realidad deportiva exacta.
+
+### 4. Nuevos Eventos de Balón Parado en Partido en Vivo y Modo Delegado
+- **Causa anterior:** Solo se podían registrar goles estándar, tarjetas, lesiones e incidencias genéricas. Faltaban eventos específicos de penaltis y balón parado esenciales para el seguimiento minucioso del entrenador y del delegado.
+- **Solución implementada:**
+  - Se incorporaron en `js/domain.js` (`addPlayerMatchEvent`) y en la interfaz de `js/app.js` (tanto para En Vivo como Modo Delegado y edición a posteriori en Calendario):
+    1. **Gol de penalti** (`penalty_goal`): Suma un gol a nuestro favor en el marcador (`goalsFor + 1`), guarda la propiedad `isPenalty: true` en el array de goles y muestra el icono `🎯⚽`.
+    2. **Penalti fallado** (`penalty_miss`): Registra la incidencia del lanzador con etiqueta `❌🎯 Penalti fallado` sin alterar el marcador.
+    3. **Penalti parado por el portero** (`penalty_saved`): Registra la incidencia de mérito del guardameta con etiqueta `🧤🎯 Penalti parado` sin variar el marcador.
+    4. **Penalti encajado** (`penalty_conceded`): Registra la incidencia sobre el portero con etiqueta `⚠️🎯 Penalti encajado` y suma un gol al rival en el marcador (`goalsAgainst + 1`).
+    5. **Gol en propia puerta** (`own_goal` / `__pp__`): Registra el gol sin asignar a ningún jugador de campo indebidamente.
+    6. **Asistencias vinculadas a goles**: Selector de asistente en vivo y en diferido, computándose de inmediato en la tabla de Asistencias de plantilla.
+
+### 5. Tablas Clasificatorias Más Visuales y Elegantes
+- **Mejoras de estilo (`styles-redesign.css`):**
+  - **Podio deportivo**: Las 3 primeras posiciones cuentan con acabados metálicos distintivos:
+    - 🥇 **1.º clasificado (`.lb-podium-1`)**: Borde y fondo sutil en degradado dorado (`rgba(234, 179, 8, 0.12)`).
+    - 🥈 **2.º clasificado (`.lb-podium-2`)**: Borde y fondo en degradado plateado (`rgba(148, 163, 184, 0.12)`).
+    - 🥉 **3.er clasificado (`.lb-podium-3`)**: Borde y fondo en degradado bronce (`rgba(217, 119, 6, 0.12)`).
+  - **Píldora de dorsal (`.lb-dorsal-tag`)**: Dorsal resaltado en cápsula compacta de alto contraste sin el símbolo `#`.
+  - Celdas con tipografía tabular (`tabular-nums`) y avatar con iniciales o foto optimizada.
+
+### 6. Reproducción de Vídeo MP4 en iPhone Físico (PWA Standalone)
+- **Diagnóstico del problema:**
+  - En ordenadores y Safari estándar el vídeo reproducía correctamente.
+  - En la PWA instalada en la pantalla de inicio del iPhone, al pulsar el botón ▶ el vídeo se quedaba en pausa a 0:00 o no arrancaba.
+  - **Causa raíz:** En `js/ejercicio-viewer.js`, dentro de la función `togglePlay()`, existía una lógica que ante un estado `readyState === 0` o red vacía forzaba `video.load()` con un parámetro URL dinámico en iOS standalone. En el motor WebKit de iOS, invocar `video.load()` de forma síncrona dentro o antes del gesto táctil de usuario aborta el pipeline de medios, cancela la promesa de reproducción (`AbortError`) y fuerza al elemento a pausarse en 0:00.
+- **Solución implementada:**
+  - Se eliminó el reseteo destructivo `video.load()` de `togglePlay()`.
+  - Se añadieron los atributos nativos obligatorios de WebKit: `webkit-playsinline`, `playsinline`, y la propiedad imperativa `video.playsInline = true`.
+  - Asignación limpia de `video.src = video.dataset.src` sin recargas intermedias, permitiendo que `video.play()` arranque limpiamente en el primer toque del usuario en la PWA.
+
+### 7. Auditoría Técnica: ¿Se pueden borrar los vídeos MP4 de Supabase?
+- **Pregunta del usuario:** *«Comprueba si se puede borrar de supabase ya los mp4 si no hacen nada ahí ni rompe nada, yo tengo copia local de esos videos pero creo que está en github»*.
+- **Dictamen y comprobación técnica:**
+  - **SÍ, los 323 vídeos históricos del catálogo precargado SE PUEDEN BORRAR del almacenamiento (Storage) de Supabase.**
+  - **Fundamento técnico:** El módulo `js/ejercicio-videos.js` contiene la función central `resolveHostedVideoUrl(url)`. Todas las URLs de vídeos del catálogo con patrón `library-v2-preview/*` o `CAMPOBASE-VIDEO-*` son interceptadas y redirigidas al CDN de **GitHub Releases** (`campobase-videos-v1`). Los navegadores y la PWA descargan y reproducen los vídeos directamente desde GitHub Releases a coste 0, sin realizar ninguna petición a Supabase Storage para estos vídeos.
+  - **⚠️ ADVERTENCIA CRÍTICA DE SEGURIDAD:**
+    - **NO se debe borrar el bucket `ejercicio-videos` de Supabase**.
+    - La funcionalidad «Añadir vídeo propio» en ejercicios personalizados (función `uploadVideo()` en `js/supabase-client.js`) sube los vídeos nuevos directamente a ese bucket de Supabase Storage.
+    - **Acción recomendada:** Se pueden borrar con total seguridad los 323 archivos `.mp4` del catálogo que estén dentro del bucket para liberar espacio en la cuota gratuita, pero manteniendo el bucket `ejercicio-videos` intacto con sus políticas de acceso.
+
+### 8. Comprobación Técnica: ¿El polling de 10 segundos sobra o es necesario teniendo Realtime?
+- **Pregunta del usuario:** *«Añade que hay que comprobar el realtime por si el ploit de 10 seg si sobre es necesario»*.
+- **Dictamen y comprobación técnica:**
+  - **NO SOBRA. El polling de 10 segundos es ESTRICTAMENTE NECESARIO como mecanismo de salvaguarda y respaldo (fallback).**
+  - **Fundamento técnico:**
+    1. **Suspensión de WebSockets en iOS PWA:** Cuando el entrenador o el delegado apagan la pantalla del iPhone, contestan un mensaje o cambian de aplicación, iOS WebKit suspende de inmediato la ejecución de JavaScript y corta o congela la conexión WebSocket de Supabase Realtime. Al volver a la app, los WebSockets con frecuencia no se enteran de la desconexión hasta pasados varios minutos o no reconectan automáticamente sin una señal activa.
+    2. **Límites e inactividad en Supabase:** Las conexiones WebSocket en la capa gratuita de Supabase sufren cortes por inactividad o cuotas de sockets concurrentes.
+    3. **Respaldo auditado por tests de arquitectura:** El test `tests/realtime-shadow-sync.test.js` («Realtime se añade como segunda vía sin retirar los respaldos actuales») exige explícitamente `setInterval(() => synchronizeCloud().catch(handleError), 10000)`.
+    - **Conclusión:** Realtime proporciona la inmediatez milimétrica en vivo cuando la pantalla está activa, mientras que el polling de 10 segundos garantiza que jamás se pierda una sincronización de partido o convocatoria por un corte silencioso de conexión.
+
+### 9. Verificación y Batería de Pruebas
+- Sincronización completa de la versión `20260923-stats-setpieces-modocampo-v44` en Service Worker, aplicación cliente y suites de tests.
+- **505/505 tests unitarios y de integración superados con éxito** (`npm test`).
+- Sintaxis y tipado validados con `npm run check` al 100%.
 

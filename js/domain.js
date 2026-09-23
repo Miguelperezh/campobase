@@ -294,8 +294,8 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
   const matchesInScope = matches.filter((match) => scope === 'all'
     || (scope === 'preseason' ? isPreseasonMatch(match) : !isPreseasonMatch(match)));
   const callupsInScope = callups.filter((callup) => {
-    const relatedMatch = callup.matchId ? matches.find((match) => match.id === callup.matchId) : null;
-    if (callup.matchId && !relatedMatch) return false;
+    const relatedMatch = matches.find((match) => (callup.matchId && match.id === callup.matchId) || (match.callupId && match.callupId === callup.id) || match.id === callup.id);
+    if (callup.matchId && !relatedMatch && !matches.some((m) => m.id === callup.matchId)) return false;
     if (scope === 'all') return true;
     const preseason = relatedMatch ? isPreseasonMatch(relatedMatch) : isPreseasonMatch({ type: callup.matchType });
     return scope === 'preseason' ? preseason : !preseason;
@@ -318,6 +318,18 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
   const attendance = attendanceInScope.flatMap((record) => record.attendance?.filter((entry) => entry.playerId === playerId) ?? []);
   const countEvents = (field, predicate = () => true) => playerMatches.reduce((total, match) => total + (match[field] ?? []).filter((item) => item.playerId === playerId && predicate(item)).length, 0);
   const countAssists = () => playerMatches.reduce((total, match) => total + (match.goals ?? []).filter((item) => item.assistantId === playerId).length, 0);
+
+  const explicitCallupCount = callupsInScope.filter((callup) => callup.availableIds?.includes(playerId)).length;
+  const playedMatchesWithoutCallup = matchesInScope.filter((match) => {
+    const hasMinutes = match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]) && match.minuteTotals[playerId] > 0;
+    if (!hasMinutes) return false;
+    const hasLinkedCallup = callupsInScope.some((c) => (match.callupId && c.id === match.callupId) || c.matchId === match.id || c.id === match.id);
+    return !hasLinkedCallup;
+  }).length;
+  const orphanAvailableCallups = callupsInScope.filter((c) => c.availableIds?.includes(playerId) && !c.matchId && !matches.some((m) => m.callupId === c.id)).length;
+  const extraCallups = Math.max(0, playedMatchesWithoutCallup - orphanAvailableCallups);
+  const totalCallups = explicitCallupCount + extraCallups;
+
   return {
     goals: countEvents('goals'),
     assists: countAssists(),
@@ -325,7 +337,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
     redCards: countEvents('cards', (item) => item.type === 'red'),
     injuries: countEvents('injuries'),
     incidents: countEvents('incidents'),
-    callups: callupsInScope.filter((callup) => callup.availableIds?.includes(playerId)).length,
+    callups: totalCallups,
     notCalled: callupsInScope.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId)).length,
     rotations: callupsInScope.filter((callup) => callup.exclusions?.some((item) => item.playerId === playerId && item.automatic)).length,
     present: attendance.filter((entry) => entry.status === 'present').length,
@@ -446,7 +458,7 @@ export function calculatePlayerCallupMinutes({
     : 0;
 
   const effectiveCallups = Number.isFinite(totalCallups) && totalCallups > 0
-    ? totalCallups
+    ? Math.max(totalCallups, countedMatchIds.size)
     : countedMatchIds.size;
   const averageMinutesPerCallup = effectiveCallups > 0
     ? Math.round(safePlayedMinutes / effectiveCallups)
@@ -499,13 +511,24 @@ export function adjustLiveScore(details, team, delta) {
 }
 
 export function addPlayerMatchEvent(details, event) {
-  if (!event?.playerId || !['goal', 'own_goal', 'yellow', 'red', 'injury', 'incident'].includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
+  const allowedKinds = ['goal', 'penalty_goal', 'penalty_miss', 'penalty_saved', 'penalty_conceded', 'own_goal', 'yellow', 'red', 'injury', 'incident'];
+  if (!event?.playerId || !allowedKinds.includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
   const next = structuredClone(details);
   for (const field of ['goals', 'cards', 'injuries', 'incidents']) next[field] ??= [];
   const { kind, ...entry } = event;
   if (kind === 'goal' || kind === 'own_goal') {
     next.goals.push(entry);
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+  } else if (kind === 'penalty_goal') {
+    next.goals.push({ ...entry, isPenalty: true });
+    next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+  } else if (kind === 'penalty_miss') {
+    next.incidents.push({ ...entry, type: 'penalty_miss', note: entry.note || 'Penalti fallado' });
+  } else if (kind === 'penalty_saved') {
+    next.incidents.push({ ...entry, type: 'penalty_saved', note: entry.note || 'Penalti parado' });
+  } else if (kind === 'penalty_conceded') {
+    next.incidents.push({ ...entry, type: 'penalty_conceded', note: entry.note || 'Penalti encajado' });
+    next.goalsAgainst = (Number(next.goalsAgainst) || 0) + 1;
   } else if (kind === 'injury') next.injuries.push(entry);
   else if (kind === 'incident') next.incidents.push(entry);
   else next.cards.push({ ...entry, type: kind });

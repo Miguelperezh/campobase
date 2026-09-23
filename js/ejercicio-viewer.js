@@ -779,7 +779,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline muted loop preload="none"></video>
+        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"></video>
         <div class="video-overlay-play" title="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </div>
@@ -1127,15 +1127,10 @@ export function initValidatedExerciseViewer(root) {
     navigator?.standalone === true
     || window.matchMedia?.('(display-mode: standalone)')?.matches
   );
-  if (isIOS && isStandalone && video.dataset.src && !video.getAttribute('src')) {
-    try {
-      video.preload = 'metadata';
-      video.src = video.dataset.src;
-      video.load();
-    } catch (error) {
-      console.warn('No se pudo precargar el vídeo en iOS/PWA:', error);
-    }
-  }
+  // Configuración estricta para iOS WebKit / PWA
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
 
   const videoDebugger = attachVideoDebugger(root, video, { isIOS, isStandalone });
 
@@ -1194,23 +1189,14 @@ export function initValidatedExerciseViewer(root) {
 
   async function togglePlay() {
     const src = video.dataset.src;
-    if (!video.getAttribute('src')) video.src = src;
+    if (!video.src || !video.getAttribute('src')) {
+      video.src = src;
+    }
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
 
     if (video.paused) {
-      // En iOS/PWA, si la precarga quedó en 0:00 / sin fuente, fuerza una
-      // URL nueva para evitar reutilizar un redirect/cache de media inválido.
-      if (isIOS && isStandalone && (video.readyState === 0 || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE)) {
-        try {
-          const fresh = new URL(src, window.location.href);
-          fresh.searchParams.set('_cbv', '20260923-stats-setpieces-modocampo-v43');
-          video.src = fresh.toString();
-          video.preload = 'auto';
-          video.load();
-        } catch (error) {
-          console.warn('No se pudo reiniciar el vídeo en iOS/PWA:', error);
-        }
-      }
-
       // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
       try {

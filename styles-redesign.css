@@ -6127,6 +6127,43 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
   font-size: 0.85rem;
 }
 
+/* Podio destacado en tablas clasificatorias */
+.lb-table tr.lb-podium-1 td {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0.02) 40%, transparent 100%);
+}
+.lb-table tr.lb-podium-2 td {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0%, rgba(148, 163, 184, 0.02) 40%, transparent 100%);
+}
+.lb-table tr.lb-podium-3 td {
+  background: linear-gradient(90deg, rgba(180, 83, 9, 0.07) 0%, rgba(180, 83, 9, 0.01) 40%, transparent 100%);
+}
+
+.lb-dorsal-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 999px;
+  background: var(--surface, rgba(0, 0, 0, 0.04));
+  color: var(--muted, #64748b);
+  border: 1px solid var(--line, #e2e8f0);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.lb-toggle-text {
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+}
+
 .minute-pill-badge {
   display: inline-block;
   padding: 0.15rem 0.55rem;

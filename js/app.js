@@ -6,7 +6,7 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-stats-setpieces-modocampo-v43';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-stats-setpieces-modocampo-v44';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
@@ -73,6 +73,7 @@ let realtimeCloudStore = null;
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
+let lastCloudSyncTimestamp = 0;
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -485,7 +486,7 @@ function renderSquadSpecialistsBar() {
     if (!id) return null;
     const p = state.players.find((item) => item.id === id);
     if (!p) return null;
-    const num = cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ` : '';
+    const num = cleanPlayerNumber(p.number) ? `${cleanPlayerNumber(p.number)} · ` : '';
     return num + p.name;
   };
 
@@ -526,7 +527,7 @@ function populateSetPiecesForm() {
   const makeOptions = (selectedId) => {
     let html = '<option value="">Sin asignar</option>';
     for (const p of sortedPlayers) {
-      const num = cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ` : '';
+      const num = cleanPlayerNumber(p.number) ? `${cleanPlayerNumber(p.number)} · ` : '';
       const foot = p.foot ? ` (${p.foot})` : '';
       const pos = playerPositions(p) ? ` · ${playerPositions(p)}` : '';
       const selected = p.id === selectedId ? ' selected' : '';
@@ -633,7 +634,7 @@ function renderSquadLeaderboards() {
         <table class="lb-table">
           <thead>
             <tr>
-              <th class="col-rank">#</th>
+              <th class="col-rank">Pos.</th>
               <th>Jugador</th>
               <th>Posición</th>
               <th class="col-num">Conv.</th>
@@ -645,13 +646,14 @@ function renderSquadLeaderboards() {
           <tbody>
             ${list.map((item, idx) => {
               const perMatch = item.summary.callups > 0 ? (item.summary.goals / item.summary.callups).toFixed(2) : '—';
-              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
-              return `<tr>
+              const num = cleanPlayerNumber(item.player.number);
+              const rankClass = idx === 0 ? 'lb-podium-1' : (idx === 1 ? 'lb-podium-2' : (idx === 2 ? 'lb-podium-3' : ''));
+              return `<tr class="${rankClass}">
                 <td class="col-rank"><strong>${medal(idx)}</strong></td>
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
-                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                    <div><strong>${escapeHtml(item.player.name)}</strong>${num ? ` <span class="lb-dorsal-tag">${escapeHtml(num)}</span>` : ''}</div>
                   </div>
                 </td>
                 <td class="col-pos">${escapeHtml(playerPositions(item.player))}</td>
@@ -672,7 +674,7 @@ function renderSquadLeaderboards() {
         <table class="lb-table">
           <thead>
             <tr>
-              <th class="col-rank">#</th>
+              <th class="col-rank">Pos.</th>
               <th>Jugador</th>
               <th>Posición</th>
               <th class="col-num">Conv.</th>
@@ -684,13 +686,14 @@ function renderSquadLeaderboards() {
           <tbody>
             ${list.map((item, idx) => {
               const perMatch = item.summary.callups > 0 ? (item.summary.assists / item.summary.callups).toFixed(2) : '—';
-              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
-              return `<tr>
+              const num = cleanPlayerNumber(item.player.number);
+              const rankClass = idx === 0 ? 'lb-podium-1' : (idx === 1 ? 'lb-podium-2' : (idx === 2 ? 'lb-podium-3' : ''));
+              return `<tr class="${rankClass}">
                 <td class="col-rank"><strong>${medal(idx)}</strong></td>
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
-                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                    <div><strong>${escapeHtml(item.player.name)}</strong>${num ? ` <span class="lb-dorsal-tag">${escapeHtml(num)}</span>` : ''}</div>
                   </div>
                 </td>
                 <td class="col-pos">${escapeHtml(playerPositions(item.player))}</td>
@@ -711,7 +714,7 @@ function renderSquadLeaderboards() {
         <table class="lb-table">
           <thead>
             <tr>
-              <th class="col-rank">#</th>
+              <th class="col-rank">Pos.</th>
               <th>Portero</th>
               <th class="col-num">Partidos</th>
               <th class="col-num">Minutos</th>
@@ -721,13 +724,14 @@ function renderSquadLeaderboards() {
           </thead>
           <tbody>
             ${list.map((item, idx) => {
-              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
-              return `<tr>
+              const num = cleanPlayerNumber(item.player.number);
+              const rankClass = idx === 0 ? 'lb-podium-1' : (idx === 1 ? 'lb-podium-2' : (idx === 2 ? 'lb-podium-3' : ''));
+              return `<tr class="${rankClass}">
                 <td class="col-rank"><strong>${medal(idx)}</strong></td>
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">🧤</span>'}
-                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                    <div><strong>${escapeHtml(item.player.name)}</strong>${num ? ` <span class="lb-dorsal-tag">${escapeHtml(num)}</span>` : ''}</div>
                   </div>
                 </td>
                 <td class="col-num">${item.keeperMatches}</td>
@@ -751,7 +755,7 @@ function renderSquadLeaderboards() {
         <table class="lb-table">
           <thead>
             <tr>
-              <th class="col-rank">#</th>
+              <th class="col-rank">Pos.</th>
               <th>Jugador</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">Rotación</th>
@@ -763,7 +767,7 @@ function renderSquadLeaderboards() {
           </thead>
           <tbody>
             ${list.map((item, idx) => {
-              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              const num = cleanPlayerNumber(item.player.number);
               const avg = item.callupInfo.averageMinutesPerCallup;
               const pct = item.callupInfo.percent;
               const badgeClass = avg >= 50 ? 'badge-good' : (avg >= 30 ? 'badge-mid' : 'badge-low');
@@ -772,7 +776,7 @@ function renderSquadLeaderboards() {
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
-                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                    <div><strong>${escapeHtml(item.player.name)}</strong>${num ? ` <span class="lb-dorsal-tag">${escapeHtml(num)}</span>` : ''}</div>
                   </div>
                 </td>
                 <td class="col-num">${item.summary.callups}</td>
@@ -794,7 +798,7 @@ function renderSquadLeaderboards() {
         <table class="lb-table">
           <thead>
             <tr>
-              <th class="col-rank">#</th>
+              <th class="col-rank">Pos.</th>
               <th>Jugador</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">🟨 Amarillas</th>
@@ -804,13 +808,13 @@ function renderSquadLeaderboards() {
           </thead>
           <tbody>
             ${list.map((item, idx) => {
-              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              const num = cleanPlayerNumber(item.player.number);
               return `<tr>
                 <td class="col-rank"><strong>${idx + 1}.º</strong></td>
                 <td class="col-player">
                   <div class="lb-player-cell">
                     ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
-                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                    <div><strong>${escapeHtml(item.player.name)}</strong>${num ? ` <span class="lb-dorsal-tag">${escapeHtml(num)}</span>` : ''}</div>
                   </div>
                 </td>
                 <td class="col-num">${item.summary.callups}</td>
@@ -837,7 +841,7 @@ function renderSquadLeaderboards() {
             <span class="meta">${scopeLabels[scope]} · ${state.players.length} jugadores</span>
           </div>
         </div>
-        <span class="badge secondary">Ver rankings</span>
+        <span class="badge secondary lb-toggle-text">${isLbOpen ? 'Cerrar tablas clasificatorias ▴' : 'Desplegar tablas clasificatorias ▾'}</span>
       </summary>
       <div class="squad-leaderboards-body">
         ${tabsMarkup}
@@ -853,7 +857,7 @@ function setPiecesQuickBanner() {
   const getP = (id) => {
     if (!id) return null;
     const p = state.players.find((x) => x.id === id);
-    return p ? (cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ${p.name}` : p.name) : null;
+    return p ? (cleanPlayerNumber(p.number) ? `${p.name} ${cleanPlayerNumber(p.number)}` : p.name) : null;
   };
   const roles = [
     setPieces.penalties?.primary && `🎯 Penalti: <strong>${escapeHtml(getP(setPieces.penalties.primary))}</strong>`,
@@ -1304,15 +1308,22 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   const events = [
     ...details.goals.map((item) => {
       const assist = item.assistantId ? ` (asist. ${playerName(item.assistantId)})` : '';
-      return `${formatMatchClock(item.second)} · Gol: ${playerName(item.playerId)}${assist}`;
+      const label = item.isPenalty ? '🎯 Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : '⚽ Gol');
+      return `${formatMatchClock(item.second)} · ${label}: ${playerName(item.playerId)}${assist}${item.note ? ` · ${item.note}` : ''}`;
     }),
-    ...details.cards.map((item) => `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? 'roja' : 'amarilla'}: ${playerName(item.playerId)}`),
-    ...details.injuries.map((item) => `${formatMatchClock(item.second)} · Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
-    ...details.incidents.map((item) => `${formatMatchClock(item.second)} · Incidencia: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
+    ...details.cards.map((item) => `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? '🟥 roja' : '🟨 amarilla'}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
+    ...details.injuries.map((item) => `${formatMatchClock(item.second)} · 🩹 Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
+    ...details.incidents.map((item) => {
+      let iconLabel = '📋 Incidencia';
+      if (item.type === 'penalty_miss') iconLabel = '❌🎯 Penalti fallado';
+      else if (item.type === 'penalty_saved') iconLabel = '🧤🚫 Penalti parado';
+      else if (item.type === 'penalty_conceded') iconLabel = '🧤⚽ Penalti encajado';
+      return `${formatMatchClock(item.second)} · ${iconLabel}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`;
+    }),
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
   const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
-  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="own_goal">Gol P.P. (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
 function renderLive() {
@@ -2704,8 +2715,17 @@ function showMatchDetail(id) {
   const assistantOptions = `<option value="">Sin asistencia</option>` + availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
   const eventList = (items, label, kind) => {
     const list = (items ?? []).map((item, i) => {
-      const assistText = (kind === 'goal' && item.assistantId) ? ` · Asistencia: ${escapeHtml(playerName(item.assistantId))}` : '';
-      return `<li>${escapeHtml(playerName(item.playerId))}${assistText}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`;
+      let mainText = escapeHtml(playerName(item.playerId));
+      if (kind === 'goal') {
+        const typePrefix = item.isPenalty ? '🎯 Gol de penalti: ' : (item.isOwnGoal ? '🥅 Gol P.P.: ' : '');
+        mainText = typePrefix + mainText;
+        if (item.assistantId) mainText += ` · Asistencia: ${escapeHtml(playerName(item.assistantId))}`;
+      } else if (kind === 'incident') {
+        if (item.type === 'penalty_miss') mainText = `❌🎯 Penalti fallado: ${mainText}`;
+        else if (item.type === 'penalty_saved') mainText = `🧤🚫 Penalti parado: ${mainText}`;
+        else if (item.type === 'penalty_conceded') mainText = `🧤⚽ Penalti encajado: ${mainText}`;
+      }
+      return `<li>${mainText}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`;
     }).join('');
     return `<section><h4>${label}</h4>${list ? `<ul class="plain-list">${list}</ul>` : '<p class="meta">Sin registros.</p>'}</section>`;
   };
@@ -2714,7 +2734,7 @@ function showMatchDetail(id) {
   $('#match-detail-body').innerHTML = `
     <p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(matchTypeLabel(match.type))} · ${match.venue === 'away' ? 'Visitante' : 'Local'}</p>
     <div class="stadium-score"><section class="score-team"><span>${escapeHtml(teams.home)}</span><strong>${homeScore ?? 0}</strong></section><span class="score-separator">—</span><section class="score-team"><span>${escapeHtml(teams.away)}</span><strong>${awayScore ?? 0}</strong></section></div>
-    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="own_goal">Gol P.P. (Propia puerta)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Asistencia<select id="detail-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
+    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">⚽ Gol</option><option value="penalty_goal">🎯⚽ Gol de penalti</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (Propia puerta)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="detail-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
     ${eventList(match.goals, 'Goles', 'goal')}
     ${eventList(match.cards, 'Tarjetas', 'card')}
     ${eventList(match.injuries, 'Lesiones', 'injury')}
@@ -2744,19 +2764,29 @@ async function addDetailEvent(matchId) {
   if (kind === 'own_goal') playerId = '__pp__';
   if (!playerId) return toast('Selecciona un jugador o Gol P.P.');
   const next = { ...match };
-  const isGoal = kind === 'goal' || kind === 'own_goal' || playerId === '__pp__';
+  const isGoal = kind === 'goal' || kind === 'penalty_goal' || kind === 'own_goal' || playerId === '__pp__';
   if (isGoal) {
     const isPp = kind === 'own_goal' || playerId === '__pp__';
+    const isPenalty = kind === 'penalty_goal';
     const effectivePlayerId = isPp ? '__pp__' : playerId;
     next.goals = [...(next.goals ?? []), {
       playerId: effectivePlayerId,
       assistantId: isPp ? '' : (assistantId === effectivePlayerId ? '' : assistantId),
       note,
       second: 0,
-      isOwnGoal: isPp
+      isOwnGoal: isPp,
+      isPenalty,
     }];
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
     if (!Number.isFinite(next.goalsAgainst)) next.goalsAgainst = 0;
+  } else if (kind === 'penalty_conceded') {
+    next.incidents = [...(next.incidents ?? []), { playerId, note: note || 'Penalti encajado', type: 'penalty_conceded' }];
+    next.goalsAgainst = (Number(next.goalsAgainst) || 0) + 1;
+    if (!Number.isFinite(next.goalsFor)) next.goalsFor = 0;
+  } else if (kind === 'penalty_miss') {
+    next.incidents = [...(next.incidents ?? []), { playerId, note: note || 'Penalti fallado', type: 'penalty_miss' }];
+  } else if (kind === 'penalty_saved') {
+    next.incidents = [...(next.incidents ?? []), { playerId, note: note || 'Penalti parado', type: 'penalty_saved' }];
   } else if (kind === 'injury') {
     next.injuries = [...(next.injuries ?? []), { playerId, note }];
   } else if (kind === 'incident') {
@@ -2769,7 +2799,13 @@ async function addDetailEvent(matchId) {
   renderPlayers();
   renderMatches();
   showMatchDetail(matchId);
-  toast(isGoal ? (playerId === '__pp__' || kind === 'own_goal' ? 'Gol en propia puerta añadido.' : 'Gol añadido al marcador.') : 'Incidencia añadida.');
+  const toastMsg = kind === 'penalty_goal' ? 'Gol de penalti añadido.' :
+    (kind === 'penalty_miss' ? 'Penalti fallado añadido.' :
+    (kind === 'penalty_saved' ? 'Penalti parado añadido.' :
+    (kind === 'penalty_conceded' ? 'Penalti encajado añadido (suma gol rival).' :
+    (playerId === '__pp__' || kind === 'own_goal' ? 'Gol en propia puerta añadido.' :
+    (kind === 'goal' ? 'Gol añadido al marcador.' : 'Incidencia añadida.')))));
+  toast(toastMsg);
 }
 
 async function removeMatchEvent(matchId, kind, index) {
@@ -2780,6 +2816,7 @@ async function removeMatchEvent(matchId, kind, index) {
   const removed = items.splice(index, 1)[0];
   next[field] = items;
   if (kind === 'goal' && removed) next.goalsFor = Math.max(0, (Number(next.goalsFor) || 0) - 1);
+  if (kind === 'incident' && removed?.type === 'penalty_conceded') next.goalsAgainst = Math.max(0, (Number(next.goalsAgainst) || 0) - 1);
   await put('matches', next);
   await refresh(true);
   renderPlayers();
@@ -4744,7 +4781,16 @@ async function addLiveEvent(prefix) {
     note,
     isOwnGoal
   });
-  await persistTimer(); renderLive(); renderDelegate(); toast(isOwnGoal ? 'Gol en propia puerta registrado.' : 'Incidencia registrada.');
+  await persistTimer();
+  renderLive();
+  renderDelegate();
+  const toastMsg = kind === 'penalty_goal' ? 'Gol de penalti registrado.' :
+    (kind === 'penalty_miss' ? 'Penalti fallado registrado.' :
+    (kind === 'penalty_saved' ? 'Penalti parado registrado.' :
+    (kind === 'penalty_conceded' ? 'Penalti encajado registrado (suma gol rival).' :
+    (isOwnGoal ? 'Gol en propia puerta registrado.' :
+    (kind === 'goal' ? 'Gol registrado.' : 'Incidencia registrada.')))));
+  toast(toastMsg);
 }
 
 async function pollLiveState() {
@@ -5830,6 +5876,10 @@ function wireEvents() {
   document.addEventListener('toggle', (event) => {
     if (event.target.matches?.('details.squad-leaderboards-card')) {
       state.isLeaderboardsOpen = event.target.open;
+      const toggleBadge = event.target.querySelector('.lb-toggle-text');
+      if (toggleBadge) {
+        toggleBadge.textContent = event.target.open ? 'Cerrar tablas clasificatorias ▴' : 'Desplegar tablas clasificatorias ▾';
+      }
     }
   }, true);
 
@@ -6675,7 +6725,8 @@ async function synchronizeCloud() {
   } catch (error) {
     state.cloudConnected = false;
     state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
-    console.warn('Sincronización en la nube no disponible:', error.message);
+  } finally {
+    lastCloudSyncTimestamp = Date.now();
   }
   networkStatus();
   await refreshSyncStatusPanel();
@@ -6753,7 +6804,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v43').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v44').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
