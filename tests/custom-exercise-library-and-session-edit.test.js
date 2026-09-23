@@ -42,7 +42,7 @@ test('crear y editar sesiones usa el mismo builder y confirma el guardado', () =
 
 test('la PWA fuerza la actualización de esta corrección', () => {
   assert.match(sw, /force2508-final-preview-own-sessions/);
-  assert.match(app, /20260923-v48-clean-print-isolation/);
+  assert.match(app, /20260923-v49-delegate-pin-mobile-print-fix/);
 });
 
 

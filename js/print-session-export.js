@@ -400,7 +400,7 @@ function generateStandalonePrintPage(htmlContent) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260923-v48-clean-print-isolation">
+  <link rel="stylesheet" href="./styles-redesign.css?v=20260923-v49-delegate-pin-mobile-print-fix">
   <style>
     @page { size: A4 portrait; margin: 8mm 10mm; }
     body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -419,34 +419,88 @@ function generateStandalonePrintPage(htmlContent) {
 </html>`;
 }
 
-function executePrint(htmlContent) {
-  if (typeof document === 'undefined') return;
-  const existing = document.getElementById('cb-print-root');
-  if (existing) {
-    existing.remove();
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod|Android/i.test(ua);
+}
+
+export async function shareOrDownloadPrintDoc(htmlContent, title = 'CampoBase-Ficha') {
+  const fullHtml = generateStandalonePrintPage(htmlContent);
+  const cleanTitle = String(title || 'CampoBase-Ficha')
+    .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\-_ ]/g, '')
+    .trim() || 'CampoBase-Ficha';
+  const filename = `${cleanTitle}.html`;
+  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+
+  // 1. Intentar Web Share API con archivo adjunto (iOS Safari 15+ y Android Chrome)
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      const file = new File([blob], filename, { type: 'text/html' });
+      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: cleanTitle,
+          text: `Ficha de entrenamiento CampoBase: ${cleanTitle}`,
+        });
+        return true;
+      }
+    } catch (shareErr) {
+      if (shareErr.name === 'AbortError') return false;
+    }
+
+    try {
+      await navigator.share({
+        title: cleanTitle,
+        text: `Ficha de entrenamiento CampoBase: ${cleanTitle}`,
+      });
+      return true;
+    } catch (shareErr) {
+      if (shareErr.name === 'AbortError') return false;
+    }
   }
 
-  // Marcar el body con la clase activa de impresión para activar el aislamiento estricto en CSS
+  // 2. Fallback de descarga directa en el móvil/navegador
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 2000);
+    return true;
+  } catch (downloadErr) {
+    console.error('Error al descargar archivo:', downloadErr);
+  }
+  return false;
+}
+
+export function executePrint(htmlContent) {
+  if (typeof document === 'undefined') return;
+
+  // Marcar el body con clase activa para aislar el contenedor
   if (document.body && document.body.classList) {
     document.body.classList.add('cb-is-printing');
   }
 
-  // Guardar y ocultar explícitamente todos los elementos parásitos de la UI de la app
-  // para que ningún estilo inline o fixed se cuele en la hoja de papel o pantalla de exportación
+  // Ocultar preventivamente elementos parásitos
   const hiddenElements = [];
   try {
     const parasiteSelectors = [
-      'body > *:not(#cb-print-root)',
-      '#cb-sub-nav',
       '#cb-bottom-nav',
+      '#cb-sub-nav',
+      '#cb-quick-sheet',
+      '#cb-header',
+      '.cb-topbar',
       '.search-bar',
       '#global-search',
-      '.topbar',
-      '.bottom-nav',
-      'header',
-      'nav',
-      '#app',
-      'dialog',
+      'main > .view',
+      'dialog[open]',
       '.dialog-sticky-footer',
       '#network-label',
       '#toast'
@@ -494,14 +548,20 @@ function executePrint(htmlContent) {
   floatingBar.innerHTML = `
     <div class="cb-print-floating-bar-inner">
       <div class="cb-print-floating-bar-info">
-        <strong>📄 Ficha Lista para Guardar</strong>
-        <span>Formato A4 compacto (2 tareas por cara)</span>
+        <strong>📄 Ficha Lista para Guardar / Imprimir</strong>
+        <span>Formato A4 compacto para móvil, carpeta y papel</span>
       </div>
       <div class="cb-print-floating-bar-actions">
-        <button type="button" class="btn primary cb-print-btn-print" id="cb-print-trigger-btn">
-          🖨️ Guardar PDF / Imprimir
+        <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
+          📲 Guardar / Compartir (WhatsApp, Archivos)
         </button>
-        <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn">
+        <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
+          📥 Descargar Ficha (.html)
+        </button>
+        <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
+          🖨️ Imprimir (AirPrint / Impresora)
+        </button>
+        <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn" style="display:none;">
           📲 Abrir para Compartir
         </button>
         <button type="button" class="btn ghost cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
@@ -558,14 +618,42 @@ function executePrint(htmlContent) {
   };
 
   // Conectar acciones táctiles de la barra flotante
+  const shareBtn = container.querySelector('#cb-print-share-btn');
+  const downloadBtn = container.querySelector('#cb-print-download-btn');
   const printBtn = container.querySelector('#cb-print-trigger-btn');
   const openBtn = container.querySelector('#cb-print-open-tab-btn');
   const closeBtn = container.querySelector('#cb-print-close-btn');
 
+  if (shareBtn) {
+    shareBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await shareOrDownloadPrintDoc(htmlContent, 'Ficha-CampoBase');
+    });
+  }
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fullHtml = generateStandalonePrintPage(htmlContent);
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Ficha-CampoBase.html';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 2000);
+    });
+  }
+
   if (printBtn) {
     printBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      triggerBrowserPrint(container, cleanup);
+      triggerBrowserPrint(container, isMobileDevice() ? null : cleanup);
     });
   }
 
@@ -574,11 +662,17 @@ function executePrint(htmlContent) {
       e.preventDefault();
       try {
         const fullHtml = generateStandalonePrintPage(htmlContent);
-        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.open();
+          win.document.write(fullHtml);
+          win.document.close();
+        } else {
+          const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        }
       } catch (err) {
-        // Fallback directo a window.print si blobs no son permitidos
         triggerBrowserPrint(container, cleanup);
       }
     });
@@ -591,11 +685,12 @@ function executePrint(htmlContent) {
     });
   }
 
-  // REGLA FUNDAMENTAL PARA MÓVILES (iOS WebKit y Android Chrome):
-  // Disparar window.print() de forma SÍNCRONA en el mismo hilo de ejecución del evento
-  // táctil del usuario. Nunca posponer en callbacks asíncronos o timers de carga de imágenes,
-  // pues el navegador móvil revoca el gesto táctil y bloquea la llamada en silencio.
-  triggerBrowserPrint(container, cleanup);
+  // En escritorio o tests sintéticos, disparar window.print() de inmediato
+  // En móviles reales, dejar la vista abierta con los botones destacados
+  // para que Migue pueda elegir Guardar, Compartir por WhatsApp o Imprimir.
+  if (!isMobileDevice()) {
+    triggerBrowserPrint(container, cleanup);
+  }
 }
 
 function triggerBrowserPrint(container, cleanup) {
@@ -603,7 +698,6 @@ function triggerBrowserPrint(container, cleanup) {
 
   if (typeof cleanup === 'function') {
     window.addEventListener('afterprint', cleanup, { once: true });
-    // Fallback generoso si afterprint no salta en ciertos navegadores móviles
     const cleanupTimeout = setTimeout(cleanup, 120000);
     if (cleanupTimeout?.unref) cleanupTimeout.unref();
   }

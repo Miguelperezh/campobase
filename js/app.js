@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v48-clean-print-isolation';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v49-delegate-pin-mobile-print-fix';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v48-clean-print-isolation';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v49-delegate-pin-mobile-print-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -1421,8 +1421,9 @@ function renderLive() {
   if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
-  const fieldIds = state.timer.onField;
-  const unlockBtn = (state.timer.phase === 'ready' && roleCanUseOwnerFeatures(state.role) && !state.timer.delegateUnlocked) ? '<button id="unlock-delegate" class="secondary">Enseñar al delegado</button>' : '';
+  const unlockBtn = roleCanUseOwnerFeatures(state.role)
+    ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
+    : '';
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
   <div id="live-tactics"></div>
@@ -1899,6 +1900,36 @@ function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
   if (!state.timer) {
+    const shownPrep = state.preparaciones?.find((p) => p.delegateShown && p.team?.length);
+    if (shownPrep) {
+      applyPreparacionToLive(shownPrep).catch(() => {});
+      return;
+    }
+    if (state.role === 'delegate') {
+      root.innerHTML = `
+        <div class="delegate-head">
+          <div>
+            <p class="eyebrow">Vista Delegado (PIN 0000)</p>
+            <h2>Partido en vivo</h2>
+          </div>
+          <button id="logout" class="secondary">Cerrar sesión</button>
+        </div>
+        <div class="panel" style="text-align:center;padding:2.5rem 1rem;">
+          <p style="font-size:1.15rem;font-weight:700;margin-bottom:0.5rem;">⏱️ Esperando partido</p>
+          <p class="meta">El entrenador (Migue) aún no ha activado el partido en vivo. Aparecerá aquí en cuanto lo muestre o 20 minutos antes de comenzar.</p>
+          <button type="button" id="delegate-refresh-btn" class="secondary" style="margin-top:1rem;">🔄 Comprobar ahora</button>
+        </div>
+      `;
+      const refBtn = $('#delegate-refresh-btn');
+      if (refBtn && !refBtn.dataset.bound) {
+        refBtn.dataset.bound = '1';
+        refBtn.addEventListener('click', async () => {
+          await refresh();
+          renderDelegate();
+        });
+      }
+      return;
+    }
     const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
     if (eligible.length) {
       root.innerHTML = `
@@ -1974,7 +2005,28 @@ function renderDelegate() {
   // El delegado solo ve el partido 20 min antes de la hora programada, o cuando
   // Migue lo desbloquea antes, o cuando ya ha empezado. Migue (owner) siempre lo ve.
   if (state.role === 'delegate' && !delegateCanSeeLive()) {
-    root.innerHTML = `${empty('El partido en vivo estará disponible 20 minutos antes del inicio.')}<button id="logout" class="secondary">Cerrar sesión</button>`;
+    root.innerHTML = `
+      <div class="delegate-head">
+        <div>
+          <p class="eyebrow">Vista Delegado (PIN 0000)</p>
+          <h2>Partido en vivo</h2>
+        </div>
+        <button id="logout" class="secondary">Cerrar sesión</button>
+      </div>
+      <div class="panel" style="text-align:center;padding:2.5rem 1rem;">
+        <p style="font-size:1.15rem;font-weight:700;margin-bottom:0.5rem;">⏱️ Partido programado</p>
+        <p class="meta">El partido en vivo estará disponible en cuanto Migue pulse «Mostrar al Delegado» o 20 minutos antes del inicio del encuentro.</p>
+        <button type="button" id="delegate-refresh-btn" class="secondary" style="margin-top:1rem;">🔄 Comprobar ahora</button>
+      </div>
+    `;
+    const refBtn = $('#delegate-refresh-btn');
+    if (refBtn && !refBtn.dataset.bound) {
+      refBtn.dataset.bound = '1';
+      refBtn.addEventListener('click', async () => {
+        await refresh();
+        renderDelegate();
+      });
+    }
     return;
   }
   const config = FORMATS[callup.format];
@@ -2018,10 +2070,16 @@ function delegateCanSeeLive() {
 
 async function unlockDelegate() {
   if (!state.timer) return;
-  state.timer.delegateUnlocked = true;
+  state.timer.delegateUnlocked = !state.timer.delegateUnlocked;
+  const prep = prepForMatch(state.timer.matchId);
+  if (prep) {
+    prep.delegateShown = state.timer.delegateUnlocked;
+    await put('settings', prep);
+  }
   await persistTimer();
   renderLive();
-  toast('El delegado ya puede ver el partido en vivo.');
+  renderDelegate();
+  toast(state.timer.delegateUnlocked ? 'El delegado ya puede ver el partido en vivo (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
 }
 
 function closeDelegateMode() {
@@ -2536,8 +2594,24 @@ function renderPreparaciones() {
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
+    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${match.id}">${prep.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button><button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
   }).join('');
+}
+
+async function togglePrepDelegateForMatch(matchId) {
+  const prep = prepForMatch(matchId);
+  if (!prep) return;
+  prep.delegateShown = !prep.delegateShown;
+  prep.savedAt = Date.now();
+  await put('settings', prep);
+  if (state.timer && state.timer.matchId === matchId) {
+    state.timer.delegateUnlocked = prep.delegateShown;
+    await persistTimer();
+    renderLive();
+  }
+  await refresh();
+  renderPreparaciones();
+  toast(prep.delegateShown ? 'El delegado ya puede ver el partido (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
 }
 
 function prepAvailableIds(matchId) {
@@ -4731,7 +4805,7 @@ async function showAuth(forceInitial = false) {
   const hasLocalPins = Boolean(state.settings.ownerPinHash && state.settings.delegatePinHash);
   const initial = forceInitial && !hasLocalPins;
   $('#auth-title').textContent = initial ? 'Configurar acceso' : 'Acceso a CampoBase';
-  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado o el PIN temporal de demo.';
+  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado (0000) o el PIN temporal de demo.';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
   $('#login-pin-field').classList.toggle('hidden', initial);
   if ($('#auth-reset-btn')) $('#auth-reset-btn').classList.toggle('hidden', initial);
@@ -4824,8 +4898,8 @@ async function submitAuth(event) {
           if (getBoundSaasUserId()) await synchronizeCloud();
         })();
         return;
-      } else if (state.settings.pinSalt && state.settings.delegatePinHash
-          && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash)) {
+      } else if (pin === '0000' || (state.settings.pinSalt && state.settings.delegatePinHash
+          && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
         $('#auth-dialog')?.close();
         applyRole('delegate');
         return;
@@ -4859,7 +4933,7 @@ async function submitAuth(event) {
             }
             return;
           }
-          if (await verifyPin(pin, local.pinSalt, local.delegatePinHash)) {
+          if (pin === '0000' || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
             recoveredRole = 'delegate';
             recoveredSettings = local;
             $('#auth-dialog')?.close();
@@ -6711,6 +6785,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
@@ -7028,7 +7103,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-v48-clean-print-isolation').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-v49-delegate-pin-mobile-print-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

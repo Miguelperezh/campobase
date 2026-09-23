@@ -891,9 +891,29 @@ Partidos activos próximos verificados:
      - Desbloqueo de controles de cambios y enlaces directos al partido en curso.
 
    - **Batería de Pruebas y Cache Versioning:**
-     - Versión global incrementada a `20260923-v48-clean-print-isolation`.
-     - 519 tests unitarios pasando al 100% (`npm test`).
+     - Versión global incrementada a `20260923-v49-delegate-pin-mobile-print-fix`.
+     - 523 tests unitarios pasando al 100% (`npm test`).
      - Verificación de sintaxis completa pasando al 100% (`npm run check`).
+
+14. **REGLAS INTOCABLES DE NAVEGACIÓN DE PARTIDOS, DELEGADO (PIN 0000) Y GUARDAR EN MÓVIL (v49):**
+   - **Navegación de Partidos estricta de 4 pestañas:**
+     - La navegación superior de Partidos (`MODULE_CONFIG.partidos.subTabs`) tiene única y exclusivamente 4 pestañas: Convocatoria (`convocatorias`), Alineación (`preparacion`), En Vivo (`partido`) y Calendario (`calendario`).
+     - **JAMÁS** añadir una subpestaña "Delegado" en la barra superior de Partidos.
+   - **Botón "Mostrar al Delegado" / "Ocultar al Delegado" accesible:**
+     - En **Partido en Vivo** (`#unlock-delegate`): siempre visible para el entrenador (`roleCanUseOwnerFeatures`). Conmuta entre `Mostrar al Delegado` y `Ocultar al Delegado` sin desaparecer al activarse, sincronizándose automáticamente con la preparación guardada y con `state.timer.delegateUnlocked`.
+     - En **Alineación** (lista de preparaciones): cada tarjeta de partido preparado dispone del botón directo `.prep-toggle-delegate` para permitir a Migue mostrar el partido al delegado días u horas antes sin tener que entrar al editor.
+     - En el editor de alineación: se conserva el botón `#prep-delegate`.
+   - **El Delegado (PIN 0000) y su Aislamiento Exclusivo a Partido en Vivo:**
+     - El PIN `0000` autentica siempre de forma directa y universal como `delegate` en `submitAuth`.
+     - El delegado **SOLO DEBE VER PARTIDO EN VIVO**: en `body.delegate-mode` se ocultan con `!important` la barra de navegación inferior, la subnavegación superior, la barra de búsqueda, ajustes y la cabecera general. Solo se muestra la vista `#delegado`.
+     - En la vista del delegado se muestra **TODO lo relativo al partido en vivo**: marcador con botones de sumar y restar goles a ambos equipos, registro y anulación de incidencias (goles, tarjetas, lesiones, penaltis), cronómetro con avance de fases, pizarra táctica, titulares en campo y suplentes con sus minutos jugados, sugerencia táctica de menos minutos y botones de cambios (manual 1–7, automático 1–3 y proponer reparto).
+     - Si no hay partido activo o preparado, el delegado ve una pantalla limpia y amigable de espera con botón para comprobar y botón de cerrar sesión.
+   - **Guardar en el Móvil y Exportación Imprimible:**
+     - En iOS (Safari / PWA) y Android (Chrome / PWA), `window.print()` suele estar bloqueado o no permitir guardar el PDF fácilmente.
+     - `shareOrDownloadPrintDoc` integra la Web Share API (`navigator.share`) para compartir o guardar directamente en "Archivos" de iOS / descargas de Android o enviar por WhatsApp.
+     - Descarga directa de archivo `.html` auto-contenido para visualización o impresión sin conexión.
+     - En dispositivos móviles, la vista previa no se destruye automáticamente si el usuario cancela AirPrint, permitiéndole elegir "Guardar / Compartir".
+
 
 
 

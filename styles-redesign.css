@@ -6552,10 +6552,24 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
   white-space: nowrap;
 }
 
-.cb-print-floating-bar-actions .cb-print-btn-print {
+.cb-print-floating-bar-actions .cb-print-btn-share {
+  background: #16a34a;
+  color: #ffffff;
+  border: 1px solid #15803d;
+  font-weight: 700;
+}
+
+.cb-print-floating-bar-actions .cb-print-btn-download {
   background: #2563eb;
   color: #ffffff;
   border: 1px solid #1d4ed8;
+  font-weight: 600;
+}
+
+.cb-print-floating-bar-actions .cb-print-btn-print {
+  background: #334155;
+  color: #f8fafc;
+  border: 1px solid #475569;
 }
 
 .cb-print-floating-bar-actions .cb-print-btn-open {
@@ -7290,5 +7304,44 @@ body.cb-is-printing dialog {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   MODO DELEGADO (PIN 0000) - AISLAMIENTO TOTAL
+   El delegado solo debe ver el partido en vivo. Cero elementos de navegación,
+   subnavegación, buscador, ajustes u otras secciones de CampoBase.
+   ========================================================================== */
+body.delegate-mode #cb-bottom-nav,
+body.delegate-mode #cb-sub-nav,
+body.delegate-mode .cb-bottom-nav,
+body.delegate-mode .cb-sub-nav,
+body.delegate-mode #cb-quick-sheet,
+body.delegate-mode .cb-quick-sheet,
+body.delegate-mode #settings-nav,
+body.delegate-mode .search-bar,
+body.delegate-mode .search-bar::before,
+body.delegate-mode .search-bar::after,
+body.delegate-mode #global-search,
+body.delegate-mode .cb-topbar,
+body.delegate-mode .bottom-nav,
+body.delegate-mode .topbar {
+  display: none !important;
+}
+
+body.delegate-mode main {
+  padding-top: 1rem !important;
+  padding-bottom: 2.5rem !important;
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+}
+
+body.delegate-mode .view:not(#delegado) {
+  display: none !important;
+}
+
+body.delegate-mode #delegado {
+  display: block !important;
+  visibility: visible !important;
+}
+
 
 

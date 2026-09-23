@@ -4387,3 +4387,44 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - En `js/app.js`, `renderAll()` sincroniza automáticamente `campobase.directFieldCache` en `localStorage`.
 - En `js/modo-campo-directo.js`, carga inmediata desde caché local sin mostrar jamás pantalla roja de error si Supabase no responde.
 - Botones de cambios desbloqueados y enlaces directos a la gestión de partido.
+
+# 67. Navegación Limpia de Partidos, Botón Mostrar al Delegado, Acceso Delegado con PIN 0000 y Guardar en Móvil — v49 (23/09/2026)
+
+## 67.1 Subpestañas de Partidos (Exactamente 4 Pestañas)
+- ⚠️ **REGLA INTOCABLE:** La barra de subnavegación de Partidos (`MODULE_CONFIG.partidos.subTabs`) tiene estrictamente 4 subpestañas:
+  1. Convocatoria (`convocatorias`)
+  2. Alineación (`preparacion`)
+  3. En Vivo (`partido`)
+  4. Calendario (`calendario`)
+- **PROHIBIDO:** Añadir una pestaña llamada "Delegado" en el menú superior de Partidos. Estropea el diseño y sobrecarga la vista.
+
+## 67.2 Botón "Mostrar al Delegado" / "Ocultar al Delegado"
+- **En Partido en Vivo (`#unlock-delegate`):**
+  - Debe estar **siempre visible para el entrenador** (`roleCanUseOwnerFeatures(state.role)`).
+  - Conmuta entre `Mostrar al Delegado` y `Ocultar al Delegado`.
+  - No desaparece al desbloquearse, permitiendo a Migue comprobar de un vistazo que el delegado ya tiene acceso y pudiendo volver a ocultarlo si lo desea.
+  - Se sincroniza inmediatamente con la preparación guardada (`prep.delegateShown`) y con `state.timer.delegateUnlocked`.
+- **En Alineación (Lista de partidos preparados):**
+  - Cada tarjeta de partido preparado en `#preparacion-list` dispone del botón directo `.prep-toggle-delegate` para activar o desactivar la visualización del delegado días u horas antes sin tener que entrar a editar la alineación.
+
+## 67.3 El Delegado (PIN 0000) y Aislamiento Estricto a Partido en Vivo
+- **Autenticación:** El PIN `0000` autentica siempre y directamente como rol `delegate`.
+- **Aislamiento Total:**
+  - Cuando el rol es `delegate`, `body.delegate-mode` oculta mediante `!important` la barra inferior (`#cb-bottom-nav`), la subnavegación superior (`#cb-sub-nav`), la barra de búsqueda, ajustes y la cabecera.
+  - La única vista visible es `#delegado`.
+- **Todo lo de Partido en Vivo:**
+  - El delegado ve y gestiona: marcador con botones (+ y -) de goles a favor y en contra, registro y anulación de incidencias (goles, tarjetas, lesiones, penaltis), cronómetro con control de tiempos, pizarra táctica con fichas y flechas, listas de titulares y suplentes con dorsal y minutos jugados, sugerencia táctica de quién ha jugado menos y botones de cambios rápidos (manual 1–7, automático 1–3 y proponer reparto).
+  - Si Migue aún no ha preparado o mostrado el partido, el delegado ve una tarjeta amigable de espera (*«⏱️ Esperando partido: El entrenador (Migue) aún no ha activado el partido en vivo. Aparecerá aquí en cuanto lo muestre o 20 minutos antes de comenzar.»*) con botón para comprobar y botón de cerrar sesión.
+
+## 67.4 Guardar PDF / Exportar en Móvil (iOS y Android)
+- En `js/print-session-export.js`, la función `shareOrDownloadPrintDoc` integra la API nativa `navigator.share` pasando el archivo `.html` maquetado para que el usuario pueda usar las opciones nativas de su móvil:
+  - *Guardar en Archivos* (iOS) o *Guardar en Descargas* (Android).
+  - *Compartir por WhatsApp* con cuerpo técnico o jugadores.
+- Como respaldo universal, se provee descarga directa vía `<a download>` del archivo `.html` compacto y legible offline.
+- En la barra flotante de exportación (`.cb-print-floating-bar`), se ofrecen botones claros y táctiles:
+  - `📲 Guardar / Compartir (WhatsApp, Archivos)`
+  - `📥 Descargar Ficha (.html)`
+  - `🖨️ Imprimir (AirPrint / Impresora)`
+  - `✕ Volver`
+- En móviles, no se destruye la vista al cancelar el diálogo de AirPrint, permitiendo al usuario utilizar el botón de Guardar/Compartir.
+

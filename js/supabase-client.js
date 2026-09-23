@@ -4,11 +4,11 @@ import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
-import './exercise-board-persistence.js?v=20260923-v48-clean-print-isolation';
-import './runtime-refresh.js?v=20260923-v48-clean-print-isolation';
+import './exercise-board-persistence.js?v=20260923-v49-delegate-pin-mobile-print-fix';
+import './runtime-refresh.js?v=20260923-v49-delegate-pin-mobile-print-fix';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
-import './exercise-view-mode-ui.js?v=20260923-v48-clean-print-isolation';
+import './exercise-view-mode-ui.js?v=20260923-v49-delegate-pin-mobile-print-fix';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
@@ -183,7 +183,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260923-v48-clean-print-isolation'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260923-v49-delegate-pin-mobile-print-fix'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
