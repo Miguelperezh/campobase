@@ -6339,3 +6339,62 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
 .event-editor button {
   min-height: 40px;
 }
+
+/* ===== Desplegables de cambios tácticos en vivo a ancho completo y legibles en móvil ===== */
+.live-tactics-slots {
+  display: grid !important;
+  gap: 0.6rem !important;
+  margin-top: 0.85rem !important;
+}
+
+.live-tactics-slots .slot {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.4rem !important;
+  border: 1px solid var(--cb-slate-200, #cbd5e1) !important;
+  border-radius: 12px !important;
+  padding: 0.65rem 0.85rem !important;
+  background: var(--cb-surface-card, #ffffff) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+
+.live-tactics-slots .slot .slot-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.live-tactics-slots .slot .pos {
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: var(--cb-brand, var(--green, #173f35)) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.live-tactics-slots .slot .dorsal {
+  font-weight: 800 !important;
+  color: var(--cb-brand, #10b981) !important;
+  font-size: 0.86rem !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 6px !important;
+}
+
+.live-tactics-slots .slot select {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  border: 1px solid var(--cb-slate-200, #cbd5e1) !important;
+  border-radius: 10px !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 0.75rem !important;
+  background-color: var(--cb-surface-input, #ffffff) !important;
+  color: var(--cb-slate-900, #0f172a) !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+}

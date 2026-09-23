@@ -291,18 +291,48 @@ export function buildPlayerHistory(playerId, attendanceRecords, callups, matches
 export function buildPlayerSummary(playerId, matches, attendanceRecords, callups, scope = 'all') {
   if (![matches, attendanceRecords, callups].every(Array.isArray)) throw new TypeError('Los históricos deben ser listas.');
   if (!['all', 'league', 'preseason'].includes(scope)) throw new TypeError('El ámbito de estadísticas no es válido.');
+
+  const isMatchCompleted = (m) => {
+    if (!m) return false;
+    if (m.status === 'finished') return true;
+    if (m.status === 'planned' || m.status === 'ready') {
+      return Boolean(m.minuteTotals && Object.values(m.minuteTotals).some((sec) => Number(sec) > 0));
+    }
+    return Boolean((m.minuteTotals && Object.values(m.minuteTotals).some((sec) => Number(sec) > 0)) || (m.goals && m.goals.length > 0) || Number.isFinite(m.goalsFor));
+  };
+
+  // Desduplicar convocatorias por partido (si hay borradores o duplicados de sync, tomar la más reciente)
+  const byMatchCallups = new Map();
+  const orphanCallups = [];
+  const sortedCallups = [...callups].sort((a, b) => (b.updatedAt ?? b.createdAt ?? 0) - (a.updatedAt ?? a.createdAt ?? 0));
+  for (const c of sortedCallups) {
+    const rel = matches.find((m) => (c.matchId && m.id === c.matchId) || (m.callupId && m.callupId === c.id) || m.id === c.id);
+    if (rel) {
+      if (!byMatchCallups.has(rel.id)) byMatchCallups.set(rel.id, c);
+    } else if (!c.matchId) {
+      orphanCallups.push(c);
+    }
+  }
+  const cleanCallups = [...byMatchCallups.values(), ...orphanCallups];
+
   const matchesInScope = matches.filter((match) => scope === 'all'
     || (scope === 'preseason' ? isPreseasonMatch(match) : !isPreseasonMatch(match)));
-  const callupsInScope = callups.filter((callup) => {
+  const callupsInScope = cleanCallups.filter((callup) => {
     const relatedMatch = matches.find((match) => (callup.matchId && match.id === callup.matchId) || (match.callupId && match.callupId === callup.id) || match.id === callup.id);
     if (callup.matchId && !relatedMatch && !matches.some((m) => m.id === callup.matchId)) return false;
+    // Si la convocatoria está vinculada a un partido planificado/futuro que aún no se ha jugado, no computa como partido disputado
+    if (relatedMatch && !isMatchCompleted(relatedMatch)) return false;
     if (scope === 'all') return true;
     const preseason = relatedMatch ? isPreseasonMatch(relatedMatch) : isPreseasonMatch({ type: callup.matchType });
     return scope === 'preseason' ? preseason : !preseason;
   });
-  const playerMatches = matchesInScope.filter((match) => match.minuteTotals?.[playerId] !== undefined
-    || match.ratings?.[playerId] !== undefined
-    || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId || item.assistantId === playerId)));
+  const playerMatches = matchesInScope.filter((match) => {
+    if (match.status === 'planned' && !(match.minuteTotals?.[playerId] > 0)) return false;
+    return (match.minuteTotals?.[playerId] ?? 0) > 0
+      || (match.minuteTotals?.[playerId] !== undefined && match.status === 'finished')
+      || match.ratings?.[playerId] !== undefined
+      || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId || item.assistantId === playerId));
+  });
   const ratings = playerMatches
     .filter((match) => (match.minuteTotals?.[playerId] ?? 0) >= 5 * 60 || (match.minuteTotals?.[playerId] === undefined && Number.isFinite(match.ratings?.[playerId])))
     .map((match) => match.ratings?.[playerId])
@@ -321,12 +351,18 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
 
   const explicitCallupCount = callupsInScope.filter((callup) => callup.availableIds?.includes(playerId)).length;
   const playedMatchesWithoutCallup = matchesInScope.filter((match) => {
+    if (!isMatchCompleted(match)) return false;
     const hasMinutes = match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]) && match.minuteTotals[playerId] > 0;
     if (!hasMinutes) return false;
-    const hasLinkedCallup = callupsInScope.some((c) => (match.callupId && c.id === match.callupId) || c.matchId === match.id || c.id === match.id);
+    const hasLinkedCallup = callupsInScope.some((c) => (match.callupId && c.id === match.callupId)
+      || c.matchId === match.id
+      || c.id === match.id
+      || (!c.matchId && match.date && c.date && String(match.date).slice(0, 10) === String(c.date).slice(0, 10)));
     return !hasLinkedCallup;
   }).length;
-  const orphanAvailableCallups = callupsInScope.filter((c) => c.availableIds?.includes(playerId) && !c.matchId && !matches.some((m) => m.callupId === c.id)).length;
+  const orphanAvailableCallups = callupsInScope.filter((c) => c.availableIds?.includes(playerId)
+    && (!c.matchId || !matches.some((m) => m.id === c.matchId))
+    && !matches.some((m) => m.callupId === c.id || (m.date && c.date && String(m.date).slice(0, 10) === String(c.date).slice(0, 10)))).length;
   const extraCallups = Math.max(0, playedMatchesWithoutCallup - orphanAvailableCallups);
   const totalCallups = explicitCallupCount + extraCallups;
 
@@ -434,7 +470,7 @@ export function calculatePlayerCallupMinutes({
         : null;
       const wasCalled = Boolean(
         (relatedCallup?.availableIds && relatedCallup.availableIds.includes(playerId)) ||
-        (match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]))
+        (match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]) && match.minuteTotals[playerId] > 0)
       );
 
       if (wasCalled) {

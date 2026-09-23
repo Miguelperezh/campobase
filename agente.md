@@ -718,3 +718,47 @@ Partidos activos próximos verificados:
 7. **Modo Campo:**
    - Incorporado timeout de seguridad en `readTable` y mensaje informativo con botón de reintento automático si el servidor Supabase se encuentra despertando tras una pausa.
 
+### 11. Resolución de Incidencias Críticas en Móvil, Estadísticas y Sincronización (2026-09-23)
+1. **Desplegables de Cambios en Vivo en Pantalla Móvil:**
+   - **Problema:** En el móvil los nombres de los jugadores en los selectores de cambios tácticos (`.live-tactics-slots .slot` y `#prep-slots .slot`) se recortaban severamente (ej. `1 Ma`, `11 Ai`, `7 Al`) al compartir fila estrecha con la etiqueta de posición y dorsal.
+   - **Solución implementada:**
+     - Reestructurado el layout de cada ranura táctica en dos filas independientes:
+       - **Fila 1 (`.slot-head`):** Posición en verde negrita a la izquierda y dorsal a la derecha.
+       - **Fila 2:** `<select>` a ancho completo (100% / min-width: 0) con `font-size: 0.95rem; font-weight: 700;`.
+     - Todos los nombres de la plantilla (ej. `1 Mateo Moyano Santana`, `11 Aitor Rodríguez`) disponen ahora del ancho completo de la pantalla móvil y se leen de forma íntegra sin cortes.
+2. **Solución a la Sincronización Móvil y Lanzadores Ausentes:**
+   - **Causa identificada:** En el PC, el usuario configuró los especialistas y jugadores en local, pero la subida a Supabase quedó bloqueada debido a que el servidor de Supabase devuelve un error `503 PGRST002: Could not query the database for the schema cache. Retrying.` (causado por la pausa del servicio o reinicio pendiente en Supabase). En consecuencia, los lanzadores nunca llegaron a la nube ni pudieron descargarse en el móvil. Además, en `js/sync-core.js`, una sincronización remota con ajustes incompletos podía sobrescribir `setPieces`.
+   - **Solución implementada:**
+     - **Preservación estricta de lanzadores:** En `js/sync-core.js` (`mergeCloudRecord`), si el registro local contiene `setPieces` y la nube devuelve uno nulo o vacío, se conservan intactos los lanzadores locales.
+     - **Transferencia directa al móvil (sin depender de Supabase):**
+       - Se añadió la función `shareDatabaseToMobile()` en `js/app.js` y botones de acceso directo:
+         - En la tarjeta rápida de Plantilla: `🎯 Lanzadores y Capitanes` > `📲 Pasar al móvil`.
+         - En Ajustes > `Copia de seguridad` > `📲 Pasar datos al móvil`.
+       - Emplea la API nativa `navigator.share` para compartir en 1 clic el archivo `.json` de la base de datos (con todos los jugadores, lanzadores y partidos) directamente a WhatsApp, AirDrop, Telegram o email.
+       - Si el navegador no soporta Web Share de archivos, descarga el archivo `.json` e instruye al usuario a cargarlo en el móvil mediante Ajustes > "Importar JSON".
+3. **Corrección Completa de Estadísticas y Tablas de Clasificación:**
+   - **Problema:** Jugadores sin ningún partido jugado aparecían con 2 convocatorias; jugadores con 3 partidos aparecían con 6 partidos; goles y estadísticas desajustadas.
+   - **Causa identificada:**
+     1. Convocatorias de partidos planificados/futuros (como la convocatoria provisional contra El Pilar) se computaban como convocatorias y partidos completados.
+     2. En `buildPlayerSummary` se sumaba `explicitCallupCount` con `playedMatchesWithoutCallup`, lo que provocaba un doble recuento (+3 y +3 = 6) cuando los identificadores de convocatoria no estaban formalmente enlazados en el partido.
+   - **Solución implementada en `js/domain.js`:**
+     - Se añadió la comprobación `isMatchCompleted(m)`: los partidos con estado `planned` o sin minutos jugados **NO computan** en las estadísticas históricas de partidos disputados ni convocatorias pasadas.
+     - Se implementó la desduplicación canónica de convocatorias (`byMatchCallups`), garantizando que cada partido completado compute como máximo una única convocatoria por jugador.
+     - Se corrigió el cálculo de convocatorias: ahora se evalúa cada partido completado una sola vez (si el jugador jugó minutos > 0 o estaba disponible en la convocatoria).
+     - Resultado verificado: el jugador con 3 partidos pasa exactamente a 3 convocatorias (no 6), y el jugador que no ha debutado pasa a 0 convocatorias (no 2).
+4. **Reproductor de Ejercicios en Chrome Móvil / iOS:**
+   - **Problema:** En Chrome móvil y Safari, al pulsar Play dos veces o interactuar con el vídeo, este se quedaba en pausa o bloqueado por una excepción `AbortError: The play() request was interrupted by a call to pause()`.
+   - **Solución implementada en `js/ejercicio-viewer.js`:**
+     - Se asigna directamente el atributo `src="${esc(videoSrc)}"` y `preload="metadata"` en la etiqueta HTML `<video>`, evitando que el elemento se reinicialice en frío al pulsar Play.
+     - Se asignan explícitamente en JavaScript las propiedades `video.muted = true; video.defaultMuted = true; video.playsInline = true;` requeridas por las políticas de autoplay de Chrome móvil y iOS WebKit.
+     - Se incorporó un cerrojo de promesa (`playPromise`) en `togglePlay()`: si una solicitud de `video.play()` está resolviendo la redirección de red, los toques sucesivos no interrumpen con `pause()`, previniendo el bloqueo y garantizando una reproducción fluida.
+5. **Modo Campo Directo frente a Error 503:**
+   - **Problema:** En el móvil, al abrir Modo Campo, se mostraba una pantalla roja de error `convocatorias: Could not query the database for the schema cache. Retrying.` sin alternativa para acceder a los datos.
+   - **Solución implementada en `js/modo-campo-directo.js`:**
+     - Se añadió un botón destacado para abrir inmediatamente la versión principal de CampoBase (`./index.html`), la cual opera 100% offline desde el almacenamiento local del dispositivo sin depender de la nube.
+     - Se incluyó la instrucción clara para reactivar Supabase: entrar en el panel de control de Supabase > *Project Settings* > *General* > *Restart Project*.
+6. **Compromisos y Protección de Datos:**
+   - **Jugadores y lanzadores del usuario:** No se han modificado ni alterado.
+   - **Convocatoria provisional contra El Pilar:** Conservada íntegra y protegida.
+
+

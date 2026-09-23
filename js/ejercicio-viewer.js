@@ -779,7 +779,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"><source src="${esc(videoSrc)}" type="video/mp4"></video>
+        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" src="${esc(videoSrc)}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="metadata"><source src="${esc(videoSrc)}" type="video/mp4"></video>
         <div class="video-overlay-play" title="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </div>
@@ -1127,10 +1127,13 @@ export function initValidatedExerciseViewer(root) {
     navigator?.standalone === true
     || window.matchMedia?.('(display-mode: standalone)')?.matches
   );
-  // Configuración estricta para iOS WebKit / PWA
+  // Configuración estricta para iOS WebKit / Chrome móvil / PWA
+  video.muted = true;
+  video.defaultMuted = true;
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
+  video.setAttribute('muted', '');
 
   const videoDebugger = attachVideoDebugger(root, video, { isIOS, isStandalone });
 
@@ -1188,7 +1191,9 @@ export function initValidatedExerciseViewer(root) {
   }
 
   let lastToggleTime = 0;
+  let playPromise = null;
   async function togglePlay() {
+    if (playPromise) return;
     const now = Date.now();
     if (now - lastToggleTime < 350) return;
     lastToggleTime = now;
@@ -1203,19 +1208,24 @@ export function initValidatedExerciseViewer(root) {
       s.type = 'video/mp4';
       video.appendChild(s);
     }
+    video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('muted', '');
 
     if (video.paused) {
       // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
       try {
-        const p = video.play();
-        if (p !== undefined) await p;
+        playPromise = video.play();
+        if (playPromise !== undefined) await playPromise;
       } catch (err) {
         console.warn('Error al reproducir vídeo:', err);
         if (video.paused) updatePlayState(false);
+      } finally {
+        playPromise = null;
       }
     } else {
       video.pause();

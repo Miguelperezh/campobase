@@ -373,9 +373,9 @@
       const authHint = isAuth
         ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Debes iniciar sesión en CampoBase antes de abrir Modo Campo.</p><p><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Ir a CampoBase / Iniciar sesión</a></p>'
         : (isStarting
-          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">El servidor en la nube se está activando tras una pausa. Pulsa Reintentar en unos segundos.</p><p><button class="btn primary" onclick="location.reload()">Reintentar conexión</button></p>'
-          : '<button class="btn primary" onclick="location.reload()">Reintentar</button>');
-      $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos</h2><p>${esc(msg)}</p>${authHint}</div>`;
+          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">El servidor de datos en la nube está en mantenimiento o reiniciándose (Error 503 PGRST002).</p><p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal (funciona sin conexión)</a></p><div style="margin:1rem 0;padding:0.75rem;background:rgba(255,255,255,0.06);border-radius:8px;font-size:0.84rem;text-align:left;line-height:1.4;"><strong style="display:block;margin-bottom:0.3rem;">ℹ️ Solución para desbloquear la nube:</strong>En tu panel de Supabase: <em>Project Settings &gt; General &gt; Restart Project</em> para reiniciar PostgREST.</div><p><button class="btn secondary" onclick="location.reload()">🔄 Reintentar conexión con la nube</button></p>'
+          : '<p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal</a></p><p><button class="btn secondary" onclick="location.reload()">Reintentar</button></p>');
+      $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos remotos</h2><p>${esc(msg)}</p>${authHint}</div>`;
       console.error('[Modo Campo directo]', error);
     }
   }

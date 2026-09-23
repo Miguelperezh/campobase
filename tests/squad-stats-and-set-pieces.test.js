@@ -8,6 +8,7 @@ import {
   buildPlayerSummary,
   addPlayerMatchEvent,
 } from '../js/domain.js';
+import { mergeCloudRecord } from '../js/sync-core.js';
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
@@ -227,6 +228,67 @@ test('reproducción de vídeo en iOS WebKit usa webkit-playsinline y no llama a 
   const togglePlayMatch = viewer.match(/async function togglePlay\(\) \{([\s\S]*?)\n {2}\}/);
   assert.ok(togglePlayMatch, 'togglePlay exists');
   assert.doesNotMatch(togglePlayMatch[1], /video\.load\(\)/);
+});
+
+test('partidos planificados o convocatorias provisionales no computan como convocatorias jugadas ni duplican estadísticas', () => {
+  const matches = [
+    { id: 'm1', type: 'league', status: 'finished', minuteTotals: { p1: 35 * 60 } },
+    { id: 'm2', type: 'league', status: 'finished', minuteTotals: { p1: 40 * 60 } },
+    { id: 'm3', type: 'league', status: 'finished', minuteTotals: { p1: 30 * 60 } },
+    { id: 'm-pilar', type: 'league', status: 'planned', minuteTotals: null },
+  ];
+  const callups = [
+    { id: 'c1', matchId: 'm1', availableIds: ['p1'] },
+    { id: 'c2', matchId: 'm2', availableIds: ['p1'] },
+    { id: 'c3', matchId: 'm3', availableIds: ['p1'] },
+    { id: 'c-pilar', matchId: 'm-pilar', availableIds: ['p1', 'p2'] },
+  ];
+  const p1Summary = buildPlayerSummary('p1', matches, [], callups, 'league');
+  assert.equal(p1Summary.callups, 3, 'El jugador con 3 partidos jugados debe tener exactamente 3 convocatorias (no 6)');
+  assert.equal(p1Summary.minutes, 105);
+
+  const p2Summary = buildPlayerSummary('p2', matches, [], callups, 'league');
+  assert.equal(p2Summary.callups, 0, 'El jugador que solo está en la convocatoria provisional de El Pilar debe tener 0 convocatorias jugadas (no 2)');
+  assert.equal(p2Summary.minutes, 0);
+
+  const boards = buildSquadLeaderboards({
+    players: [{ id: 'p1', name: 'Aitor' }, { id: 'p2', name: 'Ramiro' }],
+    matches,
+    callups,
+    scope: 'all',
+  });
+  const aitorLeaderboard = boards.minuteDistribution.find((item) => item.player.id === 'p1');
+  const ramiroLeaderboard = boards.minuteDistribution.find((item) => item.player.id === 'p2');
+  assert.equal(aitorLeaderboard.summary.callups, 3);
+  assert.equal(ramiroLeaderboard.summary.callups, 0);
+});
+
+test('mergeCloudRecord preserva especialistas de balón parado configurados localmente cuando el registro remoto viene vacío', () => {
+  const local = {
+    id: 'main',
+    teamName: 'Unión Viera',
+    setPieces: {
+      penalties: { primary: 'p1', secondary: 'p2' },
+      freeKicksLeft: { primary: 'p2', secondary: 'p3' },
+    },
+  };
+  const cloudWithoutSetPieces = {
+    id: 'main',
+    teamName: 'Unión Viera',
+    setPieces: null,
+  };
+  const merged = mergeCloudRecord('settings', local, cloudWithoutSetPieces);
+  assert.deepEqual(merged.setPieces, local.setPieces);
+});
+
+test('index.html y app.js integran botón para pasar datos al móvil por WhatsApp o AirDrop', async () => {
+  const html = await read('index.html');
+  const app = await read('js/app.js');
+
+  assert.match(html, /id="share-data-mobile"/);
+  assert.match(app, /shareDatabaseToMobile/);
+  assert.match(app, /share-database-mobile-btn/);
+  assert.match(app, /navigator\.share/);
 });
 
 

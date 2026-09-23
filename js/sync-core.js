@@ -38,6 +38,9 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
     for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash', 'demoPinSalt', 'demoPinHash']) {
       if (!merged[field] && localRecord?.[field]) merged[field] = localRecord[field];
     }
+    if ((!merged.setPieces || Object.keys(merged.setPieces).length === 0) && localRecord?.setPieces) {
+      merged.setPieces = structuredClone(localRecord.setPieces);
+    }
   }
   return merged;
 }

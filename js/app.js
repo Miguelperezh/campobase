@@ -504,7 +504,10 @@ function renderSquadSpecialistsBar() {
           <h3>🎯 Lanzadores y Capitanes</h3>
           <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
         </div>
-        <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
+          <button type="button" class="secondary share-database-mobile-btn" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
+        </div>
       </div>
       <div class="specialists-quick-grid">
         <div class="specialist-item"><span class="sp-icon">🎯</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
@@ -1616,7 +1619,7 @@ function renderTacticsSlots(sc) {
       opts.push('<option disabled>— Suplentes —</option>');
       for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
     }
-    return `<div class="slot"><span class="pos">${escapeHtml(p.pos)}</span><select data-idx="${i}">${opts.join('')}</select><span class="dorsal">${pl ? escapeHtml(pl.number) : '—'}</span></div>`;
+    return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
   const suplentesHTML = suplentesList.length
     ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
@@ -2530,7 +2533,7 @@ function renderPrepSlots() {
     const opts = ['<option value="">— Sin asignar —</option>'];
     for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
     if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
-    return `<div class="slot"><span class="pos">${escapeHtml(p.pos)}</span><select data-idx="${i}">${opts.join('')}</select><span class="dorsal">${pl ? escapeHtml(pl.number) : '—'}</span></div>`;
+    return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
   const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
   container.innerHTML = filas + suplentesHTML;
@@ -3771,6 +3774,41 @@ async function ensureLegacyExercisesNotPresent() {
 
 async function exportData() {
   const backup = await exportDatabase(); const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `campobase-copia-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('Copia exportada.');
+}
+
+async function shareDatabaseToMobile() {
+  try {
+    const backup = await exportDatabase();
+    const fileName = `campobase-copia-${new Date().toISOString().slice(0, 10)}.json`;
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const file = new File([jsonStr], fileName, { type: 'application/json' });
+
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Copia CampoBase',
+        text: `Copia completa de CampoBase (${state.players.length} jugadores, especialistas y partidos)`,
+        files: [file],
+      });
+      toast('Copia enviada correctamente.');
+      return;
+    }
+
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    await askConfirmation({
+      title: '📲 Pasar datos al móvil',
+      message: `Se ha descargado "${fileName}".\n\n1. Envíatelo a tu móvil (por WhatsApp, AirDrop o email).\n2. En el móvil, abre CampoBase > Ajustes > "Importar JSON".\n\n¡Todos tus jugadores, lanzadores y convocatorias se transferirán de inmediato sin depender de Supabase!`,
+      acceptLabel: 'Entendido',
+    });
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      toast(`No se pudo transferir: ${err.message}`);
+    }
+  }
 }
 
 async function importData(event) {
@@ -5886,6 +5924,12 @@ function wireEvents() {
       }
       populateSetPiecesForm();
       $('#set-pieces-dialog')?.showModal();
+      return;
+    }
+
+    const shareMobileBtn = event.target.closest('#share-data-mobile, .share-database-mobile-btn');
+    if (shareMobileBtn) {
+      shareDatabaseToMobile().catch(handleError);
       return;
     }
 
