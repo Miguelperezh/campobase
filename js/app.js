@@ -6287,7 +6287,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260922-releases-mobile-all-v37').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-pwa-force-refresh-v40').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
