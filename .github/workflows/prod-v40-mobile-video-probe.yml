@@ -1,0 +1,17 @@
+name: Production v40 mobile video probe
+on:
+  push:
+    branches:
+      - test/prod-v40-mobile-video
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: which google-chrome && google-chrome --version
+      - run: npm install --no-save playwright@1.55.0
+      - run: node scripts/prod-v40-mobile-video-probe.mjs
