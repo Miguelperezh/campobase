@@ -1079,6 +1079,20 @@ export function initValidatedExerciseViewer(root) {
     if (!video.getAttribute('src')) video.src = src;
 
     if (video.paused) {
+      // En iOS/PWA, si la precarga quedó en 0:00 / sin fuente, fuerza una
+      // URL nueva para evitar reutilizar un redirect/cache de media inválido.
+      if (isIOS && isStandalone && (video.readyState === 0 || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE)) {
+        try {
+          const fresh = new URL(src, window.location.href);
+          fresh.searchParams.set('_cbv', '20260923-ios-pwa-video-reload-v42');
+          video.src = fresh.toString();
+          video.preload = 'auto';
+          video.load();
+        } catch (error) {
+          console.warn('No se pudo reiniciar el vídeo en iOS/PWA:', error);
+        }
+      }
+
       // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
       try {
