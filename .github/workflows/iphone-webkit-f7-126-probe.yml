@@ -17,3 +17,4 @@ jobs:
           node-version: 20
       - run: npm install --no-save playwright@1.55.0
       - run: node scripts/iphone-production-probe.mjs
+      - run: node scripts/iphone-critical-ui-probe.mjs
