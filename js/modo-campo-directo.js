@@ -204,14 +204,30 @@
     const timer = liveTimer();
     const match = liveMatch();
     if (!timer || !match) {
-      $('#delegado').innerHTML = `<div class="section-head"><div><p class="kicker">Vista delegado</p><h2>Disponible cuando haya partido en vivo</h2></div></div><div class="card"><p>Esta pestaña se mantiene en Modo Campo para que puedas abrirla cuando quieras. Cuando no hay un partido iniciado, no muestra controles de cambios.</p></div>`;
+      const eligible = eligibleLiveMatches();
+      $('#delegado').innerHTML = `
+        <div class="section-head"><div><p class="kicker">Vista delegado</p><h2>Control de partido y cambios</h2></div></div>
+        <div class="card">
+          <h3>${eligible.length ? 'Partidos convocados disponibles' : 'Disponible cuando haya partido convocado'}</h3>
+          <p>Para gestionar el cronómetro, actas y cambios en directo, abre el partido convocado:</p>
+          <div class="actions" style="margin-top:0.75rem;">
+            ${eligible.map((m) => `<a class="btn primary" href="./index.html?view=delegado&fromCampo=1" style="text-decoration:none;display:inline-flex;align-items:center;margin-bottom:0.5rem;">▶ Iniciar ${esc(m.opponent || 'Partido')}</a>`).join('')}
+            <a class="btn secondary" href="./index.html?view=delegado&fromCampo=1" style="text-decoration:none;display:inline-flex;align-items:center;">Abrir Vista Delegado completa</a>
+          </div>
+        </div>
+      `;
       return;
     }
     const callup = callupForMatch(match);
     const field = currentFieldIds(timer, callup);
     $('#delegado').innerHTML = `<div class="section-head"><div><p class="kicker">Vista delegado</p><h2>${esc(teamName())} · ${esc(match.opponent || 'Rival')}</h2></div><span>${formatClock(timerSeconds(timer))}</span></div>
       <div class="grid live-grid"><section class="card delegate-out"><h3>Sale del campo</h3>${playerList(field.onField)}</section><section class="card delegate-in"><h3>Entra al campo</h3>${playerList(field.bench)}</section></div>
-      <div class="card"><h3>Controles que se conservarán</h3><div class="actions"><button class="btn primary" disabled>Registrar cambio</button><button class="btn secondary" disabled>Automático</button><button class="btn secondary" disabled>Proponer reparto</button></div><p class="note">En esta prueba los botones están bloqueados para no tocar el partido real. La integración final reutilizará las funciones ya validadas de Vista delegado.</p></div>`;
+      <div class="card">
+        <h3>Control de Cambios en Vivo</h3>
+        <div class="actions">
+          <a class="btn primary" href="./index.html?view=delegado&fromCampo=1" style="text-decoration:none;display:inline-flex;align-items:center;">⚡ Gestionar cambios en directo</a>
+        </div>
+      </div>`;
   }
 
   function showView(id) {
@@ -353,14 +369,15 @@
   }
 
   function applyCache(cache) {
-    if (!cache?.players?.length) return;
-    state.players = cache.players || [];
-    state.callups = cache.callups || [];
-    state.matches = cache.matches || [];
-    state.attendance = cache.attendance || cache.trainings || [];
-    state.settings = cache.settings || [];
-    state.sessions = state.settings.filter((item) => item?.recordType === 'trainingSession');
-    state.team = state.settings.find((item) => item?.id === 'main') || {};
+    if (!cache) return;
+    if (cache.players?.length) state.players = cache.players;
+    if (cache.callups?.length) state.callups = cache.callups;
+    if (cache.matches?.length) state.matches = cache.matches;
+    if (cache.attendance?.length || cache.trainings?.length) state.attendance = cache.attendance || cache.trainings;
+    const rawSettings = cache.settings;
+    state.settings = Array.isArray(rawSettings) ? rawSettings : (rawSettings && typeof rawSettings === 'object' ? [rawSettings] : []);
+    state.sessions = cache.sessions || cache.trainingSessions || state.settings.filter((item) => item?.recordType === 'trainingSession');
+    state.team = state.settings.find((item) => item?.id === 'main') || cache.team || (typeof rawSettings === 'object' && !Array.isArray(rawSettings) ? rawSettings : {});
     const sync = $('#sync');
     if (sync) sync.textContent = `Modo local · ${state.players.length} jugadores · ${state.matches.length} partidos`;
     renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
@@ -368,9 +385,12 @@
 
   async function load() {
     const sync = $('#sync');
+
+    // 1. Carga inmediata síncrona desde caché provista por la página
     if (globalThis.__CAMPOBASE_CACHE__?.players?.length) {
       applyCache(globalThis.__CAMPOBASE_CACHE__);
     }
+
     try {
       if (!globalThis.supabase?.createClient) throw new Error('No se cargó el cliente de Supabase.');
       const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
@@ -383,6 +403,7 @@
       sync.textContent = sourceText();
       renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     } catch (error) {
+      // Si tenemos datos locales (de __CAMPOBASE_CACHE__), NUNCA mostrar la pantalla roja de error
       if (state.players.length > 0) {
         if (sync) sync.textContent = `Modo local · ${state.players.length} jugadores · ${state.matches.length} partidos`;
         return;
@@ -391,17 +412,9 @@
         applyCache(globalThis.__CAMPOBASE_CACHE__);
         return;
       }
-      sync.textContent = 'Error Supabase';
-      const msg = error?.message || String(error);
-      const isAuth = msg.includes('permission denied') || msg.includes('401') || msg.includes('42501') || msg.includes('JWT');
-      const isStarting = msg.includes('schema cache') || msg.includes('PGRST002') || msg.includes('503') || msg.includes('connection pool') || msg.includes('504');
-      const authHint = isAuth
-        ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Debes iniciar sesión en CampoBase antes de abrir Modo Campo.</p><p><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Ir a CampoBase / Iniciar sesión</a></p>'
-        : (isStarting
-          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Supabase Pro necesita recargar la caché del esquema tras la actualización de plan (Error 503 PGRST002).</p><div style="margin:1rem 0;padding:0.85rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;font-size:0.88rem;text-align:left;line-height:1.5;"><strong style="display:block;margin-bottom:0.4rem;color:#f8fafc;">⚡ Activación en tu panel de Supabase:</strong>1. Entra a tu panel de Supabase y ve a <strong>SQL Editor</strong>.<br>2. Ejecuta: <code style="background:rgba(0,0,0,0.4);padding:2px 6px;border-radius:4px;color:#38bdf8;">NOTIFY pgrst, \'reload schema\';</code><br>(O ve a <em>Project Settings &gt; General &gt; Restart project</em>).</div><p style="margin: 0.8rem 0;"><button class="btn accent big" onclick="location.reload()" style="font-weight:700;padding:0.75rem 1.4rem;">🔄 Reintentar conexión</button></p><p style="margin: 0.5rem 0;"><a class="btn ghost" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.6rem 1rem;">📱 Volver a CampoBase</a></p>'
-          : '<p style="margin: 0.8rem 0;"><button class="btn accent big" onclick="location.reload()" style="font-weight:700;padding:0.75rem 1.4rem;">🔄 Reintentar conexión</button></p><p style="margin: 0.5rem 0;"><a class="btn ghost" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.6rem 1rem;">📱 Volver a CampoBase</a></p>');
-      $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos remotos</h2><p>${esc(msg)}</p>${authHint}</div>`;
-      console.error('[Modo Campo directo]', error);
+      sync.textContent = 'Modo local';
+      // Mantener la app activa en modo local sin bloqueo
+      renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     }
   }
 

@@ -393,66 +393,224 @@ export function printTrainingSession(sessionOrId, state) {
   executePrint(html);
 }
 
-function executePrint(htmlContent) {
-  if (typeof document === 'undefined') return;
-  let container = document.getElementById('cb-print-root');
-  if (container) {
-    container.remove();
-  }
-
-  container = document.createElement('div');
-  container.id = 'cb-print-root';
-  container.innerHTML = htmlContent;
-  document.body.appendChild(container);
-
-  // Asegurar que las imágenes carguen antes de abrir el diálogo de impresión
-  const images = [...container.querySelectorAll('img')];
-  if (images.length === 0) {
-    triggerBrowserPrint(container);
-    return;
-  }
-
-  let loaded = 0;
-  const onDone = () => {
-    loaded++;
-    if (loaded >= images.length) {
-      triggerBrowserPrint(container);
-    }
-  };
-
-  images.forEach((img) => {
-    if (img.complete) {
-      onDone();
-    } else {
-      img.addEventListener('load', onDone, { once: true });
-      img.addEventListener('error', onDone, { once: true });
-    }
-  });
-
-  // Timeout de seguridad por si una imagen tarda
-  const imgTimeout = setTimeout(() => {
-    if (loaded < images.length) {
-      triggerBrowserPrint(container);
-    }
-  }, 600);
-  if (imgTimeout?.unref) imgTimeout.unref();
+function generateStandalonePrintPage(htmlContent) {
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CampoBase - Ficha de Entrenamiento</title>
+  <link rel="stylesheet" href="./styles-redesign.css?v=20260923-v48-clean-print-isolation">
+  <style>
+    @page { size: A4 portrait; margin: 8mm 10mm; }
+    body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #cb-print-root { display: block !important; }
+    .cb-print-floating-bar { display: none !important; }
+  </style>
+</head>
+<body class="cb-redesign-active cb-is-printing">
+  ${htmlContent}
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 300);
+    });
+  </script>
+</body>
+</html>`;
 }
 
-function triggerBrowserPrint(container) {
-  if (typeof window === 'undefined') return;
-  const cleanup = () => {
-    if (container && container.parentNode) {
-      container.remove();
+function executePrint(htmlContent) {
+  if (typeof document === 'undefined') return;
+  const existing = document.getElementById('cb-print-root');
+  if (existing) {
+    existing.remove();
+  }
+
+  // Marcar el body con la clase activa de impresión para activar el aislamiento estricto en CSS
+  if (document.body && document.body.classList) {
+    document.body.classList.add('cb-is-printing');
+  }
+
+  // Guardar y ocultar explícitamente todos los elementos parásitos de la UI de la app
+  // para que ningún estilo inline o fixed se cuele en la hoja de papel o pantalla de exportación
+  const hiddenElements = [];
+  try {
+    const parasiteSelectors = [
+      'body > *:not(#cb-print-root)',
+      '#cb-sub-nav',
+      '#cb-bottom-nav',
+      '.search-bar',
+      '#global-search',
+      '.topbar',
+      '.bottom-nav',
+      'header',
+      'nav',
+      '#app',
+      'dialog',
+      '.dialog-sticky-footer',
+      '#network-label',
+      '#toast'
+    ];
+    if (typeof document.querySelectorAll === 'function') {
+      document.querySelectorAll(parasiteSelectors.join(', ')).forEach((el) => {
+        if (el && el.id !== 'cb-print-root' && el.style) {
+          hiddenElements.push({
+            el,
+            prevDisplay: el.style.getPropertyValue ? el.style.getPropertyValue('display') : el.style.display,
+            prevDisplayPriority: el.style.getPropertyPriority ? el.style.getPropertyPriority('display') : '',
+            prevVisibility: el.style.getPropertyValue ? el.style.getPropertyValue('visibility') : el.style.visibility,
+            prevVisibilityPriority: el.style.getPropertyPriority ? el.style.getPropertyPriority('visibility') : '',
+          });
+          if (el.style.setProperty) {
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('visibility', 'hidden', 'important');
+          } else {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+          }
+        }
+      });
     }
+  } catch (e) {
+    // Salvaguarda en caso de selectores no soportados en entornos sintéticos
+  }
+
+  // Insertar contenedor de impresión directamente en body
+  const tempWrap = document.createElement('div');
+  tempWrap.innerHTML = htmlContent.trim();
+  let container = tempWrap.firstElementChild;
+  if (!container || container.id !== 'cb-print-root') {
+    container = document.createElement('div');
+    container.id = 'cb-print-root';
+    container.className = 'cb-print-root';
+    container.innerHTML = htmlContent;
+  }
+
+  // Barra de acciones táctil para dispositivos móviles (oculta al 100% en @media print)
+  const floatingBar = document.createElement('div');
+  floatingBar.className = 'cb-print-floating-bar';
+  floatingBar.setAttribute('role', 'toolbar');
+  floatingBar.setAttribute('aria-label', 'Acciones de exportación e impresión');
+  floatingBar.innerHTML = `
+    <div class="cb-print-floating-bar-inner">
+      <div class="cb-print-floating-bar-info">
+        <strong>📄 Ficha Lista para Guardar</strong>
+        <span>Formato A4 compacto (2 tareas por cara)</span>
+      </div>
+      <div class="cb-print-floating-bar-actions">
+        <button type="button" class="btn primary cb-print-btn-print" id="cb-print-trigger-btn">
+          🖨️ Guardar PDF / Imprimir
+        </button>
+        <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn">
+          📲 Abrir para Compartir
+        </button>
+        <button type="button" class="btn ghost cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
+          ✕ Volver
+        </button>
+      </div>
+    </div>
+  `;
+  container.prepend(floatingBar);
+  document.body.appendChild(container);
+
+  let cleanedUp = false;
+  const cleanup = () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    try {
+      if (document.body && document.body.classList) {
+        document.body.classList.remove('cb-is-printing');
+      }
+      hiddenElements.forEach(({ el, prevDisplay, prevDisplayPriority, prevVisibility, prevVisibilityPriority }) => {
+        if (el && el.style) {
+          if (prevDisplay) {
+            if (el.style.setProperty) {
+              el.style.setProperty('display', prevDisplay, prevDisplayPriority || '');
+            } else {
+              el.style.display = prevDisplay;
+            }
+          } else {
+            if (el.style.removeProperty) {
+              el.style.removeProperty('display');
+            } else {
+              el.style.display = '';
+            }
+          }
+          if (prevVisibility) {
+            if (el.style.setProperty) {
+              el.style.setProperty('visibility', prevVisibility, prevVisibilityPriority || '');
+            } else {
+              el.style.visibility = prevVisibility;
+            }
+          } else {
+            if (el.style.removeProperty) {
+              el.style.removeProperty('visibility');
+            } else {
+              el.style.visibility = '';
+            }
+          }
+        }
+      });
+      if (container && container.parentNode) {
+        container.remove();
+      }
+    } catch (e) {}
   };
 
-  window.addEventListener('afterprint', cleanup, { once: true });
-  // Fallback si afterprint no salta en ciertos navegadores móviles
-  const cleanupTimeout = setTimeout(cleanup, 60000);
-  if (cleanupTimeout?.unref) cleanupTimeout.unref();
+  // Conectar acciones táctiles de la barra flotante
+  const printBtn = container.querySelector('#cb-print-trigger-btn');
+  const openBtn = container.querySelector('#cb-print-open-tab-btn');
+  const closeBtn = container.querySelector('#cb-print-close-btn');
+
+  if (printBtn) {
+    printBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerBrowserPrint(container, cleanup);
+    });
+  }
+
+  if (openBtn) {
+    openBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      try {
+        const fullHtml = generateStandalonePrintPage(htmlContent);
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      } catch (err) {
+        // Fallback directo a window.print si blobs no son permitidos
+        triggerBrowserPrint(container, cleanup);
+      }
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      cleanup();
+    });
+  }
+
+  // REGLA FUNDAMENTAL PARA MÓVILES (iOS WebKit y Android Chrome):
+  // Disparar window.print() de forma SÍNCRONA en el mismo hilo de ejecución del evento
+  // táctil del usuario. Nunca posponer en callbacks asíncronos o timers de carga de imágenes,
+  // pues el navegador móvil revoca el gesto táctil y bloquea la llamada en silencio.
+  triggerBrowserPrint(container, cleanup);
+}
+
+function triggerBrowserPrint(container, cleanup) {
+  if (typeof window === 'undefined') return;
+
+  if (typeof cleanup === 'function') {
+    window.addEventListener('afterprint', cleanup, { once: true });
+    // Fallback generoso si afterprint no salta en ciertos navegadores móviles
+    const cleanupTimeout = setTimeout(cleanup, 120000);
+    if (cleanupTimeout?.unref) cleanupTimeout.unref();
+  }
 
   if (typeof window.print === 'function') {
     window.print();
   }
 }
+
 

@@ -219,7 +219,7 @@ test('js/app.js y js/ejercicio-viewer.js integran botones y delegación de impre
   assert.match(appSource, /printTrainingSession/);
 });
 
-test('executePrint inyecta en DOM y llama a window.print()', () => {
+test('executePrint inyecta en DOM y llama a window.print() síncronamente', () => {
   let printed = false;
   let addedElement = null;
 
@@ -228,15 +228,25 @@ test('executePrint inyecta en DOM y llama a window.print()', () => {
       return id === 'cb-print-root' ? addedElement : null;
     },
     createElement(tag) {
-      return {
+      const el = {
         tagName: tag.toUpperCase(),
         id: '',
+        className: '',
         innerHTML: '',
+        firstElementChild: null,
         querySelectorAll() { return []; },
+        querySelector() { return null; },
+        setAttribute() {},
+        prepend() {},
         remove() { addedElement = null; },
       };
+      return el;
     },
     body: {
+      classList: {
+        add() {},
+        remove() {},
+      },
       appendChild(node) {
         addedElement = node;
       },
@@ -266,3 +276,23 @@ test('executePrint inyecta en DOM y llama a window.print()', () => {
     globalThis.window = prevWin;
   }
 });
+
+test('regla intocable de aislamiento de impresión: erradica buscador, subnavegación y pestañas', () => {
+  const redesignNavSrc = fs.readFileSync(new URL('../js/redesign-nav.js', import.meta.url), 'utf8');
+  const printExportSrc = fs.readFileSync(new URL('../js/print-session-export.js', import.meta.url), 'utf8');
+
+  // 1. En CSS @media print, se ocultan con !important el buscador, la subnavegación y la barra inferior
+  assert.match(stylesSource, /\.search-bar/);
+  assert.match(stylesSource, /\.search-bar::before/);
+  assert.match(stylesSource, /#cb-sub-nav/);
+  assert.match(stylesSource, /#cb-bottom-nav/);
+  assert.match(stylesSource, /body\.cb-is-printing/);
+
+  // 2. En redesign-nav.js, subNav ya no inyecta style.setProperty('display', 'flex', 'important') inline
+  assert.doesNotMatch(redesignNavSrc, /subNav\.style\.setProperty\('display',\s*'flex',\s*'important'\)/);
+
+  // 3. En print-session-export.js, executePrint gestiona cb-is-printing y suprime elementos parásitos
+  assert.match(printExportSrc, /cb-is-printing/);
+  assert.match(printExportSrc, /parasiteSelectors/);
+});
+

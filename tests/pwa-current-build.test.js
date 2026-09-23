@@ -9,7 +9,7 @@ const [html, app, sw, cloud] = await Promise.all([
   readFile(new URL('../js/supabase-client.js', import.meta.url), 'utf8'),
 ]);
 
-const BUILD = '20260923-v47-compact-print-export';
+const BUILD = '20260923-v48-clean-print-isolation';
 
 test('index app cloud y service worker apuntan al mismo build actual', () => {
   assert.match(html, new RegExp(BUILD));

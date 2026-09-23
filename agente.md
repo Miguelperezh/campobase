@@ -849,7 +849,51 @@ Partidos activos próximos verificados:
    - **Tests y Calidad:**
      - Añadido `tests/print-session-export.test.js` con 9 pruebas de resolución de datos, generación HTML, diagrama de pizarra CSS de respaldo, integración en UI y DOM de impresión.
      - 518 tests unitarios pasando al 100%.
-   - **Cache versioning:** PWA y Service Worker sincronizados a `20260923-v47-compact-print-export`.
+   - **Cache versioning:** PWA y Service Worker sincronizados a `20260923-v48-clean-print-isolation`.
+
+5. **Entrega v48 (23/09/2026) — Aislamiento Intocable de Impresión, Botón Guardar en Móvil, Modo Campo Local-First y Vista Delegado Funcional:**
+
+   - ⚠️ **REGLA DE ORO INTOCABLE DE IMPRESIÓN (AISLAMIENTO ABSOLUTO Y CERO ELEMENTOS PARÁSITOS):**
+     - En el documento impreso o exportado a PDF **NUNCA** deben aparecer elementos propios de la interfaz web o PWA de CampoBase:
+       - Ni la barra de búsqueda superior (`.search-bar`, `.search-bar::before`, `#global-search`).
+       - Ni la barra de subnavegación (`#cb-sub-nav`) ni la barra de navegación inferior (`#cb-bottom-nav`, `.bottom-nav`).
+       - Ni cabeceras de la aplicación, ni modales o diálogos abiertos.
+     - La hoja generada es **estrictamente una Ficha Técnica de Campo**:
+       - Fondo blanco limpio (estilo Eco-Tinta para ahorro en impresora).
+       - Cabecera con datos del equipo, fecha, hora, campo, tiempo total y observaciones.
+       - Cuadro resumen de material total necesario para el entrenamiento.
+       - Cada tarea incluye: insignia de fase, título y duración; preview gráfico del campo o diagrama de pizarra; espacio métrico y jugadores; objetivo de la tarea; materiales; **explicación y dinámica de la tarea paso a paso**; reglas de provocación; rotación de jugadores; consignas del entrenador y notas específicas de la sesión.
+     - **Compacidad estricta de páginas:**
+       - Ejercicio individual: exactamente **1 página A4**.
+       - Sesión completa: exactamente **2 tareas por cara A4**. Para una sesión estándar de 4-5 ejercicios, el documento tiene 2-3 páginas (solo 2 hojas físicas si el usuario activa impresión a doble cara). Jamás 2 páginas por ejercicio ni 10 páginas por sesión.
+
+   - **Botón Imprimir en Móvil (Guardar en el Móvil / PDF):**
+     - **Causa raíz:** En iOS Safari y Chrome para Android, `window.print()` requiere activación de usuario transitoria (*transient user activation*). Al ejecutarse dentro de un callback asíncrono de carga de imágenes o temporizador (`setTimeout`), el navegador móvil revoca el gesto táctil y bloquea silenciosamente la apertura del cuadro de diálogo.
+     - **Solución implementada en `js/print-session-export.js`:**
+       1. Disparo de `window.print()` de forma **100% síncrona** en el mismo hilo de ejecución del evento de clic del usuario.
+       2. Inyección en `#cb-print-root` de una barra flotante táctil superior (`.cb-print-floating-bar`, oculta al 100% en `@media print`) con:
+          - `🖨️ Guardar PDF / Imprimir`: dispara `window.print()` de forma directa.
+          - `📲 Abrir para Compartir`: genera un documento Blob HTML completo y lo abre en una pestaña limpia, permitiendo a los usuarios de iPhone / Android usar el menú nativo de Compartir -> *Guardar en Archivos* o enviar como PDF por WhatsApp.
+          - `✕ Volver`: cierra la vista y restaura la aplicación inmediatamente.
+
+   - **Pantalla Delegado Visible y 100% Funcional:**
+     - **Causas anteriores:** No estaba enlazada en la subnavegación de Partidos, no se ejecutaba `renderDelegate()` al cambiar de vista (`showView`), y si no había partido en curso mostraba un mensaje vacío bloqueante (*«Migue debe prepararlo primero»*) sin dar opciones.
+     - **Solución implementada:**
+       - Subpestaña **Delegado** visible en el módulo **Partidos** (`js/redesign-nav.js` y `js/team-access.js`).
+       - En `showView('delegado')`: ejecución reactiva inmediata de `renderDelegate()`.
+       - En `renderDelegate()`: si no hay un partido activo, se muestra un selector de partidos convocados con el botón destacado `▶ Iniciar control de partido (Delegado)`, permitiendo arrancar cronómetro y cambios en 1 toque.
+       - Interfaz completa maquetada en `styles-redesign.css`: reloj digital grande, aviso de auto-pausa a 38:00 y 74:00, tarjeta destacada con sugerencia táctica (*«¿Quién ha jugado menos?»*), listas con checkbox para jugadores en campo y suplentes con dorsal y minutos disputados, y botones de cambios operativos (manual 1–7, automático 1–3 y proponer reparto).
+       - Desbloqueo total para el entrenador (`roleCanUseOwnerFeatures`) y comprobación horaria segura sin bloqueos.
+
+   - **Modo Campo Resiliente y Local-First:**
+     - En `js/app.js`: actualización automática de `campobase.directFieldCache` en `localStorage` en cada renderizado y sincronización (`renderAll()`), asegurando que Modo Campo cuente siempre con datos locales frescos (plantilla, partidos, convocatorias, sesiones y partidos en vivo).
+     - En `js/modo-campo-directo.js`: carga inmediata y segura desde la caché local sin mostrar jamás la pantalla roja de error si Supabase no responde o no hay conexión.
+     - Desbloqueo de controles de cambios y enlaces directos al partido en curso.
+
+   - **Batería de Pruebas y Cache Versioning:**
+     - Versión global incrementada a `20260923-v48-clean-print-isolation`.
+     - 519 tests unitarios pasando al 100% (`npm test`).
+     - Verificación de sintaxis completa pasando al 100% (`npm run check`).
 
 
 

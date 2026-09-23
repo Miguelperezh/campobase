@@ -6489,9 +6489,132 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
 /* ==========================================================================
    CAMPOBASE PRINT ENGINE (@media print)
    Optimizado para Fichas de Campo y Fichas Técnicas A4 Compactas (Eco-Tinta)
+   REGLA DE ORO INTOCABLE: Aislamiento absoluto. Cero elementos parásitos
+   de la app (ni buscador, ni subnavegación, ni barra inferior, ni modales).
    ========================================================================== */
 #cb-print-root {
   display: none !important;
+}
+
+/* Barra de acciones táctiles para móvil / pantalla antes de imprimir */
+.cb-print-floating-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100000;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  margin-bottom: 1.25rem;
+  border-radius: 0 0 12px 12px;
+}
+
+.cb-print-floating-bar-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.cb-print-floating-bar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cb-print-floating-bar-info strong {
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.cb-print-floating-bar-info span {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.cb-print-floating-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cb-print-floating-bar-actions .btn {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cb-print-floating-bar-actions .cb-print-btn-print {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #1d4ed8;
+}
+
+.cb-print-floating-bar-actions .cb-print-btn-open {
+  background: #334155;
+  color: #f1f5f9;
+  border: 1px solid #475569;
+}
+
+.cb-print-floating-bar-actions .cb-print-btn-close {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid #475569;
+}
+
+body.cb-is-printing #cb-print-root {
+  display: block !important;
+  visibility: visible !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 0 1rem 3rem 1rem !important;
+}
+
+@media (max-width: 650px) {
+  .cb-print-floating-bar-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cb-print-floating-bar-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cb-print-floating-bar-actions .btn {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+body.cb-is-printing .search-bar,
+body.cb-is-printing .search-bar::before,
+body.cb-is-printing .search-bar::after,
+body.cb-is-printing #global-search,
+body.cb-is-printing #cb-sub-nav,
+body.cb-is-printing #cb-bottom-nav,
+body.cb-is-printing .bottom-nav,
+body.cb-is-printing .topbar,
+body.cb-is-printing header,
+body.cb-is-printing nav,
+body.cb-is-printing #app,
+body.cb-is-printing dialog {
+  display: none !important;
+  visibility: hidden !important;
 }
 
 @media print {
@@ -6505,6 +6628,60 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
     display: none !important;
   }
 
+  /* Ocultar barra flotante de pantalla */
+  .cb-print-floating-bar,
+  .cb-print-floating-bar * {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* AISLAMIENTO ABSOLUTO Y ERRADICACIÓN DE ELEMENTOS PARÁSITOS */
+  body.cb-redesign-active > *:not(#cb-print-root),
+  body.cb-is-printing > *:not(#cb-print-root),
+  body.cb-redesign-active:has(#plantilla.active) .search-bar,
+  body.cb-redesign-active:has(#ejercicios.active) .search-bar,
+  body.cb-redesign-active:has(#calendario.active) .search-bar,
+  body.cb-redesign-active .search-bar,
+  .search-bar,
+  .search-bar::before,
+  .search-bar::after,
+  #global-search,
+  #cb-sub-nav,
+  #cb-bottom-nav,
+  .bottom-nav,
+  .topbar,
+  header,
+  nav,
+  main,
+  #app,
+  dialog,
+  button,
+  .btn,
+  .dialog-sticky-footer,
+  .cb-quick-sheet,
+  #network-label,
+  #toast {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    content: none !important;
+  }
+
   body, html {
     background: #ffffff !important;
     color: #111827 !important;
@@ -6516,8 +6693,11 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
     overflow: visible !important;
   }
 
-  #cb-print-root {
+  #cb-print-root,
+  body.cb-is-printing #cb-print-root {
     display: block !important;
+    visibility: visible !important;
+    position: static !important;
     width: 100% !important;
     max-width: 100% !important;
     background: #ffffff !important;
@@ -6525,6 +6705,9 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
     padding: 0 !important;
     margin: 0 !important;
     box-sizing: border-box !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+    overflow: visible !important;
   }
 
   /* Encabezado común */
@@ -6908,4 +7091,204 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
     margin-top: 1mm !important;
   }
 }
+
+/* ==========================================================================
+   VISTA DELEGADO (PARTIDOS > DELEGADO)
+   Control táctil ágil de cambios, cronómetro e incidencias a pie de campo
+   ========================================================================== */
+#delegado.view {
+  display: none;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+#delegado.view.active {
+  display: block;
+}
+
+.delegate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--cb-slate-200, #e2e8f0);
+}
+
+.delegate-head h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--cb-slate-900, #0f172a);
+  margin: 0.2rem 0 0 0;
+}
+
+.delegate-head .eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cb-primary, #c8102e);
+  margin: 0;
+}
+
+.delegate-selector-card {
+  background: var(--cb-white, #ffffff);
+  border: 1px solid var(--cb-slate-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.delegate-selector-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.delegate-suggestion {
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-left: 4px solid #16a34a !important;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.delegate-suggestion h3 {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #166534;
+}
+
+.delegate-suggestion p {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.92rem;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.delegate-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.delegate-actions button {
+  min-height: 48px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+#delegado .live-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+#delegado .panel.on-field,
+#delegado .panel.bench {
+  background: #ffffff;
+  border: 1px solid var(--cb-slate-200, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+#delegado .panel.on-field h3 {
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#delegado .panel.bench h3 {
+  color: #2563eb;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#delegado .check-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+#delegado .check-row:last-child {
+  border-bottom: none;
+}
+
+#delegado .check-row:hover {
+  background: #f8fafc;
+}
+
+#delegado .check-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+#delegado .check-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cb-primary, #c8102e);
+  cursor: pointer;
+}
+
+#delegado .check-row strong[data-player-clock] {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+#delegate-clock.clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0.35rem 0;
+}
+
+@media (max-width: 650px) {
+  #delegado .live-grid {
+    grid-template-columns: 1fr;
+  }
+  .delegate-actions {
+    grid-template-columns: 1fr;
+  }
+  .delegate-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .delegate-head button {
+    width: 100%;
+  }
+}
+
 

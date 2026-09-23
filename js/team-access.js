@@ -16,7 +16,7 @@ export const DELEGATE_VIEW_OPTIONS = Object.freeze([
 const MODULE_VIEWS = Object.freeze({
   inicio: ['hoy'],
   equipo: ['plantilla', 'cuerpo-tecnico', 'asistencia'],
-  partidos: ['convocatorias', 'preparacion', 'partido', 'calendario'],
+  partidos: ['convocatorias', 'preparacion', 'partido', 'delegado', 'calendario'],
   entrenos: ['sesiones', 'ejercicios'],
   mas: ['tacticas'],
 });

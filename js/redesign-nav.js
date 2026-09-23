@@ -51,7 +51,7 @@ export const MODULE_CONFIG = {
     label: 'Partidos',
     icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="3"/></svg>`,
     defaultView: 'convocatorias',
-    views: ['convocatorias', 'preparacion', 'partido', 'calendario'],
+    views: ['convocatorias', 'preparacion', 'partido', 'delegado', 'calendario'],
     subTabs: [
       {
         id: 'convocatorias',
@@ -70,6 +70,12 @@ export const MODULE_CONFIG = {
         label: 'En Vivo',
         desc: 'Cronómetro y cambios en directo',
         icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+      },
+      {
+        id: 'delegado',
+        label: 'Delegado',
+        desc: 'Cambios rápidos, tiempos y acta de delegado',
+        icon: `<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
       },
       {
         id: 'calendario',
@@ -215,7 +221,7 @@ export function renderSubNav() {
 
   subNav.hidden = false;
   subNav.classList.remove('cb-hidden');
-  subNav.style.setProperty('display', 'flex', 'important');
+  subNav.style.removeProperty('display');
 
   // Si el módulo ya está pintado, solo actualizamos las clases activas sin destruir el DOM
   if (subNav.dataset.renderedModule === activeModuleKey) {

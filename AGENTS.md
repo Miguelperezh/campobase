@@ -4358,6 +4358,32 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
   - Detalle modal de sesión: `🖨️ Imprimir Ficha de Sesión`.
   - Visor de ejercicio individual (`js/ejercicio-viewer.js`): `🖨️ Imprimir Ficha`.
 
+# 66. Aislamiento Intocable de Impresión, Botón Guardar en Móvil, Pantalla Delegado y Modo Campo — v48 (23/09/2026)
 
+## 66.1 Regla de Oro Intocable de Impresión y PDF (Cero Elementos Parásitos)
+- ⚠️ **REGLA ESTRICTA Y PERMANENTE:** En el documento impreso o exportado a PDF **NUNCA** deben salir elementos parásitos de la interfaz:
+  - Erradicación obligatoria en CSS `@media print` de la barra de búsqueda (`.search-bar`, `.search-bar::before`, `#global-search`).
+  - Erradicación obligatoria de la barra de subnavegación (`#cb-sub-nav`) y barra inferior (`#cb-bottom-nav`, `.bottom-nav`).
+  - Erradicación de cabeceras de la aplicación, botones flotantes y modales.
+  - La hoja es exclusivamente una **Ficha Técnica de Campo** (fondo blanco eco-tinta, datos de sesión/ejercicio, materiales, explicación detallada paso a paso de la dinámica, reglas, rotaciones, consignas y notas).
+- **Compacidad obligatoria:**
+  - 1 sola página A4 por ejercicio suelto.
+  - 2 tareas por cara A4 para sesiones completas (una sesión de 5 tareas ocupa ~2.5 páginas; en impresión a doble cara son solo 2 hojas físicas, jamás 10 páginas).
 
+## 66.2 Impresión en Móvil (Guardar en el Móvil como PDF)
+- **Activación síncrona:** En `js/print-session-export.js`, `window.print()` se ejecuta **de forma 100% síncrona** en el evento de clic del usuario para evitar que WebKit en iOS Safari o Blink en Chrome móvil revoquen el permiso táctil.
+- **Barra flotante táctil:** `#cb-print-root` incluye una barra superior (`.cb-print-floating-bar`, oculta en `@media print`) con:
+  - `🖨️ Guardar PDF / Imprimir`: dispara `window.print()` directamente.
+  - `📲 Abrir para Compartir`: abre un Blob HTML limpio en una pestaña nueva para que iOS Safari y Android permitan guardar como PDF en Archivos o enviar por WhatsApp.
+  - `✕ Volver`: cierra y restaura la pantalla.
 
+## 66.3 Pantalla Delegado Visible y 100% Operativa
+- Integrada en la subnavegación de **Partidos** (`js/redesign-nav.js` y `js/team-access.js`).
+- Conectada reactivamente en `showView('delegado')` -> `renderDelegate()`.
+- Si no hay partido en vivo, muestra selector de partidos convocados con botón `▶ Iniciar control de partido (Delegado)` para arrancar en 1 toque.
+- Estilizada con diseño moderno en `styles-redesign.css` (reloj grande, sugerencia táctica, listas de campo/banquillo con minutos y controles de cambios 1–7, automático 1–3 y proponer reparto).
+
+## 66.4 Modo Campo Resiliente Local-First
+- En `js/app.js`, `renderAll()` sincroniza automáticamente `campobase.directFieldCache` en `localStorage`.
+- En `js/modo-campo-directo.js`, carga inmediata desde caché local sin mostrar jamás pantalla roja de error si Supabase no responde.
+- Botones de cambios desbloqueados y enlaces directos a la gestión de partido.

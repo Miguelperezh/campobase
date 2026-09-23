@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v47-compact-print-export';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v48-clean-print-isolation';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v47-compact-print-export';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v48-clean-print-isolation';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -229,6 +229,8 @@ function showView(viewId) {
     renderExercises();
   } else if (viewId === 'tacticas') {
     renderTactics();
+  } else if (viewId === 'delegado') {
+    renderDelegate();
   }
 }
 
@@ -352,12 +354,36 @@ async function refresh() {
   if (force || !isUserInteracting()) renderAll();
 }
 
+function syncDirectFieldCache() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const directCache = {
+      players: state.players || [],
+      callups: state.callups || [],
+      matches: state.matches || [],
+      attendance: state.trainings || [],
+      settings: [
+        ...(state.trainingSessions || []).map((s) => ({ ...s, recordType: 'trainingSession' })),
+        ...(state.exercises || []).map((e) => ({ ...e, recordType: 'exercise' })),
+        { id: 'main', teamName: state.settings?.teamName || '', format: state.format, ...(state.settings || {}) },
+        ...(state.timer ? [{ id: 'live', timer: state.timer }] : [])
+      ],
+      sessions: state.trainingSessions || [],
+      timer: state.timer || null,
+      team: { id: 'main', teamName: state.settings?.teamName || '', format: state.format, ...(state.settings || {}) },
+      at: Date.now(),
+    };
+    localStorage.setItem('campobase.directFieldCache', JSON.stringify(directCache));
+  } catch {}
+}
+
 function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
   renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics(); renderPreparaciones();
   refreshPlantillaStaff().catch(() => {});
   applyGlobalSearch();
+  syncDirectFieldCache();
   try { window.dispatchEvent(new CustomEvent('campobase:data-updated')); } catch {}
 }
 
@@ -1873,7 +1899,73 @@ function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
   if (!state.timer) {
-    root.innerHTML = `${empty('No hay un partido en vivo. Migue debe prepararlo primero.')}${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}`;
+    const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
+    if (eligible.length) {
+      root.innerHTML = `
+        <div class="delegate-head">
+          <div>
+            <p class="eyebrow">Vista Delegado</p>
+            <h2>Control de partido y cambios</h2>
+          </div>
+          ${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}
+        </div>
+        <div class="delegate-selector-card">
+          <h3>Iniciar control de partido</h3>
+          <p class="meta">Selecciona el partido convocado para gestionar el cronómetro y los cambios en directo:</p>
+          <label style="display:block;margin:1rem 0;">
+            <strong>Partido convocado</strong>
+            <select id="delegate-match-select" style="width:100%;margin-top:0.4rem;padding:0.6rem;font-size:0.95rem;">
+              <option value="">Selecciona un partido…</option>
+              ${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}
+            </select>
+          </label>
+          <div class="button-row" style="margin-top:1rem;">
+            <button id="delegate-start-live" class="primary" style="min-height:44px;font-weight:700;">▶ Iniciar control de partido (Delegado)</button>
+          </div>
+        </div>
+      `;
+      const startBtn = $('#delegate-start-live');
+      if (startBtn && !startBtn.dataset.bound) {
+        startBtn.dataset.bound = '1';
+        startBtn.addEventListener('click', async () => {
+          const select = $('#delegate-match-select');
+          const matchId = select?.value;
+          if (!matchId) {
+            toast('Por favor, selecciona un partido convocado.');
+            return;
+          }
+          const match = state.matches.find((m) => m.id === matchId);
+          const callup = callupForMatch(match);
+          if (!match || !callup) {
+            toast('No se encontró la convocatoria para este partido.');
+            return;
+          }
+          const available = callup.availableIds || [];
+          const config = FORMATS[callup.format] || FORMATS.F7;
+          const initialOnField = available.slice(0, config.players);
+          const firstKeeper = available[0] || '';
+          const secondKeeper = available[1] || firstKeeper;
+          state.timer = {
+            matchId: match.id,
+            phase: 'ready',
+            elapsed: 0,
+            runningSince: null,
+            initialOnField: [...initialOnField],
+            onField: [...initialOnField],
+            events: [],
+            firstKeeper,
+            secondKeeper,
+            delegateUnlocked: true,
+          };
+          await persistTimer();
+          renderLive();
+          renderDelegate();
+          toast('Partido preparado para el delegado.');
+        });
+      }
+      return;
+    }
+    root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Vista Delegado</p><h2>Control de partido y cambios</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${empty('No hay partidos convocados disponibles. Prepara una convocatoria primero en la pestaña Convocatorias.')}`;
     return;
   }
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
@@ -1913,13 +2005,14 @@ function enterDelegateMode() {
 // El delegado ve el partido en vivo 20 min antes de la hora programada, o cuando
 // Migue lo desbloquea antes (delegateUnlocked), o cuando ya ha empezado.
 function delegateCanSeeLive() {
+  if (roleCanUseOwnerFeatures(state.role)) return true;
   if (!state.timer) return false;
   if (state.timer.phase !== 'ready') return true; // ya empezado
-  if (state.timer.delegateUnlocked) return true;   // Migue lo desbloqueó antes
+  if (state.timer.delegateUnlocked) return true;   // Migue lo desbloqueó antes o iniciado directamente
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
-  if (!match?.date) return false;
+  if (!match?.date) return true;
   const kickoff = new Date(match.date).getTime();
-  if (!Number.isFinite(kickoff)) return false;
+  if (!Number.isFinite(kickoff)) return true;
   return Date.now() >= kickoff - 20 * 60 * 1000;
 }
 
@@ -6935,7 +7028,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-v47-compact-print-export').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-v48-clean-print-isolation').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
