@@ -31,7 +31,7 @@ async function enterDemo(page){
   await page.waitForFunction(()=>Boolean(window.__campobase?.state),null,{timeout:30000});
   const role=await page.evaluate(()=>window.__campobase?.state?.role||'');
   if(role!=='demo'){
-    await page.locator('#auth-demo-btn').tap();
+    await page.evaluate(()=>document.getElementById('auth-demo-btn')?.click());
     await page.waitForFunction(()=>window.__campobase?.state?.role==='demo',null,{timeout:30000});
   }
 }
