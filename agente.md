@@ -833,4 +833,23 @@ Partidos activos próximos verificados:
      - Nombres a ancho completo en selectores tácticos, editor de goles/asistencias en columna y tablas estadísticas sin recortes.
      - Supresión total de opciones o botones de importación manual / copia local. La arquitectura es 100% Cloud-First con Supabase y GitHub Releases.
 
+4. **Entrega v47 (23/09/2026) — Exportación e Impresión Compacta de Sesiones y Ejercicios (Fichas de Campo A4):**
+   - **Reglas Mandatorias de Compacidad:**
+     - **Ejercicio individual:** Estrictamente **1 sola página A4** (cabecera con equipo, título y badges de categoría/duración/espacio/jugadores; gráfico del campo superior; materiales, organización, dinámica de la tarea, reglas de provocación y consignas del entrenador en 2 columnas equilibradas).
+     - **Sesión completa:** Formato ultra-compacto de **2 ejercicios por cara**. Una sesión típica de 4 tareas ocupa 2 páginas; una de 5 tareas ocupa ~2.5 páginas (1 o 2 hojas físicas si el usuario activa impresión a doble cara). Jamás 2 páginas por ejercicio ni 10 páginas por sesión.
+     - **Configuración de impresión:** El usuario configura en el diálogo nativo de su sistema si imprime a 1 o 2 caras (dúplex).
+   - **Implementación Técnica:**
+     - `js/print-session-export.js`: Módulo con funciones `resolveExerciseData`, `buildSingleExerciseHtml`, `buildTrainingSessionHtml`, `printSingleExercise` y `printTrainingSession`. Carga previa de imágenes con timeout de seguridad antes de `window.print()` y auto-limpieza en `afterprint`.
+     - `styles-redesign.css`: Reglas `@media print` con tamaño `@page { size: A4 portrait; margin: 8mm 10mm; }`, aislamiento absoluto (`body > *:not(#cb-print-root) { display: none !important; }`), estilo Eco-Tinta (fondos blancos, texto negro `#111827`, bordes finos `#cbd5e1`), y control de saltos de página con `break-inside: avoid`. Oculto en pantalla con `#cb-print-root { display: none !important; }`.
+     - Integración UI:
+       - Botón `🖨️ Imprimir` en cada tarjeta de sesión en la pestaña **Sesiones**.
+       - Botón `🖨️ Imprimir Ficha de Sesión` en el detalle modal de la sesión.
+       - Botón `🖨️ Imprimir Ficha` en la barra de acciones inferior del visor de ejercicio individual (`js/ejercicio-viewer.js`).
+     - Delegación de eventos en `js/app.js` y métodos expuestos en `window.__campobase`.
+   - **Tests y Calidad:**
+     - Añadido `tests/print-session-export.test.js` con 9 pruebas de resolución de datos, generación HTML, diagrama de pizarra CSS de respaldo, integración en UI y DOM de impresión.
+     - 518 tests unitarios pasando al 100%.
+   - **Cache versioning:** PWA y Service Worker sincronizados a `20260923-v47-compact-print-export`.
+
+
 

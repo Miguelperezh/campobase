@@ -880,8 +880,11 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       ${videosHTML}
     </div>
 
-    <!-- Barra de acciones: Añadir a sesión + botón de cierre inferior fijo -->
+    <!-- Barra de acciones: Imprimir + Añadir a sesión + botón de cierre inferior fijo -->
     <div class="sheet-bottom-bar">
+      <button type="button" class="print-exercise-sheet secondary btn-print-exercise" data-id="${esc(ex.id)}" title="Imprimir o guardar ficha en PDF (1 página)">
+        🖨️ Imprimir Ficha
+      </button>
       <button type="button" class="add-exercise-to-session primary btn-add-session" data-id="${esc(ex.id)}">
         + Añadir a sesión
       </button>

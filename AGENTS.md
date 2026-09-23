@@ -4343,5 +4343,21 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - Nombres de jugadores a ancho completo en alineaciones, cambios tácticos, actas de goles y tablas estadísticas.
 - Retirados todos los botones no deseados de importación de copias locales o carga de PC. El flujo es 100% cloud a través de Supabase y GitHub Releases.
 
+# 65. Exportación e Impresión Compacta de Sesiones y Ejercicios (Fichas de Campo A4) — v47 (23/09/2026)
+
+## 65.1 Principio de Compacidad Obligatorio
+- **Ejercicio individual:** Estrictamente **1 sola página A4** (cabecera con equipo, título y badges de categoría/duración/espacio/jugadores; gráfico del campo superior; materiales, organización, dinámica de la tarea, reglas de provocación y consignas del entrenador en 2 columnas equilibradas).
+- **Sesión completa:** Formato ultra-compacto de **2 ejercicios por cara A4**. Una sesión típica de 4 tareas ocupa 2 páginas; una de 5 tareas ocupa ~2.5 páginas (1 o 2 hojas físicas si el usuario activa impresión a doble cara). Jamás 2 páginas por ejercicio ni 10 páginas por sesión.
+- **Configuración dúplex:** El usuario selecciona en el diálogo de impresión nativo del navegador si desea imprimir a 1 o 2 caras según sus necesidades de campo / carpeta con pinza.
+
+## 65.2 Arquitectura y Componentes
+- `js/print-session-export.js`: Módulo autónomo con precarga de imágenes antes de `window.print()` y auto-limpieza en `afterprint`.
+- `styles-redesign.css`: Reglas `@media print` Eco-Tinta (fondos blancos, texto negro `#111827`, badges y bordes `#cbd5e1`), `@page { size: A4 portrait; margin: 8mm 10mm; }`, paginación forzada con `break-inside: avoid` y aislamiento total de la aplicación durante la impresión (`body > *:not(#cb-print-root) { display: none !important; }`).
+- Botones en interfaz:
+  - Tarjetas de sesión en pestaña **Sesiones**: `🖨️ Imprimir`.
+  - Detalle modal de sesión: `🖨️ Imprimir Ficha de Sesión`.
+  - Visor de ejercicio individual (`js/ejercicio-viewer.js`): `🖨️ Imprimir Ficha`.
+
+
 
 

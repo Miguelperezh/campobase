@@ -6485,3 +6485,355 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
   box-sizing: border-box !important;
   white-space: normal !important;
 }
+
+/* ==========================================================================
+   CAMPOBASE PRINT ENGINE (@media print)
+   Optimizado para Fichas de Campo y Fichas Técnicas A4 Compactas (Eco-Tinta)
+   ========================================================================== */
+#cb-print-root {
+  display: none !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Ocultar la aplicación web completa al imprimir */
+  body > *:not(#cb-print-root) {
+    display: none !important;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  #cb-print-root {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Encabezado común */
+  .cb-print-header {
+    border-bottom: 2px solid #111827 !important;
+    padding-bottom: 3mm !important;
+    margin-bottom: 4mm !important;
+  }
+
+  .cb-print-brand-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 8pt !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #4b5563 !important;
+    margin-bottom: 1.5mm !important;
+  }
+
+  .cb-print-logo {
+    font-weight: 900 !important;
+    color: #15803d !important;
+    font-size: 9pt !important;
+  }
+
+  .cb-print-doc-badge {
+    font-weight: 800 !important;
+    background: #f3f4f6 !important;
+    padding: 0.8mm 2.2mm !important;
+    border-radius: 4px !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  .cb-print-team-name {
+    font-weight: 800 !important;
+    color: #111827 !important;
+  }
+
+  .cb-print-title {
+    font-size: 13pt !important;
+    font-weight: 900 !important;
+    margin: 0 0 2.5mm 0 !important;
+    line-height: 1.2 !important;
+    color: #111827 !important;
+  }
+
+  .cb-print-tags-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1.8mm !important;
+  }
+
+  .cb-print-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0.8mm 2.2mm !important;
+    border-radius: 4px !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+  }
+
+  .cb-print-pill.accent {
+    background: #dcfce7 !important;
+    border-color: #86efac !important;
+    color: #166534 !important;
+  }
+
+  /* Ficha de ejercicio individual (1 sola cara A4 estricta) */
+  .cb-print-exercise-page {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    max-height: 275mm !important;
+    overflow: hidden !important;
+  }
+
+  .cb-print-exercise-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3.5mm !important;
+  }
+
+  .cb-print-stage-box {
+    width: 100% !important;
+    height: 90mm !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f8fafc !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .cb-print-field-img {
+    max-width: 100% !important;
+    max-height: 90mm !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  .cb-print-pitch-diagram {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    background: #22c55e !important;
+    color: #ffffff !important;
+  }
+
+  .cb-print-columns-grid {
+    display: grid !important;
+    grid-template-columns: 38% 60% !important;
+    gap: 4mm !important;
+  }
+
+  .cb-print-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2.8mm !important;
+  }
+
+  .cb-print-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 2mm 3mm !important;
+    background: #ffffff !important;
+  }
+
+  .cb-print-card-title {
+    font-size: 8pt !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: #15803d !important;
+    margin: 0 0 1.2mm 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding-bottom: 0.8mm !important;
+  }
+
+  .cb-print-card-text {
+    font-size: 8pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    color: #1e293b !important;
+  }
+
+  .cb-print-card-text.pre-line {
+    white-space: pre-line !important;
+  }
+
+  /* Ficha de sesión completa (2 ejercicios por cara) */
+  .cb-print-session-page {
+    width: 100% !important;
+  }
+
+  .cb-print-meta-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 2mm !important;
+    font-size: 8pt !important;
+    margin-bottom: 1.5mm !important;
+  }
+
+  .cb-print-summary-box {
+    font-size: 7.5pt !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.2mm 2.5mm !important;
+    border-radius: 4px !important;
+    margin-top: 1.2mm !important;
+  }
+
+  .cb-print-session-tasks-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3.5mm !important;
+  }
+
+  .cb-print-session-task {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 2.5mm 3.5mm !important;
+    background: #ffffff !important;
+    margin-bottom: 2.5mm !important;
+  }
+
+  .cb-print-task-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 1.5mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .cb-print-task-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2mm !important;
+  }
+
+  .cb-print-task-badge {
+    background: #15803d !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+    font-size: 8pt !important;
+    padding: 0.6mm 2mm !important;
+    border-radius: 4px !important;
+  }
+
+  .cb-print-task-phase {
+    font-size: 7.5pt !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    color: #64748b !important;
+  }
+
+  .cb-print-task-title {
+    font-size: 10pt !important;
+    font-weight: 900 !important;
+    margin: 0 !important;
+    color: #0f172a !important;
+  }
+
+  .cb-print-pill-duration {
+    font-size: 7.5pt !important;
+    font-weight: 800 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0.8mm 2.2mm !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+  }
+
+  .cb-print-task-body {
+    display: grid !important;
+    grid-template-columns: 35% 63% !important;
+    gap: 3mm !important;
+    align-items: start !important;
+  }
+
+  .cb-print-task-media {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.2mm !important;
+  }
+
+  .cb-print-session-task-img {
+    width: 100% !important;
+    height: 45mm !important;
+    object-fit: contain !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    background: #f8fafc !important;
+    display: block !important;
+  }
+
+  .cb-print-session-task-placeholder {
+    width: 100% !important;
+    height: 45mm !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    background: #f8fafc !important;
+    font-weight: 800 !important;
+    color: #94a3b8 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .cb-print-task-submeta {
+    font-size: 7pt !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+  }
+
+  .cb-print-task-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5mm !important;
+    font-size: 7.5pt !important;
+    line-height: 1.3 !important;
+    color: #1e293b !important;
+  }
+
+  .cb-print-task-material {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.2mm 2mm !important;
+    border-radius: 4px !important;
+  }
+
+  .cb-print-task-desc {
+    white-space: pre-line !important;
+    color: #0f172a !important;
+  }
+
+  .cb-print-task-rules {
+    border-left: 2px solid #f59e0b !important;
+    padding-left: 1.5mm !important;
+    white-space: pre-line !important;
+  }
+}
+

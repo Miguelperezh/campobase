@@ -6,13 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v46-videomobile-syncpro-cleanup';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v47-compact-print-export';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v47-compact-print-export';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -3397,6 +3398,7 @@ function renderTrainingSessions() {
           <p class="meta">${escapeHtml(localDate(session.date))}${session.time ? ` · ⏰ ${session.time}` : ''}${session.pitch ? ` · 🏟️ ${escapeHtml(session.pitch)}` : ''} · ${durationInfo.metaText} · ${session.blocks.length} ${session.blocks.length === 1 ? 'bloque' : 'bloques'}</p>
         </div>
         <div class="button-row">
+          <button type="button" class="print-session icon-button secondary" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
           <button type="button" class="open-whistle-session icon-button accent" data-id="${session.id}">⏱️ Silbato</button>
           <button type="button" class="open-whatsapp-session icon-button accent" data-id="${session.id}">📱 WhatsApp</button>
           <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
@@ -3481,6 +3483,7 @@ function showSessionDetail(sessionId) {
     ${materialText ? `<p class="session-meta-line"><strong>Material necesario:</strong> ${escapeHtml(materialText)}</p>` : ''}
     ${session.notes ? `<p class="session-meta-line"><strong>Observaciones:</strong> ${escapeHtml(session.notes)}</p>` : ''}
     <div class="button-row" style="margin-top:1rem;">
+      <button type="button" class="print-session icon-button secondary" data-id="${session.id}">🖨️ Imprimir Ficha de Sesión</button>
       <button type="button" class="edit-session secondary" data-id="${session.id}">✏️ Editar sesión</button>
       <button type="button" class="open-whistle-session primary" data-id="${session.id}">⏱️ Iniciar cronómetro / Silbato</button>
       <button type="button" class="open-whatsapp-session secondary" data-id="${session.id}">📱 Compartir por WhatsApp</button>
@@ -6680,6 +6683,16 @@ function wireEvents() {
       }
       renderSessionDraft();
     }
+    if (target.matches('.print-session') || target.closest('.print-session')) {
+      const btn = target.closest('.print-session');
+      printTrainingSession(btn.dataset.id, state);
+      return;
+    }
+    if (target.matches('.print-exercise-sheet') || target.closest('.print-exercise-sheet')) {
+      const btn = target.closest('.print-exercise-sheet');
+      printSingleExercise(btn.dataset.id, state);
+      return;
+    }
     if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
     if (target.id === 'prepare-live') await prepareLive();
     if (target.id === 'advance-live') await advanceLivePhase();
@@ -6922,7 +6935,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-v46-videomobile-syncpro-cleanup').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-v47-compact-print-export').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -6958,7 +6971,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
 }
 
 init().catch(handleError);
