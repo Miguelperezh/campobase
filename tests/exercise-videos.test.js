@@ -166,7 +166,7 @@ test('todos los MP4 migrados usan variante móvil y escritorio conserva el asset
   );
   assert.equal(
     resolveHostedVideoUrl(f127, { mobile: true }),
-    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-127__ejercicio.mp4',
+    'https://github.com/Miguelperezh/campobase/releases/download/campobase-videos-v1/library-v2-preview__f7-127__ejercicio-mobile.mp4',
   );
   assert.equal(
     resolveHostedVideoUrl(f126, { mobile: false }),
