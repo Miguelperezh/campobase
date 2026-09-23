@@ -19,7 +19,7 @@ test('recargar conserva la sesión segura de la pestaña y evita expulsar al usu
     projectFile('sw.js'),
   ]);
   assert.match(app, /campobase\.activeView/);
-  assert.match(app, /20260923-stats-setpieces-modocampo-v44/);
+  assert.match(app, /20260923-stats-setpieces-modocampo-v45/);
   assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*return unlockBoundSession\(client\)/);
   assert.doesNotMatch(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]{0,120}clearBrowserSessionActive\(\)/);
   assert.doesNotMatch(sw, /client\.navigate\(client\.url\)/);

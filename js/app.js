@@ -6,7 +6,7 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-stats-setpieces-modocampo-v44';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-stats-setpieces-modocampo-v45';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
@@ -507,6 +507,7 @@ function renderSquadSpecialistsBar() {
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
           <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
           <button type="button" class="secondary share-database-mobile-btn" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
+          <button type="button" class="secondary quick-import-mobile-btn" title="Cargar archivo JSON enviado desde el ordenador">📥 Cargar datos del PC</button>
         </div>
       </div>
       <div class="specialists-quick-grid">
@@ -638,7 +639,7 @@ function renderSquadLeaderboards() {
           <thead>
             <tr>
               <th class="col-rank">Pos.</th>
-              <th>Jugador</th>
+              <th class="col-player">Jugador</th>
               <th>Posición</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">Min.</th>
@@ -678,7 +679,7 @@ function renderSquadLeaderboards() {
           <thead>
             <tr>
               <th class="col-rank">Pos.</th>
-              <th>Jugador</th>
+              <th class="col-player">Jugador</th>
               <th>Posición</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">Min.</th>
@@ -718,7 +719,7 @@ function renderSquadLeaderboards() {
           <thead>
             <tr>
               <th class="col-rank">Pos.</th>
-              <th>Portero</th>
+              <th class="col-player">Portero</th>
               <th class="col-num">Partidos</th>
               <th class="col-num">Minutos</th>
               <th class="col-num">Goles encajados</th>
@@ -759,7 +760,7 @@ function renderSquadLeaderboards() {
           <thead>
             <tr>
               <th class="col-rank">Pos.</th>
-              <th>Jugador</th>
+              <th class="col-player">Jugador</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">Rotación</th>
               <th class="col-num">Min. Jugados</th>
@@ -803,7 +804,7 @@ function renderSquadLeaderboards() {
           <thead>
             <tr>
               <th class="col-rank">Pos.</th>
-              <th>Jugador</th>
+              <th class="col-player">Jugador</th>
               <th class="col-num">Conv.</th>
               <th class="col-num">🟨 Amarillas</th>
               <th class="col-num">🟥 Rojas</th>
@@ -1806,7 +1807,15 @@ function wireTacticsBoard(sc) {
   if (lbPlay) lbPlay.addEventListener('click', () => {
     const video = lightbox.querySelector('video');
     if (!video) return;
-    if (video.paused) { video.play(); lbPlay.textContent = '⏸'; } else { video.pause(); lbPlay.textContent = '▶'; }
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    if (video.paused) {
+      video.play().then(() => { lbPlay.textContent = '⏸'; }).catch(() => { video.controls = true; });
+    } else {
+      video.pause();
+      lbPlay.textContent = '▶';
+    }
   });
   lightbox.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => {
     const video = lightbox.querySelector('video');
@@ -2632,7 +2641,10 @@ function wirePrepEditor() {
       video.playsInline = true; video.muted = true; video.loop = true;
       lightbox.appendChild(video);
       lightbox.classList.add('open');
-      video.play();
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.play().catch(() => {});
     });
     lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
@@ -2640,7 +2652,15 @@ function wirePrepEditor() {
     if (lbPlay) lbPlay.addEventListener('click', () => {
       const video = lightbox.querySelector('video');
       if (!video) return;
-      if (video.paused) { video.play(); lbPlay.textContent = '⏸'; } else { video.pause(); lbPlay.textContent = '▶'; }
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      if (video.paused) {
+        video.play().then(() => { lbPlay.textContent = '⏸'; }).catch(() => { video.controls = true; });
+      } else {
+        video.pause();
+        lbPlay.textContent = '▶';
+      }
     });
     lightbox.querySelectorAll('.speed button').forEach((b) => b.addEventListener('click', () => {
       const video = lightbox.querySelector('video');
@@ -3814,7 +3834,24 @@ async function shareDatabaseToMobile() {
 async function importData(event) {
   const file = event.target.files[0]; if (!file) return;
   if (file.size > 20_000_000) return toast('La copia supera el límite de 20 MB.');
-  try { const backup = validateBackup(JSON.parse(await file.text())); if (!await askConfirmation({ title: 'Importar copia', message: 'La importación sustituirá todos los datos locales.', acceptLabel: 'Importar y sustituir', danger: true })) return; await importDatabase(backup); state.timer = null; await refresh(); toast('Copia importada correctamente.'); } catch (error) { console.error(error); toast(`No se pudo importar: ${error.message}`); } finally { event.target.value = ''; }
+  try {
+    const backup = validateBackup(JSON.parse(await file.text()));
+    if (!await askConfirmation({
+      title: 'Importar datos de CampoBase',
+      message: 'La importación cargará la plantilla, especialistas/lanzadores, estadísticas y partidos desde la copia seleccionada.',
+      acceptLabel: 'Cargar datos',
+      danger: false,
+    })) return;
+    await importDatabase(backup);
+    state.timer = null;
+    await refresh();
+    toast('✅ Datos cargados: plantilla, partidos, estadísticas y lanzadores actualizados.');
+  } catch (error) {
+    console.error(error);
+    toast(`No se pudo importar: ${error.message}`);
+  } finally {
+    event.target.value = '';
+  }
 }
 
 function applyTeamIdentity(settings = state.settings) {
@@ -5933,6 +5970,12 @@ function wireEvents() {
       return;
     }
 
+    const quickImportBtn = event.target.closest('.quick-import-mobile-btn, #btn-quick-import-mobile');
+    if (quickImportBtn) {
+      $('#import-data')?.click();
+      return;
+    }
+
     const lbTabBtn = event.target.closest('.lb-tab-btn[data-lb-tab]');
     if (lbTabBtn) {
       state.leaderboardTab = lbTabBtn.dataset.lbTab;
@@ -6880,7 +6923,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v44').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v45').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

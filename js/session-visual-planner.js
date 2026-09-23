@@ -389,10 +389,18 @@ function togglePickerVideo(button) {
   if (!video) return;
   if (!video.src && video.dataset.src) {
     video.src = video.dataset.src;
-    video.load();
   }
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  video.setAttribute('muted', '');
   if (video.paused) {
-    video.play().then(() => { button.textContent = '⏸'; }).catch(() => {});
+    video.play().then(() => { button.textContent = '⏸'; }).catch((err) => {
+      console.warn('Error al reproducir vídeo:', err);
+      video.controls = true;
+    });
   } else {
     video.pause();
     button.textContent = '▶';

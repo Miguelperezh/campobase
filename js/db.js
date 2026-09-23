@@ -1,6 +1,6 @@
 import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
-import { getBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
+import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 
 var REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
@@ -583,14 +583,30 @@ export async function recoverLegacyPendingMutations() {
 export async function exportDatabase() {
   const data = {};
   for (const store of STORES) data[store] = await localGetAll(store);
-  return { app: 'CampoBase', version: 1, exportedAt: new Date().toISOString(), data };
+  const userId = typeof getBoundSaasUserId === 'function' ? getBoundSaasUserId() : '';
+  try {
+    const directCache = {
+      players: data.players || [],
+      callups: data.callups || [],
+      matches: data.matches || [],
+      attendance: data.trainings || [],
+      settings: data.settings || [],
+      at: Date.now(),
+    };
+    localStorage.setItem('campobase.directFieldCache', JSON.stringify(directCache));
+  } catch {}
+  return { app: 'CampoBase', version: 1, exportedAt: new Date().toISOString(), saasUserId: userId, data };
 }
 
 export async function importDatabase(backup) {
+  if (backup.saasUserId && typeof getBoundSaasUserId === 'function' && !getBoundSaasUserId()) {
+    try { setBoundSaasUserId(backup.saasUserId); configureRealDatabase(); } catch {}
+  }
+  const data = backup.data || backup;
   if (isDemoDatabase()) {
     for (const storeName of STORES) {
       demoStores[storeName].clear();
-      for (const record of backup.data[storeName]) demoStores[storeName].set(record.id, structuredClone(record));
+      for (const record of (data[storeName] || [])) demoStores[storeName].set(record.id, structuredClone(record));
     }
     notifyDataChanged(STORES, 'import');
     return;
@@ -600,12 +616,25 @@ export async function importDatabase(backup) {
   for (const storeName of STORES) {
     const store = transaction.objectStore(storeName);
     store.clear();
-    for (const record of backup.data[storeName]) {
+    for (const record of (data[storeName] || [])) {
       store.put(record);
       transaction.objectStore(SYNC_QUEUE).put(buildMutation(storeName, 'upsert', record));
     }
   }
   await transactionDone(transaction);
+
+  try {
+    const directCache = {
+      players: data.players || [],
+      callups: data.callups || [],
+      matches: data.matches || [],
+      attendance: data.trainings || data.attendance || [],
+      settings: data.settings || [],
+      at: Date.now(),
+    };
+    localStorage.setItem('campobase.directFieldCache', JSON.stringify(directCache));
+  } catch {}
+
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(STORES, 'import');
 }

@@ -761,4 +761,43 @@ Partidos activos próximos verificados:
    - **Jugadores y lanzadores del usuario:** No se han modificado ni alterado.
    - **Convocatoria provisional contra El Pilar:** Conservada íntegra y protegida.
 
+---
+
+### 12. Despliegue Crítico v45: Modo Campo Local-First, Ancho Completo en Móvil, Reproductores Táctiles y Sincronización Directa (2026-09-23)
+
+1. **Investigación y Causa Raíz de los 4 Problemas Reportados:**
+   - **Causa raíz de la falta de cambios en el móvil:** Las modificaciones se habían preparado en local pero no se habían consolidado en el build de producción ni desplegado a GitHub Pages. Además, el Service Worker de la PWA mantenía en caché la versión `v44`. Con el incremento a `20260923-stats-setpieces-modocampo-v45` y la recarga en `controllerchange`, todos los navegadores móviles renuevan sus archivos inmediatamente al conectar.
+   - **Causa raíz del bloqueo en Modo Campo:** `modo-campo-directo.html` dependía exclusivamente de una consulta remota a Supabase en frío. Al encontrarse el servidor de Supabase en error `503 PGRST002` (PostgREST sin conexión con el esquema Postgres), la pantalla fallaba tras 8 segundos sin mostrar ningún dato.
+   - **Causa raíz de los nombres estrechos en goles y asistencias:** En pantallas táctiles, el editor de eventos (`.event-editor`) utilizaba un grid de 4 columnas de 140px que comprimía los `<select>` de Jugador y Asistencia. Asimismo, en las tablas clasificatorias (`.lb-table`), la cabecera `<th>` de Jugador carecía de clase `.col-player` y su ancho mínimo de 180px era insuficiente para nombres largos con dorsal.
+   - **Causa raíz de los botones Reproducir en móvil:**
+     1. El overlay de reproducción era un `<div>` genérico sin semántica de botón nativo, lo que provocaba que WebKit en iOS omitiera el evento sintético `click` bajo ciertas condiciones táctiles.
+     2. En `togglePickerVideo` de `js/session-visual-planner.js`, la llamada síncrona a `video.load()` dentro del evento del usuario cancelaba el gesto de activación (*transient activation*), haciendo que el navegador rechazara la reproducción por política de autoplay.
+     3. Los toques en la superficie del reproductor se solapaban con eventos táctiles y pausaban el vídeo de forma accidental.
+
+2. **Soluciones Implementadas:**
+   - **Modo Campo 100% Resiliente y Local-First Inmediato:**
+     - En `modo-campo-directo.html`, un script recupera inmediatamente la base local de IndexedDB (probando tanto el identificador de usuario `campobase_<id>` como la base por defecto `campobase`) y el volcado en `localStorage.getItem('campobase.directFieldCache')`.
+     - En `js/modo-campo-directo.js`, `load()` aplica la caché local de inmediato en 0 ms: la interfaz muestra la plantilla, sesiones y partidos sin esperar a la red. La petición a Supabase se ejecuta en segundo plano: si tiene éxito actualiza los datos; si falla (503) mantiene los datos locales sin mostrar ningún error.
+     - Añadido un botón visible `📥 Cargar copia JSON de datos` en Modo Campo para cargar copias de seguridad directamente desde el móvil sin depender de la nube.
+     - Escucha reactiva del evento `campobase:cache-ready` para actualizar la vista en cuanto IndexedDB esté listo.
+   - **Nombres a Ancho Completo en Goles, Asistencias y Tablas Clasificatorias:**
+     - En `styles-redesign.css` y `styles.css`: En dispositivos móviles (`max-width: 900px`), `.event-editor` pasa a disposición en columna vertical completa (`100% !important;`), garantizando que los desplegables de **Jugador** y **Asistencia** tengan una altura táctil de 48px y muestren el nombre completo de cualquier jugador sin truncar.
+     - En `js/app.js`: Añadida la clase `.col-player` a las cabeceras `<th>` de las 5 tablas clasificatorias (Goleadores, Asistencias, Zamora, Reparto de Minutos y Fair Play).
+     - En `styles-redesign.css`: Fijado `min-width: 220px !important; white-space: nowrap !important;` tanto en `th.col-player` como en `td.col-player`, con scroll horizontal fluido (`-webkit-overflow-scrolling: touch`) en `.lb-table-wrapper`.
+   - **Reproductores de Vídeo Táctiles y Blindados:**
+     - En `js/ejercicio-viewer.js`:
+       - `.video-overlay-play` transformado en `<button type="button">` nativo accesible con `border: none; padding: 0; outline: none;`.
+       - Incorporados listeners de `touchend` con `e.preventDefault()` y debounce de 350ms, eliminando la latencia táctil de 300ms de iOS/Android y erradicando los clics fantasma.
+       - En `togglePlay()`: se fuerza `video.muted = true; video.defaultMuted = true; video.playsInline = true;` antes de `play()`. Si el navegador bloquea la reproducción, activa de inmediato `video.controls = true` como mecanismo nativo infalible.
+       - Eliminado el listener `video.addEventListener('click')` sobre la superficie del vídeo para impedir pausas no deseadas durante gestos táctiles de desplazamiento o zoom.
+       - Botón `.v-btn-play` ampliado en móvil a `min-width: 44px; min-height: 40px; font-size: 1.15rem` cumpliendo las pautas de accesibilidad táctil de Apple y Google.
+     - En `js/session-visual-planner.js`: Eliminado `video.load()` síncrono en `togglePickerVideo` para no cancelar la activación de usuario en WebKit.
+     - En `js/app.js`: Protegidos los botones de reproducción de la pizarra táctica (`.lb-play`) con `muted = true`, `playsInline = true` y captura de promesas.
+   - **Sincronización Directa PC ↔ Móvil en 1 Clic (Sin Depender del 503 de Supabase):**
+     - Botones **«📥 Cargar datos del PC»** añadidos en las cabeceras de **Hoy**, de **Plantilla** y en **Ajustes**.
+     - Botones **«📲 Pasar al móvil»** en **Plantilla** (`Lanzadores y Capitanes`) y en **Ajustes** (`Copia de seguridad`), que permiten enviar la base de datos completa con 1 toque por WhatsApp (al chat personal del entrenador) o AirDrop.
+     - En `js/db.js`, `importDatabase()` escribe en IndexedDB y guarda de forma simultánea un volcado directo en `campobase.directFieldCache`, sincronizando al mismo tiempo CampoBase normal y Modo Campo.
+   - **Cache-Busting Total del Service Worker:**
+     - Versión global actualizada a `20260923-stats-setpieces-modocampo-v45` en `index.html`, `sw.js` y ficheros de prueba, forzando la renovación de caché en todos los clientes móviles.
+
 

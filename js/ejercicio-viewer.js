@@ -780,9 +780,9 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
         <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" src="${esc(videoSrc)}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="metadata"><source src="${esc(videoSrc)}" type="video/mp4"></video>
-        <div class="video-overlay-play" title="Reproducir animación">
+        <button type="button" class="video-overlay-play" title="Reproducir animación" aria-label="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
-        </div>
+        </button>
       </div>
 
       <!-- Barra de progreso / seek -->
@@ -1224,6 +1224,7 @@ export function initValidatedExerciseViewer(root) {
       } catch (err) {
         console.warn('Error al reproducir vídeo:', err);
         if (video.paused) updatePlayState(false);
+        video.controls = true;
       } finally {
         playPromise = null;
       }
@@ -1241,9 +1242,20 @@ export function initValidatedExerciseViewer(root) {
     togglePlay();
   };
 
-  if (btnPlay) btnPlay.addEventListener('click', handleToggle);
-  if (overlayPlay) overlayPlay.addEventListener('click', handleToggle);
-  if (video) video.addEventListener('click', handleToggle);
+  if (btnPlay) {
+    btnPlay.addEventListener('click', handleToggle);
+    btnPlay.addEventListener('touchend', (e) => { e.preventDefault(); handleToggle(e); }, { passive: false });
+  }
+  if (overlayPlay) {
+    overlayPlay.addEventListener('click', handleToggle);
+    overlayPlay.addEventListener('touchend', (e) => { e.preventDefault(); handleToggle(e); }, { passive: false });
+  }
+
+  video.addEventListener('error', () => {
+    console.warn('Error en elemento de vídeo:', video.error);
+    updatePlayState(false);
+    video.controls = true;
+  });
 
   video.addEventListener('play', () => updatePlayState(true));
   video.addEventListener('playing', () => updatePlayState(true));

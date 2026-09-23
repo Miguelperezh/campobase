@@ -352,8 +352,25 @@
     showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
   }
 
+  function applyCache(cache) {
+    if (!cache?.players?.length) return;
+    state.players = cache.players || [];
+    state.callups = cache.callups || [];
+    state.matches = cache.matches || [];
+    state.attendance = cache.attendance || cache.trainings || [];
+    state.settings = cache.settings || [];
+    state.sessions = state.settings.filter((item) => item?.recordType === 'trainingSession');
+    state.team = state.settings.find((item) => item?.id === 'main') || {};
+    const sync = $('#sync');
+    if (sync) sync.textContent = `Modo local · ${state.players.length} jugadores · ${state.matches.length} partidos`;
+    renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
+  }
+
   async function load() {
     const sync = $('#sync');
+    if (globalThis.__CAMPOBASE_CACHE__?.players?.length) {
+      applyCache(globalThis.__CAMPOBASE_CACHE__);
+    }
     try {
       if (!globalThis.supabase?.createClient) throw new Error('No se cargó el cliente de Supabase.');
       const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
@@ -366,6 +383,14 @@
       sync.textContent = sourceText();
       renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     } catch (error) {
+      if (state.players.length > 0) {
+        if (sync) sync.textContent = `Modo local · ${state.players.length} jugadores · ${state.matches.length} partidos`;
+        return;
+      }
+      if (globalThis.__CAMPOBASE_CACHE__?.players?.length) {
+        applyCache(globalThis.__CAMPOBASE_CACHE__);
+        return;
+      }
       sync.textContent = 'Error Supabase';
       const msg = error?.message || String(error);
       const isAuth = msg.includes('permission denied') || msg.includes('401') || msg.includes('42501') || msg.includes('JWT');
@@ -373,14 +398,45 @@
       const authHint = isAuth
         ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Debes iniciar sesión en CampoBase antes de abrir Modo Campo.</p><p><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Ir a CampoBase / Iniciar sesión</a></p>'
         : (isStarting
-          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">El servidor de datos en la nube está en mantenimiento o reiniciándose (Error 503 PGRST002).</p><p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal (funciona sin conexión)</a></p><div style="margin:1rem 0;padding:0.75rem;background:rgba(255,255,255,0.06);border-radius:8px;font-size:0.84rem;text-align:left;line-height:1.4;"><strong style="display:block;margin-bottom:0.3rem;">ℹ️ Solución para desbloquear la nube:</strong>En tu panel de Supabase: <em>Project Settings &gt; General &gt; Restart Project</em> para reiniciar PostgREST.</div><p><button class="btn secondary" onclick="location.reload()">🔄 Reintentar conexión con la nube</button></p>'
-          : '<p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal</a></p><p><button class="btn secondary" onclick="location.reload()">Reintentar</button></p>');
+          ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">El servidor de datos en la nube está en mantenimiento o reiniciándose (Error 503 PGRST002).</p><p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal (funciona sin conexión)</a></p><p style="margin: 0.8rem 0;"><label class="btn accent" style="display:inline-block;cursor:pointer;font-weight:700;padding:0.7rem 1.2rem;">📥 Cargar copia JSON de datos<input type="file" id="campo-direct-file-input" accept=".json,application/json" style="display:none"></label></p><div style="margin:1rem 0;padding:0.75rem;background:rgba(255,255,255,0.06);border-radius:8px;font-size:0.84rem;text-align:left;line-height:1.4;"><strong style="display:block;margin-bottom:0.3rem;">ℹ️ Solución para desbloquear la nube:</strong>En tu panel de Supabase: <em>Project Settings &gt; General &gt; Restart Project</em> para reiniciar PostgREST.</div><p><button class="btn secondary" onclick="location.reload()">🔄 Reintentar conexión con la nube</button></p>'
+          : '<p style="margin: 0.8rem 0;"><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;font-weight:700;padding:0.7rem 1.2rem;">📱 Abrir CampoBase normal</a></p><p style="margin: 0.8rem 0;"><label class="btn accent" style="display:inline-block;cursor:pointer;font-weight:700;padding:0.7rem 1.2rem;">📥 Cargar copia JSON de datos<input type="file" id="campo-direct-file-input" accept=".json,application/json" style="display:none"></label></p><p><button class="btn secondary" onclick="location.reload()">Reintentar</button></p>');
       $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos remotos</h2><p>${esc(msg)}</p>${authHint}</div>`;
       console.error('[Modo Campo directo]', error);
     }
   }
 
-  document.addEventListener('change', (event) => {
+  window.addEventListener('campobase:cache-ready', (e) => {
+    if (state.players.length === 0 && e.detail?.players?.length) {
+      applyCache(e.detail);
+    }
+  });
+
+  document.addEventListener('change', async (event) => {
+    if (event.target?.id === 'campo-direct-file-input') {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        const data = json.data || json;
+        if (data.players || data.matches) {
+          state.players = data.players || [];
+          state.callups = data.callups || [];
+          state.matches = data.matches || [];
+          state.attendance = data.trainings || data.attendance || [];
+          state.settings = data.settings || [];
+          state.sessions = state.settings.filter((item) => item?.recordType === 'trainingSession');
+          state.team = state.settings.find((item) => item?.id === 'main') || {};
+          const sync = $('#sync');
+          if (sync) sync.textContent = `Archivo cargado · ${state.players.length} jugadores · ${state.matches.length} partidos`;
+          renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
+          showToast('Datos cargados correctamente.');
+        }
+      } catch (err) {
+        showToast('Error al leer el archivo JSON.');
+      }
+      return;
+    }
     const statusSelect = event.target.closest('[data-att-status]');
     if (!statusSelect) return;
     const row = statusSelect.closest('.attendance-row-full');

@@ -46,6 +46,64 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="./vendor/supabase.js"></script>
+  <script>
+    (() => {
+      try {
+        const raw = localStorage.getItem('campobase.directFieldCache');
+        if (raw) window.__CAMPOBASE_CACHE__ = JSON.parse(raw);
+      } catch {}
+
+      if (typeof indexedDB === 'undefined') return;
+
+      const tryReadDb = (name) => new Promise((resolve) => {
+        try {
+          const req = indexedDB.open(name);
+          req.onsuccess = () => {
+            const db = req.result;
+            const stores = ['players', 'callups', 'matches', 'trainings', 'settings'];
+            if (!stores.every((s) => db.objectStoreNames.contains(s))) {
+              db.close();
+              return resolve(null);
+            }
+            const tx = db.transaction(stores, 'readonly');
+            const data = {};
+            let count = 0;
+            stores.forEach((s) => {
+              const r = tx.objectStore(s).getAll();
+              r.onsuccess = () => {
+                data[s === 'trainings' ? 'attendance' : s] = r.result || [];
+                count++;
+                if (count === stores.length) {
+                  db.close();
+                  resolve(data.players && data.players.length > 0 ? data : null);
+                }
+              };
+              r.onerror = () => { count++; if (count === stores.length) { db.close(); resolve(null); } };
+            });
+          };
+          req.onerror = () => resolve(null);
+        } catch {
+          resolve(null);
+        }
+      });
+
+      const loadFromStorage = async () => {
+        const boundUser = (() => { try { return localStorage.getItem('campobase.saasUserId'); } catch { return ''; } })();
+        const names = [boundUser ? `campobase_${boundUser}` : '', 'campobase'].filter(Boolean);
+        for (const name of names) {
+          const result = await tryReadDb(name);
+          if (result && result.players && result.players.length > 0) {
+            window.__CAMPOBASE_CACHE__ = result;
+            try { localStorage.setItem('campobase.directFieldCache', JSON.stringify(result)); } catch {}
+            window.dispatchEvent(new CustomEvent('campobase:cache-ready', { detail: result }));
+            break;
+          }
+        }
+      };
+
+      loadFromStorage();
+    })();
+  </script>
   <script src="./js/modo-campo-directo.js?v=4"></script>
   <script src="./js/modo-campo-identity-exercises.js?v=2"></script>
   <script src="./js/modo-campo-theme-parity.js?v=1"></script>

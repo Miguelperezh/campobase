@@ -112,20 +112,38 @@ function addTopbarButton({ id, text, onClick, primary = false }) {
   else status.appendChild(button);
 }
 
+function saveCacheAndNavigate() {
+  try {
+    const app = window.__campobase;
+    if (app?.state) {
+      const cache = {
+        players: app.state.players || [],
+        callups: app.state.callups || [],
+        matches: app.state.matches || [],
+        attendance: app.state.trainings || [],
+        settings: app.state.settings || [],
+        at: Date.now(),
+      };
+      localStorage.setItem('campobase.directFieldCache', JSON.stringify(cache));
+    }
+  } catch {}
+  window.location.href = './modo-campo-directo.html';
+}
+
 function installEntryButtons() {
   if (fromCampo) {
     addTopbarButton({
       id: 'return-to-field-mode',
       text: '← Volver a Modo Campo',
       primary: true,
-      onClick: () => { window.location.href = './modo-campo-directo.html'; },
+      onClick: saveCacheAndNavigate,
     });
     return;
   }
   addTopbarButton({
     id: 'open-field-mode',
     text: 'Modo Campo',
-    onClick: () => { window.location.href = './modo-campo-directo.html'; },
+    onClick: saveCacheAndNavigate,
   });
 }
 
