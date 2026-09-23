@@ -591,6 +591,24 @@ Partidos activos próximos verificados:
   - `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `js/ejercicio-viewer.js`.
   - Suite de tests de integración (`tests/pwa-current-build.test.js`, `tests/auth-recovery-controls.test.js`, etc.).
   - Nuevo archivo de tests: `tests/squad-stats-and-set-pieces.test.js`.
-- Batería de pruebas: **500/500 tests unitarios y de integración superados en verde** y chequeo de sintaxis (`npm run check`) 100% verificado.
+- Batería de pruebas: **501/501 tests unitarios y de integración superados en verde** y chequeo de sintaxis (`npm run check`) 100% verificado.
+
+### 6. Diagnóstico de reproducción de vídeo en iPhone físico (`?videoDebug=1` y botón en Ajustes)
+- **Objetivo**: Proporcionar al usuario una herramienta visual e inmediata en su teléfono real para diagnosticar el estado del reproductor en `f7-126` y otros ejercicios sin depender exclusivamente de emuladores ni Playwright.
+- **Activación flexible (apta para PWA standalone sin barra de direcciones)**:
+  1. **Mediante parámetro URL**: Entrando con `?videoDebug=1` (guarda persistencia en `localStorage.setItem('campobase.videoDebug', '1')`).
+  2. **Mediante botón en Ajustes**: En la sección *Sesión y sistema* se añadió el botón `🐞 Diagnóstico de vídeo móvil`, que permite conmutar la herramienta directamente desde la PWA instalada en la pantalla de inicio del iPhone.
+- **Métricas registradas en pantalla en tiempo real**:
+  - `window.__CAMPOBASE_BUILD` (versión del código ejecutándose).
+  - `navigator.serviceWorker.controller` (Service Worker que controla activamente la página).
+  - `navigator.userAgent`.
+  - `navigator.standalone` y `(display-mode: standalone)`.
+  - `video.dataset.src` vs `video.currentSrc` (para verificar si cargó la variante `-mobile.mp4` correcta).
+  - `readyState` (0 a 4) y `networkState` (0 a 3).
+  - `paused`, `currentTime` y `duration`.
+  - `video.error` (código y mensaje en caso de fallo).
+  - **Historial reactivo de eventos**: Registra con timestamp los últimos eventos del elemento de vídeo: `loadstart`, `loadedmetadata`, `loadeddata`, `canplay`, `play`, `playing`, `waiting`, `stalled`, `suspend`, `pause`, `error`, `ended`.
+  - Botón **Copiar** para exportar todo el registro de diagnóstico y pegarlo cómodamente.
+
 
 

@@ -137,3 +137,20 @@ test('Modo Campo directo usa sesión persistente para evitar rechazos RLS 401', 
   assert.match(exercises, /persistSession:\s*true/);
   assert.match(directo, /autoRefreshToken:\s*true/);
 });
+
+test('diagnóstico seguro ?videoDebug=1 y botón en Ajustes están disponibles', async () => {
+  const html = await read('index.html');
+  const app = await read('js/app.js');
+  const viewer = await read('js/ejercicio-viewer.js');
+
+  assert.match(html, /id="toggle-video-debug"/);
+  assert.match(app, /#toggle-video-debug/);
+  assert.match(app, /campobase\.videoDebug/);
+  assert.match(viewer, /export function attachVideoDebugger/);
+  assert.match(viewer, /videoDebug/);
+  assert.match(viewer, /video-debug-panel/);
+  assert.match(viewer, /DIAGNÓSTICO VÍDEO/);
+  assert.match(viewer, /readyState/);
+  assert.match(viewer, /networkState/);
+});
+

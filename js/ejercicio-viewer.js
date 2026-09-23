@@ -953,6 +953,121 @@ export function renderExerciseGridCard(ex) {
   </article>`;
 }
 
+export function attachVideoDebugger(root, video, { isIOS = false, isStandalone = false } = {}) {
+  let isDebug = false;
+  try {
+    if (typeof window !== 'undefined' && window.location?.search) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('videoDebug') === '1') {
+        isDebug = true;
+        try { localStorage.setItem('campobase.videoDebug', '1'); } catch {}
+      } else if (params.get('videoDebug') === '0') {
+        isDebug = false;
+        try { localStorage.removeItem('campobase.videoDebug'); } catch {}
+      }
+    }
+    if (!isDebug && typeof localStorage !== 'undefined') {
+      isDebug = localStorage.getItem('campobase.videoDebug') === '1';
+    }
+  } catch {}
+
+  if (!isDebug || !root || !video) return null;
+
+  let debugPanel = root.querySelector('.video-debug-panel');
+  if (!debugPanel) {
+    debugPanel = document.createElement('div');
+    debugPanel.className = 'video-debug-panel';
+    debugPanel.style.cssText = 'margin:10px 0;padding:10px;background:#090d16;color:#38bdf8;border:1px solid #0284c7;border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;line-height:1.45;word-break:break-all;box-shadow:0 4px 12px rgba(0,0,0,0.5);';
+    const container = root.querySelector('.exercise-video-wrap') || root;
+    if (container.parentNode) {
+      container.parentNode.insertBefore(debugPanel, container.nextSibling);
+    } else {
+      root.appendChild(debugPanel);
+    }
+  }
+
+  const eventsLog = [];
+  const logEvent = (name) => {
+    const now = new Date().toLocaleTimeString('es-ES', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 2 });
+    eventsLog.unshift(`${now} [${name}] (t=${Number(video.currentTime || 0).toFixed(2)}s, rs=${video.readyState})`);
+    if (eventsLog.length > 10) eventsLog.pop();
+    render();
+  };
+
+  const trackedEvents = ['loadstart', 'loadedmetadata', 'loadeddata', 'canplay', 'play', 'playing', 'waiting', 'stalled', 'suspend', 'pause', 'error', 'ended'];
+  trackedEvents.forEach((evName) => {
+    video.addEventListener(evName, () => logEvent(evName));
+  });
+
+  function render() {
+    const swController = (typeof navigator !== 'undefined' && navigator.serviceWorker?.controller)
+      ? navigator.serviceWorker.controller.scriptURL
+      : 'Sin controlador SW activo';
+    const build = (typeof window !== 'undefined' && window.__CAMPOBASE_BUILD) || 'v43';
+    const rState = `${video.readyState} (${['HAVE_NOTHING','HAVE_METADATA','HAVE_CURRENT_DATA','HAVE_FUTURE_DATA','HAVE_ENOUGH_DATA'][video.readyState] || '?'})`;
+    const nState = `${video.networkState} (${['EMPTY','IDLE','LOADING','NO_SOURCE'][video.networkState] || '?'})`;
+    const dur = Number.isFinite(video.duration) ? `${video.duration.toFixed(2)}s` : String(video.duration);
+    const cur = Number.isFinite(video.currentTime) ? `${video.currentTime.toFixed(2)}s` : String(video.currentTime);
+    const err = video.error ? `Code ${video.error.code}: ${video.error.message || 'Error de medios'}` : 'null';
+
+    debugPanel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(56,189,248,0.3);padding-bottom:6px;">
+        <strong style="color:#f8fafc;font-size:12px;">🐞 DIAGNÓSTICO VÍDEO (iPhone / PWA)</strong>
+        <div style="display:flex;gap:4px;">
+          <button type="button" class="btn-copy-debug" style="padding:3px 8px;font-size:10px;background:#0284c7;color:#fff;border:none;border-radius:4px;cursor:pointer;">Copiar</button>
+          <button type="button" class="btn-close-debug" style="padding:3px 8px;font-size:10px;background:#475569;color:#fff;border:none;border-radius:4px;cursor:pointer;">Cerrar</button>
+        </div>
+      </div>
+      <div><strong>Build:</strong> ${build}</div>
+      <div><strong>SW Controller:</strong> ${swController}</div>
+      <div><strong>iOS:</strong> ${isIOS} | <strong>Standalone:</strong> ${isStandalone}</div>
+      <div><strong>UA:</strong> <span style="font-size:10px;color:#94a3b8;">${typeof navigator !== 'undefined' ? navigator.userAgent : ''}</span></div>
+      <div style="margin-top:4px;"><strong>data-src:</strong> <span style="color:#e2e8f0;">${video.dataset.src || '(vacío)'}</span></div>
+      <div><strong>currentSrc:</strong> <span style="color:#e2e8f0;">${video.currentSrc || video.getAttribute('src') || '(vacío)'}</span></div>
+      <div style="margin-top:4px;"><strong>readyState:</strong> ${rState}</div>
+      <div><strong>networkState:</strong> ${nState}</div>
+      <div><strong>paused:</strong> ${video.paused} | <strong>tiempo:</strong> ${cur} / ${dur}</div>
+      <div><strong>error:</strong> <span style="color:${video.error ? '#f87171' : '#4ade80'}">${err}</span></div>
+      <div style="margin-top:6px;border-top:1px dashed rgba(56,189,248,0.2);padding-top:4px;"><strong>Eventos registrados:</strong></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${eventsLog.length ? eventsLog.join('<br>') : 'Sin eventos todavía (pulsa Play para registrar)'}</div>
+    `;
+
+    debugPanel.querySelector('.btn-copy-debug')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const text = `DIAGNÓSTICO VÍDEO CAMPOBASE:
+Build: ${build}
+SW Controller: ${swController}
+iOS / Standalone: ${isIOS} / ${isStandalone}
+UA: ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}
+data-src: ${video.dataset.src || ''}
+currentSrc: ${video.currentSrc || video.getAttribute('src') || ''}
+readyState: ${rState}
+networkState: ${nState}
+paused: ${video.paused}
+time: ${cur} / ${dur}
+error: ${err}
+Eventos:
+${eventsLog.join('\n')}`;
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => alert('Diagnóstico copiado al portapapeles.'))
+          .catch(() => prompt('Copia el texto:', text));
+      } else {
+        prompt('Copia el texto:', text);
+      }
+    });
+
+    debugPanel.querySelector('.btn-close-debug')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      try { localStorage.removeItem('campobase.videoDebug'); } catch {}
+      debugPanel.remove();
+    });
+  }
+
+  render();
+  return { render, logEvent };
+}
+
 /**
  * Inicializa el reproductor interactivo y controles de zoom táctico con clamping
  */
@@ -1022,6 +1137,8 @@ export function initValidatedExerciseViewer(root) {
     }
   }
 
+  const videoDebugger = attachVideoDebugger(root, video, { isIOS, isStandalone });
+
   // Estado del reproductor y zoom
   let zoom = 1.0;
   let panX = 0;
@@ -1072,6 +1189,7 @@ export function initValidatedExerciseViewer(root) {
     if (stage) stage.classList.toggle('is-playing', isPlaying);
     const wrap = root.querySelector('.exercise-video-wrap');
     if (wrap) wrap.classList.toggle('is-playing', isPlaying);
+    videoDebugger?.render();
   }
 
   async function togglePlay() {

@@ -6173,6 +6173,17 @@ function wireEvents() {
   $('#settings-reload')?.addEventListener('click', async () => {
     await reloadAppPreservingSession();
   });
+  $('#toggle-video-debug')?.addEventListener('click', () => {
+    let current = false;
+    try { current = localStorage.getItem('campobase.videoDebug') === '1'; } catch {}
+    if (current) {
+      try { localStorage.removeItem('campobase.videoDebug'); } catch {}
+      toast('Diagnóstico de vídeo desactivado.');
+    } else {
+      try { localStorage.setItem('campobase.videoDebug', '1'); } catch {}
+      toast('Diagnóstico de vídeo activado. Abre cualquier ejercicio para verlo.');
+    }
+  });
   $('#sync-now')?.addEventListener('click', async () => {
     const button = $('#sync-now');
     if (button) button.disabled = true;
