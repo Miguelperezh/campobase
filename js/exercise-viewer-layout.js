@@ -103,13 +103,23 @@ function installOuterPlay(frame) {
     new MutationObserver(syncVisibility).observe(movement, { attributes: true, attributeFilter: ['hidden', 'style'] });
   }
 
-  play.addEventListener('click', () => {
+  const handlePlayClick = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (movement?.hidden) return;
     if (movement && movement.getAttribute('aria-pressed') !== 'true') movement.click();
     runInnerPlayback(frame);
     setTimeout(() => syncPlayLabel(frame, play), 180);
     setTimeout(() => syncPlayLabel(frame, play), 650);
     setTimeout(() => syncPlayLabel(frame, play), 1700);
+  };
+
+  play.addEventListener('click', handlePlayClick);
+  play.addEventListener('touchend', handlePlayClick, { passive: false });
+  play.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'touch') handlePlayClick(e);
   });
 
   setTimeout(() => syncPlayLabel(frame, play), 0);

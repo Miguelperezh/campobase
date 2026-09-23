@@ -779,7 +779,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" src="${esc(videoSrc)}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="metadata"><source src="${esc(videoSrc)}" type="video/mp4"></video>
+        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"><source src="${esc(videoSrc)}" type="video/mp4"></video>
         <button type="button" class="video-overlay-play" title="Reproducir animación" aria-label="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </button>
@@ -854,7 +854,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
       <div class="section-block real-video-block exercise-media-human" data-media-order="3">
         <h3>🎥 Vídeo de muestra con humanos (en caso de disponer de él)</h3>
         <div class="video-item">
-          <video class="real-video-el" controls preload="none" playsinline src="${esc(realVideo)}"></video>
+          <video class="real-video-el" controls preload="none" playsinline webkit-playsinline muted><source src="${esc(realVideo)}" type="video/mp4"></video>
         </div>
       </div>` : ''}
 
@@ -1191,23 +1191,11 @@ export function initValidatedExerciseViewer(root) {
   }
 
   let lastToggleTime = 0;
-  let playPromise = null;
   async function togglePlay() {
-    if (playPromise) return;
     const now = Date.now();
-    if (now - lastToggleTime < 350) return;
+    if (now - lastToggleTime < 300) return;
     lastToggleTime = now;
 
-    const src = video.dataset.src || video.currentSrc || video.src;
-    if (!video.src || !video.getAttribute('src')) {
-      video.src = src;
-    }
-    if (!video.querySelector('source') && src) {
-      const s = document.createElement('source');
-      s.src = src;
-      s.type = 'video/mp4';
-      video.appendChild(s);
-    }
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;
@@ -1216,17 +1204,18 @@ export function initValidatedExerciseViewer(root) {
     video.setAttribute('muted', '');
 
     if (video.paused) {
-      // Ocultar de inmediato el botón para respuesta instantánea sin latencia
       updatePlayState(true);
       try {
-        playPromise = video.play();
-        if (playPromise !== undefined) await playPromise;
+        const p = video.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch((err) => {
+            console.warn('Error al reproducir vídeo:', err);
+            if (video.paused) updatePlayState(false);
+          });
+        }
       } catch (err) {
-        console.warn('Error al reproducir vídeo:', err);
+        console.warn('Error síncrono al reproducir vídeo:', err);
         if (video.paused) updatePlayState(false);
-        video.controls = true;
-      } finally {
-        playPromise = null;
       }
     } else {
       video.pause();
@@ -1244,11 +1233,17 @@ export function initValidatedExerciseViewer(root) {
 
   if (btnPlay) {
     btnPlay.addEventListener('click', handleToggle);
-    btnPlay.addEventListener('touchend', (e) => { e.preventDefault(); handleToggle(e); }, { passive: false });
+    btnPlay.addEventListener('touchend', handleToggle, { passive: false });
   }
   if (overlayPlay) {
     overlayPlay.addEventListener('click', handleToggle);
-    overlayPlay.addEventListener('touchend', (e) => { e.preventDefault(); handleToggle(e); }, { passive: false });
+    overlayPlay.addEventListener('touchend', handleToggle, { passive: false });
+  }
+  if (stage) {
+    stage.addEventListener('click', (e) => {
+      if (e.target.closest('.video-overlay-play, .theater-exit-btn')) return;
+      handleToggle(e);
+    });
   }
 
   video.addEventListener('error', () => {

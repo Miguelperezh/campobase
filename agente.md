@@ -800,4 +800,13 @@ Partidos activos próximos verificados:
    - **Cache-Busting Total del Service Worker:**
      - Versión global actualizada a `20260923-stats-setpieces-modocampo-v45` en `index.html`, `sw.js` y ficheros de prueba, forzando la renovación de caché en todos los clientes móviles.
 
+2. **Entrega v46 (23/09/2026) — Corrección de Vídeo Móvil, Limpieza de Copias Locales y Soporte Supabase Pro:**
+   - **Retirada de botones de importación local:** Eliminados los botones de «Cargar datos del PC» en las cabeceras de Hoy y Plantilla y en Modo Campo. CampoBase opera 100% en la nube a través de Supabase y GitHub Releases según la preferencia de Migue.
+   - **Reproducción de vídeo en móvil iOS/Android:**
+     - En `js/ejercicio-viewer.js`: Retirado el atributo directo `src` de la etiqueta `<video>`, dejando exclusivamente `<source src="..." type="video/mp4">`. Esto permite a WebKit en iOS identificar el tipo MIME correcto (`video/mp4`) y eludir el `application/octet-stream` de GitHub Releases.
+     - En `togglePlay()`: Eliminado el cerrojo de promesa que bloqueaba toques repetidos y retirada la asignación destructiva de `video.src = src` que invalidaba el elemento `<source>`.
+     - Añadido soporte táctil en el botón `▶ Reproducir` del visor de pizarra en `js/exercise-viewer-layout.js` (`touchend` y `pointerup`).
+   - **Diagnóstico y activación de Supabase Pro:** La actualización a plan de pago Pro elimina las pausas para siempre. Para desbloquear el estado transitorio `503 PGRST002`, se proporcionan los pasos exactos de reinicio de PostgREST (`NOTIFY pgrst, 'reload schema';`).
+   - **Cache versioning:** Incrementada la versión a `20260923-v46-videomobile-syncpro-cleanup`.
+
 

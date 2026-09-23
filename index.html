@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260923-stats-setpieces-modocampo-v45">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260923-stats-setpieces-modocampo-v45">
+  <link rel="stylesheet" href="styles.css?v=20260923-v46-videomobile-syncpro-cleanup">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260923-v46-videomobile-syncpro-cleanup">
   <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
@@ -92,13 +92,12 @@
     <section id="hoy" class="view active" aria-labelledby="title-hoy">
       <div class="section-head today-section-head">
         <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
-        <div class="button-row"><button type="button" class="secondary quick-import-mobile-btn" title="Cargar archivo JSON enviado desde el ordenador">📥 Cargar datos del PC</button></div>
       </div>
       <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
     </section>
 
     <section id="plantilla" class="view" aria-labelledby="title-plantilla">
-      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="secondary quick-import-mobile-btn" title="Cargar archivo JSON enviado desde el ordenador">📥 Cargar datos del PC</button><button type="button" class="secondary" id="open-set-pieces-btn">🎯 Balón parado y Capitanes</button><button data-dialog="player-dialog" class="primary">+ Jugador</button></div></div>
+      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="secondary" id="open-set-pieces-btn">🎯 Balón parado y Capitanes</button><button data-dialog="player-dialog" class="primary">+ Jugador</button></div></div>
       <article id="demo-team-panel" class="panel hidden"><h3>Equipo de demostración</h3><p class="meta">Esta información es temporal, no se sincroniza y se elimina al cerrar la demo o al cumplirse dos horas.</p><form id="demo-team-form"><label>Nombre del equipo de prueba<input name="teamName" maxlength="100" required placeholder="Ej. Equipo de prueba"></label><label>Formato<select name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo de prueba</button></form></article>
       <div id="plantilla-staff-top" class="plantilla-staff-top"></div>
       <div id="squad-stats" class="stats"></div>
@@ -679,10 +678,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260923-stats-setpieces-modocampo-v45';
+    window.__CAMPOBASE_BUILD = '20260923-v46-videomobile-syncpro-cleanup';
     if ('serviceWorker' in navigator) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v45')
+      navigator.serviceWorker.register('./sw.js?v=20260923-v46-videomobile-syncpro-cleanup')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -701,8 +700,8 @@
       });
     }
   </script>
-  <script type="module" src="js/app.js?v=20260923-stats-setpieces-modocampo-v45"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260923-stats-setpieces-modocampo-v45"></script>
+  <script type="module" src="js/app.js?v=20260923-v46-videomobile-syncpro-cleanup"></script>
+  <script type="module" src="js/redesign-nav.js?v=20260923-v46-videomobile-syncpro-cleanup"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {
