@@ -1084,7 +1084,7 @@ export function initValidatedExerciseViewer(root) {
       if (isIOS && isStandalone && (video.readyState === 0 || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE)) {
         try {
           const fresh = new URL(src, window.location.href);
-          fresh.searchParams.set('_cbv', '20260923-ios-pwa-video-reload-v42');
+          fresh.searchParams.set('_cbv', '20260923-stats-setpieces-modocampo-v43');
           video.src = fresh.toString();
           video.preload = 'auto';
           video.load();

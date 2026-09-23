@@ -21,7 +21,7 @@ const localDate = (value) => {
 };
 
 const FIELD_LABELS = {
-  goals: 'goles', yellowCards: 'amarillas', redCards: 'rojas', injuries: 'lesiones', incidents: 'incidencias',
+  goals: 'goles', assists: 'asist.', yellowCards: 'amarillas', redCards: 'rojas', injuries: 'lesiones', incidents: 'incidencias',
   callups: 'convocatorias', rotations: 'rotaciones', late: 'tarde', absent: 'ausente', minutes: 'minutos', averageRating: 'media',
 };
 
@@ -186,11 +186,15 @@ async function syncPlantillaStats() {
         });
         const minutePercent = callupMinutesInfo.percent;
         const possibleMinutes = callupMinutesInfo.possibleMinutes;
+        const avgMinPerCallup = callupMinutesInfo.averageMinutesPerCallup;
+        const totalCallupsCount = callupMinutesInfo.totalCallups;
         minuteBar.title = possibleMinutes > 0
-          ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%)`
+          ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%). Media: ${avgMinPerCallup} min/partido (${totalCallupsCount} conv.)`
           : `${playerTotalMinutes} min disputados (sin convocatorias registradas)`;
         const metaSpan = minuteBar.querySelector('.player-minute-meta span:last-child');
-        if (metaSpan) metaSpan.textContent = `${playerTotalMinutes} min (${minutePercent}%)`;
+        if (metaSpan) {
+          metaSpan.innerHTML = `<strong>${playerTotalMinutes} de ${possibleMinutes} min</strong> (${minutePercent}%)${totalCallupsCount > 0 ? ` · <span class="minute-avg-pill">${totalCallupsCount} ${totalCallupsCount === 1 ? 'partido conv.' : 'partidos conv.'}</span>` : ''}`;
+        }
         const fill = minuteBar.querySelector('.player-minute-fill');
         if (fill) fill.style.width = `${minutePercent}%`;
       }
@@ -202,6 +206,10 @@ async function syncPlantillaStats() {
       setSummaryMetric(summaries[1], 'media', Number.isFinite(preseasonAverage) ? preseasonAverage : '—');
       setSummaryMetric(summaries[0], 'min', league.minutes);
       setSummaryMetric(summaries[1], 'min', preseason.minutes);
+      setSummaryMetric(summaries[0], 'goles', league.goals);
+      setSummaryMetric(summaries[1], 'goles', preseason.goals);
+      setSummaryMetric(summaries[0], 'asist', league.assists ?? 0);
+      setSummaryMetric(summaries[1], 'asist', preseason.assists ?? 0);
 
       removeLegacyMixedDetails(performance);
       const leagueButton = performance.querySelector('.edit-player-stats[data-scope="league"]');

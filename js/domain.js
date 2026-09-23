@@ -302,7 +302,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
   });
   const playerMatches = matchesInScope.filter((match) => match.minuteTotals?.[playerId] !== undefined
     || match.ratings?.[playerId] !== undefined
-    || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId)));
+    || [match.goals, match.cards, match.injuries, match.incidents].some((items) => items?.some((item) => item.playerId === playerId || item.assistantId === playerId)));
   const ratings = playerMatches
     .filter((match) => (match.minuteTotals?.[playerId] ?? 0) >= 5 * 60 || (match.minuteTotals?.[playerId] === undefined && Number.isFinite(match.ratings?.[playerId])))
     .map((match) => match.ratings?.[playerId])
@@ -317,8 +317,10 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
   });
   const attendance = attendanceInScope.flatMap((record) => record.attendance?.filter((entry) => entry.playerId === playerId) ?? []);
   const countEvents = (field, predicate = () => true) => playerMatches.reduce((total, match) => total + (match[field] ?? []).filter((item) => item.playerId === playerId && predicate(item)).length, 0);
+  const countAssists = () => playerMatches.reduce((total, match) => total + (match.goals ?? []).filter((item) => item.assistantId === playerId).length, 0);
   return {
     goals: countEvents('goals'),
+    assists: countAssists(),
     yellowCards: countEvents('cards', (item) => item.type === 'yellow'),
     redCards: countEvents('cards', (item) => item.type === 'red'),
     injuries: countEvents('injuries'),
@@ -337,7 +339,7 @@ export function buildPlayerSummary(playerId, matches, attendanceRecords, callups
 
 export function applyPlayerStatAdjustments(summary, adjustments = {}) {
   const result = { ...summary };
-  const fields = ['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
+  const fields = ['goals', 'assists', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
   for (const field of fields) {
     if (!Number.isFinite(adjustments[field])) continue;
     const value = Number(summary[field] ?? 0) + adjustments[field];
@@ -350,7 +352,7 @@ export function applyPlayerStatAdjustments(summary, adjustments = {}) {
 
 export function setPlayerStatTotals(player, scope, automaticSummary, values) {
   if (!['league', 'preseason'].includes(scope)) throw new TypeError('El ámbito de estadísticas no es válido.');
-  const integerFields = new Set(['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes']);
+  const integerFields = new Set(['goals', 'assists', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes']);
   const allowedFields = new Set([...integerFields, 'averageRating']);
   const adjustments = { ...(player.statAdjustments?.[scope] ?? {}) };
   for (const [field, rawValue] of Object.entries(values ?? {})) {
@@ -415,7 +417,9 @@ export function calculatePlayerCallupMinutes({
       if (!match || match.status === 'planned' || (match.status !== 'finished' && !match.minuteTotals)) {
         continue;
       }
-      const relatedCallup = Array.isArray(callups) ? callups.find((c) => c?.matchId === match.id) : null;
+      const relatedCallup = Array.isArray(callups)
+        ? callups.find((c) => (match.callupId && c?.id === match.callupId) || c?.matchId === match.id || c?.id === match.id)
+        : null;
       const wasCalled = Boolean(
         (relatedCallup?.availableIds && relatedCallup.availableIds.includes(playerId)) ||
         (match.minuteTotals && Number.isFinite(match.minuteTotals[playerId]))
@@ -423,9 +427,7 @@ export function calculatePlayerCallupMinutes({
 
       if (wasCalled) {
         countedMatchIds.add(match.id);
-        const matchDuration = Number.isFinite(match.playedSeconds) && match.playedSeconds > 0
-          ? Math.round(match.playedSeconds / 60)
-          : (match.format === 'F11' ? 90 : (match.format === 'F7' ? 70 : defaultDuration));
+        const matchDuration = match.format === 'F11' ? 90 : (match.format === 'F7' ? 70 : (defaultDuration || 70));
         possibleMinutes += matchDuration;
       }
     }
@@ -443,11 +445,20 @@ export function calculatePlayerCallupMinutes({
     ? Math.min(100, Math.round((safePlayedMinutes / possibleMinutes) * 100))
     : 0;
 
+  const effectiveCallups = Number.isFinite(totalCallups) && totalCallups > 0
+    ? totalCallups
+    : countedMatchIds.size;
+  const averageMinutesPerCallup = effectiveCallups > 0
+    ? Math.round(safePlayedMinutes / effectiveCallups)
+    : 0;
+
   return {
     possibleMinutes,
     playedMinutes: safePlayedMinutes,
     percent,
     matchesCounted: countedMatchIds.size,
+    totalCallups: effectiveCallups,
+    averageMinutesPerCallup,
   };
 }
 
@@ -789,4 +800,163 @@ export function validateBackup(backup) {
 export function formatMatchClock(totalSeconds) {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
   return `${String(Math.floor(safeSeconds / 60)).padStart(2, '0')}:${String(safeSeconds % 60).padStart(2, '0')}`;
+}
+
+export function getPlayerSetPieceRoles(playerId, setPieces = {}) {
+  if (!playerId || typeof setPieces !== 'object' || setPieces === null) return [];
+  const roles = [];
+  if (setPieces.penalties?.primary === playerId) roles.push({ id: 'penalty_1', label: '1.er Penalti', icon: '🎯', title: '1.er lanzador de penaltis' });
+  else if (setPieces.penalties?.secondary === playerId) roles.push({ id: 'penalty_2', label: '2.º Penalti', icon: '🎯', title: '2.º lanzador de penaltis' });
+
+  if (setPieces.freeKicksLeft?.primary === playerId) roles.push({ id: 'freekick_l_1', label: '1.ª Falta Izq.', icon: '⚡', title: '1.er lanzador de faltas perfil izquierdo (diestro)' });
+  else if (setPieces.freeKicksLeft?.secondary === playerId) roles.push({ id: 'freekick_l_2', label: '2.ª Falta Izq.', icon: '⚡', title: '2.º lanzador de faltas perfil izquierdo' });
+
+  if (setPieces.freeKicksRight?.primary === playerId) roles.push({ id: 'freekick_r_1', label: '1.ª Falta Der.', icon: '⚡', title: '1.er lanzador de faltas perfil derecho (zurdo)' });
+  else if (setPieces.freeKicksRight?.secondary === playerId) roles.push({ id: 'freekick_r_2', label: '2.ª Falta Der.', icon: '⚡', title: '2.º lanzador de faltas perfil derecho' });
+
+  if (setPieces.cornersLeft?.primary === playerId) roles.push({ id: 'corner_l_1', label: '1.er Córner Izq.', icon: '📐', title: '1.er lanzador de córners banda izquierda' });
+  else if (setPieces.cornersLeft?.secondary === playerId) roles.push({ id: 'corner_l_2', label: '2.º Córner Izq.', icon: '📐', title: '2.º lanzador de córners banda izquierda' });
+
+  if (setPieces.cornersRight?.primary === playerId) roles.push({ id: 'corner_r_1', label: '1.er Córner Der.', icon: '📐', title: '1.er lanzador de córners banda derecha' });
+  else if (setPieces.cornersRight?.secondary === playerId) roles.push({ id: 'corner_r_2', label: '2.º Córner Der.', icon: '📐', title: '2.º lanzador de córners banda derecha' });
+
+  if (setPieces.captains?.primary === playerId) roles.push({ id: 'captain_1', label: '1.er Capitán', icon: '©️', title: '1.er capitán' });
+  else if (setPieces.captains?.secondary === playerId) roles.push({ id: 'captain_2', label: '2.º Capitán', icon: '©️', title: '2.º capitán' });
+  else if (setPieces.captains?.third === playerId) roles.push({ id: 'captain_3', label: '3.er Capitán', icon: '©️', title: '3.er capitán' });
+
+  return roles;
+}
+
+export function buildSquadLeaderboards({
+  players = [],
+  matches = [],
+  attendanceRecords = [],
+  callups = [],
+  scope = 'all',
+  defaultDuration = 70,
+}) {
+  if (!Array.isArray(players)) throw new TypeError('Los jugadores deben ser una lista.');
+  const currentMatchIds = new Set((matches || []).map((m) => m?.id).filter(Boolean));
+  const currentCallups = (callups || []).filter((c) => !c?.matchId || currentMatchIds.has(c.matchId));
+  const currentTrainings = (attendanceRecords || []).filter((r) => !r?.matchId || currentMatchIds.has(r.matchId));
+
+  const statsList = players.map((player) => {
+    let summary;
+    if (scope === 'league') {
+      const automatic = buildPlayerSummary(player.id, matches, currentTrainings, currentCallups, 'league');
+      summary = applyPlayerStatAdjustments(automatic, player.statAdjustments?.league);
+    } else if (scope === 'preseason') {
+      const automatic = buildPlayerSummary(player.id, matches, currentTrainings, currentCallups, 'preseason');
+      summary = applyPlayerStatAdjustments(automatic, player.statAdjustments?.preseason);
+    } else {
+      const leagueAuto = buildPlayerSummary(player.id, matches, currentTrainings, currentCallups, 'league');
+      const league = applyPlayerStatAdjustments(leagueAuto, player.statAdjustments?.league);
+      const preAuto = buildPlayerSummary(player.id, matches, currentTrainings, currentCallups, 'preseason');
+      const preseason = applyPlayerStatAdjustments(preAuto, player.statAdjustments?.preseason);
+      summary = {
+        goals: (league.goals ?? 0) + (preseason.goals ?? 0),
+        assists: (league.assists ?? 0) + (preseason.assists ?? 0),
+        yellowCards: (league.yellowCards ?? 0) + (preseason.yellowCards ?? 0),
+        redCards: (league.redCards ?? 0) + (preseason.redCards ?? 0),
+        callups: (league.callups ?? 0) + (preseason.callups ?? 0),
+        rotations: (league.rotations ?? 0) + (preseason.rotations ?? 0),
+        minutes: (league.minutes ?? 0) + (preseason.minutes ?? 0),
+        averageRating: league.averageRating ?? preseason.averageRating ?? null,
+      };
+    }
+
+    const scopedMatches = scope === 'all'
+      ? matches
+      : matches.filter((m) => scope === 'preseason' ? isPreseasonMatch(m) : !isPreseasonMatch(m));
+    const scopedCallups = scope === 'all'
+      ? currentCallups
+      : currentCallups.filter((c) => {
+          const m = c.matchId ? matches.find((item) => item.id === c.matchId) : null;
+          return scope === 'preseason' ? (m ? isPreseasonMatch(m) : isPreseasonMatch({ type: c.matchType })) : (m ? !isPreseasonMatch(m) : !isPreseasonMatch({ type: c.matchType }));
+        });
+
+    const callupInfo = calculatePlayerCallupMinutes({
+      playerId: player.id,
+      matches: scopedMatches,
+      callups: scopedCallups,
+      defaultDuration,
+      totalCallups: summary.callups,
+      playedMinutes: summary.minutes,
+    });
+
+    const isKeeper = (player.positions ?? []).some((pos) => String(pos).toLowerCase().includes('portero'))
+      || String(player.name || '').toLowerCase().includes('ramiro');
+
+    return {
+      player,
+      summary,
+      callupInfo,
+      isKeeper,
+    };
+  });
+
+  // Pichichi
+  const topScorers = [...statsList]
+    .sort((a, b) => (b.summary.goals - a.summary.goals) || (a.summary.minutes - b.summary.minutes) || String(a.player.name).localeCompare(String(b.player.name)));
+
+  // Asistencias
+  const topAssists = [...statsList]
+    .sort((a, b) => (b.summary.assists - a.summary.assists) || (a.summary.minutes - b.summary.minutes) || String(a.player.name).localeCompare(String(b.player.name)));
+
+  // Zamora / Porteros
+  const candidateMatches = scope === 'all'
+    ? matches
+    : matches.filter((x) => scope === 'preseason' ? isPreseasonMatch(x) : !isPreseasonMatch(x));
+
+  const goalkeepers = statsList
+    .map((item) => {
+      let keeperGoalsAgainst = 0;
+      let matchesWithKeeper = 0;
+      for (const m of candidateMatches) {
+        if (!m || (m.status !== 'finished' && !m.minuteTotals)) continue;
+        const playedSec = m.minuteTotals?.[item.player.id];
+        const isRotatedKeeper = m.goalkeeperRotation && (m.goalkeeperRotation.firstKeeper === item.player.id || m.goalkeeperRotation.secondKeeper === item.player.id);
+        const playedInGoal = isRotatedKeeper || (item.isKeeper && Number.isFinite(playedSec) && playedSec > 0);
+        if (playedInGoal) {
+          matchesWithKeeper++;
+          const ga = Number.isFinite(m.goalsAgainst) ? m.goalsAgainst : 0;
+          keeperGoalsAgainst += ga;
+        }
+      }
+      const coefficient = matchesWithKeeper > 0 ? Number((keeperGoalsAgainst / matchesWithKeeper).toFixed(2)) : null;
+      return {
+        ...item,
+        keeperMatches: matchesWithKeeper,
+        goalsAgainst: keeperGoalsAgainst,
+        coefficient,
+      };
+    })
+    .filter((item) => item.isKeeper || item.keeperMatches > 0)
+    .sort((a, b) => {
+      if (a.coefficient === null && b.coefficient === null) return 0;
+      if (a.coefficient === null) return 1;
+      if (b.coefficient === null) return -1;
+      return (a.coefficient - b.coefficient) || (b.keeperMatches - a.keeperMatches);
+    });
+
+  // Reparto equitativo de minutos: ordenado de menor a mayor promedio min/partido
+  const minuteDistribution = [...statsList]
+    .sort((a, b) => (a.callupInfo.averageMinutesPerCallup - b.callupInfo.averageMinutesPerCallup) || (a.summary.minutes - b.summary.minutes) || (b.summary.callups - a.summary.callups));
+
+  // Fair Play (tarjetas)
+  const fairPlay = [...statsList]
+    .map((item) => ({
+      ...item,
+      totalCards: (item.summary.yellowCards ?? 0) + (item.summary.redCards ?? 0),
+      points: ((item.summary.yellowCards ?? 0) * 1) + ((item.summary.redCards ?? 0) * 3),
+    }))
+    .sort((a, b) => (b.points - a.points) || (b.totalCards - a.totalCards) || String(a.player.name).localeCompare(String(b.player.name)));
+
+  return {
+    topScorers,
+    topAssists,
+    goalkeepers,
+    minuteDistribution,
+    fairPlay,
+  };
 }

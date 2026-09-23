@@ -1,12 +1,12 @@
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-ios-pwa-video-reload-v42';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-stats-setpieces-modocampo-v43';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
@@ -419,9 +419,17 @@ function renderPlayers() {
     });
     const minutePercent = callupMinutesInfo.percent;
     const possibleMinutes = callupMinutesInfo.possibleMinutes;
+    const avgMinPerCallup = callupMinutesInfo.averageMinutesPerCallup;
+    const totalCallupsCount = callupMinutesInfo.totalCallups;
     const minuteBarTitle = possibleMinutes > 0
-      ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%)`
+      ? `${playerTotalMinutes} min disputados de ${possibleMinutes} min posibles en sus convocatorias (${minutePercent}%). Media: ${avgMinPerCallup} min/partido (${totalCallupsCount} conv.)`
       : `${playerTotalMinutes} min disputados (sin convocatorias registradas)`;
+
+    const specialistRoles = getPlayerSetPieceRoles(player.id, state.settings?.setPieces);
+    const specialistTags = specialistRoles.length ? `
+      <div class="player-specialist-tags">
+        ${specialistRoles.map((r) => `<span class="specialist-pill" title="${escapeHtml(r.title)}">${r.icon} ${escapeHtml(r.label)}</span>`).join('')}
+      </div>` : '';
 
     const ratingNum = summary.averageRating ? Number(summary.averageRating) : null;
     const ratingTier = ratingNum >= 4.0 ? 'rating-tier-top' : (ratingNum >= 3.0 ? 'rating-tier-good' : (ratingNum > 0 ? 'rating-tier-fair' : 'rating-tier-none'));
@@ -446,9 +454,10 @@ function renderPlayers() {
     </div>
     <div class="player-body">
       <div class="player-minute-bar" title="${escapeHtml(minuteBarTitle)}">
-        <div class="player-minute-meta"><span>Minutos disputados</span><span>${playerTotalMinutes} min (${minutePercent}%)</span></div>
+        <div class="player-minute-meta"><span>Minutos disputados</span><span><strong>${playerTotalMinutes} de ${possibleMinutes} min</strong> (${minutePercent}%)${totalCallupsCount > 0 ? ` · <span class="minute-avg-pill">${totalCallupsCount} ${totalCallupsCount === 1 ? 'partido conv.' : 'partidos conv.'}</span>` : ''}</span></div>
         <div class="player-minute-track"><div class="player-minute-fill" style="width:${minutePercent}%"></div></div>
       </div>
+      ${specialistTags}
       <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(cleanPlayerNumber(player.number) || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
       ${(player.fatherPhone || player.motherPhone || player.fatherName || player.motherName) ? `
       <div class="player-family-contacts">
@@ -460,9 +469,403 @@ function renderPlayers() {
         <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
         <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
       </div>
-      <details class="player-performance"${openPerfPlayerIds.has(player.id) ? ' open' : ''}><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Minutos`) ? ' open' : ''}><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details${openSubSectionKeys.has(`${player.id}::Puntuaciones`) ? ' open' : ''}><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details${openSubSectionKeys.has(`${player.id}::Media`) ? ' open' : ''}><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Motivos`) ? ' open' : ''}><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details${openSubSectionKeys.has(`${player.id}::Incidencias`) ? ' open' : ''}><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"${openSubSectionKeys.has(`${player.id}::Historial`) ? ' open' : ''}><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
-  </article>`;
+      <details class="player-performance"${openPerfPlayerIds.has(player.id) ? ' open' : ''}><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.assists ?? 0}</strong> asist.</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.assists ?? 0}</strong> asist.</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Minutos`) ? ' open' : ''}><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details${openSubSectionKeys.has(`${player.id}::Puntuaciones`) ? ' open' : ''}><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details${openSubSectionKeys.has(`${player.id}::Media`) ? ' open' : ''}><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Motivos`) ? ' open' : ''}><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details${openSubSectionKeys.has(`${player.id}::Incidencias`) ? ' open' : ''}><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"${openSubSectionKeys.has(`${player.id}::Historial`) ? ' open' : ''}><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
+    </article>`;
   }).join('') : empty('Añade el primer jugador para empezar.');
+  renderSquadSpecialistsBar();
+  renderSquadLeaderboards();
+}
+
+function renderSquadSpecialistsBar() {
+  const container = $('#plantilla-specialists-bar');
+  if (!container) return;
+  const setPieces = state.settings?.setPieces || {};
+
+  const getPlayerLabel = (id) => {
+    if (!id) return null;
+    const p = state.players.find((item) => item.id === id);
+    if (!p) return null;
+    const num = cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ` : '';
+    return num + p.name;
+  };
+
+  const penaltyNames = [getPlayerLabel(setPieces.penalties?.primary), getPlayerLabel(setPieces.penalties?.secondary)].filter(Boolean).join(', ');
+  const fkLeftNames = [getPlayerLabel(setPieces.freeKicksLeft?.primary), getPlayerLabel(setPieces.freeKicksLeft?.secondary)].filter(Boolean).join(', ');
+  const fkRightNames = [getPlayerLabel(setPieces.freeKicksRight?.primary), getPlayerLabel(setPieces.freeKicksRight?.secondary)].filter(Boolean).join(', ');
+  const cornerLeftNames = [getPlayerLabel(setPieces.cornersLeft?.primary), getPlayerLabel(setPieces.cornersLeft?.secondary)].filter(Boolean).join(', ');
+  const cornerRightNames = [getPlayerLabel(setPieces.cornersRight?.primary), getPlayerLabel(setPieces.cornersRight?.secondary)].filter(Boolean).join(', ');
+  const captainNames = [getPlayerLabel(setPieces.captains?.primary), getPlayerLabel(setPieces.captains?.secondary), getPlayerLabel(setPieces.captains?.third)].filter(Boolean).join(', ');
+
+  container.innerHTML = `
+    <div class="specialists-summary-card">
+      <div class="specialists-summary-head">
+        <div>
+          <h3>🎯 Lanzadores y Capitanes</h3>
+          <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
+        </div>
+        <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
+      </div>
+      <div class="specialists-quick-grid">
+        <div class="specialist-item"><span class="sp-icon">🎯</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Izq. (diestro)</small><strong>${escapeHtml(fkLeftNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Der. (zurdo)</small><strong>${escapeHtml(fkRightNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Izquierda</small><strong>${escapeHtml(cornerLeftNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Derecha</small><strong>${escapeHtml(cornerRightNames || 'Sin asignar')}</strong></div></div>
+        <div class="specialist-item"><span class="sp-icon">©️</span><div><small>Capitanes</small><strong>${escapeHtml(captainNames || 'Sin asignar')}</strong></div></div>
+      </div>
+    </div>
+  `;
+}
+
+function populateSetPiecesForm() {
+  const form = $('#set-pieces-form');
+  if (!form) return;
+  const setPieces = state.settings?.setPieces || {};
+  const sortedPlayers = sortPlayersBySquadNumber(state.players);
+
+  const makeOptions = (selectedId) => {
+    let html = '<option value="">Sin asignar</option>';
+    for (const p of sortedPlayers) {
+      const num = cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ` : '';
+      const foot = p.foot ? ` (${p.foot})` : '';
+      const pos = playerPositions(p) ? ` · ${playerPositions(p)}` : '';
+      const selected = p.id === selectedId ? ' selected' : '';
+      html += `<option value="${p.id}"${selected}>${escapeHtml(num + p.name + foot + pos)}</option>`;
+    }
+    return html;
+  };
+
+  const fields = [
+    ['penaltiesPrimary', setPieces.penalties?.primary],
+    ['penaltiesSecondary', setPieces.penalties?.secondary],
+    ['freeKicksLeftPrimary', setPieces.freeKicksLeft?.primary],
+    ['freeKicksLeftSecondary', setPieces.freeKicksLeft?.secondary],
+    ['freeKicksRightPrimary', setPieces.freeKicksRight?.primary],
+    ['freeKicksRightSecondary', setPieces.freeKicksRight?.secondary],
+    ['cornersLeftPrimary', setPieces.cornersLeft?.primary],
+    ['cornersLeftSecondary', setPieces.cornersLeft?.secondary],
+    ['cornersRightPrimary', setPieces.cornersRight?.primary],
+    ['cornersRightSecondary', setPieces.cornersRight?.secondary],
+    ['captainsPrimary', setPieces.captains?.primary],
+    ['captainsSecondary', setPieces.captains?.secondary],
+    ['captainsThird', setPieces.captains?.third],
+  ];
+
+  for (const [name, val] of fields) {
+    if (form.elements[name]) {
+      form.elements[name].innerHTML = makeOptions(val || '');
+    }
+  }
+}
+
+async function saveSetPiecesForm(event) {
+  event.preventDefault();
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede configurar los especialistas.');
+  const form = event.currentTarget;
+  const val = formObject(form);
+  const setPieces = {
+    penalties: { primary: val.penaltiesPrimary || '', secondary: val.penaltiesSecondary || '' },
+    freeKicksLeft: { primary: val.freeKicksLeftPrimary || '', secondary: val.freeKicksLeftSecondary || '' },
+    freeKicksRight: { primary: val.freeKicksRightPrimary || '', secondary: val.freeKicksRightSecondary || '' },
+    cornersLeft: { primary: val.cornersLeftPrimary || '', secondary: val.cornersLeftSecondary || '' },
+    cornersRight: { primary: val.cornersRightPrimary || '', secondary: val.cornersRightSecondary || '' },
+    captains: { primary: val.captainsPrimary || '', secondary: val.captainsSecondary || '', third: val.captainsThird || '' },
+  };
+
+  state.settings = { ...state.settings, id: 'main', setPieces };
+  await put('settings', state.settings);
+  form.closest('dialog')?.close();
+  renderPlayers();
+  toast('Lanzadores y capitanes guardados.');
+}
+
+function renderSquadLeaderboards() {
+  const container = $('#squad-leaderboards');
+  if (!container) return;
+  if (!state.players || state.players.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const tab = state.leaderboardTab || 'scorers';
+  const scope = state.leaderboardScope || 'all';
+
+  const defaultDuration = FORMATS[state.format]?.duration || 70;
+  const currentMatchIds = new Set(state.matches.map((m) => m.id));
+  const currentCallups = state.callups.filter((c) => !c.matchId || currentMatchIds.has(c.matchId));
+  const currentTrainings = state.trainings.filter((r) => !r.matchId || currentMatchIds.has(r.matchId));
+
+  const leaderboards = buildSquadLeaderboards({
+    players: state.players,
+    matches: state.matches,
+    attendanceRecords: currentTrainings,
+    callups: currentCallups,
+    scope,
+    defaultDuration,
+  });
+
+  const scopeLabels = { all: 'Todo el curso', league: 'Liga', preseason: 'Pretemporada' };
+
+  const tabsMarkup = `
+    <div class="leaderboard-tabs-bar">
+      <div class="leaderboard-nav-tabs">
+        <button type="button" class="lb-tab-btn ${tab === 'scorers' ? 'active' : ''}" data-lb-tab="scorers">⚽ Goleadores</button>
+        <button type="button" class="lb-tab-btn ${tab === 'assists' ? 'active' : ''}" data-lb-tab="assists">👟 Asistencias</button>
+        <button type="button" class="lb-tab-btn ${tab === 'goalkeepers' ? 'active' : ''}" data-lb-tab="goalkeepers">🧤 Zamora (Porteros)</button>
+        <button type="button" class="lb-tab-btn ${tab === 'minutes' ? 'active' : ''}" data-lb-tab="minutes">⏱️ Reparto de Minutos</button>
+        <button type="button" class="lb-tab-btn ${tab === 'fairplay' ? 'active' : ''}" data-lb-tab="fairplay">🟨 Fair Play</button>
+      </div>
+      <div class="leaderboard-scope-toggle">
+        <button type="button" class="lb-scope-btn ${scope === 'all' ? 'active' : ''}" data-lb-scope="all">Todo</button>
+        <button type="button" class="lb-scope-btn ${scope === 'league' ? 'active' : ''}" data-lb-scope="league">Liga</button>
+        <button type="button" class="lb-scope-btn ${scope === 'preseason' ? 'active' : ''}" data-lb-scope="preseason">Pretemporada</button>
+      </div>
+    </div>
+  `;
+
+  let tableContent = '';
+  const medal = (idx) => idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}.º`));
+
+  if (tab === 'scorers') {
+    const list = leaderboards.topScorers;
+    tableContent = `
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th>Jugador</th>
+              <th>Posición</th>
+              <th class="col-num">Conv.</th>
+              <th class="col-num">Min.</th>
+              <th class="col-num highlight">Goles</th>
+              <th class="col-num">Gol/Partido</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item, idx) => {
+              const perMatch = item.summary.callups > 0 ? (item.summary.goals / item.summary.callups).toFixed(2) : '—';
+              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              return `<tr>
+                <td class="col-rank"><strong>${medal(idx)}</strong></td>
+                <td class="col-player">
+                  <div class="lb-player-cell">
+                    ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
+                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                  </div>
+                </td>
+                <td class="col-pos">${escapeHtml(playerPositions(item.player))}</td>
+                <td class="col-num">${item.summary.callups}</td>
+                <td class="col-num">${item.summary.minutes}</td>
+                <td class="col-num highlight"><strong>${item.summary.goals}</strong></td>
+                <td class="col-num">${perMatch}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (tab === 'assists') {
+    const list = leaderboards.topAssists;
+    tableContent = `
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th>Jugador</th>
+              <th>Posición</th>
+              <th class="col-num">Conv.</th>
+              <th class="col-num">Min.</th>
+              <th class="col-num highlight">Asistencias</th>
+              <th class="col-num">Asist./Partido</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item, idx) => {
+              const perMatch = item.summary.callups > 0 ? (item.summary.assists / item.summary.callups).toFixed(2) : '—';
+              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              return `<tr>
+                <td class="col-rank"><strong>${medal(idx)}</strong></td>
+                <td class="col-player">
+                  <div class="lb-player-cell">
+                    ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
+                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                  </div>
+                </td>
+                <td class="col-pos">${escapeHtml(playerPositions(item.player))}</td>
+                <td class="col-num">${item.summary.callups}</td>
+                <td class="col-num">${item.summary.minutes}</td>
+                <td class="col-num highlight"><strong>${item.summary.assists}</strong></td>
+                <td class="col-num">${perMatch}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (tab === 'goalkeepers') {
+    const list = leaderboards.goalkeepers;
+    tableContent = list.length ? `
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th>Portero</th>
+              <th class="col-num">Partidos</th>
+              <th class="col-num">Minutos</th>
+              <th class="col-num">Goles encajados</th>
+              <th class="col-num highlight">Coeficiente</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item, idx) => {
+              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              return `<tr>
+                <td class="col-rank"><strong>${medal(idx)}</strong></td>
+                <td class="col-player">
+                  <div class="lb-player-cell">
+                    ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">🧤</span>'}
+                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                  </div>
+                </td>
+                <td class="col-num">${item.keeperMatches}</td>
+                <td class="col-num">${item.summary.minutes}</td>
+                <td class="col-num">${item.goalsAgainst}</td>
+                <td class="col-num highlight"><strong>${item.coefficient !== null ? item.coefficient : '—'}</strong></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `<p class="meta" style="padding:1rem;">Sin partidos disputados en portería registrados en este ámbito (${scopeLabels[scope]}).</p>`;
+  } else if (tab === 'minutes') {
+    const list = leaderboards.minuteDistribution;
+    tableContent = `
+      <div class="lb-help-box">
+        <span class="info-icon">💡</span>
+        <span>Ordenado de menor a mayor promedio por partido convocado para identificar de inmediato a quién le toca jugar más en la próxima jornada.</span>
+      </div>
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th>Jugador</th>
+              <th class="col-num">Conv.</th>
+              <th class="col-num">Rotación</th>
+              <th class="col-num">Min. Jugados</th>
+              <th class="col-num">Min. Posibles</th>
+              <th class="col-num">% Disp.</th>
+              <th class="col-num highlight">Media min/partido</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item, idx) => {
+              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              const avg = item.callupInfo.averageMinutesPerCallup;
+              const pct = item.callupInfo.percent;
+              const badgeClass = avg >= 50 ? 'badge-good' : (avg >= 30 ? 'badge-mid' : 'badge-low');
+              return `<tr>
+                <td class="col-rank"><strong>${idx + 1}.º</strong></td>
+                <td class="col-player">
+                  <div class="lb-player-cell">
+                    ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
+                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                  </div>
+                </td>
+                <td class="col-num">${item.summary.callups}</td>
+                <td class="col-num">${item.summary.rotations}</td>
+                <td class="col-num">${item.summary.minutes}</td>
+                <td class="col-num">${item.callupInfo.possibleMinutes}</td>
+                <td class="col-num">${pct}%</td>
+                <td class="col-num highlight"><span class="minute-pill-badge ${badgeClass}">${avg} min/partido</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (tab === 'fairplay') {
+    const list = leaderboards.fairPlay;
+    tableContent = `
+      <div class="lb-table-wrapper">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th>Jugador</th>
+              <th class="col-num">Conv.</th>
+              <th class="col-num">🟨 Amarillas</th>
+              <th class="col-num">🟥 Rojas</th>
+              <th class="col-num highlight">Puntos Fair Play</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((item, idx) => {
+              const num = cleanPlayerNumber(item.player.number) ? `#${cleanPlayerNumber(item.player.number)}` : '—';
+              return `<tr>
+                <td class="col-rank"><strong>${idx + 1}.º</strong></td>
+                <td class="col-player">
+                  <div class="lb-player-cell">
+                    ${item.player.photo ? `<img src="${item.player.photo}" class="avatar-table-mini" alt="">` : '<span class="avatar-table-mini placeholder">👤</span>'}
+                    <div><strong>${escapeHtml(item.player.name)}</strong> <small class="meta">${escapeHtml(num)}</small></div>
+                  </div>
+                </td>
+                <td class="col-num">${item.summary.callups}</td>
+                <td class="col-num">${item.summary.yellowCards}</td>
+                <td class="col-num">${item.summary.redCards}</td>
+                <td class="col-num highlight"><strong>${item.points}</strong> pts</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  const isLbOpen = state.isLeaderboardsOpen ?? true;
+
+  container.innerHTML = `
+    <details class="squad-leaderboards-card"${isLbOpen ? ' open' : ''}>
+      <summary class="squad-leaderboards-summary">
+        <div class="lb-summary-left">
+          <span class="summary-toggle-icon">📊</span>
+          <div>
+            <h3>Tablas Clasificatorias de la Plantilla</h3>
+            <span class="meta">${scopeLabels[scope]} · ${state.players.length} jugadores</span>
+          </div>
+        </div>
+        <span class="badge secondary">Ver rankings</span>
+      </summary>
+      <div class="squad-leaderboards-body">
+        ${tabsMarkup}
+        ${tableContent}
+      </div>
+    </details>
+  `;
+}
+
+function setPiecesQuickBanner() {
+  const setPieces = state.settings?.setPieces;
+  if (!setPieces) return '';
+  const getP = (id) => {
+    if (!id) return null;
+    const p = state.players.find((x) => x.id === id);
+    return p ? (cleanPlayerNumber(p.number) ? `#${cleanPlayerNumber(p.number)} ${p.name}` : p.name) : null;
+  };
+  const roles = [
+    setPieces.penalties?.primary && `🎯 Penalti: <strong>${escapeHtml(getP(setPieces.penalties.primary))}</strong>`,
+    setPieces.freeKicksLeft?.primary && `⚡ Falta Izq: <strong>${escapeHtml(getP(setPieces.freeKicksLeft.primary))}</strong>`,
+    setPieces.freeKicksRight?.primary && `⚡ Falta Der: <strong>${escapeHtml(getP(setPieces.freeKicksRight.primary))}</strong>`,
+    setPieces.cornersLeft?.primary && `📐 Córner Izq: <strong>${escapeHtml(getP(setPieces.cornersLeft.primary))}</strong>`,
+    setPieces.cornersRight?.primary && `📐 Córner Der: <strong>${escapeHtml(getP(setPieces.cornersRight.primary))}</strong>`,
+    setPieces.captains?.primary && `©️ Capitán: <strong>${escapeHtml(getP(setPieces.captains.primary))}</strong>`,
+  ].filter(Boolean);
+
+  if (!roles.length) return '';
+  return `<details class="match-set-pieces-quick-card"><summary>🎯 Balón parado y Capitanes del equipo</summary><div class="quick-set-pieces-pills">${roles.map((r) => `<span class="quick-sp-pill">${r}</span>`).join('')}</div></details>`;
 }
 
 function playerIncidentRows(playerId) {
@@ -553,7 +956,7 @@ function editPlayer(id) {
   $('#player-dialog').showModal();
 }
 
-const EDITABLE_PLAYER_STATS = ['goals', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
+const EDITABLE_PLAYER_STATS = ['goals', 'assists', 'yellowCards', 'redCards', 'injuries', 'incidents', 'callups', 'rotations', 'late', 'absent', 'minutes', 'averageRating'];
 
 function editPlayerStats(playerId, scope) {
   if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede editar las estadísticas.');
@@ -896,16 +1299,20 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   const homeTeam = teams.mySide === 'home' ? 'for' : 'against';
   const awayTeam = teams.mySide === 'away' ? 'for' : 'against';
   const options = `<option value="__pp__">⚽ Gol P.P. (Propia puerta)</option>` + availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
+  const assistantOptions = `<option value="">Sin asistencia</option>` + availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
   const minuteReasons = availableIds.map((id) => `<label>${escapeHtml(playerName(id))}<select data-minute-reason="${id}"><option value="">Sin motivo</option>${Object.entries(MINUTE_REASONS).map(([value, label]) => `<option value="${value}" ${details.minuteReasons[id] === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`).join('');
   const events = [
-    ...details.goals.map((item) => `${formatMatchClock(item.second)} · Gol: ${playerName(item.playerId)}`),
+    ...details.goals.map((item) => {
+      const assist = item.assistantId ? ` (asist. ${playerName(item.assistantId)})` : '';
+      return `${formatMatchClock(item.second)} · Gol: ${playerName(item.playerId)}${assist}`;
+    }),
     ...details.cards.map((item) => `${formatMatchClock(item.second)} · Tarjeta ${item.type === 'red' ? 'roja' : 'amarilla'}: ${playerName(item.playerId)}`),
     ...details.injuries.map((item) => `${formatMatchClock(item.second)} · Lesión: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
     ...details.incidents.map((item) => `${formatMatchClock(item.second)} · Incidencia: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`),
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
   const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
-  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="own_goal">Gol P.P. (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+  return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">Gol (suma al marcador)</option><option value="own_goal">Gol P.P. (suma al marcador)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort().map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
 function renderLive() {
@@ -954,6 +1361,7 @@ function renderLive() {
   const fieldIds = state.timer.onField;
   const unlockBtn = (state.timer.phase === 'ready' && roleCanUseOwnerFeatures(state.role) && !state.timer.delegateUnlocked) ? '<button id="unlock-delegate" class="secondary">Enseñar al delegado</button>' : '';
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
+  ${setPiecesQuickBanner()}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
@@ -1446,7 +1854,7 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article><div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article>${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
   renderDelegateTactics();
 }
 
@@ -2293,8 +2701,12 @@ function showMatchDetail(id) {
   const callup = state.callups.find((item) => item.id === match.callupId || item.matchId === match.id);
   const availableIds = callup?.availableIds ?? state.players.map((p) => p.id);
   const playerOptions = `<option value="__pp__">⚽ Gol P.P. (Propia puerta)</option>` + availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
+  const assistantOptions = `<option value="">Sin asistencia</option>` + availableIds.map((pid) => `<option value="${pid}">${escapeHtml(playerName(pid))}</option>`).join('');
   const eventList = (items, label, kind) => {
-    const list = (items ?? []).map((item, i) => `<li>${escapeHtml(playerName(item.playerId))}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`).join('');
+    const list = (items ?? []).map((item, i) => {
+      const assistText = (kind === 'goal' && item.assistantId) ? ` · Asistencia: ${escapeHtml(playerName(item.assistantId))}` : '';
+      return `<li>${escapeHtml(playerName(item.playerId))}${assistText}${item.note ? ` · ${escapeHtml(item.note)}` : ''} <button type="button" class="icon-button remove-match-event" data-kind="${kind}" data-index="${i}" aria-label="Quitar">×</button></li>`;
+    }).join('');
     return `<section><h4>${label}</h4>${list ? `<ul class="plain-list">${list}</ul>` : '<p class="meta">Sin registros.</p>'}</section>`;
   };
   $('#match-detail-title').textContent = `${teams.home} — ${teams.away}`;
@@ -2302,7 +2714,7 @@ function showMatchDetail(id) {
   $('#match-detail-body').innerHTML = `
     <p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(matchTypeLabel(match.type))} · ${match.venue === 'away' ? 'Visitante' : 'Local'}</p>
     <div class="stadium-score"><section class="score-team"><span>${escapeHtml(teams.home)}</span><strong>${homeScore ?? 0}</strong></section><span class="score-separator">—</span><section class="score-team"><span>${escapeHtml(teams.away)}</span><strong>${awayScore ?? 0}</strong></section></div>
-    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="own_goal">Gol P.P. (Propia puerta)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
+    <div class="event-editor"><label>Jugador<select id="detail-event-player">${playerOptions}</select></label><label>Tipo<select id="detail-event-kind"><option value="goal">Gol</option><option value="own_goal">Gol P.P. (Propia puerta)</option><option value="yellow">Tarjeta amarilla</option><option value="red">Tarjeta roja</option><option value="injury">Lesión</option><option value="incident">Incidencia</option></select></label><label>Asistencia<select id="detail-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="detail-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-detail-event primary" data-id="${match.id}">Añadir</button></div>
     ${eventList(match.goals, 'Goles', 'goal')}
     ${eventList(match.cards, 'Tarjetas', 'card')}
     ${eventList(match.injuries, 'Lesiones', 'injury')}
@@ -2327,6 +2739,7 @@ async function addDetailEvent(matchId) {
   const match = state.matches.find((item) => item.id === matchId); if (!match) return;
   let playerId = $('#detail-event-player').value;
   const kind = $('#detail-event-kind').value;
+  const assistantId = $('#detail-event-assistant')?.value || '';
   const note = $('#detail-event-note').value.trim();
   if (kind === 'own_goal') playerId = '__pp__';
   if (!playerId) return toast('Selecciona un jugador o Gol P.P.');
@@ -2335,7 +2748,13 @@ async function addDetailEvent(matchId) {
   if (isGoal) {
     const isPp = kind === 'own_goal' || playerId === '__pp__';
     const effectivePlayerId = isPp ? '__pp__' : playerId;
-    next.goals = [...(next.goals ?? []), { playerId: effectivePlayerId, note, second: 0, isOwnGoal: isPp }];
+    next.goals = [...(next.goals ?? []), {
+      playerId: effectivePlayerId,
+      assistantId: isPp ? '' : (assistantId === effectivePlayerId ? '' : assistantId),
+      note,
+      second: 0,
+      isOwnGoal: isPp
+    }];
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
     if (!Number.isFinite(next.goalsAgainst)) next.goalsAgainst = 0;
   } else if (kind === 'injury') {
@@ -4311,6 +4730,7 @@ async function changeLiveScore(team, delta) {
 async function addLiveEvent(prefix) {
   let playerId = $(`#${prefix}-event-player`).value;
   const kind = $(`#${prefix}-event-kind`).value;
+  const assistantId = $(`#${prefix}-event-assistant`)?.value || '';
   const note = $(`#${prefix}-event-note`).value.trim();
   if (kind === 'own_goal') playerId = '__pp__';
   if (!playerId) return toast('Selecciona un jugador o Gol P.P.');
@@ -4319,6 +4739,7 @@ async function addLiveEvent(prefix) {
     id: uid(),
     kind: isOwnGoal ? 'goal' : kind,
     playerId: isOwnGoal ? '__pp__' : playerId,
+    assistantId: isOwnGoal ? '' : (assistantId === playerId ? '' : assistantId),
     second: timerSeconds(),
     note,
     isOwnGoal
@@ -5375,8 +5796,42 @@ function wireEvents() {
 
   $('#player-form').addEventListener('submit', (event) => savePlayer(event).catch(handleError));
   $('#player-stats-form').addEventListener('submit', (event) => savePlayerStats(event).catch(handleError));
+  $('#set-pieces-form')?.addEventListener('submit', (event) => saveSetPiecesForm(event).catch(handleError));
   $('#match-form').addEventListener('submit', (event) => saveMatch(event).catch(handleError));
   $('#kit-settings-form')?.addEventListener('submit', (event) => saveKitSettings(event).catch(handleError));
+
+  document.addEventListener('click', (event) => {
+    const openSetPiecesBtn = event.target.closest('#open-set-pieces-btn, .open-set-pieces-trigger');
+    if (openSetPiecesBtn) {
+      if (!roleCanUseOwnerFeatures(state.role)) {
+        toast('Solo Migue puede configurar los especialistas.');
+        return;
+      }
+      populateSetPiecesForm();
+      $('#set-pieces-dialog')?.showModal();
+      return;
+    }
+
+    const lbTabBtn = event.target.closest('.lb-tab-btn[data-lb-tab]');
+    if (lbTabBtn) {
+      state.leaderboardTab = lbTabBtn.dataset.lbTab;
+      renderSquadLeaderboards();
+      return;
+    }
+
+    const lbScopeBtn = event.target.closest('.lb-scope-btn[data-lb-scope]');
+    if (lbScopeBtn) {
+      state.leaderboardScope = lbScopeBtn.dataset.lbScope;
+      renderSquadLeaderboards();
+      return;
+    }
+  });
+
+  document.addEventListener('toggle', (event) => {
+    if (event.target.matches?.('details.squad-leaderboards-card')) {
+      state.isLeaderboardsOpen = event.target.open;
+    }
+  }, true);
 
   // Pestañas del comunicador WhatsApp
   $$('.whatsapp-type-tabs .tab-btn').forEach((btn) => {
@@ -6287,7 +6742,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-ios-pwa-video-reload-v42').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260923-stats-setpieces-modocampo-v43').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

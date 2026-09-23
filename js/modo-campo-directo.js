@@ -352,7 +352,7 @@
     const sync = $('#sync');
     try {
       if (!globalThis.supabase?.createClient) throw new Error('No se cargó el cliente de Supabase.');
-      const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } });
+      const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
       const [players, callups, matches, attendance, settings] = await Promise.all([
         readTable(client,'jugadores'), readTable(client,'convocatorias'), readTable(client,'partidos'), readTable(client,'asistencias'), readTable(client,'configuracion'),
       ]);
@@ -363,7 +363,12 @@
       renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     } catch (error) {
       sync.textContent = 'Error Supabase';
-      $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos</h2><p>${esc(error?.message || error)}</p><button class="btn primary" onclick="location.reload()">Reintentar</button></div>`;
+      const msg = error?.message || String(error);
+      const isAuth = msg.includes('permission denied') || msg.includes('401') || msg.includes('42501') || msg.includes('JWT');
+      const authHint = isAuth
+        ? '<p style="margin: 0.5rem 0; font-size: 0.95rem; opacity: 0.9;">Debes iniciar sesión en CampoBase antes de abrir Modo Campo.</p><p><a class="btn primary" href="./index.html" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Ir a CampoBase / Iniciar sesión</a></p>'
+        : '<button class="btn primary" onclick="location.reload()">Reintentar</button>';
+      $('#hoy').innerHTML = `<div class="error"><h2>No se pudieron cargar los datos</h2><p>${esc(msg)}</p>${authHint}</div>`;
       console.error('[Modo Campo directo]', error);
     }
   }

@@ -38,6 +38,8 @@ import {
   derivePlayerMatchStats,
   buildPlayerRecord,
   calculatePlayerCallupMinutes,
+  getPlayerSetPieceRoles,
+  buildSquadLeaderboards,
 } from '../js/domain.js';
 
 test('ordena las fichas alfabéticamente por nombre ignorando mayúsculas y acentos', () => {
@@ -680,7 +682,7 @@ test('la ficha resume goles, tarjetas, lesiones, incidencias, asistencia, minuto
     { id: 'c2', availableIds: [], exclusions: [{ playerId: 'a', reason: 'rotation', automatic: true }] },
   ];
   assert.deepEqual(buildPlayerSummary('a', matches, attendance, callups), {
-    goals: 2, yellowCards: 1, redCards: 1, injuries: 1, incidents: 1,
+    goals: 2, assists: 0, yellowCards: 1, redCards: 1, injuries: 1, incidents: 1,
     callups: 1, notCalled: 1, rotations: 1, present: 0, late: 1, absent: 1,
     minutes: 31, ratings: 1, averageRating: 4,
   });
@@ -876,5 +878,147 @@ test('calculatePlayerCallupMinutes calcula el porcentaje real sobre convocatoria
   });
   assert.equal(manualOnly.possibleMinutes, 140);
   assert.equal(manualOnly.percent, 100);
+
+  // Caso Pablo Díaz: 53 min jugados en partido de F7 cronometrado a 53 min -> 76%, NO 100%
+  const pabloCase = calculatePlayerCallupMinutes({
+    playerId: 'pablo',
+    matches: [
+      { id: 'm1', status: 'finished', format: 'F7', playedSeconds: 3180, minuteTotals: { pablo: 3180 } },
+    ],
+    callups: [
+      { matchId: 'm1', availableIds: ['pablo'] },
+    ],
+    playedMinutes: 53,
+    totalCallups: 1,
+  });
+  assert.equal(pabloCase.possibleMinutes, 70); // Reglamentario de F7 = 70 min, no 53 min
+  assert.equal(pabloCase.playedMinutes, 53);
+  assert.equal(pabloCase.percent, 76);
+  assert.equal(pabloCase.averageMinutesPerCallup, 53);
+
+  // Caso Alejandro Pedrós: 2 partidos convocados, 60 min jugados en total -> 43% y media de 30 min/partido
+  const alejandroCase = calculatePlayerCallupMinutes({
+    playerId: 'alejandro',
+    matches: [
+      { id: 'm1', status: 'finished', format: 'F7', playedSeconds: 4200, minuteTotals: { alejandro: 420 } },
+      { id: 'm2', status: 'finished', format: 'F7', playedSeconds: 3180, minuteTotals: { alejandro: 3180 } },
+    ],
+    callups: [
+      { matchId: 'm1', availableIds: ['alejandro'] },
+      { matchId: 'm2', availableIds: ['alejandro'] },
+    ],
+    playedMinutes: 60,
+    totalCallups: 2,
+  });
+  assert.equal(alejandroCase.possibleMinutes, 140);
+  assert.equal(alejandroCase.playedMinutes, 60);
+  assert.equal(alejandroCase.percent, 43);
+  assert.equal(alejandroCase.averageMinutesPerCallup, 30);
+});
+
+test('getPlayerSetPieceRoles devuelve los roles y etiquetas de balón parado asignados', () => {
+  const setPieces = {
+    penalties: { primary: 'p1', secondary: 'p2' },
+    freeKicksLeft: { primary: 'p1', secondary: 'p3' },
+    freeKicksRight: { primary: 'p4', secondary: 'p2' },
+    cornersLeft: { primary: 'p3', secondary: 'p1' },
+    cornersRight: { primary: 'p4', secondary: '' },
+    captains: { primary: 'p1', secondary: 'p2', third: 'p5' },
+  };
+  const p1Roles = getPlayerSetPieceRoles('p1', setPieces);
+  assert.deepEqual(p1Roles.map((r) => r.id), ['penalty_1', 'freekick_l_1', 'corner_l_2', 'captain_1']);
+  assert.equal(p1Roles[0].label, '1.er Penalti');
+  assert.equal(p1Roles[3].label, '1.er Capitán');
+
+  const pEmpty = getPlayerSetPieceRoles('unknown', setPieces);
+  assert.deepEqual(pEmpty, []);
+});
+
+test('buildSquadLeaderboards genera las tablas de goleadores, asistencias, porteros, reparto y fair play', () => {
+  const players = [
+    { id: 'p1', name: 'Pablo Díaz', number: '10', positions: ['Delantero'] },
+    { id: 'p2', name: 'Alejandro Pedrós', number: '7', positions: ['Centrocampista'] },
+    { id: 'p3', name: 'Ramiro Casati', number: '1', positions: ['Portero'] },
+  ];
+  const matches = [
+    {
+      id: 'm1', type: 'league', status: 'finished', format: 'F7',
+      goalsFor: 4, goalsAgainst: 2,
+      minuteTotals: { p1: 3180, p2: 1800, p3: 4200 },
+      goals: [
+        { playerId: 'p1', assistantId: 'p2' },
+        { playerId: 'p1', assistantId: '' },
+        { playerId: 'p2', assistantId: 'p1' },
+        { playerId: 'p1', assistantId: 'p2' },
+      ],
+      cards: [
+        { playerId: 'p2', type: 'yellow' },
+      ],
+    },
+  ];
+  const callups = [
+    { matchId: 'm1', availableIds: ['p1', 'p2', 'p3'], exclusions: [] },
+  ];
+
+  const leaderboards = buildSquadLeaderboards({
+    players,
+    matches,
+    attendanceRecords: [],
+    callups,
+    scope: 'league',
+    defaultDuration: 70,
+  });
+
+  // Goleadores: p1 tiene 3 goles, p2 tiene 1
+  assert.equal(leaderboards.topScorers[0].player.id, 'p1');
+  assert.equal(leaderboards.topScorers[0].summary.goals, 3);
+  assert.equal(leaderboards.topScorers[1].player.id, 'p2');
+  assert.equal(leaderboards.topScorers[1].summary.goals, 1);
+
+  // Asistencias: p2 tiene 2 asistencias, p1 tiene 1
+  assert.equal(leaderboards.topAssists[0].player.id, 'p2');
+  assert.equal(leaderboards.topAssists[0].summary.assists, 2);
+  assert.equal(leaderboards.topAssists[1].player.id, 'p1');
+  assert.equal(leaderboards.topAssists[1].summary.assists, 1);
+
+  // Porteros: p3 jugó y encajó 2 goles en 1 partido -> coeficiente 2.0
+  assert.equal(leaderboards.goalkeepers.length, 1);
+  assert.equal(leaderboards.goalkeepers[0].player.id, 'p3');
+  assert.equal(leaderboards.goalkeepers[0].goalsAgainst, 2);
+  assert.equal(leaderboards.goalkeepers[0].coefficient, 2.0);
+
+  // Reparto de minutos: ordenado de menor a mayor promedio
+  assert.equal(leaderboards.minuteDistribution[0].player.id, 'p2'); // 30 min
+  assert.equal(leaderboards.minuteDistribution[1].player.id, 'p1'); // 53 min
+  assert.equal(leaderboards.minuteDistribution[2].player.id, 'p3'); // 70 min
+});
+
+test('addPlayerMatchEvent registra assistantId en goles y se refleja en buildPlayerSummary', () => {
+  const initial = { goals: [], cards: [], injuries: [], incidents: [], goalsFor: 0 };
+  const next = addPlayerMatchEvent(initial, {
+    kind: 'goal',
+    playerId: 'p1',
+    assistantId: 'p2',
+    second: 120,
+    note: 'Pase filtrado',
+  });
+  assert.equal(next.goals.length, 1);
+  assert.equal(next.goals[0].playerId, 'p1');
+  assert.equal(next.goals[0].assistantId, 'p2');
+  assert.equal(next.goalsFor, 1);
+
+  const match = {
+    id: 'm1',
+    type: 'league',
+    status: 'finished',
+    goals: next.goals,
+    minuteTotals: { p1: 1800, p2: 1800 },
+  };
+  const summaryP1 = buildPlayerSummary('p1', [match], [], [], 'league');
+  const summaryP2 = buildPlayerSummary('p2', [match], [], [], 'league');
+  assert.equal(summaryP1.goals, 1);
+  assert.equal(summaryP1.assists, 0);
+  assert.equal(summaryP2.goals, 0);
+  assert.equal(summaryP2.assists, 1);
 });
 

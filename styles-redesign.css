@@ -5836,3 +5836,372 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
 body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
   color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
 }
+
+/* ==========================================================================
+   METRICAS EQUITATIVAS, TABLAS CLASIFICATORIAS Y ESPECIALISTAS A BALON PARADO
+   ========================================================================== */
+
+/* Píldora de promedio de minutos en la tarjeta de jugador */
+.minute-avg-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+}
+
+/* Insignias de especialistas en la ficha del jugador */
+.player-specialist-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.specialist-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--primary, #0284c7);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  letter-spacing: 0.01em;
+}
+
+/* Barra y tarjeta de resumen de especialistas en Plantilla */
+.plantilla-specialists-bar {
+  margin: 1rem 0;
+}
+
+.specialists-summary-card {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.specialists-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.specialists-summary-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ink, #0f172a);
+}
+
+.specialists-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.specialist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--surface, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+}
+
+.specialist-item .sp-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.specialist-item small {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--muted, #64748b);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.specialist-item strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink, #0f172a);
+  margin-top: 0.1rem;
+  word-break: break-word;
+}
+
+/* Diálogo de configuración de balón parado */
+#set-pieces-dialog {
+  max-width: 580px;
+  width: 95vw;
+}
+
+.set-pieces-group {
+  margin-bottom: 1rem;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.set-pieces-group legend {
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 0 0.4rem;
+  color: var(--ink, #0f172a);
+}
+
+/* Tablas Clasificatorias de Plantilla */
+.squad-leaderboards {
+  margin: 1rem 0;
+}
+
+.squad-leaderboards-card {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.squad-leaderboards-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  background: var(--surface, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px solid transparent;
+}
+
+.squad-leaderboards-card[open] .squad-leaderboards-summary {
+  border-bottom-color: var(--line, #e2e8f0);
+}
+
+.lb-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lb-summary-left h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ink, #0f172a);
+}
+
+.squad-leaderboards-body {
+  padding: 1rem 1.25rem;
+}
+
+.leaderboard-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.leaderboard-nav-tabs,
+.leaderboard-scope-toggle {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.lb-tab-btn,
+.lb-scope-btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--line, #e2e8f0);
+  background: var(--card, #ffffff);
+  color: var(--ink, #0f172a);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lb-tab-btn:hover,
+.lb-scope-btn:hover {
+  background: var(--surface, rgba(0, 0, 0, 0.04));
+}
+
+.lb-tab-btn.active {
+  background: var(--cb-brand, #00d26a);
+  color: #ffffff !important;
+  border-color: var(--cb-brand, #00d26a);
+  box-shadow: 0 2px 6px rgba(0, 210, 106, 0.3);
+}
+
+.lb-scope-btn.active {
+  background: var(--ink, #0f172a);
+  color: #ffffff !important;
+  border-color: var(--ink, #0f172a);
+}
+
+.lb-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.lb-table th {
+  background: var(--surface, rgba(0, 0, 0, 0.03));
+  padding: 0.65rem 0.85rem;
+  font-weight: 800;
+  color: var(--muted, #64748b);
+  border-bottom: 1px solid var(--line, #e2e8f0);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.lb-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+  color: var(--ink, #0f172a);
+}
+
+.lb-table tr:last-child td {
+  border-bottom: none;
+}
+
+.lb-table tr:hover td {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.lb-table .col-rank {
+  width: 44px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.lb-table .col-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.lb-table .col-num.highlight {
+  font-weight: 800;
+  color: var(--primary, #0ea5e9);
+  font-size: 0.95rem;
+}
+
+.lb-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.avatar-table-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 0.85rem;
+}
+
+.minute-pill-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.minute-pill-badge.badge-good {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.minute-pill-badge.badge-mid {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+.minute-pill-badge.badge-low {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.lb-help-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  font-size: 0.8rem;
+  color: var(--primary, #0369a1);
+  margin-bottom: 0.75rem;
+}
+
+/* Balón parado rápido en modo partido / delegado */
+.match-set-pieces-quick-card {
+  margin: 0.75rem 0;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+.match-set-pieces-quick-card summary {
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink, #0f172a);
+}
+
+.quick-set-pieces-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.quick-sp-pill {
+  padding: 0.2rem 0.5rem;
+  background: var(--surface, rgba(0, 0, 0, 0.04));
+  border-radius: 6px;
+  font-size: 0.78rem;
+  border: 1px solid var(--line, #e2e8f0);
+}
+
+.event-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  align-items: end;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.event-editor button {
+  min-height: 40px;
+}

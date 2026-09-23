@@ -268,7 +268,7 @@
   async function init() {
     applyTheme({ theme:{} });
     if (!globalThis.supabase?.createClient) return;
-    client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false } });
+    client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
     await readSettings().catch((error) => console.warn('No se pudo aplicar la identidad de Modo Campo:', error));
     scheduleLightRefresh();
   }

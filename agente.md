@@ -535,3 +535,62 @@ Partidos activos próximos verificados:
 - No se modificaron ejercicios, sesiones, jugadores, convocatorias, Realtime, partido en vivo ni datos de usuario para esta validación.
 - Si un teléfono físico siguiera mostrando el fallo después de v40, tratarlo como estado local de esa instalación/PWA y verificar que haya cargado v40 antes de cambiar de nuevo la arquitectura de vídeo.
 
+## Estadísticas equitativas, Clasificaciones, Balón Parado y Fix Modo Campo — v43 (23/09/2026)
+
+### 1. Cálculo equitativo de minutos por convocatorias
+- **Problema detectado**: Anteriormente, el porcentaje de minutos disputados en la ficha del jugador calculaba los minutos posibles a partir del tiempo cronometrado del partido (`match.playedSeconds`). En partidos que duraban 53 minutos cronometrados, si un jugador jugaba los 53 minutos se le asignaba un 100% de minutos, lo cual distorsionaba la realidad competitiva respecto al tiempo reglamentario completo.
+- **Lógica implementada**:
+  - El total de minutos posibles se basa exclusivamente en los **partidos en los que el jugador ha entrado en convocatoria** (`availableIds` o minutos registrados) multiplicado por la **duración reglamentaria de la categoría**:
+    - Fútbol 7 (F7): **70 minutos** por partido.
+    - Fútbol 11 (F11): **90 minutos** por partido.
+  - **Fórmula**:
+    $$\text{Minutos posibles} = \sum_{\text{partidos conv.}} \text{Duración reglamentaria}$$
+    $$\text{\% Minutos} = \min\left(100, \operatorname{round}\left(\frac{\text{Minutos jugados}}{\text{Minutos posibles}} \times 100\right)\right)$$
+    $$\text{Media min/partido} = \operatorname{round}\left(\frac{\text{Minutos jugados}}{\text{Total convocatorias}}\right)$$
+  - **Casos reales validados**:
+    - **Pablo Díaz**: Convocado a 1 partido de F7 (70 min reglamentarios), disputó 53 minutos. Minutos posibles: 70 min. Porcentaje: **76%** (nunca 100%).
+    - **Alejandro Pedrós / Pelayo**: Convocado a 2 partidos de F7 (140 min posibles), disputó 60 minutos en total. Porcentaje: **43%**, con una media de **30 min/partido convocado**.
+  - **Representación visual**: Tanto en la ficha individual de Plantilla como en los tooltips y resúmenes se muestra de forma explícita: `<strong>X de Y min</strong> (Z%) · N partidos conv.`.
+
+### 2. Tablas clasificatorias de plantilla (`#squad-leaderboards`)
+- Se implementó un panel modular e intuitivo en la vista de Plantilla con 5 clasificaciones y selector de ámbito (**Todo el curso**, **Liga**, **Pretemporada**):
+  1. **Goleadores (Pichichi)**: Jugadores ordenados por número total de goles.
+  2. **Asistencias**: Jugadores ordenados por pases de gol. Se añadió soporte para registrar al asistente (`assistantId`) en goles tanto en directo (En vivo / Delegado) como en el detalle del partido y estadísticas manuales.
+  3. **Trofeo Zamora**: Ranking de porteros (jugadores con rol o posición de Portero con minutos jugados), calculado con el coeficiente oficial: $\frac{\text{Goles encajados}}{\text{Partidos jugados}}$.
+  4. **Reparto equitativo de minutos**: Ordenado de **menor a mayor** promedio de minutos jugados por partido convocado. Permite al entrenador detectar inmediatamente qué jugadores tienen déficit de minutos y deben ser compensados y priorizados en las siguientes convocatorias y alineaciones.
+  5. **Fair Play**: Ranking de tarjetas amarillas y rojas recibidas.
+- Interfaz con diseño de podio (oro 🥇, plata 🥈, bronce 🥉), etiquetas de rol y cambio reactivo de pestañas sin recargar.
+
+### 3. Especialistas a balón parado y capitanes
+- Se añadió el botón `🎯 Balón parado y Capitanes` en la cabecera de Plantilla junto con el modal `#set-pieces-dialog`.
+- Permite configurar y persistir en `settings/setPieces`:
+  - **Penaltis**: 1.er y 2.º lanzador.
+  - **Faltas perfil izquierdo**: 1.er lanzador (preferente diestro) y 2.º lanzador.
+  - **Faltas perfil derecho**: 1.er lanzador (preferente zurdo) y 2.º lanzador.
+  - **Córners banda izquierda**: 1.er y 2.º lanzador.
+  - **Córners banda derecha**: 1.er y 2.º lanzador.
+  - **Capitanes**: 1.er, 2.º y 3.er capitán.
+- **Visualización integrada**:
+  - Resumen rápido destacado en la parte superior de la sección Plantilla (`#plantilla-specialists-bar`).
+  - Badges/insignias visuales en la tarjeta de cada jugador (`🎯 1.er Penalti`, `⚡ 1.ª Falta Izq.`, `©️ 1.er Capitán`, etc.).
+  - Banner de consulta rápida accesible durante los partidos en directo en las vistas En vivo y Modo Delegado.
+
+### 4. Corrección de Modo Campo Directo (Pantalla sin carga / Error 401 RLS)
+- **Diagnóstico**: `modo-campo-directo.html` fallaba al cargar datos de Supabase, quedando en blanco o con spinner indefinido.
+- **Causa raíz**: Los módulos `js/modo-campo-directo.js`, `js/modo-campo-actions.js` y `js/modo-campo-identity-exercises.js` instanciaban el cliente de Supabase con `auth: { persistSession: false }`. Al tener Supabase habilitado Row Level Security (RLS) en las tablas (`jugadores`, `convocatorias`, `partidos`, `asistencias`, `configuracion`), las consultas sin token de sesión arrojaban errores HTTP 401 / código PostgreSQL `42501 permission denied for table`.
+- **Solución implementada**:
+  - Se configuró el cliente Supabase de Modo Campo con `auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }`.
+  - De esta forma, el SDK de Supabase aprovecha automáticamente la sesión segura existente del usuario iniciada en CampoBase sin necesidad de almacenamiento intermedio manual.
+  - Se implementó un manejo de errores claro y amigable en la interfaz de Modo Campo que orienta al usuario si no existe una sesión activa en lugar de quedarse congelado.
+
+### 5. Bump de versión PWA y sincronización v43
+- Versión unificada: `20260923-stats-setpieces-modocampo-v43`.
+- Sincronizados de forma atómica:
+  - `sw.js` (nombre de clave de caché `CACHE` y array `ASSETS`).
+  - `index.html` (queries de assets, registro de Service Worker y `window.__CAMPOBASE_BUILD`).
+  - `js/app.js`, `js/supabase-client.js`, `js/demo-session.js`, `js/ejercicio-viewer.js`.
+  - Suite de tests de integración (`tests/pwa-current-build.test.js`, `tests/auth-recovery-controls.test.js`, etc.).
+  - Nuevo archivo de tests: `tests/squad-stats-and-set-pieces.test.js`.
+- Batería de pruebas: **500/500 tests unitarios y de integración superados en verde** y chequeo de sintaxis (`npm run check`) 100% verificado.
+
+

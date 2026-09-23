@@ -4,7 +4,7 @@
   const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
   const client = globalThis.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession:false, autoRefreshToken:false, detectSessionInUrl:false },
+    auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true },
   });
 
   const $ = (selector, root = document) => root.querySelector(selector);
