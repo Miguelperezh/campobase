@@ -1002,6 +1002,26 @@ export function initValidatedExerciseViewer(root) {
 
   if (!video) return;
 
+  // iPhone/iPad PWA: prepara el recurso antes del toque de Play.
+  // En una instalación standalone física, iniciar redirección + carga + play
+  // en el mismo gesto puede quedarse en 0:00 aunque Safari normal funcione.
+  const ua = String(navigator?.userAgent || '');
+  const isIOS = /iPad|iPhone|iPod/i.test(ua)
+    || (navigator?.platform === 'MacIntel' && Number(navigator?.maxTouchPoints || 0) > 1);
+  const isStandalone = Boolean(
+    navigator?.standalone === true
+    || window.matchMedia?.('(display-mode: standalone)')?.matches
+  );
+  if (isIOS && isStandalone && video.dataset.src && !video.getAttribute('src')) {
+    try {
+      video.preload = 'metadata';
+      video.src = video.dataset.src;
+      video.load();
+    } catch (error) {
+      console.warn('No se pudo precargar el vídeo en iOS/PWA:', error);
+    }
+  }
+
   // Estado del reproductor y zoom
   let zoom = 1.0;
   let panX = 0;
