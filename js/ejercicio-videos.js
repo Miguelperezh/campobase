@@ -26,17 +26,14 @@ function releaseUrlForAsset(asset) {
   return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
 }
 
-const MOBILE_RELEASE_ASSETS = Object.freeze({
-  'library-v2-preview__f7-126__ejercicio.mp4': 'library-v2-preview__f7-126__ejercicio-mobile.mp4',
-});
-
 function mobileReleaseAsset(asset) {
   const name = String(asset || '');
-  return MOBILE_RELEASE_ASSETS[name] || name;
+  if (!/\.mp4$/i.test(name) || /-mobile\.mp4$/i.test(name)) return name;
+  return name.replace(/\.mp4$/i, '-mobile.mp4');
 }
 
-// Solo f7-126 tiene, de momento, una variante móvil validada.
-// Todos los demás MP4 conservan exactamente su asset original.
+// El Release contiene una pareja móvil para cada uno de los 423 MP4 originales.
+// En móvil usamos la variante H.264 compatible; en escritorio conservamos el original.
 export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
   const source = String(value ?? '').trim();
   if (!source) return '';

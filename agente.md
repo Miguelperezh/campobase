@@ -510,3 +510,12 @@ Partidos activos próximos verificados:
 - No se han borrado vídeos de Supabase en esta corrección y no se han modificado sesiones, jugadores, partidos, Realtime ni datos de usuario.
 - Mantener esta regla: no generalizar sufijos `-mobile` a todo el catálogo hasta que existan y se validen realmente esas variantes.
 
+## Vídeos móviles — resolución general v39 (23/09/2026)
+
+- Se verificó el Release `campobase-videos-v1`: contiene **846 assets MP4**, formados por **423 originales + 423 variantes `-mobile.mp4`**.
+- Verificación de integridad de nombres: **0 originales sin variante móvil** y **0 variantes móviles huérfanas**.
+- Las variantes móviles están destinadas a compatibilidad de reproducción en teléfono; el ordenador conserva el MP4 original.
+- Causa funcional detectada: el resolver de producción solo activaba la variante móvil para `f7-126`, aunque ya existían variantes móviles para todos los MP4.
+- Corrección v39: cualquier asset `*.mp4` del Release se resuelve en móvil como `*-mobile.mp4`; si ya es `-mobile.mp4`, no se vuelve a transformar.
+- El Service Worker revalida explícitamente `/js/ejercicio-videos.js` y usa una caché nueva v39 para impedir que la PWA conserve la regla antigua.
+- Esta corrección no modifica ejercicios, IDs, sesiones, partidos, jugadores, Supabase ni Realtime. Tampoco borra los vídeos originales.
