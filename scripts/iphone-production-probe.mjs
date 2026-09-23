@@ -5,23 +5,26 @@ const MOBILE='https://github.com/Miguelperezh/campobase/releases/download/campob
 
 async function checkDeployedAssets(){
   const stamp=Date.now();
-  const [swRes,indexRes,cssRes]=await Promise.all([
+  const [swRes,indexRes,cssRes,appRes]=await Promise.all([
     fetch(`${BASE}/sw.js?probe=${stamp}`,{cache:'no-store'}),
     fetch(`${BASE}/index.html?probe=${stamp}`,{cache:'no-store'}),
     fetch(`${BASE}/styles.css?probe=${stamp}`,{cache:'no-store'}),
+    fetch(`${BASE}/js/app.js?probe=${stamp}`,{cache:'no-store'}),
   ]);
-  const [sw,index,css]=await Promise.all([swRes.text(),indexRes.text(),cssRes.text()]);
+  const [sw,index,css,app]=await Promise.all([swRes.text(),indexRes.text(),cssRes.text(),appRes.text()]);
   const result={
     swStatus:swRes.status,
     indexStatus:indexRes.status,
     cssStatus:cssRes.status,
+    appStatus:appRes.status,
+    appHasViewerV41:app.includes("./ejercicio-viewer.js?v=20260923-ios-pwa-video-preload-v41"),
     swHasV40:sw.includes('20260923-pwa-force-refresh-v40'),
     swRevalidatesStyles:sw.includes("'/styles.css'") || sw.includes('"/styles.css"'),
     indexBuild:(index.match(/__CAMPOBASE_BUILD\s*=\s*['"]([^'"]+)/)||[])[1]||'',
     cssBytes:css.length,
   };
   console.log('DEPLOYED_ASSETS',JSON.stringify(result));
-  if(!swRes.ok||!indexRes.ok||!cssRes.ok||!result.swHasV40||result.indexBuild!=='20260923-pwa-force-refresh-v40'||!result.swRevalidatesStyles||css.length<1000){
+  if(!swRes.ok||!indexRes.ok||!cssRes.ok||!appRes.ok||!result.appHasViewerV41||!result.swHasV40||result.indexBuild!=='20260923-pwa-force-refresh-v40'||!result.swRevalidatesStyles||css.length<1000){
     throw new Error('Producción no sirve aún el hotfix visual: '+JSON.stringify(result));
   }
 }
@@ -41,6 +44,22 @@ await checkDeployedAssets();
 const browser=await webkit.launch({headless:true});
 const context=await browser.newContext({...devices['iPhone 13'],serviceWorkers:'allow'});
 const page=await context.newPage();
+await page.addInitScript(()=>{
+  try{Object.defineProperty(navigator,'standalone',{configurable:true,get:()=>true});}catch{}
+  const native=window.matchMedia.bind(window);
+  window.matchMedia=(q)=>{
+    const r=native(q);
+    if(q==='(display-mode: standalone)'){
+      return {
+        matches:true,media:q,onchange:null,
+        addListener:r.addListener?.bind(r),removeListener:r.removeListener?.bind(r),
+        addEventListener:r.addEventListener?.bind(r),removeEventListener:r.removeEventListener?.bind(r),
+        dispatchEvent:r.dispatchEvent?.bind(r)
+      };
+    }
+    return r;
+  };
+});
 
 const network=[];
 page.on('response',(response)=>{
@@ -106,6 +125,7 @@ try{
     const dr=d.getBoundingClientRect();
     return {
       dataSrc:v.dataset.src||'',src:v.getAttribute('src')||'',paused:v.paused,currentTime:v.currentTime||0,
+      duration:v.duration,readyState:v.readyState,networkState:v.networkState,
       videoRect:{x:vr.x,y:vr.y,width:vr.width,height:vr.height},
       dialogRect:{x:dr.x,y:dr.y,width:dr.width,height:dr.height},
       videoDisplay:getComputedStyle(v).display,
@@ -114,6 +134,9 @@ try{
   });
   console.log('BEFORE_PLAY',JSON.stringify(before));
   if(before.dataSrc!==MOBILE) throw new Error('iPhone no seleccionó variante móvil: '+before.dataSrc);
+  if(before.src!==MOBILE || before.readyState<1 || !Number.isFinite(before.duration) || before.duration<=0){
+    throw new Error('Producción no precarga el vídeo en PWA/iPhone antes del toque: '+JSON.stringify(before));
+  }
 
   await page.locator('#exercise-detail-dialog .v-btn-play').tap();
   await page.waitForTimeout(8000);
