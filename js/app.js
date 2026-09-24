@@ -16,7 +16,8 @@ import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
-import { refreshPlantillaStaff } from './staff-management.js';
+import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js';
+import { renderTodayDashboard } from './today-dashboard.js?v=2456';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -376,8 +377,20 @@ function showView(viewId) {
   if (viewId === 'plantilla') {
     renderPlayers();
     refreshPlantillaStaff().catch(() => {});
-  } else if (viewId === 'partido' || viewId === 'partidos') {
+  } else if (viewId === 'cuerpo-tecnico') {
+    refreshStaffView().catch(() => {});
+  } else if (viewId === 'partido') {
+    if (state.role === 'delegate' || state.delegateMode) {
+      renderDelegate();
+    } else {
+      renderLive();
+    }
+  } else if (viewId === 'calendario' || viewId === 'partidos') {
     renderMatches();
+  } else if (viewId === 'preparacion') {
+    renderPreparaciones();
+  } else if (viewId === 'hoy') {
+    renderTodayDashboard().catch(() => {});
   } else if (viewId === 'asistencia') {
     renderTrainings();
   } else if (viewId === 'sesiones') {
@@ -559,6 +572,8 @@ function renderAll() {
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
   renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics(); renderPreparaciones();
   refreshPlantillaStaff().catch(() => {});
+  refreshStaffView().catch(() => {});
+  renderTodayDashboard().catch(() => {});
   applyGlobalSearch();
   syncDirectFieldCache();
   try { window.dispatchEvent(new CustomEvent('campobase:data-updated')); } catch {}
@@ -7746,7 +7761,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v58-delegate-sync-permissions-final-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v59-delegate-views-visible-render-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7825,7 +7840,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
   window.__campobaseState = state;
 }
 

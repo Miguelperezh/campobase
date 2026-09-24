@@ -195,6 +195,10 @@ export function triggerStandardView(viewId) {
     }
   } else if (viewId === 'cuerpo-tecnico') {
     refreshStaffView().catch(console.error);
+  } else if (viewId === 'preparacion') {
+    if (window.__campobase && typeof window.__campobase.renderPreparaciones === 'function') {
+      window.__campobase.renderPreparaciones();
+    }
   }
 
   closeQuickSheet();

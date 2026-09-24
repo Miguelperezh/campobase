@@ -7588,19 +7588,46 @@ body.delegate-mode #delegado {
   visibility: visible !important;
 }
 
-/* Delegado multi-vista (cuando el entrenador activa Plantilla, Convocatorias o Modo Campo en Ajustes) */
+/* Delegado multi-vista (cuando el entrenador activa múltiples permisos en Ajustes) */
 body.delegate-mode.delegate-multi-view #delegado.view:not(.active),
 body.delegate-mode.delegate-multi-view #plantilla.view:not(.active),
 body.delegate-mode.delegate-multi-view #convocatorias.view:not(.active),
+body.delegate-mode.delegate-multi-view #cuerpo-tecnico.view:not(.active),
+body.delegate-mode.delegate-multi-view #partido.view:not(.active),
+body.delegate-mode.delegate-multi-view #preparacion.view:not(.active),
+body.delegate-mode.delegate-multi-view #calendario.view:not(.active),
+body.delegate-mode.delegate-multi-view #asistencia.view:not(.active),
+body.delegate-mode.delegate-multi-view #ejercicios.view:not(.active),
+body.delegate-mode.delegate-multi-view #sesiones.view:not(.active),
+body.delegate-mode.delegate-multi-view #tacticas.view:not(.active),
+body.delegate-mode.delegate-multi-view #hoy.view:not(.active) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 body.delegate-mode.delegate-multi-view .view:not(.active) {
   display: none !important;
   visibility: hidden !important;
 }
 
-body.delegate-mode.delegate-multi-view #plantilla.view.active,
-body.delegate-mode.delegate-multi-view #convocatorias.view.active,
-body.delegate-mode.delegate-multi-view #delegado.view.active,
 body.delegate-mode.delegate-multi-view .view.active {
+  display: block !important;
+  visibility: visible !important;
+}
+
+body.delegate-mode.delegate-multi-view #hoy.view.active,
+body.delegate-mode.delegate-multi-view #plantilla.view.active,
+body.delegate-mode.delegate-multi-view #cuerpo-tecnico.view.active,
+body.delegate-mode.delegate-multi-view #convocatorias.view.active,
+body.delegate-mode.delegate-multi-view #partido.view.active,
+body.delegate-mode.delegate-multi-view #delegado.view.active,
+body.delegate-mode.delegate-multi-view #preparacion.view.active,
+body.delegate-mode.delegate-multi-view #calendario.view.active,
+body.delegate-mode.delegate-multi-view #asistencia.view.active,
+body.delegate-mode.delegate-multi-view #ejercicios.view.active,
+body.delegate-mode.delegate-multi-view #sesiones.view.active,
+body.delegate-mode.delegate-multi-view #tacticas.view.active,
+body.delegate-mode.delegate-multi-view main .view.active {
   display: block !important;
   visibility: visible !important;
 }

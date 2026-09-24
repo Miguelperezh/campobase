@@ -608,7 +608,7 @@ async function unlockBoundSession(client) {
   if (settingsNav) settingsNav.hidden = isDelegate;
   $('#demo-team-panel')?.classList.add('hidden');
   try {
-    const { initTeamAccess } = await import('./team-access.js?v=20260924-v58-delegate-sync-permissions-final-fix');
+    const { initTeamAccess } = await import('./team-access.js?v=20260924-v59-delegate-views-visible-render-fix');
     await initTeamAccess(client);
   } catch (error) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
