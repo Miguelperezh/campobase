@@ -278,6 +278,11 @@ function syncDelegateModeDom() {
 }
 
 function applyDelegateNavFilters(perms) {
+  if (state.role !== 'delegate' && !state.delegateMode) {
+    $('#cb-nav-tab-convocatorias')?.remove();
+    $('#cb-nav-tab-modo-campo')?.remove();
+    return;
+  }
   const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
   $$('.bottom-nav button').forEach((btn) => {
     const view = btn.dataset.view;
@@ -572,6 +577,8 @@ async function refresh() {
   applyCustomTheme();
   if (state.role === 'delegate' || state.delegateMode) {
     syncDelegateModeDom();
+  } else {
+    restoreNormalNavUi();
   }
   if (force || !isUserInteracting()) renderAll();
 }

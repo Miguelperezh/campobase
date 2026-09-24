@@ -305,125 +305,66 @@ async function renderDelegatePanel(root = document) {
   panel.classList.toggle('hidden', !canManage);
   if (!canManage) return;
 
-  let showInviteForm = false;
   let delegate = await fetchDelegateAccount(currentClient).catch(() => null);
+  const currentSavedPerms = delegate?.view_permissions ||
+    window.__campobaseState?.settings?.delegatePermissions ||
+    JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["delegado"]');
 
-  function renderView() {
-    if (!delegate || showInviteForm) {
-      content.innerHTML = `
-        <form id="cb-delegate-invite-form">
-          <div class="form-row">
-            <label>Nombre del delegado
-              <input name="fullName" maxlength="120" autocomplete="name" placeholder="Nombre y apellidos" value="${delegate?.full_name || ''}">
-            </label>
-            <label>Correo del delegado
-              <input name="email" type="email" required autocomplete="email" placeholder="delegado@correo.es" value="${delegate?.email || ''}">
-            </label>
-          </div>
-          <fieldset class="cb-delegate-permissions">
-            <legend>Vistas permitidas</legend>
-            <p class="meta">La vista de delegado del partido es la base. Puedes marcar las secciones a las que tendrá acceso.</p>
-            <div class="cb-delegate-permissions-grid">${permissionMarkup(delegate?.view_permissions || ['delegado'])}</div>
-          </fieldset>
-          <p class="meta">Esta cuenta no puede crear equipos ni entrar en Ajustes.</p>
-          <div class="button-row" style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-            <button type="submit" class="primary">Invitar delegado</button>
-            ${delegate ? '<button type="button" id="cb-delegate-cancel-reinvite" class="secondary">Volver a permisos actuales</button>' : ''}
-          </div>
-          <p id="cb-delegate-feedback" class="meta" aria-live="polite"></p>
-        </form>
-      `;
-
-      root.getElementById('cb-delegate-cancel-reinvite')?.addEventListener('click', () => {
-        showInviteForm = false;
-        renderView();
-      });
-
-      const form = root.getElementById('cb-delegate-invite-form');
-      form?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const feedback = root.getElementById('cb-delegate-feedback');
-        const button = form.querySelector('button[type="submit"]');
-        if (button) button.disabled = true;
-        if (feedback) feedback.textContent = 'Enviando invitación…';
-        try {
-          delegate = await inviteDelegateAccount(currentClient, {
-            email: form.elements.email.value,
-            fullName: form.elements.fullName.value,
-            permissions: selectedPermissions(form),
-          });
-          showInviteForm = false;
-          renderView();
-          const newFeedback = root.getElementById('cb-delegate-feedback');
-          if (newFeedback) newFeedback.textContent = 'Invitación registrada. Ya puedes ajustar y guardar sus permisos cuando quieras.';
-        } catch (error) {
-          const msg = error.message || 'No se pudo enviar la invitación.';
-          if (/ya tiene una cuenta|already|asociada/i.test(msg)) {
-            if (feedback) feedback.textContent = 'Este equipo ya tiene un delegado asociado. Abriendo formulario de permisos…';
-            showInviteForm = false;
-            setTimeout(async () => {
-              delegate = await fetchDelegateAccount(currentClient).catch(() => null);
-              renderView();
-            }, 600);
-          } else {
-            if (feedback) feedback.textContent = msg;
-          }
-        } finally {
-          if (button) button.disabled = false;
-        }
-      });
-      return;
-    }
-
-    content.innerHTML = `
-      <div class="cb-delegate-account-summary">
-        <div>
-          <p><strong>Delegado:</strong> ${delegate.full_name || delegate.username || 'Delegado del equipo'}</p>
-          <p><strong>Correo:</strong> ${delegate.email || 'Asociado al equipo'}</p>
-          <p class="meta" style="margin-top:0.35rem;font-size:0.85rem;"><strong>Estado:</strong> ${delegate.user_id && delegate.user_id !== 'invited' ? 'Asociado al equipo' : 'Invitación activa / Listo para entrar'}</p>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:flex-end;">
-          <button type="button" id="cb-delegate-reinvite-btn" class="secondary" style="font-size:0.85rem;padding:0.4rem 0.8rem;">Cambiar o invitar a otro delegado</button>
-        </div>
+  content.innerHTML = `
+    <form id="cb-delegate-permissions-form">
+      <div class="form-row">
+        <label>Nombre del delegado
+          <input name="fullName" maxlength="120" autocomplete="name" placeholder="Nombre y apellidos (opcional)" value="${delegate?.full_name || ''}">
+        </label>
+        <label>Correo del delegado
+          <input name="email" type="email" autocomplete="email" placeholder="delegado@correo.es (opcional si usa PIN)" value="${delegate?.email || ''}">
+        </label>
       </div>
-      <form id="cb-delegate-permissions-form">
-        <fieldset class="cb-delegate-permissions">
-          <legend>Vistas permitidas</legend>
-          <p class="meta">Puedes ampliar o reducir el acceso en cualquier momento. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
-          <div class="cb-delegate-permissions-grid">${permissionMarkup(delegate.view_permissions || ['delegado'])}</div>
-        </fieldset>
-        <div class="button-row">
-          <button type="submit" class="primary">Guardar accesos</button>
-        </div>
-        <p id="cb-delegate-feedback" class="meta" aria-live="polite"></p>
-      </form>
-    `;
+      <fieldset class="cb-delegate-permissions">
+        <legend>Vistas permitidas</legend>
+        <p class="meta">Marca qué secciones puede ver el delegado. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
+        <div class="cb-delegate-permissions-grid">${permissionMarkup(currentSavedPerms)}</div>
+      </fieldset>
+      <p class="meta">Esta cuenta no puede crear equipos ni entrar en Ajustes.</p>
+      <div class="button-row">
+        <button type="submit" class="primary" id="cb-save-delegate-perms-btn">Guardar permisos del delegado</button>
+      </div>
+      <p id="cb-delegate-feedback" class="meta" aria-live="polite"></p>
+    </form>
+  `;
 
-    root.getElementById('cb-delegate-reinvite-btn')?.addEventListener('click', () => {
-      showInviteForm = true;
-      renderView();
-    });
+  const form = root.getElementById('cb-delegate-permissions-form');
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const feedback = root.getElementById('cb-delegate-feedback');
+    const button = form.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    if (feedback) feedback.textContent = 'Guardando permisos…';
 
-    const form = root.getElementById('cb-delegate-permissions-form');
-    form?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const feedback = root.getElementById('cb-delegate-feedback');
-      const button = form.querySelector('button[type="submit"]');
-      if (button) button.disabled = true;
-      try {
-        const perms = selectedPermissions(form);
-        const saved = await saveDelegatePermissions(currentClient, perms);
-        delegate.view_permissions = saved;
-        if (feedback) feedback.textContent = `Accesos guardados correctamente (${saved.length} vistas activas).`;
-      } catch (error) {
-        if (feedback) feedback.textContent = error.message || 'No se pudieron guardar los accesos.';
-      } finally {
-        if (button) button.disabled = false;
+    try {
+      const perms = selectedPermissions(form);
+      const email = String(form.elements.email?.value || '').trim();
+      const fullName = String(form.elements.fullName?.value || '').trim();
+
+      const saved = await saveDelegatePermissions(currentClient, perms);
+
+      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        try {
+          delegate = await inviteDelegateAccount(currentClient, { email, fullName, permissions: saved });
+        } catch (inviteErr) {
+          console.warn('Invitación por correo no enviada:', inviteErr.message);
+        }
       }
-    });
-  }
 
-  renderView();
+      if (feedback) {
+        feedback.textContent = `Permisos del delegado guardados correctamente (${saved.length} vistas activas).`;
+      }
+    } catch (error) {
+      if (feedback) feedback.textContent = error.message || 'No se pudieron guardar los permisos.';
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
 }
 
 function installStyles(root = document) {

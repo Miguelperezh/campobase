@@ -7653,6 +7653,13 @@ body.delegate-mode.delegate-multi-view #cb-bottom-nav .cb-nav-tab.delegate-tab-h
   pointer-events: none !important;
 }
 
+body:not(.delegate-mode) #cb-nav-tab-convocatorias,
+body:not(.delegate-mode) #cb-nav-tab-modo-campo {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo #open-field-mode,
 body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo [id*="field-mode"] {
   display: inline-flex !important;
