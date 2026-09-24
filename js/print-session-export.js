@@ -404,7 +404,7 @@ function generateStandalonePrintPage(htmlContent) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf">
+  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v53-delegate-team-invite-layout-freeze-fix">
   <style>
     @page { size: A4 portrait; margin: 8mm 10mm; }
     body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -476,17 +476,23 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
       const pageEl = itemsToRender[i];
       if (i > 0) doc.addPage('a4', 'portrait');
 
-      const canvas = await window.html2canvas(pageEl, {
+      const canvasPromise = window.html2canvas(pageEl, {
         scale: renderScale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         windowWidth: 794,
-        imageTimeout: 5000,
+        imageTimeout: 2000,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('html2canvas timeout')), 2500);
+      });
+
+      const canvas = await Promise.race([canvasPromise, timeoutPromise]);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.88);
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const finalHeight = Math.min(imgHeight, 297);
@@ -495,7 +501,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
 
     return doc.output('blob');
   } catch (err) {
-    console.warn('Error al generar PDF con html2canvas/jspdf:', err);
+    console.warn('Aviso: renderizado PDF con html2canvas abortado de forma segura:', err);
     return null;
   } finally {
     if (floatingBar) floatingBar.style.display = prevBarDisplay || '';
@@ -613,7 +619,18 @@ export function executePrint(htmlContent) {
     document.body.classList.add('cb-is-printing');
   }
 
-  // Ocultar preventivamente elementos parásitos
+  // Liberar temporalmente el bloqueo modal de la capa superior de WebKit/Safari
+  const previouslyOpenDialogs = [];
+  try {
+    if (typeof document.querySelectorAll === 'function') {
+      document.querySelectorAll('dialog[open]').forEach((d) => {
+        previouslyOpenDialogs.push(d);
+        try { d.close(); } catch {}
+      });
+    }
+  } catch {}
+
+  // Ocultar preventivamente elementos parásitos de la interfaz sin tocar main > .view
   const hiddenElements = [];
   try {
     const parasiteSelectors = [
@@ -624,8 +641,6 @@ export function executePrint(htmlContent) {
       '.cb-topbar',
       '.search-bar',
       '#global-search',
-      'main > .view',
-      'dialog[open]',
       '.dialog-sticky-footer',
       '#network-label',
       '#toast'
@@ -680,6 +695,9 @@ export function executePrint(htmlContent) {
         <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
           ✕ Salir
         </button>
+        <button type="button" class="btn primary cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
+          📄 Abrir Ficha A4
+        </button>
         <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
           📲 Compartir WhatsApp / PDF
         </button>
@@ -688,9 +706,6 @@ export function executePrint(htmlContent) {
         </button>
         <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
           🖨️ Imprimir
-        </button>
-        <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn" style="display:none;">
-          📲 Abrir para Compartir
         </button>
       </div>
     </div>
@@ -739,6 +754,9 @@ export function executePrint(htmlContent) {
       if (container && container.parentNode) {
         container.remove();
       }
+      previouslyOpenDialogs.forEach((d) => {
+        try { if (!d.open && typeof d.showModal === 'function') d.showModal(); } catch {}
+      });
     } catch (e) {}
   };
 
@@ -831,15 +849,16 @@ export function executePrint(htmlContent) {
       e.preventDefault();
       try {
         const fullHtml = generateStandalonePrintPage(htmlContent);
-        const win = window.open('', '_blank');
-        if (win) {
-          win.document.open();
-          win.document.write(fullHtml);
-          win.document.close();
-        } else {
-          const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-          const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, '_blank');
+        if (!win) {
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => a.remove(), 1000);
         }
       } catch (err) {
         triggerBrowserPrint(container, cleanup);

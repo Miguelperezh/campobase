@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -217,6 +217,7 @@ function delegateHasPermission(permission) {
 function buildDelegateInviteMessage() {
   const teamName = myTeamName() || 'nuestro equipo';
   const pin = state.settings?.delegatePin || '0000';
+  const teamId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
   const perms = getDelegatePermissions();
   const permLabels = [];
   if (perms.includes('partido')) permLabels.push('Partido en vivo (control de cambios y minutos)');
@@ -225,34 +226,122 @@ function buildDelegateInviteMessage() {
   if (perms.includes('convocatorias')) permLabels.push('Convocatorias');
   const permText = permLabels.map((l) => `• ${l}`).join('\n');
   const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://campobase.app';
-  const directUrl = `${baseUrl}?role=delegate&pin=${encodeURIComponent(pin)}`;
+  const teamParam = teamId ? `&team=${encodeURIComponent(teamId)}` : '';
+  const permsParam = `&perms=${encodeURIComponent(perms.join(','))}`;
+  const directUrl = `${baseUrl}?role=delegate&pin=${encodeURIComponent(pin)}${teamParam}${permsParam}`;
 
   return {
     teamName,
+    teamId,
     pin,
     directUrl,
-    text: `¡Hola! Te comparto tu acceso como Delegado de ${teamName} en CampoBase.\n\n🔑 Tu PIN de acceso: ${pin}\n📱 Acceso directo: ${directUrl}\n\n⚽ Pestañas y funciones activadas:\n${permText}\n\n¡Nos vemos en el campo!`,
+    text: `¡Hola! Te comparto tu acceso como Delegado de ${teamName} en CampoBase.\n\n🔑 Tu PIN de acceso: ${pin}\n📱 Acceso directo a tu equipo: ${directUrl}\n\n⚽ Pestañas y funciones activadas:\n${permText}\n\n¡Nos vemos en el campo!`,
   };
+}
+
+function syncDelegateModeDom() {
+  const perms = getDelegatePermissions();
+  const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+  if (onlyPartido) {
+    document.body.classList.add('delegate-single-view');
+    document.body.classList.remove('delegate-multi-view');
+  } else {
+    document.body.classList.remove('delegate-single-view');
+    document.body.classList.add('delegate-multi-view');
+  }
+  if (perms.includes('modo-campo')) {
+    document.body.classList.add('delegate-allow-modo-campo');
+  } else {
+    document.body.classList.remove('delegate-allow-modo-campo');
+  }
+  applyDelegateNavFilters(perms);
 }
 
 function applyDelegateNavFilters(perms) {
   const onlyPartido = perms.length === 1 && perms[0] === 'partido';
-  if (onlyPartido) return;
   $$('.bottom-nav button').forEach((btn) => {
     const view = btn.dataset.view;
-    const allowed = (view === 'partido' && perms.includes('partido'))
+    const allowed = !onlyPartido && (
+      (view === 'partido' && perms.includes('partido'))
       || (view === 'plantilla' && perms.includes('plantilla'))
-      || (view === 'convocatorias' && perms.includes('convocatorias'));
+      || (view === 'convocatorias' && perms.includes('convocatorias'))
+    );
     btn.classList.toggle('delegate-tab-hidden', !allowed);
     btn.classList.toggle('delegate-allowed-tab', allowed);
   });
   $$('#cb-bottom-nav .cb-nav-tab').forEach((tab) => {
     const mod = tab.dataset.module;
-    const allowed = (mod === 'partidos' && perms.includes('partido'))
-      || (mod === 'equipo' && perms.includes('plantilla'));
+    const allowed = !onlyPartido && (
+      (mod === 'partidos' && perms.includes('partido'))
+      || (mod === 'equipo' && perms.includes('plantilla'))
+    );
     tab.classList.toggle('delegate-tab-hidden', !allowed);
     tab.classList.toggle('delegate-allowed-tab', allowed);
+    if (mod === 'partidos') {
+      const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
+      if (lbl) lbl.textContent = 'Partido';
+    }
+    if (mod === 'equipo') {
+      const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
+      if (lbl) lbl.textContent = 'Plantilla';
+    }
   });
+
+  let convTab = $('#cb-nav-tab-convocatorias');
+  if (!onlyPartido && perms.includes('convocatorias')) {
+    if (!convTab && $('#cb-bottom-nav')) {
+      convTab = document.createElement('button');
+      convTab.type = 'button';
+      convTab.id = 'cb-nav-tab-convocatorias';
+      convTab.className = 'cb-nav-tab';
+      convTab.dataset.module = 'convocatorias';
+      convTab.title = 'Convocatoria';
+      convTab.innerHTML = `
+        <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+        <span class="cb-nav-label-wrap"><span>Convocatorias</span></span>
+      `;
+      convTab.addEventListener('click', () => {
+        showView('convocatorias');
+      });
+      $('#cb-bottom-nav').appendChild(convTab);
+    }
+    if (convTab) {
+      convTab.style.display = 'flex';
+      convTab.classList.remove('delegate-tab-hidden');
+      convTab.classList.add('delegate-allowed-tab');
+    }
+  } else if (convTab) {
+    convTab.style.display = 'none';
+    convTab.classList.add('delegate-tab-hidden');
+  }
+
+  let fieldTab = $('#cb-nav-tab-modo-campo');
+  if (!onlyPartido && perms.includes('modo-campo')) {
+    if (!fieldTab && $('#cb-bottom-nav')) {
+      fieldTab = document.createElement('button');
+      fieldTab.type = 'button';
+      fieldTab.id = 'cb-nav-tab-modo-campo';
+      fieldTab.className = 'cb-nav-tab';
+      fieldTab.dataset.module = 'modo-campo';
+      fieldTab.title = 'Modo Campo';
+      fieldTab.innerHTML = `
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+        <span class="cb-nav-label-wrap"><span>Modo Campo</span></span>
+      `;
+      fieldTab.addEventListener('click', () => {
+        window.location.href = './modo-campo-directo.html';
+      });
+      $('#cb-bottom-nav').appendChild(fieldTab);
+    }
+    if (fieldTab) {
+      fieldTab.style.display = 'flex';
+      fieldTab.classList.remove('delegate-tab-hidden');
+      fieldTab.classList.add('delegate-allowed-tab');
+    }
+  } else if (fieldTab) {
+    fieldTab.style.display = 'none';
+    fieldTab.classList.add('delegate-tab-hidden');
+  }
 }
 
 function restoreNormalNavUi() {
@@ -261,16 +350,29 @@ function restoreNormalNavUi() {
   });
   $$('#cb-bottom-nav .cb-nav-tab').forEach((tab) => {
     tab.classList.remove('delegate-tab-hidden', 'delegate-allowed-tab');
+    const mod = tab.dataset.module;
+    if (mod === 'partidos') {
+      const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
+      if (lbl) lbl.textContent = 'Partidos';
+    }
+    if (mod === 'equipo') {
+      const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
+      if (lbl) lbl.textContent = 'Equipo';
+    }
   });
+  const convTab = $('#cb-nav-tab-convocatorias');
+  if (convTab) convTab.remove();
+  const fieldTab = $('#cb-nav-tab-modo-campo');
+  if (fieldTab) fieldTab.remove();
 }
 
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
-  if (state.role === 'delegate') {
+  if (state.role === 'delegate' || state.delegateMode) {
     const perms = getDelegatePermissions();
     const onlyPartido = perms.length === 1 && perms[0] === 'partido';
     if (onlyPartido && viewId !== 'delegado' && viewId !== 'partido') return;
-    if (!delegateHasPermission(viewId) && viewId !== 'delegado') return;
+    if (!delegateHasPermission(viewId) && viewId !== 'delegado' && viewId !== 'partido') return;
     if (viewId === 'partido') viewId = 'delegado';
   }
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
@@ -424,6 +526,9 @@ async function refresh() {
   populateDelegateAccountForm();
   applyTeamIdentity();
   applyCustomTheme();
+  if (state.role === 'delegate' || state.delegateMode) {
+    syncDelegateModeDom();
+  }
   if (force || !isUserInteracting()) renderAll();
 }
 
@@ -1625,18 +1730,15 @@ function fieldBenchMarkup(fieldIds, callup, config) {
             <input type="checkbox" name="${checkName}" value="${id}">
             <span class="live-player-name">${escapeHtml(playerName(id))}</span>
           </label>
-          <div class="live-player-timing">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-          </div>
+          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
         </div>
         <div class="live-player-row-bar">
           <div class="live-bar-track">
             <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
           </div>
           <div class="live-bar-meta">
-            <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
-            <span data-player-pct-label="${id}">(${percent}%)</span>
+            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
           </div>
         </div>
       </div>
@@ -2343,18 +2445,15 @@ function renderDelegate() {
             <input type="checkbox" name="${name}" value="${id}">
             <span class="live-player-name">${escapeHtml(playerName(id))}</span>
           </label>
-          <div class="live-player-timing">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-          </div>
+          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
         </div>
         <div class="live-player-row-bar">
           <div class="live-bar-track">
             <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
           </div>
           <div class="live-bar-meta">
-            <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
-            <span data-player-pct-label="${id}">(${percent}%)</span>
+            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
           </div>
         </div>
       </div>
@@ -2372,6 +2471,7 @@ function renderDelegate() {
 function enterDelegateMode() {
   state.delegateMode = true;
   document.body.classList.add('delegate-mode');
+  syncDelegateModeDom();
   showView('delegado');
   renderDelegate();
 }
@@ -2410,7 +2510,8 @@ async function unlockDelegate() {
 
 function closeDelegateMode() {
   state.delegateMode = false;
-  document.body.classList.remove('delegate-mode');
+  document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
+  restoreNormalNavUi();
   showView('partido');
 }
 
@@ -5061,21 +5162,7 @@ function applyRole(role) {
   if (role === 'delegate') {
     state.delegateMode = true;
     document.body.classList.add('delegate-mode');
-    const perms = getDelegatePermissions();
-    const onlyPartido = perms.length === 1 && perms[0] === 'partido';
-    if (onlyPartido) {
-      document.body.classList.add('delegate-single-view');
-      document.body.classList.remove('delegate-multi-view');
-    } else {
-      document.body.classList.remove('delegate-single-view');
-      document.body.classList.add('delegate-multi-view');
-    }
-    if (perms.includes('modo-campo')) {
-      document.body.classList.add('delegate-allow-modo-campo');
-    } else {
-      document.body.classList.remove('delegate-allow-modo-campo');
-    }
-    applyDelegateNavFilters(perms);
+    syncDelegateModeDom();
     showView('delegado');
     renderDelegate();
   } else {
@@ -5476,6 +5563,9 @@ async function saveDelegateAccountSettings(event) {
   await put('settings', state.settings);
   if (!isDemoDatabase()) {
     await synchronizeCloud().catch(() => {});
+  }
+  if (state.role === 'delegate' || state.delegateMode) {
+    syncDelegateModeDom();
   }
   toast('Cuenta y permisos del delegado guardados correctamente.');
 }
@@ -7588,7 +7678,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7606,17 +7696,40 @@ async function init() {
     const params = new URLSearchParams(window.location.search);
     const roleParam = params.get('role');
     const pinParam = params.get('pin');
-    if (roleParam === 'delegate' && pinParam) {
-      const cleanPin = pinParam.trim();
-      const expectedPin = state.settings?.delegatePin || '0000';
-      let pinValid = cleanPin === expectedPin || cleanPin === '0000';
-      if (!pinValid && state.settings?.pinSalt && state.settings?.delegatePinHash) {
-        pinValid = await verifyPin(cleanPin, state.settings.pinSalt, state.settings.delegatePinHash);
+    const teamParam = params.get('team');
+    const permsParam = params.get('perms');
+    if (roleParam === 'delegate') {
+      if (teamParam) {
+        setBoundSaasUserId(teamParam);
+        try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(teamParam)); } catch {}
+        configureRealDatabase();
       }
-      if (pinValid) {
-        applyRole('delegate');
-        $('#auth-dialog')?.close();
-        autoLoggedInDelegate = true;
+      if (permsParam) {
+        const permsList = permsParam.split(',').map((p) => p.trim()).filter(Boolean);
+        if (permsList.length) {
+          state.settings = { ...(state.settings || {}), id: 'main', delegatePermissions: permsList };
+          try { put('settings', state.settings).catch(() => {}); } catch {}
+        }
+      }
+      if (pinParam) {
+        const cleanPin = pinParam.trim();
+        const expectedPin = state.settings?.delegatePin || '0000';
+        let pinValid = cleanPin === expectedPin || cleanPin === '0000';
+        if (!pinValid && state.settings?.pinSalt && state.settings?.delegatePinHash) {
+          pinValid = await verifyPin(cleanPin, state.settings.pinSalt, state.settings.delegatePinHash);
+        }
+        if (pinValid) {
+          applyRole('delegate');
+          $('#auth-dialog')?.close();
+          autoLoggedInDelegate = true;
+          void (async () => {
+            try {
+              await synchronizeCloud();
+              await refresh(true);
+              renderDelegate();
+            } catch {}
+          })();
+        }
       }
     }
   }

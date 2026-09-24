@@ -128,6 +128,10 @@ export function getActiveViewId() {
 
 export function getActiveModule(viewId) {
   if (viewId === 'delegado') return 'partidos';
+  if (typeof document !== 'undefined' && document.body?.classList.contains('delegate-mode')) {
+    if (viewId === 'convocatorias') return 'convocatorias';
+    if (viewId === 'plantilla') return 'equipo';
+  }
   for (const [modKey, mod] of Object.entries(MODULE_CONFIG)) {
     if (mod.views.includes(viewId)) return modKey;
   }
@@ -350,6 +354,27 @@ export function renderBottomNav() {
   nav.querySelectorAll('.cb-nav-tab').forEach((button) => {
     button.addEventListener('click', () => {
       const moduleKey = button.dataset.module;
+
+      if (document.body.classList.contains('delegate-mode')) {
+        closeQuickSheet();
+        if (moduleKey === 'partidos') {
+          triggerStandardView('delegado');
+          return;
+        }
+        if (moduleKey === 'equipo') {
+          triggerStandardView('plantilla');
+          return;
+        }
+        if (moduleKey === 'convocatorias') {
+          triggerStandardView('convocatorias');
+          return;
+        }
+        if (moduleKey === 'modo-campo') {
+          window.location.href = './modo-campo-directo.html';
+          return;
+        }
+      }
+
       const mod = MODULE_CONFIG[moduleKey];
       if (!mod) return;
 

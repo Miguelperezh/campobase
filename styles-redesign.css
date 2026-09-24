@@ -6693,7 +6693,7 @@ body.cb-is-printing #cb-print-root {
   }
   .cb-print-floating-bar-actions {
     display: grid !important;
-    grid-template-columns: 75px 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.45rem !important;
     width: 100% !important;
   }
@@ -6707,40 +6707,42 @@ body.cb-is-printing #cb-print-root {
     white-space: normal !important;
     text-align: center !important;
     line-height: 1.15 !important;
+    min-height: 44px !important;
+    font-size: 0.82rem !important;
+    padding: 0.45rem 0.35rem !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-close {
     grid-column: 1 !important;
     grid-row: 1 !important;
-    min-height: 42px !important;
-    font-size: 0.85rem !important;
     font-weight: 700 !important;
     background: #334155 !important;
     color: #f8fafc !important;
     border: 1px solid #475569 !important;
   }
-  .cb-print-floating-bar-actions .cb-print-btn-share {
+  .cb-print-floating-bar-actions .cb-print-btn-open {
     grid-column: 2 !important;
     grid-row: 1 !important;
-    min-height: 42px !important;
-    font-size: 0.85rem !important;
+    display: inline-flex !important;
+    font-weight: 700 !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: 1px solid #1d4ed8 !important;
+  }
+  .cb-print-floating-bar-actions .cb-print-btn-share {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
     font-weight: 700 !important;
     background: #16a34a !important;
     color: #ffffff !important;
     border: 1px solid #15803d !important;
-    white-space: normal !important;
-    text-align: center !important;
-    line-height: 1.15 !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-download {
-    grid-column: 1 / -1 !important;
+    grid-column: 2 !important;
     grid-row: 2 !important;
-    min-height: 38px !important;
-    font-size: 0.82rem !important;
     font-weight: 600 !important;
-    background: #2563eb !important;
+    background: #0284c7 !important;
     color: #ffffff !important;
-    border: 1px solid #1d4ed8 !important;
-    white-space: normal !important;
+    border: 1px solid #0369a1 !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-print {
     display: none !important; /* En móviles PWA, window.print bloquea WebKit */
@@ -7370,13 +7372,26 @@ body.cb-is-printing dialog {
 }
 
 #delegado .check-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 0.65rem;
-  border-bottom: 1px solid #f1f5f9;
-  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
   transition: background 0.15s ease;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#delegado .check-row.live-player-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0.35rem !important;
+  border: 1px solid var(--cb-slate-200, #e2e8f0) !important;
+  background: #ffffff !important;
+  margin-bottom: 0.45rem !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 #delegado .check-row:last-child {
@@ -7390,12 +7405,14 @@ body.cb-is-printing dialog {
 #delegado .check-row label {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: #1e293b;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 #delegado .check-row input[type="checkbox"] {
@@ -7403,6 +7420,7 @@ body.cb-is-printing dialog {
   height: 20px;
   accent-color: var(--cb-primary, #c8102e);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 #delegado .check-row strong[data-player-clock] {
@@ -7422,11 +7440,32 @@ body.cb-is-printing dialog {
 }
 
 @media (max-width: 650px) {
+  #delegado.view {
+    padding: 0.5rem 0.4rem !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
   #delegado .live-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin: 0.75rem 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #delegado .panel.on-field,
+  #delegado .panel.bench {
+    padding: 0.65rem 0.5rem !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
   .delegate-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    margin-bottom: calc(1.5rem + env(safe-area-inset-bottom, 20px)) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .delegate-head {
     flex-direction: column;
@@ -7468,12 +7507,17 @@ body.delegate-mode .exit {
 }
 
 body.delegate-mode main {
-  padding-top: 1rem !important;
-  padding-bottom: 2.5rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 24px)) !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
   max-width: 1000px !important;
   margin: 0 auto !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
 }
 
+/* Delegado con PIN 0000 o permiso único: aislamiento total (solo partido en vivo directo) */
 body.delegate-mode .view:not(#delegado) {
   display: none !important;
 }
@@ -7484,16 +7528,38 @@ body.delegate-mode #delegado {
 }
 
 /* Delegado multi-vista (cuando el entrenador activa Plantilla, Convocatorias o Modo Campo en Ajustes) */
-body.delegate-mode.delegate-multi-view #cb-bottom-nav,
-body.delegate-mode.delegate-multi-view .bottom-nav {
+body.delegate-mode.delegate-multi-view #plantilla.view.active,
+body.delegate-mode.delegate-multi-view #convocatorias.view.active,
+body.delegate-mode.delegate-multi-view #delegado.view.active {
+  display: block !important;
+  visibility: visible !important;
+}
+
+body.delegate-mode.delegate-multi-view #cb-bottom-nav {
   display: flex !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 10000 !important;
 }
 
-body.delegate-mode.delegate-multi-view .view.active {
-  display: block !important;
+body.delegate-mode.delegate-multi-view:not(.cb-redesign-active) .bottom-nav {
+  display: flex !important;
   visibility: visible !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 10000 !important;
+}
+
+body.delegate-mode.delegate-multi-view.cb-redesign-active .bottom-nav {
+  display: none !important;
+  visibility: hidden !important;
 }
 
 body.delegate-mode.delegate-multi-view .bottom-nav button.delegate-tab-hidden,

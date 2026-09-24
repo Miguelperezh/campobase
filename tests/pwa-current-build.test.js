@@ -9,7 +9,7 @@ const [html, app, sw, cloud] = await Promise.all([
   readFile(new URL('../js/supabase-client.js', import.meta.url), 'utf8'),
 ]);
 
-const BUILD = '20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
+const BUILD = '20260924-v53-delegate-team-invite-layout-freeze-fix';
 
 test('index app cloud y service worker apuntan al mismo build actual', () => {
   assert.match(html, new RegExp(BUILD));
