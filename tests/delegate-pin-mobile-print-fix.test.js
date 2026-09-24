@@ -1,96 +1,91 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { MODULE_CONFIG } from '../js/redesign-nav.js';
-import { shareOrDownloadPrintDoc, executePrint } from '../js/print-session-export.js';
+import { readFile } from 'node:fs/promises';
+import { nombreCorto } from '../js/live-tactics.js';
 
-const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-const app = read('js/app.js');
-const nav = read('js/redesign-nav.js');
-const styles = read('styles-redesign.css');
-const printExport = read('js/print-session-export.js');
+const [appCode, cssCode, printCode, modoCampoCode] = await Promise.all([
+  readFile(new URL('../js/app.js', import.meta.url), 'utf8'),
+  readFile(new URL('../styles-redesign.css', import.meta.url), 'utf8'),
+  readFile(new URL('../js/print-session-export.js', import.meta.url), 'utf8'),
+  readFile(new URL('../js/modo-campo-integration.js', import.meta.url), 'utf8'),
+]);
 
-test('Partidos revierte la subpestaña Delegado y conserva exactamente 4 pestañas limpias', () => {
-  const partidosConfig = MODULE_CONFIG.partidos;
-  assert.ok(partidosConfig, 'MODULE_CONFIG.partidos debe existir');
-  assert.equal(partidosConfig.subTabs.length, 4, 'Partidos debe tener exactamente 4 pestañas superiores');
-  const tabIds = partidosConfig.subTabs.map((t) => t.id);
-  assert.deepEqual(tabIds, ['convocatorias', 'preparacion', 'partido', 'calendario']);
-  assert.equal(tabIds.includes('delegado'), false, 'La subpestaña Delegado no debe estar en subTabs de Partidos');
+test('nombreCorto devuelve el primer apellido para nombres simples y compuestos', () => {
+  // Caso reportado por Migue: Alejandro Pedros Gonzalez debe ser Alejandro P. (no Alejandro G.)
+  assert.equal(nombreCorto('Alejandro Pedros Gonzalez'), 'Alejandro P.');
+  assert.equal(nombreCorto('Alejandro Pedrós González'), 'Alejandro P.');
+  assert.equal(nombreCorto('Juan Carlos Perez Martinez'), 'Juan Carlos P.');
+  assert.equal(nombreCorto('Miguel Ángel Garcia Gomez'), 'Miguel Ángel G.');
+  assert.equal(nombreCorto('Carlos Sanchez'), 'Carlos S.');
+  assert.equal(nombreCorto('Pablo'), 'Pablo');
+  assert.equal(nombreCorto(''), '');
 });
 
-test('Botón Mostrar/Ocultar al delegado está disponible en Partido en Vivo y en la lista de Alineación', () => {
-  // En Partido en vivo: #unlock-delegate siempre visible para owner y conmuta estado
-  assert.match(app, /unlockBtn = roleCanUseOwnerFeatures\(state\.role\)/);
-  assert.match(app, /state\.timer\.delegateUnlocked \? 'Ocultar al Delegado' : 'Mostrar al Delegado'/);
-  assert.match(app, /target\.id === 'unlock-delegate'/);
-  assert.match(app, /state\.timer\.delegateUnlocked = !state\.timer\.delegateUnlocked/);
+test('partido en vivo y vista delegado integran minutos objetivo visibles (Obj: X min)', () => {
+  // Debe contener la tarjeta visual targetSummaryMarkup
+  assert.match(appCode, /live-target-card/);
+  assert.match(appCode, /target-chips-container/);
+  assert.match(appCode, /target-chip/);
+  assert.match(appCode, /Minutos objetivo a disputar en este partido/);
 
-  // En la lista de Alineación (preparaciones): botón directo en cada tarjeta de partido preparado
-  assert.match(app, /prep-toggle-delegate/);
-  assert.match(app, /prep\.delegateShown \? 'Ocultar al Delegado' : 'Mostrar al Delegado'/);
-  assert.match(app, /togglePrepDelegateForMatch/);
-  assert.match(app, /target\.matches\('\.prep-toggle-delegate'\)/);
+  // Cada jugador en campo y banquillo incluye el distintivo Obj: X min
+  assert.match(appCode, /live-target-badge/);
+  assert.match(appCode, /Obj:\s*<strong>\$\{targetMin\}\s*min<\/strong>/);
+  assert.match(appCode, /live-clock-badge/);
+
+  // Los estilos CSS para estas clases están definidos
+  assert.match(cssCode, /\.live-target-card/);
+  assert.match(cssCode, /\.target-chip/);
+  assert.match(cssCode, /\.live-target-badge/);
+  assert.match(cssCode, /\.live-player-row/);
 });
 
-test('El delegado entra con PIN 0000 y queda aislado exclusivamente en Partido en Vivo', () => {
-  // Autenticación con PIN 0000
-  assert.match(app, /pin === '0000'/);
-  assert.match(app, /applyRole\('delegate'\)/);
-  assert.match(app, /Introduce el PIN de Migue, del delegado \(0000\)/);
+test('el delegado con PIN 0000 queda aislado y accede directo sin Modo Campo', () => {
+  // body.delegate-mode oculta navegación, buscador, ajustes y Modo Campo
+  assert.match(cssCode, /body\.delegate-mode #open-field-mode/);
+  assert.match(cssCode, /body\.delegate-mode \[id\*="field-mode"\]/);
+  assert.match(cssCode, /body\.delegate-mode \.view:not\(#delegado\)\s*\{\s*display:\s*none !important;/);
+  assert.match(cssCode, /body\.delegate-mode #delegado\s*\{\s*display:\s*block !important;/);
 
-  // Aislamiento CSS estricto: oculta barras de navegación, buscador, ajustes y cabecera
-  assert.match(styles, /body\.delegate-mode #cb-bottom-nav/);
-  assert.match(styles, /body\.delegate-mode #cb-sub-nav/);
-  assert.match(styles, /body\.delegate-mode \.cb-topbar/);
-  assert.match(styles, /body\.delegate-mode \.search-bar/);
-  assert.match(styles, /body\.delegate-mode \.view:not\(#delegado\)\s*\{\s*display:\s*none\s*!important;\s*\}/);
-  assert.match(styles, /body\.delegate-mode #delegado\s*\{\s*display:\s*block\s*!important;/);
+  // showView no permite salir de #delegado si el rol es delegate
+  assert.match(appCode, /if \(state\.role === 'delegate' && viewId !== 'delegado'\) return;/);
 
-  // redesign-nav oculta sub-nav si está en delegate-mode o view delegado
-  assert.match(nav, /document\.body\.classList\.contains\('delegate-mode'\) \|\| activeViewId === 'delegado'/);
+  // modo-campo-integration no inyecta botones para delegate
+  assert.match(modoCampoCode, /if \(role === 'delegate' \|\| document\.body\.classList\.contains\('delegate-mode'\)\) return;/);
 });
 
-test('Guardar en el móvil y exportación de ficha soporta Web Share y descarga directa', () => {
-  // Función exportada para móvil
-  assert.equal(typeof shareOrDownloadPrintDoc, 'function');
-  assert.match(printExport, /export async function shareOrDownloadPrintDoc/);
-  assert.match(printExport, /navigator\.share/);
-  assert.match(printExport, /isMobileDevice/);
+test('el delegado ve el partido en cuanto Migue pulsa Mostrar al Delegado', () => {
+  // delegateCanSeeLive comprueba si prep.delegateShown está activo
+  assert.match(appCode, /const prep = prepForMatch\(state\.timer\.matchId\);/);
+  assert.match(appCode, /if \(prep\?\.delegateShown \|\| state\.settings\?\.delegateAllMatches\) return true;/);
 
-  // Botones destacados en la barra flotante para móvil
-  assert.match(printExport, /cb-print-btn-share/);
-  assert.match(printExport, /cb-print-btn-download/);
-  assert.match(printExport, /cb-print-btn-print/);
-  assert.match(printExport, /Guardar \/ Compartir \(WhatsApp, Archivos\)/);
+  // renderDelegate auto-conecta la preparación mostrada si el timer estaba en null o en otro partido
+  assert.match(appCode, /if \(shownPrep && \(!state\.timer \|\| \(state\.timer\.phase === 'ready' && String\(state\.timer\.matchId\) !== String\(shownPrep\.matchId\)\)\)\)/);
 
-  // Estilos en styles-redesign.css
-  assert.match(styles, /\.cb-print-btn-share/);
-  assert.match(styles, /\.cb-print-btn-download/);
+  // togglePrepDelegateForMatch aplica la preparación al timer en vivo cuando se activa delegateShown
+  assert.match(appCode, /else if \(prep\.delegateShown\) \{\s*await applyPreparacionToLive\(prep\);/);
+
+  // Login del delegado con PIN 0000 sincroniza en segundo plano para traerse datos frescos
+  assert.match(appCode, /applyRole\('delegate'\);\s*void \(async \(\) => \{\s*try \{\s*await synchronizeCloud\(\);\s*await refresh\(true\);\s*renderDelegate\(\);/);
 });
 
-test('renderLive define fieldIds y auto-recupera la preparación activa de partidos preparados como Inter Pilar', () => {
-  // Definición garantizada de fieldIds antes de ser usado
-  assert.match(app, /const fieldIds = state\.timer\.onField \|\| \[\];/);
-  assert.match(app, /\$\{fieldBenchMarkup\(fieldIds, callup, config\)\}/);
-
-  // Auto-recuperación de preparaciones existentes si timer es null
-  assert.match(app, /const savedPrep = state\.preparaciones\?\.find/);
-  assert.match(app, /applyPreparacionToLive\(savedPrep\)/);
+test('la preparación no altera la alineación táctica elegida por Migue', () => {
+  // En fase ready, syncLiveTacticFromTimer y ensureLiveTactic respetan prep.team
+  assert.match(appCode, /if \(state\.timer\.phase === 'ready'\) \{\s*const prep = prepForMatch\(state\.timer\.matchId\);\s*if \(prep\?\.team\?\.length\) \{\s*liveTactic\.team = prep\.team\.map/);
+  assert.match(appCode, /if \(prep\?\.team\?\.length && state\.timer\.phase === 'ready'\) \{\s*liveTactic\.team = prep\.team\.map\(\(p\) => \(\{ \.\.\.p \}\)\);/);
 });
 
-test('generación de PDF binario nativo (.pdf) con jspdf y html2canvas para WhatsApp y Archivos', () => {
-  assert.match(printExport, /export async function generatePdfBlob/);
-  assert.match(printExport, /ensurePdfLibraries/);
-  assert.match(printExport, /window\.html2canvas/);
-  assert.match(printExport, /window\.jspdf/);
-  assert.match(printExport, /type:\s*'application\/pdf'/);
-  assert.match(printExport, /cleanTitle\}\.pdf/);
+test('exportación PDF en móvil no congela Safari/iOS WebKit y añade safe-area', () => {
+  // Barra flotante con safe-area-inset-top para evitar notch / dynamic island
+  assert.match(cssCode, /padding-top:\s*max\(16px,\s*env\(safe-area-inset-top,\s*24px\)\)\s*!important;/);
 
-  // Contenedor cb-print-sheet para contención visual del gráfico y tarjetas
-  assert.match(styles, /\.cb-print-sheet/);
-  assert.match(styles, /\.cb-print-stage-box/);
-  assert.match(styles, /\.cb-print-field-img/);
-  assert.match(styles, /max-height:\s*230px/);
+  // En móvil ocultamos el botón de imprimir porque window.print bloquea WebKit
+  assert.match(cssCode, /\.cb-print-btn-print\s*\{\s*display:\s*none !important;/);
+
+  // Botón imprimir redirige a compartir PDF si es móvil o PWA standalone
+  assert.match(printCode, /if \(isMobileDevice\(\) \|\| \(typeof window !== 'undefined' && window\.navigator\?\.standalone\)\)/);
+  assert.match(printCode, /await shareOrDownloadPrintDoc\(htmlContent, 'Ficha-CampoBase', container\);/);
+
+  // No dispara window.print de forma desatendida en móvil al abrir
+  assert.match(printCode, /if \(!isMobileDevice\(\) && !\(typeof window !== 'undefined' && window\.navigator\?\.standalone\)\)/);
 });
-

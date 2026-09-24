@@ -99,6 +99,8 @@ function installTopbarActionLayout() {
 
 function addTopbarButton({ id, text, onClick, primary = false }) {
   if (document.getElementById(id)) return;
+  const role = window.__campobase?.state?.role;
+  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) return;
   const status = document.querySelector('.topbar .status');
   const logout = document.getElementById('logout');
   if (!status) return;
@@ -131,6 +133,8 @@ function saveCacheAndNavigate() {
 }
 
 function installEntryButtons() {
+  const role = window.__campobase?.state?.role;
+  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) return;
   if (fromCampo) {
     addTopbarButton({
       id: 'return-to-field-mode',

@@ -932,3 +932,30 @@ Partidos activos próximos verificados:
    - **Cache Versioning y Calidad:**
      - Versión actualizada a `20260924-v50-inter-pilar-live-mobile-pdf-export`.
      - 525/525 tests unitarios y de integración pasando al 100% (`npm test`).
+
+16. **Entrega v51 (24/09/2026) — Aislamiento Total Delegado (PIN 0000), Minutos Objetivo Visibles, Nombres Cortos con Primer Apellido y Exportación PDF Móvil Sin Bloqueos:**
+    - **Aislamiento Total del Delegado (PIN 0000):**
+      - Acceso directo a la vista exclusiva `#delegado`: Al validar el PIN 0000 o PIN de delegado, la interfaz aplica `body.delegate-mode`. Se ocultan con `!important` el menú inferior (`#cb-bottom-nav`), submenús, selector de temas, buscador global, ajustes y Modo Campo (`#open-field-mode`, `#return-to-field-mode`, `[id*="field-mode"]`).
+      - Blindaje de navegación en `showView()`: Se restringe el cambio de pestaña impidiendo que el delegado salga de su vista de control de partido en vivo.
+      - Sincronización en segundo plano al login: Al ingresar con PIN 0000, `submitAuth()` lanza inmediatamente `synchronizeCloud()` y `refresh(true)` para traer el partido preparado más reciente desde Supabase.
+    - **Corrección en Nombres Cortos (`nombreCorto`):**
+      - **Problema previo:** En nombres españoles con dos apellidos (ej. "Alejandro Pedrós González"), la función extraía la inicial del último apellido generando "Alejandro G." en lugar del primer apellido.
+      - **Solución implementada:** En `js/live-tactics.js`, `nombreCorto()` extrae el primer apellido respetando nombres compuestos frecuentes (`Juan Carlos P.`, `Miguel Ángel P.`, `Alejandro P.`), verificando nombres como "Alejandro Pedros Gonzalez" -> "Alejandro P.".
+    - **Minutos Objetivo Visibles en Vivo (`Obj: X min`):**
+      - Cada fila de jugador en campo y banquillo (tanto para Migue como para el delegado) muestra una píldora visual verde con el tiempo objetivo asignado (`Obj: 40 min`) junto a su cronómetro acumulado en tiempo real.
+      - Se añadió la tarjeta superior moderna `.live-target-card` con chips individuales por jugador para una lectura rápida y clara del reparto de minutos del partido.
+    - **Preservación Fiel de la Alineación Preparada por Migue:**
+      - **Causa raíz:** `syncLiveTacticFromTimer()` y `ensureLiveTactic()` aplicaban `applyLineupToLiveTeam()`, que reordenaba arbitrariamente los jugadores por orden de lista, ignorando las posiciones tácticas exactas guardadas en `prep.team`.
+      - **Solución:** En fase `ready`, si existe `prep.team`, tanto `applyPreparacionToLive` como `syncLiveTacticFromTimer` y `ensureLiveTactic` clonan fielmente las posiciones tácticas (`x`, `y`, `pos`) elegidas por Migue.
+    - **Visibilidad Inmediata del Partido al pulsar «Mostrar al Delegado»:**
+      - `togglePrepDelegateForMatch(matchId)` aplica de inmediato la preparación al motor en vivo (`state.timer`) si estaba vacía o en otro partido, desbloqueando `state.timer.delegateUnlocked = true`.
+      - `renderDelegate()` auto-detecta preparaciones marcadas con `delegateShown` y las monta instantáneamente sin esperas.
+    - **Exportación PDF Móvil Sin Bloqueo de Safari/iOS WebKit:**
+      - **Problema previo:** En iPhone / Safari PWA standalone, invocar `window.print()` congelaba el hilo principal de WebKit dejando la app inutilizable. Además, la barra flotante quedaba oculta bajo el notch/dynamic island.
+      - **Solución:**
+        - En `styles-redesign.css`, `.cb-print-floating-bar` incluye `padding-top: max(16px, env(safe-area-inset-top, 24px)) !important;` y oculta el botón de imprimir (`.cb-print-btn-print`) en móviles (`max-width: 650px`).
+        - En `js/print-session-export.js`, en móviles y PWA standalone no se invoca `window.print()`, redirigiendo cualquier acción a `shareOrDownloadPrintDoc()`, que genera el PDF real mediante `html2canvas` + `jsPDF` y abre el menú nativo de compartir (`navigator.share`) para WhatsApp o Archivos sin ningún bloqueo.
+    - **Cache Versioning y Calidad:**
+      - Versión actualizada a `20260924-v51-delegate-live-realtime-pdf-mobile`.
+      - 525+ tests unitarios y de integración pasando al 100% (`npm test`).
+      - Verificación de sintaxis de todos los módulos limpia (`npm run check`).

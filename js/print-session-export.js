@@ -426,7 +426,8 @@ function generateStandalonePrintPage(htmlContent) {
 function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  return /iPhone|iPad|iPod|Android/i.test(ua);
+  const isTouch = (navigator.maxTouchPoints || 0) > 1 || ('ontouchstart' in (typeof window !== 'undefined' ? window : {}));
+  return /iPhone|iPad|iPod|Android/i.test(ua) || (isTouch && /Macintosh/i.test(ua));
 }
 
 export async function ensurePdfLibraries() {
@@ -467,13 +468,15 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
 
     const pages = element.querySelectorAll('.cb-print-page');
     const itemsToRender = pages.length ? Array.from(pages) : [element.querySelector('.cb-print-sheet') || element];
+    const isMobile = isMobileDevice();
+    const renderScale = isMobile ? 1.5 : 2;
 
     for (let i = 0; i < itemsToRender.length; i++) {
       const pageEl = itemsToRender[i];
       if (i > 0) doc.addPage('a4', 'portrait');
 
       const canvas = await window.html2canvas(pageEl, {
-        scale: 2,
+        scale: renderScale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -481,7 +484,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
         windowWidth: 794,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const finalHeight = Math.min(imgHeight, 297);
@@ -803,9 +806,21 @@ export function executePrint(htmlContent) {
   }
 
   if (printBtn) {
-    printBtn.addEventListener('click', (e) => {
+    printBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      triggerBrowserPrint(container, isMobileDevice() ? null : cleanup);
+      if (isMobileDevice() || (typeof window !== 'undefined' && window.navigator?.standalone)) {
+        // En móviles y PWA standalone, no disparar window.print() para evitar congelar el hilo de WebKit.
+        // En su lugar, generar y compartir el PDF directamente.
+        const prevText = printBtn.textContent;
+        printBtn.textContent = '⏳ Generando PDF...';
+        try {
+          await shareOrDownloadPrintDoc(htmlContent, 'Ficha-CampoBase', container);
+        } finally {
+          printBtn.textContent = prevText;
+        }
+        return;
+      }
+      triggerBrowserPrint(container, cleanup);
     });
   }
 
@@ -838,9 +853,9 @@ export function executePrint(htmlContent) {
   }
 
   // En escritorio o tests sintéticos, disparar window.print() de inmediato
-  // En móviles reales, dejar la vista abierta con los botones destacados
-  // para que Migue pueda elegir Guardar, Compartir por WhatsApp o Imprimir.
-  if (!isMobileDevice()) {
+  // En móviles reales y PWA, dejar la vista abierta con los botones destacados
+  // para que Migue pueda elegir Guardar, Compartir por WhatsApp o Descargar PDF sin bloqueos.
+  if (!isMobileDevice() && !(typeof window !== 'undefined' && window.navigator?.standalone)) {
     triggerBrowserPrint(container, cleanup);
   }
 }

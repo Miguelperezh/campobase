@@ -26,8 +26,8 @@ test('submitAuth en js/app.js permite escribir demo y maneja recuperacion de PIN
   assert.match(app, /settings-reload/, 'Debe conectar listener de Recargar en ajustes');
 });
 
-test('sw.js e index.html están sincronizados a v=20260924-v50-inter-pilar-live-mobile-pdf-export', () => {
+test('sw.js e index.html están sincronizados a v=20260924-v51-delegate-live-realtime-pdf-mobile', () => {
   assert.match(sw, /duration-2503/, 'sw.js debe tener la clave de caché con 2503');
-  assert.match(html, /styles-redesign\.css\?v=20260924-v50-inter-pilar-live-mobile-pdf-export/, 'index.html debe cargar estilos con v=20260924-v50-inter-pilar-live-mobile-pdf-export');
-  assert.match(html, /js\/app\.js\?v=20260924-v50-inter-pilar-live-mobile-pdf-export/, 'index.html debe cargar app.js con v=20260924-v50-inter-pilar-live-mobile-pdf-export');
+  assert.match(html, /styles-redesign\.css\?v=20260924-v51-delegate-live-realtime-pdf-mobile/, 'index.html debe cargar estilos con v=20260924-v51-delegate-live-realtime-pdf-mobile');
+  assert.match(html, /js\/app\.js\?v=20260924-v51-delegate-live-realtime-pdf-mobile/, 'index.html debe cargar app.js con v=20260924-v51-delegate-live-realtime-pdf-mobile');
 });

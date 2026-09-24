@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v51-delegate-live-realtime-pdf-mobile';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v51-delegate-live-realtime-pdf-mobile';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -201,6 +201,7 @@ function storedActiveView() {
 
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
+  if (state.role === 'delegate' && viewId !== 'delegado') return;
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   const target = document.getElementById(viewId);
   if (!target?.classList.contains('view')) return;
@@ -1461,6 +1462,13 @@ function liveTacticAvailableIds() {
 function syncLiveTacticFromTimer() {
   if (!state.timer || !liveTactic) return;
   liveTactic.drag = null; // un cambio de alineación da por terminado cualquier arrastre en curso
+  if (state.timer.phase === 'ready') {
+    const prep = prepForMatch(state.timer.matchId);
+    if (prep?.team?.length) {
+      liveTactic.team = prep.team.map((p) => ({ ...p }));
+      return;
+    }
+  }
   const keeper = state.timer.phase === 'second_half' ? state.timer.secondKeeper : state.timer.firstKeeper;
   liveTactic.team = applyLineupToLiveTeam(
     liveTactic.team,
@@ -1513,9 +1521,11 @@ function ensureLiveTactic() {
     'F7',
     state.timer.firstKeeper,
   );
-  // El timer restaurado es la fuente inicial. Sin esta hidratación, la pizarra
-  // recién creada contiene solo al portero y reduce onField de 7 a 1 al renderizar.
-  syncLiveTacticFromTimer();
+  if (prep?.team?.length && state.timer.phase === 'ready') {
+    liveTactic.team = prep.team.map((p) => ({ ...p }));
+  } else {
+    syncLiveTacticFromTimer();
+  }
   return liveTactic;
 }
 
@@ -1524,7 +1534,43 @@ function fieldBenchMarkup(fieldIds, callup, config) {
   const byPlayed = (a, b) => (livePlayerSeconds(b) ?? 0) - (livePlayerSeconds(a) ?? 0);
   const fieldSorted = [...fieldIds].sort(byPlayed);
   const benchSorted = callup.availableIds.filter((id) => !fieldIds.includes(id)).sort(byPlayed);
-  return `<div class="live-grid"><div class="panel on-field"><h3>En campo (${fieldIds.length}/${config.players})</h3><div class="check-list">${fieldSorted.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-out" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div><div class="panel bench"><h3>Suplentes</h3><div class="check-list">${benchSorted.map((id) => `<div class="check-row"><label><input type="checkbox" name="sub-in" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(livePlayerSeconds(id))}</strong></div>`).join('')}</div></div></div>`;
+  const targets = liveTargets();
+  const targetMap = new Map(targets.map((t) => [t.playerId, t.minutes]));
+  const defaultTarget = Math.round((config.duration * config.players) / (callup.availableIds.length || 1));
+
+  const row = (id, checkName) => {
+    const targetMin = targetMap.get(id) ?? defaultTarget;
+    const playedSec = livePlayerSeconds(id) ?? 0;
+    return `
+      <div class="check-row live-player-row">
+        <label>
+          <input type="checkbox" name="${checkName}" value="${id}">
+          <span class="live-player-name">${escapeHtml(playerName(id))}</span>
+        </label>
+        <div class="live-player-timing">
+          <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        </div>
+      </div>
+    `;
+  };
+
+  return `
+    <div class="live-grid">
+      <div class="panel on-field">
+        <h3>En campo (${fieldIds.length}/${config.players})</h3>
+        <div class="check-list">
+          ${fieldSorted.map((id) => row(id, 'sub-out')).join('')}
+        </div>
+      </div>
+      <div class="panel bench">
+        <h3>Suplentes</h3>
+        <div class="check-list">
+          ${benchSorted.map((id) => row(id, 'sub-in')).join('')}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Re-renderiza solo "En campo" y "Banquillo" sin reconstruir la pizarra.
@@ -1901,21 +1947,61 @@ function liveTargetSummary() {
 }
 
 function targetSummaryMarkup() {
+  const callup = liveCallup();
+  if (!callup?.availableIds?.length) return '';
+  const config = FORMATS[callup.format] || FORMATS.F7;
+  const targets = liveTargets();
   const summary = liveTargetSummary();
-  if (!summary.length) return '';
-  const parts = summary.map(({ minutes, count }) => `${count} × ${minutes} min`);
-  return `<p class="target-summary"><strong>Minutos por jugador:</strong> ${parts.join(' · ')}</p>`;
+  const summaryText = summary.map(({ minutes, count }) => `${count} jug. × ${minutes} min`).join(' · ');
+  const keepers = new Set(liveKeeperIds());
+
+  const chips = targets.map((t) => {
+    const isK = keepers.has(t.playerId);
+    const pName = nombreCorto(playerName(t.playerId));
+    return `<span class="target-chip ${isK ? 'is-keeper' : ''}"><strong>${escapeHtml(pName)}</strong>: ${t.minutes} min</span>`;
+  }).join('');
+
+  return `
+    <div class="live-target-card">
+      <div class="target-card-header">
+        <span class="target-icon">🎯</span>
+        <div>
+          <strong>Minutos objetivo a disputar en este partido</strong>
+          <span class="target-card-meta">${summaryText ? `${summaryText} · ${callup.availableIds.length} convocados` : `${config.duration} min`}</span>
+        </div>
+      </div>
+      <div class="target-chips-container">
+        ${chips}
+      </div>
+    </div>
+  `;
 }
 
 function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
+
+  const eligibleMatches = preparableMatches();
+  const nextMatch = eligibleMatches[0];
+  const nextPrep = nextMatch ? prepForMatch(nextMatch.id) : null;
+  const shownPrep = (nextPrep && (nextPrep.delegateShown || state.settings?.delegateAllMatches) && nextPrep.team?.length)
+    ? nextPrep
+    : state.preparaciones?.find((p) => {
+        if (!p.team?.length) return false;
+        const m = state.matches.find((item) => String(item.id) === String(p.matchId));
+        return m && m.status !== 'finished' && (p.delegateShown || state.settings?.delegateAllMatches);
+      });
+
+  if (shownPrep && (!state.timer || (state.timer.phase === 'ready' && String(state.timer.matchId) !== String(shownPrep.matchId)))) {
+    applyPreparacionToLive(shownPrep).catch(() => {});
+    return;
+  }
+
+  if (state.timer && shownPrep && String(state.timer.matchId) === String(shownPrep.matchId) && !state.timer.delegateUnlocked) {
+    state.timer.delegateUnlocked = true;
+  }
+
   if (!state.timer) {
-    const shownPrep = state.preparaciones?.find((p) => p.delegateShown && p.team?.length);
-    if (shownPrep) {
-      applyPreparacionToLive(shownPrep).catch(() => {});
-      return;
-    }
     if (state.role === 'delegate') {
       root.innerHTML = `
         <div class="delegate-head">
@@ -2010,7 +2096,7 @@ function renderDelegate() {
     root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Vista Delegado</p><h2>Control de partido y cambios</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${empty('No hay partidos convocados disponibles. Prepara una convocatoria primero en la pestaña Convocatorias.')}`;
     return;
   }
-  const match = state.matches.find(({ id }) => id === state.timer.matchId);
+  const match = state.matches.find(({ id }) => String(id) === String(state.timer.matchId));
   const callup = callupForMatch(match);
   if (!match || !callup) return;
   // El delegado solo ve el partido 20 min antes de la hora programada, o cuando
@@ -2045,11 +2131,31 @@ function renderDelegate() {
   const played = livePlayedSeconds();
   const fieldIds = state.timer.onField;
   const benchIds = callup.availableIds.filter((id) => !fieldIds.includes(id));
+  const targets = liveTargets();
+  const targetMap = new Map(targets.map((t) => [t.playerId, t.minutes]));
+  const defaultTarget = Math.round((config.duration * config.players) / (callup.availableIds.length || 1));
   const suggestion = suggestDelegateSubstitution(fieldIds, benchIds, played, 1, liveKeeperIds());
   const suggestionText = suggestion.inIds.length
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
     : 'No hay jugadores disponibles entre los suplentes.';
-  const row = (id, name) => `<div class="check-row"><label><input type="checkbox" name="${name}" value="${id}"><span>${escapeHtml(playerName(id))}</span></label><strong data-player-clock="${id}">${formatMatchClock(played[id] ?? 0)}</strong></div>`;
+
+  const row = (id, name) => {
+    const targetMin = targetMap.get(id) ?? defaultTarget;
+    const playedSec = played[id] ?? 0;
+    return `
+      <div class="check-row live-player-row">
+        <label>
+          <input type="checkbox" name="${name}" value="${id}">
+          <span class="live-player-name">${escapeHtml(playerName(id))}</span>
+        </label>
+        <div class="live-player-timing">
+          <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        </div>
+      </div>
+    `;
+  };
+
   const byPlayed = (a, b) => (played[b] ?? 0) - (played[a] ?? 0);
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
@@ -2072,7 +2178,9 @@ function delegateCanSeeLive() {
   if (!state.timer) return false;
   if (state.timer.phase !== 'ready') return true; // ya empezado
   if (state.timer.delegateUnlocked) return true;   // Migue lo desbloqueó antes o iniciado directamente
-  const match = state.matches.find(({ id }) => id === state.timer.matchId);
+  const prep = prepForMatch(state.timer.matchId);
+  if (prep?.delegateShown || state.settings?.delegateAllMatches) return true;
+  const match = state.matches.find(({ id }) => String(id) === String(state.timer.matchId));
   if (!match?.date) return true;
   const kickoff = new Date(match.date).getTime();
   if (!Number.isFinite(kickoff)) return true;
@@ -2085,9 +2193,11 @@ async function unlockDelegate() {
   const prep = prepForMatch(state.timer.matchId);
   if (prep) {
     prep.delegateShown = state.timer.delegateUnlocked;
+    prep.savedAt = Date.now();
     await put('settings', prep);
   }
   await persistTimer();
+  await refresh(true);
   renderLive();
   renderDelegate();
   toast(state.timer.delegateUnlocked ? 'El delegado ya puede ver el partido en vivo (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
@@ -2173,7 +2283,7 @@ function updateKeeperOptions(matchId) {
 async function applyPreparacionToLive(prep) {
   if (!prep?.team?.length) return false;
   if (state.timer && state.timer.phase !== 'ready') return false;
-  const match = state.matches.find(({ id }) => id === prep.matchId);
+  const match = state.matches.find(({ id }) => String(id) === String(prep.matchId));
   const callup = callupForMatch(match);
   if (!callup) return false;
   const team = prep.team.map((position) => ({
@@ -2188,15 +2298,20 @@ async function applyPreparacionToLive(prep) {
     secondKeeper: prep.secondKeeper,
     delegateShown: prep.delegateShown,
   });
+  readyTimer.delegateUnlocked = Boolean(prep.delegateShown || state.timer?.delegateUnlocked);
   state.timer = readyTimer;
-  liveTactic = buildLiveState(
+  // Preservar exactamente las posiciones tácticas configuradas en prep.team por Migue
+  const baseLiveState = buildLiveState(
     state.players,
     callup.availableIds,
     prep.formacion ?? '1-3-2-1',
     'F7',
     readyTimer.firstKeeper,
   );
-  syncLiveTacticFromTimer();
+  liveTactic = {
+    ...baseLiveState,
+    team: team.map((p) => ({ ...p })),
+  };
   await persistTimer();
   renderLive();
   renderDelegate();
@@ -2589,7 +2704,7 @@ function preparableMatches() {
 }
 
 function prepForMatch(matchId) {
-  return state.preparaciones.find((p) => p.matchId === matchId) ?? null;
+  return state.preparaciones.find((p) => String(p.matchId) === String(matchId)) ?? null;
 }
 
 function renderPreparaciones() {
@@ -2615,13 +2730,16 @@ async function togglePrepDelegateForMatch(matchId) {
   prep.delegateShown = !prep.delegateShown;
   prep.savedAt = Date.now();
   await put('settings', prep);
-  if (state.timer && state.timer.matchId === matchId) {
+  if (state.timer && String(state.timer.matchId) === String(matchId)) {
     state.timer.delegateUnlocked = prep.delegateShown;
     await persistTimer();
     renderLive();
+  } else if (prep.delegateShown) {
+    await applyPreparacionToLive(prep);
   }
-  await refresh();
+  await refresh(true);
   renderPreparaciones();
+  renderDelegate();
   toast(prep.delegateShown ? 'El delegado ya puede ver el partido (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
 }
 
@@ -4913,6 +5031,13 @@ async function submitAuth(event) {
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
         $('#auth-dialog')?.close();
         applyRole('delegate');
+        void (async () => {
+          try {
+            await synchronizeCloud();
+            await refresh(true);
+            renderDelegate();
+          } catch {}
+        })();
         return;
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
         $('#auth-dialog')?.close();
@@ -4953,6 +5078,13 @@ async function submitAuth(event) {
               setBoundSaasUserId(candidate.userId);
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
             }
+            void (async () => {
+              try {
+                await synchronizeCloud();
+                await refresh(true);
+                renderDelegate();
+              } catch {}
+            })();
             return;
           }
         }
@@ -7114,7 +7246,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v51-delegate-live-realtime-pdf-mobile').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

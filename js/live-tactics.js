@@ -28,12 +28,20 @@ export const TACTICA_MP4 = Object.freeze({
   '1-2-2-1-1': 'assets/tacticas/CAMPOBASE-TACTICA-12211/CampoBase_Tactica_1-2-2-1-1.mp4',
 });
 
-// Nombre corto: primer token + inicial del último token (p. ej. "Aarón P.").
+// Nombre corto: primer token + inicial del primer apellido (p. ej. "Alejandro P.").
 export function nombreCorto(name) {
   const parts = String(name ?? '').trim().split(/\s+/);
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+  // Detectar nombres compuestos comunes en español (ej. Juan Carlos, José Antonio, Miguel Ángel)
+  const compoundFirsts = new Set(['juan', 'jose', 'josé', 'miguel', 'francisco', 'victor', 'víctor', 'luis', 'carlos', 'angel', 'ángel', 'maria', 'maría']);
+  let firstName = parts[0];
+  let surname = parts[1];
+  if (parts.length >= 3 && compoundFirsts.has(parts[0].toLowerCase())) {
+    firstName = `${parts[0]} ${parts[1]}`;
+    surname = parts[2];
+  }
+  return surname ? `${firstName} ${surname[0].toUpperCase()}.` : firstName;
 }
 
 // Detecta si un jugador es portero por su posición.

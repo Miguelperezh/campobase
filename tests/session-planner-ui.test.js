@@ -61,9 +61,9 @@ test('el buscador global conserva el formato validado pero no queda fijado', () 
 });
 
 test('el planificador y la PWA cargan la misma revisión actual', () => {
-  assert.match(demo, /session-planner-ui\.js\?v=20260924-v50-inter-pilar-live-mobile-pdf-export/);
-  assert.match(sw, /20260924-v50-inter-pilar-live-mobile-pdf-export/);
-  assert.match(sw, /session-planner-ui\.js\?v=20260924-v50-inter-pilar-live-mobile-pdf-export/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260924-v51-delegate-live-realtime-pdf-mobile/);
+  assert.match(sw, /20260924-v51-delegate-live-realtime-pdf-mobile/);
+  assert.match(sw, /session-planner-ui\.js\?v=20260924-v51-delegate-live-realtime-pdf-mobile/);
   assert.match(pkg.scripts.check, /node --check js\/session-planner-ui\.js/);
   assert.equal(pkg.version, '2.44.0');
 });

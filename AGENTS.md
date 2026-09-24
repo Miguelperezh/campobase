@@ -4460,3 +4460,44 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - 525/525 tests unitarios e integrados pasando al 100% (`npm test`).
 - Verificación de sintaxis de todos los módulos limpia (`npm run check`).
 
+# 69. Entrega v51 (24/09/2026) — Aislamiento Total Delegado (PIN 0000), Minutos Objetivo Visibles, Nombres Cortos con Primer Apellido y Exportación PDF Móvil Sin Bloqueos
+
+## 69.1 Aislamiento Total y Acceso Directo del Delegado (PIN 0000)
+- **Problema:** El delegado debía entrar directamente al partido en vivo y no tener acceso a menús, submenús, buscador ni al botón de Modo Campo.
+- **Solución:**
+  - `applyRole('delegate')` aplica `body.delegate-mode` y fuerza la vista `#delegado`.
+  - En `styles-redesign.css`, `body.delegate-mode` oculta con `!important` la barra inferior `#cb-bottom-nav`, subnavegación, buscador global, ajustes, y todos los selectores de Modo Campo (`#open-field-mode`, `#return-to-field-mode`, `[id*="field-mode"]`, `[href*="modo-campo"]`).
+  - En `showView()`, se bloquea cualquier intento de navegación si `state.role === 'delegate' && viewId !== 'delegado'`.
+  - En `js/modo-campo-integration.js`, `addTopbarButton` e `installEntryButtons` abortan si el rol es delegado.
+  - Al ingresar con PIN 0000 en `submitAuth()`, se ejecuta `synchronizeCloud()` y `refresh(true)` en segundo plano para traerse de inmediato los datos del partido preparado desde Supabase.
+
+## 69.2 Nombres Cortos con Primer Apellido (`nombreCorto`)
+- **Problema:** En jugadores con dos apellidos como "Alejandro Pedrós González", la función tomaba la inicial del segundo apellido mostrando "Alejandro G." en lugar del primer apellido.
+- **Solución:**
+  - En `js/live-tactics.js`, `nombreCorto(name)` toma `parts[0]` (o nombre compuesto común como "Juan Carlos", "Miguel Ángel") y añade la inicial del primer apellido: "Alejandro Pedros Gonzalez" -> "Alejandro P.".
+
+## 69.3 Minutos Objetivo Visibles en Vivo (`Obj: X min`)
+- **Problema:** Era necesario ver de forma clara y visual los minutos recomendados que debe disputar cada jugador durante el encuentro.
+- **Solución:**
+  - En `fieldBenchMarkup()` y `renderDelegate()`, cada fila de jugador en campo y banquillo incluye `.live-target-badge` (`Obj: 40 min`) junto al cronómetro.
+  - En `targetSummaryMarkup()`, se transformó el resumen en una tarjeta moderna `.live-target-card` con chips interactivos por jugador.
+
+## 69.4 Preservación de Alineación Preparada y Sincronización Inmediata
+- **Problema:** Al pasar a partido en vivo o recargar, `applyLineupToLiveTeam` reordenaba arbitrariamente las posiciones tácticas guardadas por Migue. Además, si Migue pulsaba «Mostrar al Delegado» en Preparación, no se reflejaba de inmediato en el PIN 0000.
+- **Solución:**
+  - En fase `ready`, `applyPreparacionToLive`, `syncLiveTacticFromTimer` y `ensureLiveTactic` clonan directamente `prep.team` preservando las posiciones exactas (`pos`, `x`, `y`).
+  - `togglePrepDelegateForMatch` aplica de inmediato la preparación al motor en vivo (`state.timer`) si estaba vacía o en otro partido y activa `delegateUnlocked`.
+  - `renderDelegate` auto-detecta preparaciones marcadas con `delegateShown` y las monta de inmediato.
+
+## 69.5 Exportación PDF Móvil Sin Congelar Safari / iOS WebKit
+- **Problema:** Al pulsar "Imprimir" en iOS PWA standalone, `window.print()` congela el hilo de WebKit. Además, la barra superior quedaba oculta tras el notch / dynamic island.
+- **Solución:**
+  - En `styles-redesign.css`, `.cb-print-floating-bar` en móvil añade `padding-top: max(16px, env(safe-area-inset-top, 24px)) !important;` y oculta `.cb-print-btn-print`.
+  - En `js/print-session-export.js`, en móviles y PWA standalone no se invoca `window.print()`, redirigiendo a `shareOrDownloadPrintDoc()`, que genera el PDF real mediante `html2canvas` + `jsPDF` y abre el menú nativo de compartir (`navigator.share`) para WhatsApp o Archivos de iOS sin bloqueos.
+
+## 69.6 Versioning y Validación
+- Versión actualizada a `20260924-v51-delegate-live-realtime-pdf-mobile`.
+- 525+ tests pasando al 100% (`npm test`).
+- Sintaxis y verificación completas (`npm run check`).
+
+
