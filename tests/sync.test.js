@@ -46,6 +46,14 @@ test('durante la migración conserva los PIN ya creados si la nube todavía no l
   });
 });
 
+test('mergeCloudRecord conserva los permisos y PIN del delegado si la nube todavía no los tiene', () => {
+  const local = { id: 'main', format: 'F7', delegatePin: '1234', delegatePermissions: ['partido', 'plantilla', 'modo-campo'] };
+  const cloud = { id: 'main', format: 'F7' };
+  assert.deepEqual(mergeCloudRecord('settings', local, cloud), {
+    id: 'main', format: 'F7', delegatePin: '1234', delegatePermissions: ['partido', 'plantilla', 'modo-campo'],
+  });
+});
+
 test('la ficha permite elegir una foto o abrir la cámara del móvil', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');

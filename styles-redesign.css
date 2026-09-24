@@ -7528,6 +7528,13 @@ body.delegate-mode #delegado {
 }
 
 /* Delegado multi-vista (cuando el entrenador activa Plantilla, Convocatorias o Modo Campo en Ajustes) */
+body.delegate-mode.delegate-multi-view #delegado.view:not(.active),
+body.delegate-mode.delegate-multi-view #plantilla.view:not(.active),
+body.delegate-mode.delegate-multi-view #convocatorias.view:not(.active) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 body.delegate-mode.delegate-multi-view #plantilla.view.active,
 body.delegate-mode.delegate-multi-view #convocatorias.view.active,
 body.delegate-mode.delegate-multi-view #delegado.view.active {
@@ -7544,6 +7551,14 @@ body.delegate-mode.delegate-multi-view #cb-bottom-nav {
   left: 0 !important;
   right: 0 !important;
   z-index: 10000 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 -4px 25px rgba(15, 23, 42, 0.12) !important;
+}
+
+body.delegate-mode.delegate-multi-view #cb-bottom-nav .cb-nav-tab {
+  flex: 1 1 0px !important;
+  max-width: none !important;
+  min-width: 0 !important;
 }
 
 body.delegate-mode.delegate-multi-view:not(.cb-redesign-active) .bottom-nav {

@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v54-delegate-permissions-speed-fix';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -202,6 +202,10 @@ function storedActiveView() {
 function getDelegatePermissions() {
   const perms = state.settings?.delegatePermissions;
   if (Array.isArray(perms) && perms.length) return perms;
+  try {
+    const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
+    if (Array.isArray(cached) && cached.length) return cached;
+  } catch {}
   return ['partido'];
 }
 
@@ -301,7 +305,11 @@ function applyDelegateNavFilters(perms) {
         <span class="cb-nav-label-wrap"><span>Convocatorias</span></span>
       `;
       convTab.addEventListener('click', () => {
-        showView('convocatorias');
+        if (typeof window.triggerStandardView === 'function') {
+          window.triggerStandardView('convocatorias');
+        } else {
+          showView('convocatorias');
+        }
       });
       $('#cb-bottom-nav').appendChild(convTab);
     }
@@ -515,9 +523,18 @@ async function refresh() {
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
-  state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
+  if (!state.settings.delegatePermissions || !state.settings.delegatePermissions.length) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
+      if (Array.isArray(cached) && cached.length) {
+        state.settings.delegatePermissions = cached;
+      }
+    } catch {}
+  } else {
+    try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(state.settings.delegatePermissions)); } catch {}
+  }
   state.format = settings?.format ?? 'F7';
   $('#format').value = state.format;
   $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
@@ -5559,6 +5576,7 @@ async function saveDelegateAccountSettings(event) {
     delegatePinHash,
     delegatePermissions: perms,
   };
+  try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(perms)); } catch {}
 
   await put('settings', state.settings);
   if (!isDemoDatabase()) {
@@ -7678,7 +7696,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v53-delegate-team-invite-layout-freeze-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v54-delegate-permissions-speed-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7708,7 +7726,8 @@ async function init() {
         const permsList = permsParam.split(',').map((p) => p.trim()).filter(Boolean);
         if (permsList.length) {
           state.settings = { ...(state.settings || {}), id: 'main', delegatePermissions: permsList };
-          try { put('settings', state.settings).catch(() => {}); } catch {}
+          try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(permsList)); } catch {}
+          await put('settings', state.settings).catch(() => {});
         }
       }
       if (pinParam) {
@@ -7756,7 +7775,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
 }
 
 init().catch(handleError);

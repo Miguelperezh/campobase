@@ -156,12 +156,24 @@ export function triggerStandardView(viewId) {
     if (window.__campobase && typeof window.__campobase.renderAll === 'function') {
       window.__campobase.renderAll();
     }
+  } else if (viewId === 'convocatorias') {
+    if (window.__campobase && typeof window.__campobase.renderCallups === 'function') {
+      window.__campobase.renderCallups();
+    }
+  } else if (viewId === 'delegado') {
+    if (window.__campobase && typeof window.__campobase.renderDelegate === 'function') {
+      window.__campobase.renderDelegate();
+    }
   } else if (viewId === 'cuerpo-tecnico') {
     refreshStaffView().catch(console.error);
   }
 
   closeQuickSheet();
   updateNavState();
+}
+
+if (typeof window !== 'undefined') {
+  window.triggerStandardView = triggerStandardView;
 }
 
 export function syncTopbarHeight() {
@@ -350,6 +362,9 @@ export function renderBottomNav() {
   }).join('');
 
   document.body.append(nav);
+  if (typeof window.__campobase?.syncDelegateModeDom === 'function') {
+    window.__campobase.syncDelegateModeDom();
+  }
 
   nav.querySelectorAll('.cb-nav-tab').forEach((button) => {
     button.addEventListener('click', () => {
@@ -361,7 +376,15 @@ export function renderBottomNav() {
           triggerStandardView('delegado');
           return;
         }
+        if (moduleKey === 'delegado') {
+          triggerStandardView('delegado');
+          return;
+        }
         if (moduleKey === 'equipo') {
+          triggerStandardView('plantilla');
+          return;
+        }
+        if (moduleKey === 'plantilla') {
           triggerStandardView('plantilla');
           return;
         }
@@ -397,7 +420,12 @@ export function updateNavState() {
   const activeModuleKey = getActiveModule(activeViewId);
 
   $$('#cb-bottom-nav .cb-nav-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.module === activeModuleKey);
+    const mod = btn.dataset.module;
+    const isActive = mod === activeModuleKey
+      || (mod === 'partidos' && activeViewId === 'delegado')
+      || (mod === 'equipo' && activeViewId === 'plantilla')
+      || (mod === 'convocatorias' && activeViewId === 'convocatorias');
+    btn.classList.toggle('active', isActive);
   });
 
   renderSubNav();
@@ -587,7 +615,31 @@ function initBottomCloseControls() {
     closeFromBottom(button);
   }, true);
 
-  const observer = new MutationObserver(queueBottomCloseSync);
+  const observer = new MutationObserver((mutations) => {
+    let shouldSync = false;
+    for (const m of mutations) {
+      const target = m.target;
+      if (!target) continue;
+      if (m.type === 'attributes') {
+        const tag = target.nodeName;
+        if (tag === 'DIALOG' || target.classList?.contains('lightbox') || target.classList?.contains('tactica-overlay') || target.classList?.contains('theater-fullscreen')) {
+          shouldSync = true;
+          break;
+        }
+      } else if (m.type === 'childList') {
+        if (m.addedNodes.length || m.removedNodes.length) {
+          for (const node of m.addedNodes) {
+            if (node.nodeName === 'DIALOG' || (node.querySelector && node.querySelector('dialog, .lightbox, .tactica-overlay, .theater-fullscreen'))) {
+              shouldSync = true;
+              break;
+            }
+          }
+          if (shouldSync) break;
+        }
+      }
+    }
+    if (shouldSync) queueBottomCloseSync();
+  });
   observer.observe(document.body, {
     childList: true,
     subtree: true,
@@ -649,7 +701,10 @@ export function initRedesign() {
 
   const main = $('#app');
   if (main) {
-    const observer = new MutationObserver(() => updateNavState());
+    const observer = new MutationObserver((mutations) => {
+      const hasViewChange = mutations.some((m) => m.target?.classList?.contains('view'));
+      if (hasViewChange) updateNavState();
+    });
     observer.observe(main, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
