@@ -959,3 +959,40 @@ Partidos activos próximos verificados:
       - Versión actualizada a `20260924-v51-delegate-live-realtime-pdf-mobile`.
       - 525+ tests unitarios y de integración pasando al 100% (`npm test`).
       - Verificación de sintaxis de todos los módulos limpia (`npm run check`).
+
+17. **Entrega v52–v55 (24/09/2026) — Gestión de Permisos Granulares del Delegado, Invitación WhatsApp y Privacidad del PIN:**
+    - **Gestión de Permisos Granulares en Ajustes (`#delegate-account-panel`):**
+      - El entrenador puede seleccionar qué secciones puede ver el delegado: Partido en vivo (`partido`), Plantilla (`plantilla`), Modo Campo (`modo-campo`), Convocatorias (`convocatorias`), Asistencia (`asistencia`), Calendario (`calendario`), Cuerpo Técnico (`cuerpo-tecnico`), Preparación y alineación previa (`preparacion`), Sesiones de entrenamiento (`sesiones`), Ejercicios tácticos (`ejercicios`), Pizarra táctica (`tacticas`), Resumen del día (`hoy`).
+      - Al entrar por primera vez o al editar, si el delegado ya tiene cuenta o ya está invitado, el botón conmuta a **«Guardar permisos del delegado»** (`#save-delegate-account-btn`), permitiendo a Migue modificar los permisos cuantas veces quiera y guardarlos en el acto.
+      - Botón **«Compartir acceso por WhatsApp»** que genera un texto listo para enviar con el enlace directo, el PIN del delegado y la lista detallada con viñetas de las funciones que tiene activadas.
+    - **Privacidad y Seguridad del PIN de Migue:**
+      - Se eliminó del formulario de autenticación (`#auth-form`) el texto donde se indicaban los PINs predeterminados o de demo para evitar que cualquier persona que mire la pantalla conozca los accesos. El texto queda limpio: *"Introduce tu PIN de acceso"*.
+    - **Limpieza de Inyecciones de Navegación Huérfanas:**
+      - Erradicada la inyección de botones huérfanos o duplicados (`#cb-nav-tab-convocatorias` y `#cb-nav-tab-modo-campo`) en la barra inferior (`#cb-bottom-nav`), asegurando que solo existan los 5 módulos canónicos y que la subnavegación (`#cb-sub-nav`) controle las subvistas.
+
+18. **Entrega v56–v58 (24/09/2026) — Persistencia Robusta de Permisos en Supabase / IndexedDB y Navegación Dinámica Sin Redirecciones Forzadas:**
+    - **Causa raíz de la reversión de permisos:**
+      - Al guardar permisos localmente, `mergeCloudRecord` en `js/sync-core.js` comparaba marcas de tiempo. Si la nube tenía un registro anterior sin fecha o con timestamp desfasado, la sincronización en segundo plano sobreescribía los cambios locales de Migue con los datos antiguos de Supabase.
+    - **Solución implementada:**
+      - Se actualizó `saveDelegateAccountSettings` y `persistDelegatePermissions` para fijar `updatedAt: Date.now()`, guardando simultáneamente en `state.settings`, IndexedDB (`put('settings')`), `localStorage` y ejecutando la llamada RPC `set_delegate_permissions`.
+      - `mergeCloudRecord` respeta siempre la mutación local más reciente si su `updatedAt` es posterior al de la nube.
+    - **Navegación Dinámica en `js/redesign-nav.js`:**
+      - Se eliminaron las redirecciones forzadas a `delegado` o `plantilla` cuando el usuario pulsa un módulo; ahora se evalúan dinámicamente las subvistas permitidas para ese módulo según los permisos del delegado.
+
+19. **Entrega v59 (24/09/2026) — Corrección Crítica Pestañas Vacías del Delegado (CSS Specificity + View Renderers) y Unificación de Repositorios:**
+    - **Causa raíz de «Pestañas Vacías en Vista Delegado»:**
+      1. **Conflicto de especificidad CSS (`styles.css` vs `styles-redesign.css`):**
+         - En `styles.css`: `.delegate-mode .view:not(#delegado) { display: none !important; }`. La presencia del ID `#delegado` dentro del pseudo-selector `:not()` otorgaba una especificidad `(1, 1, 0)`.
+         - En `styles-redesign.css`: La regla genérica de multi-vista para vistas activas era `.delegate-mode.delegate-multi-view .view.active`, con especificidad `(0, 4, 1)`. Al no contener un ID, `(1, 1, 0) > (0, 4, 1)`, por lo que el navegador forzaba `display: none !important;` en cualquier vista activa que no fuera `#delegado`, `#plantilla` o `#convocatorias` (las únicas que tenían ID explícito). En consecuencia, Asistencia, Calendario, Cuerpo Técnico, Preparación, Sesiones, Ejercicios, Tácticas y Hoy quedaban completamente invisibles (pantalla en blanco).
+      2. **Omisión de llamadas a renderizado en `showView(viewId)` (`js/app.js`):**
+         - Al navegar a `calendario`, `cuerpo-tecnico`, `preparacion` o `hoy`, `showView` no llamaba a `renderMatches()`, `refreshStaffView()`, `renderPreparaciones()` ni `renderTodayDashboard()`.
+    - **Solución implementada:**
+      - En `styles.css`: se acotó la regla a `.delegate-mode:not(.delegate-multi-view) .view:not(#delegado){display:none!important}`.
+      - En `styles-redesign.css`: se añadieron reglas explícitas con ID para cada una de las 12 vistas (`#hoy.view.active`, `#plantilla.view.active`, `#cuerpo-tecnico.view.active`, `#convocatorias.view.active`, `#partido.view.active`, `#delegado.view.active`, `#preparacion.view.active`, `#calendario.view.active`, `#asistencia.view.active`, `#ejercicios.view.active`, `#sesiones.view.active`, `#tacticas.view.active`), garantizando máxima especificidad `(1, 4, 1)` para que la vista activa siempre sea visible.
+      - En `js/app.js` (`showView`) y `js/redesign-nav.js` (`triggerStandardView`): se añadieron las llamadas a los renderers respectivos de cada vista y se exportó `renderPreparaciones` en `window.__campobase`.
+      - Nueva suite `tests/delegate-all-views-render-visible.test.js` que verifica que ninguna vista del delegado quede oculta por CSS y que todas invoquen su renderer.
+    - **Saneamiento y Unificación del Repositorio:**
+      - Se diagnosticó el error `fatal: bad object refs/heads/main 2` en el repositorio del Escritorio (`/Users/miguelperez/Desktop/HERMES/PrograMARIO/01_PROYECTOS/campobase`) debido a un archivo duplicado por macOS dentro de `.git/refs/heads/`.
+      - Se eliminó la referencia corrupta y se sincronizó el repositorio del Escritorio con `origin/main`.
+      - Integrada la lógica de **Fase 1** (`js/reparto-plan.js`, `tests/reparto-plan.test.js`, `preview-fase1.html`, `INSTRUCCIONES.md`).
+      - **573 tests en verde (100%)** y `npm run check` limpio en ambos workspaces.
