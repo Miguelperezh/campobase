@@ -251,10 +251,12 @@ export function renderSubNav() {
   const activeModule = MODULE_CONFIG[activeModuleKey];
 
   let subTabs = activeModule?.subTabs || [];
-  if (document.body.classList.contains('delegate-mode')) {
+  const isDelegate = document.body.classList.contains('delegate-mode');
+  if (isDelegate) {
     let perms = ['partido'];
     try {
-      perms = window.__campobase?.state?.settings?.delegatePermissions
+      perms = window.__campobase?.getDelegatePermissions?.()
+        || window.__campobase?.state?.settings?.delegatePermissions
         || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
     } catch {}
     subTabs = subTabs.filter((tab) => {
@@ -263,7 +265,7 @@ export function renderSubNav() {
     });
   }
 
-  if (activeViewId === 'delegado' || !activeModule || !subTabs || subTabs.length <= 1) {
+  if (!activeModule || !subTabs || subTabs.length <= 1) {
     subNav.hidden = true;
     subNav.classList.add('cb-hidden');
     subNav.style.setProperty('display', 'none', 'important');
@@ -279,7 +281,8 @@ export function renderSubNav() {
   // Si el módulo ya está pintado, solo actualizamos las clases activas sin destruir el DOM
   if (subNav.dataset.renderedModule === renderedKey) {
     subNav.querySelectorAll('.cb-sub-pill').forEach((btn) => {
-      const isActive = btn.dataset.targetView === activeViewId;
+      const target = btn.dataset.targetView;
+      const isActive = target === activeViewId || (activeViewId === 'delegado' && target === 'partido');
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', String(isActive));
     });
@@ -292,7 +295,7 @@ export function renderSubNav() {
   subNav.innerHTML = `
     <div class="cb-sub-segmented" data-count="${count}" role="tablist">
       ${subTabs.map((tab) => {
-        const isActive = tab.id === activeViewId;
+        const isActive = tab.id === activeViewId || (activeViewId === 'delegado' && tab.id === 'partido');
         return `
           <button type="button" role="tab" class="cb-sub-pill ${isActive ? 'active' : ''}" data-target-view="${tab.id}" aria-selected="${isActive}">
             <span class="cb-pill-icon">${tab.icon}</span>
@@ -307,7 +310,8 @@ export function renderSubNav() {
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const viewId = button.dataset.targetView;
+      let viewId = button.dataset.targetView;
+      if (isDelegate && viewId === 'partido') viewId = 'delegado';
       if (viewId) triggerStandardView(viewId);
     });
   });
@@ -414,6 +418,10 @@ export function renderBottomNav() {
 
       if (document.body.classList.contains('delegate-mode')) {
         closeQuickSheet();
+        const perms = (window.__campobase?.getDelegatePermissions?.())
+          || window.__campobase?.state?.settings?.delegatePermissions
+          || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+
         if (moduleKey === 'partidos') {
           triggerStandardView('delegado');
           return;
@@ -441,7 +449,9 @@ export function renderBottomNav() {
         const mod = MODULE_CONFIG[moduleKey];
         if (mod) {
           const currentView = getActiveViewId();
-          const targetView = mod.views.includes(currentView) ? currentView : mod.defaultView;
+          const allowed = mod.views.filter((v) => perms.includes(v));
+          if (!allowed.length) return;
+          const targetView = allowed.includes(currentView) ? currentView : allowed[0];
           triggerStandardView(targetView);
           return;
         }

@@ -148,7 +148,9 @@ export async function saveDelegatePermissions(client, permissions = []) {
     localStorage.setItem('campobase.delegateAccount', JSON.stringify(cached));
     localStorage.setItem('campobase.delegatePermissions', JSON.stringify(saved));
   } catch {}
-  if (window.__campobaseState?.settings) {
+  if (typeof window !== 'undefined' && window.__campobase?.saveDelegatePermissions) {
+    await window.__campobase.saveDelegatePermissions(saved);
+  } else if (window.__campobaseState?.settings) {
     window.__campobaseState.settings.delegatePermissions = saved;
   }
   return saved;
@@ -305,10 +307,14 @@ async function renderDelegatePanel(root = document) {
   panel.classList.toggle('hidden', !canManage);
   if (!canManage) return;
 
+  root.getElementById('delegate-account-panel')?.classList.add('hidden');
+
   let delegate = await fetchDelegateAccount(currentClient).catch(() => null);
-  const currentSavedPerms = delegate?.view_permissions ||
-    window.__campobaseState?.settings?.delegatePermissions ||
-    JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["delegado"]');
+  const currentSavedPerms = (typeof window !== 'undefined' && window.__campobase?.getDelegatePermissions)
+    ? window.__campobase.getDelegatePermissions()
+    : (delegate?.view_permissions ||
+       window.__campobaseState?.settings?.delegatePermissions ||
+       JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["delegado"]'));
 
   content.innerHTML = `
     <form id="cb-delegate-permissions-form">

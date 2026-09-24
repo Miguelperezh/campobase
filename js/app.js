@@ -410,12 +410,17 @@ function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (state.role === 'delegate' || state.delegateMode) {
     const perms = getDelegatePermissions();
-    const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+    const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
     if (onlyPartido && viewId !== 'delegado' && viewId !== 'partido') return;
     if (!delegateHasPermission(viewId) && viewId !== 'delegado' && viewId !== 'partido') return;
     if (viewId === 'partido') viewId = 'delegado';
   }
-  if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
+  if (Array.isArray(window.__campobaseAllowedViews)) {
+    const allowed = window.__campobaseAllowedViews.includes(viewId)
+      || (viewId === 'delegado' && window.__campobaseAllowedViews.includes('partido'))
+      || (viewId === 'partido' && window.__campobaseAllowedViews.includes('delegado'));
+    if (!allowed) return;
+  }
   const target = document.getElementById(viewId);
   if (!target?.classList.contains('view')) return;
   // Cerrar modales abiertos al cambiar de vista para evitar estados huérfanos o bloqueos
@@ -5648,6 +5653,30 @@ async function saveDelegateAccountSettings(event) {
   toast('Cuenta y permisos del delegado guardados correctamente.');
 }
 
+async function persistDelegatePermissions(newPerms) {
+  const clean = Array.isArray(newPerms) ? [...new Set(newPerms.map(String))] : ['partido'];
+  if (!clean.includes('partido') && !clean.includes('delegado')) {
+    clean.push('partido');
+  }
+  state.settings = {
+    ...(state.settings || {}),
+    id: 'main',
+    delegatePermissions: clean,
+  };
+  try {
+    localStorage.setItem('campobase.delegatePermissions', JSON.stringify(clean));
+  } catch {}
+  await put('settings', state.settings);
+  if (!isDemoDatabase()) {
+    await synchronizeCloud().catch(() => {});
+  }
+  populateDelegateAccountForm();
+  if (state.role === 'delegate' || state.delegateMode) {
+    syncDelegateModeDom();
+  }
+  return clean;
+}
+
 function sendDelegateInviteWhatsApp() {
   const invite = buildDelegateInviteMessage();
   const waUrl = `https://wa.me/?text=${encodeURIComponent(invite.text)}`;
@@ -7755,7 +7784,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v56-delegate-save-perms-clean-nav-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v57-delegate-dynamic-permissions-persist-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7834,7 +7863,8 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobaseState = state;
 }
 
 init().catch(handleError);
