@@ -28,11 +28,11 @@ test('js/ejercicio-viewer.js gestiona el ocultamiento síncrono del botón overl
   assert.match(js, /video\.addEventListener\('pause'/, 'Debe escuchar evento pause');
 });
 
-test('versión de caché en sw.js e index.html están sincronizadas a v=20260924-v51-delegate-live-realtime-pdf-mobile', () => {
+test('versión de caché en sw.js e index.html están sincronizadas a v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf', () => {
   const sw = fs.readFileSync('sw.js', 'utf8');
   const html = fs.readFileSync('index.html', 'utf8');
 
   assert.match(sw, /2503/, 'sw.js debe contener la versión 2503');
-  assert.match(html, /styles-redesign\.css\?v=20260924-v51-delegate-live-realtime-pdf-mobile/, 'index.html debe cargar styles-redesign.css con v=20260924-v51-delegate-live-realtime-pdf-mobile');
-  assert.match(html, /js\/app\.js\?v=20260924-v51-delegate-live-realtime-pdf-mobile/, 'index.html debe cargar js/app.js con v=20260924-v51-delegate-live-realtime-pdf-mobile');
+  assert.match(html, /styles-redesign\.css\?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf/, 'index.html debe cargar styles-redesign.css con v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf');
+  assert.match(html, /js\/app\.js\?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf/, 'index.html debe cargar js/app.js con v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf');
 });

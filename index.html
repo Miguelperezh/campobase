@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260924-v51-delegate-live-realtime-pdf-mobile">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v51-delegate-live-realtime-pdf-mobile">
+  <link rel="stylesheet" href="styles.css?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf">
   <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
@@ -336,6 +336,46 @@
           </form>
         </article>
         <article class="panel"><h3>Copia de seguridad</h3><p>La sincronización en la nube conecta tus dispositivos y la aplicación conserva una copia local para trabajar sin conexión. Exporta JSON antes de una actualización importante.</p><div class="button-row"><button id="export-data" class="primary">Exportar JSON</button><label class="button secondary">Importar JSON<input id="import-data" type="file" accept="application/json,.json" hidden></label><button type="button" id="share-data-mobile" class="secondary" title="Pasar datos y lanzadores a tu móvil por WhatsApp o AirDrop">📲 Pasar datos al móvil</button></div></article>
+        <article class="panel" id="delegate-account-panel">
+          <h3>Cuenta y permisos del Delegado</h3>
+          <p class="meta">Asigna el PIN de acceso del delegado y selecciona qué pestañas y funciones puede ver en su dispositivo. El envío de la invitación es opcional; el delegado puede acceder directamente con su PIN.</p>
+          <form id="delegate-account-form">
+            <div class="form-row">
+              <label>PIN de acceso del delegado
+                <input name="delegatePinInput" type="text" inputmode="numeric" minlength="4" maxlength="8" required placeholder="0000" autocomplete="off" value="0000">
+              </label>
+            </div>
+            <fieldset class="delegate-permissions-fieldset" style="margin: 0.85rem 0; padding: 0.75rem 1rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;">
+              <legend style="padding: 0 0.4rem; font-weight: 700; font-size: 0.9rem;">Pestañas y funciones permitidas</legend>
+              <div class="delegate-perms-list" style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.35rem;">
+                <label class="check-row" style="cursor: default;">
+                  <input type="checkbox" name="delegatePermPartido" value="partido" checked disabled>
+                  <span><strong>⚽ Partido en vivo</strong> (Cronómetro, cambios y reparto de minutos — Siempre activo)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermPlantilla" value="plantilla" id="perm-plantilla-check">
+                  <span><strong>👥 Plantilla</strong> (Lista de jugadores, dorsales y posiciones)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermModoCampo" value="modo-campo" id="perm-modo-campo-check">
+                  <span><strong>🏟️ Modo Campo</strong> (Visualizador táctico de campo a pantalla completa)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermConvocatorias" value="convocatorias" id="perm-convocatorias-check">
+                  <span><strong>📋 Convocatorias</strong> (Consultar la lista de convocados del partido)</span>
+                </label>
+              </div>
+            </fieldset>
+            <div class="button-row">
+              <button class="primary" type="submit">Guardar cuenta y permisos</button>
+            </div>
+            <div class="button-row" style="margin-top:0.6rem;gap:0.5rem;display:flex;flex-wrap:wrap;">
+              <button type="button" id="delegate-invite-whatsapp-btn" class="secondary" style="flex:1;">📲 Enviar invitación por WhatsApp</button>
+              <button type="button" id="delegate-invite-email-btn" class="secondary" style="flex:1;">✉️ Enviar por Email</button>
+            </div>
+            <p class="meta" style="margin-top:0.5rem;font-size:0.8rem;">Si solo marcas Partido en vivo, el delegado entrará directo al partido sin botones de menú ni Modo Campo.</p>
+          </form>
+        </article>
         <article class="panel"><h3>PIN de acceso</h3><p>Solo Migue puede cambiar ambos PIN. Usa de 4 a 8 cifras distintas.</p><form id="pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de Migue<input name="ownerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><label>Nuevo PIN del delegado<input name="delegatePin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Cambiar ambos PIN</button></form></article>
         <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
         <article class="panel" id="sync-status-panel">
@@ -678,10 +718,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260924-v51-delegate-live-realtime-pdf-mobile';
+    window.__CAMPOBASE_BUILD = '20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
     if ('serviceWorker' in navigator) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260924-v51-delegate-live-realtime-pdf-mobile')
+      navigator.serviceWorker.register('./sw.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -702,8 +742,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20260924-v51-delegate-live-realtime-pdf-mobile"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260924-v51-delegate-live-realtime-pdf-mobile"></script>
+  <script type="module" src="js/app.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf"></script>
+  <script type="module" src="js/redesign-nav.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

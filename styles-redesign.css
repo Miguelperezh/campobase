@@ -6661,13 +6661,16 @@ body.cb-is-printing #cb-print-root {
 }
 
 @media (max-width: 650px) {
+  #cb-print-root {
+    padding-top: calc(125px + env(safe-area-inset-top, 24px)) !important;
+  }
   .cb-print-sheet {
     padding: 0.75rem !important;
     margin: 0.25rem auto 2rem auto !important;
     border-radius: 6px !important;
   }
   .cb-print-floating-bar {
-    position: sticky !important;
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
@@ -6675,9 +6678,9 @@ body.cb-is-printing #cb-print-root {
     padding-bottom: 0.6rem !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0 !important;
     background: #0f172a !important;
-    z-index: 100000 !important;
+    z-index: 1000000 !important;
     border-radius: 0 0 12px 12px !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
@@ -6690,7 +6693,7 @@ body.cb-is-printing #cb-print-root {
   }
   .cb-print-floating-bar-actions {
     display: grid !important;
-    grid-template-columns: 85px 1fr !important;
+    grid-template-columns: 75px 1fr !important;
     gap: 0.45rem !important;
     width: 100% !important;
   }
@@ -6701,6 +6704,9 @@ body.cb-is-printing #cb-print-root {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-close {
     grid-column: 1 !important;
@@ -6721,6 +6727,9 @@ body.cb-is-printing #cb-print-root {
     background: #16a34a !important;
     color: #ffffff !important;
     border: 1px solid #15803d !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-download {
     grid-column: 1 / -1 !important;
@@ -6731,6 +6740,7 @@ body.cb-is-printing #cb-print-root {
     background: #2563eb !important;
     color: #ffffff !important;
     border: 1px solid #1d4ed8 !important;
+    white-space: normal !important;
   }
   .cb-print-floating-bar-actions .cb-print-btn-print {
     display: none !important; /* En móviles PWA, window.print bloquea WebKit */
@@ -7428,9 +7438,10 @@ body.cb-is-printing dialog {
 }
 
 /* ==========================================================================
-   MODO DELEGADO (PIN 0000) - AISLAMIENTO TOTAL
-   El delegado solo debe ver el partido en vivo. Cero elementos de navegación,
-   subnavegación, buscador, ajustes u otras secciones de CampoBase.
+   MODO DELEGADO (PIN 0000 O PERSONALIZADO) - AISLAMIENTO TOTAL Y PERMISOS
+   Por defecto (solo Partido en vivo): vista única directa, cero elementos de navegación,
+   subnavegación, buscador, ajustes ni Modo Campo.
+   Si en Ajustes se activan más pestañas (Plantilla, Modo Campo), se habilitan solo esas.
    ========================================================================== */
 body.delegate-mode #cb-bottom-nav,
 body.delegate-mode #cb-sub-nav,
@@ -7470,6 +7481,33 @@ body.delegate-mode .view:not(#delegado) {
 body.delegate-mode #delegado {
   display: block !important;
   visibility: visible !important;
+}
+
+/* Delegado multi-vista (cuando el entrenador activa Plantilla, Convocatorias o Modo Campo en Ajustes) */
+body.delegate-mode.delegate-multi-view #cb-bottom-nav,
+body.delegate-mode.delegate-multi-view .bottom-nav {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+body.delegate-mode.delegate-multi-view .view.active {
+  display: block !important;
+  visibility: visible !important;
+}
+
+body.delegate-mode.delegate-multi-view .bottom-nav button.delegate-tab-hidden,
+body.delegate-mode.delegate-multi-view #cb-bottom-nav .cb-nav-tab.delegate-tab-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo #open-field-mode,
+body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo [id*="field-mode"] {
+  display: inline-flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* ==========================================================================
@@ -7534,12 +7572,25 @@ body.delegate-mode #delegado {
   border-color: rgba(16, 185, 129, 0.3);
 }
 
+/* Fila de jugador con barra de progreso visual de minutos jugados */
 .live-player-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  padding: 0.55rem 0.75rem !important;
+  gap: 0.35rem !important;
+  background: var(--cb-surface-card, rgba(255, 255, 255, 0.05)) !important;
+  border-radius: 8px !important;
+  margin-bottom: 0.35rem !important;
+  border: 1px solid var(--cb-slate-200, rgba(255, 255, 255, 0.08)) !important;
+}
+
+.live-player-row-top {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 0.5rem 0.75rem !important;
   gap: 0.5rem !important;
+  width: 100% !important;
 }
 
 .live-player-row label {
@@ -7591,4 +7642,251 @@ body.delegate-mode #delegado {
   color: var(--cb-slate-900, #0f172a) !important;
   min-width: 48px !important;
   text-align: right !important;
+}
+
+.live-player-row-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  width: 100% !important;
+}
+
+.live-bar-track {
+  flex: 1 1 auto !important;
+  height: 8px !important;
+  background: rgba(148, 163, 184, 0.25) !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.live-bar-fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  transition: width 0.3s ease, background-color 0.3s ease !important;
+}
+
+.live-bar-meta {
+  flex-shrink: 0 !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  color: var(--cb-slate-600, #94a3b8) !important;
+  display: inline-flex !important;
+  gap: 0.3rem !important;
+  min-width: 85px !important;
+  justify-content: flex-end !important;
+}
+
+/* Código visual de colores de progreso de minutos */
+.prog-complete { background: #10b981 !important; } /* Verde esmeralda: cumplido / superado */
+.prog-good { background: #0284c7 !important; }     /* Azul / Cyan: ritmo óptimo */
+.prog-mid { background: #f59e0b !important; }      /* Ámbar: tiempo intermedio */
+.prog-low { background: #f97316 !important; }      /* Naranja vivo: necesita minutos urgente */
+
+/* Dashboard visual de balance y reparto de minutos */
+.live-reparto-visual-dashboard {
+  background: var(--cb-slate-900, #0f172a) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  border-radius: 12px !important;
+  padding: 0.9rem !important;
+  margin: 1rem 0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+.reparto-dash-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  padding-bottom: 0.65rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.reparto-dash-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.reparto-dash-title h3 {
+  margin: 0 !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+}
+
+.reparto-dash-title p {
+  margin: 0 !important;
+  font-size: 0.78rem !important;
+  color: #94a3b8 !important;
+}
+
+.reparto-target-pill {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  border-radius: 999px !important;
+  padding: 0.2rem 0.65rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.reparto-balance-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.65rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+@media (max-width: 600px) {
+  .reparto-balance-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.reparto-col {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  padding: 0.6rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.reparto-col-header {
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 0.45rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+}
+
+.reparto-col-header.out-header {
+  color: #f87171 !important;
+}
+
+.reparto-col-header.in-header {
+  color: #38bdf8 !important;
+}
+
+.reparto-card-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.3rem 0.45rem !important;
+  border-radius: 6px !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  margin-bottom: 0.3rem !important;
+  font-size: 0.8rem !important;
+  gap: 0.4rem !important;
+}
+
+.reparto-card-item .item-name {
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 1 auto !important;
+  color: #f1f5f9 !important;
+}
+
+.reparto-card-item .item-min {
+  font-weight: 800 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  flex-shrink: 0 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Tarjeta de sustitución directa con 1 toque */
+.reparto-direct-sub-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(2, 132, 199, 0.12)) !important;
+  border: 1px solid #10b981 !important;
+  border-radius: 10px !important;
+  padding: 0.75rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.reparto-direct-sub-header {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #34d399 !important;
+  margin-bottom: 0.5rem !important;
+  text-align: center !important;
+}
+
+.reparto-direct-sub-players {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  gap: 0.5rem !important;
+  margin-bottom: 0.65rem !important;
+}
+
+.sub-col {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  flex: 1 !important;
+}
+
+.sub-dir {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 4px !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.in-dir {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.out-dir {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.sub-name {
+  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  color: #ffffff !important;
+}
+
+.sub-min {
+  font-size: 0.74rem !important;
+  color: #94a3b8 !important;
+  margin-top: 0.1rem !important;
+}
+
+.sub-swap-icon {
+  font-size: 1.35rem !important;
+  color: #f59e0b !important;
+  font-weight: 900 !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-quick-sub-direct {
+  width: 100% !important;
+  min-height: 42px !important;
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-quick-sub-direct:active {
+  transform: scale(0.98) !important;
 }

@@ -404,7 +404,7 @@ function generateStandalonePrintPage(htmlContent) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v50-inter-pilar-live-mobile-pdf-export">
+  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf">
   <style>
     @page { size: A4 portrait; margin: 8mm 10mm; }
     body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -426,8 +426,9 @@ function generateStandalonePrintPage(htmlContent) {
 function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  const isTouch = (navigator.maxTouchPoints || 0) > 1 || ('ontouchstart' in (typeof window !== 'undefined' ? window : {}));
-  return /iPhone|iPad|iPod|Android/i.test(ua) || (isTouch && /Macintosh/i.test(ua));
+  const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in (typeof window !== 'undefined' ? window : {}));
+  const isSmall = typeof window !== 'undefined' && (window.innerWidth <= 1024 || window.innerHeight <= 900);
+  return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (isTouch && /Macintosh/i.test(ua)) || (isTouch && isSmall) || isSmall;
 }
 
 export async function ensurePdfLibraries() {
@@ -482,6 +483,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
         backgroundColor: '#ffffff',
         logging: false,
         windowWidth: 794,
+        imageTimeout: 5000,
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
@@ -675,17 +677,17 @@ export function executePrint(htmlContent) {
         <span>Formato A4 compacto para móvil, WhatsApp y papel</span>
       </div>
       <div class="cb-print-floating-bar-actions">
-        <button type="button" class="btn ghost cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
-          ✕ Volver
+        <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
+          ✕ Salir
         </button>
         <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
-          📲 Guardar / Compartir (WhatsApp, Archivos)
+          📲 Compartir WhatsApp / PDF
         </button>
         <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
-          📥 Descargar Ficha (.pdf)
+          📥 Guardar / Descargar PDF
         </button>
         <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
-          🖨️ Imprimir (AirPrint / Impresora)
+          🖨️ Imprimir
         </button>
         <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn" style="display:none;">
           📲 Abrir para Compartir

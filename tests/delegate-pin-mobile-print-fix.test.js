@@ -47,11 +47,41 @@ test('el delegado con PIN 0000 queda aislado y accede directo sin Modo Campo', (
   assert.match(cssCode, /body\.delegate-mode \.view:not\(#delegado\)\s*\{\s*display:\s*none !important;/);
   assert.match(cssCode, /body\.delegate-mode #delegado\s*\{\s*display:\s*block !important;/);
 
-  // showView no permite salir de #delegado si el rol es delegate
-  assert.match(appCode, /if \(state\.role === 'delegate' && viewId !== 'delegado'\) return;/);
+  // showView aísla al delegado según permisos configurados
+  assert.match(appCode, /if \(state\.role === 'delegate'\)/);
+  assert.match(appCode, /if \(onlyPartido && viewId !== 'delegado' && viewId !== 'partido'\) return;/);
 
-  // modo-campo-integration no inyecta botones para delegate
-  assert.match(modoCampoCode, /if \(role === 'delegate' \|\| document\.body\.classList\.contains\('delegate-mode'\)\) return;/);
+  // modo-campo-integration respeta permisos del delegado
+  assert.match(modoCampoCode, /if \(role === 'delegate' \|\| document\.body\.classList\.contains\('delegate-mode'\)\) \{\s*const perms = window\.__campobase\?\.state\?\.settings\?\.delegatePermissions \|\| \['partido'\];\s*if \(!perms\.includes\('modo-campo'\)\) return;/);
+});
+
+test('configuración de cuenta de delegado en Ajustes y reparto de minutos 100% visual', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+
+  // Panel de cuenta de delegado en Ajustes
+  assert.match(html, /id="delegate-account-panel"/);
+  assert.match(html, /id="delegate-account-form"/);
+  assert.match(html, /name="delegatePinInput"/);
+  assert.match(html, /name="delegatePermPartido"/);
+  assert.match(html, /name="delegatePermPlantilla"/);
+  assert.match(html, /name="delegatePermModoCampo"/);
+  assert.match(html, /name="delegatePermConvocatorias"/);
+  assert.match(html, /id="delegate-invite-whatsapp-btn"/);
+  assert.match(html, /id="delegate-invite-email-btn"/);
+
+  // Reparto de minutos visual: barras y dashboard
+  assert.match(appCode, /live-bar-track/);
+  assert.match(appCode, /data-player-progress/);
+  assert.match(appCode, /data-player-min-label/);
+  assert.match(appCode, /data-player-pct-label/);
+  assert.match(appCode, /renderLiveRepartoDashboard/);
+  assert.match(appCode, /reparto-direct-sub-box/);
+  assert.match(appCode, /btn-quick-sub-direct/);
+
+  // Botón de WhatsApp en PDF no se corta
+  assert.match(printCode, /📲 Compartir WhatsApp \/ PDF/);
+  assert.match(cssCode, /\.cb-print-btn-share/);
+  assert.match(cssCode, /white-space:\s*normal\s*!important;/);
 });
 
 test('el delegado ve el partido en cuanto Migue pulsa Mostrar al Delegado', () => {

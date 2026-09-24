@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v51-delegate-live-realtime-pdf-mobile';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v51-delegate-live-realtime-pdf-mobile';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -199,9 +199,80 @@ function storedActiveView() {
   catch { return ''; }
 }
 
+function getDelegatePermissions() {
+  const perms = state.settings?.delegatePermissions;
+  if (Array.isArray(perms) && perms.length) return perms;
+  return ['partido'];
+}
+
+function delegateHasPermission(permission) {
+  if (state.role !== 'delegate') return true;
+  const perms = getDelegatePermissions();
+  if (permission === 'partido' || permission === 'delegado') {
+    return perms.includes('partido') || perms.includes('delegado');
+  }
+  return perms.includes(permission);
+}
+
+function buildDelegateInviteMessage() {
+  const teamName = myTeamName() || 'nuestro equipo';
+  const pin = state.settings?.delegatePin || '0000';
+  const perms = getDelegatePermissions();
+  const permLabels = [];
+  if (perms.includes('partido')) permLabels.push('Partido en vivo (control de cambios y minutos)');
+  if (perms.includes('plantilla')) permLabels.push('Plantilla de jugadores');
+  if (perms.includes('modo-campo')) permLabels.push('Modo Campo');
+  if (perms.includes('convocatorias')) permLabels.push('Convocatorias');
+  const permText = permLabels.map((l) => `• ${l}`).join('\n');
+  const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://campobase.app';
+  const directUrl = `${baseUrl}?role=delegate&pin=${encodeURIComponent(pin)}`;
+
+  return {
+    teamName,
+    pin,
+    directUrl,
+    text: `¡Hola! Te comparto tu acceso como Delegado de ${teamName} en CampoBase.\n\n🔑 Tu PIN de acceso: ${pin}\n📱 Acceso directo: ${directUrl}\n\n⚽ Pestañas y funciones activadas:\n${permText}\n\n¡Nos vemos en el campo!`,
+  };
+}
+
+function applyDelegateNavFilters(perms) {
+  const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+  if (onlyPartido) return;
+  $$('.bottom-nav button').forEach((btn) => {
+    const view = btn.dataset.view;
+    const allowed = (view === 'partido' && perms.includes('partido'))
+      || (view === 'plantilla' && perms.includes('plantilla'))
+      || (view === 'convocatorias' && perms.includes('convocatorias'));
+    btn.classList.toggle('delegate-tab-hidden', !allowed);
+    btn.classList.toggle('delegate-allowed-tab', allowed);
+  });
+  $$('#cb-bottom-nav .cb-nav-tab').forEach((tab) => {
+    const mod = tab.dataset.module;
+    const allowed = (mod === 'partidos' && perms.includes('partido'))
+      || (mod === 'equipo' && perms.includes('plantilla'));
+    tab.classList.toggle('delegate-tab-hidden', !allowed);
+    tab.classList.toggle('delegate-allowed-tab', allowed);
+  });
+}
+
+function restoreNormalNavUi() {
+  $$('.bottom-nav button').forEach((btn) => {
+    btn.classList.remove('delegate-tab-hidden', 'delegate-allowed-tab');
+  });
+  $$('#cb-bottom-nav .cb-nav-tab').forEach((tab) => {
+    tab.classList.remove('delegate-tab-hidden', 'delegate-allowed-tab');
+  });
+}
+
 function showView(viewId) {
   if (state.role === 'demo' && viewId === 'ajustes') return;
-  if (state.role === 'delegate' && viewId !== 'delegado') return;
+  if (state.role === 'delegate') {
+    const perms = getDelegatePermissions();
+    const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+    if (onlyPartido && viewId !== 'delegado' && viewId !== 'partido') return;
+    if (!delegateHasPermission(viewId) && viewId !== 'delegado') return;
+    if (viewId === 'partido') viewId = 'delegado';
+  }
   if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
   const target = document.getElementById(viewId);
   if (!target?.classList.contains('view')) return;
@@ -350,6 +421,7 @@ async function refresh() {
   $('#team-settings-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.teamName.value = state.settings.teamName ?? '';
   $('#demo-team-form').elements.format.value = state.format;
+  populateDelegateAccountForm();
   applyTeamIdentity();
   applyCustomTheme();
   if (force || !isUserInteracting()) renderAll();
@@ -1438,6 +1510,7 @@ function renderLive() {
     : '';
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
+  ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
@@ -1541,15 +1614,30 @@ function fieldBenchMarkup(fieldIds, callup, config) {
   const row = (id, checkName) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = livePlayerSeconds(id) ?? 0;
+    const playedMin = Math.round(playedSec / 60);
+    const targetSec = (targetMin || 1) * 60;
+    const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
+    const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
     return `
       <div class="check-row live-player-row">
-        <label>
-          <input type="checkbox" name="${checkName}" value="${id}">
-          <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-        </label>
-        <div class="live-player-timing">
-          <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <div class="live-player-row-top">
+          <label>
+            <input type="checkbox" name="${checkName}" value="${id}">
+            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
+          </label>
+          <div class="live-player-timing">
+            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+            <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+          </div>
+        </div>
+        <div class="live-player-row-bar">
+          <div class="live-bar-track">
+            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
+          </div>
+          <div class="live-bar-meta">
+            <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+            <span data-player-pct-label="${id}">(${percent}%)</span>
+          </div>
         </div>
       </div>
     `;
@@ -1977,6 +2065,108 @@ function targetSummaryMarkup() {
   `;
 }
 
+function renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, isDelegate = false) {
+  const targetMap = new Map((targets || []).map((t) => [t.playerId, t.minutes]));
+  const defaultTarget = Math.round(((config?.duration || 70) * (config?.players || 7)) / (((fieldIds?.length || 0) + (benchIds?.length || 0)) || 1));
+  const keepers = new Set(liveKeeperIds());
+
+  // Candidatos a salir: jugadores de campo (sin porteros) con más minutos jugados
+  const fieldNonKeepers = (fieldIds || []).filter((id) => !keepers.has(id));
+  const sortedField = [...fieldNonKeepers].sort((a, b) => (played[b] ?? 0) - (played[a] ?? 0));
+  const topField = sortedField.slice(0, 3);
+
+  // Candidatos a entrar: jugadores del banquillo (sin porteros) con menos minutos jugados
+  const benchNonKeepers = (benchIds || []).filter((id) => !keepers.has(id));
+  const sortedBench = [...benchNonKeepers].sort((a, b) => (played[a] ?? 0) - (played[b] ?? 0));
+  const leastBench = sortedBench.slice(0, 3);
+
+  // Sugerencia de cambio directo (1 a 1) para equilibrar minutos
+  const suggestion = suggestDelegateSubstitution(fieldIds || [], benchIds || [], played || {}, 1, liveKeeperIds());
+  const inId = suggestion.inIds[0];
+  const outId = suggestion.outIds[0];
+
+  const playerItem = (id, type) => {
+    const pSec = played[id] ?? 0;
+    const pMin = Math.round(pSec / 60);
+    const tMin = targetMap.get(id) ?? defaultTarget;
+    const pct = Math.min(100, Math.round((pSec / ((tMin || 1) * 60)) * 100));
+    const fillClass = pct >= 100 ? 'prog-complete' : pct >= 60 ? 'prog-good' : pct >= 30 ? 'prog-mid' : 'prog-low';
+    const shortName = nombreCorto(playerName(id));
+    return `
+      <div class="reparto-card-item">
+        <span class="item-name">${escapeHtml(shortName)}</span>
+        <div class="live-bar-track" style="max-width: 65px; height: 6px;">
+          <div class="live-bar-fill ${fillClass}" style="width: ${pct}%;"></div>
+        </div>
+        <span class="item-min">${pMin}m</span>
+      </div>
+    `;
+  };
+
+  let directSubMarkup = '';
+  if (inId && outId) {
+    const inMin = Math.round((played[inId] ?? 0) / 60);
+    const outMin = Math.round((played[outId] ?? 0) / 60);
+    const inName = nombreCorto(playerName(inId));
+    const outName = nombreCorto(playerName(outId));
+    const actionBtnId = isDelegate ? 'apply-delegate-suggestion' : 'apply-coach-quick-sub';
+
+    directSubMarkup = `
+      <div class="reparto-direct-sub-box">
+        <div class="reparto-direct-sub-header">⚡ Cambio recomendado para equilibrar minutos</div>
+        <div class="reparto-direct-sub-players">
+          <div class="sub-col">
+            <span class="sub-dir in-dir">⬆️ ENTRA</span>
+            <span class="sub-name">${escapeHtml(inName)}</span>
+            <span class="sub-min">${inMin} min jugados</span>
+          </div>
+          <div class="sub-swap-icon">⇆</div>
+          <div class="sub-col">
+            <span class="sub-dir out-dir">⬇️ SALE</span>
+            <span class="sub-name">${escapeHtml(outName)}</span>
+            <span class="sub-min">${outMin} min jugados</span>
+          </div>
+        </div>
+        <button type="button" class="btn-quick-sub-direct" id="${actionBtnId}" data-in-id="${inId}" data-out-id="${outId}">
+          ⚡ Realizar este cambio ahora
+        </button>
+      </div>
+    `;
+  } else if (!benchNonKeepers.length) {
+    directSubMarkup = `<p class="meta" style="text-align:center;margin:0.5rem 0 0 0;">Todos los jugadores de campo disponibles están jugando.</p>`;
+  }
+
+  return `
+    <article class="panel live-reparto-visual-dashboard">
+      <div class="reparto-dash-header">
+        <div class="reparto-dash-title">
+          <span>⚖️</span>
+          <div>
+            <h3>Reparto y balance de minutos</h3>
+            <p>Control visual de rotaciones para fútbol base</p>
+          </div>
+        </div>
+        <span class="reparto-target-pill">Obj: ~${defaultTarget} min / jug.</span>
+      </div>
+      <div class="reparto-balance-grid">
+        <div class="reparto-col">
+          <div class="reparto-col-header out-header">
+            <span>⬇️ Más minutos (Salir)</span>
+          </div>
+          ${topField.map((id) => playerItem(id, 'out')).join('') || '<p class="meta">Sin jugadores</p>'}
+        </div>
+        <div class="reparto-col">
+          <div class="reparto-col-header in-header">
+            <span>⬆️ Menos minutos (Entrar)</span>
+          </div>
+          ${leastBench.map((id) => playerItem(id, 'in')).join('') || '<p class="meta">Banquillo vacío</p>'}
+        </div>
+      </div>
+      ${directSubMarkup}
+    </article>
+  `;
+}
+
 function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
@@ -2142,15 +2332,30 @@ function renderDelegate() {
   const row = (id, name) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = played[id] ?? 0;
+    const playedMin = Math.round(playedSec / 60);
+    const targetSec = (targetMin || 1) * 60;
+    const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
+    const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
     return `
       <div class="check-row live-player-row">
-        <label>
-          <input type="checkbox" name="${name}" value="${id}">
-          <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-        </label>
-        <div class="live-player-timing">
-          <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <div class="live-player-row-top">
+          <label>
+            <input type="checkbox" name="${name}" value="${id}">
+            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
+          </label>
+          <div class="live-player-timing">
+            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
+            <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+          </div>
+        </div>
+        <div class="live-player-row-bar">
+          <div class="live-bar-track">
+            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
+          </div>
+          <div class="live-bar-meta">
+            <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+            <span data-player-pct-label="${id}">(${percent}%)</span>
+          </div>
         </div>
       </div>
     `;
@@ -2160,7 +2365,7 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div><article class="panel delegate-suggestion"><h3>¿Quién ha jugado menos?</h3><p>${escapeHtml(suggestionText)}</p>${suggestion.inIds.length ? '<button id="apply-delegate-suggestion" class="primary">Hacer este cambio</button>' : ''}</article>${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
   renderDelegateTactics();
 }
 
@@ -2222,17 +2427,24 @@ async function cancelLiveMatch() {
   toast('Has salido del partido. Ya puedes preparar otro.');
 }
 
-async function registerDelegateSubstitution(outIds, inIds) {
+async function executeLiveSubstitution(outIds, inIds, source = '') {
   const match = state.matches.find((item) => item.id === state.timer?.matchId);
   const callup = callupForMatch(match);
   const nextOnField = applySubstitution(state.timer.onField, outIds, inIds, callup?.availableIds ?? [], 7);
-  state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'delegate' });
+  const event = { second: timerSeconds(), outIds, inIds };
+  if (source) event.source = source;
+  state.timer.events.push(event);
   state.timer.onField = nextOnField;
   syncLiveTacticFromTimer();
   state.urgentAlertKey = '';
   state.repartoAlertKey = '';
   await persistTimer();
-  renderLive(); renderDelegate(); toast('Cambio del delegado registrado.');
+  renderLive(); renderDelegate();
+  toast(source === 'delegate' ? 'Cambio del delegado registrado.' : 'Cambio registrado.');
+}
+
+async function registerDelegateSubstitution(outIds, inIds) {
+  return executeLiveSubstitution(outIds, inIds, 'delegate');
 }
 
 async function proposeReparto() {
@@ -2365,6 +2577,39 @@ function startTicks() {
     for (const clock of [$('#clock'), $('#delegate-clock')].filter(Boolean)) clock.textContent = formatMatchClock(seconds);
     const played = livePlayedSeconds();
     $$('[data-player-clock]').forEach((element) => { element.textContent = formatMatchClock(played[element.dataset.playerClock] ?? 0); });
+
+    // Actualizar barras de progreso y etiquetas de minutos en tiempo real
+    const callup = liveCallup();
+    if (callup) {
+      const config = FORMATS[callup.format] || FORMATS.F7;
+      const targets = liveTargets();
+      const targetMap = new Map(targets.map((t) => [t.playerId, t.minutes]));
+      const defaultTarget = Math.round((config.duration * config.players) / (callup.availableIds?.length || 1));
+
+      $$('[data-player-progress]').forEach((bar) => {
+        const id = bar.dataset.playerProgress;
+        const sec = played[id] ?? 0;
+        const tMin = targetMap.get(id) ?? defaultTarget;
+        const pct = Math.min(100, Math.round((sec / ((tMin || 1) * 60)) * 100));
+        bar.style.width = `${pct}%`;
+        bar.className = `live-bar-fill ${pct >= 100 ? 'prog-complete' : pct >= 60 ? 'prog-good' : pct >= 30 ? 'prog-mid' : 'prog-low'}`;
+      });
+
+      $$('[data-player-min-label]').forEach((lbl) => {
+        const id = lbl.dataset.playerMinLabel;
+        const sec = played[id] ?? 0;
+        const tMin = targetMap.get(id) ?? defaultTarget;
+        lbl.textContent = `${Math.round(sec / 60)} / ${tMin} min`;
+      });
+
+      $$('[data-player-pct-label]').forEach((lbl) => {
+        const id = lbl.dataset.playerPctLabel;
+        const sec = played[id] ?? 0;
+        const tMin = targetMap.get(id) ?? defaultTarget;
+        const pct = Math.min(100, Math.round((sec / ((tMin || 1) * 60)) * 100));
+        lbl.textContent = `(${pct}%)`;
+      });
+    }
     if (shouldAutoPause(state.timer.phase, seconds)) {
       state.timer.elapsed = state.timer.phase === 'first_half' ? 38 * 60 : 74 * 60;
       state.timer.runningSince = null;
@@ -4797,7 +5042,7 @@ async function savePins(ownerPin, delegatePin) {
   if (cleanOwnerPin === cleanDelegatePin) throw new TypeError('Los PIN de Migue y delegado deben ser distintos.');
   const salt = crypto.randomUUID();
   const [ownerPinHash, delegatePinHash] = await Promise.all([hashPin(cleanOwnerPin, salt), hashPin(cleanDelegatePin, salt)]);
-  state.settings = { ...state.settings, id: 'main', format: state.format, pinSalt: salt, ownerPinHash, delegatePinHash };
+  state.settings = { ...state.settings, id: 'main', format: state.format, pinSalt: salt, ownerPinHash, delegatePinHash, delegatePin: cleanDelegatePin };
   await put('settings', state.settings);
 }
 
@@ -4816,11 +5061,27 @@ function applyRole(role) {
   if (role === 'delegate') {
     state.delegateMode = true;
     document.body.classList.add('delegate-mode');
+    const perms = getDelegatePermissions();
+    const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+    if (onlyPartido) {
+      document.body.classList.add('delegate-single-view');
+      document.body.classList.remove('delegate-multi-view');
+    } else {
+      document.body.classList.remove('delegate-single-view');
+      document.body.classList.add('delegate-multi-view');
+    }
+    if (perms.includes('modo-campo')) {
+      document.body.classList.add('delegate-allow-modo-campo');
+    } else {
+      document.body.classList.remove('delegate-allow-modo-campo');
+    }
+    applyDelegateNavFilters(perms);
     showView('delegado');
     renderDelegate();
   } else {
     state.delegateMode = false;
-    document.body.classList.remove('delegate-mode');
+    document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
+    restoreNormalNavUi();
     showView(storedActiveView() || 'plantilla');
   }
   // Re-renderiza el partido en vivo con el rol ya aplicado: el botón "Vista
@@ -5027,7 +5288,7 @@ async function submitAuth(event) {
           if (getBoundSaasUserId()) await synchronizeCloud();
         })();
         return;
-      } else if (pin === '0000' || (state.settings.pinSalt && state.settings.delegatePinHash
+      } else if (pin === '0000' || pin === state.settings?.delegatePin || (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
         $('#auth-dialog')?.close();
         applyRole('delegate');
@@ -5069,7 +5330,7 @@ async function submitAuth(event) {
             }
             return;
           }
-          if (pin === '0000' || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
+          if (pin === '0000' || pin === local.delegatePin || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
             recoveredRole = 'delegate';
             recoveredSettings = local;
             $('#auth-dialog')?.close();
@@ -5165,6 +5426,71 @@ async function changeDemoPin(event) {
   await put('settings', state.settings);
   form.reset();
   toast('PIN de demo guardado.');
+}
+
+function populateDelegateAccountForm() {
+  const form = $('#delegate-account-form');
+  if (!form) return;
+  const pin = state.settings?.delegatePin || '0000';
+  if (form.elements.delegatePinInput) {
+    form.elements.delegatePinInput.value = pin;
+  }
+  const perms = getDelegatePermissions();
+  if (form.elements.delegatePermPlantilla) {
+    form.elements.delegatePermPlantilla.checked = perms.includes('plantilla');
+  }
+  if (form.elements.delegatePermModoCampo) {
+    form.elements.delegatePermModoCampo.checked = perms.includes('modo-campo');
+  }
+  if (form.elements.delegatePermConvocatorias) {
+    form.elements.delegatePermConvocatorias.checked = perms.includes('convocatorias');
+  }
+}
+
+async function saveDelegateAccountSettings(event) {
+  event.preventDefault();
+  if (state.role !== 'owner') return toast('Solo Migue puede configurar la cuenta del delegado.');
+  const form = event.currentTarget;
+  const pin = String(form.elements.delegatePinInput?.value || '').trim();
+  if (!/^\d{4,8}$/.test(pin)) {
+    return toast('El PIN del delegado debe tener entre 4 y 8 cifras.');
+  }
+
+  const perms = ['partido'];
+  if (form.elements.delegatePermPlantilla?.checked) perms.push('plantilla');
+  if (form.elements.delegatePermModoCampo?.checked) perms.push('modo-campo');
+  if (form.elements.delegatePermConvocatorias?.checked) perms.push('convocatorias');
+
+  const salt = state.settings.pinSalt || crypto.randomUUID();
+  const delegatePinHash = await hashPin(pin, salt);
+
+  state.settings = {
+    ...state.settings,
+    id: 'main',
+    pinSalt: salt,
+    delegatePin: pin,
+    delegatePinHash,
+    delegatePermissions: perms,
+  };
+
+  await put('settings', state.settings);
+  if (!isDemoDatabase()) {
+    await synchronizeCloud().catch(() => {});
+  }
+  toast('Cuenta y permisos del delegado guardados correctamente.');
+}
+
+function sendDelegateInviteWhatsApp() {
+  const invite = buildDelegateInviteMessage();
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(invite.text)}`;
+  window.open(waUrl, '_blank');
+}
+
+function sendDelegateInviteEmail() {
+  const invite = buildDelegateInviteMessage();
+  const subject = `Acceso Delegado CampoBase - ${invite.teamName}`;
+  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(invite.text)}`;
+  window.location.href = mailtoUrl;
 }
 
 async function changeLiveScore(team, delta) {
@@ -6705,6 +7031,9 @@ function wireEvents() {
   });
   $('#pin-settings-form').addEventListener('submit', (event) => changePins(event).catch(handleError));
   $('#demo-pin-settings-form').addEventListener('submit', (event) => changeDemoPin(event).catch(handleError));
+  $('#delegate-account-form')?.addEventListener('submit', (event) => saveDelegateAccountSettings(event).catch(handleError));
+  $('#delegate-invite-whatsapp-btn')?.addEventListener('click', sendDelegateInviteWhatsApp);
+  $('#delegate-invite-email-btn')?.addEventListener('click', sendDelegateInviteEmail);
   $('#team-settings-form').addEventListener('submit', (event) => saveTeamSettings(event).catch(handleError));
   $('#demo-team-form').addEventListener('submit', (event) => saveDemoTeam(event).catch(handleError));
   initCustomizationListeners();
@@ -7017,13 +7346,26 @@ function wireEvents() {
       if (outIds.length < 1 || outIds.length > 7 || outIds.length !== inIds.length) return toast('Selecciona el mismo número de entradas y salidas: de 1 a 7.');
       try { await registerDelegateSubstitution(outIds, inIds); } catch (error) { handleError(error); }
     }
+    if (target.id === 'apply-coach-quick-sub') {
+      const outId = target.dataset.outId;
+      const inId = target.dataset.inId;
+      if (outId && inId) {
+        try { await executeLiveSubstitution([outId], [inId], 'owner'); } catch (error) { handleError(error); }
+      }
+    }
     if (target.id === 'apply-delegate-suggestion' || target.id === 'urgent-change') {
-      const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
-      if (!callup) return;
-      const played = livePlayedSeconds(); const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
-      const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, played, 1, liveKeeperIds());
+      const outId = target.dataset.outId;
+      const inId = target.dataset.inId;
       $('#urgent-dialog')?.close();
-      try { await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds); } catch (error) { handleError(error); }
+      if (outId && inId) {
+        try { await registerDelegateSubstitution([outId], [inId]); } catch (error) { handleError(error); }
+      } else {
+        const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
+        if (!callup) return;
+        const played = livePlayedSeconds(); const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
+        const suggestion = suggestDelegateSubstitution(state.timer.onField, bench, played, 1, liveKeeperIds());
+        try { await registerDelegateSubstitution(suggestion.outIds, suggestion.inIds); } catch (error) { handleError(error); }
+      }
     }
     if (target.id === 'owner-auto-sub' || target.id === 'delegate-auto-sub') {
       const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
@@ -7246,7 +7588,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v51-delegate-live-realtime-pdf-mobile').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v52-delegate-permissions-reparto-visual-mobile-pdf').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7259,7 +7601,26 @@ async function init() {
   await reapplyPreparacionToTimer();
   renderLive();
   renderDelegate();
-  if (!await restoreSessionRole()) {
+  let autoLoggedInDelegate = false;
+  if (typeof window !== 'undefined' && window.location) {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get('role');
+    const pinParam = params.get('pin');
+    if (roleParam === 'delegate' && pinParam) {
+      const cleanPin = pinParam.trim();
+      const expectedPin = state.settings?.delegatePin || '0000';
+      let pinValid = cleanPin === expectedPin || cleanPin === '0000';
+      if (!pinValid && state.settings?.pinSalt && state.settings?.delegatePinHash) {
+        pinValid = await verifyPin(cleanPin, state.settings.pinSalt, state.settings.delegatePinHash);
+      }
+      if (pinValid) {
+        applyRole('delegate');
+        $('#auth-dialog')?.close();
+        autoLoggedInDelegate = true;
+      }
+    }
+  }
+  if (!autoLoggedInDelegate && !await restoreSessionRole()) {
     ensureAuthPromptVisible();
     // Salvaguarda de arranque: si otro módulo de acceso cambia el diálogo
     // durante la inicialización, volvemos a comprobar que siga visible.

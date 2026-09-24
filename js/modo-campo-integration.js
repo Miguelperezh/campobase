@@ -100,7 +100,10 @@ function installTopbarActionLayout() {
 function addTopbarButton({ id, text, onClick, primary = false }) {
   if (document.getElementById(id)) return;
   const role = window.__campobase?.state?.role;
-  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) return;
+  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) {
+    const perms = window.__campobase?.state?.settings?.delegatePermissions || ['partido'];
+    if (!perms.includes('modo-campo')) return;
+  }
   const status = document.querySelector('.topbar .status');
   const logout = document.getElementById('logout');
   if (!status) return;
@@ -134,7 +137,10 @@ function saveCacheAndNavigate() {
 
 function installEntryButtons() {
   const role = window.__campobase?.state?.role;
-  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) return;
+  if (role === 'delegate' || document.body.classList.contains('delegate-mode')) {
+    const perms = window.__campobase?.state?.settings?.delegatePermissions || ['partido'];
+    if (!perms.includes('modo-campo')) return;
+  }
   if (fromCampo) {
     addTopbarButton({
       id: 'return-to-field-mode',
