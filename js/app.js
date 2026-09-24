@@ -278,9 +278,9 @@ function syncDelegateModeDom() {
 }
 
 function applyDelegateNavFilters(perms) {
+  $('#cb-nav-tab-convocatorias')?.remove();
+  $('#cb-nav-tab-modo-campo')?.remove();
   if (state.role !== 'delegate' && !state.delegateMode) {
-    $('#cb-nav-tab-convocatorias')?.remove();
-    $('#cb-nav-tab-modo-campo')?.remove();
     return;
   }
   const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
@@ -322,66 +322,6 @@ function applyDelegateNavFilters(perms) {
       if (lbl) lbl.textContent = perms.includes('plantilla') && !perms.includes('asistencia') && !perms.includes('cuerpo-tecnico') ? 'Plantilla' : 'Equipo';
     }
   });
-
-  let convTab = $('#cb-nav-tab-convocatorias');
-  if (!onlyPartido && perms.includes('convocatorias')) {
-    if (!convTab && $('#cb-bottom-nav')) {
-      convTab = document.createElement('button');
-      convTab.type = 'button';
-      convTab.id = 'cb-nav-tab-convocatorias';
-      convTab.className = 'cb-nav-tab';
-      convTab.dataset.module = 'convocatorias';
-      convTab.title = 'Convocatoria';
-      convTab.innerHTML = `
-        <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-        <span class="cb-nav-label-wrap"><span>Convocatorias</span></span>
-      `;
-      convTab.addEventListener('click', () => {
-        if (typeof window.triggerStandardView === 'function') {
-          window.triggerStandardView('convocatorias');
-        } else {
-          showView('convocatorias');
-        }
-      });
-      $('#cb-bottom-nav').appendChild(convTab);
-    }
-    if (convTab) {
-      convTab.style.display = 'flex';
-      convTab.classList.remove('delegate-tab-hidden');
-      convTab.classList.add('delegate-allowed-tab');
-    }
-  } else if (convTab) {
-    convTab.style.display = 'none';
-    convTab.classList.add('delegate-tab-hidden');
-  }
-
-  let fieldTab = $('#cb-nav-tab-modo-campo');
-  if (!onlyPartido && perms.includes('modo-campo')) {
-    if (!fieldTab && $('#cb-bottom-nav')) {
-      fieldTab = document.createElement('button');
-      fieldTab.type = 'button';
-      fieldTab.id = 'cb-nav-tab-modo-campo';
-      fieldTab.className = 'cb-nav-tab';
-      fieldTab.dataset.module = 'modo-campo';
-      fieldTab.title = 'Modo Campo';
-      fieldTab.innerHTML = `
-        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
-        <span class="cb-nav-label-wrap"><span>Modo Campo</span></span>
-      `;
-      fieldTab.addEventListener('click', () => {
-        window.location.href = './modo-campo-directo.html';
-      });
-      $('#cb-bottom-nav').appendChild(fieldTab);
-    }
-    if (fieldTab) {
-      fieldTab.style.display = 'flex';
-      fieldTab.classList.remove('delegate-tab-hidden');
-      fieldTab.classList.add('delegate-allowed-tab');
-    }
-  } else if (fieldTab) {
-    fieldTab.style.display = 'none';
-    fieldTab.classList.add('delegate-tab-hidden');
-  }
 }
 
 function restoreNormalNavUi() {
@@ -450,6 +390,9 @@ function showView(viewId) {
     renderTactics();
   } else if (viewId === 'delegado') {
     renderDelegate();
+  } else if (viewId === 'ajustes') {
+    populateDelegateAccountForm();
+    populateKitSettingsForm();
   }
 }
 
@@ -5220,11 +5163,13 @@ function applyRole(role) {
   if (role === 'delegate') {
     state.delegateMode = true;
     document.body.classList.add('delegate-mode');
+    window.__campobaseAllowedViews = getDelegatePermissions();
     syncDelegateModeDom();
     showView('delegado');
     renderDelegate();
   } else {
     state.delegateMode = false;
+    window.__campobaseAllowedViews = null;
     document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
     restoreNormalNavUi();
     showView(storedActiveView() || 'plantilla');
@@ -5277,6 +5222,7 @@ async function logoutUser() {
   }
   state.role = null;
   state.delegateMode = false;
+  window.__campobaseAllowedViews = null;
   try {
     sessionStorage.removeItem(SESSION_ROLE_KEY);
     sessionStorage.removeItem(DEMO_SESSION_KEY);
@@ -5632,6 +5578,7 @@ async function saveDelegateAccountSettings(event) {
 
   const salt = state.settings.pinSalt || crypto.randomUUID();
   const delegatePinHash = await hashPin(pin, salt);
+  const now = Date.now();
 
   state.settings = {
     ...state.settings,
@@ -5640,16 +5587,28 @@ async function saveDelegateAccountSettings(event) {
     delegatePin: pin,
     delegatePinHash,
     delegatePermissions: perms,
+    updatedAt: now,
   };
   try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(perms)); } catch {}
 
   await put('settings', state.settings);
+
+  try {
+    const { getBoundSupabaseClient } = await import('./supabase-client.js');
+    const client = getBoundSupabaseClient?.();
+    if (client) {
+      await client.rpc('set_delegate_permissions', { p_permissions: perms }).catch(() => {});
+    }
+  } catch {}
+
   if (!isDemoDatabase()) {
     await synchronizeCloud().catch(() => {});
   }
   if (state.role === 'delegate' || state.delegateMode) {
+    window.__campobaseAllowedViews = perms;
     syncDelegateModeDom();
   }
+  populateDelegateAccountForm();
   toast('Cuenta y permisos del delegado guardados correctamente.');
 }
 
@@ -5658,10 +5617,12 @@ async function persistDelegatePermissions(newPerms) {
   if (!clean.includes('partido') && !clean.includes('delegado')) {
     clean.push('partido');
   }
+  const now = Date.now();
   state.settings = {
     ...(state.settings || {}),
     id: 'main',
     delegatePermissions: clean,
+    updatedAt: now,
   };
   try {
     localStorage.setItem('campobase.delegatePermissions', JSON.stringify(clean));
@@ -5672,6 +5633,7 @@ async function persistDelegatePermissions(newPerms) {
   }
   populateDelegateAccountForm();
   if (state.role === 'delegate' || state.delegateMode) {
+    window.__campobaseAllowedViews = clean;
     syncDelegateModeDom();
   }
   return clean;
@@ -7784,7 +7746,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v57-delegate-dynamic-permissions-persist-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v58-delegate-sync-permissions-final-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

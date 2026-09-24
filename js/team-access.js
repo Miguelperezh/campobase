@@ -11,6 +11,7 @@ export const DELEGATE_VIEW_OPTIONS = Object.freeze([
   ['sesiones', 'Sesiones de entrenamiento'],
   ['ejercicios', 'Ejercicios'],
   ['tacticas', 'Pizarra táctica'],
+  ['modo-campo', 'Modo Campo'],
 ]);
 
 const MODULE_VIEWS = Object.freeze({
@@ -159,6 +160,8 @@ export async function saveDelegatePermissions(client, permissions = []) {
 export function isDelegateViewAllowed(viewId) {
   const active = window.__campobaseAllowedViews;
   if (!Array.isArray(active)) return true;
+  if (viewId === 'delegado' && active.includes('partido')) return true;
+  if (viewId === 'partido' && active.includes('delegado')) return true;
   return active.includes(viewId);
 }
 

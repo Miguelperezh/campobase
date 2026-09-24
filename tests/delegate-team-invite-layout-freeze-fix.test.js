@@ -29,16 +29,14 @@ test('delegado con permisos específicos muestra solo esas pestañas (multi-view
   assert.match(appCode, /document\.body\.classList\.add\('delegate-single-view'\);/);
   assert.match(appCode, /document\.body\.classList\.add\('delegate-multi-view'\);/);
 
-  // Inyección de pestañas dinámicas en el rediseño para convocatorias y modo campo
-  assert.match(appCode, /convTab\.id = 'cb-nav-tab-convocatorias';/);
-  assert.match(appCode, /fieldTab\.id = 'cb-nav-tab-modo-campo';/);
+  // Limpieza de pestañas huérfanas en el rediseño para convocatorias y modo campo
+  assert.match(appCode, /#cb-nav-tab-convocatorias'\)\?\.remove\(\)/);
+  assert.match(appCode, /#cb-nav-tab-modo-campo'\)\?\.remove\(\)/);
 
-  // Redirección en redesign-nav.js al pulsar en la barra del delegado
+  // Redirección dinámica en redesign-nav.js al pulsar en la barra del delegado
   assert.match(navCode, /if \(document\.body\.classList\.contains\('delegate-mode'\)\) \{/);
-  assert.match(navCode, /if \(moduleKey === 'partidos'\) \{\s*triggerStandardView\('delegado'\);/);
-  assert.match(navCode, /if \(moduleKey === 'equipo'\) \{\s*triggerStandardView\('plantilla'\);/);
-  assert.match(navCode, /if \(moduleKey === 'convocatorias'\) \{\s*triggerStandardView\('convocatorias'\);/);
-  assert.match(navCode, /if \(moduleKey === 'modo-campo'\) \{\s*window\.location\.href = '\.\/modo-campo-directo\.html';/);
+  assert.match(navCode, /const allowed = mod\.views\.filter/);
+  assert.match(navCode, /triggerStandardView\(targetView\);/);
 
   // CSS de especificidad: delegado multi-vista muestra vistas activas ganando al aislamiento
   assert.match(cssCode, /body\.delegate-mode \.view:not\(#delegado\)\s*\{\s*display:\s*none !important;\s*\}/);

@@ -36,11 +36,22 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
   }
   if (store === 'settings' && cloudRecord.id === 'main') {
     if (localRecord) {
+      const localUpdated = Number(localRecord.updatedAt || 0);
+      const cloudUpdated = Number(cloudRecord.updatedAt || 0);
+      const preferLocal = localUpdated >= cloudUpdated;
+
       for (const field of ['pinSalt', 'ownerPinHash', 'delegatePinHash', 'demoPinSalt', 'demoPinHash', 'delegatePin']) {
-        if (!merged[field] && localRecord[field]) merged[field] = localRecord[field];
+        if (preferLocal ? (localRecord[field] !== undefined) : !merged[field]) {
+          merged[field] = localRecord[field];
+        }
       }
-      if ((!merged.delegatePermissions || !merged.delegatePermissions.length) && Array.isArray(localRecord.delegatePermissions) && localRecord.delegatePermissions.length) {
-        merged.delegatePermissions = structuredClone(localRecord.delegatePermissions);
+      if (Array.isArray(localRecord.delegatePermissions) && localRecord.delegatePermissions.length) {
+        if (preferLocal || !merged.delegatePermissions || !merged.delegatePermissions.length) {
+          merged.delegatePermissions = structuredClone(localRecord.delegatePermissions);
+        }
+      }
+      if (preferLocal && localRecord.updatedAt) {
+        merged.updatedAt = localRecord.updatedAt;
       }
       if ((!merged.setPieces || Object.keys(merged.setPieces).length === 0) && localRecord?.setPieces) {
         merged.setPieces = structuredClone(localRecord.setPieces);

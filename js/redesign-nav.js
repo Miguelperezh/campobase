@@ -128,10 +128,6 @@ export function getActiveViewId() {
 
 export function getActiveModule(viewId) {
   if (viewId === 'delegado') return 'partidos';
-  if (typeof document !== 'undefined' && document.body?.classList.contains('delegate-mode')) {
-    if (viewId === 'convocatorias') return 'convocatorias';
-    if (viewId === 'plantilla') return 'equipo';
-  }
   for (const [modKey, mod] of Object.entries(MODULE_CONFIG)) {
     if (mod.views.includes(viewId)) return modKey;
   }
@@ -139,7 +135,12 @@ export function getActiveModule(viewId) {
 }
 
 export function triggerStandardView(viewId) {
-  if (Array.isArray(window.__campobaseAllowedViews) && !window.__campobaseAllowedViews.includes(viewId)) return;
+  if (Array.isArray(window.__campobaseAllowedViews)) {
+    const allowed = window.__campobaseAllowedViews.includes(viewId)
+      || (viewId === 'delegado' && window.__campobaseAllowedViews.includes('partido'))
+      || (viewId === 'partido' && window.__campobaseAllowedViews.includes('delegado'));
+    if (!allowed) return;
+  }
   if (window.__campobase && typeof window.__campobase.showView === 'function') {
     window.__campobase.showView(viewId);
   } else {
@@ -345,6 +346,23 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
   const mod = MODULE_CONFIG[moduleKey];
   if (!mod || !mod.subTabs || mod.subTabs.length <= 1) return;
 
+  const isDelegate = document.body.classList.contains('delegate-mode');
+  let allowedSubTabs = mod.subTabs || [];
+  if (isDelegate) {
+    let perms = ['partido'];
+    try {
+      perms = window.__campobase?.getDelegatePermissions?.()
+        || window.__campobase?.state?.settings?.delegatePermissions
+        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+    } catch {}
+    allowedSubTabs = allowedSubTabs.filter((tab) => {
+      if (tab.id === 'ajustes') return false;
+      if (tab.id === 'partido' || tab.id === 'delegado') return perms.includes('partido') || perms.includes('delegado');
+      return perms.includes(tab.id);
+    });
+    if (allowedSubTabs.length <= 1) return;
+  }
+
   const activeViewId = getActiveViewId();
   sheet.dataset.module = moduleKey;
   sheet.innerHTML = `
@@ -356,8 +374,8 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
       <button type="button" class="cb-quick-sheet-close" aria-label="Cerrar">✕</button>
     </div>
     <div class="cb-quick-sheet-list" role="menu">
-      ${mod.subTabs.map((tab) => {
-        const isActive = tab.id === activeViewId;
+      ${allowedSubTabs.map((tab) => {
+        const isActive = tab.id === activeViewId || (activeViewId === 'delegado' && tab.id === 'partido');
         return `
           <button type="button" class="cb-quick-sheet-item ${isActive ? 'active' : ''}" data-target-view="${tab.id}" role="menuitem">
             <span class="cb-sheet-item-icon">${tab.icon}</span>
@@ -374,7 +392,12 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
 
   sheet.querySelector('.cb-quick-sheet-close').addEventListener('click', closeQuickSheet);
   sheet.querySelectorAll('.cb-quick-sheet-item').forEach((item) => {
-    item.addEventListener('click', () => triggerStandardView(item.dataset.targetView));
+    item.addEventListener('click', () => {
+      closeQuickSheet();
+      let viewId = item.dataset.targetView;
+      if (isDelegate && viewId === 'partido') viewId = 'delegado';
+      triggerStandardView(viewId);
+    });
   });
 
   if (triggerBtn) {
@@ -415,60 +438,46 @@ export function renderBottomNav() {
   nav.querySelectorAll('.cb-nav-tab').forEach((button) => {
     button.addEventListener('click', () => {
       const moduleKey = button.dataset.module;
+      const mod = MODULE_CONFIG[moduleKey];
+      if (mod) {
+        const currentView = getActiveViewId();
+        const currentModule = getActiveModule(currentView);
 
-      if (document.body.classList.contains('delegate-mode')) {
-        closeQuickSheet();
-        const perms = (window.__campobase?.getDelegatePermissions?.())
-          || window.__campobase?.state?.settings?.delegatePermissions
-          || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+        if (document.body.classList.contains('delegate-mode')) {
+          closeQuickSheet();
+          const perms = (window.__campobase?.getDelegatePermissions?.())
+            || window.__campobase?.state?.settings?.delegatePermissions
+            || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
 
-        if (moduleKey === 'partidos') {
-          triggerStandardView('delegado');
-          return;
-        }
-        if (moduleKey === 'delegado') {
-          triggerStandardView('delegado');
-          return;
-        }
-        if (moduleKey === 'equipo') {
-          triggerStandardView('plantilla');
-          return;
-        }
-        if (moduleKey === 'plantilla') {
-          triggerStandardView('plantilla');
-          return;
-        }
-        if (moduleKey === 'convocatorias') {
-          triggerStandardView('convocatorias');
-          return;
-        }
-        if (moduleKey === 'modo-campo') {
-          window.location.href = './modo-campo-directo.html';
-          return;
-        }
-        const mod = MODULE_CONFIG[moduleKey];
-        if (mod) {
-          const currentView = getActiveViewId();
-          const allowed = mod.views.filter((v) => perms.includes(v));
+          const allowed = mod.views.filter((v) => {
+            if (v === 'ajustes') return false;
+            if (v === 'partido' || v === 'delegado') return perms.includes('partido') || perms.includes('delegado');
+            return perms.includes(v);
+          });
           if (!allowed.length) return;
-          const targetView = allowed.includes(currentView) ? currentView : allowed[0];
+
+          if (currentModule === moduleKey) {
+            if (allowed.length > 1) toggleQuickSheet(moduleKey, button);
+            return;
+          }
+
+          let targetView = allowed[0];
+          if (moduleKey === 'partidos' && (perms.includes('partido') || perms.includes('delegado'))) {
+            targetView = 'delegado';
+          } else if (allowed.includes(mod.defaultView)) {
+            targetView = mod.defaultView;
+          }
           triggerStandardView(targetView);
           return;
         }
-      }
 
-      const mod = MODULE_CONFIG[moduleKey];
-      if (!mod) return;
-
-      const currentView = getActiveViewId();
-      const currentModule = getActiveModule(currentView);
-
-      if (currentModule === moduleKey && mod.subTabs && mod.subTabs.length > 1) {
-        toggleQuickSheet(moduleKey, button);
-      } else {
-        closeQuickSheet();
-        const targetView = mod.views.includes(currentView) ? currentView : mod.defaultView;
-        triggerStandardView(targetView);
+        if (currentModule === moduleKey && mod.subTabs && mod.subTabs.length > 1) {
+          toggleQuickSheet(moduleKey, button);
+        } else {
+          closeQuickSheet();
+          const targetView = mod.views.includes(currentView) ? currentView : mod.defaultView;
+          triggerStandardView(targetView);
+        }
       }
     });
   });
