@@ -68,3 +68,29 @@ test('Guardar en el móvil y exportación de ficha soporta Web Share y descarga 
   assert.match(styles, /\.cb-print-btn-share/);
   assert.match(styles, /\.cb-print-btn-download/);
 });
+
+test('renderLive define fieldIds y auto-recupera la preparación activa de partidos preparados como Inter Pilar', () => {
+  // Definición garantizada de fieldIds antes de ser usado
+  assert.match(app, /const fieldIds = state\.timer\.onField \|\| \[\];/);
+  assert.match(app, /\$\{fieldBenchMarkup\(fieldIds, callup, config\)\}/);
+
+  // Auto-recuperación de preparaciones existentes si timer es null
+  assert.match(app, /const savedPrep = state\.preparaciones\?\.find/);
+  assert.match(app, /applyPreparacionToLive\(savedPrep\)/);
+});
+
+test('generación de PDF binario nativo (.pdf) con jspdf y html2canvas para WhatsApp y Archivos', () => {
+  assert.match(printExport, /export async function generatePdfBlob/);
+  assert.match(printExport, /ensurePdfLibraries/);
+  assert.match(printExport, /window\.html2canvas/);
+  assert.match(printExport, /window\.jspdf/);
+  assert.match(printExport, /type:\s*'application\/pdf'/);
+  assert.match(printExport, /cleanTitle\}\.pdf/);
+
+  // Contenedor cb-print-sheet para contención visual del gráfico y tarjetas
+  assert.match(styles, /\.cb-print-sheet/);
+  assert.match(styles, /\.cb-print-stage-box/);
+  assert.match(styles, /\.cb-print-field-img/);
+  assert.match(styles, /max-height:\s*230px/);
+});
+

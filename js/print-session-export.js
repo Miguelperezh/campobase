@@ -201,7 +201,8 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
 
   return `
     <div id="cb-print-root" class="cb-print-root cb-print-exercise-page">
-      <header class="cb-print-header">
+      <div class="cb-print-sheet cb-print-page">
+        <header class="cb-print-header">
         <div class="cb-print-brand-row">
           <span class="cb-print-logo">⚽ CAMPOBASE</span>
           <span class="cb-print-doc-badge">FICHA TÉCNICA DE ENTRENAMIENTO</span>
@@ -272,7 +273,8 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
         </div>
       </div>
     </div>
-  `;
+  </div>
+`;
 }
 
 /**
@@ -360,25 +362,27 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
 
   return `
     <div id="cb-print-root" class="cb-print-root cb-print-session-page">
-      <header class="cb-print-header">
-        <div class="cb-print-brand-row">
-          <span class="cb-print-logo">⚽ CAMPOBASE</span>
-          <span class="cb-print-doc-badge">HOJA DE SESIÓN DE ENTRENAMIENTO</span>
-          <span class="cb-print-team-name">${esc(teamName)}</span>
-        </div>
-        <h1 class="cb-print-title">${esc(sessionName)}</h1>
-        <div class="cb-print-meta-grid">
-          <div><strong>📅 Fecha:</strong> ${esc(sessionDate)}</div>
-          ${session.time ? `<div><strong>⏰ Hora:</strong> ${esc(session.time)}</div>` : ''}
-          ${session.pitch ? `<div><strong>🏟️ Campo:</strong> ${esc(session.pitch)}</div>` : ''}
-          <div><strong>⏱️ Tiempo Total:</strong> ${esc(totalDuration)} min (${blocks.length} tareas)</div>
-        </div>
-        ${totalMaterial ? `<div class="cb-print-summary-box"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
-        ${session.notes ? `<div class="cb-print-summary-box"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
-      </header>
+      <div class="cb-print-sheet cb-print-page">
+        <header class="cb-print-header">
+          <div class="cb-print-brand-row">
+            <span class="cb-print-logo">⚽ CAMPOBASE</span>
+            <span class="cb-print-doc-badge">HOJA DE SESIÓN DE ENTRENAMIENTO</span>
+            <span class="cb-print-team-name">${esc(teamName)}</span>
+          </div>
+          <h1 class="cb-print-title">${esc(sessionName)}</h1>
+          <div class="cb-print-meta-grid">
+            <div><strong>📅 Fecha:</strong> ${esc(sessionDate)}</div>
+            ${session.time ? `<div><strong>⏰ Hora:</strong> ${esc(session.time)}</div>` : ''}
+            ${session.pitch ? `<div><strong>🏟️ Campo:</strong> ${esc(session.pitch)}</div>` : ''}
+            <div><strong>⏱️ Tiempo Total:</strong> ${esc(totalDuration)} min (${blocks.length} tareas)</div>
+          </div>
+          ${totalMaterial ? `<div class="cb-print-summary-box"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
+          ${session.notes ? `<div class="cb-print-summary-box"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
+        </header>
 
-      <div class="cb-print-session-tasks-list">
-        ${blocksHtml}
+        <div class="cb-print-session-tasks-list">
+          ${blocksHtml}
+        </div>
       </div>
     </div>
   `;
@@ -400,7 +404,7 @@ function generateStandalonePrintPage(htmlContent) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260923-v49-delegate-pin-mobile-print-fix">
+  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v50-inter-pilar-live-mobile-pdf-export">
   <style>
     @page { size: A4 portrait; margin: 8mm 10mm; }
     body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -425,18 +429,134 @@ function isMobileDevice() {
   return /iPhone|iPad|iPod|Android/i.test(ua);
 }
 
-export async function shareOrDownloadPrintDoc(htmlContent, title = 'CampoBase-Ficha') {
-  const fullHtml = generateStandalonePrintPage(htmlContent);
+export async function ensurePdfLibraries() {
+  if (typeof window === 'undefined') return false;
+  if (window.jspdf && window.html2canvas) return true;
+  const loadScript = (src) => new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+  if (!window.html2canvas) await loadScript('./vendor/html2canvas.min.js');
+  if (!window.jspdf) await loadScript('./vendor/jspdf.umd.min.js');
+  return Boolean(window.jspdf && window.html2canvas);
+}
+
+export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+  const loaded = await ensurePdfLibraries();
+  if (!loaded || !window.jspdf || !window.html2canvas) return null;
+
+  const { jsPDF } = window.jspdf;
+  const element = targetElement || document.getElementById('cb-print-root');
+  if (!element) return null;
+
+  const floatingBar = element.querySelector('.cb-print-floating-bar');
+  const prevBarDisplay = floatingBar ? floatingBar.style.display : null;
+  if (floatingBar) floatingBar.style.display = 'none';
+
+  try {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true,
+    });
+
+    const pages = element.querySelectorAll('.cb-print-page');
+    const itemsToRender = pages.length ? Array.from(pages) : [element.querySelector('.cb-print-sheet') || element];
+
+    for (let i = 0; i < itemsToRender.length; i++) {
+      const pageEl = itemsToRender[i];
+      if (i > 0) doc.addPage('a4', 'portrait');
+
+      const canvas = await window.html2canvas(pageEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const finalHeight = Math.min(imgHeight, 297);
+      doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, finalHeight);
+    }
+
+    return doc.output('blob');
+  } catch (err) {
+    console.warn('Error al generar PDF con html2canvas/jspdf:', err);
+    return null;
+  } finally {
+    if (floatingBar) floatingBar.style.display = prevBarDisplay || '';
+  }
+}
+
+export async function shareOrDownloadPrintDoc(htmlContent, title = 'CampoBase-Ficha', targetElement = null) {
   const cleanTitle = String(title || 'CampoBase-Ficha')
     .replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\-_ ]/g, '')
     .trim() || 'CampoBase-Ficha';
-  const filename = `${cleanTitle}.html`;
+
+  // 1. Intentar generar PDF real con jsPDF + html2canvas
+  let pdfBlob = null;
+  try {
+    const el = targetElement || (typeof document !== 'undefined' ? document.getElementById('cb-print-root') : null);
+    if (el) pdfBlob = await generatePdfBlob(el, cleanTitle);
+  } catch (pdfErr) {
+    console.warn('Aviso: no se pudo generar PDF binario:', pdfErr);
+  }
+
+  if (pdfBlob) {
+    const pdfFilename = `${cleanTitle}.pdf`;
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        const file = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+        if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: cleanTitle,
+            text: `Ficha de entrenamiento CampoBase: ${cleanTitle}`,
+          });
+          return true;
+        }
+      } catch (shareErr) {
+        if (shareErr.name === 'AbortError') return false;
+      }
+    }
+
+    // Fallback de descarga directa del PDF
+    try {
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = pdfFilename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 2000);
+      return true;
+    } catch (downloadErr) {
+      console.error('Error al descargar PDF:', downloadErr);
+    }
+  }
+
+  // 2. Fallback de documento HTML standalone si no está disponible el generador de PDF
+  const fullHtml = generateStandalonePrintPage(htmlContent);
+  const htmlFilename = `${cleanTitle}.html`;
   const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
 
-  // 1. Intentar Web Share API con archivo adjunto (iOS Safari 15+ y Android Chrome)
+  // Web Share API con archivo adjunto (iOS Safari 15+ y Android Chrome)
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     try {
-      const file = new File([blob], filename, { type: 'text/html' });
+      const file = new File([blob], htmlFilename, { type: 'text/html' });
       if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -460,12 +580,12 @@ export async function shareOrDownloadPrintDoc(htmlContent, title = 'CampoBase-Fi
     }
   }
 
-  // 2. Fallback de descarga directa en el móvil/navegador
+  // Fallback de descarga directa en el móvil/navegador
   try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = htmlFilename;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
@@ -540,7 +660,7 @@ export function executePrint(htmlContent) {
     container.innerHTML = htmlContent;
   }
 
-  // Barra de acciones táctil para dispositivos móviles (oculta al 100% en @media print)
+  // Barra de acciones táctil compacta para móvil / pantalla (oculta al 100% en @media print)
   const floatingBar = document.createElement('div');
   floatingBar.className = 'cb-print-floating-bar';
   floatingBar.setAttribute('role', 'toolbar');
@@ -549,23 +669,23 @@ export function executePrint(htmlContent) {
     <div class="cb-print-floating-bar-inner">
       <div class="cb-print-floating-bar-info">
         <strong>📄 Ficha Lista para Guardar / Imprimir</strong>
-        <span>Formato A4 compacto para móvil, carpeta y papel</span>
+        <span>Formato A4 compacto para móvil, WhatsApp y papel</span>
       </div>
       <div class="cb-print-floating-bar-actions">
+        <button type="button" class="btn ghost cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
+          ✕ Volver
+        </button>
         <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
           📲 Guardar / Compartir (WhatsApp, Archivos)
         </button>
         <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
-          📥 Descargar Ficha (.html)
+          📥 Descargar Ficha (.pdf)
         </button>
         <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
           🖨️ Imprimir (AirPrint / Impresora)
         </button>
         <button type="button" class="btn secondary cb-print-btn-open" id="cb-print-open-tab-btn" style="display:none;">
           📲 Abrir para Compartir
-        </button>
-        <button type="button" class="btn ghost cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
-          ✕ Volver
         </button>
       </div>
     </div>
@@ -627,26 +747,58 @@ export function executePrint(htmlContent) {
   if (shareBtn) {
     shareBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      await shareOrDownloadPrintDoc(htmlContent, 'Ficha-CampoBase');
+      const prevText = shareBtn.textContent;
+      shareBtn.textContent = '⏳ Generando PDF...';
+      try {
+        await shareOrDownloadPrintDoc(htmlContent, 'Ficha-CampoBase', container);
+      } finally {
+        shareBtn.textContent = prevText;
+      }
     });
   }
 
   if (downloadBtn) {
-    downloadBtn.addEventListener('click', (e) => {
+    downloadBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const fullHtml = generateStandalonePrintPage(htmlContent);
-      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Ficha-CampoBase.html';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        a.remove();
-        URL.revokeObjectURL(url);
-      }, 2000);
+      const prevText = downloadBtn.textContent;
+      downloadBtn.textContent = '⏳ Preparando PDF...';
+      try {
+        const cleanTitle = 'Ficha-CampoBase';
+        let pdfBlob = null;
+        try {
+          pdfBlob = await generatePdfBlob(container, cleanTitle);
+        } catch (err) {}
+
+        if (pdfBlob) {
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${cleanTitle}.pdf`;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            a.remove();
+            URL.revokeObjectURL(url);
+          }, 2000);
+        } else {
+          const fullHtml = generateStandalonePrintPage(htmlContent);
+          const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${cleanTitle}.html`;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            a.remove();
+            URL.revokeObjectURL(url);
+          }, 2000);
+        }
+      } finally {
+        downloadBtn.textContent = prevText;
+      }
     });
   }
 

@@ -6,14 +6,14 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260923-v49-delegate-pin-mobile-print-fix';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
 import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260923-v49-delegate-pin-mobile-print-fix';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff } from './staff-management.js';
@@ -1382,6 +1382,16 @@ function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
+    // Si hay una preparación guardada para un partido próximo no finalizado, cargarla automáticamente para no perder el trabajo de Migue
+    const savedPrep = state.preparaciones?.find((p) => {
+      if (!p.team?.length) return false;
+      const m = state.matches.find((item) => item.id === p.matchId);
+      return m && m.status !== 'finished';
+    });
+    if (savedPrep) {
+      applyPreparacionToLive(savedPrep).catch(() => {});
+      return;
+    }
     root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
     const prepBtn = $('#prepare-live');
     if (prepBtn && !prepBtn.dataset.directBound) {
@@ -1421,6 +1431,7 @@ function renderLive() {
   if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
+  const fieldIds = state.timer.onField || [];
   const unlockBtn = roleCanUseOwnerFeatures(state.role)
     ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
     : '';
@@ -7103,7 +7114,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260923-v49-delegate-pin-mobile-print-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v50-inter-pilar-live-mobile-pdf-export').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

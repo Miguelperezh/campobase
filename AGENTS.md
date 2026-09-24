@@ -4428,3 +4428,35 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
   - `✕ Volver`
 - En móviles, no se destruye la vista al cancelar el diálogo de AirPrint, permitiendo al usuario utilizar el botón de Guardar/Compartir.
 
+# 68. Corrección Crítica Partido Inter Pilar (ReferenceError) y Exportación PDF Real (.pdf) en Móvil — v50 (24/09/2026)
+
+## 68.1 Resolución del ReferenceError en renderLive y Auto-Recuperación de Partidos Preparados
+- **Diagnóstico:** El usuario reportó que el partido preparado del Inter Pilar (24/09/2026) había "desaparecido" de la pestaña de Partido en Vivo y que no se podía ver para mostrar al delegado.
+  - La auditoría demostró que ni el partido ni la preparación fueron borrados de Supabase ni de IndexedDB.
+  - Al refactorizar `unlockBtn` en el commit `9f8f6559`, se eliminó inadvertidamente la línea `const fieldIds = state.timer.onField;` dentro de `renderLive()`. Al llegar a la evaluación del banquillo y campo (`fieldBenchMarkup(fieldIds, callup, config)`), JavaScript lanzaba una excepción fatal `ReferenceError: fieldIds is not defined`.
+  - Esta excepción abortaba la renderización completa de `renderLive()`, dejando la vista en blanco e impidiendo que Migue viese su partido o pulsase el botón de delegado.
+- **Corrección:**
+  - Restaurado `const fieldIds = state.timer.onField || [];` en `js/app.js`.
+  - Añadida auto-recuperación de preparaciones: si `!state.timer` al abrir Partido en Vivo, la app busca automáticamente la preparación del próximo partido no finalizado (`state.preparaciones?.find(...)`) y la aplica inmediatamente (`applyPreparacionToLive(savedPrep)`).
+  - Garantiza que cualquier partido preparado por Migue (como Inter Pilar) se cargue de forma automática y transparente con alineación, pizarra táctica, cronómetro y botón «Mostrar al Delegado».
+
+## 68.2 Exportación de PDF Real Binario (.pdf) para Móvil (WhatsApp y Archivos de iOS)
+- **Diagnóstico:** Al pulsar «Guardar / Compartir (WhatsApp, Archivos)», el sistema exportaba un archivo `.html`. Ni WhatsApp en iOS/Android ni la app nativa "Archivos" de iOS reconocen un `.html` como documento PDF, imposibilitando guardar o enviar la ficha técnica como documento real.
+- **Solución local-first (sin CDNs externas, 100% offline):**
+  - Se incorporaron las librerías `vendor/html2canvas.min.js` y `vendor/jspdf.umd.min.js` directamente en el repositorio y en la caché del Service Worker.
+  - En `js/print-session-export.js`, `generatePdfBlob(targetElement, title)` renderiza la hoja mediante `html2canvas` con escala Retina (2x) y la ensambla en un documento A4 real con `jsPDF`.
+  - `shareOrDownloadPrintDoc()` crea un `Blob` de tipo `application/pdf` y genera un `File([pdfBlob], `${cleanTitle}.pdf`, { type: 'application/pdf' })`.
+  - Al invocar `navigator.share({ files: [...] })`, iOS y Android abren la hoja nativa de compartir con el icono y formato de documento PDF real, permitiendo enviarlo por WhatsApp como PDF o guardarlo con un toque en "Archivos".
+  - Si el navegador no soporta Web Share de archivos, se descarga directamente `${cleanTitle}.pdf`.
+
+## 68.3 Contención Visual de Diagramas y Barra Flotante Compacta en Móviles
+- **Diagnóstico:** La captura en iPhone mostraba una barra superior oscura gigante que ocupaba casi el 50% de la pantalla y un campo verde descomunal desbordado del que solo se apreciaba una esquina (`A1`, `D1`).
+- **Corrección:**
+  - En `styles-redesign.css`, `.cb-print-field-img` y `.cb-print-stage-box` se restringen estrictamente con `max-height: 230px !important; object-fit: contain !important; margin: 0 auto; display: block;` impidiendo cualquier desbordamiento.
+  - La barra flotante `.cb-print-floating-bar` en móviles (`max-width: 650px`) se rediseñó con una rejilla táctil compacta de ~80px de altura (menos del 15% de la pantalla), con feedback visual durante la generación (`⏳ Generando PDF...`) y botón `✕ Volver` siempre accesible.
+
+## 68.4 Verificación y Versioning
+- Versión actualizada a `20260924-v50-inter-pilar-live-mobile-pdf-export`.
+- 525/525 tests unitarios e integrados pasando al 100% (`npm test`).
+- Verificación de sintaxis de todos los módulos limpia (`npm run check`).
+

@@ -914,6 +914,21 @@ Partidos activos próximos verificados:
      - Descarga directa de archivo `.html` auto-contenido para visualización o impresión sin conexión.
      - En dispositivos móviles, la vista previa no se destruye automáticamente si el usuario cancela AirPrint, permitiéndole elegir "Guardar / Compartir".
 
-
-
-
+15. **Entrega v50 (24/09/2026) — Corrección Crítica Partido Inter Pilar (ReferenceError) y Exportación PDF Real (.pdf) en Móvil:**
+   - **Corrección Crítica Partido Inter Pilar y Restauración Automática en Vivo:**
+     - **Causa raíz del partido "desaparecido":** El partido contra El Pilar (Alevín Inter/Pilar, 24/09/2026) y su preparación nunca fueron borrados. En el commit `9f8f6559`, al refactorizar el botón `unlockBtn` en `js/app.js`, se omitió accidentalmente `const fieldIds = state.timer.onField;`. Al intentar evaluar `${fieldBenchMarkup(fieldIds, callup, config)}`, JavaScript lanzaba un `ReferenceError: fieldIds is not defined`. Este error abortaba la ejecución completa de `renderLive()`, dejando la vista en blanco y bloqueando el acceso al partido y al botón de delegado.
+     - **Solución implementada:**
+       - Restaurado `const fieldIds = state.timer.onField || [];` en `renderLive()` de `js/app.js`.
+       - Se implementó la auto-restauración de preparaciones: si `!state.timer`, busca automáticamente la preparación del próximo partido no finalizado (`state.preparaciones?.find(...)`) y ejecuta `applyPreparacionToLive(savedPrep)`. Garantiza que el partido preparado de Inter Pilar esté siempre cargado y visible en vivo con su alineación, pizarra, cronómetro y botón de delegado.
+   - **Exportación a PDF Real Binario (`.pdf`) en Móvil (WhatsApp y Archivos de iOS):**
+     - **Problema previo:** El botón de compartir enviaba un documento `.html`. Ni WhatsApp ni la app Archivos de iOS lo reconocían como documento PDF imprimible o almacenable.
+     - **Solución local-first (0 dependencias externas / 100% offline):**
+       - Integradas localmente en `vendor/` las librerías `vendor/html2canvas.min.js` y `vendor/jspdf.umd.min.js`, cacheadas por el Service Worker.
+       - En `js/print-session-export.js`, implementadas `ensurePdfLibraries()` y `generatePdfBlob()`: renderizan la hoja con `html2canvas` (escala 2, nitidez Retina) y la ensamblan en un documento A4 real vía `jsPDF`.
+       - En `shareOrDownloadPrintDoc()`: genera un Blob `application/pdf` binario y lo comparte con `navigator.share({ files: [new File([pdfBlob], `${cleanTitle}.pdf`, { type: 'application/pdf' })] })`. En iOS y Android, abre el menú nativo con icono de PDF para compartir directamente por WhatsApp o «Guardar en Archivos». Como fallback, descarga directa de `.pdf`.
+   - **Contención Visual de Diagramas y Barra Flotante Compacta en Móviles:**
+     - En `styles-redesign.css`: los diagramas de campo (`.cb-print-field-img` y `.cb-print-stage-box`) se acotan estrictamente a `max-height: 230px !important; object-fit: contain !important; margin: 0 auto; display: block;` evitando que se desborden de la pantalla.
+     - La barra flotante táctil superior en móviles (`max-width: 650px`) se redujo a una rejilla compacta de ~80px de alto (ocupa menos del 15% de la pantalla en lugar del 50%), manteniendo visibles los botones con indicador de progreso (`⏳ Generando PDF...`) y botón `✕ Volver`.
+   - **Cache Versioning y Calidad:**
+     - Versión actualizada a `20260924-v50-inter-pilar-live-mobile-pdf-export`.
+     - 525/525 tests unitarios y de integración pasando al 100% (`npm test`).
