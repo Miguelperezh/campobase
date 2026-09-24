@@ -7517,6 +7517,67 @@ body.delegate-mode main {
   overflow-x: hidden !important;
 }
 
+/* Delegado con PIN o permiso único: cabecera exclusiva con botón Cerrar sesión */
+#cb-delegate-topbar {
+  display: none !important;
+}
+
+body.delegate-mode:not(.auth-locked) #cb-delegate-topbar {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background: var(--card, #11251f);
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.cb-delegate-topbar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cb-delegate-badge {
+  display: inline-block;
+  background: var(--cb-brand, #22c55e);
+  color: #062b1b;
+  font-weight: 800;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.cb-delegate-team {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text, #f8fafc);
+}
+
+.cb-delegate-logout-btn {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cb-delegate-logout-btn:active,
+.cb-delegate-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.28) !important;
+  color: #ffffff !important;
+}
+
 /* Delegado con PIN 0000 o permiso único: aislamiento total (solo partido en vivo directo) */
 body.delegate-mode .view:not(#delegado) {
   display: none !important;
@@ -7530,16 +7591,24 @@ body.delegate-mode #delegado {
 /* Delegado multi-vista (cuando el entrenador activa Plantilla, Convocatorias o Modo Campo en Ajustes) */
 body.delegate-mode.delegate-multi-view #delegado.view:not(.active),
 body.delegate-mode.delegate-multi-view #plantilla.view:not(.active),
-body.delegate-mode.delegate-multi-view #convocatorias.view:not(.active) {
+body.delegate-mode.delegate-multi-view #convocatorias.view:not(.active),
+body.delegate-mode.delegate-multi-view .view:not(.active) {
   display: none !important;
   visibility: hidden !important;
 }
 
 body.delegate-mode.delegate-multi-view #plantilla.view.active,
 body.delegate-mode.delegate-multi-view #convocatorias.view.active,
-body.delegate-mode.delegate-multi-view #delegado.view.active {
+body.delegate-mode.delegate-multi-view #delegado.view.active,
+body.delegate-mode.delegate-multi-view .view.active {
   display: block !important;
   visibility: visible !important;
+}
+
+body.delegate-mode.delegate-multi-view #cb-sub-nav:not(.cb-hidden) {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 body.delegate-mode.delegate-multi-view #cb-bottom-nav {

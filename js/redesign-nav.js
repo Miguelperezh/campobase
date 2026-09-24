@@ -156,6 +156,10 @@ export function triggerStandardView(viewId) {
     if (window.__campobase && typeof window.__campobase.renderAll === 'function') {
       window.__campobase.renderAll();
     }
+  } else if (viewId === 'asistencia') {
+    if (window.__campobase && typeof window.__campobase.renderAll === 'function') {
+      window.__campobase.renderAll();
+    }
   } else if (viewId === 'convocatorias') {
     if (window.__campobase && typeof window.__campobase.renderCallups === 'function') {
       window.__campobase.renderCallups();
@@ -163,6 +167,30 @@ export function triggerStandardView(viewId) {
   } else if (viewId === 'delegado') {
     if (window.__campobase && typeof window.__campobase.renderDelegate === 'function') {
       window.__campobase.renderDelegate();
+    }
+  } else if (viewId === 'partido') {
+    if (document.body.classList.contains('delegate-mode')) {
+      if (window.__campobase && typeof window.__campobase.renderDelegate === 'function') {
+        window.__campobase.renderDelegate();
+      }
+    } else if (window.__campobase && typeof window.__campobase.renderLive === 'function') {
+      window.__campobase.renderLive();
+    }
+  } else if (viewId === 'calendario') {
+    if (window.__campobase && typeof window.__campobase.renderMatches === 'function') {
+      window.__campobase.renderMatches();
+    }
+  } else if (viewId === 'sesiones') {
+    if (window.__campobase && typeof window.__campobase.renderTrainingSessions === 'function') {
+      window.__campobase.renderTrainingSessions();
+    }
+  } else if (viewId === 'ejercicios') {
+    if (window.__campobase && typeof window.__campobase.renderExercises === 'function') {
+      window.__campobase.renderExercises();
+    }
+  } else if (viewId === 'tacticas') {
+    if (window.__campobase && typeof window.__campobase.renderTactics === 'function') {
+      window.__campobase.renderTactics();
     }
   } else if (viewId === 'cuerpo-tecnico') {
     refreshStaffView().catch(console.error);
@@ -222,7 +250,20 @@ export function renderSubNav() {
   const activeModuleKey = getActiveModule(activeViewId);
   const activeModule = MODULE_CONFIG[activeModuleKey];
 
-  if (document.body.classList.contains('delegate-mode') || activeViewId === 'delegado' || !activeModule || !activeModule.subTabs || activeModule.subTabs.length <= 1) {
+  let subTabs = activeModule?.subTabs || [];
+  if (document.body.classList.contains('delegate-mode')) {
+    let perms = ['partido'];
+    try {
+      perms = window.__campobase?.state?.settings?.delegatePermissions
+        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+    } catch {}
+    subTabs = subTabs.filter((tab) => {
+      if (tab.id === 'partido' || tab.id === 'delegado') return perms.includes('partido') || perms.includes('delegado');
+      return perms.includes(tab.id);
+    });
+  }
+
+  if (activeViewId === 'delegado' || !activeModule || !subTabs || subTabs.length <= 1) {
     subNav.hidden = true;
     subNav.classList.add('cb-hidden');
     subNav.style.setProperty('display', 'none', 'important');
@@ -234,8 +275,9 @@ export function renderSubNav() {
   subNav.classList.remove('cb-hidden');
   subNav.style.removeProperty('display');
 
+  const renderedKey = `${activeModuleKey}-${subTabs.map((t) => t.id).join(',')}`;
   // Si el módulo ya está pintado, solo actualizamos las clases activas sin destruir el DOM
-  if (subNav.dataset.renderedModule === activeModuleKey) {
+  if (subNav.dataset.renderedModule === renderedKey) {
     subNav.querySelectorAll('.cb-sub-pill').forEach((btn) => {
       const isActive = btn.dataset.targetView === activeViewId;
       btn.classList.toggle('active', isActive);
@@ -244,12 +286,12 @@ export function renderSubNav() {
     return;
   }
 
-  subNav.dataset.renderedModule = activeModuleKey;
-  const count = activeModule.subTabs.length;
+  subNav.dataset.renderedModule = renderedKey;
+  const count = subTabs.length;
 
   subNav.innerHTML = `
     <div class="cb-sub-segmented" data-count="${count}" role="tablist">
-      ${activeModule.subTabs.map((tab) => {
+      ${subTabs.map((tab) => {
         const isActive = tab.id === activeViewId;
         return `
           <button type="button" role="tab" class="cb-sub-pill ${isActive ? 'active' : ''}" data-target-view="${tab.id}" aria-selected="${isActive}">
@@ -396,6 +438,13 @@ export function renderBottomNav() {
           window.location.href = './modo-campo-directo.html';
           return;
         }
+        const mod = MODULE_CONFIG[moduleKey];
+        if (mod) {
+          const currentView = getActiveViewId();
+          const targetView = mod.views.includes(currentView) ? currentView : mod.defaultView;
+          triggerStandardView(targetView);
+          return;
+        }
       }
 
       const mod = MODULE_CONFIG[moduleKey];
@@ -422,13 +471,26 @@ export function updateNavState() {
   $$('#cb-bottom-nav .cb-nav-tab').forEach((btn) => {
     const mod = btn.dataset.module;
     const isActive = mod === activeModuleKey
-      || (mod === 'partidos' && activeViewId === 'delegado')
-      || (mod === 'equipo' && activeViewId === 'plantilla')
+      || (mod === 'partidos' && (activeViewId === 'delegado' || activeViewId === 'partido' || activeViewId === 'calendario' || activeViewId === 'convocatorias' || activeViewId === 'preparacion'))
+      || (mod === 'equipo' && (activeViewId === 'plantilla' || activeViewId === 'asistencia' || activeViewId === 'cuerpo-tecnico'))
+      || (mod === 'entrenos' && (activeViewId === 'sesiones' || activeViewId === 'ejercicios'))
+      || (mod === 'inicio' && activeViewId === 'hoy')
       || (mod === 'convocatorias' && activeViewId === 'convocatorias');
     btn.classList.toggle('active', isActive);
   });
 
   renderSubNav();
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    if (e.target?.closest?.('#cb-delegate-logout-btn')) {
+      e.preventDefault();
+      if (typeof window.__campobase?.logoutUser === 'function') {
+        window.__campobase.logoutUser();
+      }
+    }
+  });
 }
 
 // Punto 1 validable: todas las ventanas/modales y pantallas completas de la app

@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260924-v54-delegate-permissions-speed-fix">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v54-delegate-permissions-speed-fix">
+  <link rel="stylesheet" href="styles.css?v=20260924-v55-delegate-dynamic-permissions-logout-fix">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v55-delegate-dynamic-permissions-logout-fix">
   <link rel="stylesheet" href="billing.css?v=1">
   <style>
     #network-label { display: none !important; }
@@ -85,6 +85,13 @@
   <header class="topbar">
     <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
     <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label"></span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
+  </header>
+  <header id="cb-delegate-topbar" class="cb-delegate-topbar" aria-label="Cabecera del delegado">
+    <div class="cb-delegate-topbar-info">
+      <span class="cb-delegate-badge">Delegado</span>
+      <span class="cb-delegate-team" id="cb-delegate-topbar-team">CampoBase</span>
+    </div>
+    <button type="button" id="cb-delegate-logout-btn" class="cb-delegate-logout-btn">Cerrar sesión</button>
   </header>
   <div class="search-bar"><input id="global-search" type="search" placeholder="Buscar por nombre o palabra…" aria-label="Buscar en la pestaña actual" autocomplete="off"></div>
 
@@ -357,12 +364,44 @@
                   <span><strong>👥 Plantilla</strong> (Lista de jugadores, dorsales y posiciones)</span>
                 </label>
                 <label class="check-row">
-                  <input type="checkbox" name="delegatePermModoCampo" value="modo-campo" id="perm-modo-campo-check">
-                  <span><strong>🏟️ Modo Campo</strong> (Visualizador táctico de campo a pantalla completa)</span>
-                </label>
-                <label class="check-row">
                   <input type="checkbox" name="delegatePermConvocatorias" value="convocatorias" id="perm-convocatorias-check">
                   <span><strong>📋 Convocatorias</strong> (Consultar la lista de convocados del partido)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermAsistencia" value="asistencia" id="perm-asistencia-check">
+                  <span><strong>⏱️ Asistencia</strong> (Control de asistencia a entrenamientos)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermCalendario" value="calendario" id="perm-calendario-check">
+                  <span><strong>📅 Calendario</strong> (Partidos, fechas y resultados)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermCuerpoTecnico" value="cuerpo-tecnico" id="perm-cuerpotecnico-check">
+                  <span><strong>🧑‍💼 Cuerpo Técnico</strong> (Miembros y roles del staff)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermPreparacion" value="preparacion" id="perm-preparacion-check">
+                  <span><strong>📋 Preparación</strong> (Alineación previa y táctica inicial)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermSesiones" value="sesiones" id="perm-sesiones-check">
+                  <span><strong>🏃 Sesiones</strong> (Planificación de entrenamientos)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermEjercicios" value="ejercicios" id="perm-ejercicios-check">
+                  <span><strong>⚽ Ejercicios</strong> (Biblioteca táctica de tareas)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermTacticas" value="tacticas" id="perm-tacticas-check">
+                  <span><strong>🎯 Pizarra Táctica</strong> (Esquemas tácticos y animaciones)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermHoy" value="hoy" id="perm-hoy-check">
+                  <span><strong>🏠 Inicio / Hoy</strong> (Resumen del día del equipo)</span>
+                </label>
+                <label class="check-row">
+                  <input type="checkbox" name="delegatePermModoCampo" value="modo-campo" id="perm-modo-campo-check">
+                  <span><strong>🏟️ Modo Campo</strong> (Visualizador táctico de campo a pantalla completa)</span>
                 </label>
               </div>
             </fieldset>
@@ -433,7 +472,7 @@
   <dialog id="auth-dialog" class="auth-dialog">
     <form id="auth-form">
       <h2 id="auth-title">Acceso a CampoBase</h2>
-      <p id="auth-help">Introduce tu PIN.</p>
+      <p id="auth-help">Introduce tu PIN de acceso.</p>
       <div id="initial-pin-fields" class="hidden">
         <label>Crear PIN de Migue (acceso total)
           <input name="newOwnerPin" type="password" inputmode="numeric" minlength="4" maxlength="8" autocomplete="new-password">
@@ -718,10 +757,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260924-v54-delegate-permissions-speed-fix';
+    window.__CAMPOBASE_BUILD = '20260924-v55-delegate-dynamic-permissions-logout-fix';
     if ('serviceWorker' in navigator) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260924-v54-delegate-permissions-speed-fix')
+      navigator.serviceWorker.register('./sw.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -742,8 +781,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20260924-v54-delegate-permissions-speed-fix"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260924-v54-delegate-permissions-speed-fix"></script>
+  <script type="module" src="js/app.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix"></script>
+  <script type="module" src="js/redesign-nav.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

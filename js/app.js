@@ -223,11 +223,27 @@ function buildDelegateInviteMessage() {
   const pin = state.settings?.delegatePin || '0000';
   const teamId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
   const perms = getDelegatePermissions();
+  const permLabelsMap = {
+    'partido': 'Partido en vivo (control de cambios y minutos)',
+    'plantilla': 'Plantilla de jugadores',
+    'modo-campo': 'Modo Campo',
+    'convocatorias': 'Convocatorias',
+    'asistencia': 'Asistencia a entrenamientos',
+    'calendario': 'Calendario y resultados',
+    'cuerpo-tecnico': 'Cuerpo técnico',
+    'preparacion': 'Preparación y alineación previa',
+    'sesiones': 'Sesiones de entrenamiento',
+    'ejercicios': 'Biblioteca de ejercicios tácticos',
+    'tacticas': 'Pizarra táctica',
+    'hoy': 'Inicio / Resumen del día',
+  };
   const permLabels = [];
-  if (perms.includes('partido')) permLabels.push('Partido en vivo (control de cambios y minutos)');
-  if (perms.includes('plantilla')) permLabels.push('Plantilla de jugadores');
-  if (perms.includes('modo-campo')) permLabels.push('Modo Campo');
-  if (perms.includes('convocatorias')) permLabels.push('Convocatorias');
+  perms.forEach((p) => {
+    if (permLabelsMap[p]) permLabels.push(permLabelsMap[p]);
+  });
+  if (!permLabels.length && perms.includes('partido')) {
+    permLabels.push('Partido en vivo (control de cambios y minutos)');
+  }
   const permText = permLabels.map((l) => `• ${l}`).join('\n');
   const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://campobase.app';
   const teamParam = teamId ? `&team=${encodeURIComponent(teamId)}` : '';
@@ -245,7 +261,7 @@ function buildDelegateInviteMessage() {
 
 function syncDelegateModeDom() {
   const perms = getDelegatePermissions();
-  const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+  const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
   if (onlyPartido) {
     document.body.classList.add('delegate-single-view');
     document.body.classList.remove('delegate-multi-view');
@@ -262,32 +278,43 @@ function syncDelegateModeDom() {
 }
 
 function applyDelegateNavFilters(perms) {
-  const onlyPartido = perms.length === 1 && perms[0] === 'partido';
+  const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
   $$('.bottom-nav button').forEach((btn) => {
     const view = btn.dataset.view;
     const allowed = !onlyPartido && (
       (view === 'partido' && perms.includes('partido'))
       || (view === 'plantilla' && perms.includes('plantilla'))
       || (view === 'convocatorias' && perms.includes('convocatorias'))
+      || perms.includes(view)
     );
     btn.classList.toggle('delegate-tab-hidden', !allowed);
     btn.classList.toggle('delegate-allowed-tab', allowed);
   });
   $$('#cb-bottom-nav .cb-nav-tab').forEach((tab) => {
     const mod = tab.dataset.module;
-    const allowed = !onlyPartido && (
-      (mod === 'partidos' && perms.includes('partido'))
-      || (mod === 'equipo' && perms.includes('plantilla'))
-    );
+    let allowed = false;
+    if (!onlyPartido) {
+      if (mod === 'partidos') {
+        allowed = perms.includes('partido') || perms.includes('delegado') || perms.includes('convocatorias') || perms.includes('preparacion') || perms.includes('calendario');
+      } else if (mod === 'equipo') {
+        allowed = perms.includes('plantilla') || perms.includes('cuerpo-tecnico') || perms.includes('asistencia');
+      } else if (mod === 'inicio') {
+        allowed = perms.includes('hoy') || perms.includes('inicio');
+      } else if (mod === 'entrenos') {
+        allowed = perms.includes('sesiones') || perms.includes('ejercicios');
+      } else if (mod === 'mas' || mod === 'tacticas') {
+        allowed = perms.includes('tacticas');
+      }
+    }
     tab.classList.toggle('delegate-tab-hidden', !allowed);
     tab.classList.toggle('delegate-allowed-tab', allowed);
     if (mod === 'partidos') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
-      if (lbl) lbl.textContent = 'Partido';
+      if (lbl) lbl.textContent = (perms.includes('partido') || perms.includes('delegado')) && !perms.includes('convocatorias') && !perms.includes('calendario') ? 'Partido' : 'Partidos';
     }
     if (mod === 'equipo') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
-      if (lbl) lbl.textContent = 'Plantilla';
+      if (lbl) lbl.textContent = perms.includes('plantilla') && !perms.includes('asistencia') && !perms.includes('cuerpo-tecnico') ? 'Plantilla' : 'Equipo';
     }
   });
 
@@ -2315,7 +2342,7 @@ function renderDelegate() {
       root.innerHTML = `
         <div class="delegate-head">
           <div>
-            <p class="eyebrow">Vista Delegado (PIN 0000)</p>
+            <p class="eyebrow">Vista Delegado</p>
             <h2>Partido en vivo</h2>
           </div>
           <button id="logout" class="secondary">Cerrar sesión</button>
@@ -2414,7 +2441,7 @@ function renderDelegate() {
     root.innerHTML = `
       <div class="delegate-head">
         <div>
-          <p class="eyebrow">Vista Delegado (PIN 0000)</p>
+          <p class="eyebrow">Vista Delegado</p>
           <h2>Partido en vivo</h2>
         </div>
         <button id="logout" class="secondary">Cerrar sesión</button>
@@ -2522,7 +2549,7 @@ async function unlockDelegate() {
   await refresh(true);
   renderLive();
   renderDelegate();
-  toast(state.timer.delegateUnlocked ? 'El delegado ya puede ver el partido en vivo (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
+  toast(state.timer.delegateUnlocked ? 'El delegado ya puede ver el partido en vivo.' : 'El delegado ya no ve el partido antes de tiempo.');
 }
 
 function closeDelegateMode() {
@@ -3103,7 +3130,7 @@ async function togglePrepDelegateForMatch(matchId) {
   await refresh(true);
   renderPreparaciones();
   renderDelegate();
-  toast(prep.delegateShown ? 'El delegado ya puede ver el partido (PIN 0000).' : 'El delegado ya no ve el partido antes de tiempo.');
+  toast(prep.delegateShown ? 'El delegado ya puede ver el partido.' : 'El delegado ya no ve el partido antes de tiempo.');
 }
 
 function prepAvailableIds(matchId) {
@@ -4528,6 +4555,8 @@ function applyTeamIdentity(settings = state.settings) {
     if (teamHeading) teamHeading.textContent = settings.teamName;
     const formInput = $('#team-settings-form')?.elements.teamName;
     if (formInput && formInput.value !== settings.teamName) formInput.value = settings.teamName;
+    const delegateTeam = $('#cb-delegate-topbar-team');
+    if (delegateTeam) delegateTeam.textContent = settings.teamName;
   }
   populateKitSettingsForm(settings);
 }
@@ -5229,6 +5258,23 @@ async function endDemoSession(message = '') {
   if (message) $('#auth-error').textContent = message;
 }
 
+async function logoutUser() {
+  if (state.role === 'demo') {
+    await endDemoSession();
+    return;
+  }
+  state.role = null;
+  state.delegateMode = false;
+  try {
+    sessionStorage.removeItem(SESSION_ROLE_KEY);
+    sessionStorage.removeItem(DEMO_SESSION_KEY);
+  } catch {}
+  document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
+  restoreNormalNavUi();
+  showAuth();
+  toast('Sesión cerrada.');
+}
+
 async function restoreSessionRole() {
   let role;
   try { role = sessionStorage.getItem(SESSION_ROLE_KEY); } catch { return false; }
@@ -5299,7 +5345,7 @@ async function showAuth(forceInitial = false) {
   const hasLocalPins = Boolean(state.settings.ownerPinHash && state.settings.delegatePinHash);
   const initial = forceInitial && !hasLocalPins;
   $('#auth-title').textContent = initial ? 'Configurar acceso' : 'Acceso a CampoBase';
-  $('#auth-help').textContent = initial ? 'Configura una sola vez dos PIN distintos. El de Migue da acceso total y el del delegado solo al partido.' : 'Introduce el PIN de Migue, del delegado (0000) o el PIN temporal de demo.';
+  $('#auth-help').textContent = initial ? 'Configura tus PIN de acceso para proteger la aplicación.' : 'Introduce tu PIN de acceso.';
   $('#initial-pin-fields').classList.toggle('hidden', !initial);
   $('#login-pin-field').classList.toggle('hidden', initial);
   if ($('#auth-reset-btn')) $('#auth-reset-btn').classList.toggle('hidden', initial);
@@ -5549,6 +5595,10 @@ function populateDelegateAccountForm() {
   if (form.elements.delegatePermConvocatorias) {
     form.elements.delegatePermConvocatorias.checked = perms.includes('convocatorias');
   }
+  form.querySelectorAll('.delegate-perms-list input[type="checkbox"]').forEach((chk) => {
+    if (chk.value === 'partido') chk.checked = true;
+    else chk.checked = perms.includes(chk.value);
+  });
 }
 
 async function saveDelegateAccountSettings(event) {
@@ -5564,6 +5614,9 @@ async function saveDelegateAccountSettings(event) {
   if (form.elements.delegatePermPlantilla?.checked) perms.push('plantilla');
   if (form.elements.delegatePermModoCampo?.checked) perms.push('modo-campo');
   if (form.elements.delegatePermConvocatorias?.checked) perms.push('convocatorias');
+  form.querySelectorAll('.delegate-perms-list input[type="checkbox"]:checked').forEach((chk) => {
+    if (chk.value && !perms.includes(chk.value)) perms.push(chk.value);
+  });
 
   const salt = state.settings.pinSalt || crypto.randomUUID();
   const delegatePinHash = await hashPin(pin, salt);
@@ -7081,8 +7134,7 @@ function wireEvents() {
     }
   });
   $('#settings-logout')?.addEventListener('click', async () => {
-    if (state.role === 'demo') await endDemoSession();
-    else showAuth();
+    await logoutUser();
   });
   $('#settings-reload')?.addEventListener('click', async () => {
     await reloadAppPreservingSession();
@@ -7495,9 +7547,9 @@ function wireEvents() {
       ensureLiveDetails().comments = $(`#${target.dataset.prefix}-comments`).value.trim();
       await persistTimer(); renderLive(); renderDelegate(); toast('Comentarios guardados.');
     }
-    if (target.id === 'logout') {
-      if (state.role === 'demo') await endDemoSession();
-      else showAuth();
+    if (target.id === 'logout' || target.closest('#logout') || target.id === 'cb-delegate-logout-btn' || target.closest('#cb-delegate-logout-btn')) {
+      await logoutUser();
+      return;
     }
   });
 }
@@ -7696,7 +7748,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v54-delegate-permissions-speed-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7775,7 +7827,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, get state() { return state; } };
 }
 
 init().catch(handleError);
