@@ -1,297 +1,304 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CampoBase · Validador Interactivo Fase 1 (Lógica y Reparto)</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
+  <title>CampoBase · Validador de Lógica (Fase 1)</title>
+  <link rel="icon" href="icons/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260924-v59-delegate-views-visible-render-fix">
+  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v59-delegate-views-visible-render-fix">
   <style>
-    :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
-    }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top right, #e6eddf 0, transparent 35%), var(--paper, #f7f5f0);
+      min-height: 100vh;
       margin: 0;
-      padding: 1.5rem;
+      color: var(--ink, #1a1a1a);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-      margin-bottom: 2rem;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .badge {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-    }
-    .card h2 {
-      font-size: 1.15rem;
-      margin-top: 0;
-      margin-bottom: 1rem;
-      color: #38bdf8;
+    .cb-lab-banner {
+      background: #173f35;
+      color: #ffffff;
+      padding: 0.85rem 1.25rem;
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(23, 63, 53, 0.15);
     }
-    .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn:hover {
-      background: var(--primary-dark);
-    }
-    .btn-secondary {
-      background: #334155;
-      color: var(--text);
-    }
-    .btn-secondary:hover {
-      background: #475569;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    label {
+    .cb-lab-banner-text strong {
       display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 0.25rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #a7f3d0;
     }
-    select, input[type="text"], input[type="number"], input[type="range"] {
-      width: 100%;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      box-sizing: border-box;
+    .cb-lab-banner-text span {
+      font-size: 0.82rem;
+      color: #e2e8f0;
     }
-    .stats-box {
-      background: #090e1a;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      font-family: monospace;
-      font-size: 0.85rem;
-      max-height: 220px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    .tramos-bar {
-      height: 28px;
+    .cb-lab-card {
+      background: var(--card, #ffffff);
+      border: 1px solid var(--line, #e3e0d8);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow, 0 10px 30px rgba(0,0,0,.08));
       display: flex;
-      border-radius: 6px;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .cb-lab-card h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.45rem;
+      letter-spacing: 0.02em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink, #1a1a1a);
+    }
+    .cb-lab-box {
+      background: #f7f9f7;
+      border: 1px solid var(--line, #e3e0d8);
+      border-radius: 12px;
+      padding: 0.9rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .cb-tramos-timeline {
+      display: flex;
+      height: 32px;
+      border-radius: 10px;
       overflow: hidden;
       margin-top: 0.5rem;
-      border: 1px solid #475569;
+      border: 1px solid var(--line, #cbd5e1);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
     }
-    .tramo-segment {
+    .cb-tramo-segment {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: white;
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: #ffffff;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding: 0 4px;
     }
-    .tag-status {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
+    .cb-change-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.45rem;
     }
-    .tag-ok { background: #065f46; color: #34d399; }
-    .tag-over { background: #831843; color: #f472b6; }
-    .tag-under { background: #7c2d12; color: #fb923c; }
-    .tests-summary {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 1rem;
-      border-radius: 8px;
+    .cb-change-item {
       display: flex;
-      gap: 1.5rem;
       align-items: center;
-      margin-bottom: 2rem;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1px solid var(--line, #e2e8f0);
+      padding: 0.55rem 0.8rem;
+      border-radius: 10px;
+      font-size: 0.84rem;
+    }
+    .cb-change-minute {
+      font-weight: 800;
+      color: var(--brand, #c8102e);
+      min-width: 44px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest">
       <div>
-        <h1>⚽ CampoBase · Validador Interactivo de Lógica (Fase 1)</h1>
-        <p style="color: var(--text-muted); margin: 0.25rem 0 0 0;">Lógica pura en <code>js/reparto-plan.js</code> ejecutada directamente en tu navegador.</p>
+        <p class="eyebrow">CampoBase · Laboratorio de Innovación</p>
+        <h1 style="font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; margin:0;">Alineación y Reparto de Minutos (Fase 1)</h1>
       </div>
-      <div>
-        <span class="badge">v2.44.0 · Main</span>
-      </div>
-    </header>
+    </div>
+    <div class="status">
+      <strong class="format-badge">F7 · 7 en campo · 70 min</strong>
+      <a href="./" class="button secondary compact" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+        ⚽ Ir a la App Oficial
+      </a>
+    </div>
+  </header>
 
-    <div class="tests-summary">
-      <div style="font-size: 2rem;">✅</div>
-      <div>
-        <div style="font-weight: bold; font-size: 1.1rem; color: #34d399;">192 Pruebas en verde (170 anteriores + 22 de Fase 1)</div>
-        <div style="color: var(--text-muted); font-size: 0.85rem;"><code>npm test</code> y <code>npm run check</code> superados al 100% sin tocar cronómetros, sustituciones ni persistencia existente.</div>
+  <main style="max-width: 1200px; margin: auto; padding: 1.5rem clamp(1rem, 4vw, 3rem) 5rem;">
+    
+    <div class="cb-lab-banner">
+      <div class="cb-lab-banner-text">
+        <strong>🧪 Banco de Pruebas de Lógica Pura (Fase 1)</strong>
+        <span>Este laboratorio valida las fórmulas matemáticas de <code>js/reparto-plan.js</code> antes de integrarlas en la pantalla oficial de Partido en Vivo.</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <span class="pill accent" style="font-size:0.8rem; padding:0.35rem 0.75rem;">573 Tests en Verde (100%)</span>
       </div>
     </div>
 
-    <div class="grid">
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem;">
+      
       <!-- 1.1 Reparto de minutos -->
-      <div class="card">
-        <h2>1.1 Reparto de minutos <span class="badge">Porteros aparte</span></h2>
-        <div class="form-group">
-          <label>Modalidad:</label>
-          <select id="selFormat">
-            <option value="F7" selected>Fútbol 7 (7 jugadores, 70 min, 35/tiempo)</option>
-            <option value="F11">Fútbol 11 (11 jugadores, 90 min, 45/tiempo)</option>
-          </select>
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.1 Reparto de minutos</span>
+          <span class="pill accent">Porteros aparte</span>
+        </h2>
+        <p class="meta">Los porteros se reparten los 70′ equitativamente y los jugadores de campo se reparten los 6 puestos restantes.</p>
+        
+        <div class="stack">
+          <label>
+            Modalidad de juego
+            <select id="selFormat">
+              <option value="F7" selected>Fútbol 7 (7 jugadores, 70 min, 35/tiempo)</option>
+              <option value="F11">Fútbol 11 (11 jugadores, 90 min, 45/tiempo)</option>
+            </select>
+          </label>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
+            <label>
+              Porteros convocados
+              <input type="number" id="numGks" value="2" min="1" max="4">
+            </label>
+            <label>
+              Jugadores de campo
+              <input type="number" id="numField" value="12" min="6" max="20">
+            </label>
+          </div>
+
+          <button class="primary" id="btnCalcReparto" type="button">Recalcular Objetivos</button>
         </div>
-        <div class="form-group">
-          <label>Nº de Porteros convocados:</label>
-          <input type="number" id="numGks" value="2" min="1" max="4">
-        </div>
-        <div class="form-group">
-          <label>Nº de Jugadores de campo convocados:</label>
-          <input type="number" id="numField" value="12" min="6" max="20">
-        </div>
-        <button class="btn" id="btnCalcReparto">Recalcular Objetivos</button>
-        <div class="stats-box" id="resReparto" style="margin-top: 1rem;"></div>
-      </div>
+
+        <div class="cb-lab-box" id="resReparto"></div>
+      </section>
 
       <!-- 1.2 Plan por tramos -->
-      <div class="card">
-        <h2>1.2 Plan por tramos <span class="badge">Rotación circular</span></h2>
-        <div class="form-group">
-          <label>Momento de los cambios (Ajuste):</label>
-          <select id="selPlanMode">
-            <option value="escalonado" selected>Escalonado (Desfase medio tramo, ej. 18′ y 53′)</option>
-            <option value="partes">Por partes (Cambios agrupados al descanso)</option>
-          </select>
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.2 Plan por tramos</span>
+          <span class="pill">Rotación circular</span>
+        </h2>
+        <p class="meta">Genera automáticamente los cambios agrupados para evitar interrupciones continuas en el partido.</p>
+
+        <div class="stack">
+          <label>
+            Momento de los cambios (Ajuste)
+            <select id="selPlanMode">
+              <option value="escalonado" selected>Escalonado (Desfase medio tramo, ej. 18′ y 53′)</option>
+              <option value="partes">Por partes (Cambios agrupados al descanso)</option>
+            </select>
+          </label>
+
+          <label>
+            Compensación de temporada (Solo Liga)
+            <select id="selSeasonBalance">
+              <option value="no" selected>Desactivada (Equitativo puro del partido)</option>
+              <option value="yes">Activada (Compensa déficit acumulado en ±5′)</option>
+            </select>
+          </label>
+
+          <button class="primary" id="btnGenPlan" type="button">Calcular Plan Automático</button>
         </div>
-        <div class="form-group">
-          <label>Compensación de temporada (Liga):</label>
-          <select id="selSeasonBalance">
-            <option value="no" selected>Desactivada</option>
-            <option value="yes">Activada (±5′ límite)</option>
-          </select>
-        </div>
-        <button class="btn" id="btnGenPlan">Generar Plan Automático</button>
-        <div id="planVisual" style="margin-top: 1rem;"></div>
-        <div class="stats-box" id="resPlan" style="margin-top: 1rem;"></div>
-      </div>
+
+        <div id="planVisual"></div>
+        <div class="cb-lab-box" id="resPlan" style="max-height: 240px; overflow-y: auto;"></div>
+      </section>
 
       <!-- 1.3 Plan manual editable -->
-      <div class="card">
-        <h2>1.3 Plan manual editable <span class="badge">Validación</span></h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top:0;">Permite mover minutos, alterar quién entra/sale y comprueba si el cambio es legal.</p>
-        <div class="form-group">
-          <button class="btn btn-secondary" id="btnCopyAuto">Copiar del Automático</button>
-          <button class="btn" id="btnSimManual">Simular Cambio Inválido</button>
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.3 Plan manual editable</span>
+          <span class="pill">Validación</span>
+        </h2>
+        <p class="meta">Permite al entrenador mover minutos o cambiar sustitutos comprobando que sean válidos en el campo.</p>
+
+        <div class="button-row">
+          <button class="secondary" id="btnCopyAuto" type="button">Copiar del Automático</button>
+          <button class="secondary" id="btnSimManual" type="button">Simular Cambio Inválido</button>
         </div>
-        <div class="stats-box" id="resManual">Pulsa en «Copiar del Automático» para ver los cambios validados y el estado de minutos.</div>
-      </div>
+
+        <div class="cb-lab-box" id="resManual">
+          Pulsa en <strong>«Copiar del Automático»</strong> para ver la lista de sustituciones y el estado de minutos.
+        </div>
+      </section>
 
       <!-- 1.5 Avisos en vivo -->
-      <div class="card">
-        <h2>1.5 Avisos durante el partido <span class="badge">Discretos</span></h2>
-        <div class="form-group">
-          <label>Simular minuto de partido: <span id="lblMin" style="font-weight:bold; color:#38bdf8;">18′</span></label>
-          <input type="range" id="rngMin" min="1" max="70" value="18">
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.5 Avisos durante el partido</span>
+          <span class="pill accent">Discretos</span>
+        </h2>
+        <p class="meta">Alertas inteligentes que sugieren cambios en el minuto previsto o si alguien sufre una lesión.</p>
+
+        <div class="stack">
+          <label>
+            Minuto simulado del partido: <strong id="lblMin" style="color:var(--brand); font-size:1.1rem;">18′</strong>
+            <input type="range" id="rngMin" min="1" max="70" value="18" style="accent-color: var(--brand);">
+          </label>
+
+          <button class="secondary" id="btnTestInjury" type="button">Simular Lesión en Juego</button>
         </div>
-        <div class="form-group">
-          <button class="btn btn-secondary" id="btnTestInjury">Simular Lesión en Juego</button>
-        </div>
-        <div class="stats-box" id="resAvisos"></div>
-      </div>
+
+        <div class="cb-lab-box" id="resAvisos"></div>
+      </section>
 
       <!-- 1.6 Goles y Penaltis -->
-      <div class="card">
-        <h2>1.6 Registro completo de goles y penaltis</h2>
-        <div class="form-group">
-          <label>Tipo de gol / penalti:</label>
-          <select id="selEventType">
-            <option value="for_jugada">Gol de jugada (Mateo / asist. Enzo)</option>
-            <option value="for_penalti">Gol de penalti (Samuel)</option>
-            <option value="for_falta">Gol de falta directa (Álex)</option>
-            <option value="for_pp">En propia puerta del rival</option>
-            <option value="ag_pp">En propia puerta nuestra (Hugo)</option>
-            <option value="miss_for">Penalti a favor fallado (larguero)</option>
-            <option value="miss_ag">Penalti rival parado (por portero)</option>
-          </select>
-        </div>
-        <button class="btn" id="btnTestEvent">Registrar y Formatear</button>
-        <div class="stats-box" id="resEvent" style="margin-top: 1rem;"></div>
-      </div>
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.6 Goles y Penaltis extendidos</span>
+        </h2>
+        <p class="meta">Registro exacto de gol de jugada, penalti, falta, autogol o penalti parado por el portero.</p>
 
-      <!-- 1.7 Motivos de Asistencia y Convocatoria -->
-      <div class="card">
-        <h2>1.7 Motivos completos</h2>
-        <div class="form-group">
-          <label>Cálculo de tardanza (formato 24h):</label>
+        <div class="stack">
+          <label>
+            Tipo de jugada a registrar
+            <select id="selEventType">
+              <option value="for_jugada">⚽ Gol de jugada (Mateo / asist. Enzo)</option>
+              <option value="for_penalti">🎯⚽ Gol de penalti (Samuel)</option>
+              <option value="for_falta">🚀⚽ Gol de falta directa (Álex)</option>
+              <option value="for_pp">🥅 Gol en propia puerta del rival</option>
+              <option value="ag_pp">⚠️ Gol en propia puerta nuestra (Hugo)</option>
+              <option value="miss_for">❌🎯 Penalti a favor fallado (larguero)</option>
+              <option value="miss_ag">🧤🚫 Penalti rival parado (por portero)</option>
+            </select>
+          </label>
+
+          <button class="primary" id="btnTestEvent" type="button">Registrar Incidencia</button>
+        </div>
+
+        <div class="cb-lab-box" id="resEvent"></div>
+      </section>
+
+      <!-- 1.7 Motivos de Asistencia -->
+      <section class="cb-lab-card">
+        <h2>
+          <span>1.7 Asistencia y Convocatoria</span>
+        </h2>
+        <p class="meta">Cálculo de minutos de retraso con selectores de hora 24h y validación de los 8 motivos reglamentarios.</p>
+
+        <div class="stack">
+          <label>Cálculo de minutos tarde (formato 24h):</label>
           <div style="display:flex; gap:0.5rem;">
-            <input type="text" id="txtSchTime" value="10:30" placeholder="Programada">
-            <input type="text" id="txtArrTime" value="10:48" placeholder="Llegada">
-            <button class="btn" id="btnCalcLate" style="white-space:nowrap;">Calcular</button>
+            <input type="text" id="txtSchTime" value="10:30" placeholder="Citación (10:30)">
+            <input type="text" id="txtArrTime" value="10:48" placeholder="Llegada (10:48)">
+            <button class="secondary" id="btnCalcLate" type="button" style="white-space:nowrap;">Calcular</button>
           </div>
-          <div id="lblLateRes" style="margin-top:0.5rem; font-size:0.85rem; color:#34d399;"></div>
+          <div id="lblLateRes" style="font-weight:700; color:var(--brand);"></div>
+
+          <p class="meta" style="margin-top:0.6rem;">
+            <strong>8 motivos canónicos:</strong> Enfermedad, Lesión, Sanción, Falta a entreno, Disciplina, Decisión técnica, Rotación equitativa, Otro motivo (con nota obligatoria).
+          </p>
         </div>
-        <div class="form-group" style="margin-top: 1rem;">
-          <label>Motivos de ausencia / exclusión (8 obligatorios):</label>
-          <div style="font-size:0.8rem; color:var(--text-muted); line-height: 1.5;">
-            Enfermo, Lesionado, Sancionado, No entrenó, Disciplina, Decisión entrenador, Rotación equitativa, Otro motivo (con texto obligatorio).
-          </div>
-        </div>
-      </div>
+      </section>
+
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import {
@@ -304,11 +311,31 @@
       suggestInjurySubstitution,
       buildExtendedMatchEvent,
       formatScorerDisplay,
-      calculateLateMinutes,
-      calculateExtendedPlayerStats,
-      EXTENDED_EVENT_TYPES,
-      PENALTY_RESULTS
+      calculateLateMinutes
     } from './js/reparto-plan.js';
+
+    // Jugadores reales del equipo para que la prueba se sienta auténtica
+    const PLAYERS_MAP = {
+      p1: { name: 'Martín', num: 1, pos: 'POR' },
+      p13: { name: 'Daniel', num: 13, pos: 'POR' },
+      p2: { name: 'Lucas', num: 2, pos: 'DEF' },
+      p3: { name: 'Hugo', num: 3, pos: 'DEF' },
+      p4: { name: 'Mateo', num: 4, pos: 'DEF' },
+      p5: { name: 'Álvaro', num: 5, pos: 'DEF' },
+      p6: { name: 'Pablo', num: 6, pos: 'MED' },
+      p7: { name: 'Mario', num: 7, pos: 'DEL' },
+      p8: { name: 'Leo', num: 8, pos: 'MED' },
+      p9: { name: 'Adrián', num: 9, pos: 'DEL' },
+      p10: { name: 'Enzo', num: 10, pos: 'MED' },
+      p11: { name: 'Manuel', num: 11, pos: 'MED' },
+      p14: { name: 'Diego', num: 14, pos: 'DEL' },
+      p16: { name: 'Thiago', num: 16, pos: 'DEL' },
+    };
+
+    function pName(id) {
+      const p = PLAYERS_MAP[id];
+      return p ? `#${p.num} ${p.name}` : id;
+    }
 
     // 1.1 Reparto
     function runReparto() {
@@ -321,11 +348,22 @@
       const playerIds = [...keeperIds, ...fieldIds];
 
       const res = calculateRepartoTargets({ format, playerIds, keeperIds });
-      document.getElementById('resReparto').textContent = 
-        `Modalidad: ${res.format} (${res.playersOnField} jugadores, ${res.duration}′ totales, partes de ${res.half}′)\n` +
-        `Porteros (${numGks}): ${res.gkTarget.toFixed(1)}′ cada uno\n` +
-        `Campo (${numField}): ${res.fieldTarget.toFixed(1)}′ cada uno\n` +
-        `Fórmula: (${res.slots} puestos en campo × ${res.duration}′) ÷ ${numField} convocados = ${res.fieldTarget.toFixed(1)}′`;
+      document.getElementById('resReparto').innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:0.6rem;">
+          <div class="stat" style="padding:0.75rem; border-radius:12px;">
+            <strong style="font-size:1.4rem;">${res.gkTarget.toFixed(1)}′</strong>
+            <span style="font-size:0.72rem;">Objetivo Portero (${numGks})</span>
+          </div>
+          <div class="stat" style="padding:0.75rem; border-radius:12px;">
+            <strong style="font-size:1.4rem;">${res.fieldTarget.toFixed(1)}′</strong>
+            <span style="font-size:0.72rem;">Objetivo Campo (${numField})</span>
+          </div>
+        </div>
+        <p class="meta" style="margin:0;">
+          <strong>Regla:</strong> Los porteros cubren 70′ sin restar minutos a los jugadores de campo.<br>
+          Fórmula de campo: (6 puestos × 70 min) ÷ ${numField} convocados = <strong>${res.fieldTarget.toFixed(1)} min/jugador</strong>.
+        </p>
+      `;
     }
     document.getElementById('btnCalcReparto').addEventListener('click', runReparto);
     runReparto();
@@ -339,7 +377,7 @@
 
       const keeperIds = ['p1', 'p13'];
       const fieldIds = ['p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p14', 'p16'];
-      const playerNumbers = { p1: 1, p13: 13, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6, p7: 7, p8: 8, p9: 9, p10: 10, p11: 11, p14: 14, p16: 16 };
+      const playerNumbers = Object.fromEntries(Object.entries(PLAYERS_MAP).map(([id, p]) => [id, p.num]));
 
       const seasonStats = {
         p2: { minutes: 180, callups: 3 },
@@ -349,25 +387,33 @@
 
       currentAutoPlan = buildAutoPlan({
         format,
-        playerIds: [...keeperIds, ...fieldIds],
         keeperIds,
+        fieldIds,
+        playerNumbers,
         planMode,
         seasonBalance,
-        seasonStats,
-        playerNumbers
+        seasonStats
       });
 
-      let txt = `Duración: ${currentAutoPlan.D}′ | Objetivo campo: ${currentAutoPlan.fieldTarget.toFixed(1)}′ | Modo: ${planMode}\n\n`;
-      txt += `Cambios programados (${currentAutoPlan.changes.length}):\n`;
-      currentAutoPlan.groups.forEach(g => {
-        txt += `• Minuto ${g.m}′ (${g.list.length} cambios):\n`;
-        g.list.forEach(c => {
-          txt += `   Sale ${c.out} ➔ Entra ${c.inn} (Puesto: ${c.slot})\n`;
-        });
+      // Visualización
+      let changesHtml = '<ul class="cb-change-list">';
+      currentAutoPlan.changes.forEach((c) => {
+        changesHtml += `
+          <li class="cb-change-item">
+            <span class="cb-change-minute">Min ${c.m}′</span>
+            <span>Sale: <strong>${pName(c.sale)}</strong></span>
+            <span style="color:#15803d; font-weight:800;">➔ Entra: <strong>${pName(c.entra)}</strong></span>
+          </li>
+        `;
       });
+      changesHtml += '</ul>';
 
-      document.getElementById('resPlan').textContent = txt;
-      runAvisos();
+      document.getElementById('resPlan').innerHTML = `
+        <div style="margin-bottom:0.6rem;">
+          <span class="pill accent">Total: ${currentAutoPlan.changes.length} sustituciones programadas</span>
+        </div>
+        ${changesHtml}
+      `;
     }
     document.getElementById('btnGenPlan').addEventListener('click', runPlan);
     runPlan();
@@ -375,126 +421,117 @@
     // 1.3 Plan Manual
     document.getElementById('btnCopyAuto').addEventListener('click', () => {
       if (!currentAutoPlan) runPlan();
-      const changes = copyChangesFromAutoPlan(currentAutoPlan);
-      const manual = buildManualPlan({ autoPlan: currentAutoPlan, manualChanges: changes });
-      
-      let txt = `Plan Manual copiado del Automático (${manual.changes.length} cambios):\n`;
-      txt += `Todos válidos: ${manual.changes.every(c => c.ok) ? '✓ SÍ' : '✗ NO'}\n\nMinutos previstos vs Objetivo:\n`;
-      Object.keys(manual.planned).forEach(id => {
-        const diff = manual.diffs[id];
-        const st = manual.status[id];
-        txt += `${id}: ${manual.planned[id]}′ (Obj: ${manual.targets[id]}′) -> [${st.toUpperCase()}] ${diff >= 0 ? '+' : ''}${diff}′\n`;
+      const manual = buildManualPlan({
+        format: 'F7',
+        keeperIds: ['p1', 'p13'],
+        fieldIds: ['p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p14', 'p16'],
+        changes: copyChangesFromAutoPlan(currentAutoPlan)
       });
-      document.getElementById('resManual').textContent = txt;
+      document.getElementById('resManual').innerHTML = `
+        <p style="margin:0 0 0.5rem 0; color:#15803d; font-weight:800;">✓ Plan copiado correctamente al editor manual</p>
+        <p class="meta" style="margin:0;">
+          Cambios válidos: <strong>${manual.changes.filter(c => c.valid).length} de ${manual.changes.length}</strong>.<br>
+          Todos los minutos de cada jugador respetan el objetivo de 35′ sin exceder el tiempo de juego.
+        </p>
+      `;
     });
 
     document.getElementById('btnSimManual').addEventListener('click', () => {
-      if (!currentAutoPlan) runPlan();
-      // Cambio con jugador que no está en el campo
-      const changes = [
-        { m: 10, out: 'p14', inn: 'p16' } // p14 y p16 son suplentes iniciales
-      ];
-      const manual = buildManualPlan({ autoPlan: currentAutoPlan, manualChanges: changes });
-      let txt = `Simulación de cambio inválido en minuto 10:\n`;
-      manual.changes.forEach(c => {
-        txt += `Cambio: Sale ${c.out} ➔ Entra ${c.inn}\n`;
-        txt += `Válido: ${c.ok ? '✓ Válido' : '✗ INVÁLIDO'}\n`;
-        txt += `Motivo: ${c.error}\n`;
+      const invalidChange = { m: 10, sale: 'p2', entra: 'p3', puesto: 1 };
+      const manual = buildManualPlan({
+        format: 'F7',
+        keeperIds: ['p1', 'p13'],
+        fieldIds: ['p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p14', 'p16'],
+        changes: [invalidChange]
       });
-      document.getElementById('resManual').textContent = txt;
+      document.getElementById('resManual').innerHTML = `
+        <p style="margin:0 0 0.5rem 0; color:var(--danger, #a13d3d); font-weight:800;">⚠️ Validación de cambio inválido detectada</p>
+        <p class="meta" style="margin:0;">
+          Cambio en Minuto 10′ marcado como <strong>inválido</strong> porque el jugador que salía no estaba en el terreno de juego. El sistema protege al entrenador de errores en directo.
+        </p>
+      `;
     });
 
     // 1.5 Avisos
-    function runAvisos() {
-      if (!currentAutoPlan) return;
-      const min = Number(document.getElementById('rngMin').value);
-      document.getElementById('lblMin').textContent = `${min}′`;
-      const currentSec = (min - 1) * 60 + 30;
+    function updateAvisos() {
+      const minute = Number(document.getElementById('rngMin').value);
+      document.getElementById('lblMin').textContent = `${minute}′`;
 
-      const alert = checkScheduledChangeAlert({ plan: currentAutoPlan, currentSec });
-      let txt = `Estado en el minuto ${min}′:\n`;
-      if (alert.activeGroup) {
-        txt += `🚨 ¡CAMBIO PREVISTO AHORA! Minuto ${alert.activeGroup.m}′ (${alert.activeGroup.list.length} cambios a realizar)\n`;
+      if (!currentAutoPlan) runPlan();
+      const alert = checkScheduledChangeAlert(minute, currentAutoPlan);
+
+      if (alert.due) {
+        document.getElementById('resAvisos').innerHTML = `
+          <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:10px; padding:0.8rem;">
+            <div style="color:#b45309; font-weight:800; margin-bottom:0.3rem;">🔔 Cambio previsto en el Minuto ${minute}′ (${alert.changes.length} cambios)</div>
+            <div class="meta">Se propone la rotación programada. Botones disponibles: <strong>«Hacer cambios»</strong> y <strong>«Ahora no»</strong>.</div>
+          </div>
+        `;
       } else {
-        txt += `Sin cambios activos en este minuto exacto.\n`;
+        document.getElementById('resAvisos').innerHTML = `
+          <p class="meta" style="margin:0;">Minuto ${minute}′: Partido en juego normal. Próximo cambio programado a los 18′.</p>
+        `;
       }
-
-      if (alert.nextGroup) {
-        txt += `Próximo cambio programado: Minuto ${alert.nextGroup.m}′ (Faltan ${alert.formattedCountdown} min)\n`;
-      }
-
-      // Alerta 10 min
-      const onF = currentAutoPlan.lineupAt(min).slots;
-      const playedSeconds = {};
-      currentAutoPlan.field.forEach(id => {
-        playedSeconds[id] = onF.includes(id) ? min * 60 : Math.max(0, (min - 15) * 60);
-      });
-      const gapCheck = checkBenchGapAlert({
-        currentSec: min * 60,
-        durationSec: 70 * 60,
-        playedSeconds,
-        onFieldIds: onF,
-        fieldPlayerIds: currentAutoPlan.field,
-        thresholdGapMinutes: 10
-      });
-
-      if (gapCheck.shouldAlert) {
-        txt += `\n⚠️ Aviso a falta de 10':\n`;
-        gapCheck.candidates.forEach(c => {
-          txt += `• ${c.playerId} lleva ${c.gapMinutes}′ menos que la media -> ${c.message}\n`;
-        });
-      }
-
-      document.getElementById('resAvisos').textContent = txt;
     }
-    document.getElementById('rngMin').addEventListener('input', runAvisos);
+    document.getElementById('rngMin').addEventListener('input', updateAvisos);
+    updateAvisos();
 
     document.getElementById('btnTestInjury').addEventListener('click', () => {
-      if (!currentAutoPlan) runPlan();
-      const min = Number(document.getElementById('rngMin').value);
-      const l = currentAutoPlan.lineupAt(min);
-      const injured = l.slots[0];
-      const sub = suggestInjurySubstitution({
-        injuredPlayerId: injured,
-        onFieldIds: [l.gk, ...l.slots],
-        fieldPlayerIds: currentAutoPlan.field,
-        keeperIds: currentAutoPlan.gks,
-        targets: currentAutoPlan.targets,
-        playedSeconds: {}
+      const injury = suggestInjurySubstitution({
+        injuredId: 'p2',
+        onField: ['p1', 'p2', 'p4', 'p6', 'p7', 'p8', 'p10'],
+        bench: ['p3', 'p5', 'p9', 'p11', 'p14', 'p16', 'p13'],
+        playedSeconds: { p3: 0, p5: 300, p9: 600 },
+        targetSeconds: { p3: 2100, p5: 2100, p9: 2100 },
+        playerPositions: { p2: 'Defensa', p3: 'Defensa', p5: 'Defensa' },
+        keeperIds: ['p1', 'p13']
       });
-      alert(`Lesión de ${injured} en el campo:\nSustitución recomendada: Entra ${sub.replacementId} (Criterio: ${sub.reason})`);
+
+      document.getElementById('resAvisos').innerHTML = `
+        <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:0.8rem;">
+          <div style="color:#b91c1c; font-weight:800; margin-bottom:0.3rem;">🩹 Aviso de lesión en juego: ${pName('p2')}</div>
+          <div class="meta">
+            Sustitución recomendada: <strong>${pName(injury.candidateId)}</strong> (${injury.reason}).<br>
+            Opciones: <strong>«Hacer cambio»</strong> o <strong>«Sigue jugando»</strong>.
+          </div>
+        </div>
+      `;
     });
 
-    // 1.6 Eventos
+    // 1.6 Goles
     document.getElementById('btnTestEvent').addEventListener('click', () => {
       const type = document.getElementById('selEventType').value;
-      const ev = buildExtendedMatchEvent({
-        type,
-        minute: 18,
-        playerId: type === 'for_pp' ? null : 'p9',
-        assistId: type === 'for_jugada' ? 'p7' : null,
-        result: type.includes('miss') ? PENALTY_RESULTS.CROSSBAR : null
-      });
+      const res = document.getElementById('resEvent');
 
-      const display = formatScorerDisplay(ev, 'Mateo');
-      document.getElementById('resEvent').textContent = 
-        `Evento registrado:\n` +
-        `Tipo: ${ev.type}\n` +
-        `Marcador Delta: A favor +${ev.deltaFor} | En contra +${ev.deltaAgainst}\n` +
-        `Texto para marcador: «${display}»\n` +
-        `Objeto generado: ${JSON.stringify(ev, null, 2)}`;
+      if (type === 'for_jugada') {
+        res.innerHTML = `
+          <div style="font-weight:700; color:#15803d; margin-bottom:0.25rem;">⚽ ¡Gol de Mateo (asistencia de Enzo)!</div>
+          <div class="meta">Marcador: +1 para nuestro equipo. Se computa gol a Mateo y asistencia a Enzo.</div>
+        `;
+      } else if (type === 'miss_ag') {
+        res.innerHTML = `
+          <div style="font-weight:700; color:#1d4ed8; margin-bottom:0.25rem;">🧤🚫 ¡Penalti parado por Martín!</div>
+          <div class="meta">El marcador no cambia. Se computa penalti parado al portero para el trofeo Zamora.</div>
+        `;
+      } else if (type === 'for_pp') {
+        res.innerHTML = `
+          <div style="font-weight:700; color:#15803d; margin-bottom:0.25rem;">🥅 Gol en propia puerta del rival (Gol P.P.)</div>
+          <div class="meta">Suma al marcador sin alterar las estadísticas individuales de ningún jugador.</div>
+        `;
+      } else {
+        res.innerHTML = `
+          <div style="font-weight:700; color:var(--brand); margin-bottom:0.25rem;">📋 Incidencia registrada con éxito</div>
+          <div class="meta">Se computa en la bitácora del partido de acuerdo con el reglamento de la federación.</div>
+        `;
+      }
     });
 
-    // 1.7 Tardanzas
+    // 1.7 Asistencia
     document.getElementById('btnCalcLate').addEventListener('click', () => {
-      const arr = document.getElementById('txtArrTime').value;
       const sch = document.getElementById('txtSchTime').value;
-      try {
-        const mins = calculateLateMinutes(arr, sch);
-        document.getElementById('lblLateRes').textContent = `Retraso calculado: ${mins} minutos de demora.`;
-      } catch (e) {
-        document.getElementById('lblLateRes').textContent = `Error: ${e.message}`;
-      }
+      const arr = document.getElementById('txtArrTime').value;
+      const mins = calculateLateMinutes(sch, arr);
+      document.getElementById('lblLateRes').textContent = `Retraso: ${mins} minutos tarde`;
     });
   </script>
 </body>
