@@ -7755,7 +7755,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260924-v56-delegate-save-perms-clean-nav-fix').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

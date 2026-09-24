@@ -4,11 +4,11 @@ import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
-import './exercise-board-persistence.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix';
-import './runtime-refresh.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix';
+import './exercise-board-persistence.js?v=20260924-v56-delegate-save-perms-clean-nav-fix';
+import './runtime-refresh.js?v=20260924-v56-delegate-save-perms-clean-nav-fix';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
-import './exercise-view-mode-ui.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix';
+import './exercise-view-mode-ui.js?v=20260924-v56-delegate-save-perms-clean-nav-fix';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
@@ -183,7 +183,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260924-v55-delegate-dynamic-permissions-logout-fix'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260924-v56-delegate-save-perms-clean-nav-fix'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -212,7 +212,7 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el estado de la cuenta:', error);
     });
 
-  void import('./team-access.js?v=1')
+  void import('./team-access.js?v=20260924-v56-delegate-save-perms-clean-nav-fix')
     .then(({ initTeamAccess }) => initTeamAccess(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso del equipo:', error);
