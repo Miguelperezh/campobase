@@ -273,6 +273,9 @@ test('liga mantiene máximo 14, amistoso admite cualquier número y torneo conse
   assert.deepEqual(friendly.availableIds, seventeen.map(({ id }) => id));
   assert.equal(friendly.exclusions.length, 0);
 
+  const friendlyTargets = calculateMinuteTargets(friendly.availableIds, 70, 7);
+  assert.equal(friendlyTargets.length, 17, 'Todos los convocados del amistoso deben entrar en el reparto de minutos');
+
   const league = buildCallupSelection(seventeen, { matchType: 'league' });
   assert.equal(league.availableIds.length, 14);
 
