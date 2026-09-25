@@ -266,11 +266,18 @@ test('una decisión de rotación pendiente conserva provisionalmente el máximo 
   assert.deepEqual(result.pendingRotationDecisions, [{ playerId: 'p1', history: protectedHistories.p1 }]);
 });
 
-test('en amistosos y torneos convoca a todos sin rotación y mantiene el máximo de 14', () => {
-  const fourteen = Array.from({ length: 14 }, (_, index) => ({ id: `p${index + 1}` }));
-  assert.deepEqual(buildCallupSelection(fourteen, { matchType: 'friendly' }).availableIds, fourteen.map(({ id }) => id));
+test('liga mantiene máximo 14, amistoso admite cualquier número y torneo conserva su límite actual', () => {
+  const seventeen = Array.from({ length: 17 }, (_, index) => ({ id: `p${index + 1}` }));
+
+  const friendly = buildCallupSelection(seventeen, { matchType: 'friendly' });
+  assert.deepEqual(friendly.availableIds, seventeen.map(({ id }) => id));
+  assert.equal(friendly.exclusions.length, 0);
+
+  const league = buildCallupSelection(seventeen, { matchType: 'league' });
+  assert.equal(league.availableIds.length, 14);
+
   assert.throws(
-    () => buildCallupSelection([...fourteen, { id: 'p15' }], { matchType: 'tournament' }),
+    () => buildCallupSelection(seventeen, { matchType: 'tournament' }),
     /máximo de 14/i,
   );
 });
