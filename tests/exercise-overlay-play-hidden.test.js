@@ -34,5 +34,5 @@ test('versión de caché en sw.js e index.html están sincronizadas a v=20260924
 
   assert.match(sw, /2503/, 'sw.js debe contener la versión 2503');
   assert.match(html, /styles-redesign\.css\?v=20260924-v59-delegate-views-visible-render-fix/, 'index.html debe cargar styles-redesign.css con v=20260924-v59-delegate-views-visible-render-fix');
-  assert.match(html, /js\/app\.js\?v=20260924-v59-delegate-views-visible-render-fix/, 'index.html debe cargar js/app.js con v=20260924-v59-delegate-views-visible-render-fix');
+  assert.match(html, /js\/app\.js\?v=20260925-friendly-unlimited-v1/, 'index.html debe cargar app.js con el cache-bust de convocatorias amistosas');
 });
