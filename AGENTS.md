@@ -4535,3 +4535,10 @@ Estado:
 - cambio en rama aislada `fix/amistoso-sin-limite-convocados`;
 - pendiente de batería completa de tests y comparación final antes de producción.
 
+# 71. Regla exacta de convocados confirmada por Miguel — 25/09/2026
+
+Confirmación expresa:
+- **Liga:** máximo **14** jugadores convocados. Nunca permitir 15 o más.
+- **Amistoso:** sin límite máximo. Miguel puede llevar 15, 17, 20, 25 o cualquier número de jugadores que quiera; todos los convocados deben entrar en el reparto de minutos.
+- No aplicar el límite de 14 a un amistoso.
+- Esta regla debe mantenerse en escritorio, móvil, preparación, reparto y cualquier validación futura relacionada con el número de convocados.
