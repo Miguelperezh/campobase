@@ -75,7 +75,7 @@ test('una mutación local obsoleta se descarta si Supabase tiene una versión po
   assert.match(db, /cloudStore\.shouldApplyMutation\(mutation\)/);
   assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id\)[\s\S]*continue/);
   assert.match(cloud, /async shouldApplyMutation\(mutation\)/);
-  assert.match(cloud, /select\('updated_at,deleted_at,payload'\)/);
+  assert.match(cloud, /select\('updated_at,deleted_at'\)/);
   assert.match(cloud, /localQueuedAt >= remoteUpdatedAt/);
 });
 
