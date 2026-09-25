@@ -58,11 +58,11 @@ test('la URL de validación no registra ni sustituye el service worker de produc
   assert.match(app, /'serviceWorker' in navigator && !isValidationPreview/);
 });
 
-test('showView recorre colecciones con $$ y no vuelve a provocar forEach sobre un único elemento', async () => {
+test('showView recorre colecciones reales y no vuelve a provocar forEach sobre un único elemento', async () => {
   const app = await projectFile('js/app.js');
   const showView = app.slice(app.indexOf('function showView'), app.indexOf('// Buscador global'));
-  assert.match(showView, /\$\$\('\.view'\)\.forEach/);
-  assert.match(showView, /\$\$\('\.bottom-nav button'\)\.forEach/);
+  assert.match(showView, /document\.querySelectorAll\('\.view'\)\.forEach/);
+  assert.match(showView, /document\.querySelectorAll\('\.bottom-nav button'\)\.forEach/);
   assert.doesNotMatch(showView, /(^|[^$])\$\('\.view'\)\.forEach/m);
   assert.doesNotMatch(showView, /(^|[^$])\$\('\.bottom-nav button'\)\.forEach/m);
 });
