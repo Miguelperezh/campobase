@@ -197,8 +197,9 @@ async function testDesktop(page) {
   if (persistedLive.prepIds.length !== 7 || new Set(persistedLive.prepIds).size !== 7 || !persistedLive.prepIds.includes('smoke-player-9')) {
     throw new Error('Preparar partido no persistió la alineación como preparación.');
   }
-  if (!persistedLive.liveIds.includes('smoke-player-9') || !persistedLive.initialIds.includes('smoke-player-9')) {
-    throw new Error('Preparar partido no persistió la alineación en settings/live.');
+  if (JSON.stringify(persistedLive.liveIds) !== JSON.stringify(persistedLive.prepIds)
+    || JSON.stringify(persistedLive.initialIds) !== JSON.stringify(persistedLive.prepIds)) {
+    throw new Error('Preparar partido no persistió el mismo orden de posiciones en settings/live.');
   }
 
   await page.evaluate(async () => {
@@ -211,8 +212,8 @@ async function testDesktop(page) {
   });
   await page.waitForSelector('#live-tactics-slots select');
   const restoredLiveIds = await page.$$eval('#live-tactics-slots select', (nodes) => nodes.map((node) => node.value).filter(Boolean));
-  if (restoredLiveIds.length !== 7 || !restoredLiveIds.includes('smoke-player-9')) {
-    throw new Error('La alineación de Preparar partido no se reconstruyó desde el guardado.');
+  if (JSON.stringify(restoredLiveIds) !== JSON.stringify(persistedLive.prepIds)) {
+    throw new Error('La alineación de Preparar partido cambió de posición al reconstruirse desde el guardado.');
   }
 
   // 4) + Ejercicio abre realmente.
