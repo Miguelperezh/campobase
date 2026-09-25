@@ -41,7 +41,7 @@ test('el nuevo Inicio se carga desde la app y queda disponible offline', async (
   ]);
   assert.match(demo, /today-dashboard\.js\?v=2456/);
   assert.match(sw, /today-dashboard\.js\?v=2456/);
-  assert.match(sw, /today-2456/);
+  assert.match(sw, /today-2457/);
   assert.match(pkg, /node --check js\/today-dashboard\.js/);
   assert.match(source, /section\.id = 'hoy'/);
   assert.match(source, /navButton\.textContent = 'Hoy'/);
