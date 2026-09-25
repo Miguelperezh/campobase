@@ -371,9 +371,6 @@ function showView(viewId) {
   } catch {}
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   document.querySelectorAll('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
-  try {
-    window.dispatchEvent(new CustomEvent('campobase:view-changed', { detail: { viewId } }));
-  } catch {}
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
   applyGlobalSearch();
@@ -410,6 +407,24 @@ function showView(viewId) {
     populateDelegateAccountForm();
     populateKitSettingsForm();
   }
+
+  // La navegación del entrenador debe quedar visible de forma determinista.
+  // El controlador de rediseño seguirá decidiendo el contenido exacto de las
+  // subpestañas; aquí solo evitamos que quede arrastrado el estado hidden de
+  // una vista anterior mientras se completa el arranque.
+  const unrestrictedOwnerView = state.role !== 'delegate'
+    && !state.delegateMode
+    && !Array.isArray(window.__campobaseAllowedViews);
+  const usesSubNav = ['plantilla', 'cuerpo-tecnico', 'asistencia', 'convocatorias', 'preparacion', 'partido', 'calendario', 'sesiones', 'ejercicios', 'tacticas', 'ajustes'].includes(viewId);
+  const subNav = document.getElementById('cb-sub-nav');
+  if (unrestrictedOwnerView && usesSubNav && subNav) {
+    subNav.hidden = false;
+    subNav.classList.remove('cb-hidden');
+    subNav.style.removeProperty('display');
+  }
+  try {
+    window.dispatchEvent(new CustomEvent('campobase:view-changed', { detail: { viewId } }));
+  } catch {}
 }
 
 // Buscador global: filtra los elementos de la vista activa por nombre o palabra.
