@@ -19,7 +19,7 @@ test('recargar conserva la sesión segura de la pestaña y evita expulsar al usu
     projectFile('sw.js'),
   ]);
   assert.match(app, /campobase\.activeView/);
-  assert.match(app, /20260925-v60-equipo-prep-persistence/);
+  assert.match(app, /20260924-v59-delegate-views-visible-render-fix/);
   assert.match(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]*return unlockBoundSession\(client\)/);
   assert.doesNotMatch(auth, /browserSessionIsActive\(session\.user\.id\)[\s\S]{0,120}clearBrowserSessionActive\(\)/);
   assert.doesNotMatch(sw, /client\.navigate\(client\.url\)/);

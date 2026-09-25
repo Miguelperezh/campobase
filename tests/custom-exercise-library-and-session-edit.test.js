@@ -42,7 +42,7 @@ test('crear y editar sesiones usa el mismo builder y confirma el guardado', () =
 
 test('la PWA fuerza la actualización de esta corrección', () => {
   assert.match(sw, /force2508-final-preview-own-sessions/);
-  assert.match(app, /20260925-v60-equipo-prep-persistence/);
+  assert.match(app, /20260924-v59-delegate-views-visible-render-fix/);
 });
 
 
