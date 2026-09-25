@@ -46,9 +46,12 @@ async function enterDemo(page) {
 async function testDesktop(page) {
   await enterDemo(page);
 
-  // 1) Subpestañas superiores: clic real.
-  await page.evaluate(() => window.__campobase.showView('plantilla'));
-  await page.waitForSelector('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
+  // 1) Navegación real: entrar primero en Equipo desde la barra principal
+  // para que el controlador rediseñado pinte la subnavegación visible.
+  await page.waitForSelector('#cb-bottom-nav [data-module="equipo"]', { state: 'visible' });
+  await page.click('#cb-bottom-nav [data-module="equipo"]');
+  await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'plantilla');
+  await page.waitForSelector('#cb-sub-nav [data-target-view="cuerpo-tecnico"]', { state: 'visible' });
   await page.click('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
   await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'cuerpo-tecnico');
 
