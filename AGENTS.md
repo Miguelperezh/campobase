@@ -4501,3 +4501,37 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - Sintaxis y verificación completas (`npm run check`).
 
 
+
+# 70. Convocatoria y reparto de minutos — Liga máximo 14; Amistosos sin límite — 25/09/2026
+
+Petición expresa de Miguel:
+- no modificar partidos;
+- no modificar ninguna otra función ni diseño de la app;
+- únicamente cambiar el límite de jugadores de la convocatoria/reparto según tipo de partido.
+
+Regla vigente:
+- **Liga:** máximo **14 jugadores convocados**.
+- **Amistoso:** **sin límite máximo de convocados**; pueden participar tantos jugadores como Miguel quiera y todos entran en el cálculo/reparto de minutos.
+- **Torneo:** no se modifica en este cambio; conserva el comportamiento previo.
+
+Implementación limitada a:
+- `js/domain.js`: `buildCallupSelection()` deja de aplicar el límite de 14 cuando `matchType === 'friendly'`.
+- `js/app.js`: únicamente se actualiza el texto de ayuda y el contador visual de convocados para reflejar “Liga: máximo 14” y “Amistoso: sin límite”.
+- `tests/domain.test.js`: prueba específica de 17 jugadores en amistoso, 14 máximo en Liga y torneo sin cambios.
+
+Qué NO se toca:
+- registros de partidos;
+- Supabase/datos reales;
+- WhatsApp;
+- alineaciones;
+- partido en vivo;
+- estadísticas;
+- asistencia;
+- preparación;
+- reparto salvo permitir más de 14 jugadores en amistosos;
+- resto de interfaz y estilos.
+
+Estado:
+- cambio en rama aislada `fix/amistoso-sin-limite-convocados`;
+- pendiente de batería completa de tests y comparación final antes de producción.
+
