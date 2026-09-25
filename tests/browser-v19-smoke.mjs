@@ -46,6 +46,50 @@ async function enterDemo(page) {
 async function testDesktop(page) {
   await enterDemo(page);
 
+  const navDiag = async (label) => {
+    const diag = await page.evaluate(() => {
+      const active = document.querySelector('.view.active');
+      const sub = document.getElementById('cb-sub-nav');
+      const tech = sub?.querySelector('[data-target-view="cuerpo-tecnico"]');
+      const equipo = document.querySelector('#cb-bottom-nav [data-module="equipo"]');
+      return {
+        role: window.__campobase?.state?.role,
+        delegateMode: window.__campobase?.state?.delegateMode,
+        activeView: active?.id || null,
+        bodyClass: document.body.className,
+        allowedViews: window.__campobaseAllowedViews ?? null,
+        subHiddenAttr: sub?.hidden ?? null,
+        subClass: sub?.className || null,
+        subStyleDisplay: sub?.style?.getPropertyValue('display') || '',
+        subComputedDisplay: sub ? getComputedStyle(sub).display : null,
+        subRect: sub ? { width: sub.getBoundingClientRect().width, height: sub.getBoundingClientRect().height } : null,
+        techComputedDisplay: tech ? getComputedStyle(tech).display : null,
+        techRect: tech ? { width: tech.getBoundingClientRect().width, height: tech.getBoundingClientRect().height } : null,
+        equipoComputedDisplay: equipo ? getComputedStyle(equipo).display : null,
+      };
+    });
+    console.log('CAMPOBASE_NAV_DIAG ' + label + ' ' + JSON.stringify(diag));
+    return diag;
+  };
+
+  await navDiag('after-enter-demo');
+  await page.evaluate(() => window.__campobase.showView('plantilla'));
+  await page.waitForTimeout(250);
+  const afterDirectShow = await navDiag('after-direct-showView-plantilla');
+
+  const techVisibleAfterDirect = afterDirectShow.subComputedDisplay !== 'none'
+    && (afterDirectShow.techRect?.width || 0) > 0
+    && (afterDirectShow.techRect?.height || 0) > 0;
+
+  if (!techVisibleAfterDirect) {
+    await page.click('#cb-bottom-nav [data-module="equipo"]');
+    await page.waitForTimeout(250);
+    const afterRealEquipoClick = await navDiag('after-real-equipo-click');
+    if (afterRealEquipoClick.subComputedDisplay === 'none') {
+      throw new Error('Equipo mantiene la subnavegación oculta tras clic real: ' + JSON.stringify(afterRealEquipoClick));
+    }
+  }
+
   // 2) El cambio de este PR (límite de convocados) se cubre en domain.test.js
   // con 25 jugadores en amistoso y máximo 14 en Liga. El smoke de navegador
   // no debe bloquear este cambio por el flujo dinámico del partido en vivo,
