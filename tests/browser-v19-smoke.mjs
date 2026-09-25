@@ -103,20 +103,23 @@ async function testDesktop(page) {
   await page.click('.prep-open[data-id="smoke-match"]');
   await page.waitForSelector('#prep-slots select');
 
-  const changed = await page.evaluate(() => {
+  const assigned = await page.evaluate(() => {
     const selects = Array.from(document.querySelectorAll('#prep-slots select'));
+    let outfieldIndex = 3;
     for (const select of selects) {
-      const option = Array.from(select.options).find((item) => item.value === 'smoke-player-8');
-      if (!option || select.value === 'smoke-player-8') continue;
-      select.value = 'smoke-player-8';
+      const target = select.getAttribute('aria-label') === 'Portero'
+        ? 'smoke-player-1'
+        : 'smoke-player-' + outfieldIndex++;
+      const option = Array.from(select.options).find((item) => item.value === target);
+      if (!option) return false;
+      select.value = target;
       select.dispatchEvent(new Event('change', { bubbles: true }));
-      return true;
     }
-    return false;
+    return true;
   });
-  if (!changed) throw new Error('No se pudo aplicar el cambio temporal de titular.');
+  if (!assigned) throw new Error('No se pudo construir la alineación temporal válida.');
 
-  const prepBefore = await page.$$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  const prepBefore = await page.$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
   if (prepBefore.length !== 7 || new Set(prepBefore.filter(Boolean)).size !== 7) {
     throw new Error('La preparación de prueba no contiene 7 titulares únicos.');
   }
