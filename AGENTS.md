@@ -4542,3 +4542,15 @@ Confirmación expresa:
 - **Amistoso:** sin límite máximo. Miguel puede llevar 15, 17, 20, 25 o cualquier número de jugadores que quiera; todos los convocados deben entrar en el reparto de minutos.
 - No aplicar el límite de 14 a un amistoso.
 - Esta regla debe mantenerse en escritorio, móvil, preparación, reparto y cualquier validación futura relacionada con el número de convocados.
+
+# 72. Corrección crítica Equipo + persistencia de preparación + RLS — 25/09/2026
+
+Causas demostradas y guardarraíles permanentes:
+
+- **Equipo / subpestañas vacías:** `js/today-dashboard.js` no puede cambiar por su cuenta la vista activa del usuario. Queda prohibido retirar `active` de `#plantilla`, `#cuerpo-tecnico` o `#asistencia` desde el render de Hoy. El dashboard de Inicio solo puede renderizar su contenido; la navegación la decide `showView()` / navegación del usuario.
+- **Preparación de partido:** una alineación guardada debe sobrevivir exactamente a `Guardar -> refresh() -> volver a abrir` manteniendo los 7 titulares y su orden/posición. No auto-regenerar ni sustituir una preparación ya guardada.
+- **Prueba obligatoria de regresión:** el browser smoke debe abrir Plantilla, Cuerpo Técnico y Asistencia mediante navegación real y comprobar que contienen vista visible; además debe crear una preparación demo válida, guardarla, forzar repintado/refresh y comprobar igualdad exacta al reabrir.
+- **RLS de equipo:** no crear políticas circulares entre `equipos_cuenta` y `equipo_miembros`. La comprobación de propietario de equipo se resuelve mediante función `SECURITY DEFINER` acotada (`is_team_owner(team_id)`) para evitar `infinite recursion detected in policy for relation "equipo_miembros"`.
+- **Datos reales:** estas correcciones no autorizan borrar, migrar, duplicar ni reconstruir jugadores, partidos, convocatorias, asistencias, estadísticas o configuraciones. No copiar datos entre propietarios/equipos para “arreglar” una vista.
+- **Despliegue PWA:** cuando se corrige un módulo cargado con query de versión, actualizar el cache-bust del módulo y el build de HTML/app/SW para evitar que móvil o escritorio sigan ejecutando código anterior.
+- **No aceptar CI verde incompleto:** si el job de browser smoke está `skipped` o no cubre Equipo/Preparación, no se considera validación suficiente de estos flujos.
