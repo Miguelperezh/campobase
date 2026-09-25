@@ -156,7 +156,7 @@ async function testDesktop(page) {
     app.state.timer = null;
     await app.refresh();
     app.renderAll();
-    app.showView('live');
+    app.showView('partido');
   });
 
   await page.waitForSelector('#live-select');
@@ -208,7 +208,7 @@ async function testDesktop(page) {
     app.state.preparaciones = [];
     await app.refresh();
     app.renderAll();
-    app.showView('live');
+    app.showView('partido');
   });
   await page.waitForSelector('#live-tactics-slots select');
   const restoredLiveIds = await page.$$eval('#live-tactics-slots select', (nodes) => nodes.map((node) => node.value).filter(Boolean));
