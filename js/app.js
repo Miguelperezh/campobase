@@ -369,8 +369,8 @@ function showView(viewId) {
     const openModals = document.querySelectorAll('dialog[open]:not(#auth-dialog)');
     openModals.forEach((d) => d.close());
   } catch {}
-  $('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
-  $('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
+  document.querySelectorAll('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
   try {
     window.dispatchEvent(new CustomEvent('campobase:view-changed', { detail: { viewId } }));
   } catch {}
