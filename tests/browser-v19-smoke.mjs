@@ -216,7 +216,42 @@ async function testDesktop(page) {
     throw new Error('La alineación de Preparar partido cambió de posición al reconstruirse desde el guardado.');
   }
 
-  // 4) + Ejercicio abre realmente.
+  // 4) Simular una actualización llegada desde otro dispositivo: con una
+  // pizarra ya montada en memoria, una preparación remota más nueva debe
+  // sustituir exactamente sus posiciones al refrescar.
+  const remoteExpected = await page.evaluate(async () => {
+    const app = window.__campobase;
+    const db = await import('./js/db.js');
+    const settings = await db.getAll('settings');
+    const prep = settings.find((item) => item.recordType === 'preparacion' && item.matchId === 'smoke-match');
+    const live = settings.find((item) => item.id === 'live');
+    if (!prep?.team?.length || !live?.timer) return [];
+    const team = prep.team.map((position) => ({ ...position }));
+    const tmp = team[1].playerId;
+    team[1].playerId = team[2].playerId;
+    team[2].playerId = tmp;
+    const expected = team.map((position) => position.playerId).filter(Boolean);
+    const updatedAt = Date.now() + 5000;
+    await db.put('settings', { ...prep, team, savedAt: updatedAt });
+    const timer = {
+      ...live.timer,
+      onField: [...expected],
+      initialOnField: [...expected],
+      updatedAt,
+    };
+    await db.put('settings', { id: 'live', timer, updatedAt });
+    app.state.timer = timer;
+    app.state.liveUpdatedAt = updatedAt;
+    await app.refresh(true);
+    return expected;
+  });
+  if (remoteExpected.length !== 7) throw new Error('No se pudo construir la alineación remota simulada.');
+  const remoteRendered = await page.$eval('#live-tactics-slots select', (nodes) => nodes.map((node) => node.value).filter(Boolean));
+  if (JSON.stringify(remoteRendered) !== JSON.stringify(remoteExpected)) {
+    throw new Error('Una alineación llegada desde otro dispositivo no sustituyó la pizarra anterior.');
+  }
+
+  // 5) + Ejercicio abre realmente.
   await page.evaluate(() => window.__campobase.showView('ejercicios'));
   await page.waitForSelector('#new-exercise');
   await page.click('#new-exercise');
