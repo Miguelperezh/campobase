@@ -101,7 +101,7 @@ test('el delegado ve el partido en cuanto Migue pulsa Mostrar al Delegado', () =
 
 test('la preparación no altera la alineación táctica elegida por Migue', () => {
   // En fase ready, syncLiveTacticFromTimer y ensureLiveTactic respetan prep.team
-  assert.match(appCode, /if \(state\.timer\.phase === 'ready'\) \{\s*const prep = prepForMatch\(state\.timer\.matchId\);\s*if \(prep\?\.team\?\.length\) \{\s*liveTactic\.team = prep\.team\.map/);
+  assert.match(appCode, /if \(state\.timer\.phase === 'ready'\) \{\s*const prep = prepForMatch\(state\.timer\.matchId\);\s*if \(prep\?\.team\?\.length\) \{\s*liveTactic = \{[\s\S]*formacion: prep\.formacion \?\? liveTactic\.formacion,[\s\S]*team: prep\.team\.map/);
   assert.match(appCode, /if \(prep\?\.team\?\.length && state\.timer\.phase === 'ready'\) \{\s*liveTactic\.team = prep\.team\.map\(\(p\) => \(\{ \.\.\.p \}\)\);/);
 });
 
