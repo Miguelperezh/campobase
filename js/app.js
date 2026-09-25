@@ -76,6 +76,7 @@ let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
 let lastCloudSyncTimestamp = 0;
+let readyLineupPersistChain = Promise.resolve();
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -1621,9 +1622,14 @@ function renderLive() {
     }
   }
 
-  // Durante la preparación, la pizarra es la fuente de la alineación.
+  // En fase preparada, una preparación persistida es la fuente canónica de
+  // posiciones. Esto permite que Realtime/polling reemplacen una pizarra vieja
+  // en otro dispositivo antes de volver a sincronizar el timer.
   ensureLiveTactic();
-  if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
+  if (state.timer.phase === 'ready' && liveTactic) {
+    syncLiveTacticFromTimer();
+    syncTimerFromLiveTactic();
+  }
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField || [];
@@ -1734,6 +1740,13 @@ async function persistReadyLineupFromLiveTactic() {
   await put('settings', record);
   await persistTimer();
   return true;
+}
+
+function queueReadyLineupPersistence() {
+  readyLineupPersistChain = readyLineupPersistChain
+    .catch(() => {})
+    .then(() => persistReadyLineupFromLiveTactic());
+  readyLineupPersistChain.catch(handleError);
 }
 
 // Garantiza que la pizarra en vivo exista (la construye si aún no está), para
@@ -1969,7 +1982,7 @@ function renderTacticsSlots(sc) {
       if (sc.which === 'owner') {
       syncTimerFromLiveTactic();
       renderFieldBench();
-      void persistReadyLineupFromLiveTactic().catch(handleError);
+      queueReadyLineupPersistence();
     }
     });
   });
@@ -2065,7 +2078,7 @@ function bindTacticsBoard(sc, svg) {
       renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
     }
     t.drag = null;
-    if (movedOwnerPlayer) void persistReadyLineupFromLiveTactic().catch(handleError);
+    if (movedOwnerPlayer) queueReadyLineupPersistence();
   });
 }
 
@@ -2080,7 +2093,7 @@ function wireTacticsBoard(sc) {
     if (sc.which === 'owner') {
       syncTimerFromLiveTactic();
       renderFieldBench();
-      void persistReadyLineupFromLiveTactic().catch(handleError);
+      queueReadyLineupPersistence();
     }
   });
   const tools = sc.tools();
@@ -2107,7 +2120,7 @@ function wireTacticsBoard(sc) {
     if (sc.which === 'owner') {
       syncTimerFromLiveTactic();
       renderFieldBench();
-      void persistReadyLineupFromLiveTactic().catch(handleError);
+      queueReadyLineupPersistence();
     }
   });
   if (!liveTacticsDocBound) {
@@ -5781,7 +5794,9 @@ async function pollLiveState() {
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   state.timer = live.timer;
-  syncLiveTacticFromTimer();
+  // Un live remoto nuevo invalida la pizarra en memoria. refresh() cargará
+  // primero la preparación sincronizada y renderLive() la reconstruirá exacta.
+  liveTactic = null;
   await refresh();
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
