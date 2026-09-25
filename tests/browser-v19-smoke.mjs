@@ -45,152 +45,93 @@ async function enterDemo(page) {
 
 async function testDesktop(page) {
   await enterDemo(page);
+  await page.waitForTimeout(600);
 
-  const navDiag = async (label) => {
-    const diag = await page.evaluate(() => {
-      const active = document.querySelector('.view.active');
-      const sub = document.getElementById('cb-sub-nav');
-      const tech = sub?.querySelector('[data-target-view="cuerpo-tecnico"]');
-      const equipo = document.querySelector('#cb-bottom-nav [data-module="equipo"]');
-      return {
-        role: window.__campobase?.state?.role,
-        delegateMode: window.__campobase?.state?.delegateMode,
-        activeView: active?.id || null,
-        bodyClass: document.body.className,
-        allowedViews: window.__campobaseAllowedViews ?? null,
-        subHiddenAttr: sub?.hidden ?? null,
-        subClass: sub?.className || null,
-        subStyleDisplay: sub?.style?.getPropertyValue('display') || '',
-        subComputedDisplay: sub ? getComputedStyle(sub).display : null,
-        subRect: sub ? { width: sub.getBoundingClientRect().width, height: sub.getBoundingClientRect().height } : null,
-        techComputedDisplay: tech ? getComputedStyle(tech).display : null,
-        techRect: tech ? { width: tech.getBoundingClientRect().width, height: tech.getBoundingClientRect().height } : null,
-        equipoComputedDisplay: equipo ? getComputedStyle(equipo).display : null,
-      };
-    });
-    console.log('CAMPOBASE_NAV_DIAG ' + label + ' ' + JSON.stringify(diag));
-    return diag;
-  };
-
-  await navDiag('after-enter-demo');
-  await page.evaluate(() => {
-    window.__cbViewWriteTrace = [];
-    window.__cbClassTrace = [];
-    if (!window.__cbClassTraceInstalled) {
-      window.__cbClassTraceInstalled = true;
-      const findView = (tokenList) => Array.from(document.querySelectorAll('.view')).find((el) => el.classList === tokenList);
-      const originalToggle = DOMTokenList.prototype.toggle;
-      DOMTokenList.prototype.toggle = function patchedToggle(token, force) {
-        const view = token === 'active' ? findView(this) : null;
-        const result = arguments.length > 1
-          ? originalToggle.call(this, token, force)
-          : originalToggle.call(this, token);
-        if (view) {
-          window.__cbClassTrace.push({
-            op: 'toggle',
-            view: view.id,
-            force: arguments.length > 1 ? Boolean(force) : null,
-            active: view.classList.contains('active'),
-            at: performance.now(),
-            stack: String(new Error('view class toggle').stack || ''),
-          });
-        }
-        return result;
-      };
-      const originalAdd = DOMTokenList.prototype.add;
-      DOMTokenList.prototype.add = function patchedAdd(...tokens) {
-        const view = tokens.includes('active') ? findView(this) : null;
-        const result = originalAdd.apply(this, tokens);
-        if (view) {
-          window.__cbClassTrace.push({
-            op: 'add',
-            view: view.id,
-            active: view.classList.contains('active'),
-            at: performance.now(),
-            stack: String(new Error('view class add').stack || ''),
-          });
-        }
-        return result;
-      };
-      const originalRemove = DOMTokenList.prototype.remove;
-      DOMTokenList.prototype.remove = function patchedRemove(...tokens) {
-        const view = tokens.includes('active') ? findView(this) : null;
-        const result = originalRemove.apply(this, tokens);
-        if (view) {
-          window.__cbClassTrace.push({
-            op: 'remove',
-            view: view.id,
-            active: view.classList.contains('active'),
-            at: performance.now(),
-            stack: String(new Error('view class remove').stack || ''),
-          });
-        }
-        return result;
-      };
-    }
-    if (!window.__cbStorageTraceInstalled) {
-      window.__cbStorageTraceInstalled = true;
-      const originalSetItem = Storage.prototype.setItem;
-      Storage.prototype.setItem = function patchedSetItem(key, value) {
-        if (key === 'campobase.activeView') {
-          window.__cbViewWriteTrace.push({
-            value: String(value),
-            at: performance.now(),
-            stack: String(new Error('activeView write').stack || ''),
-          });
-        }
-        return originalSetItem.call(this, key, value);
-      };
-    }
-  });
-  const directResult = await page.evaluate(() => {
-    const before = document.querySelector('.view.active')?.id || null;
-    const fn = window.__campobase?.showView;
-    const target = document.getElementById('plantilla');
-    let error = '';
-    try {
-      fn?.('plantilla');
-    } catch (err) {
-      error = String(err?.stack || err?.message || err);
-    }
-    return {
-      before,
-      afterImmediate: document.querySelector('.view.active')?.id || null,
-      stored: sessionStorage.getItem('campobase.activeView'),
-      targetClass: target?.className || null,
-      targetIsView: Boolean(target?.classList?.contains('view')),
-      fnSource: String(fn).slice(0, 700),
-      error,
-    };
-  });
-  console.log('CAMPOBASE_SHOWVIEW_DIAG ' + JSON.stringify(directResult));
+  // 1) Equipo: la vista elegida no puede ser robada por el repintado de Hoy.
+  await page.evaluate(() => window.__campobase.showView('plantilla'));
+  await page.evaluate(() => window.__campobase.renderAll());
   await page.waitForTimeout(250);
-  const writeTrace = await page.evaluate(() => ({
-    active: document.querySelector('.view.active')?.id || null,
-    stored: sessionStorage.getItem('campobase.activeView'),
-    writes: window.__cbViewWriteTrace || [],
-    classTrace: window.__cbClassTrace || [],
-  }));
-  console.log('CAMPOBASE_VIEW_WRITE_TRACE ' + JSON.stringify(writeTrace));
-  const afterDirectShow = await navDiag('after-direct-showView-plantilla');
+  await page.waitForFunction(() => {
+    const sub = document.getElementById('cb-sub-nav');
+    const players = document.getElementById('players-list');
+    return document.querySelector('.view.active')?.id === 'plantilla'
+      && sub && getComputedStyle(sub).display !== 'none'
+      && Boolean(players?.textContent?.trim());
+  }, null, { timeout: 10000 });
 
-  const techVisibleAfterDirect = afterDirectShow.subComputedDisplay !== 'none'
-    && (afterDirectShow.techRect?.width || 0) > 0
-    && (afterDirectShow.techRect?.height || 0) > 0;
+  await page.click('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
+  await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'cuerpo-tecnico');
+  await page.click('#cb-sub-nav [data-target-view="asistencia"]');
+  await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'asistencia');
 
-  if (!techVisibleAfterDirect) {
-    await page.click('#cb-bottom-nav [data-module="equipo"]');
-    await page.waitForTimeout(250);
-    const afterRealEquipoClick = await navDiag('after-real-equipo-click');
-    if (afterRealEquipoClick.subComputedDisplay === 'none') {
-      throw new Error('Equipo mantiene la subnavegación oculta tras clic real: ' + JSON.stringify(afterRealEquipoClick));
+  // 2) Preparación: cambiar un titular, guardar, repintar y reabrir conserva exactamente el orden.
+  await page.evaluate(() => {
+    const app = window.__campobase;
+    const ids = Array.from({ length: 9 }, (_, index) => 'smoke-player-' + (index + 1));
+    app.state.players = ids.map((id, index) => ({
+      id,
+      name: 'Jugador Smoke ' + (index + 1),
+      number: String(index + 1),
+      positions: index < 2 ? ['Portero'] : ['MC'],
+      active: true,
+    }));
+    app.state.matches = [{
+      id: 'smoke-match',
+      opponent: 'Rival Smoke',
+      date: '2099-01-01T09:00:00',
+      venue: 'home',
+      status: 'scheduled',
+      type: 'friendly',
+      format: 'F7',
+      callupId: 'smoke-callup',
+    }];
+    app.state.callups = [{
+      id: 'smoke-callup',
+      matchId: 'smoke-match',
+      availableIds: ids,
+      selectedIds: ids,
+      format: 'F7',
+      exclusions: [],
+    }];
+    app.state.preparaciones = [];
+    app.state.timer = null;
+    app.renderAll();
+    app.showView('preparacion');
+  });
+
+  await page.waitForSelector('.prep-open[data-id="smoke-match"]');
+  await page.click('.prep-open[data-id="smoke-match"]');
+  await page.waitForSelector('#prep-slots select');
+
+  const changed = await page.evaluate(() => {
+    const selects = Array.from(document.querySelectorAll('#prep-slots select'));
+    for (const select of selects) {
+      const option = Array.from(select.options).find((item) => item.value === 'smoke-player-8');
+      if (!option || select.value === 'smoke-player-8') continue;
+      select.value = 'smoke-player-8';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
     }
+    return false;
+  });
+  if (!changed) throw new Error('No se pudo aplicar el cambio temporal de titular.');
+
+  const prepBefore = await page.$$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  if (prepBefore.length !== 7 || new Set(prepBefore.filter(Boolean)).size !== 7) {
+    throw new Error('La preparación de prueba no contiene 7 titulares únicos.');
   }
 
-  // 2) El cambio de este PR (límite de convocados) se cubre en domain.test.js
-  // con 25 jugadores en amistoso y máximo 14 en Liga. El smoke de navegador
-  // no debe bloquear este cambio por el flujo dinámico del partido en vivo,
-  // que pertenece a otra funcionalidad y tiene sus propias pruebas.
+  await page.click('#prep-save');
+  await page.waitForFunction(() => document.getElementById('preparacion-editor')?.classList.contains('hidden'));
+  await page.evaluate(() => window.__campobase.renderAll());
+  await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'preparacion');
+  await page.click('.prep-open[data-id="smoke-match"]');
+  await page.waitForSelector('#prep-slots select');
+  const prepAfter = await page.$$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  if (JSON.stringify(prepAfter) !== JSON.stringify(prepBefore)) {
+    throw new Error('La alineación guardada cambió al repintar y volver a entrar.');
+  }
+  await page.click('#prep-back');
 
   // 3) + Ejercicio abre realmente.
   await page.evaluate(() => window.__campobase.showView('ejercicios'));
