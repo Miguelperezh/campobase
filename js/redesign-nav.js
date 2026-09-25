@@ -782,6 +782,7 @@ export function initRedesign() {
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', syncTopbarHeight, { passive: true });
     window.addEventListener('orientationchange', syncTopbarHeight, { passive: true });
+    window.addEventListener('campobase:view-changed', updateNavState);
   }
 
   const main = $('#app');
