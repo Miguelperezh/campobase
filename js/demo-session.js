@@ -7,7 +7,7 @@ import './session-planner-ui.js?v=20260924-v59-delegate-views-visible-render-fix
 import './attendance-linked-sources.js?v=2453';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
-import './today-dashboard.js?v=2456';
+import './today-dashboard.js?v=2457';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 
