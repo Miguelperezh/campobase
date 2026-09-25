@@ -31,7 +31,11 @@ async function enterDemo(page) {
   page.on('console', (message) => {
     if (message.type() !== 'error') return;
     const location = message.location();
-    browserErrors.push('console: ' + message.text() + (location?.url ? ' @ ' + location.url : ''));
+    const messageText = message.text();
+    const knownExternalSimpleIconBlock = messageText.includes('ERR_BLOCKED_BY_RESPONSE.NotSameOrigin')
+      && location?.url?.startsWith('https://cdn.simpleicons.org/');
+    if (knownExternalSimpleIconBlock) return;
+    browserErrors.push('console: ' + messageText + (location?.url ? ' @ ' + location.url : ''));
   });
   page.on('dialog', async (dialog) => {
     browserErrors.push('dialog: ' + dialog.message());
