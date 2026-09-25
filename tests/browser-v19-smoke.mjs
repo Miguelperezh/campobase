@@ -75,6 +75,59 @@ async function testDesktop(page) {
   await navDiag('after-enter-demo');
   await page.evaluate(() => {
     window.__cbViewWriteTrace = [];
+    window.__cbClassTrace = [];
+    if (!window.__cbClassTraceInstalled) {
+      window.__cbClassTraceInstalled = true;
+      const findView = (tokenList) => Array.from(document.querySelectorAll('.view')).find((el) => el.classList === tokenList);
+      const originalToggle = DOMTokenList.prototype.toggle;
+      DOMTokenList.prototype.toggle = function patchedToggle(token, force) {
+        const view = token === 'active' ? findView(this) : null;
+        const result = arguments.length > 1
+          ? originalToggle.call(this, token, force)
+          : originalToggle.call(this, token);
+        if (view) {
+          window.__cbClassTrace.push({
+            op: 'toggle',
+            view: view.id,
+            force: arguments.length > 1 ? Boolean(force) : null,
+            active: view.classList.contains('active'),
+            at: performance.now(),
+            stack: String(new Error('view class toggle').stack || ''),
+          });
+        }
+        return result;
+      };
+      const originalAdd = DOMTokenList.prototype.add;
+      DOMTokenList.prototype.add = function patchedAdd(...tokens) {
+        const view = tokens.includes('active') ? findView(this) : null;
+        const result = originalAdd.apply(this, tokens);
+        if (view) {
+          window.__cbClassTrace.push({
+            op: 'add',
+            view: view.id,
+            active: view.classList.contains('active'),
+            at: performance.now(),
+            stack: String(new Error('view class add').stack || ''),
+          });
+        }
+        return result;
+      };
+      const originalRemove = DOMTokenList.prototype.remove;
+      DOMTokenList.prototype.remove = function patchedRemove(...tokens) {
+        const view = tokens.includes('active') ? findView(this) : null;
+        const result = originalRemove.apply(this, tokens);
+        if (view) {
+          window.__cbClassTrace.push({
+            op: 'remove',
+            view: view.id,
+            active: view.classList.contains('active'),
+            at: performance.now(),
+            stack: String(new Error('view class remove').stack || ''),
+          });
+        }
+        return result;
+      };
+    }
     if (!window.__cbStorageTraceInstalled) {
       window.__cbStorageTraceInstalled = true;
       const originalSetItem = Storage.prototype.setItem;
@@ -116,6 +169,7 @@ async function testDesktop(page) {
     active: document.querySelector('.view.active')?.id || null,
     stored: sessionStorage.getItem('campobase.activeView'),
     writes: window.__cbViewWriteTrace || [],
+    classTrace: window.__cbClassTrace || [],
   }));
   console.log('CAMPOBASE_VIEW_WRITE_TRACE ' + JSON.stringify(writeTrace));
   const afterDirectShow = await navDiag('after-direct-showView-plantilla');
