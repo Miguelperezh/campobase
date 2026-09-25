@@ -76,6 +76,7 @@ let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
 let lastCloudSyncTimestamp = 0;
+let readyLineupPersistChain = Promise.resolve();
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -1621,9 +1622,14 @@ function renderLive() {
     }
   }
 
-  // Durante la preparación, la pizarra es la fuente de la alineación.
+  // En fase preparada, una preparación persistida es la fuente canónica de
+  // posiciones. Esto permite que Realtime/polling reemplacen una pizarra vieja
+  // en otro dispositivo antes de volver a sincronizar el timer.
   ensureLiveTactic();
-  if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
+  if (state.timer.phase === 'ready' && liveTactic) {
+    syncLiveTacticFromTimer();
+    syncTimerFromLiveTactic();
+  }
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField || [];
@@ -1660,7 +1666,11 @@ function syncLiveTacticFromTimer() {
   if (state.timer.phase === 'ready') {
     const prep = prepForMatch(state.timer.matchId);
     if (prep?.team?.length) {
-      liveTactic.team = prep.team.map((p) => ({ ...p }));
+      liveTactic = {
+        ...liveTactic,
+        formacion: prep.formacion ?? liveTactic.formacion,
+        team: prep.team.map((p) => ({ ...p })),
+      };
       return;
     }
   }
@@ -1680,17 +1690,67 @@ function syncTimerFromLiveTactic() {
   const newField = liveTactic.team.map((p) => p.playerId).filter(Boolean);
   const oldField = state.timer.onField || [];
   const same = newField.length === oldField.length && newField.every((id, i) => id === oldField[i]);
-  if (same) return;
   if (state.timer.phase === 'ready') {
-    state.timer.onField = newField;
+    state.timer.onField = [...newField];
+    state.timer.initialOnField = [...newField];
+    const keeperSlot = liveTactic.team.find((position) => position.pos === 'Portero' && position.playerId);
+    if (keeperSlot?.playerId) state.timer.firstKeeper = keeperSlot.playerId;
     return;
   }
+  if (same) return;
   const outIds = oldField.filter((id) => !newField.includes(id));
   const inIds = newField.filter((id) => !oldField.includes(id));
   if (outIds.length || inIds.length) {
     state.timer.events.push({ second: timerSeconds(), outIds, inIds });
     state.timer.onField = newField;
   }
+}
+
+// En fase "Preparado", la pizarra del entrenador es estado persistente, no solo
+// una representación visual. Cada cambio válido se guarda como preparación
+// canónica y también actualiza settings/live para sobrevivir a recargas.
+async function persistReadyLineupFromLiveTactic() {
+  if (!state.timer || state.timer.phase !== 'ready' || !liveTactic) return false;
+  const match = state.matches.find(({ id }) => String(id) === String(state.timer.matchId));
+  const callup = callupForMatch(match);
+  if (!match || !callup) return false;
+  const format = String(callup.format || match.format || state.format || 'F7').toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const team = (liveTactic.team || []).map((position) => ({ ...position }));
+  const playerIds = team.map((position) => position.playerId).filter(Boolean);
+  if (playerIds.length !== config.players || new Set(playerIds).size !== config.players) return false;
+  const availableIds = callup.availableIds || [];
+  if (!playerIds.every((id) => availableIds.includes(id))) return false;
+
+  syncTimerFromLiveTactic();
+  const existing = prepForMatch(state.timer.matchId);
+  const record = {
+    ...existing,
+    id: existing?.id ?? uid(),
+    recordType: 'preparacion',
+    matchId: state.timer.matchId,
+    firstKeeper: state.timer.firstKeeper,
+    secondKeeper: state.timer.secondKeeper || state.timer.firstKeeper,
+    formacion: liveTactic.formacion ?? existing?.formacion ?? '1-3-2-1',
+    team,
+    delegateShown: existing?.delegateShown ?? Boolean(state.timer.delegateUnlocked),
+    savedAt: Date.now(),
+  };
+
+  const prepIndex = state.preparaciones.findIndex((item) => String(item.matchId) === String(record.matchId));
+  if (prepIndex >= 0) state.preparaciones[prepIndex] = record;
+  else state.preparaciones.push(record);
+
+  await put('settings', record);
+  await persistTimer();
+  return true;
+}
+
+function queueReadyLineupPersistence() {
+  readyLineupPersistChain = readyLineupPersistChain
+    .catch(() => {})
+    .then(() => persistReadyLineupFromLiveTactic());
+  readyLineupPersistChain.catch(handleError);
 }
 
 // Garantiza que la pizarra en vivo exista (la construye si aún no está), para
@@ -1923,7 +1983,11 @@ function renderTacticsSlots(sc) {
       if (!canAssignPlayerToSlot(state.players, sc.which, slot.pos, sel.value)) return renderTacticsSlots(sc);
       sc.setState({ ...sc.state(), team: asignarJugador(sc.state().team, Number(sel.dataset.idx), sel.value) });
       renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-      if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+      if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
     });
   });
 }
@@ -2007,6 +2071,7 @@ function bindTacticsBoard(sc, svg) {
   svg.addEventListener('pointerup', (e) => {
     const t = sc.state();
     if (!t) return;
+    const movedOwnerPlayer = sc.which === 'owner' && t.drag?.type === 'team' && t.drag.moved;
     if (t.drag && t.drag.type === 'team' && !t.drag.moved) {
       openTacticsPopup(sc, t.drag.idx, e.clientX, e.clientY);
     }
@@ -2017,6 +2082,7 @@ function bindTacticsBoard(sc, svg) {
       renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
     }
     t.drag = null;
+    if (movedOwnerPlayer) queueReadyLineupPersistence();
   });
 }
 
@@ -2028,7 +2094,11 @@ function wireTacticsBoard(sc) {
     const team = cargarFormacion(t.team, state.players, liveTacticAvailableIds(), e.target.value, 'F7');
     sc.setState({ ...t, team, formacion: e.target.value, moves: [] });
     renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+    if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
   });
   const tools = sc.tools();
   const toolsFull = sc.toolsFull();
@@ -2051,7 +2121,11 @@ function wireTacticsBoard(sc) {
     if (!canAssignPlayerToSlot(state.players, sc.which, t.team[idx].pos, popupSelect.value)) return;
     sc.setState({ ...t, team: asignarJugador(t.team, idx, popupSelect.value) });
     renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+    if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
   });
   if (!liveTacticsDocBound) {
     liveTacticsDocBound = true;
@@ -5724,7 +5798,9 @@ async function pollLiveState() {
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   state.timer = live.timer;
-  syncLiveTacticFromTimer();
+  // Un live remoto nuevo invalida la pizarra en memoria. refresh() cargará
+  // primero la preparación sincronizada y renderLive() la reconstruirá exacta.
+  liveTactic = null;
   await refresh();
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
@@ -7764,7 +7840,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260925-v62-equipo-prep-rootcause').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260925-v63-live-lineup-persist').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
