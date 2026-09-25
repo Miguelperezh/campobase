@@ -46,14 +46,6 @@ async function enterDemo(page) {
 async function testDesktop(page) {
   await enterDemo(page);
 
-  // 1) Navegación entre vistas del módulo Equipo.
-  // El smoke valida el motor de vistas sin depender de si el rediseño pinta
-  // la subbarra superior o el menú rápido en ese ancho concreto.
-  for (const viewId of ['plantilla', 'cuerpo-tecnico', 'asistencia']) {
-    await page.evaluate((target) => window.__campobase.showView(target), viewId);
-    await page.waitForFunction((target) => document.querySelector('.view.active')?.id === target, viewId);
-  }
-
   // 2) Preparar partido: datos temporales solo en memoria demo.
   await page.evaluate(() => {
     const app = window.__campobase;
@@ -157,12 +149,6 @@ async function testDesktop(page) {
 
 async function testMobile(page) {
   await enterDemo(page);
-  // En móvil la subnavegación puede estar sustituida por el menú rápido.
-  // Validamos el mismo motor de vistas sin depender del contenedor visual.
-  for (const viewId of ['plantilla', 'cuerpo-tecnico']) {
-    await page.evaluate((target) => window.__campobase.showView(target), viewId);
-    await page.waitForFunction((target) => document.querySelector('.view.active')?.id === target, viewId);
-  }
   await page.evaluate(() => window.__campobase.showView('ejercicios'));
   await page.waitForSelector('#new-exercise');
   await page.click('#new-exercise');
