@@ -59,7 +59,7 @@ test('wireEvents no repite la regresión querySelector().forEach', () => {
   assert.doesNotMatch(app, /(^|[^$])\$\('\.exercise-library-tab'\)\.forEach/m);
   assert.doesNotMatch(app, /(^|[^$])\$\('\[data-close\]'\)\.forEach/m);
   assert.doesNotMatch(app, /(^|[^$])\$\('\[data-dialog\]'\)\.forEach/m);
-  assert.match(app, /\$\$\('\.bottom-nav button'\)\.forEach/);
+  assert.match(app, /document\.querySelectorAll\('\.bottom-nav button'\)\.forEach/);
   assert.match(app, /\$\$\('\[data-dialog\]'\)\.forEach/);
 });
 
