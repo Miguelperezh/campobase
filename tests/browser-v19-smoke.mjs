@@ -73,6 +73,23 @@ async function testDesktop(page) {
   };
 
   await navDiag('after-enter-demo');
+  await page.evaluate(() => {
+    window.__cbViewWriteTrace = [];
+    if (!window.__cbStorageTraceInstalled) {
+      window.__cbStorageTraceInstalled = true;
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function patchedSetItem(key, value) {
+        if (key === 'campobase.activeView') {
+          window.__cbViewWriteTrace.push({
+            value: String(value),
+            at: performance.now(),
+            stack: String(new Error('activeView write').stack || ''),
+          });
+        }
+        return originalSetItem.call(this, key, value);
+      };
+    }
+  });
   const directResult = await page.evaluate(() => {
     const before = document.querySelector('.view.active')?.id || null;
     const fn = window.__campobase?.showView;
@@ -95,6 +112,12 @@ async function testDesktop(page) {
   });
   console.log('CAMPOBASE_SHOWVIEW_DIAG ' + JSON.stringify(directResult));
   await page.waitForTimeout(250);
+  const writeTrace = await page.evaluate(() => ({
+    active: document.querySelector('.view.active')?.id || null,
+    stored: sessionStorage.getItem('campobase.activeView'),
+    writes: window.__cbViewWriteTrace || [],
+  }));
+  console.log('CAMPOBASE_VIEW_WRITE_TRACE ' + JSON.stringify(writeTrace));
   const afterDirectShow = await navDiag('after-direct-showView-plantilla');
 
   const techVisibleAfterDirect = afterDirectShow.subComputedDisplay !== 'none'
