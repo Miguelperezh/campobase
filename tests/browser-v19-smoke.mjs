@@ -82,6 +82,9 @@ async function testDesktop(page) {
 
   await page.waitForSelector('#live-select');
   await page.selectOption('#live-select', 'smoke-match');
+  await page.evaluate(() => {
+    document.getElementById('live-select')?.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await page.waitForFunction(() => {
     const a = document.getElementById('first-keeper');
     const b = document.getElementById('second-keeper');
