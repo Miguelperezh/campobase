@@ -4570,3 +4570,6 @@ Guardarraíles permanentes:
 - Esta persistencia automática solo aplica en fase `ready`. No cambiar la semántica de sustituciones ni eventos cuando el partido ya ha comenzado.
 - No borrar, migrar ni reconstruir datos reales para corregir este flujo.
 - La prueba de navegador debe entrar por **Preparar partido**, cambiar un titular, verificar que existen tanto la preparación como `settings/live`, limpiar el estado en memoria y comprobar que la alineación se reconstruye desde almacenamiento.
+- **Sincronización ordenador ↔ móvil:** respetar la arquitectura ya validada en `agente.md`: IndexedDB local-first → `syncQueue` → Supabase. Los registros de `settings` viajan por la tabla `configuracion`, incluida en Supabase Realtime. Realtime solo dispara la reconciliación normal; no escribe directamente en IndexedDB.
+- Mantener el polling cloud de **10 segundos** como fallback obligatorio frente a suspensión/corte de WebSocket en móvil. No sustituirlo ni retirarlo por esta corrección.
+- No reintroducir transferencias manuales PC→móvil como mecanismo normal: desde v46 la vía canónica multi-dispositivo es Supabase + Realtime + polling de respaldo.
