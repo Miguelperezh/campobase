@@ -54,6 +54,34 @@ test('mergeCloudRecord conserva los permisos y PIN del delegado si la nube todav
   });
 });
 
+
+test('una preparación local más reciente conserva exactamente la alineación guardada frente a una copia cloud anterior', () => {
+  const local = {
+    id: 'prep-1',
+    recordType: 'preparacion',
+    matchId: 'm1',
+    formacion: '1-2-2-2',
+    team: [
+      { pos: 'Portero', playerId: 'p1', x: 50, y: 88 },
+      { pos: 'Defensa', playerId: 'p2', x: 32, y: 68 },
+      { pos: 'Defensa', playerId: 'p3', x: 68, y: 68 },
+      { pos: 'Medio', playerId: 'p4', x: 32, y: 48 },
+      { pos: 'Medio', playerId: 'p5', x: 68, y: 48 },
+      { pos: 'Delantero', playerId: 'p6', x: 38, y: 28 },
+      { pos: 'Delantero', playerId: 'p7', x: 62, y: 28 },
+    ],
+    savedAt: 300,
+  };
+  const cloud = {
+    ...local,
+    formacion: '1-3-2-1',
+    team: local.team.map((slot, index) => ({ ...slot, playerId: `old-${index + 1}` })),
+    savedAt: 200,
+  };
+
+  assert.deepEqual(mergeCloudRecord('settings', local, cloud), local);
+});
+
 test('la ficha permite elegir una foto o abrir la cámara del móvil', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
