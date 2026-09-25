@@ -9,7 +9,7 @@ const [html, app, sw, cloud] = await Promise.all([
   readFile(new URL('../js/supabase-client.js', import.meta.url), 'utf8'),
 ]);
 
-const BUILD = '20260924-v59-delegate-views-visible-render-fix';
+const BUILD = '20260925-v62-equipo-prep-rootcause';
 
 test('index app cloud y service worker apuntan al mismo build actual', () => {
   assert.match(html, new RegExp(BUILD));
