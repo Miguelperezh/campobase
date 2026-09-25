@@ -65,17 +65,18 @@ async function testDesktop(page) {
   await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'asistencia');
 
   // 2) Preparación: cambiar un titular, guardar, repintar y reabrir conserva exactamente el orden.
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     const app = window.__campobase;
+    const db = await import('./js/db.js');
     const ids = Array.from({ length: 9 }, (_, index) => 'smoke-player-' + (index + 1));
-    app.state.players = ids.map((id, index) => ({
+    const players = ids.map((id, index) => ({
       id,
       name: 'Jugador Smoke ' + (index + 1),
       number: String(index + 1),
       positions: index < 2 ? ['Portero'] : ['MC'],
       active: true,
     }));
-    app.state.matches = [{
+    const match = {
       id: 'smoke-match',
       opponent: 'Rival Smoke',
       date: '2099-01-01T09:00:00',
@@ -84,15 +85,19 @@ async function testDesktop(page) {
       type: 'friendly',
       format: 'F7',
       callupId: 'smoke-callup',
-    }];
-    app.state.callups = [{
+    };
+    const callup = {
       id: 'smoke-callup',
       matchId: 'smoke-match',
       availableIds: ids,
       selectedIds: ids,
       format: 'F7',
       exclusions: [],
-    }];
+    };
+    for (const player of players) await db.put('players', player);
+    await db.put('matches', match);
+    await db.put('callups', callup);
+    await app.refresh();
     app.state.preparaciones = [];
     app.state.timer = null;
     app.renderAll();
