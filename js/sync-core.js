@@ -29,6 +29,20 @@ export function mergeLocalRecordForWrite(store, currentRecord, incomingRecord) {
 export function mergeCloudRecord(store, localRecord, cloudRecord) {
   assertStore(store);
   let merged = structuredClone(cloudRecord);
+
+  // Una preparación guardada por el entrenador no puede ser reemplazada por
+  // una copia remota con contenido más antiguo solo porque su updated_at sea
+  // posterior. savedAt representa la edición real de esa alineación.
+  if (
+    store === 'settings'
+    && localRecord?.recordType === 'preparacion'
+    && cloudRecord?.recordType === 'preparacion'
+  ) {
+    const localSavedAt = Number(localRecord.savedAt || 0);
+    const cloudSavedAt = Number(cloudRecord.savedAt || 0);
+    if (localSavedAt > cloudSavedAt) return structuredClone(localRecord);
+  }
+
   if (store === 'players' && localRecord) {
     // Si una versión remota antigua llega sin algunos campos de ficha,
     // conserva los valores locales en vez de hacerlos desaparecer.

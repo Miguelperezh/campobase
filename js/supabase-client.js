@@ -4,11 +4,11 @@ import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
 import './attendance-session-manual-state.js?v=3';
-import './exercise-board-persistence.js?v=20260924-v59-delegate-views-visible-render-fix';
-import './runtime-refresh.js?v=20260924-v59-delegate-views-visible-render-fix';
+import './exercise-board-persistence.js?v=20260925-v60-equipo-prep-persistence';
+import './runtime-refresh.js?v=20260925-v60-equipo-prep-persistence';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=2475';
-import './exercise-view-mode-ui.js?v=20260924-v59-delegate-views-visible-render-fix';
+import './exercise-view-mode-ui.js?v=20260925-v60-equipo-prep-persistence';
 import { CLOUD_TABLES } from './sync-core.js';
 import { getBoundSaasUserId, setBoundSaasUserId } from './auth-manager.js';
 
@@ -183,7 +183,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=20260924-v59-delegate-views-visible-render-fix'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20260925-v60-equipo-prep-persistence'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -212,7 +212,7 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el estado de la cuenta:', error);
     });
 
-  void import('./team-access.js?v=20260924-v59-delegate-views-visible-render-fix')
+  void import('./team-access.js?v=20260925-v60-equipo-prep-persistence')
     .then(({ initTeamAccess }) => initTeamAccess(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso del equipo:', error);
@@ -232,7 +232,7 @@ export function createCampoBaseCloudStore() {
       const table = CLOUD_TABLES[mutation.store];
       const query = client
         .from(table)
-        .select('updated_at,deleted_at')
+        .select('updated_at,deleted_at,payload')
         .eq('user_id', dataOwnerUserId)
         .eq('id', mutation.recordId)
         .limit(1);
@@ -242,6 +242,15 @@ export function createCampoBaseCloudStore() {
       const rows = checkResult(await query) ?? [];
       const remote = rows[0];
       if (!remote) return true;
+      if (
+        mutation.operation === 'upsert'
+        && mutation.store === 'settings'
+        && mutation.payload?.recordType === 'preparacion'
+      ) {
+        const localSavedAt = Number(mutation.payload.savedAt || 0);
+        const remoteSavedAt = Number(remote.payload?.savedAt || 0);
+        if (localSavedAt && localSavedAt >= remoteSavedAt) return true;
+      }
       const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
       const localQueuedAt = Number(mutation.queuedAt || 0);
       return localQueuedAt >= remoteUpdatedAt;
