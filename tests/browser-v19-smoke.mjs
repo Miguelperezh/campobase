@@ -48,6 +48,13 @@ async function testDesktop(page) {
 
   // 1) Subpestañas superiores: clic real.
   await page.evaluate(() => window.__campobase.showView('plantilla'));
+  await page.waitForFunction(() => {
+    const stats = document.getElementById('squad-stats');
+    const players = document.getElementById('players-list');
+    return document.querySelector('.view.active')?.id === 'plantilla'
+      && Boolean(stats?.textContent?.trim())
+      && Boolean(players?.textContent?.trim());
+  });
   await page.waitForSelector('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
   await page.click('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
   await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'cuerpo-tecnico');
@@ -98,6 +105,30 @@ async function testDesktop(page) {
   });
   await page.selectOption('#first-keeper', 'smoke-player-1');
   await page.selectOption('#second-keeper', 'smoke-player-2');
+
+  // La alineación la decide el entrenador. Guardar, salir y volver a entrar
+  // debe devolver exactamente la misma selección, sin regenerarla.
+  await page.evaluate(() => window.__campobase.showView('preparacion'));
+  await page.waitForSelector('.prep-open[data-id="smoke-match"]');
+  await page.click('.prep-open[data-id="smoke-match"]');
+  await page.waitForSelector('#prep-slots select');
+  const prepBefore = await page.$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  if (prepBefore.length !== 7 || new Set(prepBefore.filter(Boolean)).size !== 7) {
+    throw new Error('La preparación de prueba no contiene 7 titulares únicos.');
+  }
+  await page.click('#prep-save');
+  await page.waitForFunction(() => document.getElementById('preparacion-editor')?.classList.contains('hidden'));
+  await page.click('.prep-open[data-id="smoke-match"]');
+  await page.waitForSelector('#prep-slots select');
+  const prepAfter = await page.$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  if (JSON.stringify(prepAfter) !== JSON.stringify(prepBefore)) {
+    throw new Error('La alineación guardada cambió al salir y volver a entrar.');
+  }
+  await page.click('#prep-back');
+
+  await page.evaluate(() => window.__campobase.showView('partido'));
+  await page.waitForSelector('#live-select');
+  await page.selectOption('#live-select', 'smoke-match');
   await page.click('#prepare-live');
   await page.waitForFunction(() => window.__campobase?.state?.timer?.phase === 'ready', null, { timeout: 10000 });
 
@@ -154,6 +185,26 @@ async function testDesktop(page) {
     window.__campobase.setExerciseLibraryMode('mine');
   });
   await page.waitForFunction(() => document.body.innerText.includes('Ejercicio Smoke Browser'), null, { timeout: 10000 });
+
+  // El delegado no puede provocar pantallas vacías en vistas autorizadas.
+  await page.evaluate(() => {
+    const app = window.__campobase;
+    app.state.settings.delegatePermissions = ['delegado', 'plantilla', 'cuerpo-tecnico', 'asistencia'];
+    app.applyRole('delegate');
+    app.showView('plantilla');
+  });
+  await page.waitForFunction(() => {
+    const view = document.getElementById('plantilla');
+    return document.querySelector('.view.active')?.id === 'plantilla'
+      && getComputedStyle(view).display !== 'none'
+      && Boolean(document.getElementById('players-list')?.textContent?.trim());
+  });
+  await page.evaluate(() => window.__campobase.showView('asistencia'));
+  await page.waitForFunction(() => {
+    const view = document.getElementById('asistencia');
+    return document.querySelector('.view.active')?.id === 'asistencia'
+      && getComputedStyle(view).display !== 'none';
+  });
 }
 
 async function testMobile(page) {
