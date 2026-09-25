@@ -1666,7 +1666,11 @@ function syncLiveTacticFromTimer() {
   if (state.timer.phase === 'ready') {
     const prep = prepForMatch(state.timer.matchId);
     if (prep?.team?.length) {
-      liveTactic.team = prep.team.map((p) => ({ ...p }));
+      liveTactic = {
+        ...liveTactic,
+        formacion: prep.formacion ?? liveTactic.formacion,
+        team: prep.team.map((p) => ({ ...p })),
+      };
       return;
     }
   }
