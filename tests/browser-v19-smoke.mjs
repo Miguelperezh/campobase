@@ -141,7 +141,81 @@ async function testDesktop(page) {
   }
   await page.click('#prep-back');
 
-  // 3) + Ejercicio abre realmente.
+  // 3) Preparar partido (flujo real): cambiar un titular en la pizarra debe
+  // escribir preparación + live y reconstruirse desde almacenamiento.
+  await page.evaluate(async () => {
+    const app = window.__campobase;
+    const db = await import('./js/db.js');
+    const settings = await db.getAll('settings');
+    for (const item of settings) {
+      if (item.id === 'live' || (item.recordType === 'preparacion' && item.matchId === 'smoke-match')) {
+        await db.remove('settings', item.id);
+      }
+    }
+    app.state.preparaciones = [];
+    app.state.timer = null;
+    await app.refresh();
+    app.renderAll();
+    app.showView('live');
+  });
+
+  await page.waitForSelector('#live-select');
+  await page.selectOption('#live-select', 'smoke-match');
+  await page.waitForFunction(() => !document.getElementById('first-keeper')?.disabled);
+  await page.selectOption('#first-keeper', 'smoke-player-1');
+  await page.selectOption('#second-keeper', 'smoke-player-1');
+  await page.click('#prepare-live');
+  await page.waitForSelector('#live-tactics-slots select');
+
+  const changedLiveLineup = await page.evaluate(() => {
+    const selects = Array.from(document.querySelectorAll('#live-tactics-slots select'));
+    const target = selects.find((select) =>
+      select.getAttribute('aria-label') !== 'Portero'
+      && select.value !== 'smoke-player-9'
+      && Array.from(select.options).some((option) => option.value === 'smoke-player-9')
+    );
+    if (!target) return false;
+    target.value = 'smoke-player-9';
+    target.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  });
+  if (!changedLiveLineup) throw new Error('No se pudo cambiar un titular desde Preparar partido.');
+
+  await page.waitForTimeout(500);
+  const persistedLive = await page.evaluate(async () => {
+    const db = await import('./js/db.js');
+    const settings = await db.getAll('settings');
+    const prep = settings.find((item) => item.recordType === 'preparacion' && item.matchId === 'smoke-match');
+    const live = settings.find((item) => item.id === 'live');
+    return {
+      prepIds: prep?.team?.map((position) => position.playerId).filter(Boolean) ?? [],
+      prepFormation: prep?.formacion ?? '',
+      liveIds: live?.timer?.onField ?? [],
+      initialIds: live?.timer?.initialOnField ?? [],
+    };
+  });
+  if (persistedLive.prepIds.length !== 7 || new Set(persistedLive.prepIds).size !== 7 || !persistedLive.prepIds.includes('smoke-player-9')) {
+    throw new Error('Preparar partido no persistió la alineación como preparación.');
+  }
+  if (!persistedLive.liveIds.includes('smoke-player-9') || !persistedLive.initialIds.includes('smoke-player-9')) {
+    throw new Error('Preparar partido no persistió la alineación en settings/live.');
+  }
+
+  await page.evaluate(async () => {
+    const app = window.__campobase;
+    app.state.timer = null;
+    app.state.preparaciones = [];
+    await app.refresh();
+    app.renderAll();
+    app.showView('live');
+  });
+  await page.waitForSelector('#live-tactics-slots select');
+  const restoredLiveIds = await page.$$eval('#live-tactics-slots select', (nodes) => nodes.map((node) => node.value).filter(Boolean));
+  if (restoredLiveIds.length !== 7 || !restoredLiveIds.includes('smoke-player-9')) {
+    throw new Error('La alineación de Preparar partido no se reconstruyó desde el guardado.');
+  }
+
+  // 4) + Ejercicio abre realmente.
   await page.evaluate(() => window.__campobase.showView('ejercicios'));
   await page.waitForSelector('#new-exercise');
   await page.click('#new-exercise');
@@ -233,7 +307,7 @@ try {
     throw new Error('Errores de navegador detectados:\n' + browserErrors.join('\n'));
   }
 
-  console.log('Browser smoke v19 OK: subpestañas, Preparar partido, + Ejercicio y guardado.');
+  console.log('Browser smoke v19 OK: subpestañas, Preparación, Preparar partido persistente, + Ejercicio y guardado.');
 } finally {
   if (browser) await browser.close().catch(() => {});
   server.kill('SIGTERM');
