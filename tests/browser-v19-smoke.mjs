@@ -119,7 +119,7 @@ async function testDesktop(page) {
   });
   if (!assigned) throw new Error('No se pudo construir la alineación temporal válida.');
 
-  const prepBefore = await page.$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
+  const prepBefore = await page.$$eval('#prep-slots select', (nodes) => nodes.map((node) => node.value));
   if (prepBefore.length !== 7 || new Set(prepBefore.filter(Boolean)).size !== 7) {
     throw new Error('La preparación de prueba no contiene 7 titulares únicos.');
   }
