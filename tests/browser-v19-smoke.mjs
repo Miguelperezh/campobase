@@ -73,7 +73,27 @@ async function testDesktop(page) {
   };
 
   await navDiag('after-enter-demo');
-  await page.evaluate(() => window.__campobase.showView('plantilla'));
+  const directResult = await page.evaluate(() => {
+    const before = document.querySelector('.view.active')?.id || null;
+    const fn = window.__campobase?.showView;
+    const target = document.getElementById('plantilla');
+    let error = '';
+    try {
+      fn?.('plantilla');
+    } catch (err) {
+      error = String(err?.stack || err?.message || err);
+    }
+    return {
+      before,
+      afterImmediate: document.querySelector('.view.active')?.id || null,
+      stored: sessionStorage.getItem('campobase.activeView'),
+      targetClass: target?.className || null,
+      targetIsView: Boolean(target?.classList?.contains('view')),
+      fnSource: String(fn).slice(0, 700),
+      error,
+    };
+  });
+  console.log('CAMPOBASE_SHOWVIEW_DIAG ' + JSON.stringify(directResult));
   await page.waitForTimeout(250);
   const afterDirectShow = await navDiag('after-direct-showView-plantilla');
 
