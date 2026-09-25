@@ -4554,3 +4554,19 @@ Causas demostradas y guardarraíles permanentes:
 - **Datos reales:** estas correcciones no autorizan borrar, migrar, duplicar ni reconstruir jugadores, partidos, convocatorias, asistencias, estadísticas o configuraciones. No copiar datos entre propietarios/equipos para “arreglar” una vista.
 - **Despliegue PWA:** cuando se corrige un módulo cargado con query de versión, actualizar el cache-bust del módulo y el build de HTML/app/SW para evitar que móvil o escritorio sigan ejecutando código anterior.
 - **No aceptar CI verde incompleto:** si el job de browser smoke está `skipped` o no cubre Equipo/Preparación, no se considera validación suficiente de estos flujos.
+
+
+# 73. Persistencia real de alineación desde «Preparar partido» — 25/09/2026
+
+Causa demostrada en producción:
+- En la sesión real del entrenador, al modificar la alineación desde **Partido en vivo → Preparar partido**, los logs de Supabase mostraban lecturas repetidas de `configuracion` pero ninguna escritura correspondiente al cambio.
+- La causa en código era que los manejadores de la pizarra llamaban a `syncTimerFromLiveTactic()` y repintaban `En campo/Banquillo`, pero no persistían el cambio. La alineación existía solo en memoria y se perdía al actualizar.
+- El smoke anterior solo cubría `Preparación → Guardar preparación` en modo demo; no cubría el flujo real de `Preparar partido`.
+
+Guardarraíles permanentes:
+- Mientras `state.timer.phase === 'ready'`, cualquier cambio del entrenador en la pizarra de **Preparar partido** que altere titular, formación o posición de una ficha debe persistirse.
+- La fuente canónica se guarda también como registro `recordType: 'preparacion'` del mismo partido, preservando `team`, orden, `pos`, `x`, `y`, porteros y `formacion`.
+- `settings/live` debe guardar el mismo `onField` y `initialOnField`; el siete inicial usado para el cálculo de minutos no puede quedarse con la alineación automática anterior.
+- Esta persistencia automática solo aplica en fase `ready`. No cambiar la semántica de sustituciones ni eventos cuando el partido ya ha comenzado.
+- No borrar, migrar ni reconstruir datos reales para corregir este flujo.
+- La prueba de navegador debe entrar por **Preparar partido**, cambiar un titular, verificar que existen tanto la preparación como `settings/live`, limpiar el estado en memoria y comprobar que la alineación se reconstruye desde almacenamiento.
