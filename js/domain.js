@@ -140,7 +140,9 @@ export function buildCallupSelection(players, options = {}) {
   if ([...selected].some((id) => manuallyExcluded.has(id))) {
     throw new RangeError('Un jugador no puede estar convocado y fuera a la vez.');
   }
-  if (selected.size > limit) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+  if (matchType !== 'friendly' && selected.size > limit) {
+    throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+  }
 
   const eligible = uniquePlayers.filter(({ id }) => !manuallyExcluded.has(id));
   const exclusions = manualExclusions.map(({ playerId, reason, note }) => ({
@@ -149,8 +151,16 @@ export function buildCallupSelection(players, options = {}) {
     ...(note ? { note } : {}),
     automatic: false,
   }));
+
+  // Amistoso: sin máximo de convocados. Todos los disponibles pueden entrar
+  // en el reparto de minutos; las únicas bajas son las exclusiones manuales.
+  if (matchType === 'friendly') {
+    return { availableIds: eligible.map(({ id }) => id), exclusions };
+  }
+
+  // Torneo mantiene el comportamiento anterior y su límite actual.
   if (matchType !== 'league') {
-    if (eligible.length > limit) throw new RangeError(`En amistosos y torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
+    if (eligible.length > limit) throw new RangeError(`En torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
     return { availableIds: eligible.map(({ id }) => id), exclusions };
   }
 
