@@ -232,7 +232,7 @@ export function createCampoBaseCloudStore() {
       const table = CLOUD_TABLES[mutation.store];
       const query = client
         .from(table)
-        .select('updated_at,deleted_at')
+        .select('updated_at,deleted_at,payload')
         .eq('user_id', dataOwnerUserId)
         .eq('id', mutation.recordId)
         .limit(1);
@@ -242,6 +242,15 @@ export function createCampoBaseCloudStore() {
       const rows = checkResult(await query) ?? [];
       const remote = rows[0];
       if (!remote) return true;
+      if (
+        mutation.operation === 'upsert'
+        && mutation.store === 'settings'
+        && mutation.payload?.recordType === 'preparacion'
+      ) {
+        const localSavedAt = Number(mutation.payload.savedAt || 0);
+        const remoteSavedAt = Number(remote.payload?.savedAt || 0);
+        if (localSavedAt && localSavedAt >= remoteSavedAt) return true;
+      }
       const remoteUpdatedAt = Number(remote.updated_at || remote.deleted_at || 0);
       const localQueuedAt = Number(mutation.queuedAt || 0);
       return localQueuedAt >= remoteUpdatedAt;
