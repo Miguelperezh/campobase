@@ -102,7 +102,7 @@ function ensureShell() {
   if (!section) {
     section = document.createElement('section');
     section.id = 'hoy';
-    section.className = 'view active';
+    section.className = document.querySelector('.view.active') ? 'view' : 'view active';
     section.setAttribute('aria-labelledby', 'title-hoy');
     section.innerHTML = `
       <div class="section-head today-section-head">
@@ -119,12 +119,6 @@ function ensureShell() {
     navButton.dataset.view = 'hoy';
     navButton.textContent = 'Hoy';
     nav.insertBefore(navButton, nav.firstElementChild);
-  }
-
-  if (plantilla.classList.contains('active')) {
-    plantilla.classList.remove('active');
-    section.classList.add('active');
-    nav.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button === navButton));
   }
 
   installStyles();
