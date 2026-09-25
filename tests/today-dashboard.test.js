@@ -39,12 +39,19 @@ test('el nuevo Inicio se carga desde la app y queda disponible offline', async (
     projectFile('package.json'),
     projectFile('js/today-dashboard.js'),
   ]);
-  assert.match(demo, /today-dashboard\.js\?v=2456/);
-  assert.match(sw, /today-dashboard\.js\?v=2456/);
-  assert.match(sw, /today-2456/);
+  assert.match(demo, /today-dashboard\.js\?v=2457/);
+  assert.match(sw, /today-dashboard\.js\?v=2457/);
+  assert.match(sw, /today-2457/);
   assert.match(pkg, /node --check js\/today-dashboard\.js/);
   assert.match(source, /section\.id = 'hoy'/);
   assert.match(source, /navButton\.textContent = 'Hoy'/);
   assert.match(source, /today-event-grid/);
   assert.match(source, /Pendiente de hacer/);
+});
+
+
+test('renderizar Hoy nunca cambia por su cuenta la vista activa del usuario', async () => {
+  const source = await projectFile('js/today-dashboard.js');
+  assert.doesNotMatch(source, /plantilla\.classList\.remove\('active'\)/);
+  assert.match(source, /document\.querySelector\('\.view\.active'\) \? 'view' : 'view active'/);
 });

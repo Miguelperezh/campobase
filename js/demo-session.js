@@ -3,11 +3,11 @@ import './session-visual-planner.js?v=2451';
 import './session-materials.js?v=2452';
 import './session-top-actions.js?v=2458';
 import './session-picker-compat.js?v=2461';
-import './session-planner-ui.js?v=20260924-v59-delegate-views-visible-render-fix';
+import './session-planner-ui.js?v=20260925-v62-equipo-prep-rootcause';
 import './attendance-linked-sources.js?v=2453';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
-import './today-dashboard.js?v=2456';
+import './today-dashboard.js?v=2457';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 

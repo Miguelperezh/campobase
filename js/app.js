@@ -17,7 +17,7 @@ import { printSingleExercise, printTrainingSession } from './print-session-expor
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js';
-import { renderTodayDashboard } from './today-dashboard.js?v=2456';
+import { renderTodayDashboard } from './today-dashboard.js?v=2457';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -7764,7 +7764,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v59-delegate-views-visible-render-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260925-v62-equipo-prep-rootcause').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
