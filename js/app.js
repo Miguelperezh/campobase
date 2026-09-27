@@ -127,17 +127,18 @@ function composeTime24(hour, minute, required = false) {
 }
 
 function composeDateTime24(day, hour, minute) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day ?? '')) throw new TypeError('Selecciona una fecha válida.');
-  return `${day}T${composeTime24(hour, minute, true)}`;
+  const { year, month, day: dayNum } = splitDate(day);
+  const validDay = composeDate(dayNum, month, year);
+  return `${validDay}T${composeTime24(hour, minute, true)}`;
 }
 
 function setDateTimeFields(form, name, value = '') {
-  const [day = '', time = ''] = value.split('T');
+  const [day = '', time = ''] = String(value || '').split('T');
   const { hour, minute } = splitTime24(time);
   const { year, month, day: dayNum } = splitDate(day);
-  form.elements[`${name}Day`].value = dayNum;
   form.elements[`${name}Month`].value = month;
   form.elements[`${name}Year`].value = year;
+  refreshDateDayOptions(form, name, dayNum);
   form.elements[`${name}Hour`].value = hour || '00';
   form.elements[`${name}Minute`].value = minute || '00';
 }
@@ -148,8 +149,30 @@ function splitDate(value = '') {
   return { year: match?.[1] ?? '', month: match?.[2] ?? '', day: match?.[3] ?? '' };
 }
 
-function dayOptions(selected = '') {
-  return '<option value="">Día</option>' + Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+function daysInMonth(month = '', year = '') {
+  if (!/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) return 31;
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+  if (monthNumber < 1 || monthNumber > 12) return 31;
+  return new Date(yearNumber, monthNumber, 0).getDate();
+}
+
+function isRealCalendarDate(day = '', month = '', year = '') {
+  if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) return false;
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+  return monthNumber >= 1
+    && monthNumber <= 12
+    && dayNumber >= 1
+    && dayNumber <= daysInMonth(month, year)
+    && new Date(yearNumber, monthNumber - 1, dayNumber).getFullYear() === yearNumber;
+}
+
+function dayOptions(selected = '', month = '', year = '') {
+  const maxDays = daysInMonth(month, year);
+  const safeSelected = Number(selected) >= 1 && Number(selected) <= maxDays ? selected : '';
+  return '<option value="">Día</option>' + Array.from({ length: maxDays }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === safeSelected ? 'selected' : ''}>${v}</option>`).join('');
 }
 function monthOptions(selected = '') {
   return '<option value="">Mes</option>' + Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
@@ -161,11 +184,22 @@ function yearOptions(selected = '') {
 
 function dateMarkup(name, value = '', label = 'Fecha') {
   const { year, month, day } = splitDate(value);
-  return `<div class="date-24"><select name="${name}Day" required aria-label="${escapeHtml(label)}, día">${dayOptions(day)}</select><span>/</span><select name="${name}Month" required aria-label="${escapeHtml(label)}, mes">${monthOptions(month)}</select><span>/</span><select name="${name}Year" required aria-label="${escapeHtml(label)}, año">${yearOptions(year)}</select></div>`;
+  return `<div class="date-24"><select name="${name}Day" required aria-label="${escapeHtml(label)}, día">${dayOptions(day, month, year)}</select><span>/</span><select name="${name}Month" required aria-label="${escapeHtml(label)}, mes">${monthOptions(month)}</select><span>/</span><select name="${name}Year" required aria-label="${escapeHtml(label)}, año">${yearOptions(year)}</select></div>`;
+}
+
+function refreshDateDayOptions(form, name = 'date', preferredDay = '') {
+  const daySelect = form?.elements?.[`${name}Day`];
+  const monthSelect = form?.elements?.[`${name}Month`];
+  const yearSelect = form?.elements?.[`${name}Year`];
+  if (!daySelect || !monthSelect || !yearSelect) return;
+  const currentDay = preferredDay || daySelect.value;
+  daySelect.innerHTML = dayOptions(currentDay, monthSelect.value, yearSelect.value);
 }
 
 function composeDate(day, month, year) {
-  if (!/^\d{2}$/.test(day ?? '') || !/^\d{2}$/.test(month ?? '') || !/^\d{4}$/.test(year ?? '')) throw new TypeError('Selecciona una fecha válida (día, mes y año).');
+  if (!isRealCalendarDate(day ?? '', month ?? '', year ?? '')) {
+    throw new TypeError('Selecciona una fecha real del calendario.');
+  }
   return `${year}-${month}-${day}`;
 }
 
@@ -7835,6 +7869,18 @@ async function init() {
   addSessionForm.elements.dateDay.innerHTML = dayOptions();
   addSessionForm.elements.dateMonth.innerHTML = monthOptions();
   addSessionForm.elements.dateYear.innerHTML = yearOptions();
+
+  document.addEventListener('change', (event) => {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+    const match = /^(.*)(Month|Year)$/.exec(select.name || '');
+    if (!match) return;
+    const name = match[1];
+    const form = select.closest('form');
+    if (!form) return;
+    refreshDateDayOptions(form, name);
+  });
+
   const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
   $('#exercise-filters').elements.category.insertAdjacentHTML(
