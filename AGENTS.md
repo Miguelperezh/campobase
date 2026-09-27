@@ -4596,3 +4596,16 @@ Guardarraíles permanentes:
 - Probar también en Safari/iPhone que un snapshot remoto nuevo sustituye la copia local sin error de transacción y sin perder mutaciones locales pendientes.
 - Las fechas de sesiones y partidos no se validan solo por patrón `YYYY-MM-DD`: deben representar un día real del calendario. Fechas imposibles como `2026-09-31` nunca pueden bloquear `Hoy`, `Sesiones` ni la reconciliación; la UI debe tolerarlas y el creador/editor debe impedir guardar nuevas fechas imposibles.
 - Corregir este caso NO autoriza a reescribir manualmente registros históricos: primero se hace tolerante el cliente y se preserva la sincronización automática; cualquier reparación de datos existentes se trata aparte y con trazabilidad.
+
+
+# 75. Fechas reales de calendario — 27/09/2026
+
+Guardarraíles:
+- Los selectores de fecha de CampoBase deben ofrecer solo días que existan realmente para el mes y año elegidos.
+- Septiembre, abril, junio y noviembre no pueden ofrecer día 31.
+- Febrero debe ofrecer 28 días en años normales y 29 únicamente en años bisiestos reales.
+- Al cambiar mes o año, el selector de día debe recalcularse inmediatamente; si el día previamente elegido deja de existir, debe quedar sin selección.
+- El guardado debe volver a validar la fecha aunque el usuario manipule el DOM o llegue un valor externo; no basta con validar el formato YYYY-MM-DD.
+- Esta regla aplica a partidos, convocatorias manuales, asistencias, sesiones de entrenamiento y cualquier otro formulario que use los selectores DD/MM/AAAA compartidos.
+- Una fecha histórica inválida no debe bloquear el render ni la sincronización: se muestra de forma segura como inválida y el usuario puede corregirla después, sin reescribir registros automáticamente.
+- No corregir fechas históricas inventando el día correcto. La app solo impide nuevas fechas imposibles y tolera las antiguas hasta edición explícita.
