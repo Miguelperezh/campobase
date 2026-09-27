@@ -4591,4 +4591,6 @@ Guardarraíles permanentes:
 - El repintado aplazado debe usar el estado ya reconciliado; no debe volver a escribir datos, duplicar sesiones ni crear otra vía de sincronización.
 - Mantener intacta la arquitectura canónica: IndexedDB local-first → `syncQueue` → Supabase → Realtime/polling de 10 s → reconciliación local.
 - No tocar ni reconstruir datos reales para resolver una vista desactualizada.
+- En Safari/iOS, no insertar `await` entre las lecturas y los `clear()/put()` de una misma transacción IndexedDB `readwrite` usada para reconciliar snapshots. Las escrituras deben encolarse desde callbacks activos de la propia transacción para evitar `TransactionInactiveError` y conservar atomicidad con `syncQueue`.
 - Probar específicamente: crear una sesión en un dispositivo, mantener interacción activa en el segundo mientras llega la sincronización, terminar la interacción y comprobar que la sesión aparece sin recargar, sin logout y sin perder la vista activa.
+- Probar también en Safari/iPhone que un snapshot remoto nuevo sustituye la copia local sin error de transacción y sin perder mutaciones locales pendientes.
