@@ -26,8 +26,8 @@ test('submitAuth en js/app.js permite escribir demo y maneja recuperacion de PIN
   assert.match(app, /settings-reload/, 'Debe conectar listener de Recargar en ajustes');
 });
 
-test('sw.js e index.html están sincronizados a v=20260927-v65-safe-date-sync', () => {
+test('sw.js e index.html están sincronizados a v=20260927-v66-real-calendar-dates', () => {
   assert.match(sw, /duration-2503/, 'sw.js debe tener la clave de caché con 2503');
-  assert.match(html, /styles-redesign\.css\?v=20260927-v65-safe-date-sync/, 'index.html debe cargar estilos con v=20260927-v65-safe-date-sync');
-  assert.match(html, /js\/app\.js\?v=20260927-v65-safe-date-sync/, 'index.html debe cargar app.js con v=20260927-v65-safe-date-sync');
+  assert.match(html, /styles-redesign\.css\?v=20260927-v66-real-calendar-dates/, 'index.html debe cargar estilos con v=20260927-v66-real-calendar-dates');
+  assert.match(html, /js\/app\.js\?v=20260927-v66-real-calendar-dates/, 'index.html debe cargar app.js con v=20260927-v66-real-calendar-dates');
 });
