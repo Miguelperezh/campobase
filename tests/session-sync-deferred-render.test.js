@@ -24,3 +24,18 @@ test('un refresh forzado cancela el repintado aplazado antes de renderizar', asy
   assert.match(source, /deferredRenderTimer = null;/);
   assert.match(source, /renderAll\(\);/);
 });
+
+
+test('la reconciliación IndexedDB mantiene lecturas y escrituras atómicas para Safari/iOS', async () => {
+  const source = await projectFile('js/db.js');
+  const start = source.indexOf('async function replaceLocalStore');
+  const end = source.indexOf('async function queueInitialRecords');
+  const fn = source.slice(start, end);
+
+  assert.match(fn, /db\.transaction\(\[store, SYNC_QUEUE\], 'readwrite'\)/);
+  assert.match(fn, /localRequest\.onsuccess/);
+  assert.match(fn, /pendingRequest\.onsuccess/);
+  assert.match(fn, /reconcileAndWrite\(\)/);
+  assert.match(fn, /objectStore\.clear\(\)/);
+  assert.doesNotMatch(fn, /await Promise\.all/, 'no debe ceder el control entre getAll y clear\/put dentro de la transacción');
+});
