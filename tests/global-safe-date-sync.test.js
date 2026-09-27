@@ -20,5 +20,5 @@ test('el formateador global de fechas no entrega fechas inválidas a Intl.DateTi
 });
 
 test('el build PWA de este hotfix es v65 en app', () => {
-  assert.match(app, /20260927-v65-safe-date-sync/);
+  assert.match(app, /20260927-v66-real-calendar-dates/);
 });
