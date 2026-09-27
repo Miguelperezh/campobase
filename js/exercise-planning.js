@@ -324,7 +324,17 @@ export function calculateSessionTotalMaterial(blocks = [], exercisesLookup = nul
 
 export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
   const date = clean(values.date);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new TypeError('Selecciona una fecha válida para la sesión.');
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const parsedDate = dateMatch ? new Date(`${date}T12:00:00`) : null;
+  const validDate = Boolean(
+    dateMatch
+    && parsedDate
+    && Number.isFinite(parsedDate.getTime())
+    && parsedDate.getFullYear() === Number(dateMatch[1])
+    && parsedDate.getMonth() + 1 === Number(dateMatch[2])
+    && parsedDate.getDate() === Number(dateMatch[3])
+  );
+  if (!validDate) throw new TypeError('Selecciona una fecha válida para la sesión.');
   const available = new Set(metadata.availableExerciseIds || []);
   const blocks = (values.blocks || []).map((block) => {
     if (!available.has(block.exerciseId)) throw new TypeError('La sesión contiene un ejercicio que ya no está disponible.');

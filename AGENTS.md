@@ -4573,3 +4573,26 @@ Guardarraíles permanentes:
 - **Sincronización ordenador ↔ móvil:** respetar la arquitectura ya validada en `agente.md`: IndexedDB local-first → `syncQueue` → Supabase. Los registros de `settings` viajan por la tabla `configuracion`, incluida en Supabase Realtime. Realtime solo dispara la reconciliación normal; no escribe directamente en IndexedDB.
 - Mantener el polling cloud de **10 segundos** como fallback obligatorio frente a suspensión/corte de WebSocket en móvil. No sustituirlo ni retirarlo por esta corrección.
 - No reintroducir transferencias manuales PC→móvil como mecanismo normal: desde v46 la vía canónica multi-dispositivo es Supabase + Realtime + polling de respaldo.
+
+
+# 74. Sincronización móvil de sesiones y repintado seguro — 27/09/2026
+
+Causa demostrada:
+- Las sesiones nuevas de entrenamiento se guardan correctamente en IndexedDB, entran en `syncQueue` y llegan a Supabase como registros `recordType: 'trainingSession'` dentro de `configuracion`.
+- El iPhone puede descargar correctamente el mismo snapshot remoto que el Mac y aun así seguir mostrando una lista antigua si la reconciliación termina mientras el usuario está interactuando con un formulario, diálogo, selector, reproductor o pizarra.
+- El origen es que `refresh()` actualizaba el estado en memoria pero omitía `renderAll()` mientras `isUserInteracting()` era verdadero. En el siguiente polling, al no existir ya diferencias cloud/local, no se provocaba otro repintado y la interfaz podía quedar desactualizada indefinidamente.
+
+Guardarraíles permanentes:
+- No eliminar la protección `isUserInteracting()`: sigue siendo necesaria para no cerrar diálogos, perder formularios, reiniciar vídeos ni romper la pizarra en uso.
+- Si una sincronización actualiza datos mientras hay interacción, debe quedar registrado un repintado pendiente.
+- Ese repintado debe reintentarse de forma ligera y ejecutarse automáticamente en cuanto `isUserInteracting()` pase a falso.
+- Varios cambios cloud durante la misma interacción deben consolidarse en un solo repintado pendiente; no crear bucles ni múltiples timers simultáneos.
+- Un `refresh(true)` explícito puede renderizar inmediatamente y debe cancelar cualquier repintado aplazado anterior.
+- El repintado aplazado debe usar el estado ya reconciliado; no debe volver a escribir datos, duplicar sesiones ni crear otra vía de sincronización.
+- Mantener intacta la arquitectura canónica: IndexedDB local-first → `syncQueue` → Supabase → Realtime/polling de 10 s → reconciliación local.
+- No tocar ni reconstruir datos reales para resolver una vista desactualizada.
+- En Safari/iOS, no insertar `await` entre las lecturas y los `clear()/put()` de una misma transacción IndexedDB `readwrite` usada para reconciliar snapshots. Las escrituras deben encolarse desde callbacks activos de la propia transacción para evitar `TransactionInactiveError` y conservar atomicidad con `syncQueue`.
+- Probar específicamente: crear una sesión en un dispositivo, mantener interacción activa en el segundo mientras llega la sincronización, terminar la interacción y comprobar que la sesión aparece sin recargar, sin logout y sin perder la vista activa.
+- Probar también en Safari/iPhone que un snapshot remoto nuevo sustituye la copia local sin error de transacción y sin perder mutaciones locales pendientes.
+- Las fechas de sesiones y partidos no se validan solo por patrón `YYYY-MM-DD`: deben representar un día real del calendario. Fechas imposibles como `2026-09-31` nunca pueden bloquear `Hoy`, `Sesiones` ni la reconciliación; la UI debe tolerarlas y el creador/editor debe impedir guardar nuevas fechas imposibles.
+- Corregir este caso NO autoriza a reescribir manualmente registros históricos: primero se hace tolerante el cliente y se preserva la sincronización automática; cualquier reparación de datos existentes se trata aparte y con trazabilidad.

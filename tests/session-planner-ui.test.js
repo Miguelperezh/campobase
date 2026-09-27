@@ -61,9 +61,9 @@ test('el buscador global conserva el formato validado pero no queda fijado', () 
 });
 
 test('el planificador y la PWA cargan la misma revisión actual', () => {
-  assert.match(demo, /session-planner-ui\.js\?v=20260925-v63-live-lineup-persist/);
-  assert.match(sw, /20260925-v63-live-lineup-persist/);
-  assert.match(sw, /session-planner-ui\.js\?v=20260925-v63-live-lineup-persist/);
+  assert.match(demo, /session-planner-ui\.js\?v=20260927-v64-session-sync-mobile/);
+  assert.match(sw, /20260927-v64-session-sync-mobile/);
+  assert.match(sw, /session-planner-ui\.js\?v=20260927-v64-session-sync-mobile/);
   assert.match(pkg.scripts.check, /node --check js\/session-planner-ui\.js/);
   assert.equal(pkg.version, '2.44.0');
 });

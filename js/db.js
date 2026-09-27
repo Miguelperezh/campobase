@@ -315,22 +315,53 @@ export async function flushSyncQueue() {
 
 async function replaceLocalStore(store, cloudRecords) {
   const db = await openDatabase();
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  const completed = transactionDone(transaction);
-  const objectStore = transaction.objectStore(store);
-  const [localRecords, pendingMutations] = await Promise.all([
-    requestResult(objectStore.getAll()),
-    requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
-  ]);
-  if (store === 'players' && (!cloudRecords || cloudRecords.length === 0) && localRecords.length > 0) {
-    console.warn('Protección activa: se omite vaciado local de jugadores sin confirmación explícita del servidor.');
-    await completed;
-    return;
-  }
-  const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
-  objectStore.clear();
-  for (const record of reconciledRecords) objectStore.put(record);
-  await completed;
+
+  // Safari/iOS puede cerrar una transacción IndexedDB si se cede el control
+  // entre las lecturas y las escrituras. Las dos lecturas y el clear/put deben
+  // permanecer en la misma transacción atómica y las escrituras se encolan
+  // desde el callback onsuccess de la última lectura, mientras sigue activa.
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+    const objectStore = transaction.objectStore(store);
+    const queueStore = transaction.objectStore(SYNC_QUEUE);
+    const localRequest = objectStore.getAll();
+    const pendingRequest = queueStore.getAll();
+
+    let localRecords = [];
+    let pendingMutations = [];
+    let localReady = false;
+    let pendingReady = false;
+    let reconciled = false;
+
+    const reconcileAndWrite = () => {
+      if (reconciled || !localReady || !pendingReady) return;
+      reconciled = true;
+
+      if (store === 'players' && (!cloudRecords || cloudRecords.length === 0) && localRecords.length > 0) {
+        console.warn('Protección activa: se omite vaciado local de jugadores sin confirmación explícita del servidor.');
+        return;
+      }
+
+      const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
+      objectStore.clear();
+      for (const record of reconciledRecords) objectStore.put(record);
+    };
+
+    localRequest.onsuccess = () => {
+      localRecords = localRequest.result ?? [];
+      localReady = true;
+      reconcileAndWrite();
+    };
+    pendingRequest.onsuccess = () => {
+      pendingMutations = pendingRequest.result ?? [];
+      pendingReady = true;
+      reconcileAndWrite();
+    };
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error('No se pudo reconciliar la copia local.'));
+    transaction.onabort = () => reject(transaction.error ?? new Error('La reconciliación local se canceló.'));
+  });
 }
 
 async function queueInitialRecords(store, records) {

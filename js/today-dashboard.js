@@ -21,9 +21,23 @@ export function localDayKey(date = new Date()) {
 
 function dateOnly(value = '') { return String(value).slice(0, 10); }
 
+function isValidDateOnly(value = '') {
+  const day = dateOnly(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const date = Number(match[3]);
+  const parsed = new Date(`${day}T12:00:00`);
+  return Number.isFinite(parsed.getTime())
+    && parsed.getFullYear() === year
+    && parsed.getMonth() + 1 === month
+    && parsed.getDate() === date;
+}
+
 function formatDay(value = '') {
   const day = dateOnly(value);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return 'Sin fecha';
+  if (!isValidDateOnly(day)) return 'Fecha inválida';
   return new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
     .format(new Date(`${day}T12:00:00`)).replace('.', '');
 }
@@ -64,8 +78,8 @@ function callupForMatch(callups, match) {
 
 export function buildTodaySummary({ sessions = [], matches = [], trainings = [], callups = [], now = new Date() } = {}) {
   const today = localDayKey(now);
-  const usableSessions = sessions.filter((session) => /^\d{4}-\d{2}-\d{2}/.test(String(session?.date || '')));
-  const usableMatches = matches.filter((match) => /^\d{4}-\d{2}-\d{2}/.test(String(match?.date || '')));
+  const usableSessions = sessions.filter((session) => isValidDateOnly(session?.date));
+  const usableMatches = matches.filter((match) => isValidDateOnly(match?.date));
 
   const todaySessions = usableSessions.filter((session) => dateOnly(session.date) === today);
   const todayMatches = usableMatches.filter((match) => dateOnly(match.date) === today);

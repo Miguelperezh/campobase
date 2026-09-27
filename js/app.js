@@ -75,6 +75,8 @@ let realtimeCloudStore = null;
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
+let deferredRenderTimer = null;
+let deferredRenderRequested = false;
 let lastCloudSyncTimestamp = 0;
 let readyLineupPersistChain = Promise.resolve();
 
@@ -443,6 +445,37 @@ function isUserInteracting() {
   return false;
 }
 
+function scheduleDeferredRender() {
+  deferredRenderRequested = true;
+  if (deferredRenderTimer) return;
+
+  const tryRender = () => {
+    deferredRenderTimer = null;
+    if (!deferredRenderRequested) return;
+    if (isUserInteracting()) {
+      deferredRenderTimer = window.setTimeout(tryRender, 250);
+      return;
+    }
+    deferredRenderRequested = false;
+    renderAll();
+  };
+
+  deferredRenderTimer = window.setTimeout(tryRender, 250);
+}
+
+function renderOrDefer(force = false) {
+  if (force || !isUserInteracting()) {
+    deferredRenderRequested = false;
+    if (deferredRenderTimer) {
+      window.clearTimeout(deferredRenderTimer);
+      deferredRenderTimer = null;
+    }
+    renderAll();
+    return;
+  }
+  scheduleDeferredRender();
+}
+
 
 async function deduplicatePlayers() {
   // Protección de datos: refresh nunca deduplica, borra ni reescribe jugadores.
@@ -542,7 +575,7 @@ async function refresh() {
   } else {
     restoreNormalNavUi();
   }
-  if (force || !isUserInteracting()) renderAll();
+  renderOrDefer(force);
 }
 
 function syncDirectFieldCache() {
@@ -7840,7 +7873,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260925-v63-live-lineup-persist').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20260927-v64-session-sync-mobile').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

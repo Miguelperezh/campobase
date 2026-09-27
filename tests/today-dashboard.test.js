@@ -55,3 +55,23 @@ test('renderizar Hoy nunca cambia por su cuenta la vista activa del usuario', as
   assert.doesNotMatch(source, /plantilla\.classList\.remove\('active'\)/);
   assert.match(source, /document\.querySelector\('\.view\.active'\) \? 'view' : 'view active'/);
 });
+
+
+test('Hoy ignora fechas imposibles sin bloquear el render ni la sincronización', () => {
+  const now = new Date(2026, 8, 27, 12, 0, 0);
+  const summary = buildTodaySummary({
+    sessions: [
+      { id: 'bad-session', date: '2026-09-31', name: 'Fecha imposible' },
+      { id: 'good-session', date: '2026-09-28', name: 'Sesión válida' },
+    ],
+    matches: [
+      { id: 'bad-match', date: '2026-02-30T19:00', opponent: 'Fecha imposible' },
+    ],
+    now,
+  });
+
+  assert.equal(summary.nextSession?.id, 'good-session');
+  assert.equal(summary.todaySessions.length, 0);
+  assert.equal(summary.todayMatches.length, 0);
+  assert.ok(!summary.attendancePending.some((item) => item.id === 'bad-session'));
+});
