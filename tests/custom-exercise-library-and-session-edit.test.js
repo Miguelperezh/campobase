@@ -42,7 +42,7 @@ test('crear y editar sesiones usa el mismo builder y confirma el guardado', () =
 
 test('la PWA fuerza la actualización de esta corrección', () => {
   assert.match(sw, /force2508-final-preview-own-sessions/);
-  assert.match(app, /20260927-v64-session-sync-mobile/);
+  assert.match(app, /20260927-v65-safe-date-sync/);
 });
 
 
