@@ -737,13 +737,17 @@ test('index.html y app.js integran selector de semana para WhatsApp con proxima 
   assert.match(app, /isWeekend\(today\)/, 'app.js debe comprobar si hoy es fin de semana para preseleccionar la próxima semana');
 });
 
-test('isUserInteracting no bloquea renderAll por details[open] y refresh admite force=true', async () => {
+test('isUserInteracting no bloquea por details[open] y refresh fuerza o aplaza el render de forma segura', async () => {
   const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
-  const isInteractingFn = app.slice(app.indexOf('function isUserInteracting()'), app.indexOf('async function deduplicatePlayers()'));
+  const isInteractingFn = app.slice(app.indexOf('function isUserInteracting()'), app.indexOf('function scheduleDeferredRender()'));
+  const renderOrDeferFn = app.slice(app.indexOf('function renderOrDefer(force = false)'), app.indexOf('async function deduplicatePlayers()'));
 
   assert.doesNotMatch(isInteractingFn, /document\.querySelector\(['"]details\[open\]['"]\)/, 'isUserInteracting no debe considerar details[open] como interacción bloqueante');
   assert.match(app, /const force = arguments\[0\] === true;/, 'refresh debe leer el flag force');
-  assert.match(app, /if \(force \|\| !isUserInteracting\(\)\) renderAll\(\);/, 'refresh debe ejecutar renderAll si force es true o si no hay interacción');
+  assert.match(app, /renderOrDefer\(force\);/, 'refresh debe delegar el render seguro con el flag force');
+  assert.match(renderOrDeferFn, /if \(force \|\| !isUserInteracting\(\)\)/, 'renderOrDefer debe renderizar inmediatamente si force es true o si no hay interacción');
+  assert.match(renderOrDeferFn, /renderAll\(\);/, 'renderOrDefer debe ejecutar renderAll en la ruta inmediata');
+  assert.match(renderOrDeferFn, /scheduleDeferredRender\(\);/, 'renderOrDefer debe aplazar el render si la interacción sigue activa');
 });
 
 test('app.js permite incluir múltiples partidos en la planificación semanal de WhatsApp', async () => {
