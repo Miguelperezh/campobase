@@ -169,3 +169,30 @@ test('crea y edita sesiones con ejercicios de Mis ejercicios sin perder identida
   ]);
   assert.equal(edited.blocks[0].notes, 'Consigna editada');
 });
+
+
+test('no permite guardar sesiones con una fecha de calendario imposible', () => {
+  assert.throws(() => buildFlexibleTrainingSession({
+    date: '2026-09-31',
+    targetDuration: 60,
+    blocks: [],
+  }, {
+    id: 'invalid-date-session',
+    availableExerciseIds: [],
+    exercises: [],
+    createdAt: 1,
+    now: 2,
+  }), /fecha válida/i);
+
+  assert.doesNotThrow(() => buildFlexibleTrainingSession({
+    date: '2028-02-29',
+    targetDuration: 60,
+    blocks: [],
+  }, {
+    id: 'leap-session',
+    availableExerciseIds: [],
+    exercises: [],
+    createdAt: 1,
+    now: 2,
+  }));
+});
