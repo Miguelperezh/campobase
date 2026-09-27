@@ -42,10 +42,33 @@ const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character)
 const safePhoto = (value) => /^data:image\/(png|jpeg|webp|gif);base64,/i.test(value ?? '') ? value : '';
 const localDate = (value) => {
   if (!value) return 'Sin fecha';
-  const hasTime = value.includes('T');
-  return new Intl.DateTimeFormat('es-ES', hasTime
-    ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
-    : { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(hasTime ? value : `${value}T12:00:00`));
+  const raw = String(value).trim();
+  if (!raw) return 'Sin fecha';
+
+  const hasTime = raw.includes('T');
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  const parsed = new Date(hasTime ? raw : `${raw}T12:00:00`);
+
+  if (!Number.isFinite(parsed.getTime())) return 'Fecha inválida';
+
+  if (dateOnlyMatch) {
+    const year = Number(dateOnlyMatch[1]);
+    const month = Number(dateOnlyMatch[2]);
+    const day = Number(dateOnlyMatch[3]);
+    if (
+      parsed.getFullYear() !== year
+      || parsed.getMonth() + 1 !== month
+      || parsed.getDate() !== day
+    ) return 'Fecha inválida';
+  }
+
+  try {
+    return new Intl.DateTimeFormat('es-ES', hasTime
+      ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
+      : { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
+  } catch {
+    return 'Fecha inválida';
+  }
 };
 const localDateKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const empty = (text) => `<div class="panel empty">${escapeHtml(text)}</div>`;
