@@ -367,7 +367,7 @@ function applyDelegateNavFilters(perms) {
       } else if (mod === 'inicio') {
         allowed = perms.includes('hoy') || perms.includes('inicio');
       } else if (mod === 'entrenos') {
-        allowed = perms.includes('sesiones') || perms.includes('ejercicios');
+        allowed = perms.includes('sesiones') || perms.includes('ejercicios') || perms.includes('tacticas');
       } else if (mod === 'mas' || mod === 'tacticas') {
         allowed = perms.includes('tacticas');
       }
@@ -394,7 +394,7 @@ function restoreNormalNavUi() {
     const mod = tab.dataset.module;
     if (mod === 'partidos') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
-      if (lbl) lbl.textContent = 'Partidos';
+      if (lbl) lbl.textContent = 'Partido';
     }
     if (mod === 'equipo') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
@@ -7928,7 +7928,7 @@ async function init() {
     || location.hostname.startsWith('192.168.')
     || location.hostname.startsWith('10.');
   const isValidationPreview = location.pathname.endsWith('/validacion-estabilidad.html');
-  if ('serviceWorker' in navigator && !isValidationPreview) {
+  if ('serviceWorker' in navigator && !isValidationPreview && !window.__CAMPOBASE_READONLY_PREVIEW) {
     if (isLocal) {
       const reloadKey = 'campobase.localServiceWorkerReloaded';
       const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);

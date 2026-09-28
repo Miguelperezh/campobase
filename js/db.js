@@ -4,6 +4,7 @@ import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userD
 
 var REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
+const isReadOnlyPreview = () => globalThis.__CAMPOBASE_READONLY_PREVIEW === true;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
 const PLAYER_PROFILE_FIELDS = Object.freeze([
@@ -174,6 +175,7 @@ export async function getOne(store, id) {
 }
 
 export async function put(store, value) {
+  if (isReadOnlyPreview()) return value;
   if (isDemoDatabase()) {
     demoStores[store].set(value.id, structuredClone(value));
     notifyDataChanged(store, 'upsert');
@@ -196,6 +198,7 @@ export async function put(store, value) {
 }
 
 export async function putPlayerProfile(value) {
+  if (isReadOnlyPreview()) return value;
   if (!value?.id) throw new TypeError('La ficha del jugador necesita un identificador.');
   const recordToStore = { ...structuredClone(value), profileUpdatedAt: Date.now() };
   if (isDemoDatabase()) {
@@ -215,6 +218,7 @@ export async function putPlayerProfile(value) {
 }
 
 export async function putBatch(recordsByStore) {
+  if (isReadOnlyPreview()) return;
   const storeNames = Object.keys(recordsByStore);
   if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
     throw new TypeError('La operación contiene almacenes no válidos.');
@@ -256,6 +260,7 @@ export async function putBatch(recordsByStore) {
 }
 
 export async function remove(store, id) {
+  if (isReadOnlyPreview()) return;
   if (isDemoDatabase()) {
     demoStores[store].delete(id);
     notifyDataChanged(store, 'delete');
@@ -374,6 +379,23 @@ async function queueInitialRecords(store, records) {
 }
 
 export async function syncFromCloud() {
+  if (isReadOnlyPreview()) {
+    if (!canUseCloud()) return { online:false, pending:0 };
+    // Same adapter and stores. Reconcile remote reads, never flush or add pending writes.
+    try {
+      let downloaded = 0;
+      for (const store of STORES) {
+        const snapshot = await cloudStore.getSnapshot(store);
+        await replaceLocalStore(store, snapshot.records);
+        downloaded += snapshot.records.length;
+      }
+      return { online:true, pending:0, downloaded, changed:true, readOnly:true };
+    } catch (error) {
+      if (error?.code === 'CAMPOBASE_AUTH_REQUIRED') return {online:false,pending:0,authRequired:true};
+      throw error;
+    }
+  }
+
   if (isDemoDatabase()) return { online: false, pending: 0, demo: true };
   if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
   if (syncPromise) return syncPromise;
@@ -630,6 +652,7 @@ export async function exportDatabase() {
 }
 
 export async function importDatabase(backup) {
+  if (isReadOnlyPreview()) throw new Error('Importación bloqueada en la preview.');
   if (backup.saasUserId && typeof getBoundSaasUserId === 'function' && !getBoundSaasUserId()) {
     try { setBoundSaasUserId(backup.saasUserId); configureRealDatabase(); } catch {}
   }

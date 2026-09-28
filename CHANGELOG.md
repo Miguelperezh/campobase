@@ -1,5 +1,12 @@
 # Changelog
 
+## Sin publicar — Claude: shell y Hoy real
+
+- Cabecera, lateral, navegación móvil y Hoy adoptan composición, tarjetas, jerarquía y estilos de Claude, con los datos y acciones existentes.
+- Temporada de Liga derivada sin escrituras; sesiones vacías muestran duración pendiente y Lo próximo conserva la siguiente sesión aunque haya entrenamiento hoy.
+- Preview GitHub de la misma rama: Auth y lecturas Supabase existentes; mutaciones y cola bloqueadas en la preview. Sin cambios al despliegue productivo.
+
+
 ## 2.44.0 — 2026-09-09
 
 - Pack150: 25 ejercicios nuevos publicados — 126-150 (Sección 6 «Portería», categoría Porteros), completando el Pack150 (149 ejercicios; el 096 omitido por decisión de Migue).

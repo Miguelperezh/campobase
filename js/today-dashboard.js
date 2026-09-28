@@ -51,10 +51,10 @@ function formatMatchTime(value = '') {
   return match ? `${match[1]}:${match[2]}` : '';
 }
 
-function sessionMinutes(session) {
+export function sessionMinutes(session) {
   const blocks = Array.isArray(session?.blocks) ? session.blocks : [];
   const total = blocks.reduce((sum, block) => sum + (Number(block?.duration) || 0), 0);
-  return total || Number(session?.totalDuration) || Number(session?.targetDuration) || 0;
+  return blocks.length ? total : (Number(session?.totalDuration) || 0);
 }
 
 function sessionTitle(session) { return String(session?.name || '').trim() || 'Sesión de entrenamiento'; }
@@ -103,7 +103,8 @@ export function buildTodaySummary({ sessions = [], matches = [], trainings = [],
     .filter((match) => match?.status !== 'finished' && dateOnly(match.date) >= today && !callupForMatch(callups, match))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-  return { today, todaySessions, todayMatches, nextSession, nextMatch, attendancePending, callupPending };
+  const upcomingSession = [...usableSessions].filter(session => dateOnly(session.date) > today).sort((a,b) => String(a.date).localeCompare(String(b.date)))[0] || null;
+  return { today, todaySessions, todayMatches, nextSession, upcomingSession, nextMatch, attendancePending, callupPending };
 }
 
 function ensureShell() {
@@ -172,11 +173,12 @@ async function snapshot() {
     trainings,
     callups,
     sessions: [...sessionMap.values()],
+    live: settings.find(item => item?.id === 'live')?.timer || null,
   };
 }
 
 function goButton(view, label, primary = false) {
-  return `<button type="button" class="${primary ? 'primary' : 'secondary'}" data-today-view="${esc(view)}">${esc(label)}</button>`;
+  return `<button type="button" class="${primary ? 'primary cbx-btn' : 'secondary cbx-btn-secondary'}" data-today-view="${esc(view)}">${esc(label)}</button>`;
 }
 
 function sessionCard(session, trainings, today) {
@@ -201,25 +203,35 @@ function sessionCard(session, trainings, today) {
       remainingBadge = `<span class="pill today-ok">Completa</span>`;
     }
   }
-  return `<article class="panel today-event session">
+  return `<article class="panel cbx-card today-event session">
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(session.date))}</span><span class="pill">Entrenamiento</span>${remainingBadge}${attendance ? '<span class="pill today-ok">Asistencia hecha</span>' : '<span class="pill today-warning">Asistencia pendiente</span>'}</div>
     <h3>${esc(sessionTitle(session))}</h3>
     <div class="today-event-meta">${session.time ? `<span>⏰ ${esc(session.time)}</span>` : ''}<span><strong>⏱️ ${esc(durationStr)}</strong> · ${blocks} ${blocks === 1 ? 'ejercicio' : 'ejercicios'}</span>${session.pitch ? `<span>🏟️ ${esc(session.pitch)}</span>` : ''}${session.material ? `<span>Material: ${esc(session.material)}</span>` : ''}</div>
-    <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}<button type="button" class="accent open-whistle-session" data-id="${esc(session.id)}">⏱️ Silbato</button><button type="button" class="accent open-whatsapp-session" data-id="${esc(session.id)}">📱 WhatsApp</button></div>
+    <div class="cbx-session-track" aria-label="Duración por bloques">${(session.blocks || []).map((block, index) => `<span style="flex:${Math.max(0, Number(block.duration) || 0)};background:${index === 0 ? 'var(--cbx-amber)' : index === blocks - 1 ? 'var(--cbx-blue)' : 'var(--cbx-acc)'}"></span>`).join('')}${target > total ? `<span style="flex:${target-total};background:var(--cbx-line)"></span>` : ''}</div>
+    <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}<button type="button" class="accent open-whistle-session" data-id="${esc(session.id)}">Silbato</button><button type="button" class="accent open-whatsapp-session" data-id="${esc(session.id)}">WhatsApp</button></div>
   </article>`;
 }
 
-function matchCard(match, trainings, callups, today) {
+function matchCard(match, trainings, callups, today, live = null) {
   const attendance = attendanceForMatch(trainings, match.id);
   const callup = callupForMatch(callups, match);
   const isToday = dateOnly(match.date) === today;
   const time = formatMatchTime(match.date);
   const venue = match.venue === 'away' ? 'Fuera' : 'Casa';
-  return `<article class="panel today-event match">
+  const isLive = live?.matchId === match.id && live.phase !== 'finished' && live.phase !== 'ready';
+  const hasResult = match.status === 'finished' || isLive;
+  const score = isLive ? (live.details || match) : match;
+  const team = typeof document === 'undefined' ? '' : ($('#topbar-team-name')?.textContent || 'Equipo');
+  const crest = typeof document === 'undefined' ? '' : ($('#topbar-club-crest')?.getAttribute('src') || 'icons/escudo.png');
+  const elapsed = Math.max(0, Number(live?.elapsed) || 0) + (live?.runningSince ? Math.max(0, (Date.now() - live.runningSince) / 1000) : 0);
+  const clock = `${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
+  const scoreboard = hasResult ? `<div class="cbx-today-score"><div><img src="${esc(crest)}" alt=""><strong>${esc(team)}</strong></div><div><b>${Number(score.goalsFor) || 0} - ${Number(score.goalsAgainst) || 0}</b><small>${isLive ? esc(clock) : 'Finalizado'}</small></div><div><span class="cbx-opponent-crest">${esc((match.opponent || '').split(/\s+/).map(w => w[0]).slice(0,2).join(''))}</span><strong>${esc(match.opponent || 'Rival')}</strong></div></div>` : `<h3>${esc(match.opponent || 'Partido')}</h3>`;
+  return `<article class="panel cbx-card today-event match ${hasResult ? 'cbx-today-match-score' : ''}">
+    ${isLive ? '<span class="cbx-live-badge">● EN JUEGO</span>' : ''}
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(match.date))}</span><span class="pill type-${esc(match.type || 'league')}">${esc(matchType(match))}</span>${callup ? '<span class="pill today-ok">Convocatoria lista</span>' : '<span class="pill today-warning">Falta convocatoria</span>'}</div>
-    <h3>${esc(match.opponent || 'Partido')}</h3>
+    ${scoreboard}
     <div class="today-event-meta"><span><strong>${time || 'Hora pendiente'}</strong> · ${venue}</span>${match.location ? `<span>${esc(match.location)}</span>` : ''}${attendance ? '<span>Asistencia registrada</span>' : '<span>Asistencia pendiente</span>'}</div>
-    <div class="button-row">${goButton('calendario', 'Ver partido', true)}${callup ? goButton('convocatorias', 'Ver convocatoria') : goButton('convocatorias', 'Crear convocatoria')}${callup ? `<button type="button" class="accent open-whatsapp-callup" data-id="${esc(callup.id)}">📱 WhatsApp</button>` : `<button type="button" class="accent open-whatsapp-match" data-id="${esc(match.id)}">📱 WhatsApp</button>`}</div>
+    <div class="button-row">${isLive ? goButton('partido', 'Abrir partido en vivo', true) : ''}${goButton('calendario', 'Ver partido', true)}${callup ? goButton('convocatorias', 'Ver convocatoria') : goButton('convocatorias', 'Crear convocatoria')}${callup ? `<button type="button" class="accent open-whatsapp-callup" data-id="${esc(callup.id)}">WhatsApp</button>` : `<button type="button" class="accent open-whatsapp-match" data-id="${esc(match.id)}">WhatsApp</button>`}</div>
   </article>`;
 }
 
@@ -232,28 +244,46 @@ function pendingPanel(summary) {
 
 function nextPanel(summary, data) {
   const items = [];
-  if (summary.nextSession && dateOnly(summary.nextSession.date) !== summary.today) items.push(sessionCard(summary.nextSession, data.trainings, summary.today));
+  if (summary.upcomingSession) items.push(sessionCard(summary.upcomingSession, data.trainings, summary.today));
   if (summary.nextMatch && dateOnly(summary.nextMatch.date) !== summary.today) items.push(matchCard(summary.nextMatch, data.trainings, data.callups, summary.today));
   return `<article class="panel"><div class="today-title-row"><h3>Lo próximo</h3></div>${items.length ? `<div class="today-event-grid">${items.join('')}</div>` : '<div class="today-empty">Lo próximo ya está incluido en las actividades de hoy.</div>'}</article>`;
 }
 
+export function buildLeagueSummary(matches = []) {
+  const games = matches.filter(match => match.type === 'league' && match.status === 'finished'
+    && Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst))
+    .sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  return { games, goalsFor: games.reduce((n,m) => n + m.goalsFor, 0), goalsAgainst: games.reduce((n,m) => n + m.goalsAgainst, 0),
+    points: games.reduce((n,m) => n + (m.goalsFor > m.goalsAgainst ? 3 : m.goalsFor === m.goalsAgainst ? 1 : 0), 0) };
+}
+
+function seasonPanel(matches) {
+  const season = buildLeagueSummary(matches);
+  const max = Math.max(1, ...season.games.flatMap(m => [m.goalsFor, m.goalsAgainst]));
+  return `<article class="panel cbx-card cbx-season"><div class="today-title-row"><h3>Temporada · Liga</h3><span class="pill today-ok">${season.points} pts</span></div>
+    ${season.games.length ? `<div class="cbx-season-strip">${season.games.map((m,i) => `<button type="button" data-today-match="${esc(m.id)}" class="cbx-result cbx-result-${m.goalsFor > m.goalsAgainst ? 'W' : m.goalsFor === m.goalsAgainst ? 'D' : 'L'}" aria-label="${esc(m.opponent)}: ${m.goalsFor} a ${m.goalsAgainst}"><small>${m.round ? 'J' + esc(m.round) : i+1}</small><b>${m.goalsFor}-${m.goalsAgainst}</b><span>${esc(m.opponent)}</span></button>`).join('')}</div>
+    <div class="cbx-season-bars" aria-label="Goles a favor y en contra por partido">${season.games.map((m,i) => `<div><div><i style="height:${Math.max(2,m.goalsFor/max*60)}px"></i><i style="height:${Math.max(2,m.goalsAgainst/max*60)}px"></i></div><small>${m.round ? 'J'+esc(m.round) : i+1}</small></div>`).join('')}</div>` : '<div class="today-empty">Aún no hay resultados de Liga registrados.</div>'}
+    <div class="cbx-season-totals"><span>A favor · ${season.goalsFor}</span><span>En contra · ${season.goalsAgainst}</span></div></article>`;
+}
+
 function renderMarkup(summary, data) {
   const todayCards = [
-    ...summary.todayMatches.map((match) => matchCard(match, data.trainings, data.callups, summary.today)),
+    ...summary.todayMatches.map((match) => matchCard(match, data.trainings, data.callups, summary.today, data.live)),
     ...summary.todaySessions.map((session) => sessionCard(session, data.trainings, summary.today)),
   ];
   const pendingCount = summary.callupPending.length + summary.attendancePending.length;
   return `
-    <section class="panel today-hero">
+    <section class="cbx-banner today-hero">
       <div><p class="eyebrow">Tu equipo de un vistazo</p><h3>${esc(formatLongToday())}</h3></div>
       <div class="today-hero-counts"><div class="today-count"><strong>${summary.todaySessions.length}</strong><span>sesiones hoy</span></div><div class="today-count"><strong>${summary.todayMatches.length}</strong><span>partidos hoy</span></div><div class="today-count"><strong>${pendingCount}</strong><span>pendientes</span></div></div>
     </section>
     <div class="today-layout">
       <div class="today-main">
-        <article class="panel"><div class="today-title-row"><h3>Tu día</h3><span class="pill accent">${summary.todayMatches.length + summary.todaySessions.length} actividades</span></div>${todayCards.length ? `<div class="today-event-grid">${todayCards.join('')}</div>` : '<div class="today-empty">Hoy no tienes sesión ni partido creado.</div>'}</article>
+        <article class="panel"><div class="today-title-row"><h3>Tu día</h3><span class="pill accent">${summary.todayMatches.length + summary.todaySessions.length} ${summary.todayMatches.length + summary.todaySessions.length === 1 ? 'actividad' : 'actividades'}</span></div>${todayCards.length ? `<div class="today-event-grid">${todayCards.join('')}</div>` : '<div class="today-empty">Hoy no tienes sesión ni partido creado.</div>'}</article>
         ${nextPanel(summary, data)}
       </div>
       <aside class="today-side">
+        ${seasonPanel(data.matches)}
         ${pendingPanel(summary)}
         <article class="panel"><div class="today-title-row"><h3>Accesos rápidos</h3></div><div class="today-quick">${goButton('sesiones', 'Sesiones')}${goButton('asistencia', 'Asistencia')}${goButton('calendario', 'Calendario')}${goButton('convocatorias', 'Convocatoria')}</div></article>
       </aside>
@@ -293,6 +323,8 @@ function bind() {
   if (!section) return;
 
   document.addEventListener('click', (event) => {
+    const match = event.target.closest('[data-today-match]');
+    if (match) { window.__campobase?.showMatchDetail?.(match.dataset.todayMatch); return; }
     const target = event.target.closest('[data-today-view]');
     if (!target) return;
     const view = target.dataset.todayView;

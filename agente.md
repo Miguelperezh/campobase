@@ -996,3 +996,12 @@ Partidos activos próximos verificados:
       - Se eliminó la referencia corrupta y se sincronizó el repositorio del Escritorio con `origin/main`.
       - Integrada la lógica de **Fase 1** (`js/reparto-plan.js`, `tests/reparto-plan.test.js`, `preview-fase1.html`, `INSTRUCCIONES.md`).
       - **573 tests en verde (100%)** y `npm run check` limpio en ambos workspaces.
+
+
+## Claude — Shell + Hoy real, pendiente de validación visual
+
+Rama `implement/claude-hoy-real` creada desde origin/main `e9dfac33`. Se descarta el experimento Sites/local como base. El controlador y los renderizadores de CampoBase permanecen; los nuevos estilos están en css/campobase-diseno.css (fuente Claude), claude-shell.css y claude-hoy.css. Datos, Auth y tablas Supabase sin sustitución. No seguir con Equipo sin validación de Miguel.
+
+La URL /campobase-preview/ en GitHub Pages activa preview-readonly.js: se preservan las lecturas y el acceso existente, se bloquean mutaciones remotas y las funciones de escritura de db.js. La reconciliación usa el adaptador y almacenes existentes sin enviar ni añadir syncQueue; no hay stores alternativos. No registrar otro service worker de preview ni borrar cachés globales. El alojamiento solo publica la rama real; no almacena exportaciones de datos. Producción fuera de ese path conserva su flujo.
+
+Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera de red; capturas 390×844 y 1440×960 con lecturas reales en perfil temporal, nunca exportadas al repositorio. Ajustes personales de fuente/tamaño siguen vigentes, por lo que las capturas pueden diferir tipográficamente del ejemplo de Claude.
