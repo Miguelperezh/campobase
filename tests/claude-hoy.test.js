@@ -12,6 +12,7 @@ test('una sesión vacía no presenta la duración objetivo como minutos completa
 
 test('Lo próximo conserva la sesión posterior aunque también haya una hoy', async()=>{
  const {buildTodaySummary}=await import('../js/today-dashboard.js');
- const summary=buildTodaySummary({now:new Date('2026-09-28T12:00:00'),sessions:[{id:'today',date:'2026-09-28'},{id:'next',date:'2026-09-29'}]});
+ const summary=buildTodaySummary({now:new Date('2026-09-28T12:00:00'),sessions:[{id:'today',date:'2026-09-28'},{id:'next',date:'2026-09-29'},{id:'later',date:'2026-10-01'}]});
  assert.equal(summary.nextSession.id,'today');assert.equal(summary.upcomingSession.id,'next');
+ assert.deepEqual(summary.upcomingSessions.map(session=>session.id),['next','later']);
 });
