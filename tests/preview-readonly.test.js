@@ -61,6 +61,6 @@ test('la preview deja abrir la clasificación pero sigue bloqueando botones de e
   for(const listener of listeners.click)listener(event);
   return blocked;
  };
- for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]'])assert.equal(click(selector),false);
+ for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]','#open-set-pieces-btn','.open-set-pieces-trigger'])assert.equal(click(selector),false);
  assert.equal(click('.delete-player'),true);
 });
