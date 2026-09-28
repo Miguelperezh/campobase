@@ -4,15 +4,15 @@ import vm from 'node:vm';
 import fs from 'node:fs';
 const source=fs.readFileSync(new URL('../js/preview-readonly.js',import.meta.url),'utf8');
 function context(path){
- const calls=[];const window={fetch:async(...args)=>{calls.push(args);return new Response('{}');}};
+ const calls=[],listeners={};const window={fetch:async(...args)=>{calls.push(args);return new Response('{}');}};
  class XHR{open(){} send(){}}
  class Storage{constructor(){this.values=new Map()}get length(){return this.values.size}getItem(key){return this.values.get(String(key))??null}setItem(key,value){this.values.set(String(key),String(value))}removeItem(key){this.values.delete(String(key))}key(index){return [...this.values.keys()][index]??null}clear(){this.values.clear()}}
  const localStorage=new Storage(),sessionStorage=new Storage();
  localStorage.setItem('campobase.theme','production');
  const databaseNames=[];
  const indexedDB={open(name){databaseNames.push(name);return name},deleteDatabase(name){databaseNames.push(`deleted:${name}`);return name},async databases(){return [{name:'campobase'}, {name:'campobase.preview.v2:campobase'}]}};
- const ctx={window,location:{hostname:'miguelperezh.github.io',pathname:path,href:`https://miguelperezh.github.io${path}`},URL,Request,Response,XMLHttpRequest:XHR,Storage,localStorage,sessionStorage,indexedDB,navigator:{sendBeacon:()=>true},document:{addEventListener(){}},alert(){}};
- vm.runInNewContext(source,ctx);return {window,calls,localStorage,sessionStorage,indexedDB,databaseNames};
+ const ctx={window,location:{hostname:'miguelperezh.github.io',pathname:path,href:`https://miguelperezh.github.io${path}`},URL,Request,Response,XMLHttpRequest:XHR,Storage,localStorage,sessionStorage,indexedDB,navigator:{sendBeacon:()=>true},document:{addEventListener(name,listener){(listeners[name]??=[]).push(listener)}},alert(){}};
+ vm.runInNewContext(source,ctx);return {window,calls,localStorage,sessionStorage,indexedDB,databaseNames,listeners};
 }
 test('la preview permite lecturas y acceso existente pero bloquea cambios REST, Storage y RPC mutantes',async()=>{
  const {window,calls}=context('/campobase-preview/');const base='https://mdzpygfwugawlmknywxa.supabase.co';
@@ -50,4 +50,17 @@ test('el acceso con PIN permite crear y verificar la sesión sin autorizar escri
  assert.equal(calls.length,2);
  assert.equal((await window.fetch(base+'/rest/v1/settings',{method:'POST'})).status,403);
  assert.equal(calls.length,2);
+});
+
+test('la preview deja abrir la clasificación pero sigue bloqueando botones de escritura',()=>{
+ const {listeners}=context('/campobase-preview/');
+ const click=selector=>{
+  let blocked=false;
+  const button={id:'',matches(list){return list.split(', ').includes(selector)},closest(target){return target==='#app'?{}:null}};
+  const event={target:{closest(target){return target==='button'?button:null}},preventDefault(){blocked=true},stopImmediatePropagation(){blocked=true}};
+  for(const listener of listeners.click)listener(event);
+  return blocked;
+ };
+ for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]'])assert.equal(click(selector),false);
+ assert.equal(click('.delete-player'),true);
 });
