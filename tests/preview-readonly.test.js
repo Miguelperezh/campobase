@@ -22,3 +22,11 @@ test('el despliegue productivo conserva su acceso y transporte sin cambios',asyn
  const {window,calls}=context('/campobase/');assert.equal(window.__CAMPOBASE_READONLY_PREVIEW,undefined);
  await window.fetch('https://mdzpygfwugawlmknywxa.supabase.co/rest/v1/jugadores',{method:'POST'});assert.equal(calls.length,1);
 });
+
+test('el acceso con PIN permite crear y verificar la sesión sin autorizar escrituras de datos',async()=>{
+ const {window,calls}=context('/campobase-preview/');const base='https://mdzpygfwugawlmknywxa.supabase.co';
+ for(const path of ['/functions/v1/pin-login','/auth/v1/verify']) assert.equal((await window.fetch(base+path,{method:'POST'})).status,200);
+ assert.equal(calls.length,2);
+ assert.equal((await window.fetch(base+'/rest/v1/settings',{method:'POST'})).status,403);
+ assert.equal(calls.length,2);
+});
