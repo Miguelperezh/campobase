@@ -19,9 +19,22 @@ test('un momento admite que entre X por Y y Z cambie de puesto a la vez', () => 
   const change = describeMoment(initial, minute15);
   assert.deepEqual(change.outIds, ['y']);
   assert.deepEqual(change.inIds, ['x']);
+  assert.deepEqual(change.pairs, [{ inId: 'x', outId: 'y' }]);
   assert.deepEqual(change.moved, [{ playerId: 'z', position: 'Central' }]);
   assert.equal(validLineup(minute15.team, ['gk', 'x', 'y', 'z', 'a', 'b', 'c', 'd']), true);
   assert.equal(validLineup([{ ...minute15.team[0], playerId: 'x' }, ...minute15.team.slice(1)], ['gk', 'x', 'y', 'z', 'a', 'b', 'c', 'd']), false);
+});
+
+test('dos entradas se emparejan con su salida aunque otro titular cambie de posición', () => {
+  const next = { ...minute15, team: minute15.team.map((slot) => ({ ...slot })) };
+  next.team[3].playerId = 'w';
+  next.team[5].playerId = 'a';
+  const change = describeMoment(initial, next);
+  assert.deepEqual(change.pairs, [{ inId: 'x', outId: 'y' }, { inId: 'w', outId: 'c' }]);
+  assert.deepEqual(change.moved, [
+    { playerId: 'z', position: 'Central' },
+    { playerId: 'a', position: 'Medio izquierdo' },
+  ]);
 });
 
 test('los minutos previstos siguen las alineaciones de cada tramo', () => {
