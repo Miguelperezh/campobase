@@ -123,6 +123,8 @@ test('opcionesPosicion ordena titulares primero y suplentes después, solo convo
   const convocadosParciales = ['j1', 'j2', 'j3'];
   const { titulares: t2, suplentes: s2 } = opcionesPosicion(players, convocadosParciales, asignado, 'Defensa izq.', '');
   assert.deepEqual([...t2, ...s2].map((p) => p.id).sort(), ['j2', 'j3']);
+  const flexible = opcionesPosicion(players, convocadosParciales, asignado, 'Defensa izq.', '', true);
+  assert.deepEqual([...flexible.titulares, ...flexible.suplentes].map((p) => p.id).sort(), ['j1', 'j2', 'j3']);
 });
 
 test('suplentes devuelve los convocados que no están en el campo', () => {

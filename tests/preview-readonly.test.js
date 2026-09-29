@@ -11,7 +11,8 @@ function context(path){
  localStorage.setItem('campobase.theme','production');
  const databaseNames=[];
  const indexedDB={open(name){databaseNames.push(name);return name},deleteDatabase(name){databaseNames.push(`deleted:${name}`);return name},async databases(){return [{name:'campobase'}, {name:'campobase.preview.v2:campobase'}]}};
- const ctx={window,location:{hostname:'miguelperezh.github.io',pathname:path,href:`https://miguelperezh.github.io${path}`},URL,Request,Response,XMLHttpRequest:XHR,Storage,localStorage,sessionStorage,indexedDB,navigator:{sendBeacon:()=>true},document:{addEventListener(name,listener){(listeners[name]??=[]).push(listener)}},alert(){}};
+ const document={documentElement:{classList:{add(){}}},head:{append(){}},createElement(){return {}},addEventListener(name,listener){(listeners[name]??=[]).push(listener)}};
+ const ctx={window,location:{hostname:'miguelperezh.github.io',pathname:path,href:`https://miguelperezh.github.io${path}`},URL,Request,Response,XMLHttpRequest:XHR,Storage,localStorage,sessionStorage,indexedDB,navigator:{sendBeacon:()=>true},document,alert(){}};
  vm.runInNewContext(source,ctx);return {window,calls,localStorage,sessionStorage,indexedDB,databaseNames,listeners};
 }
 test('la preview permite lecturas y acceso existente pero bloquea cambios REST, Storage y RPC mutantes',async()=>{
@@ -52,7 +53,7 @@ test('el acceso con PIN permite crear y verificar la sesión sin autorizar escri
  assert.equal(calls.length,2);
 });
 
-test('la preview deja abrir la clasificación pero sigue bloqueando botones de escritura',()=>{
+test('la preview permite operar los botones locales sin abrir escrituras de red',()=>{
  const {listeners}=context('/campobase-preview/');
  const click=selector=>{
   let blocked=false;
@@ -61,8 +62,5 @@ test('la preview deja abrir la clasificación pero sigue bloqueando botones de e
   for(const listener of listeners.click)listener(event);
   return blocked;
  };
- for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]','#open-set-pieces-btn','.open-set-pieces-trigger','#new-staff-btn','#add-first-staff-btn','.edit-staff-btn','.staff-avatar-edit-btn','#new-training','[data-attendance-filter]','[data-attendance-source][data-source-id]','.edit-attendance','.attendance-all-present','.attendance-reason','.cancel-training','#new-callup','.edit-callup','.callup-open-prep','[data-callup-plan-mode]','.cancel-builder','.prep-open','.prep-view-tactic','#prep-back','#prep-gif','[data-prep-formation]'])assert.equal(click(selector),false);
- assert.equal(click('.delete-staff-btn'),true);
- assert.equal(click('.delete-training'),true);
- assert.equal(click('.delete-player'),true);
+ for(const selector of ['.prep-open','#prep-save','[data-prep-formation]','.edit-player','.delete-player','.match-detail'])assert.equal(click(selector),false);
 });
