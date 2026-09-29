@@ -14,6 +14,7 @@ import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-intera
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { buildAutoPlan } from './reparto-plan.js';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
@@ -1538,8 +1539,57 @@ async function synchronizeRotationCounters() {
   }
 }
 
+const callupPlanModes = new Map();
+
+function renderClaudeCallup(callup) {
+  const available = new Set(callup.availableIds || []);
+  const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
+  const exclusionByPlayer = new Map(exclusions.map((item) => [item.playerId, item]));
+  const players = sortPlayersBySquadNumber(state.players);
+  const knownPlayerIds = new Set(players.map((player) => player.id));
+  const missingPlayerCount = [...available].filter((id) => !knownPlayerIds.has(id)).length;
+  const keeperIds = players.filter((player) => available.has(player.id) && normalizePositions(player).includes('Portero')).map((player) => player.id);
+  const format = String(callup.format || state.format).toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const mode = callupPlanModes.get(callup.id) || 'escalonado';
+  let plan;
+  try {
+    if (missingPlayerCount || !keeperIds.length) throw new Error('La convocatoria histórica no permite reconstruir el plan completo.');
+    plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+  } catch { plan = null; }
+  const fieldCount = available.size - keeperIds.length;
+  const match = state.matches.find((item) => item.id === callup.matchId || item.callupId === callup.id);
+  const matchId = match?.id || '';
+  const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
+  const roster = players.map((player) => {
+    const isCalled = available.has(player.id);
+    const exclusion = exclusionByPlayer.get(player.id);
+    const note = exclusion ? exclusionReasonLabel(exclusion) : 'Fuera de la convocatoria';
+    return `<li class="cbx-callup-player${isCalled ? '' : ' is-out'}"><span class="cbx-callup-number">${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span><span class="cbx-callup-person"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(playerPositions(player))}</small></span><span class="cbx-callup-status ${isCalled ? 'is-called' : 'is-excluded'}">${escapeHtml(isCalled ? 'Convocado' : note)}</span></li>`;
+  }).join('');
+  const bars = plan ? [...keeperIds, ...plan.field].map((id) => {
+    const segments = keeperIds.includes(id) ? plan.gkPlan.filter((item) => item.id === id) : (plan.segs[id] || []);
+    return `<div class="cbx-plan-row"><span>${escapeHtml(playerName(id))}</span><div class="cbx-plan-track" aria-label="${escapeHtml(playerName(id))}: ${Math.round(plan.planned[id] || 0)} minutos previstos">${segments.map((segment) => `<i class="${keeperIds.includes(id) ? 'keeper' : ''}" style="left:${Math.max(0, segment.from / plan.D * 100)}%;width:${Math.max(0, (segment.to - segment.from) / plan.D * 100)}%"></i>`).join('')}</div><b>${Math.round(plan.planned[id] || 0)}′</b></div>`;
+  }).join('') : '';
+  const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
+  return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
+      <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
+      <ul class="cbx-callup-roster">${roster}</ul>
+      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
+    </section>
+    <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" aria-label="Modo del plan de cambios"><button type="button" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes || '<p class="meta">No hay cambios previstos.</p>'}</div>` : '<p class="meta">No se puede calcular un plan fiable para este registro histórico.</p>'}</section>
+    </div>
+  </article>`;
+}
+
 function renderCallups() {
   const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
+  if (document.body.classList.contains('cb-redesign-active')) {
+    $('#callups-list').innerHTML = list.length ? list.map(renderClaudeCallup).join('') : empty('Todavía no hay convocatorias.');
+    return;
+  }
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
@@ -7639,6 +7689,8 @@ function wireEvents() {
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
     if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
+    if (target.matches('[data-callup-plan-mode]')) { callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
+    if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);

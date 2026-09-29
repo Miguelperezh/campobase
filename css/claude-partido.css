@@ -1,0 +1,60 @@
+/* Partido · Convocatoria. Presentación de Claude con datos y cálculo existentes. */
+body.cb-redesign-active #convocatorias.cbx-partido-convocatorias { color: var(--cbx-ink); font-family: var(--cbx-ui); }
+body.cb-redesign-active #convocatorias.cbx-partido-convocatorias * { font-family: var(--cbx-ui) !important; }
+body.cb-redesign-active #convocatorias > .cbx-banner { min-height: 106px; margin: 0 0 16px; padding: 20px 22px; border: 0; border-radius: var(--cbx-r-hero); background: linear-gradient(120deg,var(--cbx-hero),color-mix(in srgb,var(--cbx-hero) 75%,#297053)) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #convocatorias > .cbx-banner .eyebrow { margin: 0; color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; }
+body.cb-redesign-active #convocatorias > .cbx-banner h2 { margin: 4px 0 0; color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias > .cbx-banner #new-callup { min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--cbx-acc) !important; color: #fff !important; font-weight: 800; }
+body.cb-redesign-active #convocatorias #callups-list { display: grid; gap: 18px; }
+body.cb-redesign-active #convocatorias .cbx-callup-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; gap: 16px; }
+body.cb-redesign-active #convocatorias .cbx-callup-layout .panel { margin: 0; padding: 0; overflow: hidden; border: 1px solid var(--cbx-line); border-radius: 18px; background: var(--card); box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header { padding: 16px 18px; color: #fff; background: var(--cbx-hero); }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header small { display: block; color: rgba(255,255,255,.75); font-size: 11px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias .cbx-callup-card > header h3 { margin: 4px 0 10px; color: #fff !important; font: 900 23px/1.1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; overflow-wrap: anywhere; }
+body.cb-redesign-active #convocatorias .cbx-callup-counts { display: flex; gap: 7px; flex-wrap: wrap; }
+body.cb-redesign-active #convocatorias .cbx-callup-counts span { padding: 5px 9px; border-radius: 9px; background: #ffffff24; color: #fff; font-size: 11px; font-weight: 800; }
+body.cb-redesign-active #convocatorias .cbx-callup-counts span:last-child { background: var(--cbx-acc); }
+body.cb-redesign-active #convocatorias .cbx-callup-help { margin: 0; padding: 11px 18px; background: #f7f9fb; color: var(--cbx-muted); font-size: 12px; font-weight: 600; }
+body.cb-redesign-active #convocatorias .cbx-callup-roster { margin: 0; padding: 0; list-style: none; }
+body.cb-redesign-active #convocatorias .cbx-callup-player { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; align-items: center; min-height: 49px; padding: 7px 15px; border-top: 1px solid var(--cbx-line); }
+body.cb-redesign-active #convocatorias .cbx-callup-player.is-out { background: #f7f8fa; }
+body.cb-redesign-active #convocatorias .cbx-callup-number { display: grid; place-items: center; width: 32px; min-height: 32px; border-radius: 8px; color: #fff; background: var(--cbx-hero); font: 900 15px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-player.is-out .cbx-callup-number { background: #e2e8f0; color: #64748b; }
+body.cb-redesign-active #convocatorias .cbx-callup-person { display: grid; min-width: 0; }
+body.cb-redesign-active #convocatorias .cbx-callup-person strong { color: var(--cbx-ink); font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+body.cb-redesign-active #convocatorias .cbx-callup-person small { color: var(--cbx-muted); font-size: 11px; line-height: 1.2; overflow-wrap: anywhere; }
+body.cb-redesign-active #convocatorias .cbx-callup-status { max-width: 145px; padding: 5px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; text-align: center; overflow-wrap: anywhere; }
+body.cb-redesign-active #convocatorias .cbx-callup-status.is-called { background: #dcfce7; color: #166534; }
+body.cb-redesign-active #convocatorias .cbx-callup-status.is-excluded { background: #fce8ec; color: #be123c; }
+body.cb-redesign-active #convocatorias .cbx-callup-card > footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; padding: 12px 15px; border-top: 1px solid var(--cbx-line); }
+body.cb-redesign-active #convocatorias .cbx-callup-card > footer button { min-width: 0; min-height: 40px; padding: 7px 9px; border-radius: 10px; font-size: 11px; font-weight: 800; white-space: normal; }
+body.cb-redesign-active #convocatorias .cbx-callup-card > footer .open-whatsapp-callup { color: #073b29 !important; background: #20cc69 !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-side { display: grid; gap: 16px; min-width: 0; }
+body.cb-redesign-active #convocatorias .cbx-callup-distribution, body.cb-redesign-active #convocatorias .cbx-callup-plan { padding: 16px 18px !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-distribution > small { color: var(--cbx-green-ink); font-size: 11px; font-weight: 850; letter-spacing: .07em; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias .cbx-callup-distribution h3, body.cb-redesign-active #convocatorias .cbx-callup-plan h3 { margin: 4px 0 12px; color: var(--cbx-ink); font: 900 21px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics > div { display: grid; gap: 3px; padding: 12px; border: 1px solid #d9ebe0; border-radius: 12px; background: #f0f8f3; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics > div:last-child { border-color: #f7d991; background: #fff9e9; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics small { color: var(--cbx-green-ink); font-size: 10px; font-weight: 850; text-transform: uppercase; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics strong { color: var(--cbx-hero); font: 900 30px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-metrics span { color: var(--cbx-muted); font-size: 11px; font-weight: 650; }
+body.cb-redesign-active #convocatorias .cbx-callup-distribution > p { margin: 11px 0 0; padding: 10px 12px; border: 1px dashed var(--cbx-line); border-radius: 10px; color: var(--cbx-muted); background: #f9fafb; font-size: 12px; line-height: 1.4; }
+body.cb-redesign-active #convocatorias .cbx-plan-heading { display: flex; align-items: start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+body.cb-redesign-active #convocatorias .cbx-plan-heading > div { display: flex; padding: 3px; border-radius: 999px; background: #edf2f7; }
+body.cb-redesign-active #convocatorias .cbx-plan-heading button { min-height: 32px; padding: 4px 9px; border: 0; border-radius: 999px; color: var(--cbx-muted); background: transparent; font-size: 11px; font-weight: 800; }
+body.cb-redesign-active #convocatorias .cbx-plan-heading button[aria-pressed="true"] { background: #fff; color: var(--cbx-ink); box-shadow: 0 1px 4px #0018; }
+body.cb-redesign-active #convocatorias .cbx-plan-axis { display: flex; justify-content: space-between; margin: 6px 32px 5px 120px; color: #8da0b8; font-size: 10px; font-weight: 800; }
+body.cb-redesign-active #convocatorias .cbx-plan-rows { display: grid; gap: 7px; }
+body.cb-redesign-active #convocatorias .cbx-plan-row { display: grid; grid-template-columns: 112px minmax(0,1fr) 29px; align-items: center; gap: 7px; }
+body.cb-redesign-active #convocatorias .cbx-plan-row > span { color: var(--cbx-ink); font-size: 11px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.cb-redesign-active #convocatorias .cbx-plan-row > b { color: var(--cbx-ink); font-size: 11px; text-align: right; }
+body.cb-redesign-active #convocatorias .cbx-plan-track { position: relative; height: 15px; border-radius: 5px; background: #edf2f7; overflow: hidden; }
+body.cb-redesign-active #convocatorias .cbx-plan-track::after { content: ''; position: absolute; left: 50%; height: 100%; border-left: 1px dashed #9bb0c4; }
+body.cb-redesign-active #convocatorias .cbx-plan-track i { position: absolute; top: 0; height: 100%; border-radius: 4px; background: #10b981; }
+body.cb-redesign-active #convocatorias .cbx-plan-track i.keeper { background: #f59e0b; }
+body.cb-redesign-active #convocatorias .cbx-plan-changes { display: grid; gap: 6px; margin-top: 14px; }
+body.cb-redesign-active #convocatorias .cbx-plan-change { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 9px 10px; border: 1px solid var(--cbx-line); border-radius: 10px; background: #f8fafc; color: var(--cbx-ink); font-size: 11px; line-height: 1.4; }
+body.cb-redesign-active #convocatorias .cbx-plan-change strong { color: #10a678; font-weight: 900; }
+@media(max-width:980px){body.cb-redesign-active #convocatorias .cbx-callup-layout { grid-template-columns: 1fr; }}
+@media(max-width:620px){body.cb-redesign-active #convocatorias > .cbx-banner { align-items: flex-start; flex-direction: column; gap: 12px; }body.cb-redesign-active #convocatorias .cbx-callup-player { grid-template-columns: 30px minmax(0,1fr) auto; gap: 7px; padding-inline: 10px; }body.cb-redesign-active #convocatorias .cbx-callup-status { max-width: 90px; font-size: 9px; }body.cb-redesign-active #convocatorias .cbx-callup-metrics { grid-template-columns: 1fr 1fr; }body.cb-redesign-active #convocatorias .cbx-plan-row { grid-template-columns: 74px minmax(0,1fr) 26px; gap: 4px; }body.cb-redesign-active #convocatorias .cbx-plan-axis { margin-left: 78px; margin-right: 27px; }}
