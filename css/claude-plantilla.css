@@ -206,9 +206,9 @@ body.cb-redesign-active #asistencia .cbx-banner { order: 0; min-height: 106px; m
 body.cb-redesign-active #asistencia .cbx-banner .cbx-eyebrow { color: rgba(255,255,255,.72) !important; font: 800 12px var(--cbx-ui); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 body.cb-redesign-active #asistencia .cbx-banner h2 { color: #fff !important; font: 800 32px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; margin: 4px 0 0; }
 body.cb-redesign-active #asistencia #new-training { min-height: 44px; padding: 0 16px; border: 0 !important; border-radius: 12px; color: #fff !important; background: var(--cbx-acc) !important; font: 800 14px var(--cbx-ui); }
-body.cb-redesign-active #asistencia #training-builder { order: 1; margin: 0; }
-body.cb-redesign-active #asistencia #attendance-stats { order: 2; margin: 0; }
-body.cb-redesign-active #asistencia #attendance-source-panel { order: 3; margin: 0; }
+body.cb-redesign-active #asistencia #attendance-source-panel { order: 1; margin: 0; }
+body.cb-redesign-active #asistencia #training-builder { order: 2; margin: 0; }
+body.cb-redesign-active #asistencia #attendance-stats { order: 3; margin: 0; }
 body.cb-redesign-active #asistencia #trainings-list { order: 4; margin: 0; }
 body.cb-redesign-active #asistencia #training-builder:has([data-visual-attendance="1"]) { border: 0; padding: 0; background: transparent; box-shadow: none; }
 body.cb-redesign-active #asistencia #training-form[data-visual-attendance="1"] { display: grid; gap: 0; padding: 16px 18px; border: 1px solid var(--cbx-line); border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); }
@@ -246,6 +246,15 @@ body.cb-redesign-active #asistencia .cbx-attendance-note .attendance-note { disp
 body.cb-redesign-active #asistencia .attendance-save-row { position: static; margin-top: 10px; padding: 0; border: 0; background: none; box-shadow: none; }
 body.cb-redesign-active #asistencia .attendance-save-row .primary { min-height: 44px; color: #fff; background: var(--cbx-acc); border: 0; border-radius: 10px; font: 800 13px var(--cbx-ui); }
 body.cb-redesign-active #asistencia .attendance-overview { padding: 14px 16px; border: 1px solid var(--cbx-line); border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #asistencia .attendance-activity-picker { display: grid; gap: 10px; padding: 16px 18px; border: 1px solid var(--cbx-line); border-radius: 18px; background: #fff; box-shadow: var(--cbx-shadow); scroll-margin-top: 130px; }
+body.cb-redesign-active #asistencia .attendance-activity-picker h3 { margin: 2px 0; color: var(--cbx-ink); font: 800 20px var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #asistencia .attendance-activity-picker .eyebrow { margin: 0; color: var(--cbx-muted); font: 800 11px var(--cbx-ui); text-transform: uppercase; }
+body.cb-redesign-active #asistencia .attendance-activity-picker .meta { margin: 3px 0; color: var(--cbx-muted); font: 600 12px var(--cbx-ui); }
+body.cb-redesign-active #asistencia .attendance-picker-controls { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 10px; }
+body.cb-redesign-active #asistencia .attendance-picker-controls label { min-width: 0; color: var(--cbx-ink); font: 800 12px var(--cbx-ui); }
+body.cb-redesign-active #asistencia .attendance-picker-controls select { width: 100%; min-width: 0; margin-top: 5px; }
+body.cb-redesign-active #asistencia .attendance-picker-controls button { min-height: 44px; border-radius: 10px; }
+@media(max-width:620px){body.cb-redesign-active #asistencia .attendance-picker-controls { grid-template-columns: 1fr; }body.cb-redesign-active #asistencia .attendance-picker-controls button { width: 100%; }}
 body.cb-redesign-active #asistencia .attendance-overview-head h3 { margin: 2px 0; color: var(--cbx-ink); font: 800 20px var(--cbx-disp); font-family: var(--cbx-disp) !important; text-transform: uppercase; }
 body.cb-redesign-active #asistencia .attendance-overview-head .eyebrow { color: var(--cbx-muted); font: 800 11px var(--cbx-ui); }
 body.cb-redesign-active #asistencia .attendance-overview-head .meta { color: var(--cbx-muted); font: 600 12px var(--cbx-ui); }

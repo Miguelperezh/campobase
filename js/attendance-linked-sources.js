@@ -14,7 +14,6 @@ let renderQueued = false;
 let rendering = false;
 let cleanupQueued = false;
 let activeFilter = 'all';
-let defaultAttendanceOpened = false;
 
 function formatDate(value = '') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
@@ -120,7 +119,6 @@ export function sortAttendanceActivities(activities, today = '') {
 }
 
 export function buildAttendanceActivities({ sessions = [], matches = [], trainings = [], callups = [] } = {}, today = '') {
-  const callupIds = new Set(callups.map((item) => item.id));
   const list = [
     ...sessions.map((session) => ({
       source: 'session', id: session.id, date: activityDate(session), title: sessionName(session),
@@ -130,7 +128,7 @@ export function buildAttendanceActivities({ sessions = [], matches = [], trainin
     ...matches.map((match) => ({
       source: 'match', id: match.id, date: activityDate(match), title: String(match.opponent || 'Partido'),
       subtitle: match.type === 'league' ? 'Liga' : match.type === 'friendly' ? 'Amistoso' : match.type === 'tournament' ? 'Torneo' : 'Partido',
-      attendance: attendanceForMatch(trainings, match.id), ready: Boolean(match.callupId && callupIds.has(match.callupId)),
+      attendance: attendanceForMatch(trainings, match.id), ready: Boolean(callups.find((item) => item.id === match.callupId || item.matchId === match.id)?.availableIds?.length),
     })),
   ];
   return sortAttendanceActivities(list, today);
@@ -155,7 +153,7 @@ function activityCard(row) {
     ? '<button type="button" class="secondary" disabled title="Primero crea la convocatoria del partido">Falta convocatoria</button>'
     : `<button type="button" class="${row.attendance ? 'secondary' : 'primary'}" data-attendance-source="${row.source}" data-source-id="${esc(row.id)}">${row.attendance ? 'Editar asistencia' : 'Pasar asistencia'}</button>`;
   return `<article class="attendance-activity-card panel" data-activity-type="${row.source}">
-    <div class="attendance-activity-head"><div><div class="attendance-tags"><span class="pill ${row.source === 'match' ? 'accent' : ''}">${row.source === 'match' ? 'Partido' : 'Sesión'}</span>${status}</div><h3>${esc(row.title)}</h3><p class="meta">${esc(formatDate(row.date))}${row.subtitle ? ` · ${esc(row.subtitle)}` : ''}</p></div>${button}</div>
+    <div class="attendance-activity-head"><div><div class="attendance-tags"><span class="pill ${row.source === 'match' ? 'accent' : ''}">${row.source === 'match' ? esc(row.subtitle) : 'Entrenamiento'}</span>${status}</div><h3>${esc(row.title)}</h3><p class="meta">${esc(formatDate(row.date))}${row.subtitle ? ` · ${esc(row.subtitle)}` : ''}</p></div>${button}</div>
     ${counters}
   </article>`;
 }
@@ -176,6 +174,12 @@ async function renderSources() {
     const totals = summarizeAttendance(data.trainings);
     const registered = rows.filter((row) => row.attendance).length;
     const pending = rows.length - registered;
+    const previousChoice = $('#attendance-activity-select', panel)?.value || '';
+    const options = rows.map((row) => {
+      const value = `${row.source}:${row.id}`;
+      const label = `${row.source === 'session' ? 'Entrenamiento' : row.subtitle} · ${formatDate(row.date)} · ${row.title}${row.attendance ? ' (registrada)' : ''}${row.source === 'match' && !row.ready ? ' (falta convocatoria)' : ''}`;
+      return `<option value="${esc(value)}" ${row.source === 'match' && !row.ready ? 'disabled' : ''} ${previousChoice === value ? 'selected' : ''}>${esc(label)}</option>`;
+    }).join('');
 
     const isDone = (row) => Boolean(row.attendance) || (row.date && row.date < todayKey);
 
@@ -216,6 +220,11 @@ async function renderSources() {
     }
 
     panel.innerHTML = `
+      <div class="attendance-activity-picker panel" id="attendance-activity-picker">
+        <div><p class="eyebrow">Antes de pasar lista</p><h3>¿A qué actividad asisten?</h3><p class="meta">Elige una sesión de entrenamiento, un partido de liga, amistoso o torneo ya creado.</p></div>
+        <div class="attendance-picker-controls"><label for="attendance-activity-select">Actividad<select id="attendance-activity-select"><option value="">Selecciona una actividad…</option>${options}</select></label><button type="button" class="primary" id="attendance-open-selected" disabled>Pasar lista</button></div>
+        ${rows.length ? '' : '<p class="meta">Crea primero la sesión o el partido en su pestaña. La asistencia se vinculará a esa actividad.</p>'}
+      </div>
       <div class="attendance-overview panel">
         <div class="attendance-overview-head"><div><p class="eyebrow">Control rápido</p><h3>Asistencia de actividades</h3><p class="meta">Sesiones y partidos ya creados. Un solo registro alimenta también la ficha de cada jugador.</p></div></div>
         <div class="attendance-overview-stats"><span><strong>${registered}</strong> registradas</span><span><strong>${pending}</strong> pendientes</span><span class="present"><strong>${totals.present}</strong> presentes</span><span class="late"><strong>${totals.late}</strong> tarde</span><span class="absent"><strong>${totals.absent}</strong> ausentes</span></div>
@@ -224,12 +233,7 @@ async function renderSources() {
         </div>
       </div>
       ${contentHTML}`;
-    const section = $('#asistencia');
-    const defaultSession = rows.find((row) => row.source === 'session' && row.ready && !row.attendance && row.date <= todayKey);
-    if (!defaultAttendanceOpened && section?.classList.contains('active') && defaultSession && data.players.length) {
-      defaultAttendanceOpened = true;
-      openActivityAttendance('session', defaultSession.id).catch((error) => showToast(error.message));
-    }
+    $('#attendance-open-selected', panel).disabled = !$('#attendance-activity-select', panel).value;
   } catch (error) {
     panel.innerHTML = `<p class="error panel">No se pudieron cargar las actividades para asistencia: ${esc(error?.message || 'error desconocido')}</p>`;
   } finally {
@@ -443,6 +447,22 @@ function install() {
   scheduleRender();
 
   document.addEventListener('click', (event) => {
+    if (event.target.closest('#new-training') && document.body.classList.contains('cb-redesign-active')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      $('#training-builder')?.classList.add('hidden');
+      const picker = $('#attendance-activity-picker');
+      picker?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      $('#attendance-activity-select', picker)?.focus({ preventScroll: true });
+      return;
+    }
+    if (event.target.closest('#attendance-open-selected')) {
+      const value = $('#attendance-activity-select')?.value || '';
+      const split = value.indexOf(':');
+      if (split < 1) return;
+      openActivityAttendance(value.slice(0, split), value.slice(split + 1)).catch((error) => showToast(error.message));
+      return;
+    }
     const filter = event.target.closest('[data-attendance-filter]');
     if (filter) {
       activeFilter = filter.dataset.attendanceFilter;
@@ -490,6 +510,10 @@ function install() {
   }, true);
 
   document.addEventListener('change', (event) => {
+    if (event.target.matches('#attendance-activity-select')) {
+      $('#attendance-open-selected').disabled = !event.target.value;
+      return;
+    }
     const form = event.target.closest('#training-form[data-visual-attendance="1"]');
     if (!form || !event.target.matches('input[type="radio"][name^="status-"]')) return;
     // El formulario visual comparte contenedor con el editor histórico. Cortamos este
