@@ -1724,6 +1724,80 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
+function arrangeClaudeLive(phase, logWasOpen, callup) {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const root = $('#live-match');
+  const log = root?.querySelector(':scope > .match-log');
+  const clock = root?.querySelector(':scope > .live-clock');
+  if (!log || !clock) return;
+  const score = log.querySelector('.stadium-score');
+  const venue = log.querySelector('.match-venue');
+  if (!score) return;
+  score.querySelector('.score-separator').textContent = ':';
+  const hero = document.createElement('section');
+  hero.className = 'cbx-live-hero';
+  hero.innerHTML = `<div class="cbx-live-hero-head"><span class="cbx-live-status">● ${escapeHtml(phase === 'ready' ? 'Preparado' : phase === 'halftime' ? 'Descanso' : 'En juego')}</span><span>${escapeHtml(venue?.textContent || '')}</span></div>`;
+  hero.append(score, clock);
+  const targets = clock.querySelector('.live-target-card');
+  let targetDetails = null;
+  if (targets) {
+    targetDetails = document.createElement('details');
+    targetDetails.className = 'cbx-live-targets';
+    targetDetails.innerHTML = '<summary>Ver minutos objetivo de todos los convocados</summary>';
+    targetDetails.append(targets);
+  }
+  const quick = document.createElement('div');
+  quick.className = 'cbx-live-quick-actions';
+  quick.innerHTML = '<button type="button" data-cbx-live-kind="goal">Gol nuestro</button><button type="button" data-cbx-live-rival-goal="1">Gol rival</button><button type="button" data-cbx-live-kind="penalty_goal">Penalti</button><button type="button" data-cbx-live-change="1">Cambio</button><button type="button" data-cbx-live-kind="yellow">Tarjeta</button><button type="button" data-cbx-live-kind="injury">Lesión</button><button type="button" data-cbx-live-kind="incident">Incidencia</button>';
+  hero.append(quick);
+  root.prepend(hero);
+  venue.remove();
+  log.querySelector('summary').textContent = 'Registrar incidencias y ver cronología';
+  log.open = logWasOpen;
+  const tactics = root.querySelector(':scope > #live-tactics');
+  const dashboard = root.querySelector(':scope > .live-reparto-visual-dashboard');
+  const grid = root.querySelector(':scope > .live-grid');
+  const actionRow = root.querySelector(':scope > .button-row');
+  const actionHelp = actionRow?.nextElementSibling;
+  const setPieces = root.querySelector(':scope > .match-set-pieces-quick-card');
+  const main = document.createElement('div');
+  main.className = 'cbx-live-main';
+  const changes = document.createElement('section');
+  changes.className = 'cbx-live-changes panel';
+  changes.innerHTML = '<h3>Cambios</h3>';
+  if (grid) changes.append(grid);
+  if (actionRow) changes.append(actionRow);
+  if (actionHelp?.matches('p.meta')) changes.append(actionHelp);
+  if (tactics) main.append(tactics);
+  main.append(changes);
+  if (dashboard) main.append(dashboard);
+  if (setPieces) root.append(setPieces);
+  const plan = document.createElement('details');
+  plan.className = 'cbx-live-plan';
+  const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  try {
+    const known = new Set(state.players.map((player) => player.id));
+    if (!keepers.length || (callup.availableIds || []).some((id) => !known.has(id))) throw new Error('incomplete');
+    const baseline = buildAutoPlan({ format: callup.format || state.format, playerIds: callup.availableIds, keeperIds: keepers, planMode: 'escalonado' });
+    const moments = baseline.groups.map((group) => `${group.m}′`).join(' · ');
+    plan.innerHTML = `<summary><span><strong>Plan inicial de convocatoria</strong><small>${escapeHtml(moments || 'Sin cambios programados')} · Orientativo; no sustituye los cambios registrados en vivo</small></span><b>Ver</b></summary><div class="cbx-live-plan-list">${baseline.groups.map((group) => `<p><strong>${group.m}′</strong> ${group.list.map((change) => `${escapeHtml(playerName(change.out))} → ${escapeHtml(playerName(change.inn))}`).join(' · ')}</p>`).join('') || '<p>Sin cambios previstos.</p>'}</div>`;
+    root.append(plan);
+  } catch { /* Una convocatoria histórica incompleta no genera un plan ficticio. */ }
+  if (targetDetails) root.append(targetDetails);
+  root.append(main, log);
+  quick.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    if (button.dataset.cbxLiveChange) return changes.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (button.dataset.cbxLiveRivalGoal) return score.querySelector('.score-team:last-child .score-step.primary')?.focus();
+    log.open = true;
+    const kind = log.querySelector('#owner-event-kind');
+    if (kind && button.dataset.cbxLiveKind) kind.value = button.dataset.cbxLiveKind;
+    log.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    log.querySelector('#owner-event-player')?.focus({ preventScroll: true });
+  });
+}
+
 function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
@@ -1786,12 +1860,14 @@ function renderLive() {
   const unlockBtn = roleCanUseOwnerFeatures(state.role)
     ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
     : '';
+  const logWasOpen = root.querySelector('.match-log')?.open ?? false;
   root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
   ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
+  arrangeClaudeLive(state.timer.phase, logWasOpen, callup);
   renderLiveTactics();
   startTicks();
 }
@@ -3237,10 +3313,58 @@ function renderMatchCard(match) {
   const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const date = new Date(`${String(match.date).slice(0, 10)}T12:00:00`);
+    const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+    const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+    const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
+    const score = hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente');
+    const resultClass = hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending';
+    return `<article class="cbx-calendar-match panel match-card" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></details></article>`;
+  }
   return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
 }
 
+let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+function renderClaudeCalendar() {
+  const year = claudeCalendarMonth.getFullYear();
+  const month = claudeCalendarMonth.getMonth();
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const matchDays = new Set(state.matches.map((item) => String(item.date || '').slice(0, 10)));
+  const trainingDays = new Set([...state.trainingSessions, ...state.trainings.filter((item) => item.kind !== 'match')].map((item) => String(item.date || '').slice(0, 10)));
+  const dateKey = (day) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const cells = Array.from({ length: firstWeekday }, () => '<span class="cbx-calendar-spacer"></span>').concat(Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    const key = dateKey(day);
+    const isToday = key === new Date().toLocaleDateString('en-CA');
+    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${matchDays.has(key) ? ', partido' : ''}${trainingDays.has(key) ? ', entrenamiento' : ''}"><span>${day}</span><i class="${matchDays.has(key) ? 'has-match' : trainingDays.has(key) ? 'has-training' : ''}"></i></button>`;
+  })).join('');
+  return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span></div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
+}
+
 function renderMatches() {
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const root = $('#matches-list');
+    const { upcoming, played } = partitionAndSortMatches(state.matches);
+    const league = played.filter((item) => !isPreseasonMatch(item));
+    const preseason = played.filter(isPreseasonMatch);
+    const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
+    const wasOpen = root.querySelector('#played-matches-collapsible')?.open ?? true;
+    root.innerHTML = `${renderClaudeCalendar()}${group('Próximos', upcoming)}<details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}><summary>Jugados (${played.length})</summary>${group('Liga · Jugados', league)}${group('Pretemporada', preseason)}</details>${state.matches.length ? '' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>'}`;
+    if (!root.dataset.claudeCalendarBound) {
+      root.dataset.claudeCalendarBound = '1';
+      root.addEventListener('click', (event) => {
+        const move = event.target.closest('[data-calendar-move]');
+        if (move) { claudeCalendarMonth = new Date(claudeCalendarMonth.getFullYear(), claudeCalendarMonth.getMonth() + Number(move.dataset.calendarMove), 1); renderMatches(); return; }
+        if (event.target.closest('[data-calendar-now]')) { claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderMatches(); return; }
+        const day = event.target.closest('[data-calendar-day]');
+        if (day) { root.querySelectorAll('.cbx-calendar-day').forEach((button) => button.classList.toggle('is-selected', button === day)); root.querySelector(`.cbx-calendar-match[data-match-day="${day.dataset.calendarDay}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      });
+    }
+    return;
+  }
   if (!state.matches.length) {
     $('#matches-list').innerHTML = empty('Añade el calendario de partidos manualmente.');
     return;

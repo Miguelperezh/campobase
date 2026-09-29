@@ -114,3 +114,107 @@ body.cb-redesign-active #preparacion .cbx-prep-slots-details { max-width: 420px;
 body.cb-redesign-active #preparacion .cbx-prep-slots-details > summary { cursor: pointer; font-weight: 800; }
 @media(max-width:900px){body.cb-redesign-active #preparacion .cbx-prep-editor-layout { grid-template-columns: 1fr; }body.cb-redesign-active #preparacion #preparacion-list { grid-template-columns: 1fr; }}
 @media(max-width:620px){body.cb-redesign-active #preparacion .keeper-selectors { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #preparacion #preparacion-editor { padding: 14px 12px; }body.cb-redesign-active #preparacion #preparacion-editor > .section-head { flex-wrap: wrap; }}
+
+/* Partido en vivo: disposición de Claude sobre el reloj, marcador y controles actuales. */
+body.cb-redesign-active #partido.cbx-partido-vivo { color: var(--cbx-ink); font-family: var(--cbx-ui); }
+body.cb-redesign-active #partido.cbx-partido-vivo * { font-family: var(--cbx-ui) !important; }
+body.cb-redesign-active #partido.cbx-partido-vivo > .section-head { display: none; }
+body.cb-redesign-active #partido.cbx-partido-vivo:not(:has(.cbx-live-hero)) > .section-head { display: flex; }
+body.cb-redesign-active #partido #live-match:has(.cbx-live-hero) { display: grid; gap: 14px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+body.cb-redesign-active #partido .cbx-live-hero { min-width: 0; padding: 18px; border-radius: 21px; color: #fff; background: linear-gradient(120deg,var(--cbx-hero),#0e3325) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #partido .cbx-live-hero-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; color: #c9d8d0; font-size: 11px; font-weight: 750; }
+body.cb-redesign-active #partido .cbx-live-status { padding: 6px 11px; border-radius: 999px; background: var(--cbx-acc); color: #fff !important; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+body.cb-redesign-active #partido .cbx-live-hero .stadium-score { width: 100%; max-width: 900px !important; margin: 7px auto 0; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow: visible !important; }
+body.cb-redesign-active #partido .cbx-live-hero .score-team > span { color: #fff !important; font-size: clamp(12px,1.4vw,17px) !important; }
+body.cb-redesign-active #partido .cbx-live-hero .score-team > strong { color: #fff !important; font: 900 clamp(48px,6vw,88px)/.9 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #partido .cbx-live-hero .score-separator { color: #a8bfb3 !important; font-size: clamp(30px,5vw,60px) !important; }
+body.cb-redesign-active #partido .cbx-live-hero .score-step.primary { color: #fff !important; background: #ffffff36 !important; }
+body.cb-redesign-active #partido .cbx-live-hero .score-step.secondary { color: #fff !important; background: #ffffff14 !important; border-color: #ffffff45 !important; }
+body.cb-redesign-active #partido .cbx-live-hero .live-clock { display: grid; justify-items: center; gap: 8px; padding: 0; }
+body.cb-redesign-active #partido .cbx-live-hero .live-clock > .pill { display: none; }
+body.cb-redesign-active #partido .cbx-live-hero #clock { margin: 0; color: #fff !important; font: 900 clamp(26px,3vw,43px)/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #partido .cbx-live-hero #half { width: auto; min-height: 0; padding: 0; border: 0; border-radius: 0; color: #c8d8cf !important; background: transparent !important; font-size: 11px; font-weight: 850; text-transform: uppercase; }
+body.cb-redesign-active #partido .cbx-live-hero .live-clock .button-row { justify-content: center; width: 100%; margin: 1px 0 3px; }
+body.cb-redesign-active #partido .cbx-live-hero .live-clock .button-row button { min-height: 37px; padding: 7px 11px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+body.cb-redesign-active #partido .cbx-live-quick-actions { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; margin-top: 11px; }
+body.cb-redesign-active #partido .cbx-live-quick-actions button { min-width: 0; min-height: 44px; padding: 7px 5px; border: 1px solid #ffffff25; border-radius: 10px; background: #ffffff17; color: #fff; font-size: 11px; font-weight: 800; overflow-wrap: anywhere; }
+body.cb-redesign-active #partido .cbx-live-quick-actions button:first-child { grid-column: span 3; background: #10b981; border-color: #10b981; }
+body.cb-redesign-active #partido .cbx-live-quick-actions button:nth-child(2) { grid-column: span 2; }
+body.cb-redesign-active #partido .cbx-live-main { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr); align-items: start; gap: 12px; }
+body.cb-redesign-active #partido .cbx-live-plan { margin: 0; padding: 11px 15px; border: 1px solid #b9d2c4; border-radius: 13px; background: var(--card); }
+body.cb-redesign-active #partido .cbx-live-plan > summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
+body.cb-redesign-active #partido .cbx-live-plan > summary::-webkit-details-marker { display: none; }
+body.cb-redesign-active #partido .cbx-live-plan > summary span { display: grid; gap: 2px; min-width: 0; }
+body.cb-redesign-active #partido .cbx-live-plan > summary strong { color: var(--cbx-ink); font: 900 17px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #partido .cbx-live-plan > summary small { color: var(--cbx-muted); font-size: 11px; }
+body.cb-redesign-active #partido .cbx-live-plan > summary b { padding: 7px 12px; border-radius: 9px; color: #fff; background: #10b981; font-size: 11px; }
+body.cb-redesign-active #partido .cbx-live-plan-list { display: grid; gap: 5px; margin-top: 11px; border-top: 1px solid var(--cbx-line); padding-top: 10px; }
+body.cb-redesign-active #partido .cbx-live-plan-list p { margin: 0; color: var(--cbx-ink); font-size: 12px; }
+body.cb-redesign-active #partido .cbx-live-plan-list p strong { margin-right: 8px; color: #079668; }
+body.cb-redesign-active #partido .cbx-live-main > * { min-width: 0; margin: 0 !important; }
+body.cb-redesign-active #partido .cbx-live-main #live-tactics,body.cb-redesign-active #partido .cbx-live-changes,body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { padding: 14px !important; border: 1px solid var(--cbx-line) !important; border-radius: 16px !important; background: var(--card) !important; box-shadow: var(--cbx-shadow) !important; color: var(--cbx-ink) !important; }
+body.cb-redesign-active #partido .cbx-live-main h3 { margin: 0 0 10px !important; color: var(--cbx-ink) !important; font: 900 19px/1.1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #partido .cbx-live-changes .live-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin: 0; }
+body.cb-redesign-active #partido .cbx-live-changes .on-field,body.cb-redesign-active #partido .cbx-live-changes .bench { min-width: 0; padding: 7px; border: 0; border-top: 3px solid #10b981; border-radius: 9px; box-shadow: none; }
+body.cb-redesign-active #partido .cbx-live-changes .bench { border-top-color: #f59e0b; }
+body.cb-redesign-active #partido .cbx-live-changes .check-row { min-width: 0; padding: 7px 5px; }
+body.cb-redesign-active #partido .cbx-live-changes .live-player-name { overflow-wrap: anywhere; }
+body.cb-redesign-active #partido .cbx-live-changes > .button-row { display: grid; gap: 7px; margin-top: 12px; }
+body.cb-redesign-active #partido .cbx-live-changes > .button-row button { min-width: 0; min-height: 40px; padding: 7px; white-space: normal; font-size: 11px; }
+body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard * { color: var(--cbx-ink) !important; }
+body.cb-redesign-active #partido .cbx-live-main .reparto-dash-header { border-bottom-color: var(--cbx-line) !important; }
+body.cb-redesign-active #partido .cbx-live-targets,body.cb-redesign-active #partido .match-log { margin: 0; padding: 13px 15px; border: 1px solid var(--cbx-line); border-radius: 14px; background: var(--card); box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #partido .cbx-live-targets > summary,body.cb-redesign-active #partido .match-log > summary { cursor: pointer; color: var(--cbx-ink); font-weight: 850; }
+body.cb-redesign-active #partido .match-log .event-editor { grid-template-columns: repeat(5,minmax(0,1fr)); }
+body.cb-redesign-active #partido .match-log .event-editor > * { min-width: 0; }
+@media(max-width:1100px){body.cb-redesign-active #partido .cbx-live-main { grid-template-columns: repeat(2,minmax(0,1fr)); }body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { grid-column: 1/-1; }}
+@media(max-width:720px){body.cb-redesign-active #partido .cbx-live-hero { padding: 14px 10px; }body.cb-redesign-active #partido .cbx-live-main { grid-template-columns: 1fr; }body.cb-redesign-active #partido .cbx-live-main .live-reparto-visual-dashboard { grid-column: auto; }body.cb-redesign-active #partido .cbx-live-quick-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }body.cb-redesign-active #partido .cbx-live-quick-actions button:first-child,body.cb-redesign-active #partido .cbx-live-quick-actions button:nth-child(2) { grid-column: span 3; }body.cb-redesign-active #partido .match-log .event-editor { grid-template-columns: 1fr 1fr; }body.cb-redesign-active #partido .cbx-live-hero .live-clock .button-row button { flex: 1 1 43%; }}
+
+/* Calendario y resultados: mes y tarjetas compactas de Claude, con acciones intactas. */
+body.cb-redesign-active #calendario.cbx-partido-calendario { color: var(--cbx-ink); font-family: var(--cbx-ui); }
+body.cb-redesign-active #calendario.cbx-partido-calendario * { font-family: var(--cbx-ui) !important; }
+body.cb-redesign-active #calendario > .cbx-banner { min-height: 112px; margin: 0 0 16px; padding: 19px 22px; border: 0; border-radius: 20px; background: linear-gradient(120deg,var(--cbx-hero),#124735) !important; box-shadow: var(--cbx-shadow-hero); }
+body.cb-redesign-active #calendario > .cbx-banner .eyebrow { margin: 0; color: #bdd1c6 !important; font-size: 11px; font-weight: 850; }
+body.cb-redesign-active #calendario > .cbx-banner h2 { margin: 3px 0 0; color: #fff !important; font: 900 29px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #calendario > .cbx-banner button { min-height: 43px; padding: 8px 15px; border-radius: 10px; color: #fff; background: #10b981; font-weight: 850; }
+body.cb-redesign-active #calendario #matches-list { display: grid; gap: 17px; }
+body.cb-redesign-active #calendario .cbx-calendar-month { max-width: 560px; margin: 0; padding: 15px; border: 1px solid var(--cbx-line); border-radius: 17px; background: var(--card); box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #calendario .cbx-calendar-month header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+body.cb-redesign-active #calendario .cbx-calendar-month h3 { margin: 0; color: var(--cbx-ink); font: 900 20px var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; text-transform: uppercase; }
+body.cb-redesign-active #calendario .cbx-calendar-month header div { display: flex; gap: 9px; color: var(--cbx-muted); font-size: 10px; font-weight: 800; }
+body.cb-redesign-active #calendario .cbx-calendar-month header span:first-child::first-letter { color: #c8102e; }
+body.cb-redesign-active #calendario .cbx-calendar-month header span:last-child::first-letter { color: #10b981; }
+body.cb-redesign-active #calendario .cbx-calendar-weekdays,body.cb-redesign-active #calendario .cbx-calendar-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; text-align: center; }
+body.cb-redesign-active #calendario .cbx-calendar-weekdays b { color: #91a0b3; font-size: 10px; }
+body.cb-redesign-active #calendario .cbx-calendar-day { display: grid; place-content: center; gap: 2px; min-width: 0; min-height: 45px; padding: 4px; border: 1px solid #e7edf3; border-radius: 10px; color: var(--cbx-ink); background: #f8fafc; font-size: 12px; font-weight: 850; }
+body.cb-redesign-active #calendario .cbx-calendar-day.is-today { color: #fff; background: var(--cbx-hero); }
+body.cb-redesign-active #calendario .cbx-calendar-day.is-selected { outline: 2px solid #10b981; outline-offset: 1px; }
+body.cb-redesign-active #calendario .cbx-calendar-day i { width: 6px; height: 6px; margin: auto; border-radius: 50%; }
+body.cb-redesign-active #calendario .cbx-calendar-day i.has-match { background: #c8102e; }
+body.cb-redesign-active #calendario .cbx-calendar-day i.has-training { background: #10b981; }
+body.cb-redesign-active #calendario .cbx-calendar-month footer { display: flex; justify-content: space-between; margin-top: 10px; }
+body.cb-redesign-active #calendario .cbx-calendar-month footer button { min-height: 30px; padding: 4px 11px; border: 1px solid var(--cbx-line); border-radius: 8px; color: var(--cbx-ink); background: #fff; font-size: 11px; }
+body.cb-redesign-active #calendario .cbx-calendar-group { display: grid; gap: 9px; }
+body.cb-redesign-active #calendario .cbx-calendar-group > h3 { margin: 0; color: #64748b; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
+body.cb-redesign-active #calendario .cbx-calendar-group .stack { gap: 9px; }
+body.cb-redesign-active #calendario .cbx-calendar-match { display: grid; grid-template-columns: 55px minmax(0,1fr) auto; gap: 11px; align-items: center; margin: 0; padding: 11px 13px; border: 1px solid var(--cbx-line); border-radius: 16px; background: var(--card); box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #calendario .cbx-calendar-date { display: grid; justify-items: center; padding: 6px 2px; border-radius: 10px; background: #f0f8f3; }
+body.cb-redesign-active #calendario .cbx-calendar-date small:first-child { color: #c8102e; }
+body.cb-redesign-active #calendario .cbx-calendar-date small { color: #64748b; font-size: 10px; font-weight: 850; }
+body.cb-redesign-active #calendario .cbx-calendar-date strong { color: var(--cbx-ink); font: 900 23px/1 var(--cbx-disp) !important; font-family: var(--cbx-disp) !important; }
+body.cb-redesign-active #calendario .cbx-calendar-info { min-width: 0; }
+body.cb-redesign-active #calendario .cbx-calendar-info > small { color: #64748b; font-size: 10px; font-weight: 800; }
+body.cb-redesign-active #calendario .cbx-calendar-info h3 { margin: 2px 0; color: var(--cbx-ink); font-size: 14px; font-weight: 900; overflow-wrap: anywhere; }
+body.cb-redesign-active #calendario .cbx-calendar-info p { margin: 0; color: #64748b; font-size: 10px; }
+body.cb-redesign-active #calendario .cbx-calendar-info p span { margin-right: 4px; padding: 2px 5px; border-radius: 6px; color: var(--cbx-ink); background: #f1f5f9; font-weight: 800; }
+body.cb-redesign-active #calendario .cbx-calendar-score { min-width: 65px; padding: 8px; border-radius: 9px; text-align: center; font-size: 16px; font-weight: 900; }
+body.cb-redesign-active #calendario .cbx-calendar-score.win { color: #166534; background: #dcfce7; }
+body.cb-redesign-active #calendario .cbx-calendar-score.loss { color: #be123c; background: #fce8ec; }
+body.cb-redesign-active #calendario .cbx-calendar-score.draw,body.cb-redesign-active #calendario .cbx-calendar-score.pending { color: var(--cbx-ink); background: #f1f5f9; }
+body.cb-redesign-active #calendario .cbx-calendar-actions { grid-column: 1/-1; border-top: 1px solid var(--cbx-line); padding-top: 7px; }
+body.cb-redesign-active #calendario .cbx-calendar-actions > summary { cursor: pointer; color: var(--cbx-muted); font-size: 11px; font-weight: 800; }
+body.cb-redesign-active #calendario .cbx-calendar-actions .button-row button { min-height: 36px; padding: 6px 9px; font-size: 11px; }
+body.cb-redesign-active #calendario .cbx-calendar-played { display: grid; gap: 15px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+body.cb-redesign-active #calendario .cbx-calendar-played > summary { margin-bottom: 9px; color: #64748b; cursor: pointer; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
+body.cb-redesign-active #calendario .cbx-calendar-played .cbx-calendar-group { margin-bottom: 15px; }
+@media(max-width:620px){body.cb-redesign-active #calendario > .cbx-banner { display: grid; gap: 10px; justify-items: start; }body.cb-redesign-active #calendario > .cbx-banner h2 { font-size: 26px !important; }body.cb-redesign-active #calendario .cbx-calendar-match { grid-template-columns: 51px minmax(0,1fr) auto; gap: 8px; padding: 9px; }body.cb-redesign-active #calendario .cbx-calendar-score { min-width: 54px; padding: 7px 5px; font-size: 13px; }body.cb-redesign-active #calendario .cbx-calendar-month { padding: 12px; }}
