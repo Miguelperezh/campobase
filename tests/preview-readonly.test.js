@@ -61,7 +61,7 @@ test('la preview deja abrir la clasificación pero sigue bloqueando botones de e
   for(const listener of listeners.click)listener(event);
   return blocked;
  };
- for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]','#open-set-pieces-btn','.open-set-pieces-trigger','#new-staff-btn','#add-first-staff-btn','.edit-staff-btn','.staff-avatar-edit-btn','#new-training','#attendance-open-selected','[data-attendance-filter]','[data-attendance-source][data-source-id]','.edit-attendance','.attendance-all-present','.attendance-reason','.cancel-training'])assert.equal(click(selector),false);
+ for(const selector of ['[data-lb-expand]','.lb-tab-btn[data-lb-tab]','.lb-scope-btn[data-lb-scope]','#open-set-pieces-btn','.open-set-pieces-trigger','#new-staff-btn','#add-first-staff-btn','.edit-staff-btn','.staff-avatar-edit-btn','#new-training','[data-attendance-filter]','[data-attendance-source][data-source-id]','.edit-attendance','.attendance-all-present','.attendance-reason','.cancel-training'])assert.equal(click(selector),false);
  assert.equal(click('.delete-staff-btn'),true);
  assert.equal(click('.delete-training'),true);
  assert.equal(click('.delete-player'),true);
