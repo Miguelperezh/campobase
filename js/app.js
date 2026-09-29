@@ -3307,7 +3307,7 @@ function renderPreparaciones() {
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${match.id}">${prep.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button><button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Editar preparación' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
 }
 
@@ -3344,6 +3344,52 @@ function prepCargarFormacion(team, formation, keeperId) {
   return cargarFormacion(team, state.players, prepAvailableIds(prepMatchId), formation, 'F7');
 }
 
+function arrangeClaudePrepEditor() {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const editor = $('#preparacion-editor');
+  const live = editor?.querySelector('.live-tactics');
+  const head = editor?.querySelector('.section-head');
+  if (!editor || !live || !head) return;
+  const keepers = editor.querySelector('.keeper-selectors');
+  const keeperHelp = keepers?.nextElementSibling;
+  const formationRow = live.querySelector('.formacion-row');
+  const squad = live.nextElementSibling;
+  const actions = squad?.nextElementSibling;
+  const hint = editor.querySelector('#prep-hint');
+  const layout = document.createElement('div');
+  layout.className = 'cbx-prep-editor-layout';
+  const controls = document.createElement('div');
+  controls.className = 'cbx-prep-controls';
+  const pitch = document.createElement('div');
+  pitch.className = 'cbx-prep-pitch';
+  layout.append(controls, pitch);
+  head.after(layout);
+  controls.append(keepers, keeperHelp, formationRow, squad, hint, actions);
+  const back = head.querySelector('#prep-back');
+  if (back) actions.insertBefore(back, actions.children[1] || null);
+  pitch.append(live);
+  const slots = live.querySelector('#prep-slots');
+  const details = document.createElement('details');
+  details.className = 'cbx-prep-slots-details';
+  details.innerHTML = '<summary>Asignar jugadores por lista y ver opciones de la pizarra</summary>';
+  slots.before(details);
+  details.append(slots, live.querySelector('.keeper-note'), live.querySelector('.live-tactics-legend'));
+  const select = $('#prep-formacion');
+  const pills = document.createElement('div');
+  pills.className = 'cbx-formation-pills';
+  pills.setAttribute('role', 'group');
+  pills.setAttribute('aria-label', 'Formación');
+  pills.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-prep-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('');
+  select.after(pills);
+  pills.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-prep-formation]');
+    if (!button) return;
+    select.value = button.dataset.prepFormation;
+    pills.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
 function openPreparacionEditor(matchId) {
   prepMatchId = matchId;
   const match = state.matches.find(({ id }) => id === matchId);
@@ -3364,7 +3410,7 @@ function openPreparacionEditor(matchId) {
     .map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`)
     .join('');
   $('#preparacion-editor').innerHTML = `
-    <div class="section-head"><div><p class="eyebrow">Preparando</p><h3>${escapeHtml(match.opponent)} · ${escapeHtml(localDate(match.date))}</h3></div><button type="button" id="prep-back" class="secondary">← Volver</button></div>
+    <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><button type="button" id="prep-back" class="secondary">← Volver al plan</button></div>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
@@ -3381,8 +3427,9 @@ function openPreparacionEditor(matchId) {
     <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
-  $('#preparacion-list').classList.add('hidden');
+  if (!document.body.classList.contains('cb-redesign-active')) $('#preparacion-list').classList.add('hidden');
   $('#preparacion-editor').classList.remove('hidden');
+  arrangeClaudePrepEditor();
   renderPrepBoard();
   renderPrepSlots();
   wirePrepEditor();
@@ -3391,26 +3438,31 @@ function openPreparacionEditor(matchId) {
 function renderPrepBoard() {
   const svg = $('#prep-board');
   if (!svg || !prepDraft) return;
+  const portrait = document.body.classList.contains('cb-redesign-active');
+  svg.setAttribute('viewBox', portrait ? '0 0 100 130' : '0 0 100 100');
+  const y = (value) => portrait ? 4 + value * 1.22 : value;
   const parts = [];
-  parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
-  parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
-  parts.push('<circle class="tac-line" cx="50" cy="50" r="9"/>');
-  parts.push('<rect class="tac-area" x="4" y="4" width="92" height="16"/>');
-  parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
+  parts.push(`<rect class="tac-field" x="4" y="4" width="92" height="${portrait ? 122 : 92}" rx="3"/>`);
+  parts.push(`<path class="tac-line" d="M50 4v${portrait ? 122 : 92} M4 ${y(50)}h92"/>`);
+  parts.push(`<circle class="tac-line" cx="50" cy="${y(50)}" r="9"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="4" width="92" height="${portrait ? 21 : 16}"/>`);
+  parts.push(`<rect class="tac-area" x="4" y="${portrait ? 105 : 80}" width="92" height="${portrait ? 21 : 16}"/>`);
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
-  parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
+  parts.push(`<rect class="tac-goal" x="40" y="${portrait ? 122 : 92}" width="20" height="4"/>`);
   prepDraft.forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
     const dorsal = pl ? pl.number : '';
     const label = pl ? nombreCorto(pl.name) : '';
     const labelW = label ? label.length * 1.6 + 1.6 : 0;
-    const rectX = p.x - labelW / 2, rectY = p.y + 2.1, rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectX = p.x - labelW / 2, rectY = y(p.y) + 2.1, rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${y(p.y)}" r="4.2"/><text x="${p.x}" y="${y(p.y) - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${y(p.y) + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  // Rival (mitad superior).
-  const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
-  OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
-  parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  if (!portrait) {
+    // La pizarra original conserva su rival y balón; Claude muestra solo nuestra alineación.
+    const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
+    OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
+    parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  }
   svg.innerHTML = parts.join('');
 }
 
@@ -7704,6 +7756,7 @@ function wireEvents() {
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
     if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id); $('#prep-gif')?.click(); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
