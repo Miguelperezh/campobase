@@ -270,6 +270,8 @@ function statusChoice(playerId, value, selected, label) {
   return `<label class="attendance-choice ${value} ${selected === value ? 'selected' : ''}"><input type="radio" name="status-${esc(playerId)}" value="${value}" ${selected === value ? 'checked' : ''}><span>${esc(label)}</span></label>`;
 }
 
+const ATTENDANCE_ABSENCE_REASONS = ['Enfermedad', 'Lesión', 'Decisión del entrenador', 'Disciplina', 'Estudios / colegio', 'Motivo familiar', 'Sin avisar', 'Otro motivo'];
+
 function statusRow(player, entry = {}) {
   const status = ['present', 'late', 'absent'].includes(entry.status) ? entry.status : 'present';
   const { hour, minute } = splitTime(entry.arrivalTime || '');
@@ -281,6 +283,9 @@ function statusRow(player, entry = {}) {
     </div>
     <div class="attendance-row-extra">
       <div class="arrival-time ${status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span><div class="time-24"><select name="arrivalHour-${esc(player.id)}">${timeOptions(24, hour, 'hh')}</select><span>:</span><select name="arrivalMinute-${esc(player.id)}">${timeOptions(60, minute, 'mm')}</select></div></div>
+      <div class="attendance-reasons ${status === 'absent' ? '' : 'hidden'}" role="group" aria-label="Motivo de ausencia de ${esc(player.name)}">
+        ${ATTENDANCE_ABSENCE_REASONS.map((reason) => `<button type="button" class="attendance-reason${entry.note === reason ? ' selected' : ''}" data-reason="${esc(reason)}" aria-pressed="${entry.note === reason ? 'true' : 'false'}">${esc(reason)}</button>`).join('')}
+      </div>
       <details class="cbx-attendance-note"${entry.note ? ' open' : ''}><summary>Nota</summary><label class="attendance-note">Comentario<input name="note-${esc(player.id)}" value="${esc(entry.note || '')}" maxlength="200" placeholder="Opcional: motivo, incidencia, observación…"></label></details>
     </div>
   </article>`;
@@ -307,6 +312,13 @@ function updateEditorSummary(form) {
     const selected = $('input[type="radio"]:checked', row)?.value;
     $$('.attendance-choice', row).forEach((choice) => choice.classList.toggle('selected', choice.classList.contains(selected)));
     $('.arrival-time', row)?.classList.toggle('hidden', selected !== 'late');
+    $('.attendance-reasons', row)?.classList.toggle('hidden', selected !== 'absent');
+    const note = $('.attendance-note input', row)?.value || '';
+    $$('.attendance-reason', row).forEach((reason) => {
+      const active = reason.dataset.reason === note;
+      reason.classList.toggle('selected', active);
+      reason.setAttribute('aria-pressed', String(active));
+    });
   });
 }
 
@@ -454,7 +466,23 @@ function install() {
     if (allPresent) {
       const form = allPresent.closest('form');
       $$('input[type="radio"][value="present"]', form).forEach((input) => { input.checked = true; });
+      $$('.attendance-note input', form).forEach((note) => {
+        if (ATTENDANCE_ABSENCE_REASONS.includes(note.value)) note.value = '';
+      });
       updateEditorSummary(form);
+      return;
+    }
+    const reason = event.target.closest('.attendance-reason');
+    if (reason) {
+      const row = reason.closest('[data-attendance-player]');
+      const note = $('.attendance-note input', row);
+      if (note) note.value = note.value === reason.dataset.reason ? '' : reason.dataset.reason;
+      if (reason.dataset.reason === 'Otro motivo') {
+        const details = $('.cbx-attendance-note', row);
+        if (details) details.open = true;
+        note?.focus();
+      }
+      updateEditorSummary(reason.closest('form'));
       return;
     }
     if (event.target.closest('[data-view="asistencia"]')) scheduleRender();
@@ -467,8 +495,17 @@ function install() {
     // El formulario visual comparte contenedor con el editor histórico. Cortamos este
     // cambio aquí para que el listener legado no intente tratar estos chips como <select>.
     event.stopImmediatePropagation();
+    if (event.target.value !== 'absent') {
+      const note = $('.attendance-note input', event.target.closest('[data-attendance-player]'));
+      if (note && ATTENDANCE_ABSENCE_REASONS.includes(note.value)) note.value = '';
+    }
     updateEditorSummary(form);
   }, true);
+
+  document.addEventListener('input', (event) => {
+    if (!event.target.matches('#training-form[data-visual-attendance="1"] .attendance-note input')) return;
+    updateEditorSummary(event.target.closest('form'));
+  });
 
   document.addEventListener('submit', (event) => {
     const form = event.target.closest('#training-form[data-visual-attendance="1"]');
