@@ -36,16 +36,16 @@ test('normalizeFormatoJuego mapea todas las variaciones de Astra para F7 y F11',
   assert.equal(normalizeFormatoJuego('todos'), 'todos');
 });
 
-test('el catálogo conserva los 298 históricos, antepone los 100 nuevos lotes arriba y 12 nuevos después respetando F7/F11', () => {
+test('el catálogo conserva los históricos, antepone los 100 nuevos lotes arriba y 12 nuevos después respetando F7/F11', () => {
   const mapped = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
-  assert.equal(mapped.length, 410);
+  assert.equal(mapped.length, 1060);
   assert.deepEqual(mapped.slice(0, 100).map((e) => e.id), NUEVOS_LOTES_IDS, 'Los 100 últimos introducidos deben estar en la punta de arriba');
   assert.deepEqual(mapped.slice(100, 112).map((e) => e.id), NUEVOS_EJERCICIOS_IDS, 'Los 12 del lote anterior van a continuación');
 
   const f11 = mapped.filter((e) => e.formato_juego === 'futbol_11');
   const f7 = mapped.filter((e) => e.formato_juego === 'futbol_7');
   const todos = mapped.filter((e) => e.formato_juego === 'todos');
-  assert.equal(todos.length, 130, '92 nuevos lotes + 38 históricos base sin regla específica van a ambos filtros');
+  assert.equal(todos.length, 420);
 
   const nuevosLotes = mapped.slice(0, 100);
   for (const ex of nuevosLotes) {
@@ -66,21 +66,21 @@ test('buildExercise asigna por defecto futbol_11 cuando no viene especificado', 
   assert.equal(ex.formato_juego, 'futbol_11');
 });
 
-test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 410 ejercicios', () => {
+test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 1060 ejercicios', () => {
   const currentExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
 
   const allFiltered = filterExercises(currentExercises, { formato_juego: 'todos' });
-  assert.equal(allFiltered.length, 410);
+  assert.equal(allFiltered.length, 1060);
   assert.deepEqual(allFiltered.slice(0, 100).map((e) => e.id), NUEVOS_LOTES_IDS);
 
   const f11Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_11' });
-  assert.equal(f11Filtered.length, 388);
+  assert.equal(f11Filtered.length, 714);
 
   const f7Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_7' });
-  assert.equal(f7Filtered.length, 152);
+  assert.equal(f7Filtered.length, 766);
 
   const f7ByFormatKey = filterExercises(currentExercises, { format: 'futbol_7' });
-  assert.equal(f7ByFormatKey.length, 152);
+  assert.equal(f7ByFormatKey.length, 766);
 });
 
 test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combinado', () => {
@@ -101,15 +101,15 @@ test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combi
   const pool = [astraExercise, ...baseExercises];
 
   const f7Only = filterExercises(pool, { formato_juego: 'futbol_7' });
-  assert.equal(f7Only.length, 153);
+  assert.equal(f7Only.length, 767);
   assert.ok(f7Only.some(e => e.id === 'astra-f7-001'));
 
   const f11Only = filterExercises(pool, { formato_juego: 'futbol_11' });
-  assert.equal(f11Only.length, 388);
+  assert.equal(f11Only.length, 714);
   assert.ok(!f11Only.some(e => e.id === 'astra-f7-001'));
 
   const todosOnly = filterExercises(pool, { formato_juego: 'todos' });
-  assert.equal(todosOnly.length, 411);
+  assert.equal(todosOnly.length, 1061);
   assert.ok(todosOnly.some(e => e.id === 'astra-f7-001'));
 
   const textF7 = filterExercises(pool, { text: 'transiciones extra', formato_juego: 'futbol_7' });
