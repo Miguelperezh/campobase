@@ -1005,3 +1005,33 @@ Rama `implement/claude-hoy-real` creada desde origin/main `e9dfac33`. Se descart
 La URL /campobase-preview/ en GitHub Pages activa preview-readonly.js: se preservan las lecturas y el acceso existente, se bloquean mutaciones remotas y las funciones de escritura de db.js. La reconciliación usa el adaptador y almacenes existentes sin enviar ni añadir syncQueue; no hay stores alternativos. No registrar otro service worker de preview ni borrar cachés globales. El alojamiento solo publica la rama real; no almacena exportaciones de datos. Producción fuera de ese path conserva su flujo.
 
 Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera de red; capturas 390×844 y 1440×960 con lecturas reales en perfil temporal, nunca exportadas al repositorio. Ajustes personales de fuente/tamaño siguen vigentes, por lo que las capturas pueden diferir tipográficamente del ejemplo de Claude.
+
+### 20. Entrega v60 (01/10/2026) — Validaciones Tácticas F7, Dossier A4 Claude, Corrección de Flechas y Sincronización Vista Previa = Impresión
+
+1. **Pizarra Táctica Única Interactiva y Sistemas F7 del Manual:**
+   - Se unificó la pizarra táctica para que sea una sola pizarra dinámica en `js/tactics.js` y `js/tactic-board-controller.js`. Al cambiar el sistema de juego (1-3-2-1, 1-2-3-1, 1-2-2-2, 1-3-1-2, 1-1-3-2, 1-3-3, 1-4-1-1, 1-2-1-3, 1-1-3-1-1, 1-1-4-1, 1-2-2-1-1) o la fase (con balón, sin balón, basculación, pérdida), las fichas y flechas se actualizan en la misma pizarra sin generar pizarras duplicadas.
+   - **Toggle Rival en todas las pizarras:** El rival se oculta por defecto (`showOpponent = false`) y el entrenador dispone del botón conmutable `«Mostrar rival / Ocultar rival»` tanto en la pestaña Tácticas como en Preparar Partido y Partido en Vivo.
+   - Normalización de proporciones de campo `100x100` en todas las pantallas.
+
+2. **Catálogo de 1060 Ejercicios con Filtrado Multidimensional F7:**
+   - Integración completa de los ejercicios del catálogo con normalización de taxonomía F7.
+   - La función `matchesDimension` evalúa tanto categorías como contenidos, objetivos y descripciones, permitiendo filtrar fielmente por cualquier dimensión metodológica de Fútbol 7.
+
+3. **Corrección de Flechas Tácticas y Leyenda (Eliminación de bultos y grosores excesivos):**
+   - **Causa raíz:** En `css/claude-entreno.css`, reglas globales con `!important` inflaban `.tac-arrow` a grosores de 2.8px y 3.2px, y forzaban `stroke-linecap: round !important;`. Al tener los iconos de herramientas `viewBox="0 0 32 18"`, 3.2px convertía las flechas en salchichas gigantes. Además, el cap redondeado sobresalía por delante del triángulo del marker generando un bulto visible en la punta.
+   - **Solución implementada:**
+     - En `js/tactics.js`: Los markers SVG usan `markerWidth="4" markerHeight="4" refX="1.2" refY="2"` con triángulo `M0 0.6 L3.6 2 L0 3.4z`. El trazo termina en `refX="1.2"` dentro de la base del triángulo y la punta en `x=3.6` queda 100% limpia, afilada y sin artefactos.
+     - En `css/claude-entreno.css`: Se eliminaron los grosores gigantes. Se fijó `stroke-linecap: butt !important;` y grosores estilizados proporcionales (Pase 1.4px, Movimiento 1.3px, Conducción 1.6px, Sprint 1.5px, Tiro 1.8px; e iconos de leyenda a 1.2px - 1.5px).
+
+4. **Sincronización Exacta entre Vista Previa en Pantalla e Impresión A4:**
+   - **Causa anterior:** Los estilos de la hoja (`.cb-print-columns-grid`, `.cb-print-col`, `.cb-print-card`, `.cbx-print-step-item`, etc.) estaban encerrados exclusivamente dentro de `@media print` en `styles-redesign.css`. Al abrir la vista previa en pantalla dentro de CampoBase (`#cb-print-root`), el navegador no aplicaba el grid y el contenido se colapsaba en una sola columna vertical continua con textos desproporcionados.
+   - **Solución implementada:**
+     - En `css/claude-entreno.css`: Se definieron todas las reglas de la hoja `.cb-print-sheet` tanto para pantalla como para impresión. En pantalla se muestra como una hoja física A4 blanca de `794px × 1123px` centrada con sombra, con la maquetación a 2 columnas (`display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px;`), tarjetas de métricas, diagrama de campo con leyenda y sección de notas pautadas exactamente idéntica al PDF final.
+     - **Dossier de Sesión A4:** La portada de sesión (`.cbx-print-cover-page`) con tarjetas de objetivo/material, barra temporal de fases, lista de tareas, checklist de asistencia y notas, seguida de una hoja A4 individual para cada ejercicio de la sesión.
+
+5. **Corrección del Botón de Impresión y Apertura Fiable (`window.print()`):**
+   - **Causa anterior:** `isMobileDevice()` clasificaba erróneamente cualquier pantalla con `window.innerHeight <= 900` como móvil. En ordenadores portátiles (MacBook Air / Pro) donde el alto de ventana suele ser de 700–850px, la app bloqueaba `window.print()` y ejecutaba un fallback de exportación que no abría el diálogo del navegador.
+   - **Solución:** Se corrigió `isMobileDevice()` para detectar únicamente dispositivos táctiles móviles reales (teléfonos iOS/Android). Al pulsar `«🖨️ Imprimir / Guardar PDF»`, se ejecuta `window.print()` directamente sin bloqueos.
+   - Se independizó el botón `«📄 Abrir Ficha A4»` con fondo azul `#2563eb` y texto blanco nítido, eliminando el conflicto de clases `.primary` con colores personalizados.
+   - Se desvinculó el cierre prematuro en `afterprint`: cerrar o cancelar el diálogo de impresión del navegador mantiene la vista previa en pantalla, permitiendo al usuario revisarla y pulsar `✕ Salir` o presionar la tecla `Escape` cuando desee salir.
+
