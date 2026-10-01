@@ -19,16 +19,20 @@ test('CSS claude-partido.css amplía la pizarra de preparación a 640px y priori
     'Debe estilizar .board-wrap de preparación con dimensiones generosas'
   );
   assert.ok(
-    css.includes('#preparacion .cbx-prep-editor-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr)'),
-    'La cuadrícula debe dar prioridad visual a la pizarra táctica'
+    css.includes('#preparacion .cbx-prep-editor-layout { display: grid; grid-template-columns: 1fr;'),
+    'La cuadrícula debe dar prioridad visual a la pizarra táctica con 1 columna por defecto'
+  );
+  assert.ok(
+    css.includes('minmax(560px, 640px)'),
+    'En pantallas amplias la pizarra táctica tiene entre 560px y 640px'
   );
 });
 
-test('CSS claude-partido.css maqueta los desplegables de puestos a 1 columna sin truncar', () => {
+test('CSS claude-partido.css maqueta los desplegables de puestos de forma visible y generosa sin truncar', () => {
   const css = fs.readFileSync(path.join(rootDir, 'css', 'claude-partido.css'), 'utf8');
   assert.ok(
-    css.includes('#preparacion .cbx-prep-slots-details .live-tactics-slots { display: grid; grid-template-columns: 1fr;'),
-    'Los puestos de preparación deben organizarse a 1 columna con ancho completo'
+    css.includes('#preparacion .cbx-prep-slots-details .live-tactics-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));'),
+    'Los puestos de preparación deben organizarse en cuadrícula adaptativa que permite 2 columnas holgadas'
   );
   assert.ok(
     css.includes('text-overflow: ellipsis;'),
@@ -52,7 +56,7 @@ test('El popup táctico y el diálogo de sustituciones de calendario ofrecen anc
   );
 });
 
-test('js/app.js integra botón de ampliación de pizarra y calcula ancho de popup a 340px', () => {
+test('js/app.js integra botón de ampliación de pizarra, calcula ancho de popup y mantiene desplegables siempre visibles', () => {
   const appJs = fs.readFileSync(path.join(rootDir, 'js', 'app.js'), 'utf8');
   assert.ok(
     appJs.includes('id="prep-full-btn"'),
@@ -69,5 +73,17 @@ test('js/app.js integra botón de ampliación de pizarra y calcula ancho de popu
   assert.ok(
     appJs.includes('renderPrepBoard(targetSvg = null)'),
     'renderPrepBoard debe soportar renderizar en svg ampliado'
+  );
+  assert.ok(
+    appJs.includes('layout.append(pitch, controls);'),
+    'arrangeClaudePrepEditor debe colocar la pizarra primero en el orden visual'
+  );
+  assert.ok(
+    appJs.includes('controls.prepend(slotsPanel);'),
+    'arrangeClaudePrepEditor debe anteponer los desplegables de puestos para que queden visibles'
+  );
+  assert.ok(
+    !appJs.includes('details.open = prepDraft.some'),
+    'No debe ocultar los desplegables en un details plegado'
   );
 });
