@@ -1017,11 +1017,15 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Integración completa de los ejercicios del catálogo con normalización de taxonomía F7.
    - La función `matchesDimension` evalúa tanto categorías como contenidos, objetivos y descripciones, permitiendo filtrar fielmente por cualquier dimensión metodológica de Fútbol 7.
 
-3. **Corrección de Flechas Tácticas y Leyenda (Eliminación de bultos y grosores excesivos):**
-   - **Causa raíz:** En `css/claude-entreno.css`, reglas globales con `!important` inflaban `.tac-arrow` a grosores de 2.8px y 3.2px, y forzaban `stroke-linecap: round !important;`. Al tener los iconos de herramientas `viewBox="0 0 32 18"`, 3.2px convertía las flechas en salchichas gigantes. Además, el cap redondeado sobresalía por delante del triángulo del marker generando un bulto visible en la punta.
-   - **Solución implementada:**
-     - En `js/tactics.js`: Los markers SVG usan `markerWidth="4" markerHeight="4" refX="1.2" refY="2"` con triángulo `M0 0.6 L3.6 2 L0 3.4z`. El trazo termina en `refX="1.2"` dentro de la base del triángulo y la punta en `x=3.6` queda 100% limpia, afilada y sin artefactos.
-     - En `css/claude-entreno.css`: Se eliminaron los grosores gigantes. Se fijó `stroke-linecap: butt !important;` y grosores estilizados proporcionales (Pase 1.4px, Movimiento 1.3px, Conducción 1.6px, Sprint 1.5px, Tiro 1.8px; e iconos de leyenda a 1.2px - 1.5px).
+3. **Corrección Definitiva de Flechas Tácticas y Leyenda Autocontenida (Eliminación de bultos y desbordamientos):**
+   - **Causa raíz de la deformación colosal en la leyenda (`media_1790844885292.png`):**
+     - En `styles.css:18`, la regla `.tactic-board svg { display: block; width: 100%; aspect-ratio: 1; }` aplicaba a **todos** los elementos `<svg>` contenidos dentro de `<figure class="tactic-board">`.
+     - Al estar la leyenda `<p class="board-legend">` dentro de `<figure class="tactic-board">`, cada icono de flecha recibía `width: 100%`, expandiéndose a más de 400px de ancho y creando flechas monstruosas.
+   - **Solución implementada («Otra Forma» radical y autocontenida):**
+     - En `js/tactics.js`: Se desacopló la leyenda de los markers SVG con la nueva función `renderLegendArrow(kind)`. Esta función renderiza un SVG puro de `28×14px` con punta directa `<polygon points="18,3.5 26,7 18,10.5" fill="...">`, sin `<marker>`, sin `<defs>`, con estilos inline `!important` inmutables y colores canónicos (`#2563eb` Pase, `#4b5563` Movimiento, `#8b5cf6` Conducción, `#dc2626` Disparo, `#f59e0b` Sprint).
+     - En `styles.css`: Se restringió la regla al SVG del campo táctico exclusivamente con `.tactic-board > svg:first-child`, y se añadieron selectores estrictos para `.board-legend svg` y `svg.tactic-legend-arrow` fijando `width: 28px !important; height: 14px !important;`.
+     - En `css/claude-entreno.css`: Se reforzaron las reglas de la leyenda con máxima especificidad.
+     - En `tests/tactics.test.js`: Se blindó la renderización verificando la clase `tactic-legend-arrow`, el polígono directo y las dimensiones exactas.
 
 4. **Sincronización Exacta entre Vista Previa en Pantalla e Impresión A4:**
    - **Causa anterior:** Los estilos de la hoja (`.cb-print-columns-grid`, `.cb-print-col`, `.cb-print-card`, `.cbx-print-step-item`, etc.) estaban encerrados exclusivamente dentro de `@media print` en `styles-redesign.css`. Al abrir la vista previa en pantalla dentro de CampoBase (`#cb-print-root`), el navegador no aplicaba el grid y el contenido se colapsaba en una sola columna vertical continua con textos desproporcionados.
@@ -1034,4 +1038,13 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - **Solución:** Se corrigió `isMobileDevice()` para detectar únicamente dispositivos táctiles móviles reales (teléfonos iOS/Android). Al pulsar `«🖨️ Imprimir / Guardar PDF»`, se ejecuta `window.print()` directamente sin bloqueos.
    - Se independizó el botón `«📄 Abrir Ficha A4»` con fondo azul `#2563eb` y texto blanco nítido, eliminando el conflicto de clases `.primary` con colores personalizados.
    - Se desvinculó el cierre prematuro en `afterprint`: cerrar o cancelar el diálogo de impresión del navegador mantiene la vista previa en pantalla, permitiendo al usuario revisarla y pulsar `✕ Salir` o presionar la tecla `Escape` cuando desee salir.
+
+6. **Adopción Metodológica de Spec-Driven Development (SDD):**
+   - Implementación de la jerarquía de especificaciones solicitada por el usuario:
+     - `docs/constitution.md`: Principios fundacionales inmutables (Local-First IndexedDB, 0 € coste de almacenamiento, cero dependencias runtime pesadas, 100% tests en verde, diseño Claude A4 intacto).
+     - `specs/001-tacticas-leyenda-impresion-a4/`:
+       - `spec.md`: Especificación formal de requisitos funcionales y criterios de aceptación.
+       - `plan.md`: Plan de arquitectura técnica, aislamiento y control de regresión.
+       - `tasks.md`: Desglose atómico de tareas con trazabilidad y verificación.
+
 
