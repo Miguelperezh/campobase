@@ -1453,6 +1453,23 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - **656/656 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
    - Service worker actualizado a `campobase-v2.44.0-...-20261002-v73-preview-top-hoy-quick-buttons-fix`.
 
+### 34. Entrega v74 (02/10/2026) — Blindaje Responsivo y Fluidez en Vista Móvil (< 760px / iPhone / Android)
+1. **Ajustes y Rejilla a Columna Única en Móviles (`styles-redesign.css`):**
+   - **Diagnóstico:** La regla `body.cb-redesign-active .settings-grid` forzaba `grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)) !important;` fuera de media queries. En pantallas móviles estrechas (< 380px, como iPhone de 375px/390px o Android de 360px), el ancho mínimo de 380px provocaba un ligero desbordamiento horizontal.
+   - **Solución:** Se aplicó `@media (max-width: 760px) { body.cb-redesign-active .settings-grid { grid-template-columns: 1fr !important; gap: 1rem !important; } }`, garantizando una lectura vertical holgada, sin recortes y perfectamente adaptada al 100% del viewport móvil.
+
+2. **Desplazamiento Táctil en Píldoras de Previsualización (`.cbx-preview-tabs`):**
+   - Se añadió `flex-shrink: 0 !important;` a `.cbx-preview-tab-btn` y `-webkit-overflow-scrolling: touch !important;` a `.cbx-preview-tabs`, asegurando que las 6 pestañas de previsualización (Marcador, Hoy, Convocatoria, Lanzadores, Staff, Pizarra) se desplacen con suavidad táctil sin comprimir su texto en pantallas pequeñas.
+
+3. **Adaptación de Cabecera de Marcador en Teléfonos (< 480px):**
+   - En pantallas ultracompactas, `#preview-scoreboard-header` ajusta sus paddings a `10px 8px` y las píldoras de «A favor» / «En contra» a `padding: 3px 7px; font-size: 11px;`, evitando solapamientos entre escudos, nombres y marcadores.
+
+4. **Pruebas y Verificación:**
+   - Test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` para asegurar las reglas móviles de `.settings-grid`, `.cbx-preview-tab-btn` y scroll táctil.
+   - **657/657 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v74-mobile-settings-grid-responsive-fix`.
+
+
 
 
 

@@ -160,3 +160,11 @@ test('index.html y css/claude-hoy.css sitúan la previsualización arriba y hace
     '.today-pending button debe usar var(--btn2)');
 });
 
+test('styles-redesign.css garantiza la adaptación fluida a columna única en pantallas móviles', () => {
+  const redesignCss = fs.readFileSync('styles-redesign.css', 'utf8');
+  assert.match(redesignCss, /@media\s*\(max-width:\s*760px\)\s*\{\s*body\.cb-redesign-active \.settings-grid\s*\{[^}]*grid-template-columns:\s*1fr !important/);
+  assert.match(redesignCss, /\.cbx-preview-tab-btn\s*\{[^}]*flex-shrink:\s*0 !important/);
+  assert.match(redesignCss, /\.cbx-preview-tabs\s*\{[^}]*-webkit-overflow-scrolling:\s*touch !important/);
+});
+
+
