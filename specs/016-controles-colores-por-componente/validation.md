@@ -11,3 +11,10 @@
 - Errores de alcance de variables cardBorder y bottomNav corregidos para que la aplicación del tema no se interrumpa.
 
 Main original se conserva en 7e86fc43. No se modifica producción ni Supabase. La validación final visual corresponde al usuario sobre la URL aislada.
+
+## Despliegue aislado
+- Revisión de preview: 4329560. GitHub Pages completado correctamente.
+- URL: https://miguelperezh.github.io/campobase-preview/v2/?revision=4329560
+- Marcador público source-commit.txt comprobado: 9ad20c14.
+- Paquete final: prueba de navegador superada con cero escrituras remotas.
+- main original sigue en 7e86fc43785530409ed2e7da60e4cf39255987d9.

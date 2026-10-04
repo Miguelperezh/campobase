@@ -7,4 +7,4 @@
 - [x] Ancho de acciones de sesiones.
 - [x] Comprobación de colores reales, persistencia y ancho en navegador.
 - [x] Pruebas relacionadas y comprobación de sintaxis.
-- [ ] Despliegue aislado verificado y URL entregada.
+- [x] Despliegue aislado verificado y URL entregada.
