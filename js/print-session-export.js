@@ -843,8 +843,14 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
       const imgData = canvas.toDataURL('image/jpeg', 0.88);
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const finalHeight = Math.min(imgHeight, 297);
-      doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, finalHeight);
+      if (imgHeight > 297) {
+        const scaleFactor = 297 / imgHeight;
+        const scaledWidth = imgWidth * scaleFactor;
+        const xOffset = Math.max(0, (210 - scaledWidth) / 2);
+        doc.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, 297);
+      } else {
+        doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      }
     }
 
     return doc.output('blob');

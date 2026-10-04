@@ -486,9 +486,10 @@ export function renderTacticBoard(tactic = {}, options = {}) {
     ? Boolean(options.showOpponent)
     : (t.showOpponent !== undefined ? Boolean(t.showOpponent) : true);
   if (showOpponent) {
-    for (let i = 0; i < (t.opponent || []).length; i++) {
-      const p = t.opponent[i];
-      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${xml(p.n)}</text></g>`);
+    const opps = (t.opponent && t.opponent.length) ? t.opponent : (t.format === 'F11' ? F11_OPPONENT : F7_OPPONENT);
+    for (let i = 0; i < opps.length; i++) {
+      const p = opps[i];
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${xml(p.n)}</text></g>`);
     }
   }
   const ball = t.ball || { x: 50, y: 50 };

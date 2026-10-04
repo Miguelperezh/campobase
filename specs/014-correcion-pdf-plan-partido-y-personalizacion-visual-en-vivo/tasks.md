@@ -1,0 +1,8 @@
+- [x] **Tarea 1**: Ajustar motor de maquetación y paginación en `js/print-match-plan.js` y `js/print-session-export.js` para evitar cortes y desbordamientos en hojas A4, soportando cualquier número de cambios por ventana.
+- [x] **Tarea 2**: Garantizar que el cálculo de minutos en `js/match-moments.js`, `js/reparto-plan.js` y `js/print-match-plan.js` calcule con exactitud matemática los minutos reales en cualquier escenario (desde 1 cambio puntual hasta rotación completa de 7 jugadores) sobre los 70′ oficiales.
+- [x] **Tarea 3**: Habilitar en `js/app.js` la generación y ajuste interactivo del plan por tramos directamente desde Convocatoria.
+- [x] **Tarea 4**: Añadir en `index.html` controles dedicados con previsualización en vivo inmediata para Especialistas/Lanzadores, Dorsales y Botón de WhatsApp.
+- [x] **Tarea 5**: Integrar variables de personalización en `js/app.js` (`applyCustomTheme`) y CSS (`css/claude-plantilla.css`, `css/claude-partido.css`, `css/claude-hoy.css`, `css/claude-entreno.css`).
+- [x] **Tarea 6**: Crear suite de tests `tests/pdf-plan-and-live-preview.test.js` y verificar que pase al 100%.
+- [x] **Tarea 7**: Ejecutar verificación completa `npm run check && npm test` asegurando 0 errores sintácticos y todos los tests en verde (675 tests superados).
+- [x] **Tarea 8**: Documentar la Entrega v78 en `agente.md` y actualizar `tasks.md`.

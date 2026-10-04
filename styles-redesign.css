@@ -2758,18 +2758,18 @@ html[data-theme-font="pure-white"], body[data-theme-font="pure-white"] { --cb-fo
 html[data-theme-font="navy"], body[data-theme-font="navy"] { --cb-font-custom-color: #0a1c36; }
 html[data-theme-font="high-contrast"], body[data-theme-font="high-contrast"] { --cb-font-custom-color: #000000; }
 
-body.cb-redesign-active[data-has-custom-font-color="true"] h1,
-body.cb-redesign-active[data-has-custom-font-color="true"] h2,
-body.cb-redesign-active[data-has-custom-font-color="true"] h3,
-body.cb-redesign-active[data-has-custom-font-color="true"] h4,
-body.cb-redesign-active[data-has-custom-font-color="true"] h5,
-body.cb-redesign-active[data-has-custom-font-color="true"] h6,
-body.cb-redesign-active[data-has-custom-font-color="true"] p,
-body.cb-redesign-active[data-has-custom-font-color="true"] label,
-body.cb-redesign-active[data-has-custom-font-color="true"] select,
-body.cb-redesign-active[data-has-custom-font-color="true"] summary,
-body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-body.cb-redesign-active[data-has-custom-font-color="true"] textarea,
+body.cb-redesign-active[data-has-custom-font-color="true"] h1:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h2:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h3:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h5:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h6:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] select:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] summary:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] textarea:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-name h3,
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-name p,
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-data strong,
@@ -2785,8 +2785,8 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .topbar-brand h1,
 body.cb-redesign-active[data-has-custom-font-color="true"] .card,
 body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
 body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
-body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text):not(.cb-preview-badge),
-body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cb-print-sheet *) {
+body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn),
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token) {
   color: var(--cb-font-custom-color) !important;
 }
 
@@ -2997,8 +2997,8 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score
 .staff-wa-btn {
   display: inline-flex;
   align-items: center;
-  background: #25d366;
-  color: #ffffff !important;
+  background: var(--wa-bg, #25d366);
+  color: var(--wa-ink, #053b1d) !important;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -6006,8 +6006,30 @@ body.cb-redesign-active .secondary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary,
 body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
-body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary *,
+body.cb-redesign-active button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print),
+body.cb-redesign-active button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print) *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print),
+body.cb-redesign-active[data-has-custom-font-color="true"] button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print) *,
+body.cb-redesign-active .button:not(.primary):not(.danger),
+body.cb-redesign-active[data-has-custom-font-color="true"] .button:not(.primary):not(.danger) {
   color: var(--btn2Ink, #0f172a) !important;
+}
+
+body.cb-redesign-active button[class*="open-whatsapp"],
+body.cb-redesign-active button[class*="open-whatsapp"] *,
+body.cb-redesign-active .open-whatsapp-callup,
+body.cb-redesign-active .open-whatsapp-callup *,
+body.cb-redesign-active .open-whatsapp-session,
+body.cb-redesign-active .open-whatsapp-session *,
+body.cb-redesign-active .open-whatsapp-player,
+body.cb-redesign-active .open-whatsapp-player *,
+body.cb-redesign-active .staff-wa-btn,
+body.cb-redesign-active .staff-wa-btn *,
+body.cb-redesign-active [class*="whatsapp-btn"],
+body.cb-redesign-active [class*="whatsapp-btn"] * {
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, #053b1d) !important;
 }
 
 body.cb-redesign-active #manual-refresh,

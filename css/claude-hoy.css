@@ -49,7 +49,7 @@ body.cb-redesign-active #hoy button.secondary *,
 body.cb-redesign-active #hoy .cbx-btn-secondary * {
   color: var(--btn2Ink, #0f172a) !important;
 }
-body.cb-redesign-active #hoy [class*="open-whatsapp"] { background:#25d366 !important; color:#053b1d !important; border:0 !important; }
+body.cb-redesign-active #hoy [class*="open-whatsapp"] { background: var(--wa-bg, #25d366) !important; color: var(--wa-ink, var(--waInk, #053b1d)) !important; border:0 !important; }
 body.cb-redesign-active #hoy .today-pending {
   padding: 12px !important;
   background: var(--cardBg, #ffffff) !important;

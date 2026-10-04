@@ -18,7 +18,7 @@ body.cb-redesign-active #convocatorias .cbx-callup-help { margin: 0; padding: 11
 body.cb-redesign-active #convocatorias .cbx-callup-roster { margin: 0; padding: 0; list-style: none; }
 body.cb-redesign-active #convocatorias .cbx-callup-player { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; align-items: center; min-height: 49px; padding: 7px 15px; border-top: 1px solid var(--cbx-line); }
 body.cb-redesign-active #convocatorias .cbx-callup-player.is-out { background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0)); }
-body.cb-redesign-active #convocatorias .cbx-callup-number { display: grid; place-items: center; width: 32px; min-height: 32px; border-radius: 8px; color: var(--bnInk, #ffffff); background: var(--bn, var(--cbx-hero, #0a251b)); font: 900 15px var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-number { display: grid; place-items: center; width: 32px; min-height: 32px; border-radius: 8px; color: var(--dorsal-ink, var(--bnInk, #ffffff)) !important; background: var(--dorsal-bg, var(--bn, var(--cbx-hero, #0a251b))) !important; font: 900 15px var(--disp, var(--cbx-disp)) !important; font-family: var(--disp, var(--cbx-disp)) !important; }
 body.cb-redesign-active #convocatorias .cbx-callup-player.is-out .cbx-callup-number { background: color-mix(in srgb, var(--cardBg, #ffffff) 80%, var(--cardBorder, #e2e8f0)); color: var(--cardTitle, #64748b); }
 body.cb-redesign-active #convocatorias .cbx-callup-person { display: grid; min-width: 0; }
 body.cb-redesign-active #convocatorias .cbx-callup-person strong { color: var(--cardTitle, var(--cbx-ink, #0f172a)); font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
@@ -28,7 +28,7 @@ body.cb-redesign-active #convocatorias .cbx-callup-status.is-called { background
 body.cb-redesign-active #convocatorias .cbx-callup-status.is-excluded { background: #fce8ec; color: #be123c; }
 body.cb-redesign-active #convocatorias .cbx-callup-card > footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; padding: 12px 15px; border-top: 1px solid var(--cbx-line); }
 body.cb-redesign-active #convocatorias .cbx-callup-card > footer button { min-width: 0; min-height: 40px; padding: 7px 9px; border-radius: 10px; font-size: 11px; font-weight: 800; white-space: normal; }
-body.cb-redesign-active #convocatorias .cbx-callup-card > footer .open-whatsapp-callup { color: #073b29 !important; background: #20cc69 !important; }
+body.cb-redesign-active #convocatorias .cbx-callup-card > footer .open-whatsapp-callup { color: var(--wa-ink, var(--waInk, #073b29)) !important; background: var(--wa-bg, #20cc69) !important; }
 body.cb-redesign-active #convocatorias .cbx-callup-side { display: grid; gap: 16px; min-width: 0; }
 body.cb-redesign-active #convocatorias .cbx-callup-distribution, body.cb-redesign-active #convocatorias .cbx-callup-plan { padding: 16px 18px !important; }
 body.cb-redesign-active #convocatorias .cbx-callup-distribution > small { color: var(--btn, var(--cbx-acc, #059669)); font-size: 11px; font-weight: 850; letter-spacing: .07em; text-transform: uppercase; }
@@ -509,10 +509,10 @@ body.cb-is-printing #cb-print-root.cb-print-match-plan-root,
   max-height: none;
   height: auto;
   overflow: visible;
-  padding: 28px 34px;
+  padding: 22px 28px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   background: #ffffff;
   color: #0f172a;
   box-sizing: border-box;
@@ -727,14 +727,17 @@ body.cb-is-printing #cb-print-root.cb-print-match-plan-root,
 }
 
 .cbx-pmp-starter-name {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   color: #0f172a;
-  line-height: 1.2;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
   max-width: 100%;
+  min-height: 24px;
 }
 
 .cbx-pmp-bench-banner {
@@ -830,13 +833,29 @@ body.cb-is-printing #cb-print-root.cb-print-match-plan-root,
   flex-direction: column;
 }
 
+.cbx-pmp-moment-changes.is-multi-changes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 6px;
+  padding: 4px 6px;
+}
+
+.cbx-pmp-moment-changes.is-multi-changes .cbx-pmp-change-row {
+  border-bottom: none;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 5px;
+  padding: 3px 6px;
+}
+
 .cbx-pmp-change-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 5px 10px;
-  font-size: 11.5px;
+  gap: 4px;
+  padding: 3.5px 8px;
+  font-size: 11px;
+  line-height: 1.25;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -1641,7 +1660,8 @@ body.cb-redesign-active .secondary:not([disabled]) {
 
 body.cb-redesign-active [id*="whatsapp"],
 body.cb-redesign-active .whatsapp-btn {
-  color: var(--waInk, #053b1d);
+  background: var(--wa-bg, #25d366);
+  color: var(--wa-ink, var(--waInk, #053b1d));
 }
 
 body.cb-redesign-active .round-badge,
@@ -1709,17 +1729,44 @@ body.cb-redesign-active .season-round-tag {
 #cbx-tactics-pitch-board .cbx-tac-player-chip,
 #cbx-tactics-pitch-board [data-team="1"],
 .tac-player circle,
-.live-tactics .tac-player circle {
+.live-tactics .tac-player circle,
+#prep-board .tac-player circle {
   fill: var(--tb-team, #c8102e) !important;
-  background: var(--tb-team, #c8102e) !important;
+  stroke: #ffffff !important;
+  stroke-width: 0.8 !important;
+}
+
+.tac-player text,
+.tac-player-num,
+.live-tactics .tac-player-num,
+#cbx-tactics-pitch-board .tac-player-num,
+#prep-board .tac-player-num {
+  fill: #ffffff !important;
+  font-weight: 900 !important;
+  text-anchor: middle !important;
 }
 
 #cbx-tactics-pitch-board .cbx-tac-rival-marker,
 #cbx-tactics-pitch-board [data-rival="1"],
 .tac-opponent circle,
-.live-tactics .tac-opponent circle {
-  fill: var(--tb-rival, #111827) !important;
-  background: var(--tb-rival, #111827) !important;
+.live-tactics .tac-opponent circle,
+#cbx-tactics-pitch-board .tac-opponent circle,
+#prep-board .tac-opponent circle {
+  fill: var(--tb-rival, #1e293b) !important;
+  stroke: #ffffff !important;
+  stroke-width: 1.1px !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45)) !important;
+}
+
+.tac-opp-num,
+.tac-opponent text,
+.live-tactics .tac-opp-num,
+#cbx-tactics-pitch-board .tac-opp-num,
+#prep-board .tac-opp-num {
+  fill: #ffffff !important;
+  font-size: 3.6px !important;
+  font-weight: 900 !important;
+  text-anchor: middle !important;
 }
 
 .tac-legend-team {
@@ -1727,11 +1774,44 @@ body.cb-redesign-active .season-round-tag {
 }
 
 .tac-legend-rival {
-  color: var(--tb-rival, #111827) !important;
+  color: var(--tb-rival, #1e293b) !important;
 }
 
 .tac-arrow {
   stroke: var(--tb-arrow, #facc15) !important;
+}
+
+.live-rival-btn {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  padding: 5px 11px !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}
+
+.cbx-context-gear-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--cardBorder, #cbd5e1) !important;
+  background: var(--cardBg, #ffffff) !important;
+  color: var(--cardTitle, #334155) !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: transform 0.15s, background-color 0.15s !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  flex-shrink: 0 !important;
+}
+.cbx-context-gear-btn:hover {
+  transform: rotate(30deg) scale(1.08) !important;
+  background: var(--bg, #f1f5f9) !important;
 }
 
 /* Estilos de la Barra Lateral personalizada */

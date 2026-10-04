@@ -1525,3 +1525,117 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Se añadió un botón flotante persistente `.cb-print-fab-close` con z-index ultra-prioritario (`2147483647`) fijado en la pantalla que permite salir de cualquier ficha A4 o vista de impresión en dispositivos táctiles en cualquier momento sin depender del scroll.
    - Se verificaron 666/666 tests unitarios y de integración pasando al 100%.
 
+
+### 38. Entrega v78 (04/10/2026) — Corrección de PDF de Plan de Partido, Rotación Masiva en Alevines (1 a 7 Cambios), Edición de Tramos en Convocatoria y Personalización Visual En Vivo (Especialistas, Dorsales y WhatsApp)
+
+1. **Corrección Definitiva del PDF de Plan de Partido y Motor de Paginación (`js/print-match-plan.js`, `js/print-session-export.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** El PDF de plan de partido se cortaba físicamente a la mitad del minuto 50′ (en la caja de «Relevo bajo palos»). El motivo era doble: en `generatePdfBlob` se aplicaba un recorte rígido `Math.min(imgHeight, 297)` que amputaba cualquier exceso vertical; y la Hoja 1 (`cbx-pmp-page-1`) desbordaba los 297 mm estándar cuando existían 4 o más momentos con múltiples sustituciones apiladas verticalmente.
+   - **Solución implementada:**
+     - **Paginación dinámica de 2 o 3 hojas:** Si el plan cuenta con `<= 3` ventanas de cambio, se maqueta en 2 páginas (`cbx-pmp-page-1` y `cbx-pmp-page-2`). Si cuenta con `> 3` ventanas, el motor pagina automáticamente a 3 hojas A4 limpias (`cbx-pmp-page-1`, `cbx-pmp-page-1b` y `cbx-pmp-page-2`), repartiendo los momentos y actualizando la numeración del pie a `(Página 1 de 3)`, `(Página 2 de 3)` y `(Página 3 de 3)`.
+     - **Soporte de rotación masiva en Alevines (de 1 a todos los jugadores):** En fútbol 7 / Alevines las sustituciones son volantes y reglamentariamente un entrenador puede sustituir desde 1 jugador hasta el bloque completo de 7 a la vez. Cuando un momento tiene 4 o más cambios simultáneos, se asigna la clase `.is-multi-changes`, maquetando los pares de sustitución en una rejilla fluida de 2 columnas para no desbordar la hoja.
+     - **Escalado proporcional preventivo en `generatePdfBlob`:** Se eliminó el truncado forzado por un escalado matemático `if (imgHeight > 297) { const scaleFactor = 297 / imgHeight; ... }`, garantizando que ningún texto, caja ni milímetro de contenido sea recortado al generar el PDF.
+
+2. **Cálculo de Minutos Reales y Edición Interactiva de Tramos en Convocatoria (`js/app.js`, `js/match-moments.js`):**
+   - **Diagnóstico:** En la vista de Convocatoria, la tarjeta «Plan por tramos» mostraba «No hay cambios previstos» con barras estáticas de 0′ y 70′ si no se había configurado previamente en Preparación, y no permitía generar o ajustar la rotación desde la propia convocatoria.
+   - **Solución implementada:**
+     - En `js/app.js`, se implementó `generateAndSaveCallupRotation(callupId, matchId)`, que calcula la rotación equitativa con `buildAutoPlan()`, normaliza y guarda los momentos en la colección `preparaciones`, refresca el estado y actualiza Convocatoria en un solo clic.
+     - En la tarjeta `cbx-callup-plan` se incorporó el botón `⚡ Generar rotación equitativa` cuando no hay cambios, y el botón `✏️ Ajustar cambios en Preparación` cuando ya existen, permitiendo una transición fluida sin bloqueos.
+     - En `js/match-moments.js`, `normalizeMoments()` se fortaleció para extraer la alineación inicial tanto de `prep.team` como de `prep.moments[0].team`, asegurando coherencia matemática exacta sobre los 70′ en F7 (490 minutos-jugador repartidos equitativamente).
+
+3. **Personalización Cromática Completa y Previsualizaciones En Vivo WYSIWYG (`index.html`, `js/app.js`, `css/claude-plantilla.css`, `css/claude-partido.css`, `css/claude-hoy.css`, `css/claude-entreno.css`):**
+   - **Diagnóstico:** El usuario no disponía de previsualizaciones inmediatas para ver cómo cambiaba cada elemento en directo mientras ajustaba colores. Los textos y fondo de 1.er lanzador eran fijos e inmutables, los colores de los dorsales de los jugadores no tenían controles propios, y el botón de WhatsApp tenía colores fijos con `!important` en el CSS que impedían personalizarlo.
+   - **Solución implementada:**
+     - **Nueva tarjeta de Especialistas y Balón Parado (`#specialists-colors-card`):** Controles independientes para Fondo de 1.er lanzador y capitanes (`--sp-lead-bg`), Texto de 1.er lanzador (`--sp-lead-ink`), Fondo de 2.º / 3.er lanzador (`--sp-sub-bg`) y Texto de 2.º / 3.er lanzador (`--sp-sub-ink`), con su botón de restablecimiento `#cbx-reset-specialists-btn`.
+     - **Previsualización en vivo (WYSIWYG) de Especialistas (`#cbx-specialists-preview-box`):** Muestra reactiva instantánea que dibuja una tarjeta de Penaltis con 1.er lanzador (Mateo Moyano, dorsal 7) y 2.º lanzador (Lucas Santana, dorsal 10), reaccionando a cada movimiento del selector de color en tiempo real.
+     - **Personalización y Previsualización de Dorsales:** Controles de fondo (`--dorsal-bg`) y texto/número (`--dorsal-ink`), acompañados de la caja `#cbx-preview-dorsal-box` con insignia de muestra en vivo, conectando las insignias de dorsal de Plantilla, Convocatoria y Asistencia a estas variables.
+     - **Personalización y Previsualización de WhatsApp:** Controles de Fondo (`--wa-bg`) y Texto (`--wa-ink`) con muestra en vivo reactiva (`#cbx-preview-wa-sample`). Se eliminaron los valores `#053b1d` / `#25d366` fijos con `!important` en `css/claude-hoy.css`, `css/claude-partido.css`, `css/claude-plantilla.css` y `css/claude-entreno.css`, enlazando todos los botones de WhatsApp de la app a las variables configurables.
+     - **Integración en `EXTENDED_SWATCH_CONFIGS` y `applyCustomTheme`:** Registro completo con paletas armonizadas, sincronización bidireccional y actualización reactiva inmediata en el DOM.
+
+4. **Verificación y Pruebas Automatizadas:**
+   - Creada suite de pruebas unitarias y de integración `tests/pdf-plan-and-live-preview.test.js` con 11 tests cubriendo paginación dinámica (2 y 3 hojas), rotación masiva en 2 columnas, cálculo de minutos reales, botones de tramos en convocatoria, controles en index.html, variables de tema y reglas CSS.
+   - **677/677 tests pasando al 100% en `npm test`** y **0 errores en `npm run check`**.
+
+
+### 39. Entrega v79 (04/10/2026) — Visibilidad de Rival en Pizarras, Desacoplamiento de Color de Fuente sobre Botones con Previsualización En Vivo y Perfeccionamiento del Plan de Partido A4
+
+1. **Visibilidad Inmediata del Rival («Mostrar rival») en Tácticas, Partido en Vivo y Preparación (`js/tactics.js`, `js/app.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Al alternar el interruptor «Mostrar rival» en la pestaña Tácticas, en Partido en vivo o en Preparación de partido, las piezas del rival no se mostraban o quedaban invisibles debido a drafts inicializados con arreglos `opponent: []` vacíos, SVG sin atributos de contraste explícitos sobre el césped verde oscuro y variables de color sin trazado.
+   - **Solución implementada:**
+     - En `js/tactics.js` (`renderTacticBoard`), cuando `showOpponent` es activo, si `t.opponent` no está definido o está vacío, se aplica automáticamente la plantilla de adversario oficial (`F11_OPPONENT` o `F7_OPPONENT`), renderizando cada pieza con atributos SVG explícitos: `fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"` y número con `fill="#ffffff" font-weight="900"`.
+     - En `js/app.js`, en `renderClaudeTactics()`, si `claudeTacticShowRival` está activo y `claudeTacticDraft.opponent` está vacío, se puebla de inmediato desde `getAspectBoardData(..., true).opponent`.
+     - En `js/app.js`, al pulsar `#cbx-toggle-rival-btn`, se conmuta el estado y se asegura que `claudeTacticDraft.opponent` contenga las 7 fichas rivales.
+     - En `js/app.js` (`renderTacticsBoardSvg` para Partido en vivo), se incorporó el fallback `oppList = (t.opponent && t.opponent.length) ? t.opponent : LIVE_OPPONENT` con stroke y texto `#ffffff` de alta nitidez.
+     - En `js/app.js` (`renderPrepBoard` y `wirePrepEditor` para Preparación de partido), se conectó `prepShowRival` con botones `#prep-toggle-rival-btn` y `#prep-toggle-rival-pill`, sincronizando `aria-pressed`, clases `.active` y repintado de piezas con `stroke="#ffffff"`.
+     - En `css/claude-partido.css`, se blindaron selectores para `.tac-opponent circle`, `.live-tactics .tac-opponent circle`, `#cbx-tactics-pitch-board .tac-opponent circle` y `#prep-board .tac-opponent circle`, garantizando visibilidad bajo cualquier tema.
+
+2. **Desacoplamiento del Color de Fuente de la App sobre Botones y Previsualización En Vivo (`styles-redesign.css`, `index.html`, `js/app.js`):**
+   - **Diagnóstico:** Al seleccionar un color de texto general de la aplicación (`[data-has-custom-font-color="true"]`), las reglas globales de CSS sobre `span`, `strong`, `h1`-`h6` invadían los botones de la interfaz, sobrescribiendo el color del texto y provocando que botones primarios, secundarios o de WhatsApp quedaran ilegibles. Asimismo, no existía una caja de previsualización en vivo justo al lado o debajo del selector de color de fuente general ni de los botones secundarios.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se excluyeron explícitamente todos los botones y sus descendientes de las reglas de fuente personalizada: `:not(button):not(button *):not(.secondary):not(.secondary *):not(.primary):not(.primary *):not(#cb-print-root *):not(.cb-print-sheet *)`.
+     - Se reforzaron reglas con máxima especificidad para que los botones primarios utilicen estrictamente `--btnInk`, los secundarios `--btn2Ink` y los botones de WhatsApp `var(--wa-ink, #053b1d)` con fondo `var(--wa-bg, #25d366)`.
+     - En `index.html`, se incorporó la caja `#cbx-font-preview-box` justo debajo de los swatches de «Color de fuente / Texto de la app», con muestra tipográfica `#cbx-font-preview-sample` y valor hexadecimal `#cbx-font-preview-val`.
+     - En `index.html` (`#banners-buttons-card`), se incorporó la muestra `#cbx-preview-banner-btn2` para previsualizar botones secundarios en vivo.
+     - En `js/app.js` (`updateThemePreviewBox`), se conectó la reactividad instantánea para que tanto `#cbx-font-preview-box` como `#cbx-preview-banner-btn2` actualicen sus colores en tiempo real ante cualquier interacción del usuario.
+
+3. **Perfeccionamiento del Plan de Partido A4 Impreso (`js/print-match-plan.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Los minutos de los jugadores se calculaban erróneamente porque una regla arbitraria reducía la duración a 50′ cuando había cambios antes del minuto 25. En las tarjetas de los 7 titulares iniciales, los nombres se recortaban con puntos suspensivos («Carlos Campil...») debido a `white-space: nowrap; text-overflow: ellipsis`. Además, si se imprimía el plan sin haber guardado cambios en la preparación, los 7 titulares figuraban con 70′ y los suplentes con 0′.
+   - **Solución implementada:**
+     - En `js/print-match-plan.js`, se eliminó el truncado arbitrario a 50′ o 60′: en Alevines F7 la duración oficial de 70′ (2 x 35′) y en F11 de 90′ (2 x 45′) se preservan íntegramente. Solo se asigna descanso a 25′ si explícitamente existe un cambio al descanso en el minuto 25 exacto y ningún cambio posterior.
+     - Si se imprime una ficha sin preparación previa guardada pero habiendo suplentes disponibles, el sistema deriva automáticamente una rotación equitativa mediante `buildAutoPlan()`, garantizando que todos los jugadores convocados figuren con minutos reales y justos en la tabla y en el cronograma.
+     - Si existe una preparación guardada por el entrenador con 0 sustituciones, se respeta fielmente su decisión indicando con claridad en el cronograma que los titulares disputarán el partido completo.
+     - En `css/claude-partido.css` (`.cbx-pmp-starter-name`), se eliminó `white-space: nowrap; text-overflow: ellipsis;` y se configuró `-webkit-line-clamp: 2` con salto de línea limpio y altura mínima asegurada, permitiendo que nombres completos como «Carlos Campillo» o «Alejandro Pedrós» se lean íntegramente en 2 líneas sin recortar ni un solo carácter.
+     - En `js/print-match-plan.js`, se implementó la función auxiliar `getPrevMoment(m)` para calcular sin desfases de índice las diferencias de cada ventana entre la Hoja 1 y la Hoja 2.
+
+4. **Verificación y Regresiones Cero:**
+   - **677/677 tests unitarios y de integración pasando al 100%** en la suite de Node.js (`npm test`).
+   - **0 errores de sintaxis** en `npm run check`.
+   - Cero regresiones en cronómetro de partido en vivo, marcador, goles, incidencias, actas ni valoraciones.
+
+
+### 40. Entrega v80 (04/10/2026) — Sistema de Personalización Cromática Contextual (Tuerca ⚙️ In-Context), Visibilidad Completa de Rival en Pizarra en Vivo y Tácticas, y Blindaje de Contrastes en Dorsales y Botones de WhatsApp
+
+1. **Ajuste de Colores In-Context con Botón de Tuerca ⚙️ («en absolutamente todo») (`index.html`, `js/app.js`, `css/claude-partido.css`):**
+   - **Solicitud del usuario:** *"Creo que es mejor que cada cosa tenga su botón de ajustar colores de fondo y fuentes con un botón de tuerca de ajustes al lado, así mientras cambio lo veo, pero en absolutamente todo"*.
+   - **Solución implementada:**
+     - En `index.html`, se incorporó el diálogo nativo accesible `<dialog id="cbx-quick-color-dialog">` con cabecera dinámica, cuerpo interactivo de ajuste, botón de restablecimiento contextual y botón de cierre («✓ Listo»).
+     - Se crearon e integraron botones de tuerca `.cbx-context-gear-btn` en las cabeceras y tarjetas operativas de todas las pantallas de la aplicación:
+       - **Hoy:** Cabecera principal (`data-gear-target="banners"`).
+       - **Plantilla:** Cabecera de plantilla para dorsales (`data-gear-target="dorsales"`).
+       - **Lanzadores y Especialistas:** Encabezado de la tarjeta de lanzadores y capitanes (`data-gear-target="specialists"`).
+       - **Cuerpo Técnico:** Tarjeta de cuerpo técnico (`data-gear-target="whatsapp"`).
+       - **Convocatorias:** Cabecera de sección y cada tarjeta de convocatoria individual junto al contador y botón de WhatsApp (`data-gear-target="dorsales"` y `data-gear-target="whatsapp"`).
+       - **Partido en Vivo:** Cabecera de partido (`data-gear-target="live"`) y cabecera de la pizarra táctica en vivo (`data-gear-target="tactic-board"`).
+       - **Tácticas:** Encabezado de la pizarra táctica de Claude (`data-gear-target="tactic-board"`).
+       - **Preparación, Calendario, Asistencia, Ejercicios y Sesiones:** Cabeceras de sección para banners y botones de acción (`data-gear-target="banners"`).
+     - En `js/app.js`, se implementó `openQuickColorDialog(targetKind)` con soporte completo para:
+       - `dorsales`: Fondos de círculo (`dorsalBg`) y números (`dorsalInk`) con swatches de clubes y previsualización en vivo de dorsales 7 y 10.
+       - `whatsapp`: Fondo (`waBg`) y texto/icono (`waInk`) con muestra interactiva de botón de WhatsApp a técnico y convocatoria.
+       - `specialists`: Distintivos de 1.er lanzador/capitán (`spLeadBg`, `spLeadInk`), 2.º lanzador/suplente (`spSubBg`, `spSubInk`) y dorsal.
+       - `tactic-board`: Césped (`tbPitch`), líneas (`tbLines`), fichas de tu equipo (`tbTeam`), rival (`tbRival`) y flechas (`tbArrow`) con muestra de mini-campo táctico.
+       - `live`: Botones de gol a favor (`gfBg`, `gfInk`) y gol en contra (`gaBg`, `gaInk`).
+       - `banners`: Fondos y textos de cabecera (`bannerBg`, `bannerInk`), botones primarios (`btnBg`, `btnInk`) y secundarios (`btn2Bg`, `btn2Ink`).
+     - **Reactividad instantánea sin recarga ni cierre del selector:** Los cambios sobre los `<input type="color">` y swatches disparan inmediatamente `updateThemeProperty()`, actualizando las variables CSS en `:root` y `body`, la vista que se encuentra abierta de fondo y la previsualización dentro del modal en tiempo real.
+
+2. **Visibilidad Total y Alternancia del Rival en Partido en Vivo y en Tácticas (`js/app.js`, `js/tactics.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** En la pizarra de Partido en vivo faltaba el botón visible de «Mostrar rival» en cabecera y el intento de renderizarlo lanzaba un error de referencia `LIVE_OPPONENT is not defined`. En Tácticas, el draft no sincronizaba el oponente al alternar el botón.
+   - **Solución implementada:**
+     - En `js/app.js`, se importó `LIVE_OPPONENT` desde `./live-tactics.js`.
+     - En la pizarra de Partido en vivo, se ubicaron botones destacados `.live-rival-btn` tanto en el encabezado principal (junto a «⛶ Ampliar») como en la barra de selección de sistema y selector de táctica (`#${sc.p}-toggle-rival-head-btn` y `#${sc.p}-toggle-rival-btn`), sincronizados automáticamente con el estado `liveTacticsShowOpponent` y con etiquetas reactivas («👥 Mostrar rival» / «👥 Ocultar rival»).
+     - En `wireTacticsBoard(sc)`, se conectó la escucha y refresco inmediato del SVG tanto en la vista estándar como en la ampliada.
+     - En Tácticas (`wireEvents`), se corrigió el evento `#cbx-toggle-rival-btn` para inicializar el draft completo si aún no existía y poblar `claudeTacticDraft.opponent` desde `getAspectBoardData(..., true).opponent`.
+     - En `css/claude-partido.css`, se blindaron las fichas rivales `.tac-opponent circle` con borde blanco nítido (`stroke-width: 1.1px`) y filtro `drop-shadow(0 1px 2px rgba(0,0,0,0.45))` para que resalten con alto contraste sobre cualquier tono de césped.
+
+3. **Protección de Contraste en Dorsales y Botones de WhatsApp (`styles-redesign.css`, `css/claude-partido.css`, `css/claude-plantilla.css`):**
+   - **Diagnóstico:** Los números de los dorsales en Convocatoria y Plantilla se volvían negros sobre fondos oscuros debido a reglas de `data-has-custom-font-color="true"` sobre etiquetas `span`, y el botón de WhatsApp de Cuerpo técnico forzaba texto en rojo oscuro (`var(--cbx-hero)`) sobre fondo verde.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se excluyeron explícitamente de las reglas globales de tipografía: `.cbx-callup-number`, `[data-sp-dorsal]`, `.preview-sp-dorsal-circle`, `.dorsal-badge`, `.player-dorsal`, `.specialist-rank`, `.specialist-number`, `.staff-wa-btn`, `[class*="open-whatsapp"]`, `.cbx-context-gear-btn` y fichas tácticas.
+     - En `css/claude-partido.css`, se garantizó `color: var(--dorsal-ink, var(--bnInk, #ffffff)) !important;` y `background: var(--dorsal-bg, var(--bn, var(--cbx-hero, #0a251b))) !important;` para `.cbx-callup-number`.
+     - En `css/claude-plantilla.css`, `.staff-wa-btn` utiliza estrictamente `color: var(--wa-ink, #053b1d) !important;` y `background: var(--wa-bg, #25d366) !important;`.
+
+4. **Preservación Rigurosa y Verificación Automatizada:**
+   - Se mantuvo íntegro y sin alteraciones el motor de impresión de Plan de Partido A4, confirmado como óptimo por el usuario (*"la impresión está bien"*).
+   - Se preservó el cronómetro en directo, silbato, cálculo de minutos, goles, eventos y sustituciones sin ninguna alteración ni riesgo de regresión.
+   - **680/680 tests unitarios y de integración pasando al 100% en `npm test`**.
+   - **0 errores de sintaxis en `npm run check`**.
+
+

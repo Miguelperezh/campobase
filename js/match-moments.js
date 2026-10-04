@@ -53,8 +53,12 @@ export function plannedMinutes(moments, duration = 70) {
 }
 
 export function normalizeMoments(prep) {
-  const initial = { id: 'inicio', minute: 0, formation: prep.formacion || '1-3-2-1',
-    team: (prep.team || []).map((slot) => ({ ...slot })) };
+  const initialTeam = (Array.isArray(prep.team) && prep.team.length)
+    ? prep.team
+    : (Array.isArray(prep.moments) ? (prep.moments.find((m) => Number(m.minute) === 0)?.team || prep.moments[0]?.team || []) : []);
+  const initialFormation = prep.formacion || prep.moments?.find((m) => Number(m.minute) === 0)?.formation || prep.moments?.[0]?.formation || '1-3-2-1';
+  const initial = { id: 'inicio', minute: 0, formation: initialFormation,
+    team: initialTeam.map((slot) => ({ ...slot })) };
   const later = Array.isArray(prep.moments) ? prep.moments.filter((moment) => Number(moment.minute) > 0)
     .map((moment) => ({ id: moment.id, minute: Number(moment.minute),
       formation: moment.formation || initial.formation,

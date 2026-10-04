@@ -47,8 +47,8 @@ body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week {
   padding: 0 16px;
   border-radius: 12px;
   border: 0;
-  background: #25d366 !important;
-  color: #053b1d !important;
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, var(--waInk, #053b1d)) !important;
   font: 800 13px var(--cbx-ui) !important;
   cursor: pointer;
   display: inline-flex;
