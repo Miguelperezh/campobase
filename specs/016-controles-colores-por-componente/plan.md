@@ -1,0 +1,2 @@
+# Plan
+Reutilizar el configurador existente y su guardado. Completar variables por componente y ventanas. Aplicar preferencias concretas por encima de reglas antiguas de botones. Reaplicarlas tras renderizaciones sin modificar lógica funcional. Añadir un selector de botón concreto y separar navegación lateral/inferior. Comprobar con navegador offline, colores contrastados y recarga, en escritorio y móvil; publicar solo preview.

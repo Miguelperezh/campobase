@@ -1,3 +1,4 @@
+import { applyComponentColors, observeComponentColors, configurableButtons } from './theme-component-colors.js?v=color-controls-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -1812,13 +1813,13 @@ function renderClaudeCallup(callup) {
   }).join('') : '';
   const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
   return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
-    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
       <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
       <ul class="cbx-callup-roster">${roster}</ul>
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" aria-label="Modo del plan de cambios"><button type="button" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -7301,15 +7302,15 @@ const EXTENDED_SWATCH_CONFIGS = {
 const CAMPOBASE_VIEW_IDS = [
   'hoy', 'plantilla', 'cuerpo-tecnico', 'convocatorias',
   'partido', 'delegado', 'preparacion', 'calendario',
-  'asistencia', 'ejercicios', 'sesiones', 'tacticas', 'ajustes'
+  'asistencia', 'ejercicios', 'sesiones', 'tacticas', 'ajustes', 'exercise-detail', 'comunicador'
 ];
 
 function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, defaultBtn2, defaultBtn2Ink, defaultCardBg, defaultCardBorder, defaultFontColor) {
   const viewsData = theme?.views || {};
   CAMPOBASE_VIEW_IDS.forEach((viewId) => {
-    const viewEl = document.getElementById(viewId);
+    const viewEl = document.getElementById(viewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId]);
     if (!viewEl) return;
-    const v = viewsData[viewId] || {};
+    const v = viewsData[viewId] || (viewId === 'exercise-detail' ? viewsData.ejercicios : null) || {};
 
     const bn = v.bannerBg || theme?.bannerBg || defaultHero || '#0a251b';
     const bnInk = v.bannerInk || theme?.bannerInk || '#ffffff';
@@ -7341,12 +7342,20 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
 
     const todayMatchBg = v.todayMatchBg || bn;
     const todayMatchInk = v.todayMatchInk || bnInk;
+    const callupBtnBg = v.callupBtnBg || v.btnBg || btn;
+    const callupBtnInk = v.callupBtnInk || v.btnInk || btnInk;
     const callupHeaderBg = v.callupHeaderBg || bn;
     const callupHeaderInk = v.callupHeaderInk || bnInk;
     const callupBadgeBg = v.callupBadgeBg || 'rgba(255, 255, 255, 0.2)';
     const callupBadgeInk = v.callupBadgeInk || '#ffffff';
-    const callupOutBg = v.callupOutBg || btn;
-    const callupOutInk = v.callupOutInk || btnInk;
+    const callupOutBg = v.callupOutBg || '#ef4444';
+    const callupOutInk = v.callupOutInk || '#ffffff';
+    const planModeTrack = v.planModeTrack || 'color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0))';
+    const planModeBg = v.planModeBg || 'transparent';
+    const planModeInk = v.planModeInk || 'var(--cbx-muted, #64748b)';
+    const planModeActiveBg = v.planModeActiveBg || 'var(--cardBg, #ffffff)';
+    const planModeActiveInk = v.planModeActiveInk || 'var(--cardTitle, #0f172a)';
+
     const prepHeaderBg = v.prepHeaderBg || bn;
     const prepHeaderInk = v.prepHeaderInk || bnInk;
     const prepStatusBg = v.prepStatusBg || '#fff1d6';
@@ -7359,6 +7368,8 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     const editInk = v.editInk || btn2Ink;
     const completedBg = v.completedBg || '#f1f5f9';
     const completedInk = v.completedInk || '#0f172a';
+    const completedActiveBg = v.completedActiveBg || btn;
+    const completedActiveInk = v.completedActiveInk || btnInk;
     const calloutBg = v.calloutBg || 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))';
     const calloutInk = v.calloutInk || vFontColor;
 
@@ -7395,12 +7406,19 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
 
     viewEl.style.setProperty('--today-match-bg', todayMatchBg);
     viewEl.style.setProperty('--today-match-ink', todayMatchInk);
+    viewEl.style.setProperty('--callup-btn-bg', callupBtnBg);
+    viewEl.style.setProperty('--callup-btn-ink', callupBtnInk);
     viewEl.style.setProperty('--callup-header-bg', callupHeaderBg);
     viewEl.style.setProperty('--callup-header-ink', callupHeaderInk);
     viewEl.style.setProperty('--callup-badge-bg', callupBadgeBg);
     viewEl.style.setProperty('--callup-badge-ink', callupBadgeInk);
     viewEl.style.setProperty('--callup-out-bg', callupOutBg);
     viewEl.style.setProperty('--callup-out-ink', callupOutInk);
+    viewEl.style.setProperty('--plan-mode-track', planModeTrack);
+    viewEl.style.setProperty('--plan-mode-bg', planModeBg);
+    viewEl.style.setProperty('--plan-mode-ink', planModeInk);
+    viewEl.style.setProperty('--plan-mode-active-bg', planModeActiveBg);
+    viewEl.style.setProperty('--plan-mode-active-ink', planModeActiveInk);
     viewEl.style.setProperty('--prep-header-bg', prepHeaderBg);
     viewEl.style.setProperty('--prep-header-ink', prepHeaderInk);
     viewEl.style.setProperty('--prep-status-bg', prepStatusBg);
@@ -7413,8 +7431,17 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     viewEl.style.setProperty('--edit-ink', editInk);
     viewEl.style.setProperty('--completed-bg', completedBg);
     viewEl.style.setProperty('--completed-ink', completedInk);
+    viewEl.style.setProperty('--completed-active-bg', completedActiveBg);
+    viewEl.style.setProperty('--completed-active-ink', completedActiveInk);
     viewEl.style.setProperty('--callout-bg', calloutBg);
     viewEl.style.setProperty('--callout-ink', calloutInk);
+    viewEl.style.setProperty('--cbx-acc', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--accent', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--close-bg', v.closeBg || btn2);
+    viewEl.style.setProperty('--close-ink', v.closeInk || btn2Ink);
+    viewEl.style.setProperty('--view-font-color', vFontColor);
+    viewEl.style.setProperty('--badge-bg', v.badgeBg || '#f1f5f9');
+    viewEl.style.setProperty('--badge-ink', v.badgeInk || vFontColor);
   });
 }
 
@@ -7784,7 +7811,7 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--dorsal-ink', theme.dorsalInk || theme.bannerInk || '#ffffff');
     target.style.setProperty('--sp-lead-bg', theme.spLeadBg || '#c8102e');
     target.style.setProperty('--sp-lead-ink', theme.spLeadInk || '#ffffff');
-    target.style.setProperty('--sp-sub-bg', theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`);
+    target.style.setProperty('--sp-sub-bg', theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${theme.cardBorder || '#e2e8f0'})`);
     target.style.setProperty('--sp-sub-ink', theme.spSubInk || theme.cardTitle || fontColor || '#0f172a');
     target.style.setProperty('--resInk', theme.resInk || '#ffffff');
 
@@ -7810,6 +7837,17 @@ function applyCustomTheme(themeInput) {
     target.style.setProperty('--tb-team', tbTeam);
     target.style.setProperty('--tb-rival', tbRival);
     target.style.setProperty('--tb-arrow', tbArrow);
+    // Barra inferior minimizada
+    const bottomNavBg = theme.bottomNavBg || '#ffffff';
+    const bottomNavInk = theme.bottomNavInk || '#64748b';
+    const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+    target.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    target.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    target.style.setProperty('--bottom-nav-active', bottomNavActive);
+    target.style.setProperty('--sub-nav-bg', theme.subNavBg || '#f1f5f9');
+    target.style.setProperty('--sub-nav-ink', theme.subNavInk || '#334155');
+    target.style.setProperty('--sub-nav-active-bg', theme.subNavActiveBg || '#ffffff');
+    target.style.setProperty('--sub-nav-active-ink', theme.subNavActiveInk || bottomNavActive);
   }
 
   // Aplicar fondo directamente en el canvas HTML y body
@@ -7821,10 +7859,27 @@ function applyCustomTheme(themeInput) {
   if (sidebarEl) {
     sidebarEl.style.setProperty('background', sidebarBg, 'important');
     sidebarEl.style.setProperty('color', sidebarInk, 'important');
+    sidebarEl.style.setProperty('--sidebar-bg', sidebarBg);
+    sidebarEl.style.setProperty('--sidebar-ink', sidebarInk);
+    sidebarEl.style.setProperty('--sidebar-sub', sidebarSub);
+  }
+
+  const bottomNavBg = theme.bottomNavBg || '#ffffff';
+  const bottomNavInk = theme.bottomNavInk || '#64748b';
+  const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+  // Actualizar DOM directo de la barra inferior minimizada si existe
+  const bottomNavEl = $('#cb-bottom-nav');
+  if (bottomNavEl) {
+    bottomNavEl.style.setProperty('background', bottomNavBg, 'important');
+    bottomNavEl.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    bottomNavEl.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    bottomNavEl.style.setProperty('--bottom-nav-active', bottomNavActive);
   }
 
   // Aplicar colores y estilos exclusivos por pestaña (scoped theme per view)
   applyViewScopedTheme(theme, heroBase, btnBgVal, btnInkVal, btn2BgVal, btn2InkVal, finalCardBg, theme.cardBorder || '#e2e8f0', fontColor);
+
+  applyComponentColors(theme);
 
   // Actualizar mini pizarra táctica de previsualización
   updateTacticBoardPreviewBox(tbPitch, tbLines, tbTeam, tbRival, tbArrow);
@@ -8830,6 +8885,8 @@ function openQuickColorDialog(targetKind = null) {
   if (!dialog || !bodyEl) return;
 
   const VIEWS_INFO = [
+    { id: 'exercise-detail', name: 'Ficha de ejercicio', icon: '📖', subtabs: [{ id: 'general', label: 'Texto, fondos y cierre' }] },
+    { id: 'comunicador', name: 'Comunicador WhatsApp', icon: '💬', subtabs: [{ id: 'general', label: 'Texto, fondos y botones' }] },
     { id: 'plantilla', name: 'Plantilla', icon: '👥', desc: 'Jugadores, minutos y dorsales', hasDorsales: true, hasSetPieces: true, subtabs: [{ id: 'general', label: '📋 General & Dorsales' }, { id: 'specialists', label: '🎯 Balón Parado' }] },
     { id: 'cuerpo-tecnico', name: 'Cuerpo Técnico', icon: '💬', desc: 'Entrenadores y WhatsApp', hasWa: true, subtabs: [{ id: 'general', label: '📋 Técnicos & WhatsApp' }] },
     { id: 'convocatorias', name: 'Convocatoria', icon: '📋', desc: 'Bajas, dorsales y envío', hasDorsales: true, hasWa: true, subtabs: [{ id: 'general', label: '📋 Convocatoria & Tarjetas' }] },
@@ -9717,8 +9774,68 @@ function openQuickColorDialog(targetKind = null) {
       `;
     }
 
+
+    controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
+    controlsHtml += colorRow('Etiquetas de las fichas · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
+    controlsHtml += colorRow('Etiquetas de las fichas · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
+    const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
+    if (currentViewId === 'convocatorias') controlsHtml += extraRows([
+      ['Botón + Convocatoria · Fondo', 'callupBtnBg', btnBg], ['Botón + Convocatoria · Texto', 'callupBtnInk', btnInk],
+      ['Plan por tramos · Fondo del selector', 'planModeTrack', '#e2e8f0'],
+      ['Plan · Opción inactiva fondo', 'planModeBg', '#f1f5f9'], ['Plan · Opción inactiva texto', 'planModeInk', '#334155'],
+      ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
+    ]);
+    if (currentViewId === 'sesiones') controlsHtml += extraRows([
+      ['Realizado marcado · Fondo', 'completedActiveBg', btnBg], ['Realizado marcado · Texto', 'completedActiveInk', btnInk]
+    ]);
+    if (currentViewId === 'exercise-detail') controlsHtml += extraRows([
+      ['Cerrar ejercicio · Fondo', 'closeBg', btn2Bg], ['Cerrar ejercicio · Texto', 'closeInk', btn2Ink]
+    ]);
+    controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
+      ['Menú lateral · Fondo', 'sidebarBg', '#0a251b'], ['Menú lateral · Texto', 'sidebarInk', '#ffffff'],
+      ['Barra inferior · Fondo', 'bottomNavBg', '#ffffff'], ['Barra inferior · Texto e iconos', 'bottomNavInk', '#64748b'],
+      ['Barra inferior · Texto e iconos activos', 'bottomNavActive', '#c8102e'],
+      ['Subpestañas · Fondo', 'subNavBg', '#f1f5f9'], ['Subpestañas · Texto', 'subNavInk', '#334155'],
+      ['Subpestaña activa · Fondo', 'subNavActiveBg', '#ffffff'], ['Subpestaña activa · Texto', 'subNavActiveInk', '#c8102e']
+    ].map(([label, prop, fallback]) => colorRow(label, prop, theme[prop] || fallback, fallback, [])).join('')}</details>`;
+
+
+    const buttonRoot = document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    const buttonChoices = [...configurableButtons(buttonRoot), ...[...document.querySelectorAll('dialog[open][data-theme-view]')].filter((dialog) => dialog.dataset.themeView === currentViewId).flatMap(configurableButtons)];
+    if (buttonChoices.length) controlsHtml += `<details id="qc-individual-buttons"><summary>Configurar un botón concreto</summary><label>Botón<select id="qc-button-selector">${buttonChoices.map(({ selector, label }) => `<option value="${escapeHtml(selector)}">${escapeHtml(label)}</option>`).join('')}</select></label><label>Fondo<input type="color" id="qc-button-bg"></label><label>Texto e iconos<input type="color" id="qc-button-ink"></label><button type="button" id="qc-button-reset" class="secondary">Restablecer este botón</button></details>`;
+
     titleEl.textContent = `⚙️ Personalizar: ${activeViewConfig.name}`;
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + previewHtml + controlsHtml;
+
+
+    const buttonSelector = bodyEl.querySelector('#qc-button-selector');
+    if (buttonSelector) {
+      const asHex = (value) => {
+        if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
+        const rgb = String(value).match(/\d+/g);
+        return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
+      };
+      const refreshButtonPickers = () => {
+        const target = document.querySelector(buttonSelector.value);
+        if (!target) return;
+        const style = getComputedStyle(target);
+        bodyEl.querySelector('#qc-button-bg').value = asHex(style.backgroundColor);
+        bodyEl.querySelector('#qc-button-ink').value = asHex(style.color);
+      };
+      buttonSelector.addEventListener('change', refreshButtonPickers);
+      for (const prop of ['bg', 'ink']) bodyEl.querySelector('#qc-button-' + prop).addEventListener('input', (event) => {
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
+        colours[buttonSelector.value] = { ...colours[buttonSelector.value], [prop]: event.target.value };
+        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
+      });
+      bodyEl.querySelector('#qc-button-reset').onclick = () => {
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.buttonColors || {}) };
+        delete colours[buttonSelector.value];
+        updateViewThemeProperty(currentViewId, 'buttonColors', colours);
+        refreshButtonPickers();
+      };
+      refreshButtonPickers();
+    }
 
     // Listeners para cambio de pestaña principal
     bodyEl.querySelectorAll('.cbx-qc-view-chip').forEach((chip) => {
@@ -9739,13 +9856,14 @@ function openQuickColorDialog(targetKind = null) {
     });
 
     // Listeners para color pickers
-    bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
+    bodyEl.querySelectorAll('input[type="color"][data-prop]').forEach((picker) => {
       picker.addEventListener('input', (e) => {
         const prop = e.target.dataset.prop;
         const val = e.target.value;
         const codeEl = e.target.nextElementSibling;
         if (codeEl) codeEl.textContent = val;
-        updateViewThemeProperty(currentViewId, prop, val);
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
         updateQcPreviews(currentTab, prop, val);
       });
     });
@@ -9761,7 +9879,8 @@ function openQuickColorDialog(targetKind = null) {
           const codeEl = picker.nextElementSibling;
           if (codeEl) codeEl.textContent = val;
         }
-        updateViewThemeProperty(currentViewId, prop, val);
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
         updateQcPreviews(currentTab, prop, val);
       });
     });
@@ -12974,6 +13093,7 @@ async function init() {
     });
   }
   wireEvents(); networkStatus();
+  observeComponentColors();
   realtimeCloudStore = createCampoBaseCloudStore();
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
