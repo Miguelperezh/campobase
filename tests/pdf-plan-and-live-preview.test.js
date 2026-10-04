@@ -438,3 +438,31 @@ test('Protección de contraste en dorsales y botones de WhatsApp', () => {
   assert.ok(freshPlantillaCss.includes('background: var(--wa-bg, #25d366) !important;'), '.staff-wa-btn debe usar --wa-bg con !important');
 });
 
+test('Configurador independiente de fuentes y fondos por pestaña y subpestaña', () => {
+  const freshStylesRedesign = fs.readFileSync(new URL('../styles-redesign.css', import.meta.url), 'utf8');
+  const freshAppSource = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const freshIndexHtml = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+
+  // styles-redesign.css incluye reglas con alta especificidad para botones primarios, secundarios, textos y dorsales por vista
+  assert.ok(freshStylesRedesign.includes('body.cb-redesign-active .view .primary'), 'styles-redesign.css debe incluir botón primario scoped');
+  assert.ok(freshStylesRedesign.includes('background: var(--btn, #10b981) !important;'), 'botón primario debe usar --btn con !important');
+  assert.ok(freshStylesRedesign.includes('color: var(--btnInk, #ffffff) !important;'), 'botón primario debe usar --btnInk con !important');
+  assert.ok(freshStylesRedesign.includes('body.cb-redesign-active .view .secondary'), 'styles-redesign.css debe incluir botón secundario scoped');
+  assert.ok(freshStylesRedesign.includes('background: var(--btn2, #ffffff) !important;'), 'botón secundario debe usar --btn2 con !important');
+  assert.ok(freshStylesRedesign.includes('color: var(--btn2Ink, #0f172a) !important;'), 'botón secundario debe usar --btn2Ink con !important');
+  assert.ok(freshStylesRedesign.includes('color: var(--view-font-color, var(--cb-font-custom-color, var(--ink, #0f172a))) !important;'), 'texto principal debe usar --view-font-color con !important');
+  assert.ok(freshStylesRedesign.includes('color: var(--cardTitle, var(--view-font-color, var(--cb-font-custom-color, var(--ink, #0f172a)))) !important;'), 'nombres y títulos deben usar --cardTitle con !important');
+
+  // app.js define funciones auxiliares de tema desacoplado por vista
+  assert.ok(freshAppSource.includes('CAMPOBASE_VIEW_IDS = ['), 'app.js debe definir CAMPOBASE_VIEW_IDS');
+  assert.ok(freshAppSource.includes('function applyViewScopedTheme('), 'app.js debe definir applyViewScopedTheme');
+  assert.ok(freshAppSource.includes('function updateViewThemeProperty('), 'app.js debe definir updateViewThemeProperty');
+  assert.ok(freshAppSource.includes('function resetViewTheme('), 'app.js debe definir resetViewTheme');
+  assert.ok(freshAppSource.includes('function copyViewThemeToAll('), 'app.js debe definir copyViewThemeToAll');
+
+  // index.html contiene botón de copia global y restablecer pestaña
+  assert.ok(freshIndexHtml.includes('id="cbx-quick-color-copy-all"'), 'index.html debe incluir #cbx-quick-color-copy-all');
+  assert.ok(freshIndexHtml.includes('id="cbx-quick-color-reset"'), 'index.html debe incluir #cbx-quick-color-reset');
+});
+
+

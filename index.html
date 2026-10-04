@@ -1562,8 +1562,11 @@
       <button type="button" data-close aria-label="Cerrar" style="background:transparent;border:0;font-size:20px;cursor:pointer;color:var(--cbx-muted);">✕</button>
     </div>
     <div id="cbx-quick-color-body" style="padding:16px 18px;max-height:75vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;"></div>
-    <div style="padding:12px 18px;border-top:1px solid var(--cbx-line);display:flex;justify-content:space-between;align-items:center;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 95%, var(--bg, #f4f6f5));">
-      <button type="button" id="cbx-quick-color-reset" class="secondary" style="font-size:12px;padding:6px 12px;border-radius:8px;">↺ Restablecer</button>
+    <div style="padding:12px 18px;border-top:1px solid var(--cbx-line);display:flex;justify-content:space-between;align-items:center;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 95%, var(--bg, #f4f6f5));flex-wrap:wrap;">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button type="button" id="cbx-quick-color-reset" class="secondary" style="font-size:12px;padding:6px 12px;border-radius:8px;" title="Restablecer los colores de esta pestaña a los valores predeterminados">↺ Restablecer esta pestaña</button>
+        <button type="button" id="cbx-quick-color-copy-all" class="secondary" style="font-size:12px;padding:6px 12px;border-radius:8px;" title="Copiar los colores configurados en esta pestaña a todas las demás pantallas">🌐 Copiar a todas</button>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button type="button" id="cbx-quick-color-save" class="primary" style="font-size:13px;font-weight:800;padding:7px 16px;border-radius:8px;">💾 Guardar colores</button>
         <button type="button" class="secondary" data-close style="font-size:13px;padding:7px 14px;border-radius:8px;">Cerrar</button>

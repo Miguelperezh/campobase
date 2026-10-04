@@ -4,7 +4,22 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ---
 
-## 1. Resumen de Mejoras Recientes (v20 — v25)
+## 1. Resumen de Mejoras Recientes
+
+### 1.0 Personalización Cromática Total e Independiente por Pestaña y Subpestaña (v81)
+- **Causa anterior:** Los ajustes cromáticos alteraban de forma global todas las pantallas de la aplicación. Además, ciertos botones principales y secundarios no permitían cambiar sus fondos o fuentes con alta especificidad, y el texto general o dorsales no se podían aislar por pantalla.
+- **Solución implementada:**
+  - **Aislamiento cromático absoluto (`views` en tema):** Cada pantalla (`plantilla`, `cuerpo-tecnico`, `convocatorias`, `partido`, `tacticas`, `preparacion`, `calendario`, `asistencia`, `ejercicios`, `sesiones`, `hoy`, `ajustes`) y sus subpestañas operativas (`general`, `specialists`, `live`, `tactic-board`) disponen de su propia configuración independiente en `state.settings.theme.views[viewId]`. Modificar una pantalla no afecta en absoluto a las demás («sin que afecten al resto»).
+  - **Botones Principal y Secundario independientes:** En cada vista se controla tanto el fondo (`btn` / `btn2`) como el color de fuente (`btnInk` / `btn2Ink`) con `!important` y especificidad reforzada para todos los selectores de botones (`.primary`, `.secondary`, `.cbx-btn`, `.cbx-btn-light`, `.cbx-btn-sub`, `.cbx-btn-secondary`, etc.).
+  - **Texto principal y Nombres/Títulos:** Se desacopla `--view-font-color` para los textos y párrafos de cada pantalla, y `--cardTitle` para nombres de jugadores, técnicos, partidos y títulos.
+  - **Dorsales, WhatsApp y Herramientas Especializadas:**
+    - Dorsales: fondo (`dorsalBg`) y color de número (`dorsalInk`) configurables si la pantalla los incluye.
+    - WhatsApp: fondo (`waBg`) y color de texto (`waInk`) para botones de contacto y convocatorias.
+    - Especialistas a balón parado (Plantilla): 1.er lanzador (`spLeadBg`, `spLeadInk`) y 2.º lanzador (`spSubBg`, `spSubInk`).
+    - Incidencias de partido (Partido en vivo): botones «+ Gol Nuestro» (`gfBg`, `gfInk`) y «+ Gol Rival» (`gaBg`, `gaInk`).
+    - Pizarra táctica (Tácticas y Partido en vivo): césped (`tbPitch`), líneas (`tbLines`), fichas de tu equipo (`tbTeam`), fichas del rival (`tbRival`) y flechas/trazos (`tbArrow`).
+  - **Modal unificado con tuerca superior:** Selector horizontal de las 12 pantallas y subpestañas, previsualización interactiva fiel en tiempo real, botón «↺ Restablecer esta pestaña» y botón «🌐 Copiar a todas».
+  - **Blindaje de impresión de plan:** El motor de impresión en PDF (`js/print-match-plan.js`, `#cb-print-root`, `.cb-print-sheet`) permanece 100% aislado y blindado.
 
 ### 1.1 Rendimiento Inmediato y Eliminación de Lentitud al Entrar y Poner PIN (v20)
 - **Causa anterior:** Al arrancar o introducir el PIN se encadenaban múltiples llamadas bloqueantes a la nube (Supabase), recargas forzadas (`location.reload()`) y sincronizaciones redundantes que congelaban el hilo de JavaScript y la respuesta de la pantalla táctil.
