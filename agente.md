@@ -40,6 +40,17 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
     - Botón «↺ Restablecer esta pestaña» y botón «🌐 Copiar a todas».
   - **Blindaje de impresión de plan:** El motor de impresión en PDF (`js/print-match-plan.js`, `#cb-print-root`, `.cb-print-sheet`) permanece 100% aislado y blindado.
 
+### 1.0.1 Estabilidad de Acceso tras PIN, Blindaje de Tema en Sincronización Cloud y Tuercas por Pestaña
+- **Causas resueltas:**
+  1. *Bloqueo / expulsión tras introducir PIN:* En entornos donde conviven sesión SaaS y acceso local por PIN, el polling de verificación de sesión remota volvía a abrir el diálogo o forzar el bloqueo tras 2–3 segundos al no detectar inmediatamente el rol autenticado.
+  2. *Pérdida de colores validados tras sincronización:* Durante la sincronización periódica con Supabase (`sync-core.js`), si el registro remoto de `settings` no contenía la estructura de `theme` (o sus `views` por pestaña), el `mergeCloudRecord` sobreescribía la configuración local borrando los colores configurados por el usuario.
+  3. *Tuercas contextuales por pestaña:* Se habían retirado u ocultado las tuercas discretas en las cabeceras individuales de cada pestaña y subpestaña.
+- **Solución implementada:**
+  - **Detección robusta de autenticación en `js/saas-auth-ui-v2.js`:** Se implementó `isUserAlreadyAuthenticated()` evaluando `window.__campobaseRole`, `window.__campobaseState?.role`, `document.body.dataset.userRole`, `sessionStorage` y `localStorage`. Dentro del bucle de sondeo de `handlePersistentSession`, si el usuario ya está autenticado o tiene rol activo, el bucle finaliza inmediatamente, cierra `#auth-dialog`, retira `auth-locked` y nunca vuelve a solicitar credenciales.
+  - **Blindaje y reconciliación de tema en `js/sync-core.js`:** En `mergeCloudRecord`, se protegen y fusionan explícitamente `localRecord.theme` (con deep-merge de `views` por pestaña), `localRecord.presets`, `localRecord.matchPreset` y `localRecord.sem`, garantizando que ninguna sincronización con la nube destruya los colores personalizados.
+  - **Restauración de botones de tuerca discretos (`.cbx-context-gear-btn`):**
+    - Se mantuvieron visibles y estilizados como un icono de tuerca gris minimalista (`#94a3b8`), 26px, fondo 100% transparente y sin bordes en todas las cabeceras de vistas (`data-gear-target`): `#hoy`, `#plantilla`, `#cuerpo-tecnico`, `#convocatorias`, `#partido`, `#preparacion`, `#calendario`, `#asistencia`, `#ejercicios`, `#sesiones`, `#tacticas` (cabecera y barra de acciones de pizarra). Al pulsarlos abren directamente el configurador enfocado en esa sección.
+
 ### 1.1 Rendimiento Inmediato y Eliminación de Lentitud al Entrar y Poner PIN (v20)
 - **Causa anterior:** Al arrancar o introducir el PIN se encadenaban múltiples llamadas bloqueantes a la nube (Supabase), recargas forzadas (`location.reload()`) y sincronizaciones redundantes que congelaban el hilo de JavaScript y la respuesta de la pantalla táctil.
 - **Solución implementada:**

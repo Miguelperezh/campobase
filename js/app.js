@@ -84,6 +84,9 @@ const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'S
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+if (typeof window !== 'undefined') {
+  window.__campobaseState = state;
+}
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const ACTIVE_VIEW_KEY = 'campobase.activeView';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
@@ -650,6 +653,19 @@ async function refresh() {
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
+  try {
+    const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
+    if (cachedTheme && typeof cachedTheme === 'object') {
+      state.settings.theme = {
+        ...cachedTheme,
+        ...(state.settings.theme || {}),
+        views: {
+          ...(cachedTheme.views || {}),
+          ...(state.settings.theme?.views || {}),
+        },
+      };
+    }
+  } catch {}
   if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
     try {
       const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
@@ -6063,111 +6079,7 @@ function renderTrainingSessions() {
     return;
   }
 
-    root.innerHTML = `<div class="cbx-sessions-grid">${sessions.map((session) => {
-      const targetDuration = Number(session.targetDuration) || 60;
-      const totalDuration = Number(session.totalDuration) || (session.blocks || []).reduce((acc, b) => acc + (Number(b.duration) || 0), 0);
-
-      // Status pill
-      let statusPill = '';
-      if (totalDuration < targetDuration) {
-        statusPill = `<span class="cbx-session-pill cbx-session-pill-amber">Quedan ${targetDuration - totalDuration} min</span>`;
-      } else if (totalDuration === targetDuration) {
-        statusPill = `<span class="cbx-session-pill cbx-session-pill-green">Completa</span>`;
-      } else {
-        statusPill = `<span class="cbx-session-pill cbx-session-pill-red">Exceso ${totalDuration - targetDuration} min</span>`;
-      }
-
-      // Attendance status
-      const hasAttendance = (state.trainings || []).some((t) => (t.sessionId && t.sessionId === session.id) || (t.date && String(t.date).slice(0, 10) === String(session.date).slice(0, 10) && t.kind !== 'match'));
-      const attendancePill = hasAttendance
-        ? `<span class="cbx-session-pill cbx-session-pill-green">Asistencia pasada</span>`
-        : `<span class="cbx-session-pill cbx-session-pill-gray">Asistencia pendiente</span>`;
-
-      // Warmup tag if applicable
-      const isWarmup = session.sessionKind === 'match-warmup';
-      const warmupPill = isWarmup ? `<span class="cbx-session-pill cbx-session-pill-blue">Calentamiento de partido</span>` : '';
-
-      // Date and time
-      const dateFormatted = localDate(session.date);
-      const timeStr = session.time ? ` · ${session.time}` : '';
-
-      // Proportional bar segments
-      const maxDuration = Math.max(totalDuration, targetDuration, 1);
-      const barSegments = (session.blocks || []).map((b) => {
-        const dur = Number(b.duration) || 15;
-        const pct = Math.max(3, Math.round((dur / maxDuration) * 100));
-        const colorClass = b.type === 'warmup' ? 'bar-warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'bar-game' : 'bar-main';
-        return `<span class="cbx-session-bar-seg ${colorClass}" style="flex: ${dur} 0 auto; width:${pct}%;"></span>`;
-      }).join('');
-
-      // Blocks list
-      const blocksHtml = (session.blocks || []).map((b, idx) => {
-        const validated = findValidatedExercise(b.exerciseId);
-        const exName = validated?.nombre || exerciseName(b.exerciseId);
-        const phaseType = b.type === 'warmup' ? 'warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'game' : 'main';
-        const phaseLabel = sessionBlockLabel(b.type);
-        const duration = Number(b.duration) || 15;
-
-        return `
-          <div class="cbx-session-block-row">
-            <span class="cbx-session-block-dot dot-${phaseType}">${idx + 1}</span>
-            <span class="cbx-session-mini-pitch" aria-hidden="true">
-              <svg viewBox="0 0 46 32" class="cbx-mini-pitch-svg">
-                <rect width="46" height="32" rx="4" fill="#1f5a41"/>
-                <path d="M23 0v32M0 8h8v16H0M46 8h-8v16h8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-                <circle cx="12" cy="14" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
-                <circle cx="28" cy="20" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
-                <circle cx="36" cy="10" r="2" fill="#fff"/>
-              </svg>
-            </span>
-            <div class="cbx-session-block-info">
-              <button type="button" class="session-exercise-link cbx-session-exercise-name" data-exercise-id="${escapeHtml(b.exerciseId)}" aria-label="Ver ejercicio ${escapeHtml(exName)}">${escapeHtml(exName)}</button>
-              <span class="cbx-session-block-phase">${escapeHtml(phaseLabel)}</span>
-            </div>
-            <strong class="cbx-session-block-duration">${duration}′</strong>
-            <button type="button" class="open-whistle-session cbx-session-block-play" data-id="${session.id}" data-block-index="${idx}" title="Cronómetro del bloque">▶</button>
-          </div>
-        `;
-      }).join('');
-
-      return `
-        <article class="cbx-session-card panel session-card" data-session-id="${session.id}">
-          <div class="cbx-session-pills-row">
-            <span class="cbx-session-pill cbx-session-pill-date">${escapeHtml(dateFormatted)}${escapeHtml(timeStr)}</span>
-            ${statusPill}
-            ${attendancePill}
-            ${warmupPill}
-          </div>
-          <div>
-            <h3 class="cbx-session-name"><button type="button" class="view-session link-button" data-id="${session.id}" style="font:inherit;color:inherit;text-decoration:none;text-align:left;padding:0;background:none;border:0;cursor:pointer;">${escapeHtml(session.name)}</button></h3>
-            <p class="cbx-session-meta">${escapeHtml(session.pitch || 'Campo de entrenamiento')} · ${totalDuration} / ${targetDuration} min</p>
-          </div>
-          <div class="cbx-session-bar-track">
-            ${barSegments}
-          </div>
-          <div class="cbx-session-blocks-list">
-            ${blocksHtml}
-          </div>
-          <div class="cbx-session-actions-row">
-            <button type="button" class="open-whistle-session cbx-btn-whistle" data-id="${session.id}">⏱️ Silbato</button>
-            <button type="button" class="open-whatsapp-session cbx-btn-wa" data-id="${session.id}">📱 WhatsApp</button>
-            <button type="button" class="print-session cbx-btn-sub" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
-            <button type="button" class="edit-session cbx-btn-sub" data-id="${session.id}">✏️ Editar</button>
-          </div>
-          <details class="cbx-session-more-details">
-            <summary>Más opciones</summary>
-            <div class="button-row">
-              <button type="button" class="view-session secondary compact" data-id="${session.id}">Ver ficha técnica</button>
-              <button type="button" class="delete-session danger compact" data-id="${session.id}">Borrar sesión</button>
-            </div>
-          </details>
-        </article>
-      `;
-    }).join('')}</div>`;
-    return;
-  }
-
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
+  $('#sessions-list').innerHTML = allSessions.length ? allSessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
     const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);
     const badgeExtra = durationInfo.badgeText
@@ -7512,6 +7424,12 @@ function applyCustomTheme(themeInput) {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
   } catch {}
 
+  const mergedViews = {
+    ...(state.settings?.theme?.views || {}),
+    ...(localTheme.views || {}),
+    ...(themeInput?.views || {}),
+  };
+
   const theme = {
     themeBg: 'default',
     accentPreset: 'emerald',
@@ -7523,7 +7441,8 @@ function applyCustomTheme(themeInput) {
     fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
-    ...(themeInput || {})
+    ...(themeInput || {}),
+    views: mergedViews,
   };
 
   const root = document.documentElement;
@@ -9896,7 +9815,12 @@ function openQuickColorDialog(targetKind = null) {
 
   if (saveBtn) {
     saveBtn.onclick = async () => {
+      try {
+        localStorage.setItem('campobase.theme', JSON.stringify(state.settings?.theme || {}));
+      } catch {}
       if (roleCanUseOwnerFeatures(state.role)) {
+        if (!state.settings) state.settings = { id: 'main' };
+        state.settings.updatedAt = Date.now();
         await put('settings', state.settings).catch(() => {});
       }
       toast('✅ Todos los colores guardados correctamente');
@@ -10172,7 +10096,12 @@ async function savePins(ownerPin, delegatePin) {
 
 function applyRole(role) {
   state.role = role;
+  if (typeof window !== 'undefined') {
+    window.__campobaseRole = role;
+  }
+  document.body.dataset.userRole = role;
   try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
+  try { localStorage.setItem('campobase.lastAuthRole', role); } catch {}
   const userId = getBoundSaasUserId();
   if (userId) {
     try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
