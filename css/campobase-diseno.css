@@ -30,11 +30,11 @@
 }
 
 /* Cabecera de pantalla (banda) */
-.cbx-banner { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 20px 22px; border-radius: var(--cbx-r-hero); color: #fff;
+.cbx-banner { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 20px 22px; border-radius: var(--cbx-r-hero); color: var(--bnInk, #ffffff);
   background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%), linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000));
   box-shadow: var(--cbx-shadow-hero); }
-.cbx-eyebrow { font: 800 12px var(--cbx-ui); letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .72); }
-.cbx-banner h2 { margin: 4px 0 0; font: 800 32px/1 var(--cbx-disp); text-transform: uppercase; color: #fff; }
+.cbx-eyebrow { font: 800 12px var(--cbx-ui); letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent); }
+.cbx-banner h2 { margin: 4px 0 0; font: 800 32px/1 var(--cbx-disp); text-transform: uppercase; color: var(--bnInk, #ffffff); }
 
 /* Tarjeta */
 .cbx-card { background: #fff; border: 1px solid var(--cbx-line); border-radius: var(--cbx-r-card); box-shadow: var(--cbx-shadow); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }

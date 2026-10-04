@@ -2758,14 +2758,14 @@ html[data-theme-font="pure-white"], body[data-theme-font="pure-white"] { --cb-fo
 html[data-theme-font="navy"], body[data-theme-font="navy"] { --cb-font-custom-color: #0a1c36; }
 html[data-theme-font="high-contrast"], body[data-theme-font="high-contrast"] { --cb-font-custom-color: #000000; }
 
-body.cb-redesign-active[data-has-custom-font-color="true"] h1:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] h2:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] h3:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] h5:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] h6:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
-body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h1:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h2:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h3:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h5:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h6:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner),
 body.cb-redesign-active[data-has-custom-font-color="true"] select:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] summary:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
@@ -2780,14 +2780,38 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .player-performance-s
 body.cb-redesign-active[data-has-custom-font-color="true"] .stat strong,
 body.cb-redesign-active[data-has-custom-font-color="true"] .stat span,
 body.cb-redesign-active[data-has-custom-font-color="true"] .staff-name,
-body.cb-redesign-active[data-has-custom-font-color="true"] .section-head h2,
+body.cb-redesign-active[data-has-custom-font-color="true"] .section-head:not(.cbx-banner) h2,
 body.cb-redesign-active[data-has-custom-font-color="true"] .topbar-brand h1,
 body.cb-redesign-active[data-has-custom-font-color="true"] .card,
 body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
 body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
-body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn),
-body.cb-redesign-active[data-has-custom-font-color="true"] span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token) {
+body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-banner *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token):not(.cbx-banner *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *) {
   color: var(--cb-font-custom-color) !important;
+}
+
+/* Cabeceras y Banners: garantizan que títulos y subtítulos usen var(--bnInk) y nunca se tiñan de negro */
+html body.cb-redesign-active .cbx-banner,
+html body.cb-redesign-active .cbx-banner h2,
+html body.cb-redesign-active .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active .cbx-banner .eyebrow,
+html body.cb-redesign-active .cbx-banner p,
+html body.cb-redesign-active .cbx-banner small,
+html body.cb-redesign-active .cbx-banner span:not(button *),
+html body.cb-redesign-active .plantilla-staff-bar,
+html body.cb-redesign-active .plantilla-staff-bar .plantilla-staff-title,
+html body.cb-redesign-active .plantilla-staff-bar h3,
+html body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2,
+html body.cb-redesign-active #cuerpo-tecnico .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active #plantilla .cbx-banner h2,
+html body.cb-redesign-active #plantilla .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active #plantilla .cbx-banner p {
+  color: var(--bnInk, #ffffff) !important;
+}
+
+html body.cb-redesign-active .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active .cbx-banner .eyebrow {
+  color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;
 }
 
 /* Marcador de estadio limpio, legible y adaptable */

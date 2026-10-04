@@ -1789,29 +1789,30 @@ body.cb-redesign-active .season-round-tag {
   white-space: nowrap !important;
 }
 
-.cbx-context-gear-btn {
+.topbar-gear-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  border: 1px solid var(--cardBorder, #cbd5e1) !important;
-  background: var(--cardBg, #ffffff) !important;
-  color: var(--cardTitle, #334155) !important;
-  font-size: 15px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: #94a3b8 !important;
+  font-size: 21px !important;
   line-height: 1 !important;
+  padding: 4px 6px !important;
   cursor: pointer !important;
-  transition: transform 0.15s, background-color 0.15s !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-  flex-shrink: 0 !important;
+  opacity: 0.85 !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease !important;
 }
-.cbx-context-gear-btn:hover {
-  transform: rotate(30deg) scale(1.08) !important;
-  background: var(--bg, #f1f5f9) !important;
+.topbar-gear-btn:hover {
+  opacity: 1 !important;
+  transform: rotate(30deg) scale(1.15) !important;
+  color: var(--cbx-hero, #0a251b) !important;
+}
+
+.cbx-context-gear-btn {
+  display: none !important;
 }
 
 /* Estilos de la Barra Lateral personalizada */

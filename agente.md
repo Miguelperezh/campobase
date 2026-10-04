@@ -1638,4 +1638,41 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - **680/680 tests unitarios y de integración pasando al 100% en `npm test`**.
    - **0 errores de sintaxis en `npm run check`**.
 
+### Sesión 04/10/2026 (13:50) - Tuerca Superior Discreta, Blindaje de Textos en Banners y Configurador Global Multi-Pantalla
+
+1. **Tuerca Superior Discreta en la Barra de Navegación (`index.html`, `css/claude-partido.css`, `js/app.js`):**
+   - **Requerimiento del usuario:** Sustituir las tuercas grandes con fondo blanco dentro de los banners por una única tuerca gris arriba sin fondo que configure los colores de absolutamente todo lo que se ve en cada pestaña y subpestaña y lo guarde permanentemente.
+   - **Solución implementada:**
+     - En `index.html`, se ubicó el botón `<button type="button" id="topbar-quick-color-btn" class="topbar-gear-btn" title="Personalizar colores de la aplicación" aria-label="Personalizar colores">⚙️</button>` en la barra superior `#cbx-header-actions` junto al botón de cierre de sesión.
+     - En `css/claude-partido.css`, se definió `.topbar-gear-btn` como icono minimalista gris (`color: #94a3b8; background: transparent; border: 0; font-size: 21px; padding: 4px 6px;`) con animación sutil al hover (`transform: rotate(30deg) scale(1.15)`).
+     - Se eliminaron todos los botones de tuerca invasivos dentro de los banners (`.cbx-context-gear-btn`), y se forzó `display: none !important;` en CSS para evitar cualquier visualización residual.
+     - En `js/app.js`, se conectó la delegación de eventos al hacer clic sobre `#topbar-quick-color-btn`.
+
+2. **Blindaje Definitivo de Textos en Cabeceras y Banners (`styles-redesign.css`, `css/claude-plantilla.css`, `css/campobase-diseno.css`):**
+   - **Diagnóstico:** Los textos y títulos dentro del banner rojo de Plantilla ("EQUIPO", "PLANTILLA") y la barra superior de cuerpo técnico se teñían de negro cuando el usuario seleccionaba tipografía negra personalizada en los ajustes de la aplicación, porque las reglas de `[data-has-custom-font-color="true"]` sobreescribían los encabezados.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se añadieron exclusiones de alta especificidad `:not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *)` sobre las reglas globales de `body.cb-redesign-active[data-has-custom-font-color="true"]`.
+     - Se agregaron reglas explícitas garantizando que `.cbx-banner`, `.cbx-banner h2`, `.cbx-banner .cbx-eyebrow`, `.plantilla-staff-bar`, `.plantilla-staff-title` hereden siempre `var(--bnInk, #ffffff) !important` y `color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;`.
+     - En `css/claude-plantilla.css` y `css/campobase-diseno.css`, se eliminaron los colores fijos (`#fff` y `rgba(255,255,255,.72)`) y se enlazaron a las variables dinámicas `var(--bnInk, #ffffff)`, `var(--btn)`, `var(--btn2)` y `var(--bn)`.
+     - En móviles (`@media (max-width: 700px)`), se cambió `#plantilla .cbx-banner .button-row` de cuadrícula forzada `grid-template-columns: 1fr 1fr;` a `display: flex; flex-wrap: wrap; gap: 8px;`, impidiendo que los botones se deformen en pastillas gigantes.
+
+3. **Configurador Global de Colores Multi-Pantalla con Guardado Persistente (`js/app.js`, `index.html`):**
+   - **Navegación por Pestañas:** El diálogo `#cbx-quick-color-dialog` cuenta con selector horizontal de pantallas (`📑 Cabeceras & Botones`, `👥 Plantilla & Dorsales`, `💬 WhatsApp & Equipo`, `📋 Convocatorias`, `⚽ Partido en Vivo`, `📐 Pizarra Táctica`, `🎨 Textos & Tarjetas`).
+   - **Detección Automática:** Al pulsar la tuerca gris superior, el diálogo detecta la vista en la que se encuentra el usuario (Plantilla, Convocatorias, Partido, etc.) y abre directamente la sección correspondiente. El usuario puede alternar entre pestañas en el mismo modal sin salir.
+   - **Ajustes de Absolutamente Todo:**
+     - Banners: fondo y color de texto.
+     - Botones: principal y secundario (fondo y texto).
+     - Dorsales de jugadores: círculo y número.
+     - Lanzadores y capitanes: 1.er especialista y 2.º especialista (fondo y texto).
+     - WhatsApp: fondo de botones y color de texto/icono.
+     - Partido en vivo: botones de goles (+ Gol Nuestro y + Gol Rival) y marcador.
+     - Pizarra táctica: césped, líneas, fichas de tu equipo, fichas del rival y flechas/trazos.
+     - General: color general de texto de la app, fondo de tarjetas, títulos de tarjetas y fondo global.
+   - **Guardado Permanente:** Botón «💾 Guardar colores» que llama a `put('settings', state.settings)` para persistencia inmediata en almacenamiento local y sincronización en la nube, con feedback visual vía `toast`.
+
+4. **Verificación Automatizada:**
+   - 680/680 tests unitarios y de integración pasando con éxito en `npm test`.
+   - 0 errores en `npm run check`.
+   - Sin alteraciones en el motor de impresión de planes de partido ni en el temporizador/silbato de partido en vivo.
+
 

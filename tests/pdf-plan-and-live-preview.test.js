@@ -379,24 +379,22 @@ test('Ajuste rápido de colores in-context: modal de tuerca y botones de tuerca 
   assert.ok(freshIndexHtml.includes('id="cbx-quick-color-dialog"'), 'index.html debe contener el diálogo cbx-quick-color-dialog');
   assert.ok(freshIndexHtml.includes('id="cbx-quick-color-body"'), 'index.html debe contener cbx-quick-color-body');
   assert.ok(freshIndexHtml.includes('id="cbx-quick-color-reset"'), 'index.html debe contener cbx-quick-color-reset');
+  assert.ok(freshIndexHtml.includes('id="cbx-quick-color-save"'), 'index.html debe contener cbx-quick-color-save');
 
-  // Botones de tuerca contextuales en index.html en cabeceras clave
-  assert.ok(freshIndexHtml.includes('class="cbx-context-gear-btn" data-gear-target="banners"'), 'index.html debe tener botones de tuerca para banners');
-  assert.ok(freshIndexHtml.includes('class="cbx-context-gear-btn" data-gear-target="dorsales"'), 'index.html debe tener botones de tuerca para dorsales');
-  assert.ok(freshIndexHtml.includes('class="cbx-context-gear-btn" data-gear-target="whatsapp"'), 'index.html debe tener botones de tuerca para whatsapp');
-  assert.ok(freshIndexHtml.includes('class="cbx-context-gear-btn" data-gear-target="tactic-board"'), 'index.html debe tener botones de tuerca para pizarra');
-  assert.ok(freshIndexHtml.includes('class="cbx-context-gear-btn" data-gear-target="live"'), 'index.html debe tener botones de tuerca para partido en vivo');
+  // Botón de tuerca superior discreto en topbar de index.html
+  assert.ok(freshIndexHtml.includes('id="topbar-quick-color-btn"'), 'index.html debe tener el botón superior topbar-quick-color-btn');
+  assert.ok(freshIndexHtml.includes('class="topbar-gear-btn"'), 'index.html debe usar la clase topbar-gear-btn');
 
-  // app.js define y delega openQuickColorDialog
+  // app.js define y delega openQuickColorDialog con soporte multi-pantalla
   assert.ok(freshAppSource.includes('function openQuickColorDialog('), 'app.js debe definir openQuickColorDialog');
-  assert.ok(freshAppSource.includes("targetKind === 'dorsales'"), 'openQuickColorDialog debe gestionar dorsales');
-  assert.ok(freshAppSource.includes("targetKind === 'whatsapp'"), 'openQuickColorDialog debe gestionar whatsapp');
-  assert.ok(freshAppSource.includes("targetKind === 'specialists'"), 'openQuickColorDialog debe gestionar specialists');
-  assert.ok(freshAppSource.includes("targetKind === 'tactic-board'"), 'openQuickColorDialog debe gestionar tactic-board');
-  assert.ok(freshAppSource.includes("targetKind === 'live'"), 'openQuickColorDialog debe gestionar live');
+  assert.ok(freshAppSource.includes("currentTab === 'dorsales'"), 'openQuickColorDialog debe gestionar dorsales');
+  assert.ok(freshAppSource.includes("currentTab === 'whatsapp'"), 'openQuickColorDialog debe gestionar whatsapp');
+  assert.ok(freshAppSource.includes("currentTab === 'tactic-board'"), 'openQuickColorDialog debe gestionar tactic-board');
+  assert.ok(freshAppSource.includes("currentTab === 'live'"), 'openQuickColorDialog debe gestionar live');
   assert.ok(freshAppSource.includes('openQuickColorDialog(gearBtn.dataset.gearTarget'), 'wireEvents debe delegar clicks de tuerca');
 
-  // Estilos CSS para el botón de tuerca
+  // Estilos CSS para el botón de tuerca superior y compatibilidad
+  assert.ok(freshPartidoCss.includes('.topbar-gear-btn'), 'claude-partido.css debe definir estilos para .topbar-gear-btn');
   assert.ok(freshPartidoCss.includes('.cbx-context-gear-btn'), 'claude-partido.css debe definir estilos para .cbx-context-gear-btn');
 });
 

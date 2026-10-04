@@ -889,7 +889,6 @@ function renderSquadSpecialistsBar() {
           <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" class="cbx-context-gear-btn" data-gear-target="specialists" title="Ajustar colores de especialistas" aria-label="Ajustar especialistas">⚙️</button>
           <button type="button" class="secondary open-set-pieces-trigger">Configurar lanzadores</button>
           <button type="button" class="secondary share-database-mobile-btn" style="display:none;" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
         </div>
@@ -1797,10 +1796,10 @@ function renderClaudeCallup(callup) {
   }).join('') : '';
   const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
   return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
-    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><button type="button" class="cbx-context-gear-btn" data-gear-target="dorsales" title="Ajustar colores de dorsales" aria-label="Ajustar colores de dorsales" style="margin-right:6px;">⚙️</button><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span>${available.size} convocados</span><span>${exclusions.length} fuera</span></div></header>
       <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
       <ul class="cbx-callup-roster">${roster}</ul>
-      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button><button type="button" class="cbx-context-gear-btn" data-gear-target="whatsapp" title="Ajustar color de WhatsApp" aria-label="Ajustar WhatsApp" style="margin:0 4px;">⚙️</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
+      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
       <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3>${plan ? `<div role="group" aria-label="Modo del plan de cambios"><button type="button" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `<div class="cbx-plan-axis"><span>0′</span><span>${plan.H}′</span><span>${plan.D}′</span></div><div class="cbx-plan-rows">${bars}</div><div class="cbx-plan-changes">${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
@@ -2685,7 +2684,6 @@ function renderTacticsBoard(which) {
         <div class="button-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-head-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
           <button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button>
-          <button type="button" class="cbx-context-gear-btn" data-gear-target="tactic-board" title="Ajustar colores de la pizarra táctica" aria-label="Ajustar colores">⚙️</button>
         </div>
       </div>
       <div class="formacion-row">
@@ -8568,12 +8566,27 @@ function updateThemeProperty(prop, val, extra = {}) {
   updateThemePreviewBox(currentTheme);
 }
 
-function openQuickColorDialog(targetKind = 'banners') {
+function openQuickColorDialog(targetKind = null) {
   const dialog = $('#cbx-quick-color-dialog');
   const titleEl = $('#cbx-quick-color-title');
   const bodyEl = $('#cbx-quick-color-body');
   const resetBtn = $('#cbx-quick-color-reset');
+  const saveBtn = $('#cbx-quick-color-save');
   if (!dialog || !bodyEl) return;
+
+  function detectActiveColorTab() {
+    const activeView = document.querySelector('.view.active')?.id || '';
+    if (activeView === 'plantilla') return 'dorsales';
+    if (activeView === 'cuerpo-tecnico') return 'whatsapp';
+    if (activeView === 'convocatorias') return 'callups';
+    if (activeView === 'partido' || activeView === 'delegado') return 'live';
+    if (activeView === 'tacticas') return 'tactic-board';
+    if (activeView === 'ajustes') return 'general';
+    return 'banners';
+  }
+
+  let currentTab = targetKind || detectActiveColorTab();
+  if (currentTab === 'specialists') currentTab = 'dorsales';
 
   function updateQcPreviews(kind, prop, val) {
     if (kind === 'dorsales') {
@@ -8586,6 +8599,12 @@ function openQuickColorDialog(targetKind = 'banners') {
         if (d1) d1.style.color = val;
         if (d2) d2.style.color = val;
       }
+      const r1 = $('#qc-mock-sp-lead');
+      const r2 = $('#qc-mock-sp-sub');
+      if (prop === 'spLeadBg' && r1) r1.style.background = val;
+      if (prop === 'spLeadInk' && r1) r1.style.color = val;
+      if (prop === 'spSubBg' && r2) r2.style.background = val;
+      if (prop === 'spSubInk' && r2) r2.style.color = val;
     } else if (kind === 'whatsapp') {
       const w1 = $('#qc-mock-wa-1');
       const w2 = $('#qc-mock-wa-2');
@@ -8596,23 +8615,19 @@ function openQuickColorDialog(targetKind = 'banners') {
         if (w1) w1.style.color = val;
         if (w2) w2.style.color = val;
       }
-    } else if (kind === 'specialists') {
-      const r1 = $('#qc-mock-sp-lead');
-      const r2 = $('#qc-mock-sp-sub');
-      const d1 = $('#qc-mock-sp-dorsal-1');
-      const d2 = $('#qc-mock-sp-dorsal-2');
-      if (prop === 'spLeadBg' && r1) r1.style.background = val;
-      if (prop === 'spLeadInk' && r1) r1.style.color = val;
-      if (prop === 'spSubBg' && r2) r2.style.background = val;
-      if (prop === 'spSubInk' && r2) r2.style.color = val;
+    } else if (kind === 'callups') {
+      const d1 = $('#qc-mock-callup-dorsal-1');
+      const d2 = $('#qc-mock-callup-dorsal-2');
       if (prop === 'dorsalBg') {
         if (d1) d1.style.background = val;
         if (d2) d2.style.background = val;
-      }
-      if (prop === 'dorsalInk') {
+      } else if (prop === 'dorsalInk') {
         if (d1) d1.style.color = val;
         if (d2) d2.style.color = val;
       }
+      const w = $('#qc-mock-callup-wa');
+      if (prop === 'waBg' && w) w.style.background = val;
+      if (prop === 'waInk' && w) w.style.color = val;
     } else if (kind === 'tactic-board') {
       const pitch = $('#qc-mock-tb-pitch');
       const team = $('#qc-mock-tb-team');
@@ -8634,6 +8649,13 @@ function openQuickColorDialog(targetKind = 'banners') {
       if (prop === 'gfInk' && bGf) bGf.style.color = val;
       if (prop === 'gaBg' && bGa) bGa.style.background = val;
       if (prop === 'gaInk' && bGa) bGa.style.color = val;
+    } else if (kind === 'general') {
+      const card = $('#qc-mock-general-card');
+      const title = $('#qc-mock-general-title');
+      const text = $('#qc-mock-general-text');
+      if (prop === 'cardHue' && card) card.style.background = val;
+      if (prop === 'cardTitle' && title) title.style.color = val;
+      if (prop === 'fontColor' && text) text.style.color = val;
     } else {
       const bn = $('#qc-mock-banner');
       const b1 = $('#qc-mock-btn');
@@ -8659,8 +8681,20 @@ function openQuickColorDialog(targetKind = 'banners') {
       ...localTheme,
     };
 
+    const tabsNavHtml = `
+      <div class="cbx-qc-tabs-row" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid var(--cardBorder, #e2e8f0);margin-bottom:6px;scrollbar-width:thin;">
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'banners' ? 'active' : ''}" data-tab="banners" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'banners' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'banners' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'banners' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">📑 Cabeceras & Botones</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'dorsales' ? 'active' : ''}" data-tab="dorsales" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'dorsales' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'dorsales' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'dorsales' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">👥 Plantilla & Dorsales</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'whatsapp' ? 'active' : ''}" data-tab="whatsapp" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'whatsapp' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'whatsapp' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'whatsapp' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 WhatsApp & Equipo</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'callups' ? 'active' : ''}" data-tab="callups" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'callups' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'callups' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'callups' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">📋 Convocatorias</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'live' ? 'active' : ''}" data-tab="live" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'live' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'live' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'live' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">⚽ Partido en Vivo</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'tactic-board' ? 'active' : ''}" data-tab="tactic-board" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'tactic-board' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'tactic-board' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'tactic-board' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">📐 Pizarra Táctica</button>
+        <button type="button" class="cbx-qc-tab-chip ${currentTab === 'general' ? 'active' : ''}" data-tab="general" style="padding:6px 12px;border-radius:999px;border:1px solid ${currentTab === 'general' ? 'var(--cbx-hero, #0a251b)' : 'var(--cardBorder, #cbd5e1)'};background:${currentTab === 'general' ? 'var(--cbx-hero, #0a251b)' : 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))'};color:${currentTab === 'general' ? 'var(--bnInk, #ffffff)' : 'var(--cardTitle, #334155)'};font:700 12px var(--cbx-ui);cursor:pointer;white-space:nowrap;flex-shrink:0;">🎨 Textos & Tarjetas</button>
+      </div>
+    `;
+
     let titleText = '⚙️ Personalizar Colores';
-    let contentHtml = '';
+    let tabHtml = '';
 
     const colorRow = (label, propName, currentVal, fallbackVal, presets = []) => `
       <div style="display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0));padding:10px 12px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
@@ -8682,121 +8716,127 @@ function openQuickColorDialog(targetKind = 'banners') {
       </div>
     `;
 
-    if (targetKind === 'dorsales') {
-      titleText = '⚙️ Colores de Dorsales';
+    if (currentTab === 'dorsales') {
+      titleText = '⚙️ Plantilla · Dorsales y Especialistas';
       const dorsalBgVal = theme.dorsalBg || theme.bannerBg || '#0a251b';
       const dorsalInkVal = theme.dorsalInk || theme.bannerInk || '#ffffff';
-      contentHtml = `
-        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Ajusta el fondo del círculo y el color del número de los dorsales (Convocatoria y Plantilla). Los cambios se ven al instante.</p>
-        <div id="cbx-qc-preview" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
-          <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">Vista previa:</span>
-          <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 16px var(--disp, sans-serif);box-shadow:0 1px 3px rgba(0,0,0,0.25);">7</span>
-          <span id="qc-mock-dorsal-2" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 16px var(--disp, sans-serif);box-shadow:0 1px 3px rgba(0,0,0,0.25);">10</span>
-          <div style="display:flex;flex-direction:column;">
-            <strong style="font-size:13px;color:var(--cardTitle, #0f172a);">Ejemplo Jugador</strong>
-            <small style="font-size:11px;color:var(--cbx-muted, #64748b);">Delantero · Convocado</small>
-          </div>
-        </div>
-        ${colorRow('Fondo del dorsal', 'dorsalBg', theme.dorsalBg, '#0a251b', [
-          { name: 'Verde Club', val: '#0a251b' },
-          { name: 'Rojo', val: '#c8102e' },
-          { name: 'Azul Marino', val: '#1e3a8a' },
-          { name: 'Negro', val: '#0f172a' },
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Amarillo', val: '#eab308' },
-        ])}
-        ${colorRow('Color del número (texto)', 'dorsalInk', theme.dorsalInk, '#ffffff', [
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Negro', val: '#0f172a' },
-          { name: 'Amarillo', val: '#fde047' },
-          { name: 'Dorado', val: '#f59e0b' },
-        ])}
-      `;
-    } else if (targetKind === 'whatsapp') {
-      titleText = '⚙️ Colores de Botones WhatsApp';
-      const waBgVal = theme.waBg || '#25d366';
-      const waInkVal = theme.waInk || '#ffffff';
-      contentHtml = `
-        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza el botón de WhatsApp para cuerpo técnico y convocatorias. Se actualiza en tiempo real.</p>
-        <div id="cbx-qc-preview" style="display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);align-items:center;">
-          <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);align-self:flex-start;">Vista previa:</span>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-            <button type="button" id="qc-mock-wa-1" style="display:inline-flex;align-items:center;gap:6px;background:${waBgVal};color:${waInkVal};border:0;border-radius:9px;padding:8px 14px;font:700 13px var(--cbx-ui);box-shadow:0 2px 6px rgba(0,0,0,0.12);">
-              <span>💬</span><span>WhatsApp (654 32 10 98)</span>
-            </button>
-            <button type="button" id="qc-mock-wa-2" style="display:inline-flex;align-items:center;gap:6px;background:${waBgVal};color:${waInkVal};border:0;border-radius:9px;padding:8px 14px;font:700 13px var(--cbx-ui);box-shadow:0 2px 6px rgba(0,0,0,0.12);">
-              <span>📲</span><span>Enviar convocatoria</span>
-            </button>
-          </div>
-        </div>
-        ${colorRow('Fondo de botón WhatsApp', 'waBg', theme.waBg, '#25d366', [
-          { name: 'WhatsApp Oficial', val: '#25d366' },
-          { name: 'WhatsApp Oscuro', val: '#128c7e' },
-          { name: 'Verde Campo', val: '#10b981' },
-          { name: 'Negro Elegante', val: '#0f172a' },
-        ])}
-        ${colorRow('Texto e icono de WhatsApp', 'waInk', theme.waInk, '#ffffff', [
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Verde Muy Oscuro', val: '#053b1d' },
-          { name: 'Negro', val: '#0f172a' },
-        ])}
-      `;
-    } else if (targetKind === 'specialists') {
-      titleText = '⚙️ Colores de Lanzadores y Especialistas';
       const spLeadBg = theme.spLeadBg || '#c8102e';
       const spLeadInk = theme.spLeadInk || '#ffffff';
       const spSubBg = theme.spSubBg || '#f1f5f9';
       const spSubInk = theme.spSubInk || '#0f172a';
-      const dorsalBgVal = theme.dorsalBg || '#0a251b';
-      const dorsalInkVal = theme.dorsalInk || '#ffffff';
-      contentHtml = `
-        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza los distintivos de los lanzadores principales (1.er especialista) y suplentes (2.º especialista).</p>
-        <div id="cbx-qc-preview" style="display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
-          <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">Vista previa:</span>
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Ajusta los colores de los dorsales y especialistas de la plantilla. Se actualizan al instante en toda la pantalla.</p>
+        <div id="cbx-qc-preview" style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">Dorsales:</span>
+            <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 16px var(--disp, sans-serif);box-shadow:0 1px 3px rgba(0,0,0,0.25);">7</span>
+            <span id="qc-mock-dorsal-2" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 16px var(--disp, sans-serif);box-shadow:0 1px 3px rgba(0,0,0,0.25);">10</span>
+          </div>
           <div id="qc-mock-sp-lead" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spLeadBg};color:${spLeadInk};">
-            <span style="font:800 12px var(--cbx-ui);">1.er lanzador</span>
+            <span style="font:800 12px var(--cbx-ui);">1.er lanzador (Principal)</span>
             <strong>Capitán Ejemplo</strong>
-            <span id="qc-mock-sp-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 12px var(--disp);">10</span>
           </div>
           <div id="qc-mock-sp-sub" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spSubBg};color:${spSubInk};border:1px solid #cbd5e1;">
-            <span style="font:800 12px var(--cbx-ui);">2.º lanzador</span>
+            <span style="font:800 12px var(--cbx-ui);">2.º lanzador (Suplente)</span>
             <strong>Segundo Ejemplo</strong>
-            <span id="qc-mock-sp-dorsal-2" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:${dorsalBgVal};color:${dorsalInkVal};font:800 12px var(--disp);">7</span>
           </div>
         </div>
+        ${colorRow('Fondo del dorsal', 'dorsalBg', theme.dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Color del número (dorsal)', 'dorsalInk', theme.dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Dorado', val: '#f59e0b' }
+        ])}
         ${colorRow('Fondo 1.er Lanzador (Principal)', 'spLeadBg', theme.spLeadBg, '#c8102e', [
-          { name: 'Rojo Carmesí', val: '#c8102e' },
-          { name: 'Azul Real', val: '#1e40af' },
-          { name: 'Verde Élite', val: '#059669' },
-          { name: 'Dorado', val: '#d97706' },
-          { name: 'Negro', val: '#0f172a' },
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Real', val: '#1e40af' }, { name: 'Verde Élite', val: '#059669' }, { name: 'Dorado', val: '#d97706' }, { name: 'Negro', val: '#0f172a' }
         ])}
         ${colorRow('Texto 1.er Lanzador', 'spLeadInk', theme.spLeadInk, '#ffffff', [
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Negro', val: '#0f172a' },
-          { name: 'Amarillo', val: '#fde047' },
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
         ])}
         ${colorRow('Fondo 2.º Lanzador (Suplente)', 'spSubBg', theme.spSubBg, '#f1f5f9', [
-          { name: 'Gris Claro', val: '#f1f5f9' },
-          { name: 'Blanco Puro', val: '#ffffff' },
-          { name: 'Slate Suave', val: '#e2e8f0' },
-          { name: 'Oscuro Sutil', val: '#1e293b' },
+          { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Oscuro Sutil', val: '#1e293b' }
         ])}
         ${colorRow('Texto 2.º Lanzador', 'spSubInk', theme.spSubInk, '#0f172a', [
-          { name: 'Oscuro', val: '#0f172a' },
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Verde', val: '#065f46' },
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#065f46' }
         ])}
       `;
-    } else if (targetKind === 'tactic-board') {
-      titleText = '⚙️ Pizarra Táctica y Fichas';
+    } else if (currentTab === 'whatsapp') {
+      titleText = '⚙️ Cuerpo Técnico · WhatsApp y Tarjetas';
+      const waBgVal = theme.waBg || '#25d366';
+      const waInkVal = theme.waInk || '#ffffff';
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza los botones de WhatsApp de contacto y la visualización del equipo técnico.</p>
+        <div id="cbx-qc-preview" style="display:flex;gap:10px;justify-content:center;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <button type="button" id="qc-mock-wa-1" style="display:inline-flex;align-items:center;gap:6px;background:${waBgVal};color:${waInkVal};border:0;border-radius:9px;padding:8px 14px;font:700 13px var(--cbx-ui);box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+            <span>💬</span><span>WhatsApp (654 32 10 98)</span>
+          </button>
+        </div>
+        ${colorRow('Fondo botón WhatsApp', 'waBg', theme.waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }, { name: 'Negro Elegante', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto e icono WhatsApp', 'waInk', theme.waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+      `;
+    } else if (currentTab === 'callups') {
+      titleText = '⚙️ Convocatorias · Dorsales y Envío';
+      const dorsalBgVal = theme.dorsalBg || theme.bannerBg || '#0a251b';
+      const dorsalInkVal = theme.dorsalInk || theme.bannerInk || '#ffffff';
+      const waBgVal = theme.waBg || '#25d366';
+      const waInkVal = theme.waInk || '#ffffff';
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza la lista de dorsales de los convocados y el botón de envío de convocatoria.</p>
+        <div id="cbx-qc-preview" style="display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="qc-mock-callup-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:${dorsalBgVal};color:${dorsalInkVal};font:800 15px var(--disp);">4</span>
+              <strong>Jugador Convocado</strong>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:3px 8px;border-radius:999px;">Convocado</span>
+          </div>
+          <button type="button" id="qc-mock-callup-wa" style="margin-top:4px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:${waBgVal};color:${waInkVal};border:0;border-radius:9px;padding:8px 14px;font:800 13px var(--cbx-ui);">
+            📲 Enviar convocatoria por WhatsApp
+          </button>
+        </div>
+        ${colorRow('Fondo dorsal convocatoria', 'dorsalBg', theme.dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto número dorsal', 'dorsalInk', theme.dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo botón WhatsApp', 'waBg', theme.waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'Verde Campo', val: '#10b981' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto botón WhatsApp', 'waInk', theme.waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+      `;
+    } else if (currentTab === 'live') {
+      titleText = '⚙️ Partido en Vivo · Goles y Marcador';
+      const gfBg = theme.gfBg || '#f0f7f3';
+      const gfInk = theme.gfInk || '#14532d';
+      const gaBg = theme.gaBg || '#fdf2f4';
+      const gaInk = theme.gaInk || '#9f1239';
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza los botones de incidencias (+ Gol Nuestro y + Gol Rival) del partido en directo.</p>
+        <div id="cbx-qc-preview" style="display:flex;gap:10px;justify-content:center;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <button type="button" id="qc-mock-live-gf" style="padding:10px 16px;border-radius:10px;background:${gfBg};color:${gfInk};border:1px solid currentColor;font:800 14px var(--cbx-ui);">+ Gol Nuestro</button>
+          <button type="button" id="qc-mock-live-ga" style="padding:10px 16px;border-radius:10px;background:${gaBg};color:${gaInk};border:1px solid currentColor;font:800 14px var(--cbx-ui);">+ Gol Rival</button>
+        </div>
+        ${colorRow('Fondo Gol a Favor', 'gfBg', theme.gfBg, '#f0f7f3', [{ name: 'Verde Pastel', val: '#f0f7f3' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }])}
+        ${colorRow('Texto Gol a Favor', 'gfInk', theme.gfInk, '#14532d', [{ name: 'Verde Oscuro', val: '#14532d' }, { name: 'Blanco', val: '#ffffff' }])}
+        ${colorRow('Fondo Gol en Contra', 'gaBg', theme.gaBg, '#fdf2f4', [{ name: 'Rojo Pastel', val: '#fdf2f4' }, { name: 'Rojo Vivo', val: '#ef4444' }])}
+        ${colorRow('Texto Gol en Contra', 'gaInk', theme.gaInk, '#9f1239', [{ name: 'Rojo Oscuro', val: '#9f1239' }, { name: 'Blanco', val: '#ffffff' }])}
+      `;
+    } else if (currentTab === 'tactic-board') {
+      titleText = '⚙️ Pizarra Táctica · Campo, Líneas y Fichas';
       const tb = theme.tb || state.settings?.tb || DEFAULT_TACTIC_BOARD;
       const tbPitch = theme.tbPitch || tb.pitch || '#064e3b';
       const tbLines = theme.tbLines || tb.lines || '#ffffff';
       const tbTeam = theme.tbTeam || tb.team || '#10b981';
       const tbRival = theme.tbRival || tb.rival || '#ef4444';
       const tbArrow = theme.tbArrow || tb.arrow || '#fbbf24';
-      contentHtml = `
+      tabHtml = `
         <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza el césped, líneas y fichas de tu equipo y del rival tanto en Tácticas como en Partido en vivo.</p>
         <div id="qc-mock-tb-pitch" style="padding:10px;background:${tbPitch};border-radius:12px;display:flex;justify-content:space-around;align-items:center;min-height:75px;border:2px solid ${tbLines};">
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
@@ -8813,66 +8853,56 @@ function openQuickColorDialog(targetKind = 'banners') {
           </div>
         </div>
         ${colorRow('Césped (fondo pizarra)', 'tbPitch', theme.tbPitch, '#064e3b', [
-          { name: 'Césped Clásico', val: '#064e3b' },
-          { name: 'Césped Profundo', val: '#022c22' },
-          { name: 'Verde Vivo', val: '#047857' },
-          { name: 'Pizarra Negra', val: '#0f172a' },
-          { name: 'Azul Táctico', val: '#0f2942' },
+          { name: 'Césped Clásico', val: '#064e3b' }, { name: 'Césped Profundo', val: '#022c22' }, { name: 'Verde Vivo', val: '#047857' }, { name: 'Pizarra Negra', val: '#0f172a' }, { name: 'Azul Táctico', val: '#0f2942' }
         ])}
         ${colorRow('Líneas de campo', 'tbLines', theme.tbLines, '#ffffff', [
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Amarillo', val: '#facc15' },
-          { name: 'Gris Claro', val: '#cbd5e1' },
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#facc15' }, { name: 'Gris Claro', val: '#cbd5e1' }
         ])}
         ${colorRow('Fichas de tu equipo', 'tbTeam', theme.tbTeam, '#10b981', [
-          { name: 'Esmeralda', val: '#10b981' },
-          { name: 'Azul Club', val: '#2563eb' },
-          { name: 'Blanco', val: '#ffffff' },
-          { name: 'Amarillo', val: '#eab308' },
-          { name: 'Rojo', val: '#dc2626' },
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Club', val: '#2563eb' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Rojo', val: '#dc2626' }
         ])}
         ${colorRow('Fichas del rival', 'tbRival', theme.tbRival, '#ef4444', [
-          { name: 'Rojo Alerta', val: '#ef4444' },
-          { name: 'Granate', val: '#991b1b' },
-          { name: 'Naranja', val: '#ea580c' },
-          { name: 'Negro', val: '#0f172a' },
-          { name: 'Amarillo', val: '#ca8a04' },
+          { name: 'Rojo Alerta', val: '#ef4444' }, { name: 'Granate', val: '#991b1b' }, { name: 'Naranja', val: '#ea580c' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#ca8a04' }
         ])}
         ${colorRow('Flechas y dibujos', 'tbArrow', theme.tbArrow, '#fbbf24', [
-          { name: 'Amarillo Neón', val: '#fbbf24' },
-          { name: 'Blanco Puro', val: '#ffffff' },
-          { name: 'Cyan Eléctrico', val: '#06b6d4' },
-          { name: 'Rojo Marcador', val: '#f87171' },
+          { name: 'Amarillo Neón', val: '#fbbf24' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Cyan Eléctrico', val: '#06b6d4' }, { name: 'Rojo Marcador', val: '#f87171' }
         ])}
       `;
-    } else if (targetKind === 'live') {
-      titleText = '⚙️ Partido en Vivo y Marcador';
-      const gfBg = theme.gfBg || '#f0f7f3';
-      const gfInk = theme.gfInk || '#14532d';
-      const gaBg = theme.gaBg || '#fdf2f4';
-      const gaInk = theme.gaInk || '#9f1239';
-      contentHtml = `
-        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza los botones de goles e incidencias para el partido en directo.</p>
-        <div id="cbx-qc-preview" style="display:flex;gap:10px;justify-content:center;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
-          <button type="button" id="qc-mock-live-gf" style="padding:10px 16px;border-radius:10px;background:${gfBg};color:${gfInk};border:1px solid currentColor;font:800 14px var(--cbx-ui);">+ Gol Nuestro</button>
-          <button type="button" id="qc-mock-live-ga" style="padding:10px 16px;border-radius:10px;background:${gaBg};color:${gaInk};border:1px solid currentColor;font:800 14px var(--cbx-ui);">+ Gol Rival</button>
+    } else if (currentTab === 'general') {
+      titleText = '⚙️ Letras, Tarjetas y Fondo de la App';
+      const cardBgVal = theme.cardHue || '#ffffff';
+      const cardTitleVal = theme.cardTitle || '#0f172a';
+      const fontColorVal = theme.fontColor || '#0f172a';
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza la letra general de la app, el fondo de las tarjetas y el fondo global.</p>
+        <div id="qc-mock-general-card" style="padding:14px;background:${cardBgVal};border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);box-shadow:0 2px 6px rgba(0,0,0,0.06);">
+          <h4 id="qc-mock-general-title" style="margin:0 0 6px;font:800 15px var(--disp, sans-serif);color:${cardTitleVal};">Tarjeta de Ejemplo</h4>
+          <p id="qc-mock-general-text" style="margin:0;font-size:13px;line-height:1.4;color:${fontColorVal};">Este texto muestra cómo se lee el contenido general en toda la aplicación.</p>
         </div>
-        ${colorRow('Fondo Gol a Favor', 'gfBg', theme.gfBg, '#f0f7f3', [{ name: 'Verde Pastel', val: '#f0f7f3' }, { name: 'Verde Esmeralda', val: '#10b981' }])}
-        ${colorRow('Texto Gol a Favor', 'gfInk', theme.gfInk, '#14532d', [{ name: 'Verde Oscuro', val: '#14532d' }, { name: 'Blanco', val: '#ffffff' }])}
-        ${colorRow('Fondo Gol en Contra', 'gaBg', theme.gaBg, '#fdf2f4', [{ name: 'Rojo Pastel', val: '#fdf2f4' }, { name: 'Rojo Vivo', val: '#ef4444' }])}
-        ${colorRow('Texto Gol en Contra', 'gaInk', theme.gaInk, '#9f1239', [{ name: 'Rojo Oscuro', val: '#9f1239' }, { name: 'Blanco', val: '#ffffff' }])}
+        ${colorRow('Color general de la letra (texto)', 'fontColor', theme.fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Azul Noche', val: '#0a1c36' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Color de títulos de tarjetas', 'cardTitle', theme.cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Fondo de tarjetas y paneles', 'cardHue', theme.cardHue, '#ffffff', [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Marfil Suave', val: '#fafaf9' }, { name: 'Menta Tenue', val: '#f0fdf4' }
+        ])}
+        ${colorRow('Fondo general de la aplicación', 'appBgHue', theme.appBgHue, '#f4f6f5', [
+          { name: 'Gris CampoBase', val: '#f4f6f5' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Gris Pizarra', val: '#f1f5f9' }, { name: 'Arena Cálida', val: '#f6f3eb' }
+        ])}
       `;
     } else {
       // 'banners' / default
-      titleText = '⚙️ Cabeceras y Botones Principales';
+      titleText = '⚙️ Cabeceras (Banners) y Botones';
       const bannerBg = theme.bannerBg || '#0a251b';
       const bannerInk = theme.bannerInk || '#ffffff';
       const btnBg = theme.btnBg || '#10b981';
       const btnInk = theme.btnInk || '#ffffff';
       const btn2Bg = theme.btn2Bg || '#ffffff';
       const btn2Ink = theme.btn2Ink || '#0f172a';
-      contentHtml = `
-        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza las cabeceras de cada pantalla y los colores de los botones de acción.</p>
+      tabHtml = `
+        <p style="margin:0;font-size:12px;color:var(--cbx-muted, #64748b);">Personaliza el fondo y el texto de las cabeceras principales, y los botones de acción de cada pantalla.</p>
         <div id="qc-mock-banner" style="padding:12px 14px;background:${bannerBg};color:${bannerInk};border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
           <div>
             <span style="font-size:10px;opacity:0.8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Cabecera de ejemplo</span>
@@ -8884,43 +8914,54 @@ function openQuickColorDialog(targetKind = 'banners') {
           </div>
         </div>
         ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', theme.bannerBg, '#0a251b', [
+          { name: 'Rojo Carmesí', val: '#c8102e' },
           { name: 'Verde Hero', val: '#0a251b' },
           { name: 'Azul Noche', val: '#061021' },
           { name: 'Granate', val: '#170408' },
           { name: 'Gris Carbón', val: '#0f1113' },
-          { name: 'Negro Puro', val: '#000000' },
+          { name: 'Negro Puro', val: '#000000' }
         ])}
-        ${colorRow('Texto de Cabecera', 'bannerInk', theme.bannerInk, '#ffffff', [
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', theme.bannerInk, '#ffffff', [
           { name: 'Blanco', val: '#ffffff' },
           { name: 'Amarillo', val: '#fde047' },
           { name: 'Gris Claro', val: '#e2e8f0' },
+          { name: 'Dorado', val: '#f59e0b' }
         ])}
         ${colorRow('Botón Principal (Fondo)', 'btnBg', theme.btnBg, '#10b981', [
           { name: 'Esmeralda', val: '#10b981' },
           { name: 'Azul Real', val: '#2563eb' },
           { name: 'Rojo Carmesí', val: '#dc2626' },
           { name: 'Dorado', val: '#f59e0b' },
-          { name: 'Negro', val: '#0f172a' },
+          { name: 'Negro', val: '#0f172a' }
         ])}
         ${colorRow('Botón Principal (Texto)', 'btnInk', theme.btnInk, '#ffffff', [
           { name: 'Blanco', val: '#ffffff' },
-          { name: 'Negro', val: '#0f172a' },
+          { name: 'Negro', val: '#0f172a' }
         ])}
         ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', theme.btn2Bg, '#ffffff', [
           { name: 'Blanco', val: '#ffffff' },
           { name: 'Gris Claro', val: '#f1f5f9' },
-          { name: 'Gris Oscuro', val: '#334155' },
+          { name: 'Gris Oscuro', val: '#334155' }
         ])}
         ${colorRow('Botón Secundario (Texto)', 'btn2Ink', theme.btn2Ink, '#0f172a', [
           { name: 'Oscuro', val: '#0f172a' },
-          { name: 'Blanco', val: '#ffffff' },
+          { name: 'Blanco', val: '#ffffff' }
         ])}
       `;
     }
 
     titleEl.textContent = titleText;
-    bodyEl.innerHTML = contentHtml;
+    bodyEl.innerHTML = tabsNavHtml + tabHtml;
 
+    // Listeners para cambio de pestaña dentro del modal
+    bodyEl.querySelectorAll('.cbx-qc-tab-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        currentTab = chip.dataset.tab;
+        renderContent();
+      });
+    });
+
+    // Listeners para los color pickers
     bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
       picker.addEventListener('input', (e) => {
         const prop = e.target.dataset.prop;
@@ -8928,10 +8969,11 @@ function openQuickColorDialog(targetKind = 'banners') {
         const codeEl = e.target.nextElementSibling;
         if (codeEl) codeEl.textContent = val;
         updateThemeProperty(prop, val);
-        updateQcPreviews(targetKind, prop, val);
+        updateQcPreviews(currentTab, prop, val);
       });
     });
 
+    // Listeners para los swatches de sugerencias
     bodyEl.querySelectorAll('.cbx-swatch-btn').forEach((swatch) => {
       swatch.addEventListener('click', () => {
         const prop = swatch.dataset.prop;
@@ -8943,13 +8985,13 @@ function openQuickColorDialog(targetKind = 'banners') {
           if (codeEl) codeEl.textContent = val;
         }
         updateThemeProperty(prop, val);
-        updateQcPreviews(targetKind, prop, val);
+        updateQcPreviews(currentTab, prop, val);
       });
     });
   }
 
   resetBtn.onclick = async () => {
-    if (targetKind === 'dorsales') {
+    if (currentTab === 'dorsales') {
       let t = {};
       try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
       delete t.dorsalBg; delete t.dorsalInk;
@@ -8958,7 +9000,7 @@ function openQuickColorDialog(targetKind = 'banners') {
       applyCustomTheme(t);
       if (roleCanUseOwnerFeatures(state.role)) await put('settings', state.settings).catch(() => {});
       toast('Colores de dorsales restablecidos');
-    } else if (targetKind === 'whatsapp') {
+    } else if (currentTab === 'whatsapp') {
       let t = {};
       try { t = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
       delete t.waBg; delete t.waInk;
@@ -8967,15 +9009,23 @@ function openQuickColorDialog(targetKind = 'banners') {
       applyCustomTheme(t);
       if (roleCanUseOwnerFeatures(state.role)) await put('settings', state.settings).catch(() => {});
       toast('Colores de WhatsApp restablecidos');
-    } else if (targetKind === 'specialists') {
-      await resetSpecialistsColors();
-    } else if (targetKind === 'tactic-board') {
+    } else if (currentTab === 'tactic-board') {
       await resetTacticBoardColors();
     } else {
       await resetExtendedColors();
     }
     renderContent();
   };
+
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      if (roleCanUseOwnerFeatures(state.role)) {
+        await put('settings', state.settings).catch(() => {});
+      }
+      toast('✅ Todos los colores guardados correctamente');
+      dialog.close();
+    };
+  }
 
   renderContent();
   dialog.showModal();
@@ -10848,10 +10898,10 @@ function wireEvents() {
   $('#kit-settings-form')?.addEventListener('submit', (event) => saveKitSettings(event).catch(handleError));
 
   document.addEventListener('click', (event) => {
-    const gearBtn = event.target.closest('.cbx-context-gear-btn, [data-gear-target]');
+    const gearBtn = event.target.closest('#topbar-quick-color-btn, .topbar-gear-btn, .cbx-context-gear-btn, [data-gear-target]');
     if (gearBtn) {
       event.preventDefault();
-      openQuickColorDialog(gearBtn.dataset.gearTarget || 'banners');
+      openQuickColorDialog(gearBtn.dataset.gearTarget || null);
       return;
     }
 
