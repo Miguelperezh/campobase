@@ -5899,18 +5899,169 @@ function showExerciseDetail(exerciseId) {
   if (dialog) dialog.scrollTop = 0;
 }
 
+async function toggleTrainingSessionCompleted(id) {
+  const session = state.trainingSessions.find((s) => s.id === id);
+  if (!session) return;
+  const isCompleted = !session.completed;
+  const updated = {
+    ...session,
+    completed: isCompleted,
+    updatedAt: Date.now(),
+  };
+  await put('settings', updated);
+  await refresh(true);
+  renderTrainingSessions();
+  toast(isCompleted ? 'Entrenamiento archivado como realizado.' : 'Entrenamiento desmarcado y movido a pendientes.');
+}
+
 function renderTrainingSessions() {
-  const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  const allSessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  const activeSessions = allSessions.filter((s) => !s.completed);
+  const completedSessions = allSessions.filter((s) => !!s.completed);
 
   if (document.body.classList.contains('cb-redesign-active')) {
     const root = $('#sessions-list');
-    if (!sessions.length) {
+    if (!allSessions.length) {
       root.innerHTML = `<div class="cbx-card empty-state" style="text-align:center;padding:32px 16px;">
         <h3 style="font:800 20px var(--cbx-disp);text-transform:uppercase;color:var(--cbx-ink);margin-bottom:8px;">Todavía no hay sesiones de entrenamiento guardadas</h3>
         <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">Usa «+ Sesión» para crear una sesión o «WhatsApp semana» para compartir horarios.</p>
       </div>`;
       return;
     }
+
+    const renderCard = (session) => {
+      const targetDuration = Number(session.targetDuration) || 60;
+      const totalDuration = Number(session.totalDuration) || (session.blocks || []).reduce((acc, b) => acc + (Number(b.duration) || 0), 0);
+
+      // Status pill
+      let statusPill = '';
+      if (session.completed) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green" style="background:var(--btn, #10b981);color:var(--btnInk, #ffffff);font-weight:800;">✓ Realizado</span>`;
+      } else if (totalDuration < targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-amber">Quedan ${targetDuration - totalDuration} min</span>`;
+      } else if (totalDuration === targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green">Completa</span>`;
+      } else {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-red">Exceso ${totalDuration - targetDuration} min</span>`;
+      }
+
+      // Attendance status
+      const hasAttendance = (state.trainings || []).some((t) => (t.sessionId && t.sessionId === session.id) || (t.date && String(t.date).slice(0, 10) === String(session.date).slice(0, 10) && t.kind !== 'match'));
+      const attendancePill = hasAttendance
+        ? `<span class="cbx-session-pill cbx-session-pill-green">Asistencia pasada</span>`
+        : `<span class="cbx-session-pill cbx-session-pill-gray">Asistencia pendiente</span>`;
+
+      // Warmup tag if applicable
+      const isWarmup = session.sessionKind === 'match-warmup';
+      const warmupPill = isWarmup ? `<span class="cbx-session-pill cbx-session-pill-blue">Calentamiento de partido</span>` : '';
+
+      // Date and time
+      const dateFormatted = localDate(session.date);
+      const timeStr = session.time ? ` · ${session.time}` : '';
+
+      // Proportional bar segments
+      const maxDuration = Math.max(totalDuration, targetDuration, 1);
+      const barSegments = (session.blocks || []).map((b) => {
+        const dur = Number(b.duration) || 15;
+        const pct = Math.max(3, Math.round((dur / maxDuration) * 100));
+        const colorClass = b.type === 'warmup' ? 'bar-warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'bar-game' : 'bar-main';
+        return `<span class="cbx-session-bar-seg ${colorClass}" style="flex: ${dur} 0 auto; width:${pct}%;"></span>`;
+      }).join('');
+
+      // Blocks list
+      const blocksHtml = (session.blocks || []).map((b, idx) => {
+        const validated = findValidatedExercise(b.exerciseId);
+        const exName = validated?.nombre || exerciseName(b.exerciseId);
+        const phaseType = b.type === 'warmup' ? 'warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'game' : 'main';
+        const phaseLabel = sessionBlockLabel(b.type);
+        const duration = Number(b.duration) || 15;
+
+        return `
+          <div class="cbx-session-block-row">
+            <span class="cbx-session-block-dot dot-${phaseType}">${idx + 1}</span>
+            <span class="cbx-session-mini-pitch" aria-hidden="true">
+              <svg viewBox="0 0 46 32" class="cbx-mini-pitch-svg">
+                <rect width="46" height="32" rx="4" fill="#1f5a41"/>
+                <path d="M23 0v32M0 8h8v16H0M46 8h-8v16h8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                <circle cx="12" cy="14" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="28" cy="20" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="36" cy="10" r="2" fill="#fff"/>
+              </svg>
+            </span>
+            <div class="cbx-session-block-info">
+              <button type="button" class="session-exercise-link cbx-session-exercise-name" data-exercise-id="${escapeHtml(b.exerciseId)}" aria-label="Ver ejercicio ${escapeHtml(exName)}">${escapeHtml(exName)}</button>
+              <span class="cbx-session-block-phase">${escapeHtml(phaseLabel)}</span>
+            </div>
+            <strong class="cbx-session-block-duration">${duration}′</strong>
+            <button type="button" class="open-whistle-session cbx-session-block-play" data-id="${session.id}" data-block-index="${idx}" title="Cronómetro del bloque">▶</button>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <article class="cbx-session-card panel session-card ${session.completed ? 'is-completed' : ''}" data-session-id="${session.id}">
+          <div class="cbx-session-pills-row">
+            <span class="cbx-session-pill cbx-session-pill-date">${escapeHtml(dateFormatted)}${escapeHtml(timeStr)}</span>
+            ${statusPill}
+            ${attendancePill}
+            ${warmupPill}
+          </div>
+          <div>
+            <h3 class="cbx-session-name"><button type="button" class="view-session link-button" data-id="${session.id}" style="font:inherit;color:inherit;text-decoration:none;text-align:left;padding:0;background:none;border:0;cursor:pointer;">${escapeHtml(session.name)}</button></h3>
+            <p class="cbx-session-meta">${escapeHtml(session.pitch || 'Campo de entrenamiento')} · ${totalDuration} / ${targetDuration} min</p>
+          </div>
+          <div class="cbx-session-bar-track">
+            ${barSegments}
+          </div>
+          <div class="cbx-session-blocks-list">
+            ${blocksHtml}
+          </div>
+          <div class="cbx-session-actions-row">
+            <button type="button" class="open-whistle-session cbx-btn-whistle" data-id="${session.id}">⏱️ Silbato</button>
+            <button type="button" class="open-whatsapp-session cbx-btn-wa" data-id="${session.id}">📱 WhatsApp</button>
+            <button type="button" class="print-session cbx-btn-sub" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
+            <button type="button" class="edit-session cbx-btn-sub" data-id="${session.id}">✏️ Editar</button>
+            <button type="button" class="toggle-session-completed cbx-btn-completed ${session.completed ? 'is-completed' : ''}" data-id="${session.id}" title="${session.completed ? 'Marcar como pendiente' : 'Marcar como realizado'}">
+              ${session.completed ? '✓ Realizado' : '○ Realizado'}
+            </button>
+          </div>
+          <details class="cbx-session-more-details">
+            <summary>Más opciones</summary>
+            <div class="button-row">
+              <button type="button" class="view-session secondary compact" data-id="${session.id}">Ver ficha técnica</button>
+              <button type="button" class="delete-session danger compact" data-id="${session.id}">Borrar sesión</button>
+            </div>
+          </details>
+        </article>
+      `;
+    };
+
+    let html = '';
+    if (activeSessions.length) {
+      html += `<div class="cbx-sessions-grid">${activeSessions.map(renderCard).join('')}</div>`;
+    } else if (completedSessions.length) {
+      html += `<div class="cbx-card empty-state" style="text-align:center;padding:24px 16px;margin-bottom:16px;">
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay entrenamientos pendientes. Todos los entrenamientos están archivados como realizados abajo.</p>
+      </div>`;
+    }
+
+    if (completedSessions.length) {
+      html += `
+        <details class="cbx-completed-sessions-accordion" ${!activeSessions.length ? 'open' : ''}>
+          <summary class="cbx-completed-sessions-summary">
+            <span>📁 Entrenamientos realizados (${completedSessions.length})</span>
+            <span class="cbx-accordion-indicator">▾</span>
+          </summary>
+          <div class="cbx-sessions-grid cbx-completed-sessions-grid">
+            ${completedSessions.map(renderCard).join('')}
+          </div>
+        </details>
+      `;
+    }
+
+    root.innerHTML = html;
+    return;
+  }
 
     root.innerHTML = `<div class="cbx-sessions-grid">${sessions.map((session) => {
       const targetDuration = Number(session.targetDuration) || 60;
@@ -7276,6 +7427,29 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     const tbRival = v.tbRival || theme?.tbRival || '#ef4444';
     const tbArrow = v.tbArrow || theme?.tbArrow || '#fbbf24';
 
+    const todayMatchBg = v.todayMatchBg || bn;
+    const todayMatchInk = v.todayMatchInk || bnInk;
+    const callupHeaderBg = v.callupHeaderBg || bn;
+    const callupHeaderInk = v.callupHeaderInk || bnInk;
+    const callupBadgeBg = v.callupBadgeBg || 'rgba(255, 255, 255, 0.2)';
+    const callupBadgeInk = v.callupBadgeInk || '#ffffff';
+    const callupOutBg = v.callupOutBg || btn;
+    const callupOutInk = v.callupOutInk || btnInk;
+    const prepHeaderBg = v.prepHeaderBg || bn;
+    const prepHeaderInk = v.prepHeaderInk || bnInk;
+    const prepStatusBg = v.prepStatusBg || '#fff1d6';
+    const prepStatusInk = v.prepStatusInk || '#8a5900';
+    const whistleBg = v.whistleBg || bn;
+    const whistleInk = v.whistleInk || bnInk;
+    const printBg = v.printBg || btn2;
+    const printInk = v.printInk || btn2Ink;
+    const editBg = v.editBg || btn2;
+    const editInk = v.editInk || btn2Ink;
+    const completedBg = v.completedBg || '#f1f5f9';
+    const completedInk = v.completedInk || '#0f172a';
+    const calloutBg = v.calloutBg || 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))';
+    const calloutInk = v.calloutInk || vFontColor;
+
     viewEl.style.setProperty('--bn', bn);
     viewEl.style.setProperty('--bnInk', bnInk);
     viewEl.style.setProperty('--btn', btn);
@@ -7306,6 +7480,29 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
     viewEl.style.setProperty('--tb-team', tbTeam);
     viewEl.style.setProperty('--tb-rival', tbRival);
     viewEl.style.setProperty('--tb-arrow', tbArrow);
+
+    viewEl.style.setProperty('--today-match-bg', todayMatchBg);
+    viewEl.style.setProperty('--today-match-ink', todayMatchInk);
+    viewEl.style.setProperty('--callup-header-bg', callupHeaderBg);
+    viewEl.style.setProperty('--callup-header-ink', callupHeaderInk);
+    viewEl.style.setProperty('--callup-badge-bg', callupBadgeBg);
+    viewEl.style.setProperty('--callup-badge-ink', callupBadgeInk);
+    viewEl.style.setProperty('--callup-out-bg', callupOutBg);
+    viewEl.style.setProperty('--callup-out-ink', callupOutInk);
+    viewEl.style.setProperty('--prep-header-bg', prepHeaderBg);
+    viewEl.style.setProperty('--prep-header-ink', prepHeaderInk);
+    viewEl.style.setProperty('--prep-status-bg', prepStatusBg);
+    viewEl.style.setProperty('--prep-status-ink', prepStatusInk);
+    viewEl.style.setProperty('--whistle-bg', whistleBg);
+    viewEl.style.setProperty('--whistle-ink', whistleInk);
+    viewEl.style.setProperty('--print-bg', printBg);
+    viewEl.style.setProperty('--print-ink', printInk);
+    viewEl.style.setProperty('--edit-bg', editBg);
+    viewEl.style.setProperty('--edit-ink', editInk);
+    viewEl.style.setProperty('--completed-bg', completedBg);
+    viewEl.style.setProperty('--completed-ink', completedInk);
+    viewEl.style.setProperty('--callout-bg', calloutBg);
+    viewEl.style.setProperty('--callout-ink', calloutInk);
   });
 }
 
@@ -8716,15 +8913,15 @@ function openQuickColorDialog(targetKind = null) {
   const VIEWS_INFO = [
     { id: 'plantilla', name: 'Plantilla', icon: '👥', desc: 'Jugadores, minutos y dorsales', hasDorsales: true, hasSetPieces: true, subtabs: [{ id: 'general', label: '📋 General & Dorsales' }, { id: 'specialists', label: '🎯 Balón Parado' }] },
     { id: 'cuerpo-tecnico', name: 'Cuerpo Técnico', icon: '💬', desc: 'Entrenadores y WhatsApp', hasWa: true, subtabs: [{ id: 'general', label: '📋 Técnicos & WhatsApp' }] },
-    { id: 'convocatorias', name: 'Convocatoria', icon: '📋', desc: 'Bajas, dorsales y envío', hasDorsales: true, hasWa: true, subtabs: [{ id: 'general', label: '📋 Convocatoria & WhatsApp' }] },
+    { id: 'convocatorias', name: 'Convocatoria', icon: '📋', desc: 'Bajas, dorsales y envío', hasDorsales: true, hasWa: true, subtabs: [{ id: 'general', label: '📋 Convocatoria & Tarjetas' }] },
     { id: 'partido', name: 'Partido en Vivo', icon: '⚽', desc: 'Marcador, cambios y pizarra', hasDorsales: true, hasGoals: true, hasTacticBoard: true, subtabs: [{ id: 'live', label: '⚽ Marcador & Goles' }, { id: 'tactic-board', label: '📐 Pizarra en Vivo' }] },
-    { id: 'tacticas', name: 'Tácticas', icon: '📐', desc: 'Pizarra interactiva libre', hasTacticBoard: true, subtabs: [{ id: 'general', label: '📑 Cabecera & Botones' }, { id: 'tactic-board', label: '📐 Pizarra Interactiva' }] },
-    { id: 'preparacion', name: 'Preparación', icon: '⏱️', desc: 'Alineación y plan PDF', hasDorsales: true, subtabs: [{ id: 'general', label: '📋 Titulares & Imprimir' }] },
+    { id: 'tacticas', name: 'Tácticas', icon: '📐', desc: 'Pizarra interactiva libre', hasTacticBoard: true, subtabs: [{ id: 'general', label: '📑 Hero, Botones & Callout' }, { id: 'tactic-board', label: '📐 Pizarra Táctica' }] },
+    { id: 'preparacion', name: 'Preparación', icon: '⏱️', desc: 'Alineación y plan PDF', hasDorsales: true, subtabs: [{ id: 'general', label: '📋 Tarjetas de Partido & Acciones' }] },
+    { id: 'sesiones', name: 'Sesiones', icon: '⏱️', desc: 'Planificación por bloques', hasWa: true, subtabs: [{ id: 'general', label: '⏱️ Acciones, Silbato & Fichas' }] },
+    { id: 'hoy', name: 'Tu Día', icon: '🏠', desc: 'Resumen diario y marcador', subtabs: [{ id: 'general', label: '🏠 Resumen & Tarjeta de Marcador' }] },
     { id: 'calendario', name: 'Calendario', icon: '📅', desc: 'Próximos partidos y resultados', subtabs: [{ id: 'general', label: '📅 Partidos & Resultados' }] },
     { id: 'asistencia', name: 'Asistencia', icon: '📝', desc: 'Control de faltas y dorsales', hasDorsales: true, subtabs: [{ id: 'general', label: '📝 Asistencia & Dorsales' }] },
     { id: 'ejercicios', name: 'Ejercicios', icon: '📖', desc: 'Biblioteca de fichas tácticas', subtabs: [{ id: 'general', label: '📖 Biblioteca de Fichas' }] },
-    { id: 'sesiones', name: 'Sesiones', icon: '⏱️', desc: 'Planificación por bloques', hasWa: true, subtabs: [{ id: 'general', label: '⏱️ Sesiones & WhatsApp' }] },
-    { id: 'hoy', name: 'Hoy', icon: '🏠', desc: 'Resumen diario del club', subtabs: [{ id: 'general', label: '🏠 Resumen del Club' }] },
     { id: 'ajustes', name: 'Ajustes', icon: '⚙️', desc: 'Preferencias y temas', subtabs: [{ id: 'general', label: '⚙️ Ajustes del Sistema' }] },
   ];
 
@@ -8773,6 +8970,19 @@ function openQuickColorDialog(targetKind = null) {
     const pRival = $('#qc-mock-tb-rival');
     const pArrow = $('#qc-mock-tb-arrow');
 
+    const pTodayMatch = $('#qc-mock-today-match');
+    const pTodayMatchScore = $('#qc-mock-today-score');
+    const pCallupHeader = $('#qc-mock-callup-header');
+    const pCallupBadge = $('#qc-mock-callup-badge');
+    const pCallupOut = $('#qc-mock-callup-out');
+    const pPrepHeader = $('#qc-mock-prep-header');
+    const pWhistleBtn = $('#qc-mock-btn-whistle');
+    const pPrintBtn = $('#qc-mock-btn-print');
+    const pEditBtn = $('#qc-mock-btn-edit');
+    const pCompletedBtn = $('#qc-mock-btn-completed');
+    const pCallout = $('#qc-mock-callout');
+    const pCalloutText = $('#qc-mock-callout-text');
+
     if (prop === 'bannerBg' && pBanner) pBanner.style.background = val;
     if (prop === 'bannerInk') {
       if (pBanner) pBanner.style.color = val;
@@ -8804,6 +9014,8 @@ function openQuickColorDialog(targetKind = null) {
       if (w1) w1.style.background = val;
       const cw = $('#qc-mock-callup-wa');
       if (cw) cw.style.background = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.background = val;
     }
     if (prop === 'waInk') {
       if (pWa) pWa.style.color = val;
@@ -8811,6 +9023,8 @@ function openQuickColorDialog(targetKind = null) {
       if (w1) w1.style.color = val;
       const cw = $('#qc-mock-callup-wa');
       if (cw) cw.style.color = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.color = val;
     }
     if (prop === 'spLeadBg' && pSpLead) pSpLead.style.background = val;
     if (prop === 'spLeadInk' && pSpLead) pSpLead.style.color = val;
@@ -8830,30 +9044,38 @@ function openQuickColorDialog(targetKind = null) {
       if (arrowText) arrowText.style.color = val;
     }
 
-    if (kind === 'dorsales') {
-      const d1 = $('#qc-mock-dorsal-1');
-      const d2 = $('#qc-mock-dorsal-2');
-      if (prop === 'dorsalBg') { if (d1) d1.style.background = val; if (d2) d2.style.background = val; }
-      else if (prop === 'dorsalInk') { if (d1) d1.style.color = val; if (d2) d2.style.color = val; }
-    } else if (kind === 'whatsapp') {
-      const w1 = $('#qc-mock-wa-1');
-      if (prop === 'waBg' && w1) w1.style.background = val;
-      if (prop === 'waInk' && w1) w1.style.color = val;
-    } else if (kind === 'callups') {
-      const d1 = $('#qc-mock-callup-dorsal-1');
-      if (prop === 'dorsalBg' && d1) d1.style.background = val;
-      if (prop === 'dorsalInk' && d1) d1.style.color = val;
-    } else if (kind === 'live') {
-      if (prop === 'gfBg' && pGf) pGf.style.background = val;
-      if (prop === 'gfInk' && pGf) pGf.style.color = val;
-      if (prop === 'gaBg' && pGa) pGa.style.background = val;
-      if (prop === 'gaInk' && pGa) pGa.style.color = val;
-    } else if (kind === 'tactic-board') {
-      if (prop === 'tbPitch' && pPitch) pPitch.style.background = val;
-      if (prop === 'tbLines' && pPitch) pPitch.style.borderColor = val;
-      if (prop === 'tbTeam' && pTeam) pTeam.style.background = val;
-      if (prop === 'tbRival' && pRival) pRival.style.background = val;
-      if (prop === 'tbArrow' && pArrow) pArrow.style.background = val;
+    if (prop === 'todayMatchBg' && pTodayMatch) pTodayMatch.style.background = val;
+    if (prop === 'todayMatchInk' && pTodayMatch) {
+      pTodayMatch.style.color = val;
+      if (pTodayMatchScore) pTodayMatchScore.style.color = val;
+      pTodayMatch.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupHeaderBg' && pCallupHeader) pCallupHeader.style.background = val;
+    if (prop === 'callupHeaderInk' && pCallupHeader) {
+      pCallupHeader.style.color = val;
+      pCallupHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupBadgeBg' && pCallupBadge) pCallupBadge.style.background = val;
+    if (prop === 'callupBadgeInk' && pCallupBadge) pCallupBadge.style.color = val;
+    if (prop === 'callupOutBg' && pCallupOut) pCallupOut.style.background = val;
+    if (prop === 'callupOutInk' && pCallupOut) pCallupOut.style.color = val;
+    if (prop === 'prepHeaderBg' && pPrepHeader) pPrepHeader.style.background = val;
+    if (prop === 'prepHeaderInk' && pPrepHeader) {
+      pPrepHeader.style.color = val;
+      pPrepHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'whistleBg' && pWhistleBtn) pWhistleBtn.style.background = val;
+    if (prop === 'whistleInk' && pWhistleBtn) pWhistleBtn.style.color = val;
+    if (prop === 'printBg' && pPrintBtn) pPrintBtn.style.background = val;
+    if (prop === 'printInk' && pPrintBtn) pPrintBtn.style.color = val;
+    if (prop === 'editBg' && pEditBtn) pEditBtn.style.background = val;
+    if (prop === 'editInk' && pEditBtn) pEditBtn.style.color = val;
+    if (prop === 'completedBg' && pCompletedBtn) pCompletedBtn.style.background = val;
+    if (prop === 'completedInk' && pCompletedBtn) pCompletedBtn.style.color = val;
+    if (prop === 'calloutBg' && pCallout) pCallout.style.background = val;
+    if (prop === 'calloutInk') {
+      if (pCallout) pCallout.style.color = val;
+      if (pCalloutText) pCalloutText.style.color = val;
     }
   }
 
@@ -8910,6 +9132,27 @@ function openQuickColorDialog(targetKind = null) {
     const tbTeam = val('tbTeam', '#10b981');
     const tbRival = val('tbRival', '#ef4444');
     const tbArrow = val('tbArrow', '#fbbf24');
+
+    const todayMatchBg = val('todayMatchBg', bannerBg);
+    const todayMatchInk = val('todayMatchInk', bannerInk);
+    const callupHeaderBg = val('callupHeaderBg', bannerBg);
+    const callupHeaderInk = val('callupHeaderInk', bannerInk);
+    const callupBadgeBg = val('callupBadgeBg', 'rgba(255, 255, 255, 0.2)');
+    const callupBadgeInk = val('callupBadgeInk', '#ffffff');
+    const callupOutBg = val('callupOutBg', btnBg);
+    const callupOutInk = val('callupOutInk', btnInk);
+    const prepHeaderBg = val('prepHeaderBg', bannerBg);
+    const prepHeaderInk = val('prepHeaderInk', bannerInk);
+    const whistleBg = val('whistleBg', bannerBg);
+    const whistleInk = val('whistleInk', bannerInk);
+    const printBg = val('printBg', btn2Bg);
+    const printInk = val('printInk', btn2Ink);
+    const editBg = val('editBg', btn2Bg);
+    const editInk = val('editInk', btn2Ink);
+    const completedBg = val('completedBg', '#f1f5f9');
+    const completedInk = val('completedInk', '#0f172a');
+    const calloutBg = val('calloutBg', '#dcfce7');
+    const calloutInk = val('calloutInk', fontColor);
 
     const viewsBarHtml = `
       <div class="cbx-qc-views-bar" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;border-bottom:1px solid var(--cardBorder, #e2e8f0);margin-bottom:6px;scrollbar-width:thin;">
@@ -9091,6 +9334,385 @@ function openQuickColorDialog(targetKind = null) {
         ])}
         ${colorRow('Nombres de Jugadores y Títulos', 'cardTitle', cardTitle, '#0f172a', [
           { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+      `;
+    } else if (currentViewId === 'hoy') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera de Tu Día</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Tu Día en CampoBase</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Principal</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Secundario</button>
+            </div>
+          </div>
+          <div id="qc-mock-today-match" style="padding:12px 14px;background:${todayMatchBg};color:${todayMatchInk};border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:0.9;">
+              <strong style="color:${todayMatchInk};">C.F. UNIÓN VIERA ALEVÍN D vs HURACÁN A</strong>
+              <span style="padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${todayMatchInk};">Finalizado</span>
+            </div>
+            <div id="qc-mock-today-score" style="font:800 24px var(--disp);text-align:center;color:${todayMatchInk};">1 - 15</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.85;">
+              <span style="color:${todayMatchInk};">09:00 · Casa · Alfonso Silva</span>
+              <span style="color:${todayMatchInk};">Asistencia registrada</span>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13px;color:${cardTitle};">Próximos Eventos y Estado</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};line-height:1.4;">Resumen general de la jornada, asistencias y notas informativas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Tarjeta Marcador / Partido', 'todayMatchBg', todayMatchBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Gris Grafito', val: '#1e293b' }, { name: 'Negro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y Números del Marcador', 'todayMatchInk', todayMatchInk, bannerInk, [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Amarillo Oro', val: '#facc15' }, { name: 'Gris Claro', val: '#e2e8f0' }, { name: 'Verde Claro', val: '#a7f3d0' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas, datos)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Títulos y Nombres', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Fondo de Tarjetas', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }, { name: 'Marfil', val: '#fafaf9' }
+        ])}
+        ${colorRow('Borde de Tarjetas', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }, { name: 'Oscuro Sutil', val: '#334155' }
+        ])}
+      `;
+    } else if (currentViewId === 'convocatorias') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Convocatorias</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Convocatorias</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Convocatoria</button>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-callup-header" style="padding:10px 14px;background:${callupHeaderBg};color:${callupHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${callupHeaderInk};">F7 · LIGA · 09:00</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${callupHeaderInk};">HURACÁN A</h4>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span id="qc-mock-callup-badge" style="padding:3px 8px;border-radius:999px;background:${callupBadgeBg};color:${callupBadgeInk};font:800 11px var(--cbx-ui);">14 convocados</span>
+                <span id="qc-mock-callup-out" style="padding:3px 8px;border-radius:999px;background:${callupOutBg};color:${callupOutInk};font:800 11px var(--cbx-ui);">0 fuera</span>
+              </div>
+            </div>
+            <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-callup-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">10</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Jugador Convocado</strong>
+              </div>
+              <button type="button" id="qc-mock-wa" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:700 11px var(--cbx-ui);">💬 WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Convocatoria', 'callupHeaderBg', callupHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Convocatoria', 'callupHeaderInk', callupHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Píldora «14 convocados»', 'callupBadgeBg', callupBadgeBg, 'rgba(255, 255, 255, 0.2)', [
+          { name: 'Translúcido Blanco', val: 'rgba(255, 255, 255, 0.2)' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Gris Nieve', val: '#f1f5f9' }
+        ])}
+        ${colorRow('Texto Píldora «14 convocados»', 'callupBadgeInk', callupBadgeInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Oscuro', val: '#065f46' }
+        ])}
+        ${colorRow('Fondo Botón / Píldora «0 fuera»', 'callupOutBg', callupOutBg, btnBg, [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Dorado', val: '#f59e0b' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Botón / Píldora «0 fuera»', 'callupOutInk', callupOutInk, btnInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo Botón WhatsApp', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }
+        ])}
+        ${colorRow('Texto WhatsApp', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul', val: '#2563eb' }, { name: 'Rojo', val: '#dc2626' }
+        ])}
+        ${colorRow('Botón Principal (Texto)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'preparacion') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Preparación</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Preparación de Partidos</h4>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-prep-header" style="padding:10px 14px;background:${prepHeaderBg};color:${prepHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${prepHeaderInk};">Próximo Rival</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${prepHeaderInk};">UD. Jinámar</h4>
+              </div>
+              <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${prepHeaderInk};">Jornada 5</span>
+            </div>
+            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">8</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Medio Centro Titular</strong>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" id="qc-mock-btn" style="flex:1;padding:7px 10px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 11.5px var(--cbx-ui);text-align:center;">Preparar partido</button>
+                <button type="button" id="qc-mock-btn2" style="flex:1;padding:7px 10px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">Convocar y preparar</button>
+                <button type="button" id="qc-mock-btn-print" style="flex:1;padding:7px 10px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">🖨️ Imprimir plan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Partido', 'prepHeaderBg', prepHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Partido', 'prepHeaderInk', prepHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón Acción Principal («Preparar partido»)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Acción Principal', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Acción Secundaria («Convocar y preparar»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Acción Secundaria', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Texto)', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'sesiones') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Sesiones</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Sesiones de Entrenamiento</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Sesión</button>
+          </div>
+          <div id="qc-mock-card" style="padding:12px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div>
+              <strong id="qc-mock-card-title" style="font-size:14px;color:${cardTitle};cursor:pointer;">Entrenamiento: Posesión y Finalización</strong>
+              <p id="qc-mock-card-text" style="margin:2px 0 0;font-size:12px;color:${fontColor};">1. Calentamiento: Rondos 4x2 (15′) · 2. Partido (30′)</p>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" id="qc-mock-btn-whistle" style="flex:1;padding:6px 4px;border-radius:8px;background:${whistleBg};color:${whistleInk};border:0;font:700 11px var(--cbx-ui);text-align:center;">⏱️ Silbato</button>
+              <button type="button" id="qc-mock-btn-wa" style="flex:1;padding:6px 4px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:800 11px var(--cbx-ui);text-align:center;">📱 WhatsApp</button>
+              <button type="button" id="qc-mock-btn-print" style="flex:1;padding:6px 4px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">🖨️ Imprimir</button>
+              <button type="button" id="qc-mock-btn-edit" style="flex:1;padding:6px 4px;border-radius:8px;background:${editBg};color:${editInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✏️ Editar</button>
+              <button type="button" id="qc-mock-btn-completed" style="flex:1;padding:6px 4px;border-radius:8px;background:${completedBg};color:${completedInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✓ Realizado</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Sesión» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Sesión»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón «⏱️ Silbato» (Fondo)', 'whistleBg', whistleBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Botón «⏱️ Silbato»', 'whistleInk', whistleInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Botón «📱 WhatsApp» (Fondo)', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }
+        ])}
+        ${colorRow('Texto Botón «📱 WhatsApp»', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón «🖨️ Imprimir» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «🖨️ Imprimir»', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✏️ Editar» (Fondo)', 'editBg', editBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «✏️ Editar»', 'editInk', editInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✓ Realizado» (Fondo)', 'completedBg', completedBg, '#f1f5f9', [
+          { name: 'Gris Suave', val: '#f1f5f9' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Botón «✓ Realizado»', 'completedInk', completedInk, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#15803d' }
+        ])}
+        ${colorRow('Título de Sesión (Enlace)', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+        ${colorRow('Nombres de Ejercicios y Textos', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'tacticas' && currentSubTab === 'general') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:14px 16px;background:${bannerBg};color:${bannerInk};border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Pizarra Táctica & Estrategia</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 17px var(--disp);color:${bannerInk};">Tácticas</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Táctica</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Mostrar rival</button>
+            </div>
+          </div>
+          <div id="qc-mock-callout" style="padding:10px 14px;background:${calloutBg};border-radius:10px;border:1px solid #cbd5e1;">
+            <p id="qc-mock-callout-text" style="margin:0;font-size:12px;color:${calloutInk};line-height:1.4;">
+              Arrastra los jugadores en la pizarra para organizar la salida de balón, presión y bloque defensivo.
+            </p>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Sistema F7 1-3-2-1 (Árbol)</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};">Equilibrio entre líneas y progresión por bandas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Hero Banner Fondo', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Hero Banner Texto', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Táctica» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Táctica»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario («Mostrar rival»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón Secundario', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Caja Informativa (Callout / pestaña verde)', 'calloutBg', calloutBg, '#dcfce7', [
+          { name: 'Verde Menta Suave', val: '#dcfce7' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Amarillo Alerta', val: '#fef3c7' }, { name: 'Azul Tenue', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Caja Informativa', 'calloutInk', calloutInk, fontColor, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Bosque', val: '#166534' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Nombres y Títulos de Tácticas', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Texto Principal (Descripción)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
         ])}
       `;
     } else {
@@ -11804,6 +12426,11 @@ function wireEvents() {
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
     const waPlayerBtn = target.closest('.open-whatsapp-player');
     if (target.id === 'open-whatsapp-week-header-btn' || target.closest('#open-whatsapp-week-header-btn')) openWhatsAppDialog({ mode: 'week' });
+    if (target.matches('.toggle-session-completed') || target.closest('.toggle-session-completed')) {
+      const completedBtn = target.closest('.toggle-session-completed') || target;
+      toggleTrainingSessionCompleted(completedBtn.dataset.id).catch(handleError);
+      return;
+    }
     if (target.matches('.open-whistle-session') || target.closest('.open-whistle-session')) {
       const whistleBtn = target.closest('.open-whistle-session') || target;
       openWhistleDialog(whistleBtn.dataset.id, whistleBtn.dataset.blockIndex);

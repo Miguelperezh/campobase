@@ -6,19 +6,38 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ## 1. Resumen de Mejoras Recientes
 
-### 1.0 Personalización Cromática Total e Independiente por Pestaña y Subpestaña (v81)
-- **Causa anterior:** Los ajustes cromáticos alteraban de forma global todas las pantallas de la aplicación. Además, ciertos botones principales y secundarios no permitían cambiar sus fondos o fuentes con alta especificidad, y el texto general o dorsales no se podían aislar por pantalla.
+### 1.0 Personalización Cromática Total e Independiente por Pantalla y Archivo de Entrenamientos Realizados (v81 - SDD 015)
+- **Causa anterior:**
+  1. Los ajustes cromáticos alteraban de forma global todas las pantallas de la aplicación.
+  2. En varias pantallas persistían textos negros o contrastes deficientes sobre fondos oscuros o banners rojos (por ejemplo, en el marcador de *Tu Día*, cabeceras de *Convocatorias*, tarjetas de *Preparación* y *Partido en Vivo*).
+  3. Los títulos de entrenamientos y enlaces de ejercicios heredaban fondos y bordes de botones globales (`button:not(...)`), desvirtuando su aspecto textual.
+  4. En *Sesiones*, faltaba un flujo para marcar entrenamientos completados («✓ Realizado») y archivarlos limpiamente sin borrarlos.
+  5. En *Tácticas*, la caja informativa verde y los banners no disponían de personalización cromática independiente.
+  6. El acceso al diálogo de colores requería un icono discreto y sin fondo para no sobrecargar la barra superior.
 - **Solución implementada:**
+  - **Tuerca de configuración discreta y minimalista:** Botón de cabecera `#topbar-quick-color-btn` con clase `.topbar-gear-btn`, color gris neutro `#94a3b8`, fondo 100% transparente y sin sombras ni bordes invasivos.
   - **Aislamiento cromático absoluto (`views` en tema):** Cada pantalla (`plantilla`, `cuerpo-tecnico`, `convocatorias`, `partido`, `tacticas`, `preparacion`, `calendario`, `asistencia`, `ejercicios`, `sesiones`, `hoy`, `ajustes`) y sus subpestañas operativas (`general`, `specialists`, `live`, `tactic-board`) disponen de su propia configuración independiente en `state.settings.theme.views[viewId]`. Modificar una pantalla no afecta en absoluto a las demás («sin que afecten al resto»).
-  - **Botones Principal y Secundario independientes:** En cada vista se controla tanto el fondo (`btn` / `btn2`) como el color de fuente (`btnInk` / `btn2Ink`) con `!important` y especificidad reforzada para todos los selectores de botones (`.primary`, `.secondary`, `.cbx-btn`, `.cbx-btn-light`, `.cbx-btn-sub`, `.cbx-btn-secondary`, etc.).
-  - **Texto principal y Nombres/Títulos:** Se desacopla `--view-font-color` para los textos y párrafos de cada pantalla, y `--cardTitle` para nombres de jugadores, técnicos, partidos y títulos.
-  - **Dorsales, WhatsApp y Herramientas Especializadas:**
-    - Dorsales: fondo (`dorsalBg`) y color de número (`dorsalInk`) configurables si la pantalla los incluye.
-    - WhatsApp: fondo (`waBg`) y color de texto (`waInk`) para botones de contacto y convocatorias.
-    - Especialistas a balón parado (Plantilla): 1.er lanzador (`spLeadBg`, `spLeadInk`) y 2.º lanzador (`spSubBg`, `spSubInk`).
-    - Incidencias de partido (Partido en vivo): botones «+ Gol Nuestro» (`gfBg`, `gfInk`) y «+ Gol Rival» (`gaBg`, `gaInk`).
-    - Pizarra táctica (Tácticas y Partido en vivo): césped (`tbPitch`), líneas (`tbLines`), fichas de tu equipo (`tbTeam`), fichas del rival (`tbRival`) y flechas/trazos (`tbArrow`).
-  - **Modal unificado con tuerca superior:** Selector horizontal de las 12 pantallas y subpestañas, previsualización interactiva fiel en tiempo real, botón «↺ Restablecer esta pestaña» y botón «🌐 Copiar a todas».
+  - **Contraste y elementos aislados por pantalla:**
+    - **Tu Día (`#hoy`):** Tarjeta de marcador de partido `.cbx-today-match-score` con variables dedicadas `--today-match-bg` (fondo) y `--today-match-ink` (texto, nombres de equipos, resultado, metadata y asistencia).
+    - **Convocatorias (`#convocatorias`):** Cabecera de partido con `--callup-header-bg` y `--callup-header-ink`; píldora de convocados ("14 convocados") con `--callup-badge-bg` y `--callup-badge-ink`; píldora de no convocados contigua ("0 fuera") con `--callup-out-bg` y `--callup-out-ink`.
+    - **Preparación (`#preparacion`):** Cabeceras de tarjetas de partido ("UD. Jinámar", etc.) con `--prep-header-bg` y `--prep-header-ink`; botones de acción ("Preparar partido", "Convocar y preparar", "Imprimir plan") con estilos desacoplados.
+    - **Partido en Vivo (`#partido`):** Cabecera con `.cbx-banner` unificada; botones «+ Gol Nuestro» (`gfBg`, `gfInk`) y «+ Gol Rival» (`gaBg`, `gaInk`); pizarra táctica en vivo independiente.
+    - **Tácticas (`#tacticas`):** Hero banner, eyebrow, título y caja informativa ("la pestaña verde") `.cbx-tactics-callout` vinculada a `--callout-bg` y `--callout-ink`.
+  - **Sesiones de entrenamiento — 5 Botones y Archivo de Realizados:**
+    - **Limpieza visual:** Títulos `.view-session.link-button` y enlaces de ejercicios `.session-exercise-link` libres de fondos o bordes de botones.
+    - **5 botones de acción por sesión:**
+      1. ⏱️ Silbato (`.cbx-btn-whistle`, variables `--whistle-bg` y `--whistle-ink`).
+      2. 📱 WhatsApp (`.cbx-btn-wa`, variables `--waBg` y `--waInk`).
+      3. 🖨️ Imprimir (`.print-session.cbx-btn-sub`, variables `--print-bg` y `--print-ink`).
+      4. ✏️ Editar (`.edit-session.cbx-btn-sub`, variables `--edit-bg` y `--edit-ink`).
+      5. ✓ Realizado / Pendiente (`.cbx-btn-completed`, variables `--completed-bg` y `--completed-ink`).
+    - **Acordeón colapsable inferior:** Las sesiones marcadas como realizadas se archivan automáticamente en `<details class="cbx-completed-sessions-accordion">` al final del listado, permitiendo desplegarlas o plegarlas cómodamente y desmarcar su estado cuando sea necesario.
+    - **Persistencia en modelo:** `js/exercise-planning.js` (`buildFlexibleTrainingSession`) conserva la bandera `completed: Boolean(values.completed)`.
+  - **Modal unificado con previsualización en vivo (`openQuickColorDialog`):**
+    - Selector horizontal de las 12 pantallas y subpestañas.
+    - Previsualizaciones interactivas fieles en tiempo real para todas las vistas.
+    - Controles de color especializados según la pantalla activa.
+    - Botón «↺ Restablecer esta pestaña» y botón «🌐 Copiar a todas».
   - **Blindaje de impresión de plan:** El motor de impresión en PDF (`js/print-match-plan.js`, `#cb-print-root`, `.cb-print-sheet`) permanece 100% aislado y blindado.
 
 ### 1.1 Rendimiento Inmediato y Eliminación de Lentitud al Entrar y Poner PIN (v20)

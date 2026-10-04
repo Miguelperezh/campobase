@@ -1,0 +1,26 @@
+# Tareas SDD 015: Lista de Tareas y Progreso
+
+- [x] **T1. Estructura HTML (`index.html`)**: Homologar cabecera de `#partido` añadiendo la clase `.cbx-banner`.
+- [x] **T2. Estilos de Tu Día (`css/claude-hoy.css`)**: Vincular tarjeta de marcador a `--today-match-bg` y tipografía a `--today-match-ink`.
+- [x] **T3. Estilos de Convocatorias y Preparación (`css/claude-partido.css`)**:
+  - Vincular cabecera de convocatoria a `--callup-header-bg` y `--callup-header-ink`.
+  - Píldora "14 convocados" a `--callup-badge-bg` / `--callup-badge-ink`.
+  - Píldora contigua "0 fuera" a `--callup-out-bg` / `--callup-out-ink`.
+  - Cabecera de tarjeta de preparación a `--prep-header-bg` y `--prep-header-ink`.
+  - Botones de acción en preparación vinculados a `--btn` / `--btn2` con textos nítidos.
+- [x] **T4. Estilos de Sesiones y Tácticas (`css/claude-entreno.css`)**:
+  - Eliminar fondo de botón en títulos y enlaces de ejercicios en sesiones.
+  - Añadir soporte para 5 botones de acción (Silbato, WhatsApp, Imprimir, Editar, Realizado).
+  - Configurar hero, eyebrow, título y callout ("la pestaña verde") en Tácticas.
+- [x] **T5. Refactorización de selectores globales (`styles-redesign.css`)**:
+  - Proteger cabeceras y tarjetas contra la regla de fuente negra general.
+  - Excluir enlaces textuales de la regla general de botones.
+  - Asegurar reglas scoped para las 12 pantallas y subpestañas.
+- [x] **T6. Lógica de Aplicación y Modal de Personalización (`js/app.js`)**:
+  - Extender `applyViewScopedTheme` con las nuevas variables CSS.
+  - Añadir controles y previsualizaciones especializadas en `openQuickColorDialog` para cada vista.
+  - Implementar lógica de marcado "Realizado" en `renderTrainingSessions` con acordeón inferior colapsable.
+  - Añadir listener delegado para `.toggle-session-completed`.
+- [x] **T7. Documentación en `agente.md`**: Actualizar con la especificación 015 y manual de cambios.
+- [x] **T8. Pruebas y Validación**: Ejecutar `npm test` y verificar que todas las suites pasen al 100%.
+- [x] **T9. Push a `origin/main`**: Subir cambios directamente a la rama principal.

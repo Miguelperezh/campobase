@@ -359,6 +359,7 @@ export function buildFlexibleTrainingSession(values = {}, metadata = {}) {
     notes: clean(values.notes),
     blocks,
     totalDuration: status.total,
+    completed: Boolean(values.completed),
     createdAt: metadata.createdAt,
     updatedAt: metadata.now,
   };
