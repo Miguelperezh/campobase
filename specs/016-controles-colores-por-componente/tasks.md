@@ -8,3 +8,9 @@
 - [x] Comprobación de colores reales, persistencia y ancho en navegador.
 - [x] Pruebas relacionadas y comprobación de sintaxis.
 - [x] Despliegue aislado verificado y URL entregada.
+
+## Iteración: panel detallado
+- [x] Conservar formato del panel existente y explicar los controles.
+- [x] Controles nombrados de elementos propios, campos, fondos y gráficos.
+- [x] Búsqueda y restablecimiento individual.
+- [ ] Verificar persistencia y publicar únicamente la prueba aislada.

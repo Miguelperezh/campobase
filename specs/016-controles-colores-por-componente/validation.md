@@ -18,3 +18,8 @@ Main original se conserva en 7e86fc43. No se modifica producción ni Supabase. L
 - Marcador público source-commit.txt comprobado: 9ad20c14.
 - Paquete final: prueba de navegador superada con cero escrituras remotas.
 - main original sigue en 7e86fc43785530409ed2e7da60e4cf39255987d9.
+
+## Iteración del panel detallado
+- 32 pruebas relacionadas superadas y sintaxis comprobada.
+- Navegador aislado: filas con explicaciones, control por nombre, fondo de Editar persistente, borde individual y restauración sin borrar el fondo del botón.
+- También pasan convocatoria, textos, navegación independiente, cierre de ejercicio, WhatsApp y anchos de sesiones. Cero escrituras remotas.
