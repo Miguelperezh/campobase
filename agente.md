@@ -1764,3 +1764,7 @@ Miguel exige copiar el plan visible a Preparación sin regenerarlo, editar jugad
 
 ### Publicación aislada: comprobar versión real, no parámetros del enlace
 Un parámetro revision no selecciona un commit en GitHub Pages. Antes de pedir validación, comprobar workflow exitoso y contenido real de source-commit.txt y archivos corregidos. No afirmar que los cambios están visibles porque se hayan subido al repositorio. Fallo de asignación de runner en deploy legacy: solución preparada con un job que empaqueta y publica en el mismo runner, solo campobase-preview; original y Supabase intactos. La conexión GitHub existente aceptó el archivo sin renovar permisos.
+
+
+## 2026-10-05 · Plan por tramos y ajustes intuitivos (SDD 023)
+Preservar todos los bloques validados y valores de personalización. Dar acceso visible a Plan por tramos desde Preparación, con propuesta, revisión y uso del borrador explicados; consultas rápidas de inicio/descanso/final. La rueda del plan ajusta solo el plan de su propia pantalla. Los menús de colores y fuentes deben mostrar una muestra inmediata junto a cada control y separar ajustes generales de elementos concretos sin eliminar opciones. No publicar estos cambios en main ni producción antes de validación.
