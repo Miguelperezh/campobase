@@ -75,6 +75,30 @@ try {
   await called.locator('input[type=range]').dispatchEvent('input');
   assert.match(await called.locator('.cbx-minute-selection').textContent(),new RegExp(name));
   assert.match(await called.locator('.cbx-minute-selection').textContent(),/35′ jugados/);
+  assert.match(await called.locator('.cbx-minute-spans').first().textContent(),/0′–35′ · 35 min/);
+  const calledTotals=await called.locator('.cbx-minute-total small').allTextContents();
+  const beforeCopy=await page.evaluate(async()=>JSON.stringify(await (await import('./js/db.js')).getAll('settings')));
+  await page.evaluate(()=>{window.print=()=>{};});
+  await page.locator('.cbx-print-callup-plan').first().click();
+  await page.waitForFunction(()=>document.querySelector('#cb-print-root'));
+  assert.match(await page.locator('#cb-print-root').textContent(),/Rival de prueba/);
+  await page.locator('#cb-print-fab-close').click();
+  await page.locator('.cbx-copy-callup-plan').first().click();
+  await page.waitForFunction(()=>document.querySelectorAll('[data-prep-moment]').length>1);
+  assert.deepEqual(await page.locator('[data-minute-timeline="prep:preview-test-match"] .cbx-minute-total small').allTextContents(),calledTotals);
+  assert.equal(await page.evaluate(async()=>JSON.stringify(await (await import('./js/db.js')).getAll('settings'))),beforeCopy);
+  await page.locator('[data-prep-moment]').nth(1).click();
+  const minuteBefore=await page.locator('.cbx-moment-adjust > strong').textContent();
+  await page.locator('[data-prep-minute="1"]').click();
+  assert.notEqual(await page.locator('.cbx-moment-adjust > strong').textContent(),minuteBefore);
+  await page.locator('#prep-restore-plan').click();
+  await page.locator('#prep-back-head').click();
+  await page.evaluate(()=>window.__campobase.showView('plantilla'));
+  await page.locator('#plantilla [data-gear-target="plantilla"]').first().click();
+  assert.equal(await page.locator('.cbx-adjustments-preview').count(),1);
+  assert.ok(await page.locator('.cbx-adjustment-icon').count());
+  for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.locator('#cbx-quick-color-dialog').evaluate(el=>el.scrollWidth>el.clientWidth+1),false);}
+  await page.locator('#cbx-quick-color-save').click();
   // Use deliberately changed starters so proposal cannot rely on catalog order.
   await page.evaluate(async()=>{
     const db=await import('./js/db.js');const s=window.__campobase.state;
@@ -115,6 +139,9 @@ try {
   await detail.locator('.view-exercise').first().click();
   await page.waitForFunction(()=>document.querySelector('.exercise-board-overlay')?.classList.contains('open')&& !document.querySelector('#session-detail-dialog').open);
   await page.waitForFunction(()=>document.querySelector('.exercise-board-overlay iframe')?.dataset.boardReady==='1',null,{timeout:20000});
+  const actualCreatorCover=await page.frameLocator('.exercise-board-overlay iframe').locator('svg#board').evaluate(el=>el.outerHTML);
+  assert.ok(actualCreatorCover.startsWith('<svg'));
+  await page.evaluate(async preview=>{const db=await import('./js/db.js');const item=window.__campobase.state.exercises.find(e=>e.id==='browser-own-svg');item.boardPreview=preview;await db.put('settings',item);},actualCreatorCover);
   await page.locator('.exercise-board-viewer-back').click();
   await page.waitForFunction(()=>document.querySelector('#session-detail-dialog').open);
   assert.equal(await detail.locator('.session-visual-accordion').first().getAttribute('open'),'');

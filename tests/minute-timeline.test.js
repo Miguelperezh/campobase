@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { accumulatedMinutes, planFromMoments, proposePrepMoments, renderMinuteTimeline } from '../js/minute-timeline.js';
+import { accumulatedMinutes, rotationPlanMoments, planFromMoments, proposePrepMoments, renderMinuteTimeline } from '../js/minute-timeline.js';
 import { validLineup, describeMoment } from '../js/match-moments.js';
 
 const ids=['g1','g2',...Array.from({length:12},(_,i)=>'p'+i)];
@@ -46,4 +46,17 @@ test('reparto con trece jugadores de campo redondea minutos sin perder cambios',
  assert.equal(plan.field.reduce((sum,id)=>sum+plan.planned[id],0),420);
  for(const id of plan.field)assert.ok(Math.abs(plan.planned[id]-420/13)<=1,`${id}: ${plan.planned[id]}`);
  for(const moment of moments)assert.ok(validLineup(moment.team,roster,7));
+});
+
+test('copiar el plan visible conserva exactamente cada tramo, sin regenerarlo',async()=>{
+ const {buildAutoPlan}=await import('../js/reparto-plan.js');
+ for(const mode of ['escalonado','partes']) {
+  const auto=buildAutoPlan({format:'F7',playerIds:[...ids,'p12'],keeperIds:['g1','g2'],planMode:mode});
+  const moments=rotationPlanMoments(auto,initial);
+  const copied=planFromMoments(moments,[...ids,'p12'],['g1','g2']);
+  for(const id of [...ids,'p12']) assert.ok(Math.abs(copied.planned[id]-auto.planned[id])<0.02, id);
+  assert.deepEqual(moments[0].team.map(s=>s.playerId),[auto.lineupAt(0).gk,...auto.lineupAt(0).slots]);
+  for(const m of moments)assert.ok(validLineup(m.team,[...ids,'p12'],7));
+  const html=renderMinuteTimeline(copied,[], 'exact');assert.match(html,/cbx-minute-spans/);assert.match(html,/min/);
+ }
 });

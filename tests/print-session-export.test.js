@@ -327,3 +327,9 @@ test('portada propia SVG guardada se convierte a imagen de impresión y se manti
   const html=buildTrainingSessionHtml({name:'Sesión histórica',blocks:[{exercise:ex,duration:12,type:'main'}]},{exercises:[ex],players:[]});
   assert.match(html,/Portada propia/);assert.match(html,/data:image\/svg\+xml/);
 });
+
+test('portada propia antigua sin customBoard conserva su imagen guardada y la versión vigente',()=>{
+ const mine={id:'legacy-own-cover',category:'Mis ejercicios',name:'Mi ejercicio antiguo',preview:'https://example.com/ejercicio-previews/mi-portada.png'};
+ assert.equal(resolveExerciseData({...mine,preview:'old.png'},{exercises:[mine]}).preview,mine.preview);
+ assert.match(buildSingleExerciseHtml(mine.id,{exercises:[mine]}),/mi-portada.png/);
+});
