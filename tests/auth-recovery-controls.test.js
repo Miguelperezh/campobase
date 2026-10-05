@@ -26,8 +26,12 @@ test('submitAuth en js/app.js permite escribir demo y maneja recuperacion de PIN
   assert.match(app, /settings-reload/, 'Debe conectar listener de Recargar en ajustes');
 });
 
-test('sw.js e index.html están sincronizados a v=20260927-v66-real-calendar-dates', () => {
+test('los recursos actuales de HTML están incluidos en la caché del service worker', () => {
   assert.match(sw, /duration-2503/, 'sw.js debe tener la clave de caché con 2503');
-  assert.match(html, /styles-redesign\.css\?v=20260927-v66-real-calendar-dates/, 'index.html debe cargar estilos con v=20260927-v66-real-calendar-dates');
-  assert.match(html, /js\/app\.js\?v=20260927-v66-real-calendar-dates/, 'index.html debe cargar app.js con v=20260927-v66-real-calendar-dates');
+  const stylesheet = html.match(/href="(styles-redesign\.css\?v=[^"]+)"/)?.[1];
+  assert.ok(stylesheet, 'El HTML debe cargar una versión explícita de estilos');
+  assert.ok(sw.includes("'./" + stylesheet + "'"), 'SW debe precachear la misma versión de estilos');
+  const bundle = html.match(/src="(js\/app\.js\?v=[^"]+)"/)?.[1];
+  assert.ok(bundle, 'El HTML debe cargar una versión explícita de app');
+  assert.ok(sw.includes("'./" + bundle + "'"), 'SW debe precachear la misma versión de app');
 });

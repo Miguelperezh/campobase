@@ -1,0 +1,28 @@
+# Validación
+
+- 32 pruebas relacionadas de preferencias, personalización y aislamiento: pasan.
+- npm run check y sintaxis del módulo nuevo: pasan.
+- Navegador offline con datos de prueba: colores computados de convocados/fuera, + Convocatoria, cabecera del rival, selector del plan, menú lateral, navegación inferior y subpestañas comprobados.
+- Acciones de sesiones: fondos y fuentes; personalización de Editar conservada al guardar y refrescar.
+- Botones sin desbordamiento a 390 y 1280 píxeles.
+- Ficha de ejercicio: rueda accesible y cierre configurable.
+- Comunicador: texto y botón activo configurables.
+- El paquete ensamblado de campobase-preview/v2 supera el mismo recorrido. Cero escrituras remotas durante las comprobaciones.
+- Errores de alcance de variables cardBorder y bottomNav corregidos para que la aplicación del tema no se interrumpa.
+
+Main original se conserva en 7e86fc43. No se modifica producción ni Supabase. La validación final visual corresponde al usuario sobre la URL aislada.
+
+## Despliegue aislado
+- Revisión de preview: 4329560. GitHub Pages completado correctamente.
+- URL: https://miguelperezh.github.io/campobase-preview/v2/?revision=4329560
+- Marcador público source-commit.txt comprobado: 9ad20c14.
+- Paquete final: prueba de navegador superada con cero escrituras remotas.
+- main original sigue en 7e86fc43785530409ed2e7da60e4cf39255987d9.
+
+## Iteración del panel detallado
+- 32 pruebas relacionadas superadas y sintaxis comprobada.
+- Navegador aislado: filas con explicaciones, control por nombre, fondo de Editar persistente, borde individual y restauración sin borrar el fondo del botón.
+- También pasan convocatoria, textos, navegación independiente, cierre de ejercicio, WhatsApp y anchos de sesiones. Cero escrituras remotas.
+
+- Preview beb6ead desplegada; marcador público comprobado: 1794451d. URL: https://miguelperezh.github.io/campobase-preview/v2/?revision=beb6ead
+- Main original sigue en 7e86fc43785530409ed2e7da60e4cf39255987d9.
