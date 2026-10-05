@@ -834,7 +834,7 @@ function bindEvents(client) {
   $('#saas-remembered-other')?.addEventListener('click', async () => {
     removeStored(localStorage, REMEMBERED_ACCOUNT_KEY);
     clearBrowserSessionActive();
-    await client.auth.signOut({ scope: 'local' }).catch(() => {});
+    await client.auth.signOut().catch(() => {});
     clearBoundSaasUserId();
     showPane('login');
   });
@@ -863,7 +863,7 @@ function bindEvents(client) {
   });
 
   $('#saas-cancel-account')?.addEventListener('click', async () => {
-    await client.auth.signOut({ scope: 'local' }).catch(() => {});
+    await client.auth.signOut().catch(() => {});
     pendingSession = null;
     pendingProfile = null;
     pendingRememberDevice = false;
