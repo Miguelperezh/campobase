@@ -13,4 +13,4 @@
 - [x] Conservar formato del panel existente y explicar los controles.
 - [x] Controles nombrados de elementos propios, campos, fondos y gráficos.
 - [x] Búsqueda y restablecimiento individual.
-- [ ] Verificar persistencia y publicar únicamente la prueba aislada.
+- [x] Verificar persistencia y publicar únicamente la prueba aislada.

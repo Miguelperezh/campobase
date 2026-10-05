@@ -23,3 +23,6 @@ Main original se conserva en 7e86fc43. No se modifica producción ni Supabase. L
 - 32 pruebas relacionadas superadas y sintaxis comprobada.
 - Navegador aislado: filas con explicaciones, control por nombre, fondo de Editar persistente, borde individual y restauración sin borrar el fondo del botón.
 - También pasan convocatoria, textos, navegación independiente, cierre de ejercicio, WhatsApp y anchos de sesiones. Cero escrituras remotas.
+
+- Preview beb6ead desplegada; marcador público comprobado: 1794451d. URL: https://miguelperezh.github.io/campobase-preview/v2/?revision=beb6ead
+- Main original sigue en 7e86fc43785530409ed2e7da60e4cf39255987d9.
