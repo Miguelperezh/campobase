@@ -3,4 +3,4 @@
 - [x] Dos ejercicios por página y portada personalizada.
 - [x] Corregir cierre de sesión y verificar bloqueo inmediato.
 - [x] Pruebas funcionales y PDF A4.
-- [ ] Publicar preview y documentar.
+- [x] Publicar preview y documentar.
