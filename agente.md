@@ -1732,3 +1732,5 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
 - PWA: build `20261005-ajustes-visuales-detallados`; recursos del configurador precacheados con su versión. Los tests verifican correspondencia entre recursos del HTML y cache sin depender de una fecha histórica.
 - Validación: 690 tests pasan, sintaxis correcta; browser smoke de navegación de Equipo, Preparación, Preparar partido persistente y ejercicios pasa. Prueba específica de colores y persistencia en navegador aislado sin escrituras remotas superada.
 - No se modifican tablas, RLS, datos reales, bibliotecas, estadísticas, impresión ni motores de partido. La protección de preview sigue limitada a `/campobase-preview/`; producción mantiene su funcionamiento normal.
+
+- Publicación confirmada: PR #92 fusionado (13c8ad5e), CI de PR y main correctos, GitHub Pages completado; producción sirve HTML, CSS y módulo nuevos comprobados. URL: https://miguelperezh.github.io/campobase/.
