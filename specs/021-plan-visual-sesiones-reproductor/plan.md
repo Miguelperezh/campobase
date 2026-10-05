@@ -1,0 +1,4 @@
+# Plan y clarificaciones
+Reutilizar buildAutoPlan y match-moments; añadir visualizador compartido. Remapear la rotación circular a titulares actuales y materializar cambios simultáneamente. Propuesta temporal y aplicación explícita. Selector de minuto actualiza números sin recargar el panel. Ajustar exclusivamente geometría de Media liga.
+Apertura de modal hijo con retorno al padre y foco; corregir listeners de vídeo y promesas de carga. Resolver bloques antiguos por ID o snapshot incorporado sin cambiar persistencia. Ofrecer imprimir selección de Mis ejercicios vigente con la misma función de impresión de sesión.
+Miguel indica que los MP4 fallan aleatoriamente también en móvil; no hay un archivo concreto. No se atribuye a un codec sin evidencia. SDD018–020 mantienen personalización y validaciones anteriores; esta iteración amplía esas especificaciones.

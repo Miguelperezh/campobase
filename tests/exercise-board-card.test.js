@@ -27,6 +27,7 @@ test('Mis ejercicios se rehidrata, traduce el formato de Supabase y usa visor re
     boardCoverSourceType: 'frame', boardCoverFrameProgress: 0.5,
   }];
 
+  source = source.replace("import { suspendSessionDetail } from './session-detail-navigation.js';", "const suspendSessionDetail=()=>()=>{};");
   source = source.replace(
     "import { syncFromCloud, getAll } from './db.js';",
     "const syncFromCloud=async()=>{globalThis.__syncCalls=(globalThis.__syncCalls||0)+1; if(globalThis.__syncCalls<3)return {online:false,pending:0}; globalThis.__cloudReady=true; return {online:true,pending:0};}; const getAll=async()=>globalThis.__cloudReady?globalThis.__persisted:[];",

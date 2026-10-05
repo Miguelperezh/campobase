@@ -317,3 +317,13 @@ test('sesiones agrupa dos ejercicios por página y conserva todos en orden', () 
     for(let i=0;i<count;i++){const position=html.indexOf('src="selected-'+i+'.svg"');assert.ok(position>previous);previous=position;assert.ok(html.includes('Descripción completa '+i));}
   }
 });
+
+test('portada propia SVG guardada se convierte a imagen de impresión y se mantiene en bloques antiguos', () => {
+  const svg='<svg viewBox="0 0 100 50"><text x="5" y="25">FRAME ELEGIDO</text></svg>';
+  const ex={id:'mine-svg',customBoard:true,name:'Portada propia',boardPreview:svg,duration:12};
+  const data=resolveExerciseData(ex,{exercises:[ex]});
+  assert.ok(data.preview.startsWith('data:image/svg+xml;charset=utf-8,'));
+  assert.match(decodeURIComponent(data.preview),/xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+  const html=buildTrainingSessionHtml({name:'Sesión histórica',blocks:[{exercise:ex,duration:12,type:'main'}]},{exercises:[ex],players:[]});
+  assert.match(html,/Portada propia/);assert.match(html,/data:image\/svg\+xml/);
+});
