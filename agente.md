@@ -1742,3 +1742,7 @@ SDD: specs/018-ajustes-locales-rotaciones. Rama fix/ajustes-locales-colores-rota
 
 ## 2026-10-05 · Elecciones de menú y fichas comunes
 SDD019: segundo lanzador responde a fondo/texto de menú y limpia solo los overrides conflictivos cuando el usuario elige un color; no se imponen colores nuevos. Controles antiguos de especialistas escriben en Plantilla. Fichas y clasificación usan selectores comunes en vez de controles por jugador. Hoy muestra únicamente sus elementos y etiquetas. Prueba con overrides anteriores, persistencia y todas las fichas: correcta. Suite 690/690. Entrega únicamente en preview aislada.
+
+
+## 2026-10-05 · Guardado, impresión y cierre de acceso
+SDD020: Guardar recoge la selección final del selector nativo; preview conserva tema local frente a snapshots antiguos. Limpieza acotada de prioridades de color solo para el componente elegido. Impresión de sesiones: portada más dos ejercicios por A4, conserva textos y usa boardPreview vigente de Mis ejercicios. Cierre de sesión limpia marcadores redundantes y muestra acceso sin esperar a la red; SaaS usa cierre local. Validación: 692 tests, sintaxis, navegador aislado y PDF real. Cambios solo en rama fix/ajustes-locales-colores-rotaciones y preview separada; sin cambios de datos, main original ni Supabase.
