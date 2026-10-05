@@ -82,12 +82,17 @@ try {
   await page.locator('.cbx-print-callup-plan').first().click();
   await page.waitForFunction(()=>document.querySelector('#cb-print-root'));
   assert.match(await page.locator('#cb-print-root').textContent(),/Rival de prueba/);
+  const printedCallup=await page.locator('#cb-print-root').innerHTML();
   await page.locator('#cb-print-fab-close').click();
   await page.locator('.cbx-copy-callup-plan').first().click();
   await page.waitForFunction(()=>document.querySelectorAll('[data-prep-moment]').length>1);
   assert.deepEqual(await page.locator('[data-minute-timeline="prep:preview-test-match"] .cbx-minute-total small').allTextContents(),calledTotals);
   assert.equal(await page.evaluate(async()=>JSON.stringify(await (await import('./js/db.js')).getAll('settings'))),beforeCopy);
   await page.locator('[data-prep-moment]').nth(1).click();
+  await page.locator('#prep-print-moments').click();
+  await page.waitForFunction(()=>document.querySelector('#cb-print-root'));
+  assert.equal(await page.locator('#cb-print-root').innerHTML(),printedCallup,'Imprimir desde otro momento conserva el plan completo');
+  await page.locator('#cb-print-fab-close').click();
   const minuteBefore=await page.locator('.cbx-moment-adjust > strong').textContent();
   await page.locator('[data-prep-minute="1"]').click();
   assert.notEqual(await page.locator('.cbx-moment-adjust > strong').textContent(),minuteBefore);
