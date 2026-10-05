@@ -7,3 +7,6 @@
 - Regresión de sesiones, ficha de ejercicios y WhatsApp: correcta a 390 y 1280 px. Cero errores de página y cero escrituras remotas.
 - Prueba reproducible: tests/browser-local-colors.mjs; recibe CAMPOBASE_TEST_FIXTURE (copia privada de datos) y CAMPOBASE_PREVIEW_ROOT, usa Playwright/Chrome existentes. No incluye datos personales en Git.
 - Publicación de esta corrección: únicamente preview independiente; main y Supabase sin modificaciones durante este bloque.
+
+- Fuente final: 198949eb; preview: 2e5c612. URL de prueba: https://miguelperezh.github.io/campobase-preview/v2/?revision=2e5c612. La referencia versionada de Hoy evita reutilizar el gráfico previo.
+- Main original comprobado mediante GitHub: 360b2b2dce3cc454a644b5d8fe428ccdc2df8557, idéntico al inicio del bloque.
