@@ -1734,3 +1734,7 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
 - No se modifican tablas, RLS, datos reales, bibliotecas, estadísticas, impresión ni motores de partido. La protección de preview sigue limitada a `/campobase-preview/`; producción mantiene su funcionamiento normal.
 
 - Publicación confirmada: PR #92 fusionado (13c8ad5e), CI de PR y main correctos, GitHub Pages completado; producción sirve HTML, CSS y módulo nuevos comprobados. URL: https://miguelperezh.github.io/campobase/.
+
+
+## 2026-10-05 · Corrección acotada de colores locales y sugerencias
+SDD: specs/018-ajustes-locales-rotaciones. Rama fix/ajustes-locales-colores-rotaciones. Controles de cada pantalla sin selector de otras pantallas; navegación compartida accesible desde Ajustes. Selectores por acción evitan recolorear varios botones que comparten ID. Barras GF/GC y capitanes 1/2/3 independientes; banner Tácticas efectivo. Reutiliza buildAutoPlan en memoria para sugerencias, sin sustituir planes ni escribir en un almacén inexistente. Pruebas: sintaxis, 690 tests y navegadores crítico/específico con Supabase bloqueado. Sin cambios de backend, RLS ni datos de producción.

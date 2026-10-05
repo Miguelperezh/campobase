@@ -280,9 +280,9 @@ test('Cálculo de minutos exactos en F7 70′ con sustituciones volantes complet
 });
 
 test('Convocatoria permite generar rotación equitativa y ajustar cambios en preparación', () => {
-  assert.ok(appSource.includes('generateAndSaveCallupRotation'), 'app.js debe definir generateAndSaveCallupRotation');
+  assert.ok(appSource.includes('suggestCallupRotation'), 'app.js debe definir suggestCallupRotation');
   assert.ok(appSource.includes('cbx-generate-callup-rotation-btn'), 'app.js debe renderizar el botón de generar rotación equitativa');
-  assert.ok(appSource.includes('⚡ Generar rotación equitativa'), 'Debe incluir el texto del botón interactivo');
+  assert.ok(appSource.includes('Sugerir rotaciones'), 'Debe incluir el texto del botón interactivo');
   assert.ok(appSource.includes('✏️ Ajustar cambios en Preparación'), 'Debe incluir acceso directo a ajustar cambios');
 });
 
@@ -387,10 +387,10 @@ test('Ajuste rápido de colores in-context: modal de tuerca y botones de tuerca 
 
   // app.js define y delega openQuickColorDialog con soporte multi-pantalla
   assert.ok(freshAppSource.includes('function openQuickColorDialog('), 'app.js debe definir openQuickColorDialog');
-  assert.ok(freshAppSource.includes("currentTab === 'dorsales'"), 'openQuickColorDialog debe gestionar dorsales');
-  assert.ok(freshAppSource.includes("currentTab === 'whatsapp'"), 'openQuickColorDialog debe gestionar whatsapp');
-  assert.ok(freshAppSource.includes("currentTab === 'tactic-board'"), 'openQuickColorDialog debe gestionar tactic-board');
-  assert.ok(freshAppSource.includes("currentTab === 'live'"), 'openQuickColorDialog debe gestionar live');
+  assert.ok(freshAppSource.includes("currentViewId === 'plantilla'"), 'openQuickColorDialog debe gestionar dorsales');
+  assert.ok(freshAppSource.includes("currentViewId === 'cuerpo-tecnico'"), 'openQuickColorDialog debe gestionar whatsapp');
+  assert.ok(freshAppSource.includes("currentSubTab === 'tactic-board'"), 'openQuickColorDialog debe gestionar tactic-board');
+  assert.ok(freshAppSource.includes("currentSubTab === 'live'"), 'openQuickColorDialog debe gestionar live');
   assert.ok(freshAppSource.includes('openQuickColorDialog(gearBtn.dataset.gearTarget'), 'wireEvents debe delegar clicks de tuerca');
 
   // Estilos CSS para el botón de tuerca superior y compatibilidad
