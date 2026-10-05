@@ -60,14 +60,15 @@ async function testDesktop(page) {
   await page.waitForFunction(() => {
     const sub = document.getElementById('cb-sub-nav');
     const players = document.getElementById('players-list');
+    const sidebar = document.getElementById('cb-claude-sidebar');
     return document.querySelector('.view.active')?.id === 'plantilla'
-      && sub && getComputedStyle(sub).display !== 'none'
+      && ((sub && getComputedStyle(sub).display !== 'none') || (sidebar && getComputedStyle(sidebar).display !== 'none'))
       && Boolean(players?.textContent?.trim());
   }, null, { timeout: 10000 });
 
-  await page.click('#cb-sub-nav [data-target-view="cuerpo-tecnico"]');
+  await page.locator('[data-target-view="cuerpo-tecnico"]:visible').first().click();
   await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'cuerpo-tecnico');
-  await page.click('#cb-sub-nav [data-target-view="asistencia"]');
+  await page.locator('[data-target-view="asistencia"]:visible').first().click();
   await page.waitForFunction(() => document.querySelector('.view.active')?.id === 'asistencia');
 
   // 2) Preparación: cambiar un titular, guardar, repintar y reabrir conserva exactamente el orden.
@@ -166,11 +167,16 @@ async function testDesktop(page) {
   });
 
   await page.waitForSelector('#live-select');
-  await page.selectOption('#live-select', 'smoke-match');
-  await page.waitForFunction(() => !document.getElementById('first-keeper')?.disabled);
-  await page.selectOption('#first-keeper', 'smoke-player-1');
-  await page.selectOption('#second-keeper', 'smoke-player-1');
-  await page.click('#prepare-live');
+  // Enviar la elección completa en el mismo turno de eventos: los repintados
+  // periódicos de la demo no deben quedar entre los pasos del driver.
+  await page.evaluate(() => {
+    const match = document.getElementById('live-select');
+    match.value = 'smoke-match';
+    match.dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('first-keeper').value = 'smoke-player-1';
+    document.getElementById('second-keeper').value = 'smoke-player-1';
+    document.getElementById('prepare-live').click();
+  });
   await page.waitForSelector('#live-tactics-slots select');
 
   const changedLiveLineup = await page.evaluate(() => {

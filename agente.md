@@ -1721,3 +1721,14 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
    - Sin alteraciones en el motor de impresión de planes de partido ni en el temporizador/silbato de partido en vivo.
 
 
+
+
+### Sesión 05/10/2026 — Personalización detallada validada y presentación visual de ajustes
+
+- Miguel valida la prueba aislada y autoriza explícitamente fusionar en main y publicar en producción.
+- SDD: `specs/016-controles-colores-por-componente/` y `specs/017-ajustes-visuales-publicacion/`.
+- Controles de colores efectivos por componente, con nombres y explicaciones, búsqueda, bordes, campos, SVG, restauración individual y compatibilidad con preferencias anteriores. Menús lateral, inferior y subpestañas independientes.
+- La mejora final afecta únicamente al diálogo de ajustes: navegación visual en tarjetas, filas agrupadas, foco visible, tamaños táctiles y pie accesible. Se mantienen contenido, opciones, valores, listeners, guardado y restauración.
+- PWA: build `20261005-ajustes-visuales-detallados`; recursos del configurador precacheados con su versión. Los tests verifican correspondencia entre recursos del HTML y cache sin depender de una fecha histórica.
+- Validación: 690 tests pasan, sintaxis correcta; browser smoke de navegación de Equipo, Preparación, Preparar partido persistente y ejercicios pasa. Prueba específica de colores y persistencia en navegador aislado sin escrituras remotas superada.
+- No se modifican tablas, RLS, datos reales, bibliotecas, estadísticas, impresión ni motores de partido. La protección de preview sigue limitada a `/campobase-preview/`; producción mantiene su funcionamiento normal.
