@@ -6,4 +6,7 @@
 - Selección de impresión propia: SVG creado con la forma real que guarda el Creador decodifica como imagen; PDF Chromium A4 real de dos páginas (portada + ejercicio). Sesiones de hasta cinco ejercicios y referencias incorporadas antiguas cubiertas por tests. No se alteran bloques antiguos para incorporar otros ejercicios.
 - MP4 real local: avanza, pausa, vuelve a reproducirse y conserva reproducción al cambiar velocidad. Touchend seguido de click activa una vez. Carga reintentable y recuperación local; las rutas originales se conservan. No es una auditoría de todos los MP4 ni una prueba en iPhone físico/Safari: queda la validación de Miguel en sus dispositivos y con sus vídeos.
 - Cero errores de navegador y cero mutaciones Supabase en prueba. Script reproducible: tests/browser-plan-sessions-video.mjs; requiere Playwright y fixture privada por variable CAMPOBASE_TEST_FIXTURE. No se incorporan datos privados al repositorio.
-- Integración publicada únicamente en campobase-preview/v2. Rama fix/ajustes-locales-colores-rotaciones; producción original intacta.
+- Paquete exacto de preview probado de nuevo tras el último cambio: navegador correcto y 697/697 tests.
+- Código fuente 7c9fed13 subido a fix/ajustes-locales-colores-rotaciones. Paquete abd15e2 subido únicamente a campobase-preview; GitHub Pages run 37365255624 permanece en cola tras cinco minutos. La URL pública todavía sirve 2c6bf0a7: despliegue pendiente de confirmación, no se declara publicado.
+- URL prevista: https://miguelperezh.github.io/campobase-preview/v2/?revision=abd15e2.
+- Main original verificado sin cambios: 360b2b2dce3cc454a644b5d8fe428ccdc2df8557. Sin escrituras Supabase.
