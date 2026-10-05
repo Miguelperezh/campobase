@@ -215,8 +215,8 @@ export function buildMatchPlanHtml(matchOrId, state = {}, options = {}) {
   let moments = [];
   if (options.momentsDraft && options.momentsDraft.length) {
     moments = normalizeMoments({
-      team: options.teamDraft || prep?.team,
-      formacion: options.formacionDraft || prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1'),
+      team: options.momentsDraft.find(moment=>Number(moment.minute)===0)?.team || options.teamDraft || prep?.team,
+      formacion: options.momentsDraft.find(moment=>Number(moment.minute)===0)?.formation || options.formacionDraft || prep?.formacion || (isF11 ? '1-4-3-3' : '1-3-2-1'),
       moments: options.momentsDraft,
     });
   } else if (prep) {
