@@ -1738,3 +1738,7 @@ Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera
 
 ## 2026-10-05 · Corrección acotada de colores locales y sugerencias
 SDD: specs/018-ajustes-locales-rotaciones. Rama fix/ajustes-locales-colores-rotaciones. Controles de cada pantalla sin selector de otras pantallas; navegación compartida accesible desde Ajustes. Selectores por acción evitan recolorear varios botones que comparten ID. Barras GF/GC y capitanes 1/2/3 independientes; banner Tácticas efectivo. Reutiliza buildAutoPlan en memoria para sugerencias, sin sustituir planes ni escribir en un almacén inexistente. Pruebas: sintaxis, 690 tests y navegadores crítico/específico con Supabase bloqueado. Sin cambios de backend, RLS ni datos de producción.
+
+
+## 2026-10-05 · Elecciones de menú y fichas comunes
+SDD019: segundo lanzador responde a fondo/texto de menú y limpia solo los overrides conflictivos cuando el usuario elige un color; no se imponen colores nuevos. Controles antiguos de especialistas escriben en Plantilla. Fichas y clasificación usan selectores comunes en vez de controles por jugador. Hoy muestra únicamente sus elementos y etiquetas. Prueba con overrides anteriores, persistencia y todas las fichas: correcta. Suite 690/690. Entrega únicamente en preview aislada.

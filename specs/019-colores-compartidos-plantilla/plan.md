@@ -1,0 +1,2 @@
+# Plan
+Reutilizar rama de correcciones, sin main ni producción. Deshacer exclusivamente las prioridades de color conflictivas cuando el usuario opere su control. Conectar controles antiguos de especialistas con el tema local de Plantilla. Sustituir catálogo por jugador por selectores comunes; conservar opciones de fondo/texto/borde por componente. Eliminar incorporación de otras ventanas y corregir etiquetas ajenas en Hoy. Pruebas con overrides antiguos, clicks reales del menú, varias fichas, persistencia, aislamiento y vista móvil.
