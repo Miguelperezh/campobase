@@ -1772,3 +1772,5 @@ Preservar todos los bloques validados y valores de personalización. Dar acceso 
 
 ## 2026-10-06 · Ventanas de cambios editables (SDD 024)
 Mantener los ajustes validados. Permitir intervalos repetidos arbitrarios por jugador, con un relevo que cubre descansos; sumar exactamente 0–5, 10–15 y 20–30 = 20 min. Ventana modal de borrador con selección de todas las alineaciones por tramo, intercambios de posición y recomendaciones según convocados/objetivos. Convertir siempre a los momentos completos existentes para guardar, imprimir y Partido en vivo; no crear persistencia paralela ni sobrescribir planes sin aplicar/guardar explícitamente. Preservar jugadores/posiciones restantes, impedir duplicados y solapamientos, admitir deshacer/cancelar. No alterar ajustes, main ni producción en esta fase.
+
+- Plan por tramos: seleccionar una fila debe abrir edición de ese jugador; consultar el minuto no altera los totales previstos del resto. Edición de intervalos cambia únicamente jugador/relevo y conserva otros tramos. Mostrar consulta y edición con acciones distintas.

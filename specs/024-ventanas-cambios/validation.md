@@ -5,3 +5,5 @@
 No se modifican ajustes validados, datos de Supabase ni main del repositorio original. La publicación se realiza únicamente en campobase-preview.
 
 Verificación pública: GitHub Pages despliegue 37442553673 correcto; source-commit.txt confirma 9325d997. Las mismas pruebas de navegador pasan usando los archivos públicos sin sustitución de HTML, JS ni CSS.
+
+Corrección individual: Chrome comprueba que consultar minuto 30 conserva todos los totales previstos y que la acción de edición abre exactamente el jugador seleccionado. El caso 20/50, guardado/reapertura y recomendaciones sigue pasando.
