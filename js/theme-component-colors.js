@@ -48,6 +48,7 @@ export function configurableElements(root) {
   ];
   const seen = new Set();
   for (const [group, query] of groups) for (const element of root.querySelectorAll(query)) {
+    if(root.id==='squad-stats')continue;
     if (root.matches('.specialist-item') || (root.id==='plantilla-specialists-bar' && element.closest('.specialist-item')) || (root.id === 'plantilla' && element.closest('#squad-leaderboards'))) continue;
     if (root.id === 'plantilla' && (element.closest('.cbx-player') || element.querySelector('.cbx-player') || element.closest('#squad-leaderboards tbody'))) continue;
     if (seen.has(element) || element.closest('#cbx-quick-color-dialog') || element.matches('.cbx-context-gear-btn')) continue;
@@ -64,6 +65,7 @@ export function configurableElements(root) {
     const index = options.filter((option) => option.group === group && option.label === name).length + 1;
     options.push({ selector: selectorFor(element), group, label: name || 'Gráfico', context: heading ? named(heading) : '', tag: element.tagName.toLowerCase(), index });
   }
+  if(root.id==='squad-stats')root.querySelectorAll('.stat').forEach((stat,index)=>{const label=stat.querySelector('span')?.textContent?.trim()||'Indicador';for(const [part,local]of [['Tarjeta',''],['Cifra',' strong'],['Etiqueta',' span']])options.push({selector:'#squad-stats .stat:nth-child('+(index+1)+')'+local,label:label+' · '+part,group:'Indicadores',context:'Solo este indicador',tag:'div',index:1,shared:true});});
   if(root.matches('.specialist-item') || root.id==='plantilla-specialists-bar'){
     for(const card of (root.matches('.specialist-item')?[root]:[...root.querySelectorAll('.specialist-item')])){
       const scope=root.matches('.specialist-item')?'#'+CSS.escape(root.id):'#'+CSS.escape(root.id)+' .specialist-item:nth-of-type('+([...card.parentElement.children].filter(n=>n.tagName===card.tagName).indexOf(card)+1)+')';
@@ -320,7 +322,9 @@ export function observeComponentColors() {
     scheduled = false;
     document.querySelectorAll('.view').forEach((view) => {
       const liveHead = view.id === 'partido' ? view.querySelector('.cbx-live-hero-head') : null;
-      const existing = view.querySelector('.cbx-context-gear-btn');
+      const existing = view.querySelector('.cbx-context-gear-btn:not([data-theme-section])');
+      if(existing && view.querySelector('[data-theme-section]')){existing.hidden=true;return;}
+      if(existing)existing.hidden=false;
       if (existing) {
         if (liveHead && !liveHead.contains(existing)) liveHead.append(existing);
         else if (view.classList.contains('active') && !existing.getClientRects().length) {
@@ -360,12 +364,14 @@ export function observeComponentColors() {
       button.setAttribute('aria-label', 'Ajustar colores de esta ventana');
       (dialog.querySelector('.dialog-head') || dialog).append(button);
     });
-    const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view .specialist-item,.view #squad-stats .stat,.view .cbx-player,.view section')];
+    document.querySelectorAll('.cbx-section-gear').forEach(button=>{const scope=document.getElementById(button.dataset.themeSection);if(scope?.matches('.cbx-player,.specialist-item,.stat') || button.closest('.cbx-player'))button.remove();});
+    const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view #squad-stats,.view #plantilla-specialists-bar,.view #players-list')];
     for(const root of roots) {
       if(root.closest('#cbx-quick-color-dialog')||root.classList.contains('view'))continue;
       const view=root.closest('.view');if(!view)continue;
       const heading=root.querySelector('h2,h3,h4,legend,summary');
-      if(!heading && !root.matches('.stat,.cbx-player'))continue;
+      if(root.parentElement.closest('.panel,.cbx-card') && !root.matches('#players-list,#squad-stats,#plantilla-specialists-bar'))continue;
+      if(!heading && !root.matches('#players-list,#squad-stats'))continue;
       const scope=root.matches('.cbx-player')?document.getElementById('players-list'):root;
       if(!scope.id) {
         const label=(heading?.textContent||root.className).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,55);
@@ -375,7 +381,7 @@ export function observeComponentColors() {
       if([...root.querySelectorAll('[data-theme-section]')].some(b=>b.dataset.themeSection===scope.id))continue;
       const button=document.createElement('button');button.type='button';button.className='cbx-context-gear-btn cbx-section-gear';button.textContent='⚙️';button.dataset.gearTarget='section';button.dataset.themeSection=scope.id;
       button.setAttribute('aria-label','Personalizar '+(root.matches('.cbx-player')?'todas las fichas de jugadores':heading?.textContent||root.querySelector('span')?.textContent||'esta sección'));
-      (root.matches('.cbx-player')?root.querySelector('.player-head-right'):heading?.parentElement||root).append(button);
+      if(root.id==='players-list'){button.textContent='⚙️ Colores de las fichas';button.style.gridColumn='1 / -1';root.prepend(button);}else (heading?.parentElement||root).append(button);
     }
     const leaders=document.getElementById('squad-leaderboards');
     if(leaders && !leaders.querySelector('[data-theme-section="squad-leaderboards"]')) {

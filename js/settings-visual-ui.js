@@ -60,6 +60,23 @@ export function enhanceColorSettings(root, elements = []) {
     row.dataset.visualSymbol = symbol;
     row.setAttribute('aria-label', title);
   });
+  // One explicit choice, one visible element: keep all saved controls and listeners.
+  if(concrete){
+    const chooser=document.createElement('label');chooser.textContent='¿Qué quieres cambiar?';
+    const select=document.createElement('select');select.id='cbx-colour-element-choice';select.setAttribute('aria-label','Elemento que quieres personalizar');
+    const fields=[...concrete.querySelectorAll('[data-element-index]')];
+    fields.forEach(field=>{const item=elements[Number(field.dataset.elementIndex)];const option=document.createElement('option');option.value=field.dataset.elementIndex;option.textContent=item.label;select.append(option);});
+    chooser.append(select);concrete.prepend(chooser);
+    const show=()=>{fields.forEach(field=>field.hidden=field.dataset.elementIndex!==select.value);concrete.querySelectorAll('.cbx-colour-group').forEach(group=>{group.open=true;group.hidden=![...group.querySelectorAll('[data-element-index]')].some(field=>!field.hidden);group.querySelector('summary').hidden=true;});};
+    select.addEventListener('change',show,{signal});show();
+    concrete.querySelector('#qc-element-search')?.closest('label')?.setAttribute('hidden','');
+    const intro=concrete.querySelector('h3');if(intro)intro.textContent='Elige un elemento y cambia su fondo o su texto';
+    concrete.querySelector(':scope > p')?.setAttribute('hidden','');
+    toolbar.remove();
+    if(concreteOnly){concrete.hidden=false;}else{const advanced=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Otros elementos de esta sección';advanced.append(summary);concrete.before(advanced);advanced.append(concrete);concrete.hidden=false;}
+    root.querySelector('.cbx-adjustments-preview')?.setAttribute('hidden','');
+    root.querySelector('.cbx-adjustments-layout')?.style.setProperty('display','block');
+  }
   // Pair background/foreground controls so each sample shows the chosen combination.
   root.querySelectorAll('.cbx-color-control-row').forEach(row => {
     const picker = row.querySelector('input[type=color]');
@@ -90,7 +107,7 @@ export function enhanceColorSettings(root, elements = []) {
     root.addEventListener('input', update, {signal});
     root.addEventListener('click', event => { if (event.target.closest('.cbx-swatch-btn')) queueMicrotask(update); }, {signal});
   });
-  root.querySelectorAll('.cbx-colour-group').forEach(group => {
+  if(!concrete)root.querySelectorAll('.cbx-colour-group').forEach(group => {
     group.addEventListener('toggle', () => {
       if (group.open) root.querySelectorAll('.cbx-colour-group').forEach(other => { if (other !== group) other.open = false; });
     });
