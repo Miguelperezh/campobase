@@ -9998,7 +9998,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
         const item = elements[Number(picker.dataset.element)];
         const saved = structuredClone(state.settings?.theme?.views?.[currentViewId] || {});
         const previous = saved.elementColors?.[item.selector] || {};
-        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp]);
+        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp], !!sectionRoot);
         const colours = saved.elementColors || {};
         delete colours[item.selector];
         colours[item.selector] = { ...previous, [picker.dataset.elementProp]: event.target.value };

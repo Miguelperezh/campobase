@@ -98,7 +98,7 @@ export function configurableElements(root) {
   return options.filter((option) => option.shared || !playerNames.some((name) => name && option.label.includes(name)));
 }
 
-export function clearColourConflicts(settings, selector, properties) {
+export function clearColourConflicts(settings, selector, properties, preserveBroader = false) {
   let targets;
   try { targets = [...document.querySelectorAll(selector)]; } catch { return; }
   for (const storeName of ['elementColors', 'buttonColors']) {
@@ -107,7 +107,8 @@ export function clearColourConflicts(settings, selector, properties) {
       try { matches = [...document.querySelectorAll(savedSelector)]; } catch { continue; }
       for (const prop of properties) {
         const overlap = matches.some((element) => targets.some((target) => element === target || (prop === 'color' && target.contains(element))));
-        if (overlap) delete colours[storeName === 'buttonColors' ? (prop === 'background' ? 'bg' : prop === 'color' ? 'ink' : prop) : prop];
+        const fullyCovered=matches.every(element=>targets.some(target=>element===target || (prop==='color'&&target.contains(element))));
+        if (overlap && (!preserveBroader || fullyCovered)) delete colours[storeName === 'buttonColors' ? (prop === 'background' ? 'bg' : prop === 'color' ? 'ink' : prop) : prop];
       }
       if (!Object.keys(colours).length) delete settings[storeName][savedSelector];
     }
