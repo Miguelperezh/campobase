@@ -1768,3 +1768,7 @@ Un parámetro revision no selecciona un commit en GitHub Pages. Antes de pedir v
 
 ## 2026-10-05 · Plan por tramos y ajustes intuitivos (SDD 023)
 Preservar todos los bloques validados y valores de personalización. Dar acceso visible a Plan por tramos desde Preparación, con propuesta, revisión y uso del borrador explicados; consultas rápidas de inicio/descanso/final. La rueda del plan ajusta solo el plan de su propia pantalla. Los menús de colores y fuentes deben mostrar una muestra inmediata junto a cada control y separar ajustes generales de elementos concretos sin eliminar opciones. No publicar estos cambios en main ni producción antes de validación.
+
+
+## 2026-10-06 · Ventanas de cambios editables (SDD 024)
+Mantener los ajustes validados. Permitir intervalos repetidos arbitrarios por jugador, con un relevo que cubre descansos; sumar exactamente 0–5, 10–15 y 20–30 = 20 min. Ventana modal de borrador con selección de todas las alineaciones por tramo, intercambios de posición y recomendaciones según convocados/objetivos. Convertir siempre a los momentos completos existentes para guardar, imprimir y Partido en vivo; no crear persistencia paralela ni sobrescribir planes sin aplicar/guardar explícitamente. Preservar jugadores/posiciones restantes, impedir duplicados y solapamientos, admitir deshacer/cancelar. No alterar ajustes, main ni producción en esta fase.
