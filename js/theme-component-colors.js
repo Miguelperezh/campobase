@@ -364,6 +364,15 @@ export function observeComponentColors() {
       button.setAttribute('aria-label', 'Ajustar colores de esta ventana');
       (dialog.querySelector('.dialog-head') || dialog).append(button);
     });
+    // Keep historical selector identities even when a card no longer owns a gear.
+    document.querySelectorAll('.view .panel,.view .cbx-card,.view .specialist-item,.view #squad-stats .stat,.view section').forEach(root=>{
+      if(root.id || root.classList.contains('view'))return;
+      const view=root.closest('.view');const heading=root.querySelector('h2,h3,h4,legend,summary');
+      if(!view || (!heading && !root.matches('.stat')))return;
+      const label=(heading?.textContent||root.className).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,55);
+      const peers=[...view.querySelectorAll(root.tagName)].filter(el=>el.className===root.className);
+      root.id=view.id+'-colours-'+label+'-'+peers.indexOf(root);
+    });
     document.querySelectorAll('.cbx-section-gear').forEach(button=>{const scope=document.getElementById(button.dataset.themeSection);if(scope?.matches('.cbx-player,.specialist-item,.stat') || button.closest('.cbx-player'))button.remove();});
     const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view .cbx-banner,.view #squad-stats,.view #plantilla-specialists-bar,.view #players-list')];
     for(const root of roots) {
