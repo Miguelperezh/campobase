@@ -36,7 +36,7 @@ test('acumulación sigue solo los tramos en campo y conserva los movimientos de 
  const plan=planFromMoments([initial,shifted],ids,['g1','g2'],70);
  assert.equal(plan.planned.p11,70);
  const html=renderMinuteTimeline(plan,ids.map(id=>({id,name:'Jugador '+id,number:7})),'test');
- assert.match(html,/type="range"/);assert.match(html,/data-minute-player="p11"/);assert.match(html,/de 70′/);
+ assert.match(html,/type="range"/);assert.match(html,/data-minute-player="p11"/);assert.match(html,/<b>70′<\/b><small>Total de este jugador/);
 });
 
 test('reparto con trece jugadores de campo redondea minutos sin perder cambios',()=>{
