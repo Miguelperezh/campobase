@@ -1,9 +1,10 @@
-import { openMatchWindowEditor } from './match-window-editor.js?v=player-edit-1';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-1';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-5';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-1';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-5';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -760,9 +761,9 @@ function renderAll() {
 }
 
 function renderPlayerFamilyContact(label, name, phone) {
-  const detail = `${label}: ${name || (phone ? 'Sin nombre' : 'Sin registrar')}${phone ? ` · ${phone}` : ''}`;
-  if (!phone) return `<span class="contact-pill meta">${escapeHtml(detail)}</span>`;
-  return `<a href="https://wa.me/${formatWhatsAppPhone(phone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp ${label}">${escapeHtml(detail)}</a>`;
+  const detail = `<span class="cbx-family-name">${escapeHtml(label)}: ${escapeHtml(name || (phone ? 'Sin nombre' : 'Sin registrar'))}</span>${phone ? ` · <span class="cbx-family-phone">${escapeHtml(phone)}</span>` : ''}`;
+  if (!phone) return `<span class="contact-pill meta">${detail}</span>`;
+  return `<a href="https://wa.me/${formatWhatsAppPhone(phone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp ${label}">${detail}</a>`;
 }
 
 function renderPlayers() {
@@ -834,7 +835,7 @@ function renderPlayers() {
     const specialistRoles = getPlayerSetPieceRoles(player.id, state.settings?.setPieces);
     const specialistTags = specialistRoles.length ? `
       <div class="player-specialist-tags">
-        ${specialistRoles.map((r) => `<span class="specialist-pill" title="${escapeHtml(r.title)}">${r.icon} ${escapeHtml(r.label)}</span>`).join('')}
+        ${specialistRoles.map((r) => `<span class="specialist-pill" data-specialty="${/capit/i.test(r.label)?'cap':/penal/i.test(r.label)?'pen':/falta/i.test(r.label)?'fal':'cor'}" title="${escapeHtml(r.title)}"><span class="cbx-specialty-icon">${r.icon}</span> <span class="cbx-specialty-label">${escapeHtml(r.label)}</span></span>`).join('')}
       </div>` : '';
 
     const ratingNum = summary.averageRating ? Number(summary.averageRating) : null;
@@ -1778,7 +1779,7 @@ function renderClaudeCallup(callup) {
       <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
-      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3><button type="button" class="cbx-context-gear-btn" data-gear-target="callup-plan" aria-label="Colores de Plan por tramos">⚙️</button>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-edit-callup-windows primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Editar entradas y ventanas</button><button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3><button type="button" class="cbx-context-gear-btn" data-gear-target="callup-plan" aria-label="Colores de Plan por tramos">⚙️</button>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-edit-callup-windows primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Abrir Plan de tiempos</button><button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
         <div style="padding:12px 6px;text-align:center;">
           <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -4598,7 +4599,7 @@ function renderPrepMoments() {
     </div>
     <section class="cbx-prep-proposal" id="prep-plan-tramos"><div class="cbx-plan-heading"><h4>Plan por tramos</h4><button type="button" class="cbx-context-gear-btn" data-gear-target="prep-plan" aria-label="Colores de Plan por tramos">⚙️</button></div><p class="meta">${prepSuggestedMoments ? 'Propuesta según los convocados y reparto de minutos. Revisa las parejas antes de usarla.' : 'Tu plan actual. Selecciona una barra para seguir los minutos de ese jugador.'}</p>
     <p class="cbx-plan-guide"><b>1. Elige el reparto</b> · Escalonado: relevos a lo largo del partido. Por partes: relevos agrupados.<br><b>2. Pulsa Sugerir cambios</b> y revisa las barras.<br><b>3. Usa la propuesta</b> para editar jugadores y posiciones. Guarda cuando esté lista.</p><label>Tipo de reparto<select id="prep-plan-mode"><option value="escalonado" ${prepPlanMode === 'escalonado' ? 'selected' : ''}>Escalonado</option><option value="partes" ${prepPlanMode === 'partes' ? 'selected' : ''}>Por partes</option></select></label>
-    <button type="button" id="prep-edit-windows" class="primary">Editar entradas y ventanas de cambios</button>
+    <button type="button" id="prep-edit-windows" class="primary">Abrir Plan de tiempos · editar y proponer</button>
     <button type="button" id="prep-propose-auto" class="primary">✨ Sugerir cambios y minutos</button>
     ${renderMinuteTimeline(timeline,state.players,'prep:' + prepMatchId)}
     <div class="cbx-plan-changes">${proposalChanges}</div>
@@ -4637,6 +4638,14 @@ function openPrepWindowEditor(selectedPlayerId = '') {
           if(slot.pos==='Portero'?!keeperIds.includes(slot.playerId):keeperIds.includes(slot.playerId))slot.playerId='';
         }
         return proposePrepMoments({initial:completeProposedStarters(proposed,playerIds,keeperIds),playerIds,keeperIds,format:callup?.format||state.format,mode:prepPlanMode,playerNumbers:Object.fromEntries(state.players.map(p=>[p.id,Number(cleanPlayerNumber(p.number))||999])),idFactory:uid});
+      },
+      onPrint:moments=>printMatchPlan(matchId,state,{momentsDraft:moments,teamDraft:moments[0].team,formacionDraft:moments[0].formation}),
+      onSave:async moments=>{
+        if(prepMatchId!==matchId)throw new Error('La preparación activa ha cambiado.');
+        prepMomentsDraft=structuredClone(moments);prepSuggestedMoments=null;
+        $('#prep-keeper1').value=moments[0].team.find(s=>s.pos==='Portero')?.playerId||'';
+        selectPrepMoment(0,false);
+        await savePreparacion();
       },
       onApply:moments=>{
         if(prepMatchId!==matchId)throw new Error('La preparación activa ha cambiado. Abre de nuevo el editor de ventanas.');
@@ -7517,6 +7526,7 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
 }
 
 function applyCustomTheme(themeInput) {
+  themeInput = colorPreviewTheme() || themeInput;
   let localTheme = {};
   try {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -8979,7 +8989,7 @@ function copyViewThemeToAll(viewId) {
   applyCustomTheme(currentTheme);
 }
 
-function openQuickColorDialog(targetKind = null, sectionId = null) {
+function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
   const sectionRoot=sectionId && document.getElementById(sectionId);
   const dialog = $('#cbx-quick-color-dialog');
   const titleEl = $('#cbx-quick-color-title');
@@ -10118,6 +10128,26 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
 
   renderContent();
   dialog.showModal();
+}
+function openQuickColorDialog(targetKind = null, sectionId = null) {
+  const scope=sectionId?document.getElementById(sectionId):null;
+  const targets={specialists:'plantilla',dorsales:'plantilla','callup-plan':'convocatorias','prep-plan':'preparacion',callups:'convocatorias',live:'partido','live-board':'partido','delegate-board':'delegado','tactic-board':'tacticas',whatsapp:'cuerpo-tecnico'};
+  const viewId=scope?.closest('.view')?.id || scope?.dataset.themeView || targets[targetKind] || (targetKind && (document.getElementById(targetKind)||['navegacion','exercise-detail','comunicador'].includes(targetKind))?targetKind:document.querySelector('.view.active')?.id) || 'plantilla';
+  const planScope=targetKind==='prep-plan'?document.getElementById('prep-plan-tramos'):targetKind==='callup-plan'?document.querySelector('#convocatorias .cbx-callup-plan'):null;
+  const actualScope=scope||planScope||(targetKind==='specialists'?document.getElementById('plantilla-specialists-bar'):null);
+  const title=actualScope?.querySelector('h2,h3,h4')?.textContent?.trim() || ({plantilla:'Plantilla',hoy:'Hoy','cuerpo-tecnico':'Cuerpo técnico',asistencia:'Asistencia',convocatorias:'Convocatoria',preparacion:'Preparación',partido:'Partido en vivo',sesiones:'Sesiones',ejercicios:'Ejercicios',tacticas:'Tácticas',navegacion:'Navegación compartida'})[viewId] || viewId;
+  openClaudeColorEditor({viewId,scope:actualScope,title,
+    readTheme:()=>{let local={};try{local=JSON.parse(localStorage.getItem('campobase.theme')||'{}');}catch{}return {...state.settings?.theme,...local,views:{...state.settings?.theme?.views,...local.views}};},
+    applyTheme:applyCustomTheme,
+    saveTheme:async theme=>{
+      if(!roleCanUseOwnerFeatures(state.role))throw new Error('Solo el entrenador puede guardar estos ajustes.');
+      const settings={...state.settings,theme,updatedAt:Date.now()};
+      await put('settings',settings);
+      localStorage.setItem('campobase.theme',JSON.stringify(theme));
+      if(localStorage.getItem('campobase.theme')!==JSON.stringify(theme))throw new Error('No coincide la comprobación del guardado.');
+      state.settings=settings;
+    }
+  });
 }
 window.openQuickColorDialog = openQuickColorDialog;
 
@@ -13323,7 +13353,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-ajustes-sencillos-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-claude-propuesta-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
