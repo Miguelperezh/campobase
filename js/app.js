@@ -9874,7 +9874,8 @@ function openQuickColorDialog(targetKind = null) {
       const planRoot = currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan');
       const actualPlanColor = (selector, property, fallback) => {
         const element = planRoot?.querySelector(selector);
-        const rgb = element && getComputedStyle(element).getPropertyValue(property).match(/\d+/g);
+        const color = element && getComputedStyle(element).getPropertyValue(property);
+        const rgb = color?.startsWith('rgb') ? color.match(/\d+/g) : null;
         return rgb?.length >= 3 ? '#' + rgb.slice(0,3).map(value => Number(value).toString(16).padStart(2,'0')).join('') : fallback;
       };
       previewHtml = `<div class="cbx-plan-colour-example"><strong>Plan por tramos</strong><p>Titular · 0′–35′ · 35 minutos</p><div class="cbx-minute-track"><i style="left:0;width:50%"></i></div></div>`;
