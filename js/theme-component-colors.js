@@ -1,6 +1,8 @@
 // Component choices take precedence over the legacy blanket button rules.
 let currentTheme = {};
 const originalColours = new WeakMap();
+const originalIcons = new WeakMap();
+const rememberedProperties = ['background','color','border-color','border-top-color','border-left-color','border-bottom-color','fill','stroke','accent-color','font-family','font-size','font-weight'];
 
 export function configurableButtons(root) {
   const options = new Map();
@@ -188,6 +190,8 @@ export function applyComponentColors(theme) {
     }
     element.removeAttribute('data-theme-override');
   });
+  const iconSelectors=Object.values(currentTheme.views||{}).flatMap(view=>Object.values(view.uiParts||{})).filter(c=>c.css==='icon').map(c=>c.selector);
+  document.querySelectorAll('[data-ui-icon]').forEach(node=>{if(iconSelectors.some(selector=>{try{return node.matches(selector);}catch{return false;}}))return;node.textContent=originalIcons.get(node);node.removeAttribute('data-ui-icon');});
   const paint = (root, selector, bg, ink) => {
     root?.querySelectorAll(selector).forEach((element) => {
       if (bg) element.style.setProperty('background', `var(${bg})`, 'important');
@@ -261,7 +265,7 @@ export function applyComponentColors(theme) {
     paint(root, '.tab-btn.active', '--btn', '--btnInk');
     paint(root, '#whatsapp-form,.dialog-head,.sheet-bottom-bar,.dialog-sticky-footer', '--cardBg', '--view-font-color');
   }
-  document.querySelectorAll('dialog[data-theme-view]').forEach((dialog) => {
+  document.querySelectorAll('dialog[data-theme-view]:not(.cbp-time-plan)').forEach((dialog) => {
     paint(dialog, '.primary', '--btn', '--btnInk');
     paint(dialog, '.secondary', '--btn2', '--btn2Ink');
     paint(dialog, 'label,p', null, '--view-font-color');
@@ -284,7 +288,7 @@ export function applyComponentColors(theme) {
       matches.forEach((button) => {
         if(button.closest('.view') && button.closest('.view').id!==viewId)return;
         for (const element of [button, ...button.querySelectorAll('span,strong,small,b,svg')]) {
-          originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
+          originalColours.set(element, rememberedProperties.map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
           element.dataset.themeOverride = '1';
           if (element === button && colours.bg) element.style.setProperty('background', colours.bg, 'important');
           if (colours.ink) element.style.setProperty('color', colours.ink, 'important');
@@ -297,12 +301,12 @@ export function applyComponentColors(theme) {
       try { matches = document.querySelectorAll(selector); } catch { continue; }
       matches.forEach((element) => {
         if(element.closest('.view') && element.closest('.view').id!==viewId)return;
-        if (!element.hasAttribute('data-theme-override')) originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
+        if (!element.hasAttribute('data-theme-override')) originalColours.set(element, rememberedProperties.map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
         element.dataset.themeOverride = '1';
         for (const [prop, value] of Object.entries(colours)) if (['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].includes(prop) && /^#[0-9a-f]{6}$/i.test(value)) element.style.setProperty(prop, value, 'important');
         if (element.matches('[data-specialist-rank]') && /^#[0-9a-f]{6}$/i.test(colours.background || '')) element.querySelectorAll('.specialist-rank,.specialist-number').forEach(child=>{ if(!child.hasAttribute('data-theme-override'))originalColours.set(child,['background','color'].map(prop=>[prop,child.style.getPropertyValue(prop),child.style.getPropertyPriority(prop)]));child.dataset.themeOverride='1';child.style.setProperty('background',colours.background,'important');});
         if ( /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll('span,strong,small,b,svg,h1,h2,h3,h4,h5,p,label,li,td,th,a').forEach((child) => {
-          if (!child.hasAttribute('data-theme-override')) originalColours.set(child, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
+          if (!child.hasAttribute('data-theme-override')) originalColours.set(child, rememberedProperties.map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
           child.dataset.themeOverride = '1';
           child.style.setProperty('color', colours.color, 'important');
         });
@@ -314,6 +318,27 @@ export function applyComponentColors(theme) {
   // Explicit goal-series choices must win over old generic chart overrides.
   paint(today, '.cbx-season-bars > div > div > i:first-child', '--season-goals-for');
   paint(today, '.cbx-season-bars > div > div > i:nth-child(2)', '--season-goals-against');
+  // Semantic controls from Claude are applied last, after historical theme selectors.
+  for(const [viewId,settings]of Object.entries(currentTheme.views||{}))for(const choice of Object.values(settings.uiParts||{}).sort((a,b)=>{const depth=s=>{try{let n=document.querySelector(s),d=0;while(n){d++;n=n.parentElement;}return d;}catch{return 0;}};return depth(a.selector)-depth(b.selector);})){
+    if(!choice || !/^#[\w-]+(?: |$)/.test(choice.selector||''))continue;
+    let nodes;try{nodes=document.querySelectorAll(choice.selector);}catch{continue;}
+    for(const node of nodes){
+      if(node.closest('.view')&&node.closest('.view').id!==viewId)continue;
+      if(choice.css==='icon'){
+        if(typeof choice.value!=='string'||choice.value.length>16)continue;
+        if(!originalIcons.has(node))originalIcons.set(node,node.textContent);
+        if(node.textContent!==choice.value)node.textContent=choice.value;node.dataset.uiIcon='';continue;
+      }
+      if(!rememberedProperties.includes(choice.css))continue;
+      const valid=choice.css==='font-family'?/^[\w ,'-]{1,100}$/.test(choice.value):choice.css==='font-size'?/^([89]|[1-6][0-9]|7[0-2])px$/.test(choice.value):choice.css==='font-weight'?/^[4-9]00$/.test(choice.value):/^#[0-9a-f]{6}$/i.test(choice.value);
+      if(!valid)continue;
+      const paintPart=child=>{if(!child.hasAttribute('data-theme-override'))originalColours.set(child,rememberedProperties.map(prop=>[prop,child.style.getPropertyValue(prop),child.style.getPropertyPriority(prop)]));child.dataset.themeOverride='1';child.style.setProperty(choice.css,choice.value,'important');};
+      paintPart(node);
+      if(choice.css==='color'||choice.css.startsWith('font-'))node.querySelectorAll('span,strong,small,b,h1,h2,h3,h4,p,a,svg').forEach(paintPart);
+      if(node.matches('[data-specialist-rank]')&&choice.css==='background')node.querySelectorAll('.specialist-rank,.specialist-number').forEach(paintPart);
+    }
+  }
+
 }
 
 export function observeComponentColors() {
