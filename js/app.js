@@ -13315,7 +13315,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261005-plan-copia-ajustes').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-plan-jugadores-produccion').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

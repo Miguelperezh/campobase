@@ -4609,3 +4609,6 @@ Guardarraíles:
 - Esta regla aplica a partidos, convocatorias manuales, asistencias, sesiones de entrenamiento y cualquier otro formulario que use los selectores DD/MM/AAAA compartidos.
 - Una fecha histórica inválida no debe bloquear el render ni la sincronización: se muestra de forma segura como inválida y el usuario puede corregirla después, sin reescribir registros automáticamente.
 - No corregir fechas históricas inventando el día correcto. La app solo impide nuevas fechas imposibles y tolera las antiguas hasta edición explícita.
+
+## Publicación autorizada 6/10/2026 — SDD025
+Miguel autoriza publicar los cambios validados de ajustes/planes y edición por jugador en main y producción. Esta autorización no permite reemplazar datos: conservar sesiones, ejercicios propios, colores, preferencias, PIN, jugadores, partidos e IDs actuales. Publicar código y documentación; no importar datos de preview, ejecutar seeds/reset, migraciones ni escrituras Supabase. Actualizar caché de recursos PWA sin borrar IndexedDB ni localStorage. Registrar pruebas y versión pública real antes de declarar despliegue terminado. Las reglas previas y áreas ajenas se conservan íntegramente.
