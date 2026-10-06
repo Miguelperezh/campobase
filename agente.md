@@ -1777,3 +1777,5 @@ Mantener los ajustes validados. Permitir intervalos repetidos arbitrarios por ju
 
 ## 2026-10-06 · Publicación autorizada preservando datos (SDD025)
 Usuario autoriza main/producción para versión validada SDD018–024. Publicación exclusiva de código/documentación y actualización de recursos PWA; datos, sesiones nuevas, ejercicios propios, colores/preferencias y registros de Supabase quedan intactos. Sin importación de fixtures/preview, seeds, reset ni migraciones. AGENTS.md se amplía de forma acumulativa. Guardado de cambios del plan sigue siendo explícito por el usuario.
+
+SDD025: PR93 integrado e5e7517d con 707 pruebas y browser CI correctos. Pages legacy esperando runner: usar production-pages.yml con un solo runner, mismo patrón probado en preview. Cambiar solo método de publicación, sin código funcional adicional ni datos.
