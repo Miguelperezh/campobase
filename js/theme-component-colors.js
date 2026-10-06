@@ -63,9 +63,17 @@ export function configurableElements(root) {
     const index = options.filter((option) => option.group === group && option.label === name).length + 1;
     options.push({ selector: selectorFor(element), group, label: name || 'Gráfico', context: heading ? named(heading) : '', tag: element.tagName.toLowerCase(), index });
   }
+  if(root.matches('.specialist-item')){
+    for(const row of root.querySelectorAll('[data-specialist-rank]')){
+      const rank=row.dataset.specialistRank;const base='#'+CSS.escape(root.id)+' [data-specialist-rank="'+rank+'"]';
+      for(const [label,selector]of [['Fila completa',base],['Nombre',base+' strong'],['Distintivo',base+' .specialist-rank'],['Dorsal',base+' .specialist-number']])options.push({selector,label:rank+'.º · '+label,group:'Lanzadores y capitanes',context:'Solo esta sección',tag:'div',index:1,shared:true});
+    }
+  }
   if (root.id === 'plantilla') {
     const shared = [
       ['Ficha completa', '.cbx-player'], ['Nombre del jugador', '.cbx-player .player-name h3'],
+      ['Etiquetas de dorsal, posición, pierna y rotaciones', '.cbx-player .player-data small'], ['Valores de dorsal, posición, pierna y rotaciones', '.cbx-player .player-data strong'],
+      ['Nota y datos adicionales', '.cbx-player .player-body .meta'], ['Teléfono y nombre del padre', '.cbx-player .player-family-contacts > :nth-child(1)'], ['Teléfono y nombre de la madre', '.cbx-player .player-family-contacts > :nth-child(2)'],
       ['Dorsal', '.cbx-player .player-data > span:nth-child(1)'], ['Posición', '.cbx-player .player-data > span:nth-child(2)'],
       ['Pierna', '.cbx-player .player-data > span:nth-child(3)'], ['Rotaciones', '.cbx-player .player-data > span:nth-child(4)'],
       ['Media de Liga', '.cbx-player .player-rating-badge'], ['Minutos disputados', '.cbx-player .player-minute-bar'],
@@ -82,7 +90,7 @@ export function configurableElements(root) {
       ['Replegar estadísticas', '.cbx-player .collapse-stats-btn'],
     ];
     for (const [label, local] of shared) if (root.querySelector(local)) options.push({selector: '#plantilla ' + local, group: 'Fichas de jugadores · estilo común', label, context: 'Se aplica a todas las fichas de jugadores', tag: 'div', index: 1, shared: true});
-    for (const [label, local] of [['Filas de clasificación', '.lb-table tbody tr'], ['Nombres en clasificación', '.lb-table tbody .col-player'], ['Cifras de clasificación', '.lb-table tbody .col-num'], ['Orden en clasificación', '.lb-table tbody .col-rank']]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a todas las filas de clasificación', tag: 'div', index: 1, shared: true});
+    for (const [label, local] of [['Cabeceras de columnas', '.lb-table thead th'], ['Todos los textos y cifras de la tabla', '.lb-table tbody td'], ['Posiciones de los jugadores', '.lb-table tbody .col-pos'], ['Dorsales de clasificación', '.lb-dorsal-tag'], ['Botones de clasificación', '.lb-tab-btn,.lb-scope-btn,.cbx-leaders-more,.lb-toggle-text'], ['Filas de clasificación', '.lb-table tbody tr'], ['Nombres en clasificación', '.lb-table tbody .col-player'], ['Cifras de clasificación', '.lb-table tbody .col-num'], ['Orden en clasificación', '.lb-table tbody .col-rank']]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a todas las filas de clasificación', tag: 'div', index: 1, shared: true});
   }
   options.push({ selector: '#' + CSS.escape(root.id), group: 'Fondos, tarjetas y recuadros', label: 'Fondo de la pantalla o ventana', context: '', tag: root.tagName.toLowerCase(), index: 1 });
   const playerNames = root.id === 'plantilla' ? [...root.querySelectorAll('.player-name h3')].map((element) => element.textContent.trim()) : [];
@@ -167,8 +175,9 @@ export function applyComponentColors(theme) {
     });
   };
   const today = document.getElementById('hoy');
-  paint(today, '.cbx-season-goals-for', '--season-goals-for');
-  paint(today, '.cbx-season-goals-against', '--season-goals-against');
+  const todayColours=currentTheme.views?.hoy || {};
+  if(todayColours.seasonGoalsForColor)paint(today, '.cbx-season-goals-for', '--season-goals-for');
+  if(todayColours.seasonGoalsAgainstColor)paint(today, '.cbx-season-goals-against', '--season-goals-against');
   const tactics = document.getElementById('tacticas');
   paint(tactics, '.cbx-tactics-hero', '--bn');
   paint(tactics, '.cbx-tactics-hero-text', null, '--bnInk');
@@ -243,13 +252,14 @@ export function applyComponentColors(theme) {
   const subnav = document.getElementById('cb-sub-nav');
   paint(subnav, '.cb-sub-pill:not(.active)', '--sub-nav-bg', '--sub-nav-ink');
   paint(subnav, '.cb-sub-pill.active', '--sub-nav-active-bg', '--sub-nav-active-ink');
-  for (const settings of Object.values(currentTheme.views || {})) {
+  for (const [viewId,settings] of Object.entries(currentTheme.views || {})) {
     for (const [selector, colours] of Object.entries(settings.buttonColors || {})) {
       // Only selectors generated for an application container are accepted.
       if (!/^#[\w-]+ (button|#)/.test(selector)) continue;
       let matches;
       try { matches = document.querySelectorAll(selector); } catch { continue; }
       matches.forEach((button) => {
+        if(button.closest('.view') && button.closest('.view').id!==viewId)return;
         for (const element of [button, ...button.querySelectorAll('span,strong,small,b,svg')]) {
           originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
           element.dataset.themeOverride = '1';
@@ -258,15 +268,16 @@ export function applyComponentColors(theme) {
         }
       });
     }
-    for (const [selector, colours] of Object.entries(settings.elementColors || {})) {
+    for (const [selector, colours] of Object.entries(settings.elementColors || {}).sort(([a],[b])=>{const depth=sel=>{let n=document.querySelector(sel),d=0;while(n){d++;n=n.parentElement;}return d;};try{return depth(a)-depth(b);}catch{return 0;}})) {
       if (!/^#[\w-]+(?: |$)/.test(selector)) continue;
       let matches;
       try { matches = document.querySelectorAll(selector); } catch { continue; }
       matches.forEach((element) => {
+        if(element.closest('.view') && element.closest('.view').id!==viewId)return;
         if (!element.hasAttribute('data-theme-override')) originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
         element.dataset.themeOverride = '1';
         for (const [prop, value] of Object.entries(colours)) if (['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].includes(prop) && /^#[0-9a-f]{6}$/i.test(value)) element.style.setProperty(prop, value, 'important');
-        if ((element.matches('button,a,summary') || selector.startsWith('#plantilla .cbx-player')) && /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll(selector.startsWith('#plantilla .cbx-player') ? 'span,strong,small,b,svg,h3,h4,p,label,li,td' : 'span,strong,small,b,svg').forEach((child) => {
+        if ( /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll('span,strong,small,b,svg,h1,h2,h3,h4,h5,p,label,li,td,th,a').forEach((child) => {
           if (!child.hasAttribute('data-theme-override')) originalColours.set(child, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
           child.dataset.themeOverride = '1';
           child.style.setProperty('color', colours.color, 'important');
@@ -324,6 +335,27 @@ export function observeComponentColors() {
       button.setAttribute('aria-label', 'Ajustar colores de esta ventana');
       (dialog.querySelector('.dialog-head') || dialog).append(button);
     });
+    const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view .specialist-item,.view #squad-stats .stat,.view .cbx-player,.view section')];
+    for(const root of roots) {
+      if(root.closest('#cbx-quick-color-dialog')||root.classList.contains('view'))continue;
+      const view=root.closest('.view');if(!view)continue;
+      const heading=root.querySelector('h2,h3,h4,legend,summary');
+      if(!heading && !root.matches('.stat,.cbx-player'))continue;
+      const scope=root.matches('.cbx-player')?document.getElementById('players-list'):root;
+      if(!scope.id) {
+        const label=(heading?.textContent||root.className).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,55);
+        const peers=[...view.querySelectorAll(root.tagName)].filter(el=>el.className===root.className);
+        scope.id=view.id+'-colours-'+label+'-'+peers.indexOf(root);
+      }
+      if([...root.querySelectorAll('[data-theme-section]')].some(b=>b.dataset.themeSection===scope.id))continue;
+      const button=document.createElement('button');button.type='button';button.className='cbx-context-gear-btn cbx-section-gear';button.textContent='⚙️';button.dataset.gearTarget='section';button.dataset.themeSection=scope.id;
+      button.setAttribute('aria-label','Personalizar '+(root.matches('.cbx-player')?'todas las fichas de jugadores':heading?.textContent||root.querySelector('span')?.textContent||'esta sección'));
+      (root.matches('.cbx-player')?root.querySelector('.player-head-right'):heading?.parentElement||root).append(button);
+    }
+    const leaders=document.getElementById('squad-leaderboards');
+    if(leaders && !leaders.querySelector('[data-theme-section="squad-leaderboards"]')) {
+      const button=document.createElement('button');button.type='button';button.className='cbx-context-gear-btn cbx-section-gear';button.textContent='⚙️';button.dataset.gearTarget='section';button.dataset.themeSection=leaders.id;button.setAttribute('aria-label','Personalizar tablas clasificatorias');leaders.querySelector('summary')?.append(button);
+    }
     applyComponentColors();
   };
   new MutationObserver(() => {
