@@ -48,6 +48,7 @@ export function configurableElements(root) {
   ];
   const seen = new Set();
   for (const [group, query] of groups) for (const element of root.querySelectorAll(query)) {
+    if (root.matches('.specialist-item') || (root.id==='plantilla-specialists-bar' && element.closest('.specialist-item')) || (root.id === 'plantilla' && element.closest('#squad-leaderboards'))) continue;
     if (root.id === 'plantilla' && (element.closest('.cbx-player') || element.querySelector('.cbx-player') || element.closest('#squad-leaderboards tbody'))) continue;
     if (seen.has(element) || element.closest('#cbx-quick-color-dialog') || element.matches('.cbx-context-gear-btn')) continue;
     if (element.closest('svg') && group !== 'Iconos y gráficos') continue;
@@ -63,24 +64,26 @@ export function configurableElements(root) {
     const index = options.filter((option) => option.group === group && option.label === name).length + 1;
     options.push({ selector: selectorFor(element), group, label: name || 'Gráfico', context: heading ? named(heading) : '', tag: element.tagName.toLowerCase(), index });
   }
-  if(root.matches('.specialist-item')){
+  if(root.matches('.specialist-item') || root.id==='plantilla-specialists-bar'){
+    for(const card of (root.matches('.specialist-item')?[root]:[...root.querySelectorAll('.specialist-item')])){
+      const scope=root.matches('.specialist-item')?'#'+CSS.escape(root.id):'#'+CSS.escape(root.id)+' .specialist-item:nth-of-type('+([...card.parentElement.children].filter(n=>n.tagName===card.tagName).indexOf(card)+1)+')';
+      for(const [label,local]of [['Título de la especialidad',' h4'],['Icono de la especialidad',' .sp-icon']])options.push({selector:scope+local,label:label+' · '+card.querySelector('h4')?.textContent?.trim(),group:'Lanzadores y capitanes',context:'Solo esta tarjeta de especialidad',tag:'div',index:1,shared:true});
+    }
     for(const row of root.querySelectorAll('[data-specialist-rank]')){
-      const rank=row.dataset.specialistRank;const base='#'+CSS.escape(root.id)+' [data-specialist-rank="'+rank+'"]';
-      for(const [label,selector]of [['Fila completa',base],['Nombre',base+' strong'],['Distintivo',base+' .specialist-rank'],['Dorsal',base+' .specialist-number']])options.push({selector,label:rank+'.º · '+label,group:'Lanzadores y capitanes',context:'Solo esta sección',tag:'div',index:1,shared:true});
+      const rank=row.dataset.specialistRank;const card=row.closest('.specialist-item');const prefix=root.matches('.specialist-item')?'':' '+card.querySelector('h4,h3')?.textContent?.trim();const base='#'+CSS.escape(root.id)+(root.matches('.specialist-item')?'':' .specialist-item:nth-of-type('+([...card.parentElement.children].filter(n=>n.tagName===card.tagName).indexOf(card)+1)+')')+' [data-specialist-rank="'+rank+'"]';
+      for(const [label,selector]of [['Fila completa',base],['Nombre del jugador',base+' strong'],['Etiqueta de función (1.º lanzador/capitán)',base+' .specialist-rank'],['Dorsal',base+' .specialist-number']])options.push({selector,label:rank+'.º · '+label+(prefix||''),group:'Lanzadores y capitanes',context:'Solo esta sección',tag:'div',index:1,shared:true});
     }
   }
   if (root.id === 'plantilla') {
     const shared = [
       ['Ficha completa', '.cbx-player'], ['Nombre del jugador', '.cbx-player .player-name h3'],
-      ['Etiquetas de dorsal, posición, pierna y rotaciones', '.cbx-player .player-data small'], ['Valores de dorsal, posición, pierna y rotaciones', '.cbx-player .player-data strong'],
       ['Nota y datos adicionales', '.cbx-player .player-body .meta'], ['Teléfono y nombre del padre', '.cbx-player .player-family-contacts > :nth-child(1)'], ['Teléfono y nombre de la madre', '.cbx-player .player-family-contacts > :nth-child(2)'],
       ['Dorsal', '.cbx-player .player-data > span:nth-child(1)'], ['Posición', '.cbx-player .player-data > span:nth-child(2)'],
       ['Pierna', '.cbx-player .player-data > span:nth-child(3)'], ['Rotaciones', '.cbx-player .player-data > span:nth-child(4)'],
       ['Media de Liga', '.cbx-player .player-rating-badge'], ['Media Liga · valor', '.cbx-player .player-rating-badge .valor'], ['Media Liga · etiqueta', '.cbx-player .player-rating-badge .etiqueta'], ['Minutos · etiqueta', '.cbx-player .player-minute-meta > span:first-child'], ['Minutos · cifra y porcentaje', '.cbx-player .player-minute-meta > span:last-child'], ['Minutos · partidos convocado', '.cbx-player .minute-avg-pill'], ['Minutos disputados', '.cbx-player .player-minute-bar'],
       ['Barra de minutos · Fondo', '.cbx-player .player-minute-track'], ['Barra de minutos · Relleno', '.cbx-player .player-minute-fill'],
-      ['Distintivos de especialista', '.cbx-player .player-specialist-tags'],
-      ['Contacto del padre', '.cbx-player .player-family-contacts > :nth-child(1)'],
-      ['Contacto de la madre', '.cbx-player .player-family-contacts > :nth-child(2)'],
+      ['Lanzadores y capitanes en fichas · cada píldora completa', '.cbx-player .specialist-pill'],
+
       ['Botón WhatsApp', '.cbx-player .open-whatsapp-player'], ['Botón Editar', '.cbx-player .edit-player'],
       ['Botón Borrar', '.cbx-player .delete-player'], ['Actividad y estadísticas', '.cbx-player .player-performance-summary'],
       ['Resumen de estadísticas', '.cbx-player .player-summary'], ['Texto de estadísticas', '.cbx-player .player-summary span'],
@@ -91,9 +94,25 @@ export function configurableElements(root) {
     ];
     for(const [index,label]of ['Dorsal','Posición','Pierna','Rotaciones'].entries())for(const [part,tag]of [['Etiqueta','small'],['Valor','strong']])shared.push([label+' · '+part,'.cbx-player .player-data > span:nth-child('+(index+1)+') '+tag]);
     for (const [label, local] of shared) if (root.querySelector(local)) options.push({selector: '#plantilla ' + local, group: 'Fichas de jugadores · estilo común', label, context: 'Se aplica a todas las fichas de jugadores', tag: 'div', index: 1, shared: true});
-    for (const [label, local] of [['Cabeceras de columnas', '.lb-table thead th'], ['Todos los textos y cifras de la tabla', '.lb-table tbody td'], ['Posiciones de los jugadores', '.lb-table tbody .col-pos'], ['Dorsales de clasificación', '.lb-dorsal-tag'], ['Botones de clasificación', '.lb-tab-btn,.lb-scope-btn,.cbx-leaders-more,.lb-toggle-text'], ['Filas de clasificación', '.lb-table tbody tr'], ['Nombres en clasificación', '.lb-table tbody .col-player'], ['Cifras de clasificación', '.lb-table tbody .col-num'], ['Orden en clasificación', '.lb-table tbody .col-rank']]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a todas las filas de clasificación', tag: 'div', index: 1, shared: true});
+    for (const [label, local] of [
+      ['Tabla · fondo de todas las filas', '.lb-table tbody tr'],
+      ['Tabla · todos los textos y cifras', '.lb-table tbody td'],
+      ['Columna Jugador · nombres', '.lb-table tbody .col-player'],
+      ['Columna Posición · posiciones de juego', '.lb-table tbody .col-pos'],
+      ['Columna Pos. · número de orden', '.lb-table tbody .col-rank'],
+      ['Jugador · distintivo del dorsal', '.lb-dorsal-tag'],
+      ['Botones Goleadores, Asistencias, Zamora, Minutos y Fair Play', '.lb-tab-btn'],
+      ['Filtros Todo, Liga y Pretemporada', '.lb-scope-btn'],
+      ['Botón Ver clasificación completa', '.cbx-leaders-more'],
+      ['Botón Abrir/cerrar tablas', '.lb-toggle-text']
+    ]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a toda esta tabla', tag: 'div', index: 1, shared: true});
+    const table=root.querySelector('#squad-leaderboards .lb-table');
+    table?.querySelectorAll('thead th').forEach((th,index)=>{
+      const label=th.textContent.trim().toLocaleUpperCase('es');
+      for(const [part,local]of [['Cabecera','thead th'],['Celdas','tbody td']])options.push({selector:'#plantilla #squad-leaderboards .lb-table '+local+':nth-child('+(index+1)+')',group:'Clasificación · columnas',label:part+' «'+label+'»',context:part==='Cabecera'?'Solo el título de esta columna':'Solo los valores de esta columna en todos los jugadores',tag:'div',index:1,shared:true});
+    });
   }
-  options.push({ selector: '#' + CSS.escape(root.id), group: 'Fondos, tarjetas y recuadros', label: 'Fondo de la pantalla o ventana', context: '', tag: root.tagName.toLowerCase(), index: 1 });
+  options.push({ selector: '#' + CSS.escape(root.id), group: 'Fondos, tarjetas y recuadros', label: root.matches('.specialist-item')?'Tarjeta de especialidad · fondo completo':'Fondo de la pantalla o sección', context: '', tag: root.tagName.toLowerCase(), index: 1 });
   const playerNames = root.id === 'plantilla' ? [...root.querySelectorAll('.player-name h3')].map((element) => element.textContent.trim()) : [];
   return options.filter((option) => option.shared || !playerNames.some((name) => name && option.label.includes(name)));
 }
@@ -279,6 +298,7 @@ export function applyComponentColors(theme) {
         if (!element.hasAttribute('data-theme-override')) originalColours.set(element, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)]));
         element.dataset.themeOverride = '1';
         for (const [prop, value] of Object.entries(colours)) if (['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].includes(prop) && /^#[0-9a-f]{6}$/i.test(value)) element.style.setProperty(prop, value, 'important');
+        if (element.matches('[data-specialist-rank]') && /^#[0-9a-f]{6}$/i.test(colours.background || '')) element.querySelectorAll('.specialist-rank,.specialist-number').forEach(child=>{ if(!child.hasAttribute('data-theme-override'))originalColours.set(child,['background','color'].map(prop=>[prop,child.style.getPropertyValue(prop),child.style.getPropertyPriority(prop)]));child.dataset.themeOverride='1';child.style.setProperty('background',colours.background,'important');});
         if ( /^#[0-9a-f]{6}$/i.test(colours.color || '')) element.querySelectorAll('span,strong,small,b,svg,h1,h2,h3,h4,h5,p,label,li,td,th,a').forEach((child) => {
           if (!child.hasAttribute('data-theme-override')) originalColours.set(child, ['background', 'color', 'border-color', 'fill', 'stroke', 'accent-color'].map((prop) => [prop, child.style.getPropertyValue(prop), child.style.getPropertyPriority(prop)]));
           child.dataset.themeOverride = '1';
@@ -289,6 +309,9 @@ export function applyComponentColors(theme) {
     }
 
   }
+  // Explicit goal-series choices must win over old generic chart overrides.
+  if(todayColours.seasonGoalsForColor)paint(today, '.cbx-season-goals-for', '--season-goals-for');
+  if(todayColours.seasonGoalsAgainstColor)paint(today, '.cbx-season-goals-against', '--season-goals-against');
 }
 
 export function observeComponentColors() {

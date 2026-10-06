@@ -1,9 +1,9 @@
 import { openMatchWindowEditor } from './match-window-editor.js?v=player-edit-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-1';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-2';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-1';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-2';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -9947,6 +9947,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
       const rgb = String(value).match(/\d+/g);
       return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
     };
+    if(currentSubTab==='specialists')controlsHtml='';
     controlsHtml = '<section class="cbx-general-color-controls">' + controlsHtml + '</section>';
     controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Buscar en esta pantalla…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
     for (const group of [...new Set(elements.map((element) => element.group))]) {
@@ -9961,7 +9962,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
         controlsHtml += `<fieldset class="cbx-named-colour" data-element-index="${buttonIndex}"><legend>${escapeHtml(item.label)}${item.index > 1 ? ' · ' + item.index : ''}</legend><p class="cbx-color-control-help">${escapeHtml(item.context && item.context !== item.label ? 'Dentro de «' + item.context + '». ' : '')}${item.shared ? escapeHtml(item.context) + '.' : 'Cambia solo este elemento de ' + escapeHtml(activeViewConfig.name) + '.'}</p>`;
         for (const [prop, label] of properties) {
           const value = asHex(vSettings.elementColors?.[item.selector]?.[prop] || style.getPropertyValue(prop));
-          controlsHtml += `<div class="cbx-color-control-row"><label>${label}<input type="color" data-element="${buttonIndex}" data-element-prop="${prop}" value="${value}" aria-label="${escapeHtml(label + ' de ' + item.label)}"><code>${value}</code></label><p class="cbx-color-control-help">${prop === 'background' ? 'Superficie detrás del contenido.' : prop === 'color' ? 'Color de las letras e iconos que heredan este texto.' : prop === 'border-color' ? 'Color del contorno existente; no añade un borde.' : prop === 'fill' ? 'Color interior de esta figura del gráfico.' : prop === 'accent-color' ? 'Marca de selección o barra de progreso.' : 'Color del trazo de esta figura del gráfico.'}</p></div>`;
+          controlsHtml += `<div class="cbx-color-control-row"><label>${label}<input type="color" data-element="${buttonIndex}" data-element-prop="${prop}" value="${value}" aria-label="${escapeHtml(label + ' de ' + item.label)}"><code>${value}</code></label><p class="cbx-color-control-help">${prop === 'background' ? 'Fondo de «' + escapeHtml(item.label) + '».' : prop === 'color' ? 'Texto de «' + escapeHtml(item.label) + '».' : prop === 'border-color' ? 'Color del contorno existente; no añade un borde.' : prop === 'fill' ? 'Color interior de esta figura del gráfico.' : prop === 'accent-color' ? 'Marca de selección o barra de progreso.' : 'Color del trazo de esta figura del gráfico.'}</p></div>`;
         }
         controlsHtml += `<button type="button" class="secondary" data-reset-element="${buttonIndex}">Restablecer ${escapeHtml(item.label)}</button></fieldset>`;
       }
@@ -9969,6 +9970,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
     }
     controlsHtml += '</section>';
     titleEl.textContent = sectionRoot ? '⚙️ Personalizar: '+(sectionRoot.id==='players-list'?'Fichas de jugadores · todas iguales':sectionRoot.querySelector('h2,h3,h4,summary')?.textContent||sectionRoot.querySelector('span')?.textContent||'esta sección') : `⚙️ Personalizar: ${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}`;
+    if(sectionRoot || currentSubTab==='specialists')previewHtml='<p>Cada elemento tiene debajo una muestra con su texto real. Cambia Fondo o Texto y verás inmediatamente la combinación elegida.</p>';
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + '<div class="cbx-adjustments-layout"><aside class="cbx-adjustments-preview"><h4>Vista previa</h4><p>Comprueba aquí los colores de esta pantalla.</p>' + previewHtml + '</aside><div class="cbx-adjustments-controls">' + controlsHtml + '</div></div>';
     bodyEl.querySelectorAll('.cbx-colour-group').forEach(group=>{
       const summary=group.querySelector('summary');
@@ -13321,7 +13323,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-ajustes-secciones').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-ajustes-claros').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
