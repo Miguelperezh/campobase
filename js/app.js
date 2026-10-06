@@ -9888,7 +9888,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
       ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
     ]);
     if (currentViewId === 'hoy' && (!sectionRoot || sectionRoot.matches('.cbx-season'))) controlsHtml += extraRows([
-      ['Goles a favor · Color de barras', 'seasonGoalsForColor', '#10b981'], ['Goles en contra · Color de barras', 'seasonGoalsAgainstColor', '#e11d48']
+      ['Goles a favor · Color de barras', 'seasonGoalsForColor', vSettings.gfColor || theme.gfColor || '#10b981'], ['Goles en contra · Color de barras', 'seasonGoalsAgainstColor', vSettings.gaColor || theme.gaColor || '#e11d48']
     ]);
     if (currentSubTab === 'specialists') controlsHtml += extraRows([1, 2, 3].flatMap((rank) => [
       [rank + '.º capitán · Fondo del distintivo', 'captain' + rank + 'Bg', rank === 1 ? spLeadBg : spSubBg],
