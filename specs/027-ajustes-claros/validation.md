@@ -1,3 +1,8 @@
 # Comprobaciones
 707 pruebas aprobadas y comprobación de sintaxis aprobada. Navegador Chrome temporal, datos sintéticos, Supabase bloqueado: selector antiguo rojo en el gráfico, GF/GC independientes después de guardar; fondo de fila aplicado también a función/dorsal; muestra inmediata con fondo azul/texto blanco; cabecera POSICIÓN independiente; textos de tabla; píldoras de especialidad con fondo/texto elegidos en todas las fichas; padre y botones comunes; ancho móvil 390 y escritorio 1280. Sin errores ni escrituras remotas.
 Publicación y prueba de recursos públicos se registran en la revisión de GitHub.
+
+## Corrección del gráfico tras informe de Miguel
+La prueba previa cargaba siempre el módulo nuevo de Hoy. El CSS todavía vinculaba GF al acento general y GC al peligro, mientras la aplicación de colores dependía de clases nuevas y elecciones específicas. Se sustituye por vínculo CSS directo a variables semánticas, identificación por primera/segunda barra y lectura de colores GF/GC previamente guardados. Se versionan también CSS y módulo Hoy. La nueva prueba sirve HTML anterior sin clases específicas, recarga un tema guardado y añade un selector gráfico rojo histórico antes de abrir la rueda y cambiar los colores.
+
+Además, app, demo-session y redesign-nav importaban tres URLs de versión distintas del mismo módulo de Hoy. Al tratarse de módulos diferentes, cada uno ejecutaba bind() con sus propios listeners, observador y timer de repintado. Se unifican las tres importaciones y se versionan sus consumidores. La prueba de integración/offline compara ahora las URLs reales en lugar de exigir una versión antigua fija.

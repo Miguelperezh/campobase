@@ -5,7 +5,7 @@
 // Totalmente desacoplado de la lógica de negocio y datos reales.
 // ==========================================================================
 
-import { renderTodayDashboard } from './today-dashboard.js?v=claude-hoy-real-2';
+import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
 import { refreshStaffView, initStaffManagement } from './staff-management.js?v=claude-tecnicos-1';
 import './pwa-install-manager.js?v=1';
 
