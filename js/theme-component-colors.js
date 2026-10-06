@@ -76,7 +76,7 @@ export function configurableElements(root) {
       ['Nota y datos adicionales', '.cbx-player .player-body .meta'], ['Teléfono y nombre del padre', '.cbx-player .player-family-contacts > :nth-child(1)'], ['Teléfono y nombre de la madre', '.cbx-player .player-family-contacts > :nth-child(2)'],
       ['Dorsal', '.cbx-player .player-data > span:nth-child(1)'], ['Posición', '.cbx-player .player-data > span:nth-child(2)'],
       ['Pierna', '.cbx-player .player-data > span:nth-child(3)'], ['Rotaciones', '.cbx-player .player-data > span:nth-child(4)'],
-      ['Media de Liga', '.cbx-player .player-rating-badge'], ['Minutos disputados', '.cbx-player .player-minute-bar'],
+      ['Media de Liga', '.cbx-player .player-rating-badge'], ['Media Liga · valor', '.cbx-player .player-rating-badge .valor'], ['Media Liga · etiqueta', '.cbx-player .player-rating-badge .etiqueta'], ['Minutos · etiqueta', '.cbx-player .player-minute-meta > span:first-child'], ['Minutos · cifra y porcentaje', '.cbx-player .player-minute-meta > span:last-child'], ['Minutos · partidos convocado', '.cbx-player .minute-avg-pill'], ['Minutos disputados', '.cbx-player .player-minute-bar'],
       ['Barra de minutos · Fondo', '.cbx-player .player-minute-track'], ['Barra de minutos · Relleno', '.cbx-player .player-minute-fill'],
       ['Distintivos de especialista', '.cbx-player .player-specialist-tags'],
       ['Contacto del padre', '.cbx-player .player-family-contacts > :nth-child(1)'],
@@ -89,6 +89,7 @@ export function configurableElements(root) {
       ['Títulos de estadísticas', '.cbx-player .player-stats-title'], ['Desplegables de actividad', '.cbx-player .player-stats-expanded details'],
       ['Replegar estadísticas', '.cbx-player .collapse-stats-btn'],
     ];
+    for(const [index,label]of ['Dorsal','Posición','Pierna','Rotaciones'].entries())for(const [part,tag]of [['Etiqueta','small'],['Valor','strong']])shared.push([label+' · '+part,'.cbx-player .player-data > span:nth-child('+(index+1)+') '+tag]);
     for (const [label, local] of shared) if (root.querySelector(local)) options.push({selector: '#plantilla ' + local, group: 'Fichas de jugadores · estilo común', label, context: 'Se aplica a todas las fichas de jugadores', tag: 'div', index: 1, shared: true});
     for (const [label, local] of [['Cabeceras de columnas', '.lb-table thead th'], ['Todos los textos y cifras de la tabla', '.lb-table tbody td'], ['Posiciones de los jugadores', '.lb-table tbody .col-pos'], ['Dorsales de clasificación', '.lb-dorsal-tag'], ['Botones de clasificación', '.lb-tab-btn,.lb-scope-btn,.cbx-leaders-more,.lb-toggle-text'], ['Filas de clasificación', '.lb-table tbody tr'], ['Nombres en clasificación', '.lb-table tbody .col-player'], ['Cifras de clasificación', '.lb-table tbody .col-num'], ['Orden en clasificación', '.lb-table tbody .col-rank']]) if (root.querySelector('#squad-leaderboards ' + local)) options.push({selector: '#plantilla #squad-leaderboards ' + local, group: 'Clasificación · estilo común', label, context: 'Se aplica a todas las filas de clasificación', tag: 'div', index: 1, shared: true});
   }
