@@ -365,7 +365,7 @@ export function observeComponentColors() {
       (dialog.querySelector('.dialog-head') || dialog).append(button);
     });
     document.querySelectorAll('.cbx-section-gear').forEach(button=>{const scope=document.getElementById(button.dataset.themeSection);if(scope?.matches('.cbx-player,.specialist-item,.stat') || button.closest('.cbx-player'))button.remove();});
-    const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view #squad-stats,.view #plantilla-specialists-bar,.view #players-list')];
+    const roots=[...document.querySelectorAll('.view .panel,.view .cbx-card,.view .cbx-banner,.view #squad-stats,.view #plantilla-specialists-bar,.view #players-list')];
     for(const root of roots) {
       if(root.closest('#cbx-quick-color-dialog')||root.classList.contains('view'))continue;
       const view=root.closest('.view');if(!view)continue;
@@ -373,6 +373,7 @@ export function observeComponentColors() {
       if(root.parentElement.closest('.panel,.cbx-card') && !root.matches('#players-list,#squad-stats,#plantilla-specialists-bar'))continue;
       if(!heading && !root.matches('#players-list,#squad-stats'))continue;
       const scope=root.matches('.cbx-player')?document.getElementById('players-list'):root;
+      if(!scope.id && root.matches('.cbx-banner'))scope.id=view.id+'-colours-banner';
       if(!scope.id) {
         const label=(heading?.textContent||root.className).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,55);
         const peers=[...view.querySelectorAll(root.tagName)].filter(el=>el.className===root.className);
