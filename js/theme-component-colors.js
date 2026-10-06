@@ -197,8 +197,8 @@ export function applyComponentColors(theme) {
   };
   const today = document.getElementById('hoy');
   const todayColours=currentTheme.views?.hoy || {};
-  if(todayColours.seasonGoalsForColor)paint(today, '.cbx-season-goals-for', '--season-goals-for');
-  if(todayColours.seasonGoalsAgainstColor)paint(today, '.cbx-season-goals-against', '--season-goals-against');
+  paint(today, '.cbx-season-bars > div > div > i:first-child', '--season-goals-for');
+  paint(today, '.cbx-season-bars > div > div > i:nth-child(2)', '--season-goals-against');
   const tactics = document.getElementById('tacticas');
   paint(tactics, '.cbx-tactics-hero', '--bn');
   paint(tactics, '.cbx-tactics-hero-text', null, '--bnInk');
@@ -310,8 +310,8 @@ export function applyComponentColors(theme) {
 
   }
   // Explicit goal-series choices must win over old generic chart overrides.
-  if(todayColours.seasonGoalsForColor)paint(today, '.cbx-season-goals-for', '--season-goals-for');
-  if(todayColours.seasonGoalsAgainstColor)paint(today, '.cbx-season-goals-against', '--season-goals-against');
+  paint(today, '.cbx-season-bars > div > div > i:first-child', '--season-goals-for');
+  paint(today, '.cbx-season-bars > div > div > i:nth-child(2)', '--season-goals-against');
 }
 
 export function observeComponentColors() {

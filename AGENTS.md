@@ -4618,3 +4618,6 @@ Usuario autoriza publicación en main/producción. Cada sección tiene rueda pro
 
 ## 6/10/2026 · Ajustes claros SDD027
 Los controles de clasificación deben nombrar su cabecera y columna exactas. Los especialistas usan el mismo esquema de fila completa/nombre/función/dorsal para cada rango. La elección de fondo completo incluye las etiquetas y dorsales interiores. Las píldoras de especialidad de fichas comparten ajuste entre jugadores. La vista previa usa el texto real y empareja fondo/texto al instante. Las elecciones explícitas GF/GC tienen prioridad sobre selectores gráficos históricos. No imponer colores ni reescribir datos.
+
+## 6/10/2026 · Gráfico de goles con HTML anterior
+No validar cambios de gráfico solo con navegador limpio. Las barras GF/GC deben identificarse también por su posición semántica (primera/segunda barra), para funcionar con HTML anterior sin clases nuevas. El CSS debe usar las mismas variables de color que el menú; no el acento genérico rojo. Respetar los colores GF/GC guardados. Versionar también el módulo de Hoy y su CSS al cambiar este vínculo. Validar tema guardado, selector rojo histórico y HTML antiguo, sin escrituras reales.

@@ -1,9 +1,9 @@
 import { openMatchWindowEditor } from './match-window-editor.js?v=player-edit-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-2';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-2';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -28,7 +28,7 @@ import { printMatchPlan } from './print-match-plan.js?v=plan-visual-2';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=claude-asistencia-3';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=color-controls-8';
+import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -7461,8 +7461,8 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
       viewEl.style.setProperty('--captain-' + rank + '-bg', v['captain' + rank + 'Bg'] || (rank === 1 ? spLeadBg : spSubBg));
       viewEl.style.setProperty('--captain-' + rank + '-ink', v['captain' + rank + 'Ink'] || (rank === 1 ? spLeadInk : spSubInk));
     }
-    viewEl.style.setProperty('--season-goals-for', v.seasonGoalsForColor || v.accentColor || theme?.accentColor || btn);
-    viewEl.style.setProperty('--season-goals-against', v.seasonGoalsAgainstColor || '#e11d48');
+    viewEl.style.setProperty('--season-goals-for', v.seasonGoalsForColor || v.gfColor || theme?.gfColor || '#10b981');
+    viewEl.style.setProperty('--season-goals-against', v.seasonGoalsAgainstColor || v.gaColor || theme?.gaColor || '#e11d48');
     viewEl.style.setProperty('--tb-pitch', tbPitch);
     viewEl.style.setProperty('--tb-lines', tbLines);
     viewEl.style.setProperty('--tb-team', tbTeam);
@@ -13323,7 +13323,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-ajustes-claros').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-goles-directos').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
