@@ -4615,3 +4615,6 @@ Miguel autoriza publicar los cambios validados de ajustes/planes y edición por 
 
 ## 6/10/2026 · Ajustes por sección SDD026
 Usuario autoriza publicación en main/producción. Cada sección tiene rueda propia y menú visual del mismo formato, sin controles ajenos. Goles GF/GC, filas completas de lanzadores/capitanes, indicadores y clasificación personalizables. Fichas comunes a todos los jugadores, incluyendo textos, botones y teléfonos de padre/madre. No imponer paletas ni sobrescribir datos actuales; conflictos antiguos se limpian solo para el elemento/propiedad que el usuario elige. Selectores de otra pestaña se ignoran sin borrar almacenamiento. Mantener SDD y validar colores efectivos/guardado/móvil antes de publicar.
+
+## 6/10/2026 · Ajustes claros SDD027
+Los controles de clasificación deben nombrar su cabecera y columna exactas. Los especialistas usan el mismo esquema de fila completa/nombre/función/dorsal para cada rango. La elección de fondo completo incluye las etiquetas y dorsales interiores. Las píldoras de especialidad de fichas comparten ajuste entre jugadores. La vista previa usa el texto real y empareja fondo/texto al instante. Las elecciones explícitas GF/GC tienen prioridad sobre selectores gráficos históricos. No imponer colores ni reescribir datos.

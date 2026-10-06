@@ -64,24 +64,29 @@ export function enhanceColorSettings(root, elements = []) {
   root.querySelectorAll('.cbx-color-control-row').forEach(row => {
     const picker = row.querySelector('input[type=color]');
     if (!picker) return;
+    if(picker.dataset.elementProp && picker.dataset.elementProp!=='background' && picker.closest('fieldset')?.querySelector('[data-element-prop="background"]'))return;
     const label = row.querySelector('span')?.textContent || picker.getAttribute('aria-label') || row.querySelector('label')?.textContent || 'Ejemplo';
     const target = elements[Number(picker.dataset.element)]?.selector;
     const source = target && document.querySelector(target);
     const sample = document.createElement('div');
     if (source) sample.style.fontFamily = getComputedStyle(source).fontFamily;
     sample.className = 'cbx-setting-live-sample';
-    sample.textContent = /fuente|texto|nombre/i.test(label) ? 'Así se leerá este texto · Aa 123' : /barra|minutos/i.test(label) ? '▰ 35 minutos' : /bot[oó]n|cerrar|editar/i.test(label) ? 'Ejemplo de botón' : 'Ejemplo de ' + label.toLocaleLowerCase('es');
+    sample.textContent = source?.textContent?.trim().replace(/\s+/g,' ').slice(0,140) || (/fuente|texto|nombre/i.test(label) ? 'Así se leerá este texto · Aa 123' : /barra|minutos/i.test(label) ? '▰ 35 minutos' : /bot[oó]n|cerrar|editar/i.test(label) ? 'Ejemplo de botón' : 'Ejemplo de ' + label.toLocaleLowerCase('es'));
+    sample.setAttribute('aria-label','Vista previa real de '+label);
     const prop = picker.dataset.prop || picker.dataset.elementProp;
     const isInk = /Ink|fontColor|textColor|cardTitle|planTextColor|^color$/.test(prop);
     const paired = !picker.dataset.prop ? null : /Ink$/.test(prop) ? prop.replace(/Ink$/, 'Bg') : /Bg$/.test(prop) ? prop.replace(/Bg$/, 'Ink') : ['fontColor','textColor','cardTitle'].includes(prop) ? 'cardBg' : prop === 'planTextColor' ? 'planRowColor' : null;
     const update = () => {
-      const counterpart = paired && paired !== prop ? root.querySelector(`input[data-prop="${paired}"]`) : null;
+      const counterpart = picker.dataset.elementProp ? picker.closest('fieldset')?.querySelector('[data-element-prop="'+(isInk?'background':'color')+'"]') : paired && paired !== prop ? root.querySelector(`input[data-prop="${paired}"]`) : null;
       sample.style.backgroundColor = isInk ? counterpart?.value || '#f1f5f9' : picker.value;
       sample.style.color = isInk ? picker.value : counterpart?.value || '#17202a';
       if (/border|Border|stroke/.test(prop)) { sample.style.backgroundColor = '#f8fafc'; sample.style.borderColor = picker.value; }
+      const border=picker.dataset.elementProp && picker.closest('fieldset')?.querySelector('[data-element-prop="border-color"]');if(border)sample.style.borderColor=border.value;
       sample.title = label + ': ' + picker.value;
+      if(source){ sample.style.fontWeight=getComputedStyle(source).fontWeight; sample.style.borderRadius=getComputedStyle(source).borderRadius; }
+      if(picker.dataset.elementProp==='background' && /Nombre|Cabecera|Celdas/.test(elements[Number(picker.dataset.element)]?.label||''))sample.textContent=source?.textContent?.trim().slice(0,140)||label;
     };
-    row.append(sample); update();
+    if(picker.dataset.elementProp){picker.closest('fieldset').append(sample);sample.style.padding='12px';sample.style.borderStyle='solid';sample.style.borderWidth='1px';}else row.append(sample); update();
     root.addEventListener('input', update, {signal});
     root.addEventListener('click', event => { if (event.target.closest('.cbx-swatch-btn')) queueMicrotask(update); }, {signal});
   });
