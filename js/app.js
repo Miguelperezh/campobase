@@ -1,10 +1,10 @@
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-2';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-2';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-3';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-3';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-2';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-2';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -13353,7 +13353,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-claude-propuesta-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-claude-propuesta-3').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

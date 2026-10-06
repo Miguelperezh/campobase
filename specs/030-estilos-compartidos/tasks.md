@@ -1,0 +1,3 @@
+- [x] Alcance común y etiquetas concretas.
+- [x] Comprobar varios ejercicios y clasificación, guardar/reabrir sin escrituras remotas.
+- [ ] Publicación y comprobación de archivos públicos.

@@ -1794,3 +1794,6 @@ Una rueda por sección, sin repetir por jugador, tarjeta interior ni rango de la
 
 ## 6/10/2026 · SDD029 propuesta Claude con datos reales
 Integrar el panel lateral de personalización y el editor de tiempos de CampoBase Propuesta Ajustes y Plan usando DOM y datos actuales, sin cargar CBP.PL ni registros ficticios. Controles uiParts con prioridad final y valores actuales como base, vista previa en memoria y persistencia explícita theme.views. Plan de intervalos independientes: validación de cobertura, conversión a momentos canónicos y exportador/guardado existentes. Publicación autorizada por Miguel para main/producción; sin seeds, migraciones, borrado ni escrituras remotas de pruebas.
+
+## Estilos comunes SDD030
+Ajustes estándar de ejercicios compartidos por todas las tarjetas. Clasificación: botones/filtros por nombre y aviso explicativo ajustable. Mantener el resto validado y datos actuales. Ver specs/030-estilos-compartidos.
