@@ -1,0 +1,9 @@
+# Validación
+Cinco pruebas del motor de minutos/copia existentes pasan. Navegador en candidato aislado a 390 y 1280 px: acceso directo a Plan por tramos desde Preparación, Sugerir dentro de la sección; ruedas contextuales de ambas vistas sin ajustes de cabecera; selección y guardado de colores independientes reflejados en CSS calculado; consultas rápidas a final 70′; muestras inmediatas del color del texto; apertura del grupo de elementos concretos; sin desbordamiento de menú, sin errores de JavaScript y sin mutaciones remotas. Supabase bloqueado y fixture almacenado solo en navegador efímero. Publicación pública pendiente.
+
+2026-10-06: corregido el desplazamiento del acceso directo en móvil (margen bajo cabecera), compactado el menú con vista previa plegable en móvil, sin pie duplicado; etiquetas legibles propias del menú sin cambiar la tipografía de la app. La muestra de cada texto combina su color con el fondo correspondiente. Paquete fe56b3f6 comprobado en navegador aislado; última comprobación pública pendiente.
+
+Corrección adicional: la pintura heredada de botones secundarios imponía color/fondo a las filas del plan. Las preferencias explícitas del plan ahora se aplican a sus filas, nombres y minutos en ambas vistas. La prueba verifica CSS calculado del texto y fondo, además de la barra; pasa en candidato a 390/1280, sin errores ni mutaciones remotas.
+
+## URL pública comprobada — 2026-10-06
+Despliegue aislado 108b0f3, ejecución 37437435543 completada. /campobase-preview/v2/source-commit.txt devuelve 44827a97. Navegador contra HTML/JS/CSS públicos sin sustitución local: acceso desde Preparar partido; ruedas locales; selección/guardado real del color de barras, nombres y fondos; combinación texto/fondo en muestras; consultas de minutos; menú a 390 y 1280. Sin errores de JavaScript ni mutaciones remotas. Supabase bloqueado en la prueba, datos solo en navegador efímero. Main original sigue en 360b2b2dce3cc454a644b5d8fe428ccdc2df8557.

@@ -1,0 +1,2 @@
+# Plan
+Rama fix/ajustes-locales-colores-rotaciones. Reparar selectores por acción; aplicar variables existentes de botones y tarjetas; añadir variables locales para barras y capitanes. Acotar paneles y restablecimientos. Reutilizar buildAutoPlan para sugerencias temporales, sin escrituras. Verificar navegador offline con datos copiados, suite completa y sintaxis. Actualizar caché y prueba aislada.

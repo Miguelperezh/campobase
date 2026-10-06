@@ -1,0 +1,12 @@
+# Comprobaciones
+- Suite: 697 tests correctos; sintaxis de todos los módulos, incluidos los tres nuevos.
+- Plan puro: titulares distintos del orden del catálogo, rotaciones escalonadas/por partes completas y sin duplicados, porteros separados, minutos totales 420 + 70. Trece jugadores de campo: reparto con redondeo acotado a un minuto. Acumulación solo en tramos en campo y compatibilidad con cambios de posición.
+- Chrome aislado: Media liga dentro de su tarjeta a 390 y 1280 px; selección de jugador y recorrido hasta minuto 70. Proponer no escribe ni modifica titulares; usar propuesta deja todos los convocados del ejemplo a 35 minutos; recuperar vuelve al borrador anterior. Ninguna escritura remota.
+- Sesión preparada de prueba con un ejercicio propio y otro de catálogo: Ver propio abre pizarra por encima de la app; Volver retorna a la misma sesión con desplegable abierto. Ejercicio de catálogo abre y cierra a la sesión original.
+- Selección de impresión propia: SVG creado con la forma real que guarda el Creador decodifica como imagen; PDF Chromium A4 real de dos páginas (portada + ejercicio). Sesiones de hasta cinco ejercicios y referencias incorporadas antiguas cubiertas por tests. No se alteran bloques antiguos para incorporar otros ejercicios.
+- MP4 real local: avanza, pausa, vuelve a reproducirse y conserva reproducción al cambiar velocidad. Touchend seguido de click activa una vez. Carga reintentable y recuperación local; las rutas originales se conservan. No es una auditoría de todos los MP4 ni una prueba en iPhone físico/Safari: queda la validación de Miguel en sus dispositivos y con sus vídeos.
+- Cero errores de navegador y cero mutaciones Supabase en prueba. Script reproducible: tests/browser-plan-sessions-video.mjs; requiere Playwright y fixture privada por variable CAMPOBASE_TEST_FIXTURE. No se incorporan datos privados al repositorio.
+- Paquete exacto de preview probado de nuevo tras el último cambio: navegador correcto y 697/697 tests.
+- Código fuente 7c9fed13 subido a fix/ajustes-locales-colores-rotaciones. Paquete abd15e2 subido únicamente a campobase-preview; GitHub Pages run 37365255624 permanece en cola tras cinco minutos. La URL pública todavía sirve 2c6bf0a7: despliegue pendiente de confirmación, no se declara publicado.
+- URL prevista: https://miguelperezh.github.io/campobase-preview/v2/?revision=abd15e2.
+- Main original verificado sin cambios: 360b2b2dce3cc454a644b5d8fe428ccdc2df8557. Sin escrituras Supabase.

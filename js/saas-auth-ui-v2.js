@@ -916,7 +916,7 @@ function bindEvents(client) {
     event.preventDefault();
     event.stopImmediatePropagation();
     event.stopPropagation();
-    await client.auth.signOut().catch(() => {});
+    await client.auth.signOut({ scope: 'local' }).catch(() => {});
     clearBoundSaasUserId();
     clearBrowserSessionActive();
     removeStored(localStorage, REMEMBERED_ACCOUNT_KEY);

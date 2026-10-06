@@ -132,7 +132,7 @@ test('buildExercisePageHtml y buildSingleExerciseHtml generan el formato Claude 
   assert.match(html, /Ref\. EJ-042/);
 });
 
-test('buildTrainingSessionHtml genera dossier multi-página: Portada (Pág 1) + Hojas A4 individuales para cada ejercicio (Pág 2..N)', () => {
+test('buildTrainingSessionHtml genera dossier multi-página: Portada (Pág 1) + dos ejercicios por página A4', () => {
   const state = {
     teamName: 'Infantil B',
     category: 'Infantil',
@@ -165,7 +165,7 @@ test('buildTrainingSessionHtml genera dossier multi-página: Portada (Pág 1) + 
 
   // Página 1: Portada
   assert.match(html, /cb-print-session-cover/);
-  assert.match(html, /Pág\. 1 de 4/);
+  assert.match(html, /Pág\. 1 de 3/);
   assert.match(html, /cbx-print-timeline-bar/);
   assert.match(html, /ASISTENCIA/);
   assert.match(html, /cbx-print-att-box/);
@@ -174,11 +174,11 @@ test('buildTrainingSessionHtml genera dossier multi-página: Portada (Pág 1) + 
 
   // Páginas 2..4: Cada ejercicio en su propia hoja A4 completa
   const exercisePagesCount = (html.match(/cb-print-session-exercise-page/g) || []).length;
-  assert.equal(exercisePagesCount, 3, 'Debe generar exactamente 3 páginas de ejercicios para los 3 bloques');
+  assert.equal(exercisePagesCount, 2, 'Tres bloques necesitan dos páginas de ejercicios');
 
-  assert.match(html, /Pág\. 2 de 4/);
-  assert.match(html, /Pág\. 3 de 4/);
-  assert.match(html, /Pág\. 4 de 4/);
+  assert.match(html, /Pág\. 2 de 3/);
+  assert.match(html, /Pág\. 3 de 3/);
+  assert.doesNotMatch(html, /Pág\. 4 de/);
   assert.match(html, /Rondos 3v1/);
   assert.match(html, /Salida de balón 4v3/);
   assert.match(html, /Partido condicionado/);

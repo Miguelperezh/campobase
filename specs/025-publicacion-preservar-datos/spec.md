@@ -1,0 +1,2 @@
+# Publicar versión validada conservando producción
+Miguel autoriza main y producción el 6/10/2026. Publicar mejoras validadas SDD018–024, sin importar datos de preview ni reemplazar registros reales, sesiones, ejercicios, preferencias, colores, PIN o identidad. Código y documentación exclusivamente. Sin SQL, migraciones, seed, reset ni llamadas de escritura Supabase. Preservar IDs, IndexedDB y persistencia existente. Mantener diseño y datos actuales; actualizar únicamente caché de recursos de la PWA.

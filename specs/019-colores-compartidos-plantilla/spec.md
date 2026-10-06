@@ -1,0 +1,2 @@
+# Corrección del configurador
+Segundo lanzador: los cambios elegidos por el usuario desde menú deben actualizar fondo y texto de todas las filas del rango, incluso con overrides antiguos guardados. No establecer colores nuevos por cuenta del agente. Hoy muestra únicamente controles de su resumen. Fichas de Plantilla: un control por tipo de elemento, aplicado a todos los jugadores; sin listados individuales por nombre/dorsal. Conservar datos, funciones y contenido.

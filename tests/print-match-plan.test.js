@@ -211,7 +211,7 @@ test('buildMatchPlanHtml maneja correctamente un partido sin ventanas adicionale
 
 test('Integración en app.js y CSS para botones de impresión del plan de partido', () => {
   // Verificación de imports
-  assert.match(appSource, /import\s*\{\s*printMatchPlan\s*\}\s*from\s*['"]\.\/print-match-plan\.js['"]/, 'app.js debe importar printMatchPlan');
+  assert.match(appSource, /import\s*\{\s*printMatchPlan\s*\}\s*from\s*['"]\.\/print-match-plan\.js(?:\?[^'"]+)?['"]/, 'app.js debe importar printMatchPlan');
 
   // Verificación de botones en la UI
   assert.match(appSource, /class="prep-print-plan secondary"/, 'renderPreparaciones debe incluir botón prep-print-plan');
@@ -259,3 +259,10 @@ test('app.js y HTML integran botones de impresión omnipresentes (cabecera, bann
   assert.match(appSource, /\.cbx-live-print-plan/, 'Debe registrar delegación para cbx-live-print-plan');
 });
 
+
+test('imprimir desde otro momento conserva el inicio y los minutos del borrador',()=>{
+ const state={matches:[mockMatch],players:mockPlayers,preparaciones:[mockPrep]};
+ const correct=buildMatchPlanHtml(mockMatch.id,state,{momentsDraft:mockPrep.moments,teamDraft:mockPrep.team,formacionDraft:mockPrep.formacion});
+ const selectedLater=buildMatchPlanHtml(mockMatch.id,state,{momentsDraft:mockPrep.moments,teamDraft:mockPrep.moments[1].team,formacionDraft:'1-2-3-1'});
+ assert.equal(selectedLater,correct);
+});

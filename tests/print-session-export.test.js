@@ -296,3 +296,40 @@ test('regla intocable de aislamiento de impresión: erradica buscador, subnavega
   assert.match(printExportSrc, /parasiteSelectors/);
 });
 
+
+
+test('Mis ejercicios imprime la portada actual guardada frente a preview antigua o snapshot', () => {
+  const saved={id:'mine-cover',customBoard:true,name:'Mi tarea',preview:'old.png',boardPreview:'selected-frame.svg',boardCoverFrameProgress:0.75};
+  const state={exercises:[saved]};
+  assert.equal(resolveExerciseData('mine-cover',state).preview,'selected-frame.svg');
+  assert.equal(resolveExerciseData({...saved,boardPreview:'obsolete.svg'},state).preview,'selected-frame.svg');
+  assert.match(buildSingleExerciseHtml('mine-cover',state),/src="selected-frame.svg"/);
+});
+
+test('sesiones agrupa dos ejercicios por página y conserva todos en orden', () => {
+  for (const count of [0,1,2,3,4,5]) {
+    const exercises=Array.from({length:count},(_,i)=>({id:'own-'+i,customBoard:true,name:'Tarea única '+i,description:'Descripción completa '+i,boardPreview:'selected-'+i+'.svg'}));
+    const html=buildTrainingSessionHtml({id:'session',blocks:exercises.map(ex=>({exerciseId:ex.id,type:'main',duration:10}))},{exercises,players:[]});
+    assert.equal((html.match(/class="cb-print-sheet cb-print-page cb-print-session-exercise-page/g)||[]).length,Math.ceil(count/2));
+    assert.equal((html.match(/class="cb-print-session-exercise"/g)||[]).length,count);
+    assert.match(html,new RegExp('Pág\\. 1 de '+(1+Math.ceil(count/2))));
+    let previous=-1;
+    for(let i=0;i<count;i++){const position=html.indexOf('src="selected-'+i+'.svg"');assert.ok(position>previous);previous=position;assert.ok(html.includes('Descripción completa '+i));}
+  }
+});
+
+test('portada propia SVG guardada se convierte a imagen de impresión y se mantiene en bloques antiguos', () => {
+  const svg='<svg viewBox="0 0 100 50"><text x="5" y="25">FRAME ELEGIDO</text></svg>';
+  const ex={id:'mine-svg',customBoard:true,name:'Portada propia',boardPreview:svg,duration:12};
+  const data=resolveExerciseData(ex,{exercises:[ex]});
+  assert.ok(data.preview.startsWith('data:image/svg+xml;charset=utf-8,'));
+  assert.match(decodeURIComponent(data.preview),/xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+  const html=buildTrainingSessionHtml({name:'Sesión histórica',blocks:[{exercise:ex,duration:12,type:'main'}]},{exercises:[ex],players:[]});
+  assert.match(html,/Portada propia/);assert.match(html,/data:image\/svg\+xml/);
+});
+
+test('portada propia antigua sin customBoard conserva su imagen guardada y la versión vigente',()=>{
+ const mine={id:'legacy-own-cover',category:'Mis ejercicios',name:'Mi ejercicio antiguo',preview:'https://example.com/ejercicio-previews/mi-portada.png'};
+ assert.equal(resolveExerciseData({...mine,preview:'old.png'},{exercises:[mine]}).preview,mine.preview);
+ assert.match(buildSingleExerciseHtml(mine.id,{exercises:[mine]}),/mi-portada.png/);
+});
