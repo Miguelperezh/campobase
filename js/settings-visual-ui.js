@@ -34,15 +34,16 @@ export function enhanceColorSettings(root, elements = []) {
   }
   const general = controls.querySelector('.cbx-general-color-controls');
   const concrete = controls.querySelector('.cbx-named-colors');
+  const concreteOnly=!!concrete && !general?.querySelector('input');
   const toolbar = document.createElement('div');
   toolbar.className = 'cbx-settings-sections';
   toolbar.setAttribute('role', 'group');
   toolbar.setAttribute('aria-label', 'Qué quieres personalizar');
   for (const [label, section] of [['🎨 Colores de la sección', general], ['🔎 Un elemento concreto', concrete]]) {
-    if (!section) continue;
+    if (!section || (concreteOnly && section===general)) continue;
     const button = document.createElement('button');
-    button.type = 'button'; button.className = 'secondary'; button.textContent = label;
-    button.setAttribute('aria-pressed', String(section === general));
+    button.type = 'button'; button.className = 'secondary'; button.textContent = concreteOnly?'🎨 Elementos de esta sección':label;
+    button.setAttribute('aria-pressed', String(section === (concreteOnly?concrete:general)));
     button.onclick = () => {
       general.hidden = section !== general; concrete.hidden = section !== concrete;
       [...toolbar.children].forEach(item => item.setAttribute('aria-pressed', String(item === button)));
@@ -50,7 +51,8 @@ export function enhanceColorSettings(root, elements = []) {
     toolbar.append(button);
   }
   controls.prepend(toolbar);
-  if (concrete) concrete.hidden = true;
+  if (concrete) concrete.hidden = !concreteOnly;
+  if(general && concreteOnly)general.hidden=true;
   general?.querySelectorAll(':scope > .cbx-color-control-row').forEach(row => {
     const prop = row.querySelector('[data-prop]')?.dataset.prop || '';
     const title = row.querySelector('span')?.textContent || '';

@@ -4612,3 +4612,6 @@ Guardarraíles:
 
 ## Publicación autorizada 6/10/2026 — SDD025
 Miguel autoriza publicar los cambios validados de ajustes/planes y edición por jugador en main y producción. Esta autorización no permite reemplazar datos: conservar sesiones, ejercicios propios, colores, preferencias, PIN, jugadores, partidos e IDs actuales. Publicar código y documentación; no importar datos de preview, ejecutar seeds/reset, migraciones ni escrituras Supabase. Actualizar caché de recursos PWA sin borrar IndexedDB ni localStorage. Registrar pruebas y versión pública real antes de declarar despliegue terminado. Las reglas previas y áreas ajenas se conservan íntegramente.
+
+## 6/10/2026 · Ajustes por sección SDD026
+Usuario autoriza publicación en main/producción. Cada sección tiene rueda propia y menú visual del mismo formato, sin controles ajenos. Goles GF/GC, filas completas de lanzadores/capitanes, indicadores y clasificación personalizables. Fichas comunes a todos los jugadores, incluyendo textos, botones y teléfonos de padre/madre. No imponer paletas ni sobrescribir datos actuales; conflictos antiguos se limpian solo para el elemento/propiedad que el usuario elige. Selectores de otra pestaña se ignoran sin borrar almacenamiento. Mantener SDD y validar colores efectivos/guardado/móvil antes de publicar.

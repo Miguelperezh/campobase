@@ -1,9 +1,9 @@
 import { openMatchWindowEditor } from './match-window-editor.js?v=player-edit-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { enhanceColorSettings } from './settings-visual-ui.js?v=visual-4';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=section-controls-1';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=color-controls-9';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=section-controls-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -8920,6 +8920,7 @@ function updateViewThemeProperty(viewId, prop, val) {
     const selector = actionTargets[prop].split(',').map((part) => '#' + containerId + ' ' + part).join(',');
     clearColourConflicts(viewSettings, selector, [prop.endsWith('Bg') ? 'background' : 'color']);
   }
+  if(viewId==='hoy' && /^seasonGoals(For|Against)Color$/.test(prop))clearColourConflicts(viewSettings,'#hoy .cbx-season-goals-'+(prop.includes('Against')?'against':'for'),['background']);
   if (viewId === 'plantilla') {
     const sharedControls = {cardBg: ['.cbx-player','background'], cardTitle: ['.cbx-player .player-name h3','color'], fontColor: ['.cbx-player .player-body','color'], dorsalBg: ['.cbx-player .player-data > span:first-child','background'], dorsalInk: ['.cbx-player .player-data > span:first-child','color']};
     if (sharedControls[prop]) clearColourConflicts(viewSettings, '#plantilla ' + sharedControls[prop][0], [sharedControls[prop][1]]);
@@ -8978,7 +8979,8 @@ function copyViewThemeToAll(viewId) {
   applyCustomTheme(currentTheme);
 }
 
-function openQuickColorDialog(targetKind = null) {
+function openQuickColorDialog(targetKind = null, sectionId = null) {
+  const sectionRoot=sectionId && document.getElementById(sectionId);
   const dialog = $('#cbx-quick-color-dialog');
   const titleEl = $('#cbx-quick-color-title');
   const bodyEl = $('#cbx-quick-color-body');
@@ -9026,6 +9028,7 @@ function openQuickColorDialog(targetKind = null) {
     }
   }
 
+  if(sectionRoot){currentViewId=sectionRoot.closest('.view')?.id||currentViewId;currentSubTab='section';}
   let currentElementOptions = [];
   let currentTab = currentSubTab;
   if (currentSubTab === 'general') {
@@ -9176,7 +9179,7 @@ function openQuickColorDialog(targetKind = null) {
 
     const activeViewConfig = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
     const subtabs = activeViewConfig.subtabs || [{ id: 'general', label: 'General' }];
-    if (!(currentSubTab === 'plan' && ['convocatorias','preparacion'].includes(currentViewId)) && !subtabs.some((st) => st.id === currentSubTab)) {
+    if (!sectionRoot && !(currentSubTab === 'plan' && ['convocatorias','preparacion'].includes(currentViewId)) && !subtabs.some((st) => st.id === currentSubTab)) {
       currentSubTab = subtabs[0].id;
     }
 
@@ -9867,15 +9870,16 @@ function openQuickColorDialog(targetKind = null) {
     }
 
 
-    if (!['specialists', 'tactic-board', 'plan'].includes(currentSubTab)) {
+    if (!['specialists', 'tactic-board', 'plan', 'section'].includes(currentSubTab)) {
     if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
     if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
     controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
     controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Fondo' : 'Etiquetas de esta pantalla · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
     controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Texto' : 'Etiquetas de esta pantalla · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
     }
+    if(sectionRoot){controlsHtml='';previewHtml='<p>Personaliza solo esta sección. Cada control muestra el elemento y los colores elegidos.</p>';}
     const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
-    if (currentViewId === 'convocatorias') controlsHtml += extraRows([
+    if (!sectionRoot && currentViewId === 'convocatorias') controlsHtml += extraRows([
       ['Editar y abrir Preparación · Fondo', 'btn2Bg', btn2Bg], ['Editar y abrir Preparación · Texto', 'btn2Ink', btn2Ink],
       ['Tarjetas y filas · Fondo', 'cardBg', cardBg],
       ['Botón + Convocatoria · Fondo', 'callupBtnBg', btnBg], ['Botón + Convocatoria · Texto', 'callupBtnInk', btnInk],
@@ -9883,17 +9887,17 @@ function openQuickColorDialog(targetKind = null) {
       ['Plan · Opción inactiva fondo', 'planModeBg', '#f1f5f9'], ['Plan · Opción inactiva texto', 'planModeInk', '#334155'],
       ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
     ]);
-    if (currentViewId === 'hoy') controlsHtml += extraRows([
+    if (currentViewId === 'hoy' && (!sectionRoot || sectionRoot.matches('.cbx-season'))) controlsHtml += extraRows([
       ['Goles a favor · Color de barras', 'seasonGoalsForColor', '#10b981'], ['Goles en contra · Color de barras', 'seasonGoalsAgainstColor', '#e11d48']
     ]);
     if (currentSubTab === 'specialists') controlsHtml += extraRows([1, 2, 3].flatMap((rank) => [
       [rank + '.º capitán · Fondo del distintivo', 'captain' + rank + 'Bg', rank === 1 ? spLeadBg : spSubBg],
       [rank + '.º capitán · Texto del distintivo', 'captain' + rank + 'Ink', rank === 1 ? spLeadInk : spSubInk]
     ]));
-    if (currentViewId === 'sesiones') controlsHtml += extraRows([
+    if (!sectionRoot && currentViewId === 'sesiones') controlsHtml += extraRows([
       ['Realizado marcado · Fondo', 'completedActiveBg', btnBg], ['Realizado marcado · Texto', 'completedActiveInk', btnInk]
     ]);
-    if (currentViewId === 'exercise-detail') controlsHtml += extraRows([
+    if (!sectionRoot && currentViewId === 'exercise-detail') controlsHtml += extraRows([
       ['Cerrar ejercicio · Fondo', 'closeBg', btn2Bg], ['Cerrar ejercicio · Texto', 'closeInk', btn2Ink]
     ]);
     if (currentViewId === 'ajustes' || currentViewId === 'navegacion') controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
@@ -9931,10 +9935,12 @@ function openQuickColorDialog(targetKind = null) {
     const buttonRoot = (currentSubTab === 'plan' ? (currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan')) : null) || (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
     if (currentSubTab === 'plan' && buttonRoot && !buttonRoot.id) buttonRoot.id = 'callup-plan-tramos';
     const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot])];
-    const elements = elementRoots.flatMap(configurableElements).filter((item) => {
+    const elements = (sectionRoot?(sectionRoot.id==='players-list'||sectionRoot.id==='squad-leaderboards'?configurableElements(document.getElementById(currentViewId)):configurableElements(sectionRoot)):elementRoots.flatMap(configurableElements)).filter((item) => {
       const element = document.querySelector(item.selector);
+      if(sectionRoot && !(element && (sectionRoot===element || sectionRoot.contains(element))))return false;
       return !((currentSubTab === 'general' && currentViewId === 'plantilla' && element?.closest('#plantilla-specialists-bar')) || (currentSubTab === 'general' && currentViewId === 'tacticas' && element?.closest('#cbx-tactics-board-section')) || (currentSubTab === 'live' && element?.closest('#live-tactics')));
     });
+    if(sectionRoot){for(const item of elements)item.shared=true;}
     currentElementOptions = elements;
     const asHex = (value) => {
       if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
@@ -9962,7 +9968,7 @@ function openQuickColorDialog(targetKind = null) {
       controlsHtml += '</details>';
     }
     controlsHtml += '</section>';
-    titleEl.textContent = `⚙️ Personalizar: ${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}`;
+    titleEl.textContent = sectionRoot ? '⚙️ Personalizar: '+(sectionRoot.id==='players-list'?'Fichas de jugadores · todas iguales':sectionRoot.querySelector('h2,h3,h4,summary')?.textContent||sectionRoot.querySelector('span')?.textContent||'esta sección') : `⚙️ Personalizar: ${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}`;
     bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + '<div class="cbx-adjustments-layout"><aside class="cbx-adjustments-preview"><h4>Vista previa</h4><p>Comprueba aquí los colores de esta pantalla.</p>' + previewHtml + '</aside><div class="cbx-adjustments-controls">' + controlsHtml + '</div></div>';
     bodyEl.querySelectorAll('.cbx-colour-group').forEach(group=>{
       const summary=group.querySelector('summary');
@@ -9992,7 +9998,7 @@ function openQuickColorDialog(targetKind = null) {
         const item = elements[Number(picker.dataset.element)];
         const saved = structuredClone(state.settings?.theme?.views?.[currentViewId] || {});
         const previous = saved.elementColors?.[item.selector] || {};
-        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp]);
+        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp], !!sectionRoot);
         const colours = saved.elementColors || {};
         delete colours[item.selector];
         colours[item.selector] = { ...previous, [picker.dataset.elementProp]: event.target.value };
@@ -12000,7 +12006,7 @@ function wireEvents() {
     const gearBtn = event.target.closest('#topbar-quick-color-btn, .topbar-gear-btn, .cbx-context-gear-btn, [data-gear-target]');
     if (gearBtn) {
       event.preventDefault();
-      openQuickColorDialog(gearBtn.dataset.gearTarget || null);
+      openQuickColorDialog(gearBtn.dataset.gearTarget || null,gearBtn.dataset.themeSection || null);
       return;
     }
 
@@ -13315,7 +13321,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-plan-jugadores-produccion').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-ajustes-secciones').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
