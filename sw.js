@@ -6,6 +6,7 @@ const BOARD_PARTS = [
   './assets/exercise-board/part-4.b64',
 ];
 const ASSETS = [
+  './js/demo-session.js?v=goal-series-1', './js/redesign-nav.js?v=goal-series-1',
   './js/app.js?v=section-controls-3', './js/theme-component-colors.js?v=section-controls-3', './js/settings-visual-ui.js?v=section-controls-3',
   './css/campobase-diseno.css?v=hoy-real-2',
   './css/claude-partido.css?v=plan-intuitivo-5',

@@ -4,3 +4,5 @@ Publicación y prueba de recursos públicos se registran en la revisión de GitH
 
 ## Corrección del gráfico tras informe de Miguel
 La prueba previa cargaba siempre el módulo nuevo de Hoy. El CSS todavía vinculaba GF al acento general y GC al peligro, mientras la aplicación de colores dependía de clases nuevas y elecciones específicas. Se sustituye por vínculo CSS directo a variables semánticas, identificación por primera/segunda barra y lectura de colores GF/GC previamente guardados. Se versionan también CSS y módulo Hoy. La nueva prueba sirve HTML anterior sin clases específicas, recarga un tema guardado y añade un selector gráfico rojo histórico antes de abrir la rueda y cambiar los colores.
+
+Además, app, demo-session y redesign-nav importaban tres URLs de versión distintas del mismo módulo de Hoy. Al tratarse de módulos diferentes, cada uno ejecutaba bind() con sus propios listeners, observador y timer de repintado. Se unifican las tres importaciones y se versionan sus consumidores. La prueba de integración/offline compara ahora las URLs reales en lugar de exigir una versión antigua fija.
