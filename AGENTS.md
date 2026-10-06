@@ -4621,3 +4621,6 @@ Los controles de clasificación deben nombrar su cabecera y columna exactas. Los
 
 ## 6/10/2026 · Gráfico de goles con HTML anterior
 No validar cambios de gráfico solo con navegador limpio. Las barras GF/GC deben identificarse también por su posición semántica (primera/segunda barra), para funcionar con HTML anterior sin clases nuevas. El CSS debe usar las mismas variables de color que el menú; no el acento genérico rojo. Respetar los colores GF/GC guardados. Versionar también el módulo de Hoy y su CSS al cambiar este vínculo. Validar tema guardado, selector rojo histórico y HTML antiguo, sin escrituras reales.
+
+## 6/10/2026 · Menús sencillos
+Una rueda por sección, sin repetir por jugador, tarjeta interior ni rango de lanzador. El menú usa un selector «Qué quieres cambiar», muestra solo el elemento elegido con Fondo/Texto/Borde y una muestra real. Los detalles adicionales quedan plegados; no borrar controles ni valores guardados. Fichas comunes, indicadores agrupados y especialistas agrupados.
