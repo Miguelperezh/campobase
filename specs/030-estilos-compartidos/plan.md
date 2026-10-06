@@ -1,0 +1,1 @@
+Vincular el catálogo a las clases actuales; generar selectores comunes en el respaldo de ejercicios; añadir aviso y botones exactos de clasificación; comprobar previsualización, guardado y reapertura sin escrituras remotas.

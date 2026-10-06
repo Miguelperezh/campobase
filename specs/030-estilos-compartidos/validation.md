@@ -1,0 +1,2 @@
+# Validación
+Chrome aislado: cambiar fondo y texto de número de jugadores afecta a todas las tarjetas visibles; guardar y volver a renderizar conserva el cambio. Aviso explicativo de minutos y botón Zamora editables por nombre; guardado y cambio entre clasificaciones conservan elecciones. Cero errores de navegador y solicitudes de escritura remota. Comprobación de sintaxis y diff. No se modifican datos del equipo ni valores de preferencias en producción durante las pruebas.

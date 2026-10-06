@@ -28,6 +28,16 @@ export function configurableElements(root) {
   if (!root?.id) return [];
   const options = [];
   const selectorFor = (element) => {
+    const card=element.closest('#ejercicios .exercise-card');
+    if(card){
+      const shared=[];
+      for(let node=element;node&&node!==card;node=node.parentElement){
+        const classes=[...node.classList].filter(name=>! /^(active|selected|is-|diff-)/.test(name));
+        const siblings=[...node.parentElement.children].filter(child=>child.tagName===node.tagName);
+        shared.unshift(node.tagName.toLowerCase()+(classes.length?classes.map(name=>'.'+CSS.escape(name)).join(''):':nth-of-type('+(siblings.indexOf(node)+1)+')'));
+      }
+      return '#ejercicios .exercise-card'+(shared.length?' '+shared.join(' > '):'');
+    }
     const parts = [];
     for (let node = element; node && node !== root; node = node.parentElement) {
       if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }

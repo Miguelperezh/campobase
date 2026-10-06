@@ -1,5 +1,5 @@
 import { SECTIONS } from './claude-color-catalog.js';
-import { configurableElements } from './theme-component-colors.js?v=claude-proposal-2';
+import { configurableElements } from './theme-component-colors.js?v=claude-proposal-3';
 const viewSections={hoy:['hoy'],plantilla:['ind','lz','cl','fi'],'cuerpo-tecnico':['tec'],asistencia:['asi'],convocatorias:['con'],preparacion:['pre'],partido:['viv'],calendario:['cal'],sesiones:['ses'],ejercicios:['eje'],tacticas:['tac'],delegado:['mc'],navegacion:['nav']};
 const mappings={};
 const bind=(id,base,parts={})=>mappings[id]={base,parts};
@@ -57,7 +57,7 @@ bind('con.ex','#convocatorias .cbx-callup-player.is-out .cbx-callup-status');
 bind('pre.ok','#preparacion .is-prepared .pill');bind('pre.dark','#preparacion .prep-toggle-delegate');bind('pre.btn2','#preparacion .prep-view-tactic');bind('pre.del','#preparacion .prep-delete');bind('pre.gk','#preparacion .cbx-prep-keepers label');bind('pre.form','#preparacion .cbx-formation-pills button',{activeBg:'&[aria-pressed=true]',activeText:'&[aria-pressed=true]',bg:'&[aria-pressed=false]',text:'&[aria-pressed=false]'});bind('pre.save','#preparacion #prep-save');
 bind('viv.sb','#partido .cbx-live-hero',{score:'.cbx-live-score',clock:'.cbx-live-clock',text:'.cbx-live-team'});bind('viv.gol','#partido #goal-for-btn');bind('viv.riv','#partido #goal-against-btn');bind('viv.pause','#partido #pause-btn');bind('viv.half','#partido #half-time-btn');bind('viv.plan','#partido .cbx-live-plan',{title:'h3',text:'p',btnBg:'button',btnText:'button'});bind('viv.row','#partido .player-timer',{name:'strong',min:'.timer-minutes',fill:'.player-minute-fill',track:'.player-minute-track'});
 bind('ses.card','#sesiones .cbx-session-card',{title:'h3',text:'.cbx-session-meta'});bind('ses.date','#sesiones .cbx-session-date');bind('ses.warn','#sesiones .today-warning');bind('ses.blk','#sesiones .cbx-session-block-row',{title:'strong',text:'.cbx-session-block-phase',num:'.cbx-session-block-duration'});bind('ses.play','#sesiones .cbx-session-block-play');bind('ses.silb','#sesiones .cbx-btn-whistle');bind('ses.waw','#sesiones #whatsapp-week-btn');
-bind('eje.card','#ejercicios .sp-card, #ejercicios .exercise-card',{title:'h3',text:'p'});bind('eje.jug','#ejercicios .sp-players-badge');bind('eje.ver','#ejercicios .view-exercise');bind('eje.add','#ejercicios .add-exercise-to-session');bind('eje.cat','#ejercicios select');
+bind('eje.card','#ejercicios .sp-card, #ejercicios .exercise-card',{title:'h3',cat:'.cbx-card-cat-fmt',mat:'.cbx-card-mat',text:'p'});bind('eje.jug','#ejercicios .cbx-card-pill-players, #ejercicios .sp-players-badge');bind('eje.dif','#ejercicios .cbx-card-pill-diff');bind('eje.ver','#ejercicios button.view-exercise');bind('eje.add','#ejercicios .add-exercise-to-session');bind('eje.cat','#ejercicios select');
 bind('tac.form','#tacticas .cbx-formation-pills button',{activeBg:'&[aria-pressed=true]',activeText:'&[aria-pressed=true]',bg:'&[aria-pressed=false]',text:'&[aria-pressed=false]'});bind('tac.tool','#tacticas .tb-toolbar button');bind('tac.save','#tacticas #save-tactic');bind('tac.list','#tacticas .tactic-card');
 bind('mc.top','#delegado .cbx-banner',{title:'h2',sub:'p'});bind('mc.card','#delegado .panel',{title:'h3',text:'.meta'});bind('mc.live','#delegado #delegate-live-btn');bind('mc.chip','#delegado .pill');
 const cssProperty=key=>/^emo/.test(key)?'icon':/bg|win|draw|loss|fill|track|grass|bar|alt|topT|topP/.test(key.toLowerCase())?'background':key==='top'?'border-top-color':/border/.test(key)?'border-color':key==='accent'||key==='activeBar'?'border-left-color':key==='axis'?'border-bottom-color':key==='line'?'border-color':'color';
@@ -71,7 +71,7 @@ export function claudeColorSections(viewId,scope) {
   const props=element.props.map(prop=>({...prop,selector:targetSelector(mapping,prop.key),css:cssProperty(prop.key),viewId})).filter(prop=>(prop.css!=='icon'||mapping.parts[prop.key])&&within(query(prop.selector)));
   // Font controls belong to this concrete element; do not affect other sections.
   const text=props.find(prop=>prop.css==='color');if(text)props.push(...[['font-family','Familia de la fuente'],['font-size','Tamaño de la fuente'],['font-weight','Grosor de la fuente']].map(([css,label])=>({key:css,label,css,selector:text.selector,viewId})));
-  return props.length?{...element,props}:null;
+  return props.length?{...element,name:element.id==='eje.jug'?'Etiqueta de número de jugadores':element.name,props}:null;
  }).filter(Boolean)})).filter(section=>section.els.length);
  // Match the real table's headings instead of the prototype's example column order.
  if(viewId==='plantilla'&&(!scope||scope.id==='squad-leaderboards')){
@@ -79,13 +79,28 @@ export function claudeColorSections(viewId,scope) {
    const name=th.textContent.trim();const base='#squad-leaderboards .lb-table';section?.els.push({id:'column-'+index,name:'Columna «'+name+'»',scope:'Esta columna en todas las clasificaciones',props:[{key:'head',label:'Título «'+name+'»',css:'color',selector:base+' thead th:nth-child('+(index+1)+')',viewId},{key:'val',label:'Valores de «'+name+'»',css:'color',selector:base+' tbody td:nth-child('+(index+1)+')',viewId},{key:'bg',label:'Fondo de «'+name+'»',css:'background',selector:base+' tbody td:nth-child('+(index+1)+')',viewId}]});
   });
  }
+ if(viewId==='plantilla'&&(!scope||scope.id==='squad-leaderboards')){
+  const section=sections.find(s=>s.id==='cl');
+  const add=(id,name,selector,scopeText)=>{if(query(selector).length)section?.els.push({id,name,scope:scopeText,props:['background','color','border-color'].map(css=>({key:css,label:css==='background'?'Fondo de «'+name+'»':css==='color'?'Texto de «'+name+'»':'Borde de «'+name+'»',css,selector,viewId}))});};
+  add('cl.help','Aviso explicativo de la clasificación','#squad-leaderboards .lb-help-box','El recuadro y su texto explicativo');
+  for(const button of query('#squad-leaderboards [data-lb-tab], #squad-leaderboards [data-lb-scope]')){
+   const attr=button.hasAttribute('data-lb-tab')?'data-lb-tab':'data-lb-scope';const key=button.getAttribute(attr);
+   add('cl.'+key,'Botón «'+button.textContent.trim()+'»','#squad-leaderboards ['+attr+'="'+key+'"]','Este botón en todas las clasificaciones');
+  }
+ }
  const root=scope||document.getElementById(viewId)||document.getElementById({'exercise-detail':'exercise-detail-dialog',comunicador:'whatsapp-dialog'}[viewId]);
  const fallbackRoot=scope?.id==='players-list'?document.getElementById('plantilla'):root;
+ if(viewId==='ejercicios'){
+  const section=sections.find(s=>s.id==='eje');
+  for(const [id,name,local]of [['duration','Duración de ejercicio','.cbx-card-pill-dur'],['demo-label','Etiqueta «Ver demostración · GIF/MP4»','.cbx-card-badge-demo'],['favorite','Botón de favorito','.cbx-card-star-btn']]){
+   const selector='#ejercicios '+local;if(query(selector).length)section?.els.push({id:'eje.'+id,name,scope:'Se aplica a todos los ejercicios',props:['background','color','border-color'].map(css=>({key:css,label:css==='background'?'Fondo':css==='color'?'Texto':'Borde',css,selector,viewId}))});
+  }
+ }
  const existing=new Set(sections.flatMap(s=>s.els.flatMap(e=>e.props.map(p=>p.selector))));
  const representedNodes=sections.flatMap(s=>s.els.flatMap(e=>e.props.flatMap(p=>query(p.selector))));
  const extras=configurableElements(fallbackRoot).filter(item=>within(query(item.selector))&&!existing.has(item.selector)&&!query(item.selector).every(node=>representedNodes.some(n=>n===node))).filter(item=>!query(item.selector)[0]?.closest('.cbx-context-gear-btn'));
  const groups=new Map();
- for(const item of extras){const name=item.group; if(!groups.has(name))groups.set(name,[]);const css=item.tag==='svg'||['path','rect','circle','line'].includes(item.tag)?['fill','stroke']:['background','color','border-color'];groups.get(name).push({id:item.selector,name:item.label,scope:item.context||'Solo '+(scope?'esta sección':'esta pestaña'),props:css.map(key=>({key,label:{background:'Fondo',color:'Texto','border-color':'Borde',fill:'Interior del icono',stroke:'Trazo del icono'}[key],css:key,selector:item.selector,viewId}))});}
+ for(const item of new Map(extras.map(item=>[item.selector,item])).values()){const name=item.group; if(!groups.has(name))groups.set(name,[]);const css=item.tag==='svg'||['path','rect','circle','line'].includes(item.tag)?['fill','stroke']:['background','color','border-color'];groups.get(name).push({id:item.selector,name:item.label,scope:viewId==='ejercicios'&&item.selector.includes('.exercise-card')?'Se aplica a todos los ejercicios':item.context||'Solo '+(scope?'esta sección':'esta pestaña'),props:css.map(key=>({key,label:{background:'Fondo',color:'Texto','border-color':'Borde',fill:'Interior del icono',stroke:'Trazo del icono'}[key],css:key,selector:item.selector,viewId}))});}
  for(const [name,els]of groups)sections.push({id:'real-'+name,name,els});
  return sections;
 }
