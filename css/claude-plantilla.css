@@ -336,3 +336,9 @@ body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-medi
 /* The grade label determines the badge width; never force it outside a square. */
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-media { flex:0 0 auto;width:max-content;min-width:76px;max-width:100%;min-height:64px;padding:8px 10px; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .liga-media .etiqueta { width:auto;white-space:nowrap!important;font-size:10px!important;line-height:1.3!important; }
+
+/* Keep a family telephone number together without changing contact colours or text. */
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .cbx-family-phone {
+  display: inline-block; white-space: nowrap !important;
+  overflow-wrap: normal; word-break: normal;
+}

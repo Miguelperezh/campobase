@@ -13353,7 +13353,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-claude-propuesta-3').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-telefonos-padres-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
