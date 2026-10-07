@@ -4636,3 +4636,6 @@ Los permisos de un snapshot remoto explícito son canónicos después de vaciar 
 
 ## 7/10/2026 · Tres PIN en el mismo navegador SDD035
 Cerrar acceso PIN bloquea la app y conserva la conexión SaaS del equipo; salir de la cuenta completa sí desconecta. Restauraciones asíncronas iniciadas antes de un cambio de PIN no pueden cambiar el rol posterior ni desbloquear la pantalla. Los formularios PIN local y de cuenta recordada respetan titular/delegado/demo configurados. No borrar el PIN que se está escribiendo al terminar el arranque. Probar concesiones y retiradas desde el formulario real de cuenta en una misma pestaña, tres PIN, recargas y navegación móvil; no asignar permisos manualmente ni alterar datos reales.
+
+## 7/10/2026 · Actualizar delegado SDD036
+La cabecera exclusiva del delegado debe conservar Actualizar junto a Cerrar sesión, en escritorio y móvil. Reutilizar la actualización controlada existente, preservando PIN/rol, vista permitida y conexión. El botón no concede permisos ni abre Ajustes. No borrar almacenamiento ni alterar datos reales.

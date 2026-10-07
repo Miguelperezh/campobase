@@ -24,10 +24,18 @@ try{
  await page.goto('https://miguelperezh.github.io/campobase/');await page.waitForFunction(()=>window.__campobase?.state.settings.delegatePin==='5678',null,{timeout:10000});
  const enter=async(pin,role)=>{if(!await page.locator('#auth-form input[name=pin]').isVisible())await page.locator('#saas-local-pin-btn').evaluate(el=>el.click());await page.locator('#auth-form input[name=pin]').waitFor({state:'visible',timeout:4000}).catch(async e=>{console.log(await page.evaluate(()=>({role:window.__campobase.state.role,open:document.querySelector('#auth-dialog').open,body:document.body.className,srole:sessionStorage.getItem('campobase.sessionRole'),grole:window.__campobaseRole,localForm:document.querySelector('#auth-form').className,saas:document.querySelector('#saas-auth-shell').className})));throw e;});await page.locator('#auth-form input[name=pin]').fill(pin);await page.locator('#auth-form').evaluate(f=>f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));await page.waitForFunction(r=>window.__campobase.state.role===r,role,{timeout:10000}).catch(async e=>{console.log(await page.evaluate(()=>({role:window.__campobase.state.role,err:document.querySelector('#auth-error').textContent,cloud:window.__campobase.state.cloudError,body:document.body.className})));throw e;});};
  await enter('1234','owner');await page.waitForSelector('#cb-delegate-permissions-form',{state:'attached',timeout:10000});
+ const refreshDelegate=async()=>{
+  const button=page.locator('#cb-delegate-refresh-btn');await button.waitFor({state:'visible'});assert.equal(await button.textContent(),'Actualizar');
+  const oldUrl=page.url();await Promise.all([page.waitForURL(url=>url.href!==oldUrl&&url.searchParams.has('_cb'),{waitUntil:'load'}),button.click()]);
+  await page.waitForFunction(()=>window.__campobase?.state.role==='delegate',null,{timeout:15000});
+  assert.equal(await page.locator('#cb-delegate-refresh-btn').isVisible(),true);
+ };
+ let checkedRefresh=false;
  for(const perms of [['delegado','sesiones','ejercicios'],['delegado','plantilla','tacticas'],['delegado'],['delegado','hoy','asistencia']]){
   await page.evaluate(perms=>{window.__campobase.showView('ajustes');const f=document.querySelector('#cb-delegate-permissions-form');for(const c of f.querySelectorAll('input[name=delegateViews]'))c.checked=perms.includes(c.value);f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));},perms);
   await page.waitForFunction(perms=>JSON.stringify(window.__campobase.getDelegatePermissions())===JSON.stringify(perms),perms);
   await page.locator('#logout').click();await page.reload();await page.waitForFunction(()=>window.__campobase?.state.settings.delegatePin==='5678');assert.equal(await page.evaluate(()=>window.__campobase.state.role),null);await enter('5678','delegate');await page.evaluate(async()=>{const {initTeamAccess}=await import('./js/team-access.js?v=pin-switch-1');await initTeamAccess(window.__cbSupabaseClient);});
+  if(!checkedRefresh)await refreshDelegate();
   for(const view of ['plantilla','sesiones','ejercicios','tacticas','hoy','asistencia']){
    assert.equal(await page.locator('#cb-claude-sidebar [data-target-view="'+view+'"]').isVisible(),perms.includes(view),'VISIBLE '+view+' '+JSON.stringify(perms));
    await page.evaluate(view=>window.__campobase.showView(view),view);
@@ -39,6 +47,7 @@ try{
    assert.equal(await button.isVisible(),allowed,'MOBILE '+mod);
    if(allowed){await button.click();assert(perms.includes(await page.locator('.view.active').getAttribute('id')));}
   }
+  if(!checkedRefresh){await refreshDelegate();assert.deepEqual(await page.evaluate(()=>window.__campobase.getDelegatePermissions()),perms);checkedRefresh=true;}
   await page.setViewportSize({width:1280,height:900});
   await page.locator('#cb-delegate-logout-btn').click();await enter('1234','owner');
   await page.locator('.topbar #logout').click();await enter('9012','demo');

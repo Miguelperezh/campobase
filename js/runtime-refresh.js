@@ -21,9 +21,9 @@ let boardObjectUrl = '';
 let boardHtmlPromise = null;
 let hydrationPromise = null;
 
-function buttonMarkup() {
+function buttonMarkup(id = BUTTON_ID) {
   const button = document.createElement('button');
-  button.id = BUTTON_ID;
+  button.id = id;
   button.type = 'button';
   button.className = 'secondary compact';
   button.textContent = 'Actualizar';
@@ -64,13 +64,18 @@ async function refreshNow(button) {
 }
 
 export function installRuntimeRefresh() {
-  if (document.getElementById(BUTTON_ID)) return;
-  const status = document.querySelector('.topbar .status');
-  if (!status) return;
-  const button = buttonMarkup();
-  const logout = document.getElementById('logout');
-  status.insertBefore(button, logout ?? null);
-  button.addEventListener('click', () => refreshNow(button));
+  const headers = [
+    { id: BUTTON_ID, container: '.topbar .status', before: 'logout' },
+    { id: 'cb-delegate-refresh-btn', container: '#cb-delegate-topbar', before: 'cb-delegate-logout-btn' },
+  ];
+  for (const { id, container, before } of headers) {
+    if (document.getElementById(id)) continue;
+    const status = document.querySelector(container);
+    if (!status) continue;
+    const button = buttonMarkup(id);
+    status.insertBefore(button, document.getElementById(before) ?? null);
+    button.addEventListener('click', () => refreshNow(button));
+  }
 }
 
 function toBoardExercise(record = {}) {

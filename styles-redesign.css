@@ -8861,3 +8861,9 @@ body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo [id*="field-mod
 .btn-quick-sub-direct:active {
   transform: scale(0.98) !important;
 }
+
+/* Actualizar del delegado: reutiliza la recarga segura sin abrir Ajustes. */
+#cb-delegate-topbar { gap: .5rem; flex-wrap: wrap; }
+#cb-delegate-topbar .cb-delegate-topbar-info { flex: 1 1 160px; min-width: 0; flex-wrap: wrap; }
+#cb-delegate-refresh-btn { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
+#cb-delegate-logout-btn { flex: 0 0 auto; white-space: nowrap; }
