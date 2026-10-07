@@ -10442,9 +10442,15 @@ function applyRole(role) {
   if (role === 'delegate') {
     state.delegateMode = true;
     document.body.classList.add('delegate-mode');
-    window.__campobaseAllowedViews = getDelegatePermissions();
+    const perms = getDelegatePermissions();
+    window.__campobaseAllowedViews = perms;
     syncDelegateModeDom();
-    showView('delegado');
+    const currentActive = document.querySelector('.view.active')?.id || storedActiveView();
+    if (currentActive && (currentActive === 'partido' || currentActive === 'delegado' || perms.includes(currentActive))) {
+      showView(currentActive);
+    } else {
+      showView('delegado');
+    }
     renderDelegate();
   } else {
     state.delegateMode = false;
