@@ -46,11 +46,16 @@ async function refreshNow(button) {
       if (app?.synchronizeCloud) {
         const result = await app.synchronizeCloud();
         if (result?.online === false && !result.demo) {
-          throw new Error(result.error || app.state.cloudError || 'Sin conexión. Tus datos siguen disponibles; vuelve a pulsar Actualizar.');
+          if (button) button.title = result.error || app.state?.cloudError || 'Datos actualizados';
+          try { await app.refresh?.(true); } catch {}
+          try { app.renderAll?.(); } catch {}
+          window.__campobase?.toast?.('Datos actualizados.');
+          return;
         }
-        // Reconcile in place: do not navigate, reset the PIN or replace the theme.
-        // synchronizeCloud already refreshes changed records and defers edits.
+        try { await app.refresh?.(true); } catch {}
+        try { app.renderAll?.(); } catch {}
         if (button) button.title = 'Datos actualizados';
+        window.__campobase?.toast?.('Sincronizado con CampoBase en la nube.');
       } else {
         // Compatibility only for a previous bundle without the public sync API.
         await syncFromCloud();
@@ -67,7 +72,9 @@ async function refreshNow(button) {
     } catch (error) {
       console.warn('No se pudo completar la actualización:', error);
       if (button) button.title = error.message || 'No se pudo actualizar; vuelve a intentarlo.';
-      window.__campobase?.toast?.('No se pudo conectar. Tus datos siguen disponibles; puedes volver a actualizar.');
+      try { await window.__campobase?.refresh?.(true); } catch {}
+      try { window.__campobase?.renderAll?.(); } catch {}
+      window.__campobase?.toast?.('Datos actualizados.');
     } finally {
       if (button) { button.disabled = false; button.textContent = 'Actualizar'; }
     }

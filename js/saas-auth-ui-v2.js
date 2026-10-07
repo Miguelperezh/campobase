@@ -679,21 +679,27 @@ async function handlePersistentSession(client) {
   // base vacía. Si no llegan, mostramos la cuenta preparada como fallback.
   const app = await waitForApp();
   const started = Date.now();
-  while (app?.state && Date.now() - started < 6000) {
+  while (app?.state && Date.now() - started < 800) {
     if (isUserAlreadyAuthenticated() || app.state.role) {
       const dialog = $('#auth-dialog');
       if (dialog?.open) dialog.close();
       document.body?.classList.remove('auth-locked');
       return true;
     }
-    if (app.state.settings?.ownerPinHash && app.state.settings?.delegatePinHash) {
+    const hasPin = Boolean(
+      (app.state.settings?.ownerPinHash && app.state.settings?.delegatePinHash) ||
+      app.state.settings?.ownerPinHash ||
+      app.state.settings?.pinSalt
+    );
+    if (hasPin) {
       if (isUserAlreadyAuthenticated()) return true;
       const dialog = $('#auth-dialog');
       if (dialog && !dialog.open) dialog.showModal();
       showLocalPin();
       return true;
     }
-    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    if (app.state.dataLoaded) break;
+    await new Promise((resolve) => window.setTimeout(resolve, 60));
   }
 
   await prepareSignedInChoice(client, { session, user: session.user });
