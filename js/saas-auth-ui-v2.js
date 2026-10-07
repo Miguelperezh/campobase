@@ -1,3 +1,4 @@
+import { hasUsableTeamSnapshot } from './training-session-status.js';
 import {
   isPinAccessSession, isPinAccessLocked, getPinAccessRevision, clearPinAccess,
   bootstrapUserDatabase,
@@ -589,7 +590,7 @@ function waitForApp(timeoutMs = 12000) {
   return new Promise((resolve) => {
     const started = Date.now();
     const timer = window.setInterval(() => {
-      if (window.__campobase?.state || Date.now() - started > timeoutMs) {
+      if (window.__campobase?.state?.dataLoaded || Date.now() - started > timeoutMs) {
         clearInterval(timer);
         resolve(window.__campobase || null);
       }
@@ -617,9 +618,9 @@ async function unlockBoundSession(client) {
   // Keep the access dialog until the bound account's data is loaded.
   if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
   if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected
-      && typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+      && !hasUsableTeamSnapshot(app.state) && typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
   if (typeof app.refresh === 'function') await app.refresh(true);
-  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected) {
+  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected && !hasUsableTeamSnapshot(app.state)) {
     throw new Error(app.state.cloudError || 'No se han podido cargar los datos del equipo. Intenta entrar de nuevo.');
   }
   if (isPinAccessLocked() || accessRevision !== getPinAccessRevision()) return false;
@@ -980,7 +981,7 @@ function observeDialog(client) {
   if (!dialog) return;
   const sync = async () => {
     if (!dialog.open || localPinMode || recoveryMode) return;
-    if (isUserAlreadyAuthenticated()) {
+    if (window.__campobase?.state?.role && !isPinAccessLocked()) {
       if (dialog.open) dialog.close();
       document.body?.classList.remove('auth-locked');
       return;
@@ -1041,6 +1042,7 @@ export async function initSaasAuth(client) {
     const app = await waitForApp();
     if (app?.state) {
       app.state.role = role;
+      app.applyRole?.(role);
       try { if (typeof app.renderAll === 'function') app.renderAll(); } catch {}
     }
     return;

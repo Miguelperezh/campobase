@@ -26,9 +26,10 @@ try{
  await enter('1234','owner');await page.waitForSelector('#cb-delegate-permissions-form',{state:'attached',timeout:10000});
  const refreshDelegate=async()=>{
   const button=page.locator('#cb-delegate-refresh-btn');await button.waitFor({state:'visible'});assert.equal(await button.textContent(),'Actualizar');
-  const oldUrl=page.url();await Promise.all([page.waitForURL(url=>url.href!==oldUrl&&url.searchParams.has('_cb'),{waitUntil:'load'}),button.click()]);
-  await page.waitForFunction(()=>window.__campobase?.state.role==='delegate',null,{timeout:15000});
-  assert.equal(await page.locator('#cb-delegate-refresh-btn').isVisible(),true);
+  const oldUrl=page.url();await button.click();await page.waitForFunction(()=>document.querySelector('#cb-delegate-refresh-btn')?.title==='Datos actualizados');
+  assert.equal(page.url(),oldUrl,'Actualizar no debe navegar ni echar al delegado');
+  assert.equal(await page.evaluate(()=>window.__campobase.state.role),'delegate');
+  assert.equal(await button.isVisible(),true);
  };
  let checkedRefresh=false;
  for(const perms of [['delegado','sesiones','ejercicios'],['delegado','plantilla','tacticas'],['delegado'],['delegado','hoy','asistencia']]){

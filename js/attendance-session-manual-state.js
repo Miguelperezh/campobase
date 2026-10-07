@@ -1,17 +1,11 @@
+import { isTrainingSessionCompleted, withTrainingSessionCompleted } from './training-session-status.js';
 import { getAll, put } from './db.js';
 
 const ROOT_ID = 'attendance-source-panel';
 let syncTimer = 0;
 let syncing = false;
 
-function sessionIsClosed(session) {
-  return Boolean(
-    session?.status === 'closed'
-    || session?.status === 'finished'
-    || session?.closedAt
-    || session?.archived === true
-  );
-}
+function sessionIsClosed(session) { return isTrainingSessionCompleted(session); }
 
 async function sessionMap() {
   const settings = await getAll('settings');
@@ -175,7 +169,7 @@ async function markSessionRealized(button) {
   button.disabled = true;
   try {
     const now = Date.now();
-    await put('settings', { ...session, status: 'closed', closedAt: now, updatedAt: now });
+    await put('settings', withTrainingSessionCompleted(session, true, now));
     if (typeof window.__campobase?.refresh === 'function') await window.__campobase.refresh();
     scheduleSync();
   } catch (error) {

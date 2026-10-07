@@ -51,6 +51,7 @@ test('replaceLocalStore nunca borra jugadores locales si la respuesta del servid
 test('requireBoundUser tiene fallback tolerante a user.id si mi_equipo_contexto falla', () => {
   const reqUserFn = cloud.slice(cloud.indexOf('async function requireBoundUser('), cloud.indexOf('export function createCampoBaseCloudStore('));
   assert.match(reqUserFn, /let dataOwnerUserId = user\.id;/);
-  assert.match(reqUserFn, /client\.rpc\('mi_equipo_contexto'\)/);
+  assert.match(reqUserFn, /getBoundTeamContext\(client, user\.id\)/);
+  assert.match(cloud, /client\.rpc\('mi_equipo_contexto'\)/);
   assert.doesNotMatch(reqUserFn, /if \(teamError\) throw teamError;/);
 });

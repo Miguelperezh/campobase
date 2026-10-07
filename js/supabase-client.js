@@ -3,9 +3,9 @@ import './plantilla-stats-sync.js';
 import './player-data-sync.js?v=1';
 import './match-calendar-sync.js';
 import './player-roster-guard.js?v=1';
-import './attendance-session-manual-state.js?v=3';
+import './attendance-session-manual-state.js?v=fluid-refresh-1';
 import './exercise-board-persistence.js?v=20260927-v66-real-calendar-dates';
-import './runtime-refresh.js?v=delegate-refresh-1';
+import './runtime-refresh.js?v=fluid-refresh-1';
 import './exercise-viewer-controls.js?v=2475';
 import './exercise-viewer-layout.js?v=plan-visual-1';
 import './exercise-view-mode-ui.js?v=20260927-v66-real-calendar-dates';
@@ -77,6 +77,24 @@ export async function getRemoteMainSettings() {
   return row.payload || null;
 }
 
+const boundTeamContexts = new WeakMap();
+async function getBoundTeamContext(client, userId) {
+  const cached = boundTeamContexts.get(client);
+  if (cached?.userId === userId && Date.now() < cached.expiresAt) return cached.promise;
+  const entry = { userId, expiresAt: Date.now() + 5000, promise: null };
+  entry.promise = Promise.resolve().then(() => client.rpc('mi_equipo_contexto')).then((result) => {
+    if (result.error || !result.data) {
+      if (boundTeamContexts.get(client) === entry) boundTeamContexts.delete(client);
+    }
+    return result;
+  }).catch((error) => {
+    if (boundTeamContexts.get(client) === entry) boundTeamContexts.delete(client);
+    throw error;
+  });
+  boundTeamContexts.set(client, entry);
+  return entry.promise;
+}
+
 async function requireBoundUser(client) {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
@@ -101,7 +119,7 @@ async function requireBoundUser(client) {
   let dataOwnerUserId = user.id;
   let teamContext = null;
   try {
-    const { data, error: teamError } = await client.rpc('mi_equipo_contexto');
+    const { data, error: teamError } = await getBoundTeamContext(client, user.id);
     if (!teamError && data) {
       teamContext = data;
       if (teamContext.data_owner_user_id) dataOwnerUserId = teamContext.data_owner_user_id;
@@ -183,7 +201,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=pin-switch-1'))
+    .then(() => import('./saas-auth-ui-v2.js?v=fluid-refresh-1'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
