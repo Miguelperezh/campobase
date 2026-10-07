@@ -608,13 +608,24 @@ async function unlockBoundSession(client) {
 
   const isDelegate = profile.role === 'delegate';
   const isAdmin = profile.role === 'owner' || profile.role === 'admin';
-  const localRole = isDelegate ? 'delegate' : 'owner';
+  const pinDelegate = !isDelegate && sessionStorage.getItem('campobase.sessionRole') === 'delegate';
+  const localRole = isDelegate || pinDelegate ? 'delegate' : 'owner';
+  // Keep the access dialog until the bound account's data is loaded.
+  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected
+      && typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (typeof app.refresh === 'function') await app.refresh(true);
+  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.players?.length && !app.state.cloudConnected) {
+    throw new Error(app.state.cloudError || 'No se han podido cargar los datos del equipo. Intenta entrar de nuevo.');
+  }
+  if (typeof app.renderAll === 'function') app.renderAll();
   app.state.role = localRole;
   // La cuenta SaaS de delegado usa navegación configurable. No activamos el
   // antiguo "delegate-mode", que seguirá reservado al PIN local limitado.
-  app.state.delegateMode = false;
+  app.state.delegateMode = pinDelegate;
   try { sessionStorage.setItem('campobase.sessionRole', localRole); } catch { /* No bloquea la sesión. */ }
-  document.body.classList.remove('auth-locked', 'delegate-mode', 'demo-mode');
+  document.body.classList.remove('auth-locked', 'demo-mode');
+  document.body.classList.toggle('delegate-mode', pinDelegate);
   document.documentElement.dataset.saasRole = isAdmin ? 'admin' : (isDelegate ? 'delegate' : 'coach');
   const roleLabel = $('#role-label');
   if (roleLabel) roleLabel.textContent = isAdmin ? 'Administrador' : (isDelegate ? 'Delegado' : 'Entrenador');
@@ -628,13 +639,10 @@ async function unlockBoundSession(client) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
   }
 
-  // Al recuperar una sesión SaaS válida, cierra el diálogo primero y refresca inmediatamente desde Supabase.
-  // No dejamos la interfaz abierta con una IndexedDB vacía esperando al intervalo.
+  if (pinDelegate) app.applyRole?.('delegate');
+  // Reveal the application only after loading the bound account.
   const dialog = $('#auth-dialog');
   if (dialog?.open) dialog.close();
-  if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
-  if (typeof app.refresh === 'function') await app.refresh();
-  if (typeof app.renderAll === 'function') app.renderAll();
   return true;
 }
 

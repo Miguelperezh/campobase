@@ -1,0 +1,1 @@
+Entrada PIN debe autenticar/vincular, sincronizar, refrescar y después abrir la interfaz. No mostrar copia vacía durante la descarga. Preservar rol delegado de PIN al restaurar sesión. Sin cambios de datos ni políticas. El delegado sin sesión remota no queda resuelto por esta corrección: falta identificar su ruta de entrada.

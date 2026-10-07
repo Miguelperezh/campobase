@@ -27,13 +27,13 @@ test('triggerStandardView en redesign-nav incluye caso para plantilla que repint
   assert.match(navTrigger, /renderAll\(\)/);
 });
 
-test('unlockBoundSession cierra el auth-dialog antes de refrescar y fuerza app.renderAll', () => {
+test('unlockBoundSession carga y repinta antes de cerrar el acceso', () => {
   const unlockFn = authUi.slice(authUi.indexOf('async function unlockBoundSession('), authUi.indexOf('async function handlePersistentSession('));
   const closeIdx = unlockFn.indexOf('dialog.close()');
   const renderAllIdx = unlockFn.indexOf('app.renderAll()');
   assert.ok(closeIdx > 0, 'Debe llamar a dialog.close()');
   assert.ok(renderAllIdx > 0, 'Debe llamar a app.renderAll()');
-  assert.ok(closeIdx < renderAllIdx, 'dialog.close() debe ejecutarse antes de renderAll()');
+  assert.ok(renderAllIdx < closeIdx, 'renderAll() debe ejecutarse antes de revelar la app');
 });
 
 test('auth-dialog tiene listener de evento close para repintar al desbloquear', () => {

@@ -1,0 +1,5 @@
+- [x] Lectura de datos actuales y detección del servicio PIN que autentica solo al titular.
+- [x] Corrección de orden de carga y preservación de rol.
+- [x] Pruebas de secuencia y formulario real con descarga retrasada.
+- [ ] Publicación.
+- [ ] Confirmar ruta de entrada del delegado y probar su conexión remota.

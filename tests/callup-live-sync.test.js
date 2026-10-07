@@ -57,14 +57,10 @@ test('saveCallup sincroniza la preparación y el temporizador en vivo con la nue
   );
 });
 
-test('submitAuth aplica el rol inmediatamente y corre la sincronización en background', async () => {
+test('submitAuth espera la finalización del acceso PIN antes de mostrar la cuenta', async () => {
   const appJs = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
   const submitAuthBody = appJs.slice(appJs.indexOf('async function submitAuth'), appJs.indexOf('async function pollLiveState'));
-  assert.match(
-    submitAuthBody,
-    /\$\('#auth-dialog'\)\?\.close\(\);\s*applyRole\('owner'\);/,
-    'submitAuth debe cerrar el diálogo y aplicar rol inmediatamente tras verificar PIN local',
-  );
+  assert.match(submitAuthBody, /await completePinLogin\('owner'/);
 });
 
 test('syncFromCloud comprueba si los datos cambiaron antes de sustituir el almacén', async () => {

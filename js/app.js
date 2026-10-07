@@ -6,7 +6,7 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=pin-hydration-1';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -10613,6 +10613,32 @@ function ensureAuthPromptVisible() {
   void showAuth();
 }
 
+async function completePinLogin(role, pin, userId = '', authenticated = false) {
+  if (role === 'owner' && !authenticated) {
+    try {
+      const session = await signInWithCampoBasePin(getSupabaseAuthClient(), userId, pin);
+      if (session?.user?.id) setBoundSaasUserId(session.user.id);
+    } catch (error) {
+      if (navigator.onLine && !state.players.length) throw error;
+      console.warn('Acceso PIN con copia local: no se pudo conectar a la nube.', error);
+    }
+  }
+  configureRealDatabase();
+  const bound = getBoundSaasUserId();
+  if (bound) try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(bound)); } catch {}
+  await synchronizeCloud();
+  // A startup sync may have begun before authentication; its completed result
+  // is not a hydrated session. Retry once now that the account is bound.
+  if (navigator.onLine && bound && !state.cloudConnected) await synchronizeCloud();
+  await refresh(true);
+  if (navigator.onLine && !state.players.length && !state.cloudConnected) {
+    throw new Error(state.cloudError || 'No se han podido cargar los datos del equipo. Vuelve a intentar entrar; no se ha modificado ningún dato.');
+  }
+  applyRole(role);
+  $('#auth-dialog')?.close();
+  renderAll();
+}
+
 async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
@@ -10636,11 +10662,7 @@ async function submitAuth(event) {
             configureRealDatabase();
             try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
             await hydratePinSettingsFromSupabase();
-            applyRole('owner');
-            $('#auth-dialog').close();
-            await synchronizeCloud();
-            await refresh();
-            renderAll();
+            await completePinLogin('owner', enteredOwnerPin, session.user.id, true);
             toast('Sincronizado con CampoBase en la nube.');
             return;
           }
@@ -10661,30 +10683,7 @@ async function submitAuth(event) {
         return;
       } else if (state.settings.pinSalt && state.settings.ownerPinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
-        $('#auth-dialog')?.close();
-        applyRole('owner');
-        const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
-        void (async () => {
-          if (userId) {
-            try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
-            try {
-              const client = getSupabaseAuthClient();
-              await signInWithCampoBasePin(client, userId, pin);
-            } catch { /* si ya tiene sesión o falla red, continúa con acceso local */ }
-          } else {
-            try {
-              const client = getSupabaseAuthClient();
-              const session = await signInWithCampoBasePin(client, '', pin);
-              if (session?.user?.id) {
-                setBoundSaasUserId(session.user.id);
-                try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
-              }
-            } catch (err) {
-              console.warn('Auto-enlace con Supabase fallido:', err);
-            }
-          }
-          if (getBoundSaasUserId()) await synchronizeCloud();
-        })();
+        await completePinLogin('owner', pin, getBoundSaasUserId() || getRememberedSaasAccount()?.id || '');
         return;
       } else if (pin === '0000' || pin === state.settings?.delegatePin || (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
@@ -10713,19 +10712,8 @@ async function submitAuth(event) {
           if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
             recoveredRole = 'owner';
             recoveredSettings = local;
-            $('#auth-dialog')?.close();
-            applyRole('owner');
-            if (candidate.userId) {
-              setBoundSaasUserId(candidate.userId);
-              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
-              void (async () => {
-                try {
-                  const client = getSupabaseAuthClient();
-                  await signInWithCampoBasePin(client, candidate.userId, pin);
-                  await synchronizeCloud();
-                } catch {}
-              })();
-            }
+            if (candidate.userId) setBoundSaasUserId(candidate.userId);
+            await completePinLogin('owner', pin, candidate.userId || '');
             return;
           }
           if (pin === '0000' || pin === local.delegatePin || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
@@ -10758,14 +10746,8 @@ async function submitAuth(event) {
               configureRealDatabase();
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
               await hydratePinSettingsFromSupabase();
-              $('#auth-dialog')?.close();
-              applyRole('owner');
+              await completePinLogin('owner', pin, session.user.id, true);
               toast('Sincronizado con CampoBase en la nube.');
-              void (async () => {
-                await synchronizeCloud();
-                await refresh();
-                renderAll();
-              })();
               return;
             }
           } catch (err) {
@@ -13365,7 +13347,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-permissions-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261007-pin-hydration-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
