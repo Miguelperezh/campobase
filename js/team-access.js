@@ -208,13 +208,24 @@ export function applyTeamAccessContext(context) {
   currentContext = context || null;
   const role = context?.membership_role || '';
   if (role !== 'delegate') {
+    const app = typeof window !== 'undefined' ? window.__campobase : null;
+    const isLocalDelegate = (
+      app?.state?.role === 'delegate' ||
+      app?.state?.delegateMode ||
+      (typeof window !== 'undefined' && window.__campobaseRole === 'delegate') ||
+      document.body?.classList?.contains('delegate-mode')
+    );
+    if (isLocalDelegate) {
+      const perms = (app?.getDelegatePermissions ? app.getDelegatePermissions() : null)
+        || app?.state?.settings?.delegatePermissions
+        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+      window.__campobaseAllowedViews = perms;
+      if (app?.syncDelegateModeDom) app.syncDelegateModeDom();
+      return;
+    }
     window.__campobaseAllowedViews = null;
     document.documentElement.dataset.saasTeamRole = role || '';
     document.body?.classList.remove('saas-delegate-mode');
-    // The authenticated account can be coach while its visible access uses
-    // the delegate PIN. A late team-context response must preserve that role.
-    const app = window.__campobase;
-    if (app?.state?.role === 'delegate' && app.state.delegateMode) app.applyRole?.('delegate');
     return;
   }
 
@@ -272,13 +283,37 @@ function ensurePanel(root = document) {
   return true;
 }
 
-async function renderDelegatePanel(root = document) {
+export async function renderDelegatePanel(root = document) {
   const panel = root.getElementById('cb-delegate-account-panel');
   const content = root.getElementById('cb-delegate-account-content');
-  if (!panel || !content || !currentClient) return;
+  if (!panel || !content) return;
 
-  const context = currentContext || await fetchTeamContext(currentClient).catch(() => null);
-  if (!context) {
+  const isOwner = (
+    (typeof window !== 'undefined' && (
+      window.__campobaseRole === 'owner' ||
+      window.__campobase?.state?.role === 'owner' ||
+      window.__campobaseState?.role === 'owner' ||
+      document.body?.dataset?.userRole === 'owner'
+    )) || false
+  );
+  const isDelegate = (
+    (typeof window !== 'undefined' && (
+      window.__campobaseRole === 'delegate' ||
+      window.__campobase?.state?.role === 'delegate' ||
+      window.__campobaseState?.role === 'delegate' ||
+      document.body?.dataset?.userRole === 'delegate'
+    )) || false
+  );
+
+  const context = currentContext || (currentClient ? await fetchTeamContext(currentClient).catch(() => null) : null);
+
+  if (isDelegate || context?.membership_role === 'delegate') {
+    panel.classList.add('hidden');
+    return;
+  }
+
+  const canManage = isOwner || ['admin', 'coach'].includes(context?.membership_role);
+  if (!canManage) {
     panel.classList.remove('hidden');
     content.innerHTML = `
       <div class="cb-delegate-access-preview">
@@ -306,22 +341,20 @@ async function renderDelegatePanel(root = document) {
     `;
     return;
   }
-  if (context.membership_role === 'delegate') {
-    panel.classList.add('hidden');
-    return;
-  }
-  const canManage = ['admin', 'coach'].includes(context.membership_role);
-  panel.classList.toggle('hidden', !canManage);
-  if (!canManage) return;
 
+  panel.classList.remove('hidden');
   root.getElementById('delegate-account-panel')?.classList.add('hidden');
 
-  let delegate = await fetchDelegateAccount(currentClient).catch(() => null);
+  let delegate = currentClient ? await fetchDelegateAccount(currentClient).catch(() => null) : null;
   const currentSavedPerms = (typeof window !== 'undefined' && window.__campobase?.getDelegatePermissions)
     ? window.__campobase.getDelegatePermissions()
     : (delegate?.view_permissions ||
        window.__campobaseState?.settings?.delegatePermissions ||
        JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["delegado"]'));
+
+  const currentPin = (typeof window !== 'undefined' && window.__campobase?.state?.settings?.delegatePin)
+    || window.__campobaseState?.settings?.delegatePin
+    || '0000';
 
   content.innerHTML = `
     <form id="cb-delegate-permissions-form">
@@ -332,19 +365,42 @@ async function renderDelegatePanel(root = document) {
         <label>Correo del delegado
           <input name="email" type="email" autocomplete="email" placeholder="delegado@correo.es (opcional si usa PIN)" value="${delegate?.email || ''}">
         </label>
+        <label>PIN de acceso del delegado
+          <input name="delegatePinInput" type="text" inputmode="numeric" minlength="4" maxlength="8" required placeholder="0000" autocomplete="off" value="${currentPin}">
+        </label>
       </div>
       <fieldset class="cb-delegate-permissions">
         <legend>Vistas permitidas</legend>
         <p class="meta">Marca qué secciones puede ver el delegado. Ajustes y creación de equipos nunca están disponibles para el delegado.</p>
-        <div class="cb-delegate-permissions-grid">${permissionMarkup(currentSavedPerms)}</div>
+        <div class="cb-delegate-permissions-grid">${permissionMarkup(currentSavedPerms, { disabled: false })}</div>
       </fieldset>
       <p class="meta">Esta cuenta no puede crear equipos ni entrar en Ajustes.</p>
       <div class="button-row">
         <button type="submit" class="primary" id="cb-save-delegate-perms-btn">Guardar permisos del delegado</button>
       </div>
+      <div class="button-row" style="margin-top:0.6rem;gap:0.5rem;display:flex;flex-wrap:wrap;">
+        <button type="button" id="cb-delegate-invite-whatsapp-btn" class="secondary" style="flex:1;">📲 Enviar invitación por WhatsApp</button>
+        <button type="button" id="cb-delegate-invite-email-btn" class="secondary" style="flex:1;">✉️ Enviar por Email</button>
+      </div>
       <p id="cb-delegate-feedback" class="meta" aria-live="polite"></p>
     </form>
   `;
+
+  root.getElementById('cb-delegate-invite-whatsapp-btn')?.addEventListener('click', () => {
+    if (typeof window !== 'undefined' && window.__campobase?.sendDelegateInviteWhatsApp) {
+      window.__campobase.sendDelegateInviteWhatsApp();
+    } else {
+      root.getElementById('delegate-invite-whatsapp-btn')?.click();
+    }
+  });
+
+  root.getElementById('cb-delegate-invite-email-btn')?.addEventListener('click', () => {
+    if (typeof window !== 'undefined' && window.__campobase?.sendDelegateInviteEmail) {
+      window.__campobase.sendDelegateInviteEmail();
+    } else {
+      root.getElementById('delegate-invite-email-btn')?.click();
+    }
+  });
 
   const form = root.getElementById('cb-delegate-permissions-form');
   form?.addEventListener('submit', async (event) => {
@@ -358,10 +414,23 @@ async function renderDelegatePanel(root = document) {
       const perms = selectedPermissions(form);
       const email = String(form.elements.email?.value || '').trim();
       const fullName = String(form.elements.fullName?.value || '').trim();
+      const pin = String(form.elements.delegatePinInput?.value || '').trim();
+
+      if (pin && !/^\d{4,8}$/.test(pin)) {
+        throw new Error('El PIN del delegado debe tener entre 4 y 8 cifras.');
+      }
+
+      if (pin && typeof window !== 'undefined' && window.__campobase?.state?.settings) {
+        window.__campobase.state.settings.delegatePin = pin;
+        const delegatePinForm = root.getElementById('delegate-account-form');
+        if (delegatePinForm?.elements?.delegatePinInput) {
+          delegatePinForm.elements.delegatePinInput.value = pin;
+        }
+      }
 
       const saved = await saveDelegatePermissions(currentClient, perms);
 
-      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && currentClient) {
         try {
           delegate = await inviteDelegateAccount(currentClient, { email, fullName, permissions: saved });
         } catch (inviteErr) {
@@ -372,12 +441,22 @@ async function renderDelegatePanel(root = document) {
       if (feedback) {
         feedback.textContent = `Permisos del delegado guardados correctamente (${saved.length} vistas activas).`;
       }
+      if (typeof window !== 'undefined' && window.__campobase?.toast) {
+        window.__campobase.toast(`Permisos del delegado guardados correctamente (${saved.length} vistas activas).`);
+      }
     } catch (error) {
       if (feedback) feedback.textContent = error.message || 'No se pudieron guardar los permisos.';
+      if (typeof window !== 'undefined' && window.__campobase?.toast) {
+        window.__campobase.toast(error.message || 'No se pudieron guardar los permisos.');
+      }
     } finally {
       if (button) button.disabled = false;
     }
   });
+}
+
+if (typeof window !== 'undefined') {
+  window.__campobaseRenderDelegatePanel = renderDelegatePanel;
 }
 
 function installStyles(root = document) {

@@ -1830,3 +1830,15 @@ Integrar el panel lateral de personalización y el editor de tiempos de CampoBas
 
 ## Estilos comunes SDD030
 Ajustes estándar de ejercicios compartidos por todas las tarjetas. Clasificación: botones/filtros por nombre y aviso explicativo ajustable. Mantener el resto validado y datos actuales. Ver specs/030-estilos-compartidos.
+
+## 2026-10-07 · Corrección de gestión y guardado de permisos del delegado (SDD031)
+- Identificado y resuelto el bloqueo por el cual las casillas de verificación de permisos del delegado aparecían desactivadas o no guardaban cambios al acceder como Entrenador / Owner con PIN.
+- En `js/team-access.js`:
+  - `renderDelegatePanel` reconoce el rol `owner` del entrenador independientemente de la presencia de sesión multi-inquilino de Supabase. El panel muestra el formulario de permisos editable (`#cb-delegate-permissions-form`) con casillas habilitadas para todas las vistas (salvo `delegado` como base).
+  - Integración del campo PIN del delegado y botones directos de invitación por WhatsApp y Email en el formulario de gestión.
+  - `applyTeamAccessContext` salvaguarda los permisos permitidos del delegado (`window.__campobaseAllowedViews`) ante llamadas tardías de comprobación de contexto sin sobreescribir a `null`.
+- En `js/app.js`:
+  - `syncDelegateModeDom` y `applyDelegateNavFilters` calculan `onlyPartido` de forma estricta comprobando la existencia de permisos ajenos a partido/delegado.
+  - Sincronización bidireccional y actualización reactiva de las casillas en la interfaz al guardar desde cualquier panel.
+  - Al abrir Ajustes (`showView('ajustes')`), se invoca reactivamente el refresco del panel de delegado.
+
