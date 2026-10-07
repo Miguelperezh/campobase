@@ -22,3 +22,7 @@ test('restaurar cuenta autenticada no convierte el PIN de delegado en titular ni
  const result=vm.runInContext('unlockBoundSession({})',context);await new Promise(r=>setImmediate(r));assert.equal(dialog.open,true);assert.equal(app.state.role,null);
  loading.resolve();await result;assert.equal(app.state.role,'delegate');assert.equal(app.state.delegateMode,true);assert.equal(dialog.open,false);assert.deepEqual(events,['download','refresh','render','delegate','close']);
 });
+
+test('el acceso PIN importa la vinculación real de cuenta',()=>{
+ assert.match(appCode,/import \{[^}]*\bsetBoundSaasUserId\b[^}]*\} from '\.\/auth-manager\.js'/);
+});

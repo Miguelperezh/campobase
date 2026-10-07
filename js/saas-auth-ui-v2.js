@@ -615,7 +615,7 @@ async function unlockBoundSession(client) {
   if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected
       && typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
   if (typeof app.refresh === 'function') await app.refresh(true);
-  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.players?.length && !app.state.cloudConnected) {
+  if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected) {
     throw new Error(app.state.cloudError || 'No se han podido cargar los datos del equipo. Intenta entrar de nuevo.');
   }
   if (typeof app.renderAll === 'function') app.renderAll();
