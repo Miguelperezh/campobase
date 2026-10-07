@@ -356,6 +356,9 @@ function buildDelegateInviteMessage() {
 
 function syncDelegateModeDom() {
   const perms = getDelegatePermissions();
+  if (state.role === 'delegate' || state.delegateMode) {
+    window.__campobaseAllowedViews = [...perms];
+  }
   const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
   if (onlyPartido) {
     document.body.classList.add('delegate-single-view');
@@ -370,6 +373,10 @@ function syncDelegateModeDom() {
     document.body.classList.remove('delegate-allow-modo-campo');
   }
   applyDelegateNavFilters(perms);
+  if (state.role === 'delegate' || state.delegateMode) {
+    const active = document.querySelector('.view.active')?.id;
+    if (active && active !== 'partido' && active !== 'delegado' && !perms.includes(active)) showView('delegado');
+  }
 }
 
 function applyDelegateNavFilters(perms) {
@@ -13358,7 +13365,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261006-telefonos-padres-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-permissions-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -13384,12 +13391,12 @@ async function init() {
         try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(teamParam)); } catch {}
         configureRealDatabase();
       }
-      if (permsParam) {
+      if (permsParam && !Array.isArray(state.settings?.delegatePermissions)) {
         const permsList = permsParam.split(',').map((p) => p.trim()).filter(Boolean);
         if (permsList.length) {
           state.settings = { ...(state.settings || {}), id: 'main', delegatePermissions: permsList };
           try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(permsList)); } catch {}
-          await put('settings', state.settings).catch(() => {});
+          // Invitation hints never overwrite the canonical team settings.
         }
       }
       if (pinParam) {

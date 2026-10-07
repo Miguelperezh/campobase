@@ -1,0 +1,1 @@
+Actualizar AllowedViews desde permisos actuales en syncDelegateModeDom y cerrar vista retirada. Usar permisos de invitación solo como ayuda en memoria cuando no hay configuración. Sin migraciones ni escrituras en Supabase.

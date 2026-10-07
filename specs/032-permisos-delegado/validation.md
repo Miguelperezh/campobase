@@ -1,0 +1,1 @@
+Navegador aislado: concesión de Sesiones tras refresh, retirada de Sesiones mientras estaba abierta, bloqueo de reapertura y acceso a Ejercicios. Cero errores y escrituras remotas. Pruebas de regresión ejecutan funciones reales de app.js. Lectura de Supabase confirma permisos en configuración; no se modificó la base de datos.

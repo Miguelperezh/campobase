@@ -1,0 +1,3 @@
+- [x] Reproducción antes de corregir: permisos nuevos en settings, pero AllowedViews antiguo.
+- [x] Concesión, retirada y regresión de enlace antiguo comprobadas.
+- [ ] Publicación.
