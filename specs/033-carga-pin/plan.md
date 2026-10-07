@@ -1,0 +1,1 @@
+Centralizar finalización del PIN titular, esperar carga en restauración SaaS, reintentar una sola vez tras autenticación si el arranque anterior no conectó y mostrar error en lugar de desbloquear una copia vacía.

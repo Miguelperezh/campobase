@@ -175,6 +175,6 @@ test('restaurar una sesión SaaS válida descarga Supabase antes de cerrar el di
   const auth = await projectFile('js/saas-auth-ui-v2.js');
   const unlock = auth.slice(auth.indexOf('async function unlockBoundSession'), auth.indexOf('async function handlePersistentSession'));
   assert.match(unlock, /if \(typeof app\.synchronizeCloud === 'function'\) await app\.synchronizeCloud\(\)/);
-  assert.match(unlock, /if \(typeof app\.refresh === 'function'\) await app\.refresh\(\)/);
+  assert.match(unlock, /if \(typeof app\.refresh === 'function'\) await app\.refresh\(true\)/);
 });
 
