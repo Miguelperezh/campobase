@@ -360,7 +360,8 @@ function syncDelegateModeDom() {
   if (state.role === 'delegate' || state.delegateMode) {
     window.__campobaseAllowedViews = [...perms];
   }
-  const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
+  const nonMatchPerms = perms.filter((p) => p !== 'partido' && p !== 'delegado');
+  const onlyPartido = nonMatchPerms.length === 0;
   if (onlyPartido) {
     document.body.classList.add('delegate-single-view');
     document.body.classList.remove('delegate-multi-view');
@@ -386,7 +387,8 @@ function applyDelegateNavFilters(perms) {
   if (state.role !== 'delegate' && !state.delegateMode) {
     return;
   }
-  const onlyPartido = perms.length === 1 && (perms[0] === 'partido' || perms[0] === 'delegado');
+  const nonMatchPerms = perms.filter((p) => p !== 'partido' && p !== 'delegado');
+  const onlyPartido = nonMatchPerms.length === 0;
   $$('.bottom-nav button').forEach((btn) => {
     const view = btn.dataset.view;
     const allowed = !onlyPartido && (
@@ -523,6 +525,7 @@ function showView(viewId) {
     populateKitSettingsForm();
     renderCustomizerControls();
     renderSavedThemePresets();
+    void window.__campobaseRenderDelegatePanel?.(document);
   }
 }
 
@@ -10904,6 +10907,19 @@ async function saveDelegateAccountSettings(event) {
     window.__campobaseAllowedViews = perms;
     syncDelegateModeDom();
   }
+  try {
+    const cachedAccount = JSON.parse(localStorage.getItem('campobase.delegateAccount') || '{}');
+    cachedAccount.view_permissions = perms;
+    localStorage.setItem('campobase.delegateAccount', JSON.stringify(cachedAccount));
+  } catch {}
+  const cbForm = document.getElementById('cb-delegate-permissions-form');
+  if (cbForm) {
+    if (cbForm.elements.delegatePinInput) cbForm.elements.delegatePinInput.value = pin;
+    cbForm.querySelectorAll('input[name="delegateViews"]').forEach((chk) => {
+      if (chk.value === 'delegado') chk.checked = true;
+      else chk.checked = perms.includes(chk.value);
+    });
+  }
   populateDelegateAccountForm();
   toast('Cuenta y permisos del delegado guardados correctamente.');
 }
@@ -10926,6 +10942,13 @@ async function persistDelegatePermissions(newPerms) {
   await put('settings', state.settings);
   if (!isDemoDatabase()) {
     await synchronizeCloud().catch(() => {});
+  }
+  const cbForm = document.getElementById('cb-delegate-permissions-form');
+  if (cbForm) {
+    cbForm.querySelectorAll('input[name="delegateViews"]').forEach((chk) => {
+      if (chk.value === 'delegado') chk.checked = true;
+      else chk.checked = clean.includes(chk.value);
+    });
   }
   populateDelegateAccountForm();
   if (state.role === 'delegate' || state.delegateMode) {
@@ -13457,7 +13480,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, sendDelegateInviteWhatsApp, sendDelegateInviteEmail, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 
