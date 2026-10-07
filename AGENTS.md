@@ -4630,3 +4630,6 @@ Miguel autoriza integrar y publicar en main/producción la propuesta del ZIP, us
 
 ## Estilos comunes SDD030
 Los ajustes estándar de ejercicios afectan a todas las tarjetas, nunca a un ID concreto. Clasificación debe permitir elegir cada botón/filtro por su nombre y el aviso explicativo. No modificar el resto validado ni datos. Una elección común sustituye solo la misma propiedad de los elementos cubiertos.
+
+## 7/10/2026 · Sincronización de permisos PIN SDD034
+Los permisos de un snapshot remoto explícito son canónicos después de vaciar syncQueue; una fecha local de otros ajustes nunca resucita concesiones retiradas. No confundir [] con un campo ausente. La entrada PIN del delegado espera sincronización y los menús de escritorio/móvil se actualizan al recibir datos, aunque no cambie la vista ni las clases del body. Probar concesiones y retiradas repetidas desde Ajustes en sesiones separadas con el PIN de cada rol; no preasignar permisos reales ni cambiar datos/PIN/RLS para simular un resultado. Una prueba con autenticación simulada no demuestra acceso remoto por PIN desde un dispositivo sin sesión cloud.

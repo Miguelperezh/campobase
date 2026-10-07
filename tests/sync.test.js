@@ -89,3 +89,12 @@ test('un snapshot antiguo no pisa altas ni resucita borrados que siguen pendient
     [pendingUpsert, pendingDelete],
   ), [localPreparation]);
 });
+
+test('permisos remotos prevalecen sobre ajustes locales con fecha más reciente',()=>{
+ let local={id:'main',delegatePermissions:['partido','sesiones'],updatedAt:999};
+ for(const permissions of [['partido','ejercicios'],['partido','sesiones','tacticas'],['partido'],[]]){
+  const merged=mergeCloudRecord('settings',local,{id:'main',delegatePermissions:permissions,updatedAt:1});
+  assert.deepEqual(merged.delegatePermissions,permissions);
+  local=merged;
+ }
+});

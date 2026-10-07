@@ -6,7 +6,7 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=pin-hydration-2';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=delegate-sync-1';
 import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -296,10 +296,10 @@ function storedActiveView() {
 
 function getDelegatePermissions() {
   const perms = state.settings?.delegatePermissions;
-  if (Array.isArray(perms) && perms.length) return perms;
+  if (Array.isArray(perms)) return perms;
   try {
     const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
-    if (Array.isArray(cached) && cached.length) return cached;
+    if (Array.isArray(cached)) return cached;
   } catch {}
   return ['partido'];
 }
@@ -706,7 +706,7 @@ async function refresh() {
       state.settings.matchPreset = null;
     }
   }
-  if (!state.settings.delegatePermissions || !state.settings.delegatePermissions.length) {
+  if (!Array.isArray(state.settings.delegatePermissions)) {
     try {
       const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
       if (Array.isArray(cached) && cached.length) {
@@ -10687,15 +10687,7 @@ async function submitAuth(event) {
         return;
       } else if (pin === '0000' || pin === state.settings?.delegatePin || (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
-        $('#auth-dialog')?.close();
-        applyRole('delegate');
-        void (async () => {
-          try {
-            await synchronizeCloud();
-            await refresh(true);
-            renderDelegate();
-          } catch {}
-        })();
+        await completePinLogin('delegate', pin);
         return;
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
         $('#auth-dialog')?.close();
@@ -10719,19 +10711,8 @@ async function submitAuth(event) {
           if (pin === '0000' || pin === local.delegatePin || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
             recoveredRole = 'delegate';
             recoveredSettings = local;
-            $('#auth-dialog')?.close();
-            applyRole('delegate');
-            if (candidate.userId) {
-              setBoundSaasUserId(candidate.userId);
-              try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(candidate.userId)); } catch {}
-            }
-            void (async () => {
-              try {
-                await synchronizeCloud();
-                await refresh(true);
-                renderDelegate();
-              } catch {}
-            })();
+            if (candidate.userId) setBoundSaasUserId(candidate.userId);
+            await completePinLogin('delegate', pin, candidate.userId || '');
             return;
           }
         }
@@ -13347,7 +13328,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261007-pin-hydration-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-sync-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

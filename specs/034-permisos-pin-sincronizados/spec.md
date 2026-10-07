@@ -1,0 +1,1 @@
+Los permisos elegidos por el titular deben aparecer y desaparecer en la sesión PIN del delegado mediante sincronización existente. Conservar datos, PIN y presentación validados. No asignar permisos manuales en producción.

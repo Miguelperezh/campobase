@@ -45,8 +45,11 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
           merged[field] = localRecord[field];
         }
       }
-      if (Array.isArray(localRecord.delegatePermissions) && localRecord.delegatePermissions.length) {
-        if (preferLocal || !merged.delegatePermissions || !merged.delegatePermissions.length) {
+      // Permissions from a downloaded snapshot are authoritative. Pending owner
+      // changes are already flushed before this merge; unrelated local settings
+      // timestamps must not resurrect grants or overwrite revocations.
+      if (Array.isArray(localRecord.delegatePermissions)) {
+        if (!Array.isArray(merged.delegatePermissions)) {
           merged.delegatePermissions = structuredClone(localRecord.delegatePermissions);
         }
       }
