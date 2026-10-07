@@ -211,6 +211,10 @@ export function applyTeamAccessContext(context) {
     window.__campobaseAllowedViews = null;
     document.documentElement.dataset.saasTeamRole = role || '';
     document.body?.classList.remove('saas-delegate-mode');
+    // The authenticated account can be coach while its visible access uses
+    // the delegate PIN. A late team-context response must preserve that role.
+    const app = window.__campobase;
+    if (app?.state?.role === 'delegate' && app.state.delegateMode) app.applyRole?.('delegate');
     return;
   }
 

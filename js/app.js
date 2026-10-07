@@ -6,8 +6,8 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=delegate-sync-1';
-import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=pin-switch-1';
+import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
@@ -10459,6 +10459,7 @@ function applyRole(role) {
 }
 
 async function startDemoSession(session) {
+  const accessRevision = beginPinAccess();
   configureDemoDatabase(session);
   state.demoSession = session;
   try { sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(session)); } catch { throw new Error('El navegador debe permitir almacenamiento de sesión para usar la demo.'); }
@@ -10472,6 +10473,7 @@ async function startDemoSession(session) {
   const live = await getOne('settings', 'live');
   state.timer = live?.timer ?? null;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
+  if (!finishPinAccess(accessRevision)) return;
   applyRole('demo');
   networkStatus();
 }
@@ -10504,6 +10506,8 @@ function clearAccessMarkers() {
 }
 
 async function logoutUser() {
+  $('#auth-form')?.reset();
+  lockPinAccess();
   clearAccessMarkers();
   if (state.role === 'demo') {
     await endDemoSession();
@@ -10571,6 +10575,7 @@ async function hydratePinSettingsFromSupabase() {
 }
 
 async function showAuth(forceInitial = false, { hydrate = true } = {}) {
+  const accessRevision = getPinAccessRevision();
   // El cierre explícito debe bloquear la interfaz sin esperar a la red.
   if (hydrate) await hydratePinSettingsFromSupabase();
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
@@ -10582,6 +10587,8 @@ async function showAuth(forceInitial = false, { hydrate = true } = {}) {
       }
     }
   }
+  // A delayed boot prompt cannot relock a PIN selected while hydration ran.
+  if (state.role || accessRevision !== getPinAccessRevision()) return;
   // Mostrar el diálogo no equivale a cerrar sesión. El sessionRole se conserva
   // para que la capa SaaS pueda verificar y restaurar una sesión válida tras recarga.
   document.body.classList.add('auth-locked');
@@ -10601,7 +10608,9 @@ async function showAuth(forceInitial = false, { hydrate = true } = {}) {
   form.elements.newOwnerPin.required = initial;
   form.elements.newDelegatePin.required = initial;
   form.elements.pin.required = !initial;
-  form.reset();
+  // Preserve a PIN being typed while the asynchronous boot prompt finishes.
+  // Explicit logout clears this form before opening the next access.
+  if (initial) form.reset();
   $('#auth-error').textContent = '';
   if (!$('#auth-dialog').open) $('#auth-dialog').showModal();
 }
@@ -10614,6 +10623,7 @@ function ensureAuthPromptVisible() {
 }
 
 async function completePinLogin(role, pin, userId = '', authenticated = false) {
+  const accessRevision = beginPinAccess();
   if (role === 'owner' && !authenticated) {
     try {
       const session = await signInWithCampoBasePin(getSupabaseAuthClient(), userId, pin);
@@ -10634,9 +10644,32 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   if (navigator.onLine && bound && !state.cloudConnected) {
     throw new Error(state.cloudError || 'No se han podido cargar los datos del equipo. Vuelve a intentar entrar; no se ha modificado ningún dato.');
   }
+  if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
   applyRole(role);
   $('#auth-dialog')?.close();
   renderAll();
+}
+
+async function getConfiguredPinRole(pin) {
+  const settings = state.settings || {};
+  if (settings.pinSalt && settings.ownerPinHash && await verifyPin(pin, settings.pinSalt, settings.ownerPinHash)) return 'owner';
+  if (pin === '0000' || pin === settings.delegatePin || (settings.pinSalt && settings.delegatePinHash && await verifyPin(pin, settings.pinSalt, settings.delegatePinHash))) return 'delegate';
+  if (pin.toLowerCase() === 'demo' || (settings.demoPinHash && await verifyPin(pin, settings.demoPinSalt, settings.demoPinHash))) return 'demo';
+  return '';
+}
+
+async function loginWithPin(pin) {
+  // Both visible PIN forms use the same validated role and data-loading path.
+  const role = await getConfiguredPinRole(String(pin).trim());
+  if (role === 'demo') {
+    await startDemoSession(createDemoSession(crypto.randomUUID()));
+    $('#auth-dialog')?.close();
+  } else if (role) {
+    await completePinLogin(role, String(pin).trim(), getBoundSaasUserId() || getRememberedSaasAccount()?.id || '');
+  } else {
+    throw new Error('PIN incorrecto.');
+  }
+  return role;
 }
 
 async function submitAuth(event) {
@@ -13328,7 +13361,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-sync-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261007-pin-switch-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -13407,7 +13440,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 
