@@ -56,6 +56,35 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
       if ((!merged.setPieces || Object.keys(merged.setPieces).length === 0) && localRecord?.setPieces) {
         merged.setPieces = structuredClone(localRecord.setPieces);
       }
+      if (localRecord.theme) {
+        if (preferLocal || !merged.theme || Object.keys(merged.theme).length === 0) {
+          merged.theme = structuredClone(localRecord.theme);
+        } else {
+          merged.theme = {
+            ...structuredClone(localRecord.theme),
+            ...structuredClone(merged.theme),
+            views: {
+              ...(localRecord.theme.views || {}),
+              ...(merged.theme.views || {}),
+            },
+          };
+        }
+      }
+      if (Array.isArray(localRecord.presets) && localRecord.presets.length) {
+        if (preferLocal || !Array.isArray(merged.presets) || !merged.presets.length) {
+          merged.presets = structuredClone(localRecord.presets);
+        }
+      }
+      if (localRecord.matchPreset !== undefined && localRecord.matchPreset !== null) {
+        if (preferLocal || merged.matchPreset === undefined || merged.matchPreset === null) {
+          merged.matchPreset = localRecord.matchPreset;
+        }
+      }
+      if (localRecord.sem) {
+        if (preferLocal || !merged.sem) {
+          merged.sem = structuredClone(localRecord.sem);
+        }
+      }
     }
   }
   return merged;

@@ -9,7 +9,7 @@ import { EJERCICIOS_LOTES_151_650, LOTES_151_650_IDS } from './ejercicios-lotes-
 import { normalizeFormatoJuego } from './training-domain.js';
 
 const NUEVOS_IDS = new Set(NUEVOS_EJERCICIOS_IDS);
-const NUEVOS_LOTES_SET = new Set(NUEVOS_LOTES_IDS);
+const NUEVOS_LOTES_SET = new Set([...NUEVOS_LOTES_IDS, ...LOTES_151_650_IDS]);
 const LOTES_151_650_SET = new Set(LOTES_151_650_IDS);
 
 export const EJERCICIOS_VALIDADOS = Object.freeze([
@@ -55,27 +55,30 @@ export function toCampoBaseExercise(item) {
   const formato_juego = normalizeFormatoJuego(rawFormato);
   const isLudico = Boolean(
     item?.ludico === true
+    || exercise.ludico
     || (Array.isArray(item?.etiquetas) && item.etiquetas.some((t) => /l[uú]dic/i.test(String(t))))
     || (Array.isArray(item?.categorias_adicionales) && item.categorias_adicionales.some((c) => /l[uú]dic/i.test(String(c))))
     || (Array.isArray(item?.categorias_visibles) && item.categorias_visibles.some((c) => /l[uú]dic/i.test(String(c))))
   );
   const mapped = {
     ...exercise,
+    subcategoria: item?.subcategoria || exercise.subcategoria || '',
     ludico: isLudico,
     etiquetas: Array.isArray(item?.etiquetas) ? item.etiquetas : (exercise.etiquetas || []),
     categorias_adicionales: Array.isArray(item?.categorias_adicionales) ? item.categorias_adicionales : (exercise.categorias_adicionales || []),
     categorias_visibles: Array.isArray(item?.categorias_visibles) ? item.categorias_visibles : (exercise.categorias_visibles || []),
+    works: Array.isArray(item?.que_se_trabaja) && item.que_se_trabaja.length
+      ? item.que_se_trabaja
+      : (Array.isArray(exercise.works) && exercise.works.length ? exercise.works : []),
     // `video` del formato interno sigue siendo la animación/MP4 gráfico para no romper nada.
     // El vídeo humano queda separado y es el que usa el filtro «Solo con vídeo».
     formato_juego,
     formatos_juego: Array.isArray(item?.formatos_juego) && item.formatos_juego.length
       ? item.formatos_juego
-      : (Array.isArray(exercise.formatos_juego) && exercise.formatos_juego.length
-          ? exercise.formatos_juego
-          : (formato_juego === 'futbol_7' ? ['futbol_7'] : ['futbol_7', 'futbol_11'])),
-    format: item?.format || exercise.format || (formato_juego === 'futbol_7' ? 'F7' : 'F11'),
-    preview: item?.media?.preview || item?.preview || exercise.preview || '',
+      : (exercise.formatos_juego || (formato_juego === 'todos' ? ['futbol_7', 'futbol_11'] : [formato_juego])),
+    format: exercise.format || (formato_juego === 'futbol_11' ? 'F11' : 'F7'),
     video_muestra: videoMuestra,
+    videoMuestra,
     hasHumanVideo: Boolean(videoMuestra),
   };
 

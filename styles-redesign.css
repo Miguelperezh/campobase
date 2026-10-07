@@ -174,7 +174,7 @@ body {
 
 html:has(body.cb-redesign-active),
 body.cb-redesign-active {
-  background: var(--cb-surface-bg);
+  background: var(--bg, var(--cb-surface-bg, #f4f6f5)) !important;
   color: var(--cb-slate-900);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -1829,6 +1829,49 @@ body.cb-redesign-active .settings-grid {
   align-items: start !important;
 }
 
+@media (max-width: 760px) {
+  body.cb-redesign-active .settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+.cbx-preview-tab-btn {
+  flex-shrink: 0 !important;
+}
+
+.cbx-preview-tabs {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+@media (max-width: 480px) {
+  #preview-scoreboard-header {
+    padding: 10px 8px !important;
+    gap: 4px !important;
+  }
+  .cbx-preview-gf-badge,
+  .cbx-preview-ga-badge {
+    padding: 3px 7px !important;
+    font-size: 11px !important;
+  }
+}
+
+body.cb-redesign-active .cbx-theme-preview-card,
+body.cb-redesign-active #theme-preview-card {
+  grid-column: 1 / -1 !important;
+  background: var(--cardBg, #ffffff) !important;
+  border: 1.5px solid var(--cardBorder, #cbd5e1) !important;
+  border-radius: var(--cb-radius-xl, 18px) !important;
+  padding: 1.4rem !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08) !important;
+}
+
+body.cb-redesign-active .cbx-surfaces-preview-box,
+body.cb-redesign-active #cbx-surfaces-preview-box {
+  background: var(--cardBg, #ffffff) !important;
+  border: 1px solid var(--cardBorder, #cbd5e1) !important;
+}
+
 body.cb-redesign-active .settings-card {
   padding: 1.6rem !important;
   border-radius: var(--cb-radius-xl) !important;
@@ -2152,9 +2195,9 @@ body.cb-redesign-active #cb-bottom-nav {
 
 body.cb-redesign-active .card,
 body.cb-redesign-active .panel {
-  background: var(--cb-surface-card, #ffffff) !important;
-  border-color: var(--cb-slate-200, #e2e8f0) !important;
-  color: var(--cb-slate-900, inherit);
+  background: var(--cardBg, var(--cb-surface-card, #ffffff)) !important;
+  border-color: var(--cardBorder, var(--cb-slate-200, #e2e8f0)) !important;
+  color: var(--ink, var(--cb-slate-900, inherit));
 }
 
 body.cb-redesign-active input,
@@ -2715,18 +2758,18 @@ html[data-theme-font="pure-white"], body[data-theme-font="pure-white"] { --cb-fo
 html[data-theme-font="navy"], body[data-theme-font="navy"] { --cb-font-custom-color: #0a1c36; }
 html[data-theme-font="high-contrast"], body[data-theme-font="high-contrast"] { --cb-font-custom-color: #000000; }
 
-body.cb-redesign-active[data-has-custom-font-color="true"] h1,
-body.cb-redesign-active[data-has-custom-font-color="true"] h2,
-body.cb-redesign-active[data-has-custom-font-color="true"] h3,
-body.cb-redesign-active[data-has-custom-font-color="true"] h4,
-body.cb-redesign-active[data-has-custom-font-color="true"] h5,
-body.cb-redesign-active[data-has-custom-font-color="true"] h6,
-body.cb-redesign-active[data-has-custom-font-color="true"] p,
-body.cb-redesign-active[data-has-custom-font-color="true"] label,
-body.cb-redesign-active[data-has-custom-font-color="true"] select,
-body.cb-redesign-active[data-has-custom-font-color="true"] summary,
-body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-body.cb-redesign-active[data-has-custom-font-color="true"] textarea,
+body.cb-redesign-active[data-has-custom-font-color="true"] h1:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h2:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h3:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h5:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] h6:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active[data-has-custom-font-color="true"] select:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] summary:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
+body.cb-redesign-active[data-has-custom-font-color="true"] textarea:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-name h3,
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-name p,
 body.cb-redesign-active[data-has-custom-font-color="true"] .player-data strong,
@@ -2737,14 +2780,38 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .player-performance-s
 body.cb-redesign-active[data-has-custom-font-color="true"] .stat strong,
 body.cb-redesign-active[data-has-custom-font-color="true"] .stat span,
 body.cb-redesign-active[data-has-custom-font-color="true"] .staff-name,
-body.cb-redesign-active[data-has-custom-font-color="true"] .section-head h2,
+body.cb-redesign-active[data-has-custom-font-color="true"] .section-head:not(.cbx-banner):not(.view > .section-head) h2,
 body.cb-redesign-active[data-has-custom-font-color="true"] .topbar-brand h1,
 body.cb-redesign-active[data-has-custom-font-color="true"] .card,
-body.cb-redesign-active[data-has-custom-font-color="true"] .panel,
-body.cb-redesign-active[data-has-custom-font-color="true"] .meta,
-body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(.valor):not(.badge-text):not(.cb-preview-badge),
-body.cb-redesign-active[data-has-custom-font-color="true"] span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor) {
+body.cb-redesign-active[data-has-custom-font-color="true"] .panel:not(.cbx-prep-card .section-head),
+body.cb-redesign-active[data-has-custom-font-color="true"] .meta:not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *),
+body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *):not(.cbx-callup-counts span) {
   color: var(--cb-font-custom-color) !important;
+}
+
+/* Cabeceras y Banners: garantizan que títulos y subtítulos usen var(--bnInk) y nunca se tiñan de negro */
+html body.cb-redesign-active .cbx-banner,
+html body.cb-redesign-active .cbx-banner h2,
+html body.cb-redesign-active .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active .cbx-banner .eyebrow,
+html body.cb-redesign-active .cbx-banner p,
+html body.cb-redesign-active .cbx-banner small,
+html body.cb-redesign-active .cbx-banner span:not(button *),
+html body.cb-redesign-active .plantilla-staff-bar,
+html body.cb-redesign-active .plantilla-staff-bar .plantilla-staff-title,
+html body.cb-redesign-active .plantilla-staff-bar h3,
+html body.cb-redesign-active #cuerpo-tecnico .cbx-banner h2,
+html body.cb-redesign-active #cuerpo-tecnico .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active #plantilla .cbx-banner h2,
+html body.cb-redesign-active #plantilla .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active #plantilla .cbx-banner p {
+  color: var(--bnInk, #ffffff) !important;
+}
+
+html body.cb-redesign-active .cbx-banner .cbx-eyebrow,
+html body.cb-redesign-active .cbx-banner .eyebrow {
+  color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;
 }
 
 /* Marcador de estadio limpio, legible y adaptable */
@@ -2954,8 +3021,8 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .stadium-score .score
 .staff-wa-btn {
   display: inline-flex;
   align-items: center;
-  background: #25d366;
-  color: #ffffff !important;
+  background: var(--wa-bg, #25d366);
+  color: var(--wa-ink, #053b1d) !important;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -5935,14 +6002,385 @@ dialog {
 
 /* El texto dentro de botones respeta el contraste del color de acento,
    incluso cuando el usuario ha elegido un color de fuente personalizado. */
+body.cb-redesign-active .primary,
+body.cb-redesign-active .primary *,
+body.cb-redesign-active button.primary,
+body.cb-redesign-active button.primary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] .primary,
-body.cb-redesign-active[data-has-custom-font-color="true"] .primary * {
-  color: var(--cb-accent-text, #ffffff) !important;
+body.cb-redesign-active[data-has-custom-font-color="true"] .primary *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.primary,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.primary *,
+body.cb-redesign-active button[type="submit"]:not(.secondary),
+body.cb-redesign-active button[type="submit"]:not(.secondary) *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button[type="submit"]:not(.secondary),
+body.cb-redesign-active[data-has-custom-font-color="true"] button[type="submit"]:not(.secondary) *,
+body.cb-redesign-active #cbx-preview-banner-btn,
+body.cb-redesign-active #cbx-preview-banner-btn *,
+body.cb-redesign-active #preview-sample-btn,
+body.cb-redesign-active .cbx-preview-banner-btn,
+body.cb-redesign-active #save-delegate-account-btn,
+body.cb-redesign-active #save-delegate-account-btn * {
+  color: var(--btnInk, var(--cb-accent-text, #ffffff)) !important;
 }
 
+body.cb-redesign-active button.secondary,
+body.cb-redesign-active button.secondary *,
+body.cb-redesign-active .secondary,
+body.cb-redesign-active .secondary *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary,
+body.cb-redesign-active[data-has-custom-font-color="true"] button.secondary *,
 body.cb-redesign-active[data-has-custom-font-color="true"] .secondary,
-body.cb-redesign-active[data-has-custom-font-color="true"] .secondary * {
-  color: var(--ink, var(--cb-font-custom-color, #0f172a)) !important;
+body.cb-redesign-active[data-has-custom-font-color="true"] .secondary *,
+body.cb-redesign-active button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name),
+body.cb-redesign-active button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name) *,
+body.cb-redesign-active[data-has-custom-font-color="true"] button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name),
+body.cb-redesign-active[data-has-custom-font-color="true"] button:not(.primary):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name) *,
+body.cb-redesign-active .button:not(.primary):not(.danger):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button),
+body.cb-redesign-active[data-has-custom-font-color="true"] .button:not(.primary):not(.danger):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.link-button) {
+  color: var(--btn2Ink, #0f172a) !important;
+}
+
+body.cb-redesign-active button[class*="open-whatsapp"],
+body.cb-redesign-active button[class*="open-whatsapp"] *,
+body.cb-redesign-active .open-whatsapp-callup,
+body.cb-redesign-active .open-whatsapp-callup *,
+body.cb-redesign-active .open-whatsapp-session,
+body.cb-redesign-active .open-whatsapp-session *,
+body.cb-redesign-active .open-whatsapp-player,
+body.cb-redesign-active .open-whatsapp-player *,
+body.cb-redesign-active .staff-wa-btn,
+body.cb-redesign-active .staff-wa-btn *,
+body.cb-redesign-active [class*="whatsapp-btn"],
+body.cb-redesign-active [class*="whatsapp-btn"] * {
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, #053b1d) !important;
+}
+
+body.cb-redesign-active #manual-refresh,
+body.cb-redesign-active #manual-refresh *,
+body.cb-redesign-active[data-has-custom-font-color="true"] #manual-refresh,
+body.cb-redesign-active[data-has-custom-font-color="true"] #manual-refresh * {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   PERSONALIZACIÓN CROMÁTICA INDEPENDIENTE POR PESTAÑA Y SUBPESTAÑA
+   Garantiza que cada pestaña tenga sus propios colores de fondo, fuentes,
+   botones (principal y secundario), dorsales, tarjetas y textos sin afectar al resto.
+   ========================================================================== */
+
+/* Cabeceras y Banners independientes */
+body.cb-redesign-active .view .cbx-banner,
+body.cb-redesign-active .view > .section-head,
+body.cb-redesign-active .view .header-card {
+  background: var(--bn, #0a251b) !important;
+  color: var(--bnInk, #ffffff) !important;
+}
+body.cb-redesign-active .view .cbx-banner h1,
+body.cb-redesign-active .view .cbx-banner h2,
+body.cb-redesign-active .view .cbx-banner h3,
+body.cb-redesign-active .view .cbx-banner h4,
+body.cb-redesign-active .view .cbx-banner p,
+body.cb-redesign-active .view .cbx-banner span:not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.badge):not(.cb-pulse-dot):not(button *),
+body.cb-redesign-active .view > .section-head h1,
+body.cb-redesign-active .view > .section-head h2,
+body.cb-redesign-active .view > .section-head h3,
+body.cb-redesign-active .view > .section-head p,
+body.cb-redesign-active .view > .section-head span:not(button *) {
+  color: var(--bnInk, #ffffff) !important;
+}
+
+/* Botón Principal independiente por pestaña (Fondo y Fuente) */
+body.cb-redesign-active .view .primary,
+body.cb-redesign-active .view button.primary,
+body.cb-redesign-active .view .cbx-btn,
+body.cb-redesign-active .view .cbx-btn-main,
+body.cb-redesign-active .view #new-callup,
+body.cb-redesign-active .view #new-staff-btn,
+body.cb-redesign-active .view #new-training,
+body.cb-redesign-active .view #new-session,
+body.cb-redesign-active .view #new-exercise,
+body.cb-redesign-active .view #cbx-new-tactic-btn,
+body.cb-redesign-active .view button[data-dialog="player-dialog"],
+body.cb-redesign-active .view button[data-dialog="match-dialog"],
+body.cb-redesign-active .view button[data-dialog="exercise-dialog"],
+body.cb-redesign-active .view button[type="submit"]:not(.secondary):not([class*="whatsapp"]):not(.topbar-gear-btn):not(#cbx-quick-color-dialog *) {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+  border-color: var(--btn, #10b981) !important;
+}
+body.cb-redesign-active .view .primary *,
+body.cb-redesign-active .view button.primary *,
+body.cb-redesign-active .view .cbx-btn *,
+body.cb-redesign-active .view .cbx-btn-main *,
+body.cb-redesign-active .view #new-callup *,
+body.cb-redesign-active .view #new-staff-btn *,
+body.cb-redesign-active .view #new-training *,
+body.cb-redesign-active .view #new-session *,
+body.cb-redesign-active .view #new-exercise *,
+body.cb-redesign-active .view #cbx-new-tactic-btn *,
+body.cb-redesign-active .view button[data-dialog="player-dialog"] *,
+body.cb-redesign-active .view button[data-dialog="match-dialog"] *,
+body.cb-redesign-active .view button[data-dialog="exercise-dialog"] *,
+body.cb-redesign-active .view button[type="submit"]:not(.secondary):not([class*="whatsapp"]):not(.topbar-gear-btn):not(#cbx-quick-color-dialog *) * {
+  color: var(--btnInk, #ffffff) !important;
+}
+
+/* Botón Secundario independiente por pestaña (Fondo y Fuente) */
+body.cb-redesign-active .view .secondary,
+body.cb-redesign-active .view button.secondary,
+body.cb-redesign-active .view .cbx-btn-light,
+body.cb-redesign-active .view .cbx-btn-sub,
+body.cb-redesign-active .view .cbx-btn-secondary,
+body.cb-redesign-active .view .cbx-btn-ghost-dark,
+body.cb-redesign-active .view .cbx-btn-outline-dark,
+body.cb-redesign-active .view #open-set-pieces-btn,
+body.cb-redesign-active .view #prep-print-banner,
+body.cb-redesign-active .view #new-session-exercises,
+body.cb-redesign-active .view .btn-rival-toggle-claude,
+body.cb-redesign-active .view #cbx-toggle-rival-btn,
+body.cb-redesign-active .view button:not(.primary):not(.cbx-btn):not(.cbx-btn-main):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.staff-wa-btn):not([class*="whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.theme-bg-btn):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cbx-swatch-btn):not(.cbx-qc-tab-chip):not(.cbx-qc-view-chip):not(.cbx-qc-subtab-chip):not(.cb-mode-switcher-btn):not(#open-field-mode):not([id*="goal"]):not(#new-callup):not(#new-staff-btn):not(#new-training):not(#new-session):not(#new-exercise):not(#cbx-new-tactic-btn):not([data-dialog="player-dialog"]):not([data-dialog="match-dialog"]):not([data-dialog="exercise-dialog"]):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name) {
+  background: var(--btn2, #ffffff) !important;
+  color: var(--btn2Ink, #0f172a) !important;
+  border-color: color-mix(in srgb, var(--btn2Ink, #0f172a) 25%, transparent) !important;
+}
+body.cb-redesign-active .view .secondary *,
+body.cb-redesign-active .view button.secondary *,
+body.cb-redesign-active .view .cbx-btn-light *,
+body.cb-redesign-active .view .cbx-btn-sub *,
+body.cb-redesign-active .view .cbx-btn-secondary *,
+body.cb-redesign-active .view .cbx-btn-ghost-dark *,
+body.cb-redesign-active .view .cbx-btn-outline-dark *,
+body.cb-redesign-active .view #open-set-pieces-btn *,
+body.cb-redesign-active .view #prep-print-banner *,
+body.cb-redesign-active .view #new-session-exercises *,
+body.cb-redesign-active .view .btn-rival-toggle-claude *,
+body.cb-redesign-active .view #cbx-toggle-rival-btn *,
+body.cb-redesign-active .view button:not(.primary):not(.cbx-btn):not(.cbx-btn-main):not(.danger):not(#manual-refresh):not([class*="open-whatsapp"]):not(.staff-wa-btn):not([class*="whatsapp"]):not(.cb-print-btn-print):not(.topbar-gear-btn):not(.cbx-context-gear-btn):not(#cbx-quick-color-dialog *):not(.theme-bg-btn):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cbx-swatch-btn):not(.cbx-qc-tab-chip):not(.cbx-qc-view-chip):not(.cbx-qc-subtab-chip):not(.cb-mode-switcher-btn):not(#open-field-mode):not([id*="goal"]):not(#new-callup):not(#new-staff-btn):not(#new-training):not(#new-session):not(#new-exercise):not(#cbx-new-tactic-btn):not([data-dialog="player-dialog"]):not([data-dialog="match-dialog"]):not([data-dialog="exercise-dialog"]):not(.link-button):not(.view-session):not(.session-exercise-link):not(.cbx-session-exercise-name) * {
+  color: var(--btn2Ink, #0f172a) !important;
+}
+
+/* Componentes especiales con aislamiento cromático */
+body.cb-redesign-active #hoy .cbx-today-match-score {
+  background: var(--today-match-bg, var(--bn, #0a251b)) !important;
+  color: var(--today-match-ink, #ffffff) !important;
+}
+body.cb-redesign-active #hoy .cbx-today-match-score .cbx-today-score strong,
+body.cb-redesign-active #hoy .cbx-today-match-score .cbx-today-score b,
+body.cb-redesign-active #hoy .cbx-today-match-score .cbx-today-score small,
+body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta span,
+body.cb-redesign-active #hoy .cbx-today-match-score .today-event-meta strong {
+  color: var(--today-match-ink, #ffffff) !important;
+}
+
+body.cb-redesign-active #convocatorias .cbx-callup-card > header {
+  background: var(--callup-header-bg, var(--bn, #0a251b)) !important;
+  color: var(--callup-header-ink, #ffffff) !important;
+}
+body.cb-redesign-active #convocatorias .cbx-callup-card > header small {
+  color: color-mix(in srgb, var(--callup-header-ink, #ffffff) 80%, transparent) !important;
+}
+body.cb-redesign-active #convocatorias .cbx-callup-card > header h3 {
+  color: var(--callup-header-ink, #ffffff) !important;
+}
+body.cb-redesign-active #convocatorias .cbx-callup-counts span:first-child {
+  background: var(--callup-badge-bg, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--callup-badge-ink, #ffffff) !important;
+}
+body.cb-redesign-active #convocatorias .cbx-callup-counts span:last-child {
+  background: var(--callup-out-bg, var(--btn, #10b981)) !important;
+  color: var(--callup-out-ink, var(--btnInk, #ffffff)) !important;
+}
+
+body.cb-redesign-active #preparacion .cbx-prep-card .section-head {
+  background: var(--prep-header-bg, var(--bn, #0a251b)) !important;
+  color: var(--prep-header-ink, #ffffff) !important;
+}
+body.cb-redesign-active #preparacion .cbx-prep-card .section-head .meta,
+body.cb-redesign-active #preparacion .cbx-prep-card .section-head p {
+  color: color-mix(in srgb, var(--prep-header-ink, #ffffff) 80%, transparent) !important;
+}
+body.cb-redesign-active #preparacion .cbx-prep-card .section-head h3 {
+  color: var(--prep-header-ink, #ffffff) !important;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-whistle {
+  background: var(--whistle-bg, var(--bn, #0a251b)) !important;
+  color: var(--whistle-ink, #ffffff) !important;
+}
+body.cb-redesign-active #sesiones .print-session.cbx-btn-sub {
+  background: var(--print-bg, var(--btn2, #ffffff)) !important;
+  color: var(--print-ink, var(--btn2Ink, #0f172a)) !important;
+}
+body.cb-redesign-active #sesiones .edit-session.cbx-btn-sub {
+  background: var(--edit-bg, var(--btn2, #ffffff)) !important;
+  color: var(--edit-ink, var(--btn2Ink, #0f172a)) !important;
+}
+body.cb-redesign-active #sesiones .cbx-btn-completed {
+  background: var(--completed-bg, #f1f5f9) !important;
+  color: var(--completed-ink, #0f172a) !important;
+}
+body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+}
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button,
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button {
+  color: var(--cardTitle, #0f172a) !important;
+}
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  color: var(--view-font-color, #0f172a) !important;
+}
+
+body.cb-redesign-active #tacticas .cbx-tactics-hero {
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--btn, #10b981) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, #0a251b), color-mix(in srgb, var(--bn, #0a251b) 75%, #000000)) !important;
+  color: var(--bnInk, #ffffff) !important;
+}
+body.cb-redesign-active #tacticas .cbx-tactics-eyebrow {
+  color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;
+}
+body.cb-redesign-active #tacticas .cbx-tactics-title {
+  color: var(--bnInk, #ffffff) !important;
+}
+body.cb-redesign-active #tacticas #cbx-new-tactic-btn,
+body.cb-redesign-active #tacticas .btn-new-tactic-claude {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+}
+body.cb-redesign-active #tacticas .btn-rival-toggle-claude {
+  background: var(--btn2, #ffffff) !important;
+  color: var(--btn2Ink, #0f172a) !important;
+}
+body.cb-redesign-active #tacticas .cbx-tactics-callout {
+  background: var(--callout-bg, color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))) !important;
+  border: 1px solid var(--cardBorder, #cbd5e1) !important;
+}
+body.cb-redesign-active #tacticas .cbx-tactics-callout p {
+  color: var(--callout-ink, var(--view-font-color, #0f172a)) !important;
+}
+body.cb-redesign-active #tacticas .cbx-tactics-pitch-container {
+  background: var(--tb-pitch, #064e3b) !important;
+}
+body.cb-redesign-active #tacticas .tac-field {
+  fill: var(--tb-pitch, #064e3b) !important;
+}
+body.cb-redesign-active #tacticas .tac-line,
+body.cb-redesign-active #tacticas .tac-area {
+  stroke: var(--tb-lines, #ffffff) !important;
+}
+body.cb-redesign-active #tacticas .tac-player circle {
+  fill: var(--tb-team, #10b981) !important;
+}
+body.cb-redesign-active #tacticas .tac-opponent circle {
+  fill: var(--tb-rival, #ef4444) !important;
+}
+
+/* Texto Principal independiente por pestaña (Párrafos, etiquetas, datos) */
+body.cb-redesign-active .view p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *),
+body.cb-redesign-active .view label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view small:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view td:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view .meta:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.player-dorsal):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge),
+body.cb-redesign-active .view span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.topbar-gear-btn):not(#cbx-quick-color-dialog *):not(.cbx-swatch-btn):not(.cbx-qc-tab-chip):not(.cbx-qc-view-chip):not(.cbx-qc-subtab-chip):not(.cbx-pmp-starter-num) {
+  color: var(--view-font-color, var(--cb-font-custom-color, var(--ink, #0f172a))) !important;
+}
+
+/* Nombres y Títulos independientes por pestaña */
+body.cb-redesign-active .view h1:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view h2:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view h3:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active .view .player-name h3,
+body.cb-redesign-active .view .player-name p,
+body.cb-redesign-active .view .player-name,
+body.cb-redesign-active .view .staff-name,
+body.cb-redesign-active .view .card-title,
+body.cb-redesign-active .view .tac-name-claude {
+  color: var(--cardTitle, var(--view-font-color, var(--cb-font-custom-color, var(--ink, #0f172a)))) !important;
+}
+
+/* Dorsales independientes por pestaña */
+body.cb-redesign-active .view .player-dorsal,
+body.cb-redesign-active .view .dorsal-badge,
+body.cb-redesign-active .view .cbx-callup-number,
+body.cb-redesign-active .view .preview-sp-dorsal-circle,
+body.cb-redesign-active .view [data-sp-dorsal],
+body.cb-redesign-active .view .cbx-pmp-starter-num {
+  background: var(--dorsal-bg, #0a251b) !important;
+  color: var(--dorsal-ink, #ffffff) !important;
+  border-color: var(--dorsal-ink, #ffffff) !important;
+}
+
+/* Tarjetas y Paneles independientes por pestaña */
+body.cb-redesign-active .view .card,
+body.cb-redesign-active .view .panel:not(.section-head):not(.cbx-banner),
+body.cb-redesign-active .view .cbx-card {
+  background: var(--cardBg, #ffffff) !important;
+  border-color: var(--cardBorder, #e2e8f0) !important;
+}
+
+/* Botones de WhatsApp independientes */
+body.cb-redesign-active .view button[class*="open-whatsapp"],
+body.cb-redesign-active .view .open-whatsapp-callup,
+body.cb-redesign-active .view .open-whatsapp-session,
+body.cb-redesign-active .view .open-whatsapp-player,
+body.cb-redesign-active .view .staff-wa-btn,
+body.cb-redesign-active .view [class*="whatsapp-btn"],
+body.cb-redesign-active .view #open-whatsapp-week-header-btn {
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, #ffffff) !important;
+}
+body.cb-redesign-active .view button[class*="open-whatsapp"] *,
+body.cb-redesign-active .view .open-whatsapp-callup *,
+body.cb-redesign-active .view .open-whatsapp-session *,
+body.cb-redesign-active .view .open-whatsapp-player *,
+body.cb-redesign-active .view .staff-wa-btn *,
+body.cb-redesign-active .view [class*="whatsapp-btn"] *,
+body.cb-redesign-active .view #open-whatsapp-week-header-btn * {
+  color: var(--wa-ink, #ffffff) !important;
+}
+
+/* Balón Parado en Plantilla */
+body.cb-redesign-active .view .sp-lead-badge,
+body.cb-redesign-active .view [data-sp-role="lead"] {
+  background: var(--sp-lead-bg, #c8102e) !important;
+  color: var(--sp-lead-ink, #ffffff) !important;
+}
+body.cb-redesign-active .view .sp-sub-badge,
+body.cb-redesign-active .view [data-sp-role="sub"] {
+  background: var(--sp-sub-bg, #f1f5f9) !important;
+  color: var(--sp-sub-ink, #0f172a) !important;
+}
+
+/* Partido en vivo: Goles (+ Gol Nuestro y + Gol Rival) */
+body.cb-redesign-active .view #live-goal-for,
+body.cb-redesign-active .view .btn-gf {
+  background: var(--gfBg, #f0f7f3) !important;
+  color: var(--gfInk, #14532d) !important;
+}
+body.cb-redesign-active .view #live-goal-against,
+body.cb-redesign-active .view .btn-ga {
+  background: var(--gaBg, #fdf2f4) !important;
+  color: var(--gaInk, #9f1239) !important;
+}
+
+/* Pizarra táctica (Césped y Líneas) */
+body.cb-redesign-active .view .tactic-board-canvas,
+body.cb-redesign-active .view .tactic-field,
+body.cb-redesign-active .view .pizarra-tactica-campo {
+  background: var(--tb-pitch, #064e3b) !important;
+  border-color: var(--tb-lines, #ffffff) !important;
 }
 
 /* ==========================================================================
@@ -6609,6 +7047,10 @@ body.cb-is-printing #cb-print-root {
   box-sizing: border-box !important;
 }
 
+.cb-print-page + .cb-print-page {
+  margin-top: 2rem !important;
+}
+
 /* Contención estricta de diagramas y tarjetas tanto en visor como en móvil */
 .cb-print-stage-box {
   width: 100%;
@@ -6658,6 +7100,312 @@ body.cb-is-printing #cb-print-root {
   background: #f8fafc;
   display: block;
   margin: 0 auto;
+}
+
+/* Claude Redesign A4 Print Enhancements */
+.cbx-print-header-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+.cbx-print-crest-wrap {
+  width: 52px !important;
+  height: 52px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.cbx-print-crest-img {
+  max-width: 52px !important;
+  max-height: 52px !important;
+  object-fit: contain !important;
+}
+
+.cbx-print-header-center {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.cbx-print-eyebrow {
+  font-size: 8pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+  margin-bottom: 2px !important;
+}
+
+.cbx-print-submeta {
+  font-size: 8.5pt !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+}
+
+.cbx-print-header-badges {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  align-items: flex-end !important;
+}
+
+.cbx-print-badge-soft {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 7.5pt !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+}
+
+.cbx-print-badge-amber {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+  font-size: 7.5pt !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+}
+
+.cbx-print-header-side {
+  text-align: right !important;
+  flex-shrink: 0 !important;
+}
+
+.cbx-print-duration-big {
+  font-size: 26pt !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.02em !important;
+}
+
+.cbx-print-header-players {
+  font-size: 8.5pt !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin-top: 2px !important;
+}
+
+.cbx-print-header-staff {
+  font-size: 8pt !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+}
+
+/* Stat cards row (Single Exercise) */
+.cbx-print-stat-cards {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  margin: 8px 0 10px 0 !important;
+}
+
+.cbx-print-stat-card {
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cbx-print-stat-card-label {
+  font-size: 6.5pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+}
+
+.cbx-print-stat-card-val {
+  font-size: 11pt !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+}
+
+/* Pitch container with legend */
+.cbx-print-pitch-container {
+  position: relative !important;
+}
+
+.cbx-print-pitch-legend {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 12px !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #ffffff !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 7pt !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.legend-dot.red { color: #ef4444 !important; }
+.legend-dot.blue { color: #3b82f6 !important; }
+.legend-line { font-weight: 900 !important; }
+
+/* Top cards (Session) */
+.cbx-print-cards-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin: 6px 0 8px 0 !important;
+}
+
+.cbx-print-card-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.cbx-print-card-box-label {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #0f766e !important;
+}
+
+.cbx-print-card-box-text {
+  font-size: 8.5pt !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+.cbx-print-card-box-notes {
+  font-size: 8pt !important;
+  color: #475569 !important;
+  margin: 2px 0 0 0 !important;
+}
+
+/* Timeline proportion bar */
+.cbx-print-timeline-bar {
+  display: flex !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  margin: 6px 0 12px 0 !important;
+  font-weight: 900 !important;
+  font-size: 8pt !important;
+  color: #ffffff !important;
+}
+
+.cbx-print-timeline-segment {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 4px !important;
+  border-right: 1.5px solid #ffffff !important;
+}
+
+.cbx-print-timeline-segment:last-child {
+  border-right: 0 !important;
+}
+
+.cbx-print-timeline-segment.warmup { background: #ea580c !important; }
+.cbx-print-timeline-segment.main { background: #0f766e !important; }
+.cbx-print-timeline-segment.final { background: #dc2626 !important; }
+.cbx-print-timeline-segment.cool { background: #64748b !important; }
+
+/* Bottom section: Attendance checklist & Coaching notes */
+.cbx-print-bottom-grid {
+  display: grid !important;
+  grid-template-columns: 1.1fr 0.9fr !important;
+  gap: 14px !important;
+  margin-top: 10px !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.cbx-print-attendance-section,
+.cbx-print-notes-section {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  background: #ffffff !important;
+}
+
+.cbx-print-section-title,
+.cbx-print-notes-title {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #475569 !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.cbx-print-attendance-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 3px 12px !important;
+}
+
+.cbx-print-att-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 7.5pt !important;
+  color: #0f172a !important;
+}
+
+.cbx-print-att-box {
+  width: 10px !important;
+  height: 10px !important;
+  border: 1.5px solid #475569 !important;
+  border-radius: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+.cbx-print-att-num {
+  font-weight: 800 !important;
+  width: 14px !important;
+}
+
+.cbx-print-att-name {
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.cbx-print-notes-lines {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-top: 8px !important;
+}
+
+.cbx-print-note-line {
+  border-bottom: 1px solid #cbd5e1 !important;
+  height: 2px !important;
+}
+
+.cbx-print-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 7pt !important;
+  color: #64748b !important;
+  margin-top: 8px !important;
+  padding-top: 4px !important;
+  border-top: 1px solid #e2e8f0 !important;
 }
 
 @media (max-width: 650px) {
@@ -6932,6 +7680,45 @@ body.cb-is-printing dialog {
     break-inside: avoid !important;
     max-height: 275mm !important;
     overflow: hidden !important;
+  }
+
+  .cb-print-page {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    max-height: 275mm !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .cb-print-page + .cb-print-page {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .cbx-print-steps-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.8mm !important;
+  }
+
+  .cbx-print-step-item {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 2mm !important;
+  }
+
+  .cbx-print-step-num {
+    font-size: 8.5pt !important;
+    line-height: 1.2 !important;
+    color: #15803d !important;
+    font-weight: 900 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .cbx-print-step-txt {
+    font-size: 7.5pt !important;
+    line-height: 1.3 !important;
+    color: #1e293b !important;
   }
 
   .cb-print-exercise-layout {

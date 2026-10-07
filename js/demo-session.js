@@ -1,13 +1,13 @@
 import './calendar-substitutions-entry.js?v=2447';
-import './session-visual-planner.js?v=2451';
+import './session-visual-planner.js?v=plan-visual-1';
 import './session-materials.js?v=2452';
 import './session-top-actions.js?v=2458';
 import './session-picker-compat.js?v=2461';
-import './session-planner-ui.js?v=20260924-v59-delegate-views-visible-render-fix';
-import './attendance-linked-sources.js?v=2453';
+import './session-planner-ui.js?v=20260927-v66-real-calendar-dates';
+import './attendance-linked-sources.js?v=claude-asistencia-3';
 import './player-data-sync.js?v=2453';
 import './attendance-history-responsive.js?v=2455';
-import './today-dashboard.js?v=2456';
+import './today-dashboard.js?v=goal-series-1';
 
 export const DEMO_DURATION_MS = 2 * 60 * 60 * 1_000;
 

@@ -1,0 +1,18 @@
+# Validación
+42 tests relacionados pasan: conversión fiel de plan en ambos modos, minutos, impresión de plan y ejercicio, compatibilidad de colores. Chrome aislado a 390/1280px: insignia dentro del recuadro; tramos con duración; copia conserva totales y no guarda; momento editable; impresión del plan; ajustes con vista previa y grupos sin desbordamiento. Portada obtenida del SVG renderizado por el creador real decodifica e imprime en PDF de dos páginas (portada de sesión y ejercicio). Se conservan vuelta a sesión y controles MP4. Cero errores y cero mutaciones remotas. No es validación en teléfono físico ni de todos los registros privados. Despliegue aún pendiente.
+
+Regresión adicional: imprimir desde un momento distinto de Inicio no sustituye titulares ni formación inicial; el PDF es idéntico al impreso desde Inicio.
+
+Paquete final aislado: 2115b58; código c7d75049. El exportador de preview conserva su formato anterior y recibe solo la corrección de inicio del borrador; no se incorporan otras diferencias históricas del exportador de la rama. El navegador verifica igualdad del HTML impreso al entrar desde Convocatoria y al imprimir desde otro momento en Preparación. GitHub Pages run 37369130635 pendiente de publicación; no declarar visible hasta comprobar archivos públicos.
+
+## Incidencia de publicación confirmada
+GitHub Pages run 37369130635: build correcto, deploy cancelado sin ejecutar pasos. Anotación del servidor: “The job was not acquired by Runner of type hosted even after multiple attempts”. La URL pública sigue sirviendo 2c6bf0a7. Se reintenta únicamente lo fallido. Alternativa preparada en el repo separado: .github/workflows/preview-pages.yml, un solo runner ubuntu-22.04 para empaquetar y publicar, commit local 74a262d. GitHub rechazó subirlo por ausencia de scope workflow. La configuración Pages se restauró a legacy/main/raíz tras el rechazo; no se dejó el sitio dependiendo de un workflow inexistente. Autorización de renovar conexión solicitada a Miguel; no ejecutarla sin respuesta. No cambios en código de app, original, datos, Supabase ni recursos de pago.
+
+Alternativa aceptada por la conexión GitHub ya autorizada: commit c7809a9 en campobase-preview, workflow de un solo runner ubuntu-22.04. No fue necesario ampliar el scope del acceso CLI; la pregunta sobre renovación deja de ser necesaria. Pages de preview configurado como workflow y despliegues legacy obsoletos cancelados. Run 37373326369 pendiente; mismos archivos funcionales de 2115b58, sin cambios adicionales de app.
+
+Bloqueo externo confirmado en https://www.githubstatus.com/: incidencia activa de GitHub Actions el 05/10/2026, fallos y retrasos de asignación de runners en múltiples configuraciones. Mantener la ejecución preparada 37373326369; no repetir reintentos ni pedir validación mientras source-commit.txt siga antiguo. No prometer publicación por cambiar el parámetro revision.
+
+
+## Publicación pública comprobada — 2026-10-05
+
+El flujo alternativo de un solo runner de campobase-preview completó la ejecución 37373326369. La URL pública /campobase-preview/v2/source-commit.txt devuelve c7d75049. Prueba de navegador contra los archivos públicos (sin sustituir HTML/JS/CSS por archivos locales): Media liga dentro del recuadro a 390/1280; selección y minutos exactos; copia del plan visible a Preparación; edición e impresión del mismo plan; menú visual de ajustes sin desbordamiento. Sin errores JavaScript y sin mutaciones remotas. Los datos de prueba solo se insertaron en el navegador efímero, con Supabase bloqueado. No se desplegó ningún recurso Cloudflare ni se contrató servicio adicional.

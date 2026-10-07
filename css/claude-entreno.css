@@ -1,0 +1,2602 @@
+/* CampoBase · Entreno (Sesiones de entrenamiento, Ejercicios, Tácticas)
+   Estilos específicos del rediseño Claude para el módulo Entreno. */
+
+/* Encabezado y banner de Sesiones */
+body.cb-redesign-active #sesiones > .cbx-banner {
+  min-height: 106px;
+  margin: 0 0 12px;
+  padding: 20px 22px;
+  border: 0;
+  border-radius: var(--cbx-r-hero);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000)) !important;
+  box-shadow: var(--cbx-shadow-hero);
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-eyebrow,
+body.cb-redesign-active #sesiones > .cbx-banner .eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, .75) !important;
+  font: 800 12px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner h2 {
+  margin: 4px 0 0;
+  color: #fff !important;
+  font: 800 32px/1 var(--cbx-disp) !important;
+  font-family: var(--cbx-disp) !important;
+  text-transform: uppercase;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .button-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, var(--waInk, #053b1d)) !important;
+  font: 800 13px var(--cbx-ui) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, .25);
+  transition: transform .15s ease, filter .15s ease;
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner .cbx-btn-whatsapp-week:hover {
+  filter: brightness(1.05);
+}
+
+body.cb-redesign-active #sesiones > .cbx-banner #new-session {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cbx-acc) !important;
+  color: #fff !important;
+  font: 800 14px var(--cbx-ui) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .25);
+  cursor: pointer;
+}
+
+/* Leyenda de fases de entrenamiento */
+body.cb-redesign-active #sesiones .cbx-sessions-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font: 700 12px var(--cbx-ui);
+  color: #475569;
+  margin: 8px 0 16px;
+  padding: 0 4px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-sessions-legend .legend-game { background: #2563eb; }
+
+/* Grid de tarjetas de sesión */
+body.cb-redesign-active #sesiones .cbx-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Tarjeta individual de sesión */
+body.cb-redesign-active #sesiones .cbx-session-card {
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: var(--cbx-r-card);
+  box-shadow: var(--cbx-shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Fila de píldoras de estado y fecha */
+body.cb-redesign-active #sesiones .cbx-session-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill {
+  font: 700 12px/1.2 var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-date {
+  background: #dff0e7;
+  color: #153c2c;
+  font-weight: 800;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-gray {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-pill-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+/* Título de sesión y campo */
+body.cb-redesign-active #sesiones .cbx-session-name {
+  font: 800 19px/1.2 var(--cbx-ui);
+  color: var(--cbx-ink);
+  margin: 0;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-meta {
+  font: 600 13px/1.3 var(--cbx-ui);
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+/* Barra horizontal de bloques proporcional */
+body.cb-redesign-active #sesiones .cbx-session-bar-track {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  gap: 2px;
+  background: #f1f5f9;
+  margin: 2px 0 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-bar-seg {
+  height: 100%;
+  border-radius: 3px;
+  min-width: 4px;
+  transition: width .2s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-session-bar-seg.bar-game { background: #2563eb; }
+
+/* Lista de bloques de ejercicios */
+body.cb-redesign-active #sesiones .cbx-session-blocks-list {
+  display: flex;
+  flex-direction: column;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-row {
+  display: grid;
+  grid-template-columns: 24px 46px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font: 800 12px/1 var(--cbx-ui);
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-warmup { background: #f59e0b; }
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-main { background: #10b981; }
+body.cb-redesign-active #sesiones .cbx-session-block-dot.dot-game { background: #2563eb; }
+
+body.cb-redesign-active #sesiones .cbx-session-mini-pitch {
+  position: relative;
+  width: 46px;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: block;
+  border: 1px solid #1e523d;
+}
+
+body.cb-redesign-active #sesiones .cbx-mini-pitch-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  font: 700 13.5px/1.2 var(--cbx-ui);
+  color: var(--cbx-ink);
+  text-align: left;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-exercise-name:hover {
+  color: #10b981;
+  text-decoration: underline;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-phase {
+  font: 600 11.5px/1 var(--cbx-ui);
+  color: #64748b;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-duration {
+  font: 800 14px/1 var(--cbx-ui);
+  color: var(--cbx-ink);
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-play {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--cbx-hero);
+  color: #fff;
+  font: 800 11px/1 var(--cbx-ui);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: background .15s ease, transform .1s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-block-play:hover {
+  background: #10b981;
+  transform: scale(1.05);
+}
+
+/* Fila de botones de acción de sesión */
+/* Fila de botones de acción de sesión */
+body.cb-redesign-active #sesiones .cbx-session-actions-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-actions-row > button {
+  flex: 1 1 calc(20% - 6px);
+  min-width: 62px;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-whistle {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--whistle-bg, var(--bn, #0a251b)) !important;
+  color: var(--whistle-ink, var(--bnInk, #ffffff)) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-wa {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--wa-bg, #25d366) !important;
+  color: var(--wa-ink, #ffffff) !important;
+  font: 800 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .print-session.cbx-btn-sub {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  background: var(--print-bg, var(--btn2, #ffffff)) !important;
+  color: var(--print-ink, var(--btn2Ink, #0f172a)) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .edit-session.cbx-btn-sub {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  background: var(--edit-bg, var(--btn2, #ffffff)) !important;
+  color: var(--edit-ink, var(--btn2Ink, #0f172a)) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-completed {
+  height: 38px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #cbd5e1);
+  background: var(--completed-bg, #f1f5f9) !important;
+  color: var(--completed-ink, #0f172a) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+  border-color: var(--btn, #10b981) !important;
+}
+
+/* Evitar que botones que son enlaces textuales hereden estilos de botón genéricos */
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button,
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  display: inline !important;
+}
+body.cb-redesign-active #sesiones .view-session.link-button,
+body.cb-redesign-active #sesiones .cbx-session-name button {
+  color: var(--cardTitle, #0f172a) !important;
+}
+body.cb-redesign-active #sesiones .session-exercise-link,
+body.cb-redesign-active #sesiones .cbx-session-exercise-name {
+  color: var(--view-font-color, #0f172a) !important;
+}
+
+body.cb-redesign-active #sesiones .cbx-btn-sub:hover {
+  filter: brightness(0.96);
+}
+
+/* Desplegable de más opciones */
+body.cb-redesign-active #sesiones .cbx-session-more-details {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details summary {
+  cursor: pointer;
+  color: var(--cbx-muted);
+  font: 700 11px var(--cbx-ui);
+  user-select: none;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details .button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body.cb-redesign-active #sesiones .cbx-session-more-details button {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+/* Acordeón de entrenamientos realizados */
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion {
+  margin-top: 24px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  border-radius: var(--cbx-r-card, 16px);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 88%, #f8fafc);
+  overflow: hidden;
+  box-shadow: var(--cbx-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font: 800 15px var(--cbx-ui);
+  color: var(--cardTitle, #334155);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, #f1f5f9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s ease;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary::-webkit-details-marker {
+  display: none;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary:hover {
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, #e2e8f0);
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary .cbx-accordion-indicator {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion[open] .cbx-completed-sessions-summary .cbx-accordion-indicator {
+  transform: rotate(180deg);
+}
+body.cb-redesign-active #sesiones .cbx-completed-sessions-grid {
+  padding: 16px;
+  border-top: 1px solid var(--cardBorder, #e2e8f0);
+  opacity: 0.92;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 620px) {
+  body.cb-redesign-active #sesiones > .cbx-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  body.cb-redesign-active #sesiones > .cbx-banner .button-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  body.cb-redesign-active #sesiones > .cbx-banner .button-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body.cb-redesign-active #sesiones .cbx-sessions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.cb-redesign-active #sesiones .cbx-session-actions-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}
+
+/* ==========================================================
+   EJERCICIOS (Rediseño Claude)
+   ========================================================== */
+
+/* Banner de Ejercicios */
+body.cb-redesign-active #ejercicios > .cbx-banner {
+  min-height: 106px;
+  margin: 0 0 12px;
+  padding: 20px 22px;
+  border: 0;
+  border-radius: var(--cbx-r-hero);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--cbx-acc, var(--btn, #10b981)) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, var(--cbx-hero, #0a251b)), color-mix(in srgb, var(--bn, var(--cbx-hero, #0a251b)) 75%, #000000)) !important;
+  box-shadow: var(--cbx-shadow-hero);
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner .cbx-eyebrow,
+body.cb-redesign-active #ejercicios > .cbx-banner .eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, .75) !important;
+  font: 800 12px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner h2 {
+  margin: 4px 0 0;
+  color: #fff !important;
+  font: 800 32px/1 var(--cbx-disp) !important;
+  font-family: var(--cbx-disp) !important;
+  text-transform: uppercase;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner .button-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner #new-exercise {
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cbx-acc) !important;
+  color: #fff !important;
+  font: 800 14px var(--cbx-ui) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .25);
+  cursor: pointer;
+}
+
+body.cb-redesign-active #ejercicios > .cbx-banner #new-session-exercises {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .15) !important;
+  color: #fff !important;
+  font: 700 14px var(--cbx-ui) !important;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+/* Selector Biblioteca / Mis ejercicios */
+body.cb-redesign-active #ejercicios .exercise-library-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  max-width: 420px;
+  margin: 14px 0;
+  border: 0;
+}
+
+body.cb-redesign-active #ejercicios .exercise-library-tab {
+  height: 38px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  font: 700 13px var(--cbx-ui);
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all .15s ease;
+  user-select: none;
+}
+
+body.cb-redesign-active #ejercicios .exercise-library-tab.active {
+  background: #fff;
+  color: var(--cbx-ink);
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Tarjeta contenedora de filtros */
+body.cb-redesign-active #exercise-filters {
+  display: block !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 16px !important;
+}
+
+body.cb-redesign-active #exercise-filters .cbx-native-filter-fields {
+  display: none !important;
+}
+
+body.cb-redesign-active .cbx-filter-card {
+  width: 100% !important;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--cbx-shadow);
+}
+
+/* Dimensiones de trabajo Fútbol 7 */
+body.cb-redesign-active .cbx-filter-dims-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.cb-redesign-active .cbx-filter-dims-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.cb-redesign-active .cbx-filter-dims-label {
+  font: 700 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+body.cb-redesign-active .cbx-filter-dims-row::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+body.cb-redesign-active .cbx-dim-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-dim-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-dim-chip.active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  border-color: #0f766e !important;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, 0.25);
+}
+
+/* Rejilla de filtros directos y buscador */
+body.cb-redesign-active .cbx-filter-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  align-items: flex-end;
+}
+
+body.cb-redesign-active .cbx-filter-search-box {
+  grid-column: span 2;
+  min-width: 200px;
+}
+
+@media (max-width: 640px) {
+  body.cb-redesign-active .cbx-filter-search-box {
+    grid-column: span 1 / -1;
+  }
+}
+
+body.cb-redesign-active .cbx-filter-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+body.cb-redesign-active .cbx-filter-control-item label {
+  font: 700 11px var(--cbx-ui);
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body.cb-redesign-active .cbx-filter-input,
+body.cb-redesign-active .cbx-filter-select {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  padding: 0 10px;
+  font: 500 12.5px var(--cbx-ui);
+  color: #1e293b;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+body.cb-redesign-active .cbx-filter-input:focus,
+body.cb-redesign-active .cbx-filter-select:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+/* Pestañas de tipo de filtro legacy (si se usan) */
+body.cb-redesign-active .cbx-filter-tabs-row {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid #e2e8f0;
+  margin: -2px -2px 0;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+body.cb-redesign-active .cbx-ftab {
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  font: 700 13px var(--cbx-ui);
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active .cbx-ftab.active {
+  color: #0f172a;
+  font-weight: 800;
+  border-bottom-color: #0f766e;
+}
+
+body.cb-redesign-active .cbx-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12.5px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active .cbx-chip.active {
+  background: #0a251b !important;
+  color: #fff !important;
+  border-color: #0a251b !important;
+  font-weight: 800;
+}
+
+/* Barra inferior de filtros */
+body.cb-redesign-active .cbx-filter-bottom-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+body.cb-redesign-active .cbx-toggle-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12px var(--cbx-ui);
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all .15s ease;
+  user-select: none;
+}
+
+body.cb-redesign-active .cbx-toggle-chip:hover {
+  background: #f8fafc;
+}
+
+body.cb-redesign-active #cbx-filter-fav.active {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active #cbx-filter-video.active {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active .cbx-filter-count {
+  font: 700 12.5px var(--cbx-ui);
+  color: #64748b;
+  margin-right: 4px;
+}
+
+body.cb-redesign-active .cbx-filter-clear-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-filter-clear-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Grid de ejercicios */
+body.cb-redesign-active #exercises-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* Tarjeta individual de ejercicio */
+body.cb-redesign-active .cbx-exercise-card {
+  background: #fff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  box-shadow: 0 3px 12px rgba(15,23,42,.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+body.cb-redesign-active .cbx-exercise-card:hover {
+  box-shadow: 0 6px 18px rgba(15,23,42,.1);
+}
+
+/* Zona superior: Portada / Pizarra / Miniatura */
+body.cb-redesign-active .cbx-card-thumb-wrap {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: repeating-linear-gradient(90deg, #1f5a41 0 12.5%, #236447 12.5% 25%);
+  cursor: pointer;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-card-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-card-pitch-mock {
+  position: absolute;
+  inset: 0;
+}
+
+body.cb-redesign-active .cbx-pitch-markings {
+  position: absolute;
+  inset: 10px;
+  border: 1.5px solid rgba(255,255,255,.35);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-pitch-markings::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1.5px solid rgba(255,255,255,.35);
+}
+
+body.cb-redesign-active .cbx-pitch-dot {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-red {
+  width: 12px;
+  height: 12px;
+  background: #c8102e;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-black {
+  width: 12px;
+  height: 12px;
+  background: #111;
+}
+
+body.cb-redesign-active .cbx-pitch-dot.dot-ball {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1.5px solid #111;
+}
+
+/* Insignias sobre la portada */
+body.cb-redesign-active .cbx-card-badge-demo {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  font: 800 11px var(--cbx-ui);
+  color: #fff;
+  background: rgba(0,0,0,.5);
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+body.cb-redesign-active .cbx-card-badge-realvideo {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font: 800 11px var(--cbx-ui);
+  color: #fff;
+  background: #c8102e;
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+body.cb-redesign-active .cbx-card-star-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0,0,0,.5);
+  color: #fff;
+  font-size: 18px;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition: transform .15s, background .15s;
+  z-index: 2;
+}
+
+body.cb-redesign-active .cbx-card-star-btn:hover {
+  transform: scale(1.1);
+  background: rgba(0,0,0,.7);
+}
+
+body.cb-redesign-active .cbx-card-star-btn.active {
+  color: #f59e0b;
+  background: rgba(0,0,0,.7);
+}
+
+/* Cuerpo de la tarjeta */
+body.cb-redesign-active .cbx-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+body.cb-redesign-active .cbx-card-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+body.cb-redesign-active[data-has-custom-font-color="true"] .cbx-card-pill-players,
+body.cb-redesign-active .cbx-card-pill-players {
+  font: 800 13px var(--cbx-ui);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0a251b !important;
+  color: #fff !important;
+}
+
+body.cb-redesign-active .cbx-card-pill-dur {
+  font: 700 12px var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff {
+  font: 700 12px var(--cbx-ui);
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-media {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-baja {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+body.cb-redesign-active .cbx-card-pill-diff.diff-alta {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+body.cb-redesign-active .cbx-card-title {
+  font: 800 16px/1.25 var(--cbx-ui);
+  color: var(--cbx-ink);
+  margin: 0;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+body.cb-redesign-active .cbx-card-title:hover {
+  color: #0f766e;
+}
+
+body.cb-redesign-active .cbx-card-cat-fmt {
+  font: 600 12.5px var(--cbx-ui);
+  color: #1e523d;
+}
+
+body.cb-redesign-active .cbx-card-mat {
+  font: 500 12.5px var(--cbx-ui);
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Fila de botones de acción de tarjeta */
+body.cb-redesign-active .cbx-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+body.cb-redesign-active .cbx-card-btn-demo {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--cbx-hero);
+  color: #fff;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-card-btn-demo:hover {
+  background: #10b981;
+}
+
+body.cb-redesign-active .cbx-card-btn-add {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cbx-acc) 28%, #e2e8f0);
+  background: color-mix(in srgb, var(--cbx-acc) 8%, #fff);
+  color: var(--cbx-ink);
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .cbx-card-btn-add:hover {
+  background: color-mix(in srgb, var(--cbx-acc) 16%, #fff);
+}
+
+/* Estado vacío de ejercicios */
+body.cb-redesign-active .cbx-empty-exercises {
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: 18px;
+  border: 2px dashed #cbd5e1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  grid-column: 1 / -1;
+  margin: 12px 0;
+}
+
+body.cb-redesign-active .cbx-empty-title {
+  font: 800 20px var(--cbx-disp);
+  text-transform: uppercase;
+  color: var(--cbx-ink);
+}
+
+body.cb-redesign-active .cbx-empty-desc {
+  font: 500 14px var(--cbx-ui);
+  color: #64748b;
+  max-width: 440px;
+}
+
+body.cb-redesign-active .cbx-clear-filters-action {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--cbx-acc);
+  color: #fff;
+  font: 800 14px var(--cbx-ui);
+  cursor: pointer;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 620px) {
+  body.cb-redesign-active #ejercicios > .cbx-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  body.cb-redesign-active #ejercicios > .cbx-banner .button-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  body.cb-redesign-active #ejercicios > .cbx-banner .button-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  body.cb-redesign-active #exercises-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   TÁCTICAS CLAUDE REDESIGN (movil-11-tacticas.png)
+   ========================================================================== */
+body:not(.cb-redesign-active) #cbx-tacticas-redesign {
+  display: none !important;
+}
+
+body.cb-redesign-active .cbx-legacy-tactics-wrapper {
+  display: none !important;
+}
+
+body.cb-redesign-active #tacticas:not(.active) {
+  display: none !important;
+}
+
+body.cb-redesign-active #tacticas.active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+body.cb-redesign-active .cbx-tactics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Hero Banner */
+body.cb-redesign-active .cbx-tactics-hero {
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--btn, #10b981) 38%, transparent), transparent 55%),
+              linear-gradient(135deg, var(--bn, #0a251b), color-mix(in srgb, var(--bn, #0a251b) 75%, #000000)) !important;
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  color: var(--bnInk, #ffffff) !important;
+}
+
+body.cb-redesign-active .cbx-tactics-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.cb-redesign-active .cbx-tactics-eyebrow {
+  font: 800 11px var(--cbx-disp);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;
+}
+
+body.cb-redesign-active .cbx-tactics-title {
+  font: 900 24px var(--cbx-disp);
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--bnInk, #ffffff) !important;
+  line-height: 1.1;
+}
+
+body.cb-redesign-active .btn-new-tactic-claude {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+  border: 0;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  transition: all .15s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+body.cb-redesign-active .btn-new-tactic-claude:hover {
+  filter: brightness(1.08);
+}
+
+/* Card Principal Pizarra */
+body.cb-redesign-active .cbx-tactics-board-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-tactics-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.cb-redesign-active .cbx-tactics-label {
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+/* Chips de Formación F7 */
+body.cb-redesign-active .cbx-tactics-formations-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-f7-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12.5px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-f7-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-f7-chip.active {
+  background: #0a251b !important;
+  color: #ffffff !important;
+  border-color: #0a251b !important;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(10, 37, 27, 0.25);
+}
+
+/* Herramientas Grid */
+body.cb-redesign-active .cbx-tactics-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+@media (min-width: 520px) {
+  body.cb-redesign-active .cbx-tactics-tools-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+body.cb-redesign-active .cbx-tool-btn {
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+
+body.cb-redesign-active .cbx-tool-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-tool-btn.active {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #0f172a;
+}
+
+body.cb-redesign-active .cbx-tool-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+}
+
+body.cb-redesign-active .cbx-tool-btn-label {
+  font: 700 11px var(--cbx-ui);
+  color: #1e293b;
+}
+
+/* Callout informativo */
+body.cb-redesign-active .cbx-tactics-callout {
+  background: var(--callout-bg, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+body.cb-redesign-active .cbx-tactics-callout p {
+  font: 500 12.5px var(--cbx-ui);
+  color: var(--callout-ink, #166534);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Botones de acción de pizarra */
+body.cb-redesign-active .cbx-tactics-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+body.cb-redesign-active .btn-rival-toggle-claude {
+  flex: 1.2;
+  height: 44px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  font: 700 13px var(--cbx-ui);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .btn-rival-toggle-claude:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+body.cb-redesign-active .btn-rival-toggle-claude.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+body.cb-redesign-active .btn-save-tactic-claude {
+  flex: 1.5;
+  height: 44px;
+  border-radius: 12px;
+  background: #10b981;
+  color: #ffffff;
+  border: 0;
+  font: 700 14px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+body.cb-redesign-active .btn-save-tactic-claude:hover {
+  background: #059669;
+}
+
+body.cb-redesign-active .btn-clear-tactic-claude {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  font: 700 14px var(--cbx-ui);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .btn-clear-tactic-claude:hover {
+  background: #f1f5f9;
+}
+
+/* Campo Pizarra SVG */
+body.cb-redesign-active .cbx-tactics-pitch-container {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--tb-pitch, #1a4d34);
+  box-shadow: 0 4px 16px rgba(10, 37, 27, 0.2);
+  padding: 8px;
+}
+
+body.cb-redesign-active .cbx-tactics-pitch-board {
+  width: 100%;
+  touch-action: none;
+}
+
+body.cb-redesign-active .cbx-tactics-pitch-board svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Guías Tácticas Card */
+body.cb-redesign-active .cbx-tactics-guides-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-guides-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+body.cb-redesign-active .cbx-guides-title {
+  font: 800 15px var(--cbx-disp);
+  text-transform: uppercase;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+body.cb-redesign-active .btn-anim-claude {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  border: 0;
+  font: 700 12px var(--cbx-ui);
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+
+body.cb-redesign-active .btn-anim-claude:hover {
+  background: #1e293b;
+}
+
+body.cb-redesign-active .cbx-guides-aspects-row,
+body.cb-redesign-active .cbx-tactics-aspects-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+body.cb-redesign-active .cbx-aspect-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font: 700 12px var(--cbx-ui);
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+body.cb-redesign-active .cbx-aspect-chip:hover {
+  background: #f1f5f9;
+}
+
+body.cb-redesign-active .cbx-aspect-chip.active {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  border-color: #0f766e !important;
+  font-weight: 800;
+}
+
+body.cb-redesign-active .cbx-guides-content-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 500 13px var(--cbx-ui);
+  color: #334155;
+  line-height: 1.5;
+}
+
+body.cb-redesign-active .cbx-guides-content-box strong {
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-guide-bullet {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+body.cb-redesign-active .cbx-guide-bullet::before {
+  content: "•";
+  color: #0f766e;
+  font-weight: 900;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-board-wrap {
+  background: #0f172a;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+body.cb-redesign-active .cbx-guide-aspect-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-badge {
+  background: #10b981;
+  color: #ffffff;
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-meta {
+  color: #94a3b8;
+  font: 600 11px var(--cbx-ui);
+}
+
+body.cb-redesign-active .cbx-guide-aspect-pitch {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a4d34;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-pitch svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+body.cb-redesign-active .cbx-guide-aspect-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Tácticas Guardadas */
+body.cb-redesign-active .cbx-saved-tactics-card {
+  background: #ffffff;
+  border: 1px solid var(--cbx-line);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--cbx-shadow);
+}
+
+body.cb-redesign-active .cbx-saved-tactics-title {
+  font: 800 11px var(--cbx-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-saved-tactics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border-color .15s;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-item:hover {
+  border-color: #cbd5e1;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-name {
+  font: 800 13.5px var(--cbx-ui);
+  color: #0f172a;
+}
+
+body.cb-redesign-active .cbx-saved-tactic-sub {
+  font: 500 12px var(--cbx-ui);
+  color: #64748b;
+}
+
+body.cb-redesign-active .cbx-btn-view-tactic {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font: 700 12px var(--cbx-ui);
+  color: #0f172a;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+body.cb-redesign-active .cbx-btn-view-tactic:hover {
+  background: #f1f5f9;
+}
+
+/* Flechas tácticas réplica exacta manual / PDF */
+body.cb-redesign-active .tac-arrow {
+  stroke-linecap: butt !important;
+}
+
+body.cb-redesign-active .tac-arrow.mov {
+  stroke: #4b5563 !important;
+  stroke-width: 1.3px !important;
+  stroke-dasharray: 5 3.5 !important;
+}
+
+body.cb-redesign-active .tac-arrow.spr {
+  stroke: #f59e0b !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 3.5 2 !important;
+}
+
+body.cb-redesign-active .tac-arrow.pac {
+  stroke: #2563eb !important;
+  stroke-width: 1.4px !important;
+}
+
+body.cb-redesign-active .tac-arrow.dri {
+  stroke: #8b5cf6 !important;
+  stroke-width: 1.6px !important;
+  stroke-dasharray: 4 2.5 !important;
+}
+
+body.cb-redesign-active .tac-arrow.tiq {
+  stroke: #dc2626 !important;
+  stroke-width: 1.8px !important;
+}
+
+/* En la barra de herramientas y leyendas de pizarra, iconos nítidos y proporcionados */
+.tactic-tool-icon .tac-arrow {
+  stroke-linecap: butt !important;
+}
+.tactic-tool-icon .tac-arrow.mov { stroke-width: 1.2px !important; }
+.tactic-tool-icon .tac-arrow.spr { stroke-width: 1.4px !important; }
+.tactic-tool-icon .tac-arrow.pac { stroke-width: 1.3px !important; }
+.tactic-tool-icon .tac-arrow.dri { stroke-width: 1.5px !important; }
+.tactic-tool-icon .tac-arrow.tiq { stroke-width: 1.6px !important; }
+
+/* Leyenda de la pizarra táctica: iconos siempre compactos e inline (28x14) */
+body.cb-redesign-active .board-legend svg,
+body.cb-redesign-active svg.tactic-legend-arrow,
+.board-legend svg,
+svg.tactic-legend-arrow {
+  display: inline-block !important;
+  width: 28px !important;
+  height: 14px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 14px !important;
+  max-height: 14px !important;
+  aspect-ratio: auto !important;
+  vertical-align: middle !important;
+  flex: none !important;
+}
+
+/* ==========================================================
+   IMPRESIÓN OFICIAL CLAUDE (SESIÓN Y EJERCICIO A4)
+   ========================================================== */
+#cb-print-root {
+  display: block;
+}
+
+body.cb-is-printing #cb-print-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 85px 20px 40px;
+}
+
+/* Botón flotante siempre visible para salir de la ficha */
+.cb-print-fab-close {
+  position: fixed !important;
+  top: max(14px, env(safe-area-inset-top, 14px)) !important;
+  right: 14px !important;
+  z-index: 2147483647 !important;
+  min-height: 42px !important;
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: transform .1s ease !important;
+}
+.cb-print-fab-close:active {
+  transform: scale(0.96) !important;
+}
+@media print {
+  .cb-print-fab-close { display: none !important; }
+}
+
+/* Barra de acciones de impresión (pantalla) */
+.cb-print-floating-bar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+  background: #0a251b;
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 95vw;
+}
+
+.cb-print-floating-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.cb-print-floating-bar-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cb-print-floating-bar-info strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.cb-print-floating-bar-info span {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.cb-print-floating-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-print-floating-bar-actions button {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: 0 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  transition: transform .1s, opacity .15s !important;
+}
+
+.cb-print-floating-bar-actions button:active {
+  transform: scale(0.97) !important;
+}
+
+.cb-print-btn-print {
+  background: #10b981 !important;
+  color: #04120c !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important;
+}
+
+.cb-print-btn-open {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
+}
+
+.cb-print-btn-share {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4) !important;
+}
+
+.cb-print-btn-download {
+  background: #334155 !important;
+  color: #ffffff !important;
+  border: 1px solid #475569 !important;
+}
+
+.cb-print-btn-close {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================
+   HOJA A4 CLAUDE (SESIÓN Y EJERCICIO) - PANTALLA E IMPRESIÓN
+   ========================================================== */
+.cb-print-sheet {
+  width: 794px;
+  min-height: 1123px;
+  max-height: 1123px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+  padding: 30px 38px 24px 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #0f172a;
+  margin: 0 auto 30px auto;
+  page-break-after: always;
+  break-after: page;
+  border-radius: 6px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Encabezado A4 */
+.cb-print-header {
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.cbx-print-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cbx-print-crest-wrap {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbx-print-crest-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cbx-print-header-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.cbx-print-eyebrow {
+  font-size: 7.5pt;
+  font-weight: 800;
+  color: #15803d;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.cb-print-title {
+  font-size: 16pt;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.cbx-print-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cbx-print-badge-soft {
+  font-size: 7pt;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  white-space: nowrap;
+}
+
+.cbx-print-badge-amber {
+  font-size: 7pt;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+}
+
+.cb-print-doc-badge {
+  font-size: 6.5pt;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Tarjetas de métricas (DURACIÓN, SERIES, JUGADORES, ESPACIO) */
+.cbx-print-stat-cards {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.cbx-print-stat-card {
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cbx-print-stat-card-label {
+  font-size: 6.5pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+}
+
+.cbx-print-stat-card-val {
+  font-size: 11pt !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+}
+
+/* Contenedor del campo y pizarra táctica */
+.cb-print-stage-box.cbx-print-pitch-container {
+  width: 100% !important;
+  height: 215px !important;
+  max-height: 215px !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background: #166534 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-field-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 215px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.cb-print-pitch-diagram {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  background: #22c55e !important;
+  color: #ffffff !important;
+}
+
+.cbx-print-pitch-legend {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 12px !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  color: #ffffff !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  font-size: 7pt !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  z-index: 2 !important;
+}
+
+.cbx-print-pitch-legend .legend-dot.red { color: #ef4444 !important; }
+.cbx-print-pitch-legend .legend-dot.blue { color: #3b82f6 !important; }
+.cbx-print-pitch-legend .legend-line { font-weight: 900 !important; }
+
+/* 2 Columnas Claude */
+.cb-print-columns-grid {
+  display: grid !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.cb-print-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.cb-print-card-title {
+  font-size: 7.5pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #15803d !important;
+  margin: 0 0 5px 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 3px !important;
+  line-height: 1.2 !important;
+}
+
+.cb-print-card-text {
+  font-size: 7.5pt !important;
+  line-height: 1.35 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.cb-print-card-text.pre-line {
+  white-space: pre-line !important;
+}
+
+.cb-print-card-subtext {
+  font-size: 7pt !important;
+  color: #475569 !important;
+  margin: 4px 0 0 0 !important;
+  line-height: 1.3 !important;
+}
+
+.cbx-print-steps-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.cbx-print-step-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+.cbx-print-step-num {
+  font-size: 8.5pt !important;
+  font-weight: 900 !important;
+  color: #15803d !important;
+  line-height: 1.2 !important;
+  flex-shrink: 0 !important;
+}
+
+.cbx-print-step-txt {
+  font-size: 7.5pt !important;
+  line-height: 1.3 !important;
+  color: #1e293b !important;
+}
+
+.cbx-print-variants-box {
+  background: #f8fafc !important;
+}
+
+.cbx-print-variants-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+/* Bloque Notas del Entrenador */
+.cbx-print-notes-section {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+  margin-bottom: 6px !important;
+}
+
+.cbx-print-notes-title {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #475569 !important;
+  margin: 0 0 5px 0 !important;
+}
+
+.cbx-print-notes-lines {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 11px !important;
+  margin-top: 6px !important;
+}
+
+.cbx-print-note-line {
+  border-bottom: 1px solid #cbd5e1 !important;
+  height: 1px !important;
+}
+
+/* Pie de página */
+.cbx-print-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 7pt !important;
+  color: #64748b !important;
+  padding-top: 6px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  margin-top: auto !important;
+}
+
+/* ==========================================================
+   PORTADA DE SESIÓN (Página 1 de la sesión)
+   ========================================================== */
+.cbx-print-cards-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.cbx-print-card-box {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.cbx-print-card-box-label {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #0f766e !important;
+}
+
+.cbx-print-card-box-text {
+  font-size: 8pt !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+}
+
+.cbx-print-card-box-notes {
+  font-size: 7.5pt !important;
+  color: #475569 !important;
+  margin: 2px 0 0 0 !important;
+}
+
+.cbx-print-timeline-bar {
+  display: flex !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  font-weight: 900 !important;
+  font-size: 7.5pt !important;
+  color: #ffffff !important;
+}
+
+.cbx-print-timeline-segment {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 4px !important;
+  border-right: 1.5px solid #ffffff !important;
+}
+
+.cbx-print-timeline-segment:last-child {
+  border-right: 0 !important;
+}
+
+.cbx-print-timeline-segment.warmup { background: #ea580c !important; }
+.cbx-print-timeline-segment.main { background: #0f766e !important; }
+.cbx-print-timeline-segment.final { background: #dc2626 !important; }
+.cbx-print-timeline-segment.cool { background: #64748b !important; }
+
+.cb-print-session-tasks-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.cb-print-session-task {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  background: #ffffff !important;
+}
+
+.cbx-print-bottom-grid {
+  display: grid !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
+  gap: 12px !important;
+  margin-bottom: 6px !important;
+}
+
+.cbx-print-attendance-section {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 7px 10px !important;
+  background: #ffffff !important;
+}
+
+.cbx-print-section-title {
+  font-size: 7pt !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #475569 !important;
+  margin: 0 0 5px 0 !important;
+}
+
+.cbx-print-attendance-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 3px 12px !important;
+}
+
+.cbx-print-att-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 7.5pt !important;
+  color: #0f172a !important;
+}
+
+.cbx-print-att-box {
+  width: 10px !important;
+  height: 10px !important;
+  border: 1.5px solid #475569 !important;
+  border-radius: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ==========================================================
+   RESPONSIVE MÓVIL PANTALLA: FICHA DE SESIÓN Y BOTONES FLOTANTES
+   ========================================================== */
+@media screen and (max-width: 850px) {
+  body.cb-is-printing #cb-print-root {
+    padding: max(140px, calc(125px + env(safe-area-inset-top, 20px))) 10px 40px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  .cb-print-floating-bar {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 0 16px 16px !important;
+    background: #0b1e16 !important;
+    border-bottom: 2px solid #10b981 !important;
+    padding: max(10px, env(safe-area-inset-top, 10px)) 12px 10px 12px !important;
+    box-sizing: border-box !important;
+    z-index: 2147483647 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .cb-print-floating-bar-inner {
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .cb-print-floating-bar-info {
+    display: none !important;
+  }
+
+  .cb-print-floating-bar-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .cb-print-btn-close {
+    grid-column: 1 / -1 !important;
+    order: -1 !important;
+    min-height: 44px !important;
+    font-size: 14.5px !important;
+    font-weight: 900 !important;
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.45) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  .cb-print-btn-print {
+    display: none !important;
+  }
+
+  .cb-print-btn-open,
+  .cb-print-btn-share,
+  .cb-print-btn-download {
+    min-height: 40px !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.25 !important;
+    border-radius: 8px !important;
+  }
+
+  .cb-print-sheet {
+    width: 100% !important;
+    max-width: 794px !important;
+    min-height: auto !important;
+    max-height: none !important;
+    height: auto !important;
+    margin: 0 auto 28px auto !important;
+    padding: 24px 20px !important;
+    box-sizing: border-box !important;
+    border-radius: 6px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    overflow: visible !important;
+  }
+
+  .cb-print-columns-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .cbx-print-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .cb-print-stage-box.cbx-print-pitch-container {
+    height: auto !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 11 !important;
+  }
+
+  .cb-print-field-img {
+    max-height: none !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .cb-print-task-body {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .cb-print-task-media {
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================
+   REGLAS PARA @media print (IMPRESIÓN REAL NATIVA)
+   ========================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #cb-print-root, #cb-print-root * {
+    visibility: visible !important;
+  }
+  #cb-print-root {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+  .cb-print-floating-bar {
+    display: none !important;
+  }
+  .cb-print-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    overflow: hidden !important;
+    padding: 10mm 12mm 8mm 12mm !important;
+    border-radius: 0 !important;
+  }
+  .cb-print-stage-box.cbx-print-pitch-container {
+    height: 54mm !important;
+    max-height: 54mm !important;
+  }
+  .cb-print-field-img {
+    max-height: 54mm !important;
+  }
+}
+
+

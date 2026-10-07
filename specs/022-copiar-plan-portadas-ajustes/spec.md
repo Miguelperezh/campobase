@@ -1,0 +1,2 @@
+# Alcance pedido por Miguel
+Media liga dentro de su insignia conservando la ficha y colores. Plan visible en Convocatoria copiable a Preparación, editable e imprimible; duración exacta de cada tramo además de acumulados y total. Portadas de Mis ejercicios creados con + Ejercicios incluidas en impresión. Menús de ajustes más visuales sin eliminar opciones ni modificar valores. Solo rama y preview aisladas; no producción ni datos.

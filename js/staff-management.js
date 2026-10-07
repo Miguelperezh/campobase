@@ -37,9 +37,15 @@ export function getRoleMeta(roleId) {
 export async function getStaffMembers() {
   try {
     const settings = await getAll('settings');
+    const claudeRoleOrder = {
+      head_coach: 0, assistant_coach: 1, goalkeeper_coach: 2,
+      fitness_coach: 3, team_delegate: 4, pitch_delegate: 5,
+    };
     return settings
       .filter((item) => item?.recordType === 'staffMember')
-      .sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+      .sort((a, b) => (claudeRoleOrder[a.role] ?? 6) - (claudeRoleOrder[b.role] ?? 6)
+        || (a.order ?? 99) - (b.order ?? 99)
+        || (a.createdAt ?? 0) - (b.createdAt ?? 0));
   } catch (err) {
     console.error('Error al obtener cuerpo técnico:', err);
     return [];
@@ -140,14 +146,15 @@ export function renderStaffList(members, container) {
           : '';
 
         return `
-          <article class="card staff-card" data-staff-id="${member.id}">
+          <article class="card staff-card cbx-staff-card" data-staff-id="${member.id}">
             <div class="staff-card-header">
               <div class="staff-avatar-wrapper">
                 ${staffAvatarHtml(member)}
-                <span class="staff-badge staff-role-${member.color || 'zinc'}">
-                  ${escapeHtml(member.badgeText || member.roleTitle)}
-                </span>
+                <button type="button" class="staff-avatar-edit-btn" data-id="${member.id}" aria-label="Cambiar foto de ${escapeHtml(member.name)}">+</button>
               </div>
+              <span class="staff-badge staff-role-${member.color || 'zinc'}">
+                  ${escapeHtml(({ head_coach: 'Principal', assistant_coach: 'Segundo', goalkeeper_coach: 'Preparador', team_delegate: 'Delegado' })[member.role] || member.badgeText || member.roleTitle)}
+              </span>
               <div class="staff-info">
                 <h3 class="staff-name">${escapeHtml(member.name)}</h3>
                 <p class="staff-role-title">${escapeHtml(member.roleTitle)}</p>
@@ -156,29 +163,21 @@ export function renderStaffList(members, container) {
 
             ${member.phone || member.notes ? `
               <div class="staff-card-body">
-                ${member.phone ? `
-                  <div class="staff-contact-row">
-                    <span class="staff-contact-label">📞 Teléfono:</span>
-                    <a href="tel:${phoneFormatted}" class="staff-phone-link">${phoneFormatted}</a>
-                    ${whatsappUrl ? `
-                      <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="staff-wa-btn" title="Contactar por WhatsApp">
-                        WhatsApp
-                      </a>
-                    ` : ''}
-                  </div>
-                ` : ''}
-                ${member.notes ? `
-                  <p class="staff-notes">${escapeHtml(member.notes)}</p>
-                ` : ''}
+                <p class="staff-contact-summary">
+                  ${member.notes ? `<span>${escapeHtml(member.notes)}</span>` : ''}
+                  ${member.notes && member.phone ? '<span aria-hidden="true"> · </span>' : ''}
+                  ${member.phone ? `<a href="tel:${phoneFormatted}" class="staff-phone-link">${phoneFormatted}</a>` : ''}
+                </p>
               </div>
             ` : ''}
 
             <div class="staff-card-actions">
+              ${whatsappUrl ? `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="staff-wa-btn" title="Contactar por WhatsApp">WhatsApp</a>` : ''}
               <button type="button" class="secondary compact edit-staff-btn" data-id="${member.id}">
-                ✏️ Editar
+                Editar
               </button>
               <button type="button" class="ghost-danger compact delete-staff-btn" data-id="${member.id}">
-                🗑️ Eliminar
+                Eliminar
               </button>
             </div>
           </article>
@@ -187,7 +186,7 @@ export function renderStaffList(members, container) {
     </div>
   `;
 
-  container.querySelectorAll('.edit-staff-btn').forEach((btn) => {
+  container.querySelectorAll('.edit-staff-btn, .staff-avatar-edit-btn').forEach((btn) => {
     btn.addEventListener('click', () => openStaffDialog(btn.dataset.id));
   });
 
@@ -247,45 +246,25 @@ export function renderPlantillaStaffTop(members, container) {
     <div class="plantilla-staff-bar">
       <div class="plantilla-staff-head">
         <div class="plantilla-staff-title-wrap">
-          <span class="plantilla-staff-icon">📋</span>
-          <h3 class="plantilla-staff-title">Cuerpo Técnico</h3>
-          <span class="plantilla-staff-count-pill">${members.length}</span>
+          <h3 class="plantilla-staff-title">Cuerpo técnico · ${members.length}</h3>
         </div>
-        <button type="button" class="secondary compact" id="plantilla-staff-add-btn">+ Añadir técnico</button>
+        <button type="button" class="plantilla-staff-manage" data-target-view="cuerpo-tecnico">Gestionar</button>
       </div>
       <div class="plantilla-staff-scroll">
-        ${members.map((member) => {
-          const phoneClean = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
-          const waUrl = phoneClean ? `https://wa.me/${encodeURIComponent(phoneClean)}` : '';
-          const telUrl = member.phone ? `tel:${escapeHtml(member.phone)}` : '';
-
-          return `
+        ${members.map((member) => `
             <div class="plantilla-staff-card" data-staff-id="${member.id}">
               <div class="plantilla-staff-avatar-box">
                 ${staffAvatarHtml(member)}
               </div>
               <div class="plantilla-staff-info">
-                <span class="plantilla-staff-role-badge staff-role-${member.color || 'zinc'}">
-                  ${escapeHtml(member.badgeText || member.roleTitle)}
-                </span>
                 <strong class="plantilla-staff-name">${escapeHtml(member.name)}</strong>
-              </div>
-              <div class="plantilla-staff-actions">
-                ${waUrl ? `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="staff-quick-btn wa" title="WhatsApp a ${escapeHtml(member.name)}">💬</a>` : ''}
-                ${telUrl ? `<a href="${telUrl}" class="staff-quick-btn tel" title="Llamar a ${escapeHtml(member.name)}">📞</a>` : ''}
-                <button type="button" class="staff-quick-btn edit plantilla-staff-edit-btn" data-id="${member.id}" title="Editar perfil">✏️</button>
+                <span class="plantilla-staff-role-badge">${escapeHtml(member.roleTitle || getRoleMeta(member.role).label)}</span>
               </div>
             </div>
-          `;
-        }).join('')}
+          `).join('')}
       </div>
     </div>
   `;
-
-  container.querySelector('#plantilla-staff-add-btn')?.addEventListener('click', () => openStaffDialog());
-  container.querySelectorAll('.plantilla-staff-edit-btn').forEach((btn) => {
-    btn.addEventListener('click', () => openStaffDialog(btn.dataset.id));
-  });
 }
 
 export async function refreshPlantillaStaff() {

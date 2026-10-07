@@ -375,19 +375,33 @@ const xml = (value) => clean(value).replace(/[&<>\"']/g, (c) => ({ '&': '&amp;',
 const arrowStyle = (kind) => {
   const styles = {
     pass:   { cls: 'tac-arrow pac',  stroke: '#2b6cb0', dash: 'none',    weight: 1.4 },
-    move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',    weight: 1.2 },
-    dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',    weight: 2.2 },
+    move:   { cls: 'tac-arrow mov',  stroke: '#6b6b6b', dash: '6 4',     weight: 1.2 },
+    dribble:{ cls: 'tac-arrow dri',  stroke: '#7c3aed', dash: '4 2',     weight: 2.2 },
     shot:   { cls: 'tac-arrow tiq',  stroke: '#e8590c', dash: 'none',    weight: 2.6 },
-    sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',  weight: 2.0 },
+    sprint: { cls: 'tac-arrow spr',  stroke: '#f6cf4c', dash: '3 1.5',   weight: 2.0 },
   };
   return styles[kind] ?? { cls: 'tac-arrow pac', stroke: '#2b6cb0', dash: 'none', weight: 1.4 };
 };
+
+export function renderLegendArrow(kind) {
+  const meta = {
+    pass:    { stroke: '#2563eb', dash: 'none',  w: 1.4, cls: 'pac' },
+    move:    { stroke: '#4b5563', dash: '4 2.5', w: 1.2, cls: 'mov' },
+    dribble: { stroke: '#8b5cf6', dash: '3 1.5', w: 1.8, cls: 'dri' },
+    shot:    { stroke: '#dc2626', dash: 'none',  w: 2.0, cls: 'tiq' },
+    sprint:  { stroke: '#f59e0b', dash: '2.5 1.5', w: 1.6, cls: 'spr' },
+  };
+  const s = meta[kind] || meta.pass;
+  const dashAttr = s.dash !== 'none' ? ` stroke-dasharray="${s.dash}"` : '';
+  const inlineStyle = 'display:inline-block!important;width:28px!important;height:14px!important;min-width:28px!important;max-width:28px!important;min-height:14px!important;max-height:14px!important;aspect-ratio:auto!important;vertical-align:middle!important;flex:none!important;';
+  return `<svg class="tactic-legend-arrow" width="28" height="14" viewBox="0 0 28 14" style="${inlineStyle}" aria-hidden="true" focusable="false"><line x1="2" y1="7" x2="19" y2="7" stroke="${s.stroke}" stroke-width="${s.w}"${dashAttr} stroke-linecap="butt"/><polygon points="18,3.5 26,7 18,10.5" fill="${s.stroke}"/></svg>`;
+}
 
 const actionLabel = (kind) => {
   const defs = {
     pass: 'Pase', move: 'Movimiento sin balón', dribble: 'Conducción', shot: 'Disparo', sprint: 'Sprint',
   };
-  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${renderTacticToolIcon(kind)}${defs[kind] ?? 'Pase'}</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:.6rem">${renderLegendArrow(kind)}<span>${defs[kind] ?? 'Pase'}</span></span>`;
 };
 
 // Herramientas de la pizarra interactiva.
@@ -411,7 +425,7 @@ export function renderTacticToolIcon(kind) {
   if (kind === 'clear') return `<svg ${common}><path d="M6 9h20M10 9l1-4h10l1 4M9 9l1 8h12l1-8" fill="none" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 6h6" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round"/></svg>`;
   const s = arrowStyle(kind);
   const markerId = `tool-arrow-${kind}-${++toolIconSeq}`;
-  return `<svg ${common}><defs><marker id="${markerId}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker></defs><path d="M3 9 L27 9" class="${s.cls}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="round" marker-end="url(#${markerId})"/></svg>`;
+  return `<svg ${common}><defs><marker id="${markerId}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="${s.stroke}"/></marker></defs><path d="M3 9 L24 9" class="${s.cls}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="butt" marker-end="url(#${markerId})"/></svg>`;
 }
 
 const TOOL_KINDS = new Set(['pass', 'move', 'dribble', 'shot', 'sprint']);
@@ -427,7 +441,8 @@ export function createTacticMove(from, to, kind) {
 export function renderTacticArrow(from, to, kind, markerId = 'tac-arrow-shared', idx = '') {
   const s = arrowStyle(kind);
   const idxAttr = idx !== '' ? ` data-idx="${idx}"` : '';
-  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" marker-end="url(#${markerId})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
+  const mid = `${markerId}-${s.stroke.replace('#', '')}`;
+  return `<path class="${s.cls}" d="M${from.x} ${from.y} L${to.x} ${to.y}" stroke="${s.stroke}" stroke-width="${s.weight}" fill="none" stroke-dasharray="${s.dash}" stroke-linecap="butt" marker-end="url(#${mid})" data-piece="arrow" data-kind="${xml(kind)}"${idxAttr}/>`;
 }
 
 export function renderTacticArrowDefs(markerId = 'tac-arrow-shared') { return marker(markerId); }
@@ -467,30 +482,34 @@ export function renderTacticBoard(tactic = {}, options = {}) {
     const p = t.team[i];
     parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num">${xml(p.n)}</text></g>`);
   }
-  for (let i = 0; i < (t.opponent || []).length; i++) {
-    const p = t.opponent[i];
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${xml(p.n)}</text></g>`);
+  const showOpponent = options.showOpponent !== undefined
+    ? Boolean(options.showOpponent)
+    : (t.showOpponent !== undefined ? Boolean(t.showOpponent) : true);
+  if (showOpponent) {
+    const opps = (t.opponent && t.opponent.length) ? t.opponent : (t.format === 'F11' ? F11_OPPONENT : F7_OPPONENT);
+    for (let i = 0; i < opps.length; i++) {
+      const p = opps[i];
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${xml(p.n)}</text></g>`);
+    }
   }
   const ball = t.ball || { x: 50, y: 50 };
   parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
-  const swatches = `<span class="tac-legend-team">●</span> = mi equipo<span class="tac-legend-rival">●</span> = rival<span style="display:inline-flex;align-items:center;margin-right:.6rem"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1px solid #111;margin-right:4px"></span>balón</span>`;
+  const swatches = `<span class="tac-legend-team">●</span> = mi equipo${showOpponent ? '<span class="tac-legend-rival">●</span> = rival' : ''}<span style="display:inline-flex;align-items:center;margin-right:.6rem"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;border:1px solid #111;margin-right:4px"></span>balón</span>`;
   const arrowSwatches = (t.moves || []).length > 0
     ? [...new Set((t.moves || []).map((m) => m.kind || 'pass'))].map(actionLabel).join('')
     : '<span style="color:#888">dibujar flechas con las herramientas de arriba</span>';
   return `<figure class="tactic-board"><svg viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica de ${xml(t.name || 'táctica')}">${marker(markerId)}${parts.join('')}</svg><p class="board-legend"><strong>Leyenda:</strong> ${swatches} ${arrowSwatches}</p></figure>`;
 }
 
-// Genera los markers SVG para las flechas. Usa fill="context-stroke" para que
-// el marker herede el color del trazo de la flecha padre (no negro fijo).
-// Tamaño reducido (2×2) para que la punta no sea enorme.
+// Genera los markers SVG para las flechas con color explícito para evitar bugs de context-stroke.
 const marker = (id) => {
-  const colors = ['#2b6cb0', '#6b6b6b', '#7c3aed', '#e8590c', '#f6cf4c'];
+  const colors = ['#2563eb', '#4b5563', '#8b5cf6', '#dc2626', '#f59e0b', '#2b6cb0', '#6b6b6b', '#7c3aed', '#e8590c', '#f6cf4c'];
   let defs = '<defs>';
   for (const color of colors) {
     const mid = `${id}-${color.replace('#', '')}`;
-    defs += `<marker id="${mid}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+    defs += `<marker id="${mid}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="${color}"/></marker>`;
   }
-  defs += `<marker id="${id}" markerWidth="2" markerHeight="2" refX="2" refY="1" orient="auto"><path d="M0 0 L2 1 L0 2z" fill="context-stroke"/></marker>`;
+  defs += `<marker id="${id}" markerWidth="4" markerHeight="4" refX="1.2" refY="2" orient="auto"><path d="M0 0.6 L3.6 2 L0 3.4z" fill="context-stroke"/></marker>`;
   defs += '</defs>';
   return defs;
 };

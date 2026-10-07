@@ -119,7 +119,6 @@ export function sortAttendanceActivities(activities, today = '') {
 }
 
 export function buildAttendanceActivities({ sessions = [], matches = [], trainings = [], callups = [] } = {}, today = '') {
-  const callupIds = new Set(callups.map((item) => item.id));
   const list = [
     ...sessions.map((session) => ({
       source: 'session', id: session.id, date: activityDate(session), title: sessionName(session),
@@ -129,7 +128,7 @@ export function buildAttendanceActivities({ sessions = [], matches = [], trainin
     ...matches.map((match) => ({
       source: 'match', id: match.id, date: activityDate(match), title: String(match.opponent || 'Partido'),
       subtitle: match.type === 'league' ? 'Liga' : match.type === 'friendly' ? 'Amistoso' : match.type === 'tournament' ? 'Torneo' : 'Partido',
-      attendance: attendanceForMatch(trainings, match.id), ready: Boolean(match.callupId && callupIds.has(match.callupId)),
+      attendance: attendanceForMatch(trainings, match.id), ready: Boolean(callups.find((item) => item.id === match.callupId || item.matchId === match.id)?.availableIds?.length),
     })),
   ];
   return sortAttendanceActivities(list, today);
@@ -154,7 +153,7 @@ function activityCard(row) {
     ? '<button type="button" class="secondary" disabled title="Primero crea la convocatoria del partido">Falta convocatoria</button>'
     : `<button type="button" class="${row.attendance ? 'secondary' : 'primary'}" data-attendance-source="${row.source}" data-source-id="${esc(row.id)}">${row.attendance ? 'Editar asistencia' : 'Pasar asistencia'}</button>`;
   return `<article class="attendance-activity-card panel" data-activity-type="${row.source}">
-    <div class="attendance-activity-head"><div><div class="attendance-tags"><span class="pill ${row.source === 'match' ? 'accent' : ''}">${row.source === 'match' ? 'Partido' : 'Sesión'}</span>${status}</div><h3>${esc(row.title)}</h3><p class="meta">${esc(formatDate(row.date))}${row.subtitle ? ` · ${esc(row.subtitle)}` : ''}</p></div>${button}</div>
+    <div class="attendance-activity-head"><div><div class="attendance-tags"><span class="pill ${row.source === 'match' ? 'accent' : ''}">${row.source === 'match' ? esc(row.subtitle) : 'Entrenamiento'}</span>${status}</div><h3>${esc(row.title)}</h3><p class="meta">${esc(formatDate(row.date))}${row.subtitle ? ` · ${esc(row.subtitle)}` : ''}</p></div>${button}</div>
     ${counters}
   </article>`;
 }
@@ -216,7 +215,7 @@ async function renderSources() {
 
     panel.innerHTML = `
       <div class="attendance-overview panel">
-        <div class="attendance-overview-head"><div><p class="eyebrow">Control rápido</p><h3>Asistencia de actividades</h3><p class="meta">Sesiones y partidos ya creados. Un solo registro alimenta también la ficha de cada jugador.</p></div></div>
+        <div class="attendance-overview-head"><div><p class="eyebrow">Control rápido</p><h3>Asistencia de actividades</h3><p class="meta">Elige una sesión o un partido y pulsa «Pasar asistencia». Cada registro quedará vinculado a esa actividad.</p></div></div>
         <div class="attendance-overview-stats"><span><strong>${registered}</strong> registradas</span><span><strong>${pending}</strong> pendientes</span><span class="present"><strong>${totals.present}</strong> presentes</span><span class="late"><strong>${totals.late}</strong> tarde</span><span class="absent"><strong>${totals.absent}</strong> ausentes</span></div>
         <div class="attendance-filters" role="group" aria-label="Filtrar actividades">
           ${filterButton('all', 'Todas', rows.length)}${filterButton('session', 'Sesiones', rows.filter((row) => row.source === 'session').length)}${filterButton('match', 'Partidos', rows.filter((row) => row.source === 'match').length)}${filterButton('pending', 'Pendientes', pending)}
@@ -263,18 +262,23 @@ function statusChoice(playerId, value, selected, label) {
   return `<label class="attendance-choice ${value} ${selected === value ? 'selected' : ''}"><input type="radio" name="status-${esc(playerId)}" value="${value}" ${selected === value ? 'checked' : ''}><span>${esc(label)}</span></label>`;
 }
 
+const ATTENDANCE_ABSENCE_REASONS = ['Enfermedad', 'Lesión', 'Decisión del entrenador', 'Disciplina', 'Estudios / colegio', 'Motivo familiar', 'Sin avisar', 'Otro motivo'];
+
 function statusRow(player, entry = {}) {
   const status = ['present', 'late', 'absent'].includes(entry.status) ? entry.status : 'present';
   const { hour, minute } = splitTime(entry.arrivalTime || '');
   const initials = String(player.name || 'J').split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
   return `<article class="attendance-player-row panel" data-attendance-player="${esc(player.id)}">
-    <div class="attendance-player-ident"><span class="attendance-avatar">${esc(initials)}</span><div><strong>${esc(player.name || 'Jugador')}</strong><small>${player.number ? `Dorsal ${esc(player.number)}` : 'Sin dorsal'}</small></div></div>
+    <div class="attendance-player-ident"><span class="attendance-avatar">${esc(player.number || initials)}</span><div><strong>${esc(player.name || 'Jugador')}</strong><small>${player.number ? `Dorsal ${esc(player.number)}` : 'Sin dorsal'}</small></div></div>
     <div class="attendance-status-choices" role="radiogroup" aria-label="Asistencia de ${esc(player.name)}">
       ${statusChoice(player.id, 'present', status, 'Presente')}${statusChoice(player.id, 'late', status, 'Tarde')}${statusChoice(player.id, 'absent', status, 'Ausente')}
     </div>
     <div class="attendance-row-extra">
       <div class="arrival-time ${status === 'late' ? '' : 'hidden'}"><span>Hora de llegada</span><div class="time-24"><select name="arrivalHour-${esc(player.id)}">${timeOptions(24, hour, 'hh')}</select><span>:</span><select name="arrivalMinute-${esc(player.id)}">${timeOptions(60, minute, 'mm')}</select></div></div>
-      <label class="attendance-note">Comentario<input name="note-${esc(player.id)}" value="${esc(entry.note || '')}" maxlength="200" placeholder="Opcional: motivo, incidencia, observación…"></label>
+      <div class="attendance-reasons ${status === 'absent' ? '' : 'hidden'}" role="group" aria-label="Motivo de ausencia de ${esc(player.name)}">
+        ${ATTENDANCE_ABSENCE_REASONS.map((reason) => `<button type="button" class="attendance-reason${entry.note === reason ? ' selected' : ''}" data-reason="${esc(reason)}" aria-pressed="${entry.note === reason ? 'true' : 'false'}">${esc(reason)}</button>`).join('')}
+      </div>
+      <details class="cbx-attendance-note"${entry.note ? ' open' : ''}><summary>Nota</summary><label class="attendance-note">Comentario<input name="note-${esc(player.id)}" value="${esc(entry.note || '')}" maxlength="200" placeholder="Opcional: motivo, incidencia, observación…"></label></details>
     </div>
   </article>`;
 }
@@ -300,6 +304,13 @@ function updateEditorSummary(form) {
     const selected = $('input[type="radio"]:checked', row)?.value;
     $$('.attendance-choice', row).forEach((choice) => choice.classList.toggle('selected', choice.classList.contains(selected)));
     $('.arrival-time', row)?.classList.toggle('hidden', selected !== 'late');
+    $('.attendance-reasons', row)?.classList.toggle('hidden', selected !== 'absent');
+    const note = $('.attendance-note input', row)?.value || '';
+    $$('.attendance-reason', row).forEach((reason) => {
+      const active = reason.dataset.reason === note;
+      reason.classList.toggle('selected', active);
+      reason.setAttribute('aria-pressed', String(active));
+    });
   });
 }
 
@@ -324,7 +335,7 @@ async function openActivityAttendance(source, sourceId) {
   root.classList.remove('hidden');
   root.innerHTML = `<form id="training-form" data-visual-attendance="1" data-attendance-source="${source}" data-source-id="${esc(sourceId)}" data-attendance-id="${esc(existing?.id || '')}">
     <div class="attendance-editor-head">
-      <div><span class="pill ${match ? 'accent' : ''}">${match ? 'Partido' : 'Sesión'}</span><h3>${esc(title)}</h3><p class="meta">${esc(subtitle)}</p></div>
+      <div><h3>Pasar lista</h3><p class="meta">${esc(subtitle)} · ${esc(title)}</p></div>
       <button type="button" class="secondary attendance-all-present">Todos presentes</button>
     </div>
     <div class="attendance-editor-summary" aria-live="polite"></div>
@@ -424,6 +435,12 @@ function install() {
   scheduleRender();
 
   document.addEventListener('click', (event) => {
+    if (event.target.closest('#new-training') && document.body.classList.contains('cb-redesign-active')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      $('#training-builder')?.classList.add('hidden');
+      return;
+    }
     const filter = event.target.closest('[data-attendance-filter]');
     if (filter) {
       activeFilter = filter.dataset.attendanceFilter;
@@ -447,7 +464,23 @@ function install() {
     if (allPresent) {
       const form = allPresent.closest('form');
       $$('input[type="radio"][value="present"]', form).forEach((input) => { input.checked = true; });
+      $$('.attendance-note input', form).forEach((note) => {
+        if (ATTENDANCE_ABSENCE_REASONS.includes(note.value)) note.value = '';
+      });
       updateEditorSummary(form);
+      return;
+    }
+    const reason = event.target.closest('.attendance-reason');
+    if (reason) {
+      const row = reason.closest('[data-attendance-player]');
+      const note = $('.attendance-note input', row);
+      if (note) note.value = note.value === reason.dataset.reason ? '' : reason.dataset.reason;
+      if (reason.dataset.reason === 'Otro motivo') {
+        const details = $('.cbx-attendance-note', row);
+        if (details) details.open = true;
+        note?.focus();
+      }
+      updateEditorSummary(reason.closest('form'));
       return;
     }
     if (event.target.closest('[data-view="asistencia"]')) scheduleRender();
@@ -460,8 +493,17 @@ function install() {
     // El formulario visual comparte contenedor con el editor histórico. Cortamos este
     // cambio aquí para que el listener legado no intente tratar estos chips como <select>.
     event.stopImmediatePropagation();
+    if (event.target.value !== 'absent') {
+      const note = $('.attendance-note input', event.target.closest('[data-attendance-player]'));
+      if (note && ATTENDANCE_ABSENCE_REASONS.includes(note.value)) note.value = '';
+    }
     updateEditorSummary(form);
   }, true);
+
+  document.addEventListener('input', (event) => {
+    if (!event.target.matches('#training-form[data-visual-attendance="1"] .attendance-note input')) return;
+    updateEditorSummary(event.target.closest('form'));
+  });
 
   document.addEventListener('submit', (event) => {
     const form = event.target.closest('#training-form[data-visual-attendance="1"]');
@@ -475,6 +517,10 @@ function install() {
     const stores = new Set(event.detail?.stores ?? []);
     if (['trainings', 'matches', 'callups', 'players', 'settings'].some((store) => stores.has(store))) scheduleRender();
   });
+  const attendanceView = $('#asistencia');
+  if (attendanceView) new MutationObserver(() => {
+    if (attendanceView.classList.contains('active')) scheduleRender();
+  }).observe(attendanceView, { attributes: true, attributeFilter: ['class'] });
 }
 
 if (typeof document !== 'undefined') {

@@ -1,0 +1,2 @@
+# Plan
+Reutilizar motor de reparto, pizarra/momentos editables y exportador A4. Convertir el plan visible usando sus límites de tramo reales, no regenerar otra rotación al copiar. Abrir borrador reversible con guardado explícito. Reutilizar controles y listeners de colores, separar vista previa y agrupar visualmente sus elementos. Imprimir la portada vigente y admitir registros propios históricos sin customBoard.

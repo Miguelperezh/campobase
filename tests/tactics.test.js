@@ -123,6 +123,9 @@ test('renderiza la pizarra táctica editable con piezas pequeñas, balón fijo y
   assert.match(html, /tac-arrow.spr/, 'el sprint tiene trazo diferenciado');
   assert.match(html, /tac-legend-team/, 'mi equipo tiene color propio en la leyenda');
   assert.match(html, /tac-legend-rival/, 'rival tiene color propio en la leyenda');
+  assert.match(html, /class="tactic-legend-arrow"/, 'las flechas de la leyenda usan la clase tactic-legend-arrow');
+  assert.match(html, /<polygon points="18,3.5 26,7 18,10.5"/, 'la flecha de la leyenda dibuja la punta con polygon directo');
+  assert.match(html, /width="28" height="14"/, 'la flecha de la leyenda tiene dimensiones 28x14 fijas');
 });
 
 test('cada formación incluye una guía completa de ataque y defensa', () => {

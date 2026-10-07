@@ -1,3 +1,10 @@
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-3';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-3';
+import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
+import { suspendSessionDetail } from './session-detail-navigation.js';
+import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
+import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js';
 import { getBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -6,18 +13,23 @@ import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FOR
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './ejercicios-validados.js';
-import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { renderValidatedExerciseHTML, renderExerciseGridCard, initValidatedExerciseViewer, attachLightbox } from './ejercicio-viewer.js?v=plan-visual-1';
 import { buildVideoRecord, initVideoSection, videoPath } from './ejercicio-videos.js';
 import { TACTIC_FORMATS, FORMATION_NAMES, FORMATION_GUIDES, TACTIC_TOOLS, buildTactic, createTacticMove, defaultTactic, moveTacticPiece, renderTacticBoard, renderTacticToolIcon, renderTacticArrow, renderTacticArrowDefs, sortTactics } from './tactics.js';
-import { LIVE_FORMATIONS, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
+import { LIVE_FORMATIONS, LIVE_OPPONENT, TACTICA_MP4, nombreCorto, playerById, buildLiveState, buildReadyTimerFromPreparation, asignarJugador, cargarFormacion, applyLineupToLiveTeam, opcionesPosicion, suplentes, canAssignPlayerToSlot } from './live-tactics.js';
 import { TACTICAS_INTERACTIVAS, findTacticaInteractiva } from './tacticas-interactivas.js';
 import { renderTacticaInteractivaHTML, initTacticaViewer, attachTacticaLightbox } from './tactica-viewer.js';
 import { renderTacticaGuiaHTML, initTacticaGuia } from './tactica-guia-viewer.js';
-import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=20260924-v54-delegate-permissions-speed-fix';
+import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tacticas-pdf-domain.js';
+import { initTacticBoard } from './tactic-board-controller.js';
+import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-8';
+import { buildAutoPlan } from './reparto-plan.js';
+import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
+import { printMatchPlan } from './print-match-plan.js?v=plan-visual-2';
 
-import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js';
-import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js';
-import { renderTodayDashboard } from './today-dashboard.js?v=2456';
+import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=goal-series-1';
+import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
+import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches } from './match-calendar-sync.js';
 import {
@@ -33,6 +45,7 @@ import {
   getNextWeekDateRange,
   isWeekend,
   formatWeekSpanLabel,
+  buildWhatsAppMatchFamilySummary,
 } from './whatsapp-suite.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -42,10 +55,33 @@ const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character)
 const safePhoto = (value) => /^data:image\/(png|jpeg|webp|gif);base64,/i.test(value ?? '') ? value : '';
 const localDate = (value) => {
   if (!value) return 'Sin fecha';
-  const hasTime = value.includes('T');
-  return new Intl.DateTimeFormat('es-ES', hasTime
-    ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
-    : { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(hasTime ? value : `${value}T12:00:00`));
+  const raw = String(value).trim();
+  if (!raw) return 'Sin fecha';
+
+  const hasTime = raw.includes('T');
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  const parsed = new Date(hasTime ? raw : `${raw}T12:00:00`);
+
+  if (!Number.isFinite(parsed.getTime())) return 'Fecha inválida';
+
+  if (dateOnlyMatch) {
+    const year = Number(dateOnlyMatch[1]);
+    const month = Number(dateOnlyMatch[2]);
+    const day = Number(dateOnlyMatch[3]);
+    if (
+      parsed.getFullYear() !== year
+      || parsed.getMonth() + 1 !== month
+      || parsed.getDate() !== day
+    ) return 'Fecha inválida';
+  }
+
+  try {
+    return new Intl.DateTimeFormat('es-ES', hasTime
+      ? { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
+      : { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
+  } catch {
+    return 'Fecha inválida';
+  }
 };
 const localDateKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const empty = (text) => `<div class="panel empty">${escapeHtml(text)}</div>`;
@@ -55,6 +91,9 @@ const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'S
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+if (typeof window !== 'undefined') {
+  window.__campobaseState = state;
+}
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const ACTIVE_VIEW_KEY = 'campobase.activeView';
 const DEMO_SESSION_KEY = 'campobase.demoSession';
@@ -70,12 +109,32 @@ let liveTactic = null; // estado de la pizarra táctica en vivo (Fase A)
 let liveTacticsDocBound = false; // evita acumular el listener global de cierre de popup
 let prepDraft = null; // borrador de la pizarra de preparación de partido
 let prepMatchId = null; // partido que se está preparando
+let prepMomentsDraft = [];
+let prepMomentIndex = 0;
 let playerCropper = null;
 let realtimeCloudStore = null;
+
+const DEFAULT_SEM = {
+  gk: '#0284c7',
+  def: '#16a34a',
+  mid: '#eab308',
+  fw: '#dc2626',
+  win: '#10b981',
+  draw: '#f59e0b',
+  loss: '#ef4444',
+};
+
+const DEFAULT_PRESETS = [
+  { name: 'Oficial Unión Viera', theme: 'default', accent: '#10b981', font: 'system', fontTitle: 'sport' },
+  { name: 'Modo Noche OLED', theme: 'dark', accent: '#10b981', font: 'system', fontTitle: 'sport' },
+];
 let realtimeSubscriptionStarting = false;
 let realtimeSubscriptionActive = false;
 let realtimeSyncTimer = null;
+let deferredRenderTimer = null;
+let deferredRenderRequested = false;
 let lastCloudSyncTimestamp = 0;
+let readyLineupPersistChain = Promise.resolve();
 
 function selectOptions(max, step = 1, selected = '', includeEmpty = false) {
   const options = includeEmpty ? '<option value="">—</option>' : '';
@@ -101,17 +160,18 @@ function composeTime24(hour, minute, required = false) {
 }
 
 function composeDateTime24(day, hour, minute) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day ?? '')) throw new TypeError('Selecciona una fecha válida.');
-  return `${day}T${composeTime24(hour, minute, true)}`;
+  const { year, month, day: dayNum } = splitDate(day);
+  const validDay = composeDate(dayNum, month, year);
+  return `${validDay}T${composeTime24(hour, minute, true)}`;
 }
 
 function setDateTimeFields(form, name, value = '') {
-  const [day = '', time = ''] = value.split('T');
+  const [day = '', time = ''] = String(value || '').split('T');
   const { hour, minute } = splitTime24(time);
   const { year, month, day: dayNum } = splitDate(day);
-  form.elements[`${name}Day`].value = dayNum;
   form.elements[`${name}Month`].value = month;
   form.elements[`${name}Year`].value = year;
+  refreshDateDayOptions(form, name, dayNum);
   form.elements[`${name}Hour`].value = hour || '00';
   form.elements[`${name}Minute`].value = minute || '00';
 }
@@ -122,8 +182,30 @@ function splitDate(value = '') {
   return { year: match?.[1] ?? '', month: match?.[2] ?? '', day: match?.[3] ?? '' };
 }
 
-function dayOptions(selected = '') {
-  return '<option value="">Día</option>' + Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+function daysInMonth(month = '', year = '') {
+  if (!/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) return 31;
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+  if (monthNumber < 1 || monthNumber > 12) return 31;
+  return new Date(yearNumber, monthNumber, 0).getDate();
+}
+
+function isRealCalendarDate(day = '', month = '', year = '') {
+  if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) return false;
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+  return monthNumber >= 1
+    && monthNumber <= 12
+    && dayNumber >= 1
+    && dayNumber <= daysInMonth(month, year)
+    && new Date(yearNumber, monthNumber - 1, dayNumber).getFullYear() === yearNumber;
+}
+
+function dayOptions(selected = '', month = '', year = '') {
+  const maxDays = daysInMonth(month, year);
+  const safeSelected = Number(selected) >= 1 && Number(selected) <= maxDays ? selected : '';
+  return '<option value="">Día</option>' + Array.from({ length: maxDays }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === safeSelected ? 'selected' : ''}>${v}</option>`).join('');
 }
 function monthOptions(selected = '') {
   return '<option value="">Mes</option>' + Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
@@ -135,11 +217,22 @@ function yearOptions(selected = '') {
 
 function dateMarkup(name, value = '', label = 'Fecha') {
   const { year, month, day } = splitDate(value);
-  return `<div class="date-24"><select name="${name}Day" required aria-label="${escapeHtml(label)}, día">${dayOptions(day)}</select><span>/</span><select name="${name}Month" required aria-label="${escapeHtml(label)}, mes">${monthOptions(month)}</select><span>/</span><select name="${name}Year" required aria-label="${escapeHtml(label)}, año">${yearOptions(year)}</select></div>`;
+  return `<div class="date-24"><select name="${name}Day" required aria-label="${escapeHtml(label)}, día">${dayOptions(day, month, year)}</select><span>/</span><select name="${name}Month" required aria-label="${escapeHtml(label)}, mes">${monthOptions(month)}</select><span>/</span><select name="${name}Year" required aria-label="${escapeHtml(label)}, año">${yearOptions(year)}</select></div>`;
+}
+
+function refreshDateDayOptions(form, name = 'date', preferredDay = '') {
+  const daySelect = form?.elements?.[`${name}Day`];
+  const monthSelect = form?.elements?.[`${name}Month`];
+  const yearSelect = form?.elements?.[`${name}Year`];
+  if (!daySelect || !monthSelect || !yearSelect) return;
+  const currentDay = preferredDay || daySelect.value;
+  daySelect.innerHTML = dayOptions(currentDay, monthSelect.value, yearSelect.value);
 }
 
 function composeDate(day, month, year) {
-  if (!/^\d{2}$/.test(day ?? '') || !/^\d{2}$/.test(month ?? '') || !/^\d{4}$/.test(year ?? '')) throw new TypeError('Selecciona una fecha válida (día, mes y año).');
+  if (!isRealCalendarDate(day ?? '', month ?? '', year ?? '')) {
+    throw new TypeError('Selecciona una fecha real del calendario.');
+  }
   return `${year}-${month}-${day}`;
 }
 
@@ -181,6 +274,7 @@ function formObject(form) { return Object.fromEntries(new FormData(form)); }
 function checkedValues(name, root = document) { return $$(`input[name="${name}"]:checked`, root).map((input) => input.value); }
 function playerName(id) {
   if (id === '__pp__' || id === 'pp' || id === '__own_goal__') return 'Gol P.P.';
+  if (id === '__rival__') return 'Rival';
   return state.players.find((player) => player.id === id)?.name ?? 'Jugador eliminado';
 }
 function matchTypeLabel(type) { return MATCH_TYPES[type] ?? MATCH_TYPES.league; }
@@ -307,7 +401,7 @@ function applyDelegateNavFilters(perms) {
       } else if (mod === 'inicio') {
         allowed = perms.includes('hoy') || perms.includes('inicio');
       } else if (mod === 'entrenos') {
-        allowed = perms.includes('sesiones') || perms.includes('ejercicios');
+        allowed = perms.includes('sesiones') || perms.includes('ejercicios') || perms.includes('tacticas');
       } else if (mod === 'mas' || mod === 'tacticas') {
         allowed = perms.includes('tacticas');
       }
@@ -334,7 +428,7 @@ function restoreNormalNavUi() {
     const mod = tab.dataset.module;
     if (mod === 'partidos') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
-      if (lbl) lbl.textContent = 'Partidos';
+      if (lbl) lbl.textContent = 'Partido';
     }
     if (mod === 'equipo') {
       const lbl = tab.querySelector('.cb-nav-label-wrap span:first-child');
@@ -348,6 +442,7 @@ function restoreNormalNavUi() {
 }
 
 function showView(viewId) {
+  const previousViewId = document.querySelector('.view.active')?.id;
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (state.role === 'delegate' || state.delegateMode) {
     const perms = getDelegatePermissions();
@@ -371,8 +466,20 @@ function showView(viewId) {
   } catch {}
   $$('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
   $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === viewId));
+  if (previousViewId !== viewId) window.scrollTo({ top: 0, behavior: 'instant' });
   try { sessionStorage.setItem(ACTIVE_VIEW_KEY, viewId); } catch { /* La vista seguirá funcionando sin persistencia. */ }
   $('#app').focus();
+
+  // Gestión de tema específico para el partido (matchPreset)
+  const mp = state.settings?.presets && state.settings.matchPreset !== undefined && state.settings.matchPreset !== null
+    ? state.settings.presets[state.settings.matchPreset]
+    : null;
+  if ((viewId === 'partido' || viewId === 'delegado') && mp) {
+    applyCustomTheme(mp.theme ? mp : { ...state.settings.theme, ...mp });
+  } else if (previousViewId === 'partido' || previousViewId === 'delegado') {
+    applyCustomTheme(state.settings?.theme);
+  }
+
   applyGlobalSearch();
   if (viewId === 'plantilla') {
     renderPlayers();
@@ -406,6 +513,8 @@ function showView(viewId) {
   } else if (viewId === 'ajustes') {
     populateDelegateAccountForm();
     populateKitSettingsForm();
+    renderCustomizerControls();
+    renderSavedThemePresets();
   }
 }
 
@@ -429,8 +538,10 @@ function applyGlobalSearch() {
 function isUserInteracting() {
   if (document.querySelector('dialog[open]:not(#auth-dialog)')) return true;
   const active = document.activeElement;
-  if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea')) return true;
+  if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea, summary, details')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
+  // Si hay algún desplegable o panel details abierto en vivo, no interrumpir al usuario con re-render
+  if (document.querySelector('#live-match details[open], #delegado details[open]')) return true;
   // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
   if ((window.__viewersPlaying || 0) > 0) return true;
   // Si la pizarra táctica en vivo está ampliada (lightbox abierto), no re-renderizar
@@ -440,6 +551,37 @@ function isUserInteracting() {
   // (se cerraría solo y el usuario perdería la selección).
   if (document.querySelector('.live-tactics-popup.open')) return true;
   return false;
+}
+
+function scheduleDeferredRender() {
+  deferredRenderRequested = true;
+  if (deferredRenderTimer) return;
+
+  const tryRender = () => {
+    deferredRenderTimer = null;
+    if (!deferredRenderRequested) return;
+    if (isUserInteracting()) {
+      deferredRenderTimer = window.setTimeout(tryRender, 250);
+      return;
+    }
+    deferredRenderRequested = false;
+    renderAll();
+  };
+
+  deferredRenderTimer = window.setTimeout(tryRender, 250);
+}
+
+function renderOrDefer(force = false) {
+  if (force || !isUserInteracting()) {
+    deferredRenderRequested = false;
+    if (deferredRenderTimer) {
+      window.clearTimeout(deferredRenderTimer);
+      deferredRenderTimer = null;
+    }
+    renderAll();
+    return;
+  }
+  scheduleDeferredRender();
 }
 
 
@@ -486,7 +628,7 @@ async function refresh() {
     }));
 
   state.exercises = [...validatedExercises, ...myExercises];
-  if (state.exercises.length < 400 && typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.onLine) {
+  if (state.exercises.length < 400 && !window.__CAMPOBASE_READONLY_PREVIEW && typeof navigator !== 'undefined' && navigator.onLine) {
     const healKey = 'campobase.auto_catalog_heal_v29';
     try {
       if (!sessionStorage.getItem(healKey)) {
@@ -518,6 +660,45 @@ async function refresh() {
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
   state.settings = settings ?? { id: 'main' };
+  try {
+    const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
+    if (cachedTheme && typeof cachedTheme === 'object') {
+      const storedTheme = state.settings.theme || {};
+      const isolated = window.__CAMPOBASE_READONLY_PREVIEW === true;
+      const viewIds = new Set([...Object.keys(cachedTheme.views || {}), ...Object.keys(storedTheme.views || {})]);
+      state.settings.theme = {
+        ...(isolated ? storedTheme : cachedTheme),
+        ...(isolated ? cachedTheme : storedTheme),
+        views: Object.fromEntries([...viewIds].map((id) => [id, isolated
+          ? { ...(storedTheme.views?.[id] || {}), ...(cachedTheme.views?.[id] || {}) }
+          : { ...(cachedTheme.views?.[id] || {}), ...(storedTheme.views?.[id] || {}) }])),
+      };
+    }
+  } catch {}
+  if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
+    try {
+      const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
+      state.settings.presets = Array.isArray(cachedPresets) && cachedPresets.length ? cachedPresets : [...DEFAULT_PRESETS];
+    } catch {
+      state.settings.presets = [...DEFAULT_PRESETS];
+    }
+  }
+  if (!state.settings.sem) {
+    try {
+      const cachedSem = JSON.parse(localStorage.getItem('campobase.sem') || 'null');
+      state.settings.sem = cachedSem && typeof cachedSem === 'object' ? cachedSem : { ...DEFAULT_SEM };
+    } catch {
+      state.settings.sem = { ...DEFAULT_SEM };
+    }
+  }
+  if (state.settings.matchPreset === undefined || state.settings.matchPreset === null) {
+    try {
+      const cachedMatch = JSON.parse(localStorage.getItem('campobase.matchPreset') || 'null');
+      state.settings.matchPreset = cachedMatch;
+    } catch {
+      state.settings.matchPreset = null;
+    }
+  }
   if (!state.settings.delegatePermissions || !state.settings.delegatePermissions.length) {
     try {
       const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
@@ -541,7 +722,7 @@ async function refresh() {
   } else {
     restoreNormalNavUi();
   }
-  if (force || !isUserInteracting()) renderAll();
+  renderOrDefer(force);
 }
 
 function syncDirectFieldCache() {
@@ -577,6 +758,12 @@ function renderAll() {
   applyGlobalSearch();
   syncDirectFieldCache();
   try { window.dispatchEvent(new CustomEvent('campobase:data-updated')); } catch {}
+}
+
+function renderPlayerFamilyContact(label, name, phone) {
+  const detail = `<span class="cbx-family-name">${escapeHtml(label)}: ${escapeHtml(name || (phone ? 'Sin nombre' : 'Sin registrar'))}</span>${phone ? ` · <span class="cbx-family-phone">${escapeHtml(phone)}</span>` : ''}`;
+  if (!phone) return `<span class="contact-pill meta">${detail}</span>`;
+  return `<a href="https://wa.me/${formatWhatsAppPhone(phone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp ${label}">${detail}</a>`;
 }
 
 function renderPlayers() {
@@ -648,20 +835,19 @@ function renderPlayers() {
     const specialistRoles = getPlayerSetPieceRoles(player.id, state.settings?.setPieces);
     const specialistTags = specialistRoles.length ? `
       <div class="player-specialist-tags">
-        ${specialistRoles.map((r) => `<span class="specialist-pill" title="${escapeHtml(r.title)}">${r.icon} ${escapeHtml(r.label)}</span>`).join('')}
+        ${specialistRoles.map((r) => `<span class="specialist-pill" data-specialty="${/capit/i.test(r.label)?'cap':/penal/i.test(r.label)?'pen':/falta/i.test(r.label)?'fal':'cor'}" title="${escapeHtml(r.title)}"><span class="cbx-specialty-icon">${r.icon}</span> <span class="cbx-specialty-label">${escapeHtml(r.label)}</span></span>`).join('')}
       </div>` : '';
 
     const ratingNum = summary.averageRating ? Number(summary.averageRating) : null;
     const ratingTier = ratingNum >= 4.0 ? 'rating-tier-top' : (ratingNum >= 3.0 ? 'rating-tier-good' : (ratingNum > 0 ? 'rating-tier-fair' : 'rating-tier-none'));
     const ratingDisplay = ratingNum !== null ? ratingNum.toFixed(1) : (summary.averageRating ?? '—');
 
-    return `<article class="card player" data-player-id="${player.id}">
+    return `<article class="card player cbx-player" data-player-id="${player.id}">
     <div class="player-head">
       <div class="player-identity">
         ${playerCardPhoto(player)}
         <div class="player-name">
           <h3>${escapeHtml(player.name)}</h3>
-          <span class="player-subhead-pill">Dorsal ${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span>
         </div>
       </div>
       <div class="player-head-right">
@@ -679,15 +865,14 @@ function renderPlayers() {
       </div>
       ${specialistTags}
       <div class="player-data"><span><small>Dorsal</small><strong>${escapeHtml(cleanPlayerNumber(player.number) || 'Sin asignar')}</strong></span><span><small>Posición</small><strong>${escapeHtml(playerPositions(player))}</strong></span><span><small>Pierna</small><strong>${escapeHtml(player.foot || 'Sin indicar')}</strong></span><span><small>Rotaciones</small><strong>${summary.rotations + preseasonSummary.rotations} fuera</strong></span></div>
-      ${(player.fatherPhone || player.motherPhone || player.fatherName || player.motherName) ? `
       <div class="player-family-contacts">
-        ${player.fatherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.fatherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Padre">👨 ${escapeHtml(player.fatherName || 'Padre')}: ${escapeHtml(player.fatherPhone)}</a>` : (player.fatherName ? `<span class="contact-pill meta">👨 Padre: ${escapeHtml(player.fatherName)}</span>` : '')}
-        ${player.motherPhone ? `<a href="https://wa.me/${formatWhatsAppPhone(player.motherPhone)}" target="_blank" rel="noopener noreferrer" class="contact-pill" title="WhatsApp Madre">👩 ${escapeHtml(player.motherName || 'Madre')}: ${escapeHtml(player.motherPhone)}</a>` : (player.motherName ? `<span class="contact-pill meta">👩 Madre: ${escapeHtml(player.motherName)}</span>` : '')}
-      </div>` : ''}
+        ${renderPlayerFamilyContact('Padre', player.fatherName, player.fatherPhone)}
+        ${renderPlayerFamilyContact('Madre', player.motherName, player.motherPhone)}
+      </div>
       <div class="player-card-actions-bar">
-        <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">📱 WhatsApp</button>
-        <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">✏️ Editar</button>
-        <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">🗑️ Borrar</button>
+        <button type="button" class="icon-button open-whatsapp-player accent" data-id="${player.id}" aria-label="WhatsApp a familia de ${escapeHtml(player.name)}">WhatsApp</button>
+        <button type="button" class="icon-button edit-player" data-id="${player.id}" aria-label="Editar ${escapeHtml(player.name)}">Editar</button>
+        <button type="button" class="icon-button delete-player danger" data-id="${player.id}" aria-label="Eliminar ${escapeHtml(player.name)}">Borrar</button>
       </div>
       <details class="player-performance"${openPerfPlayerIds.has(player.id) ? ' open' : ''}><summary class="player-performance-summary"><span class="summary-toggle-icon">📊</span><span>Ver actividad y estadísticas</span></summary><div class="player-stats-expanded"><div class="player-summary"><span><strong>${summary.goals}</strong> goles</span><span><strong>${summary.assists ?? 0}</strong> asist.</span><span><strong>${summary.yellowCards}/${summary.redCards}</strong> amarillas/rojas</span><span><strong>${summary.injuries}</strong> lesiones</span><span><strong>${summary.incidents}</strong> incidencias</span><span><strong>${summary.callups}</strong> convocatorias</span><span><strong>${summary.rotations}</strong> rotaciones</span><span><strong>${summary.late}/${summary.absent}</strong> tarde/ausente</span><span><strong>${summary.minutes}</strong> min</span><span><strong>${summary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="league">Editar estadísticas de Liga</button><h4 class="player-stats-title">Pretemporada</h4><div class="player-summary"><span><strong>${preseasonSummary.goals}</strong> goles</span><span><strong>${preseasonSummary.assists ?? 0}</strong> asist.</span><span><strong>${preseasonSummary.yellowCards}/${preseasonSummary.redCards}</strong> amarillas/rojas</span><span><strong>${preseasonSummary.injuries}</strong> lesiones</span><span><strong>${preseasonSummary.incidents}</strong> incidencias</span><span><strong>${preseasonSummary.callups}</strong> convocatorias</span><span><strong>${preseasonSummary.rotations}</strong> rotaciones</span><span><strong>${preseasonSummary.late}/${preseasonSummary.absent}</strong> tarde/ausente</span><span><strong>${preseasonSummary.minutes}</strong> min</span><span><strong>${preseasonSummary.averageRating ?? '—'}</strong> media</span></div><button type="button" class="edit-player-stats secondary" data-player-id="${player.id}" data-scope="preseason">Editar estadísticas de Pretemporada</button><p class="meta"><span class="rank">${index + 1}. ${summary.minutes + preseasonSummary.minutes} min acumulados</span>${player.notes ? ` · ${escapeHtml(player.notes)}` : ''}</p>${seasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Minutos`) ? ' open' : ''}><summary>Minutos por temporada</summary><ul class="plain-list">${seasonRows}</ul></details>` : ''}${ratingRows ? `<details${openSubSectionKeys.has(`${player.id}::Puntuaciones`) ? ' open' : ''}><summary>Puntuaciones (${derivedMatchStats.ratingHistory.length})</summary><ul class="plain-list">${ratingRows}</ul></details>` : ''}${seasonRatingRows ? `<details${openSubSectionKeys.has(`${player.id}::Media`) ? ' open' : ''}><summary>Media por temporada</summary><ul class="plain-list">${seasonRatingRows}</ul></details>` : ''}${minuteReasonRows ? `<details${openSubSectionKeys.has(`${player.id}::Motivos`) ? ' open' : ''}><summary>Motivos de menos minutos</summary><ul class="plain-list">${minuteReasonRows}</ul></details>` : ''}${incidentRows ? `<details${openSubSectionKeys.has(`${player.id}::Incidencias`) ? ' open' : ''}><summary>Incidencias y motivos (${playerIncidentRows(player.id).length})</summary><ul class="plain-list">${incidentRows}</ul></details>` : ''}${history.length ? `<details class="player-history"${openSubSectionKeys.has(`${player.id}::Historial`) ? ' open' : ''}><summary>Historial completo (${history.length})</summary><ul class="plain-list">${historyRows}</ul></details>` : '<p class="meta">Sin actividad registrada.</p>'}<button type="button" class="collapse-stats-btn secondary">▲ Replegar estadísticas</button></div></details></div>
     </article>`;
@@ -701,40 +886,45 @@ function renderSquadSpecialistsBar() {
   if (!container) return;
   const setPieces = state.settings?.setPieces || {};
 
-  const getPlayerLabel = (id) => {
-    if (!id) return null;
-    const p = state.players.find((item) => item.id === id);
-    if (!p) return null;
-    const num = cleanPlayerNumber(p.number) ? `${cleanPlayerNumber(p.number)} · ` : '';
-    return num + p.name;
-  };
-
-  const penaltyNames = [getPlayerLabel(setPieces.penalties?.primary), getPlayerLabel(setPieces.penalties?.secondary)].filter(Boolean).join(', ');
-  const fkLeftNames = [getPlayerLabel(setPieces.freeKicksLeft?.primary), getPlayerLabel(setPieces.freeKicksLeft?.secondary)].filter(Boolean).join(', ');
-  const fkRightNames = [getPlayerLabel(setPieces.freeKicksRight?.primary), getPlayerLabel(setPieces.freeKicksRight?.secondary)].filter(Boolean).join(', ');
-  const cornerLeftNames = [getPlayerLabel(setPieces.cornersLeft?.primary), getPlayerLabel(setPieces.cornersLeft?.secondary)].filter(Boolean).join(', ');
-  const cornerRightNames = [getPlayerLabel(setPieces.cornersRight?.primary), getPlayerLabel(setPieces.cornersRight?.secondary)].filter(Boolean).join(', ');
-  const captainNames = [getPlayerLabel(setPieces.captains?.primary), getPlayerLabel(setPieces.captains?.secondary), getPlayerLabel(setPieces.captains?.third)].filter(Boolean).join(', ');
+  const playersById = new Map(state.players.map((player) => [player.id, player]));
+  const specialistCard = (title, icon, assignments, isCaptain = false) => `
+    <section class="specialist-item" data-specialist-kind="${isCaptain ? 'captain' : 'launcher'}" aria-label="${escapeHtml(title)}">
+      <div class="specialist-item-head"><span class="sp-icon" aria-hidden="true">${icon}</span><h4>${escapeHtml(title)}</h4></div>
+      <div class="specialist-rank-list">
+        ${assignments.map((id, index) => {
+          const player = playersById.get(id);
+          const rank = isCaptain
+            ? ['1.er capitán', '2.º capitán', '3.er capitán'][index]
+            : ['1.er lanzador', '2.º lanzador'][index];
+          const number = player ? cleanPlayerNumber(player.number) : '';
+          return `<div class="specialist-rank-row${player ? '' : ' unassigned'}" data-specialist-rank="${index + 1}">
+            <span class="specialist-rank">${rank}</span>
+            <strong>${player ? escapeHtml(player.name) : 'Sin asignar'}</strong>
+            ${number ? `<span class="specialist-number" aria-label="Dorsal ${escapeHtml(number)}">${escapeHtml(number)}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </section>`;
 
   container.innerHTML = `
     <div class="specialists-summary-card">
       <div class="specialists-summary-head">
         <div>
-          <h3>🎯 Lanzadores y Capitanes</h3>
+          <h3>Lanzadores y Capitanes</h3>
           <p class="meta">Especialistas a balón parado asignados para faltas, córners, penaltis y capitanía</p>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" class="secondary open-set-pieces-trigger">⚙️ Configurar lanzadores</button>
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="specialists" aria-label="Ajustar colores de lanzadores y capitanes">⚙️</button><button type="button" class="secondary open-set-pieces-trigger">Configurar lanzadores</button>
           <button type="button" class="secondary share-database-mobile-btn" style="display:none;" title="Pasar lanzadores y plantilla a tu móvil por WhatsApp o AirDrop">📲 Pasar al móvil</button>
         </div>
       </div>
       <div class="specialists-quick-grid">
-        <div class="specialist-item"><span class="sp-icon">🎯</span><div><small>Penaltis</small><strong>${escapeHtml(penaltyNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Izq. (diestro)</small><strong>${escapeHtml(fkLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">⚡</span><div><small>Faltas Der. (zurdo)</small><strong>${escapeHtml(fkRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Izquierda</small><strong>${escapeHtml(cornerLeftNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">📐</span><div><small>Córners Derecha</small><strong>${escapeHtml(cornerRightNames || 'Sin asignar')}</strong></div></div>
-        <div class="specialist-item"><span class="sp-icon">©️</span><div><small>Capitanes</small><strong>${escapeHtml(captainNames || 'Sin asignar')}</strong></div></div>
+        ${specialistCard('Penaltis', '🎯', [setPieces.penalties?.primary, setPieces.penalties?.secondary])}
+        ${specialistCard('Faltas izquierda · diestro', '⚡', [setPieces.freeKicksLeft?.primary, setPieces.freeKicksLeft?.secondary])}
+        ${specialistCard('Faltas derecha · zurdo', '⚡', [setPieces.freeKicksRight?.primary, setPieces.freeKicksRight?.secondary])}
+        ${specialistCard('Córners izquierda', '↖', [setPieces.cornersLeft?.primary, setPieces.cornersLeft?.secondary])}
+        ${specialistCard('Córners derecha', '↗', [setPieces.cornersRight?.primary, setPieces.cornersRight?.secondary])}
+        ${specialistCard('Capitanes', '©', [setPieces.captains?.primary, setPieces.captains?.secondary, setPieces.captains?.third], true)}
       </div>
     </div>
   `;
@@ -832,11 +1022,11 @@ function renderSquadLeaderboards() {
   const tabsMarkup = `
     <div class="leaderboard-tabs-bar">
       <div class="leaderboard-nav-tabs">
-        <button type="button" class="lb-tab-btn ${tab === 'scorers' ? 'active' : ''}" data-lb-tab="scorers">⚽ Goleadores</button>
-        <button type="button" class="lb-tab-btn ${tab === 'assists' ? 'active' : ''}" data-lb-tab="assists">👟 Asistencias</button>
-        <button type="button" class="lb-tab-btn ${tab === 'goalkeepers' ? 'active' : ''}" data-lb-tab="goalkeepers">🧤 Zamora (Porteros)</button>
-        <button type="button" class="lb-tab-btn ${tab === 'minutes' ? 'active' : ''}" data-lb-tab="minutes">⏱️ Reparto de Minutos</button>
-        <button type="button" class="lb-tab-btn ${tab === 'fairplay' ? 'active' : ''}" data-lb-tab="fairplay">🟨 Fair Play</button>
+        <button type="button" class="lb-tab-btn ${tab === 'scorers' ? 'active' : ''}" data-lb-tab="scorers">Goleadores</button>
+        <button type="button" class="lb-tab-btn ${tab === 'assists' ? 'active' : ''}" data-lb-tab="assists">Asistencias</button>
+        <button type="button" class="lb-tab-btn ${tab === 'goalkeepers' ? 'active' : ''}" data-lb-tab="goalkeepers">Zamora (Porteros)</button>
+        <button type="button" class="lb-tab-btn ${tab === 'minutes' ? 'active' : ''}" data-lb-tab="minutes">Reparto de minutos</button>
+        <button type="button" class="lb-tab-btn ${tab === 'fairplay' ? 'active' : ''}" data-lb-tab="fairplay">Fair Play</button>
       </div>
       <div class="leaderboard-scope-toggle">
         <button type="button" class="lb-scope-btn ${scope === 'all' ? 'active' : ''}" data-lb-scope="all">Todo</button>
@@ -847,7 +1037,7 @@ function renderSquadLeaderboards() {
   `;
 
   let tableContent = '';
-  const medal = (idx) => idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}.º`));
+  const medal = (idx) => String(idx + 1);
 
   if (tab === 'scorers') {
     const list = leaderboards.topScorers;
@@ -1055,7 +1245,7 @@ function renderSquadLeaderboards() {
   const isLbOpen = state.isLeaderboardsOpen ?? true;
 
   container.innerHTML = `
-    <details class="squad-leaderboards-card"${isLbOpen ? ' open' : ''}>
+    <details class="squad-leaderboards-card${state.leaderboardExpanded ? ' cbx-leaders-all' : ''}"${isLbOpen ? ' open' : ''}>
       <summary class="squad-leaderboards-summary">
         <div class="lb-summary-left">
           <span class="summary-toggle-icon">📊</span>
@@ -1069,6 +1259,7 @@ function renderSquadLeaderboards() {
       <div class="squad-leaderboards-body">
         ${tabsMarkup}
         ${tableContent}
+        ${state.players.length > 5 ? `<button type="button" class="cbx-leaders-more" data-lb-expand="1" aria-expanded="${state.leaderboardExpanded ? 'true' : 'false'}">${state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa'}</button>` : ''}
       </div>
     </details>
   `;
@@ -1242,7 +1433,7 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
   const options = state.matches.filter((match) => match.status !== 'finished' || match.id === selectedMatchId).sort((a,b)=>a.date.localeCompare(b.date)).map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`).join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><div class="form-row"><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Máximo 14.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || preselectedMatchId || options ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!preselectedMatchId && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">Selecciona…</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><div class="form-row"><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><div class="callup-help panel"><strong>Liga: máximo 14. Amistoso: sin límite de convocados para el reparto de minutos.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${state.players.map((player) => callupPlayerCard(player, existing)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1306,7 +1497,10 @@ function updateTargetPreview() {
     const automatic = selection.exclusions.filter(({ automatic: isAutomatic }) => isAutomatic);
     const exclusionList = (items) => items.length ? `<ul class="plain-list">${items.map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('')}</ul>` : '<p class="meta">Nadie.</p>';
     const pending = selection.pendingRotationDecisions ?? [];
-    preview.innerHTML = `${pending.length ? `<p class="warning panel"><strong>Revisión necesaria:</strong> al guardar te preguntaré por ${pending.map(({ playerId }) => escapeHtml(playerName(playerId))).join(', ')} porque ya se quedaron fuera por enfermedad o decisión del entrenador.</p>` : ''}<div class="preview-summary"><h3>Convocados (${selection.availableIds.length}/14)</h3><p>${selection.availableIds.map(playerName).map(escapeHtml).join(', ')}</p><div class="exclusion-summary"><section><h4>Fuera manualmente (${manual.length})</h4>${exclusionList(manual)}</section><section><h4>Fuera por CampoBase (${automatic.length})</h4>${exclusionList(automatic)}</section></div><p><strong>Total fuera: ${selection.exclusions.length}</strong></p></div><details><summary>Ver minutos objetivo</summary><table class="minute-table"><thead><tr><th>Jugador</th><th>Objetivo</th></tr></thead><tbody>${targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</tbody></table></details>`;
+    const callupCountLabel = match.type === 'friendly'
+      ? `${selection.availableIds.length} · sin máximo`
+      : `${selection.availableIds.length}/14`;
+    preview.innerHTML = `${pending.length ? `<p class="warning panel"><strong>Revisión necesaria:</strong> al guardar te preguntaré por ${pending.map(({ playerId }) => escapeHtml(playerName(playerId))).join(', ')} porque ya se quedaron fuera por enfermedad o decisión del entrenador.</p>` : ''}<div class="preview-summary"><h3>Convocados (${callupCountLabel})</h3><p>${selection.availableIds.map(playerName).map(escapeHtml).join(', ')}</p><div class="exclusion-summary"><section><h4>Fuera manualmente (${manual.length})</h4>${exclusionList(manual)}</section><section><h4>Fuera por CampoBase (${automatic.length})</h4>${exclusionList(automatic)}</section></div><p><strong>Total fuera: ${selection.exclusions.length}</strong></p></div><details><summary>Ver minutos objetivo</summary><table class="minute-table"><thead><tr><th>Jugador</th><th>Objetivo</th></tr></thead><tbody>${targets.map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('')}</tbody></table></details>`;
   } catch (error) { preview.innerHTML = `<p class="warning panel">${escapeHtml(error.message)}</p>`; }
 }
 
@@ -1346,9 +1540,12 @@ async function saveCallup(event) {
   const format = existing?.format ?? state.format;
   const config = FORMATS[format];
   const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
-  const targets = calculateMinuteTargets(availableIds, config.duration, config.players, keeperIds);
-  const callup = { id: existing?.id ?? uid(), matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? Date.now(), updatedAt: Date.now() };
-  const nextCallups = [...state.callups.filter(({ id }) => id !== callup.id), callup];
+  const existingForMatch = (!existing && match?.id)
+    ? state.callups.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id))
+    : null;
+  const targetId = existing?.id || existingForMatch?.id || uid();
+  const callup = { id: targetId, matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? existingForMatch?.createdAt ?? Date.now(), updatedAt: Date.now() };
+  const nextCallups = [...state.callups.filter(({ id, matchId: mId }) => id !== callup.id && mId !== match.id), callup];
   const matchesToSave = [{ ...match, callupId: callup.id, format }];
   if (existing?.matchId && existing.matchId !== match.id) {
     const oldMatch = state.matches.find(({ id }) => id === existing.matchId);
@@ -1420,6 +1617,13 @@ async function saveCallup(event) {
   renderLive();
   renderDelegate();
   renderPreparaciones();
+  if (pendingPrepAfterCallupMatchId === match.id) {
+    pendingPrepAfterCallupMatchId = '';
+    showView('preparacion');
+    openPreparacionEditor(match.id);
+    toast('Convocatoria guardada. Ya puedes preparar la alineación.');
+    return;
+  }
   showView('convocatorias');
   toast(existing ? 'Convocatoria actualizada.' : 'Convocatoria guardada.');
 }
@@ -1434,8 +1638,184 @@ async function synchronizeRotationCounters() {
   }
 }
 
+const callupPlanModes = new Map();
+let pendingPrepAfterCallupMatchId = '';
+
+const callupSuggestedPlans = new Map();
+const callupVisiblePlans = new Map();
+let prepSuggestedMoments = null;
+let prepPreviousMoments = null;
+let prepPlanMode = 'escalonado';
+wireMinuteTimelines();
+function suggestCallupRotation(callupId) {
+  const callup = state.callups.find((item) => item.id === callupId);
+  if (!callup) return;
+  const playerIds = callup.availableIds || [];
+  const keeperIds = playerIds.filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+  try {
+    if (playerIds.some((id) => !state.players.some((player) => player.id === id)) || !keeperIds.length) throw new Error('Faltan fichas o un portero');
+    const mode = callupPlanModes.get(callup.id) || 'escalonado';
+    const plan = buildAutoPlan({ format: callup.format || state.format || 'F7', playerIds, keeperIds, planMode: mode,
+      playerNumbers: Object.fromEntries(state.players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+    callupSuggestedPlans.set(callup.id, { mode, plan });
+    renderCallups();
+    toast('Sugerencia calculada. Tu preparación guardada sigue intacta.');
+  } catch (error) { toast('No se pudo calcular la sugerencia: ' + error.message); }
+}
+
+function renderClaudeCallup(callup) {
+  const available = new Set(callup.availableIds || []);
+  const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
+  const exclusionByPlayer = new Map(exclusions.map((item) => [item.playerId, item]));
+  const players = sortPlayersBySquadNumber(state.players);
+  const knownPlayerIds = new Set(players.map((player) => player.id));
+  const missingPlayerCount = [...available].filter((id) => !knownPlayerIds.has(id)).length;
+  const keeperIds = players.filter((player) => available.has(player.id) && normalizePositions(player).includes('Portero')).map((player) => player.id);
+  const format = String(callup.format || state.format).toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const mode = callupPlanModes.get(callup.id) || 'escalonado';
+  const match = state.matches.find((item) => item.id === callup.matchId || item.callupId === callup.id);
+  const matchId = match?.id || '';
+  const prep = matchId ? prepForMatch(matchId) : null;
+  let plan = null;
+
+  if (prep && prep.team && prep.team.length) {
+    try {
+      const moments = normalizeMoments(prep);
+      const D = config.duration;
+      const H = config.half;
+      const field = [...available].filter((id) => !keeperIds.includes(id)).sort((a, b) => {
+        const na = cleanPlayerNumber(players.find((p) => p.id === a)?.number);
+        const nb = cleanPlayerNumber(players.find((p) => p.id === b)?.number);
+        return (Number(na) || 999) - (Number(nb) || 999);
+      });
+      const segs = {};
+      field.forEach((id) => { segs[id] = []; });
+      const gkPlan = [];
+
+      for (let i = 0; i < moments.length; i++) {
+        const from = moments[i].minute;
+        const to = Math.min(D, moments[i + 1]?.minute ?? D);
+        if (to > from) {
+          for (const slot of (moments[i].team || [])) {
+            if (!slot.playerId) continue;
+            if (keeperIds.includes(slot.playerId)) {
+              if (gkPlan.length && gkPlan[gkPlan.length - 1].id === slot.playerId && gkPlan[gkPlan.length - 1].to === from) {
+                gkPlan[gkPlan.length - 1].to = to;
+              } else {
+                gkPlan.push({ id: slot.playerId, from, to });
+              }
+            } else if (segs[slot.playerId]) {
+              const arr = segs[slot.playerId];
+              if (arr.length && arr[arr.length - 1].to === from) {
+                arr[arr.length - 1].to = to;
+              } else {
+                arr.push({ from, to });
+              }
+            }
+          }
+        }
+      }
+
+      const planned = {};
+      field.forEach((id) => {
+        planned[id] = (segs[id] || []).reduce((sum, s) => sum + (s.to - s.from), 0);
+      });
+      gkPlan.forEach((g) => {
+        planned[g.id] = (planned[g.id] || 0) + (g.to - g.from);
+      });
+
+      const changes = [];
+      for (let i = 1; i < moments.length; i++) {
+        const m = moments[i].minute;
+        const diff = describeMoment(moments[i - 1], moments[i]);
+        if (diff.pairs && diff.pairs.length) {
+          diff.pairs.forEach((p) => {
+            if (p.outId && p.inId) changes.push({ m, out: p.outId, inn: p.inId });
+          });
+        }
+      }
+      const groupsMap = {};
+      changes.forEach((c) => {
+        (groupsMap[c.m] = groupsMap[c.m] || []).push(c);
+      });
+      const groups = Object.keys(groupsMap)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((m) => ({ m, list: groupsMap[m] }));
+
+      const fieldTarget = field.length > 0 ? (config.players - 1) * D / field.length : 0;
+      const gkTarget = keeperIds.length > 0 ? D / keeperIds.length : 0;
+
+      plan = { format, D, H, slots: config.players - 1, gks: keeperIds, field, gkPlan, segs, planned, groups, fieldTarget, gkTarget };
+    } catch {
+      plan = null;
+    }
+  }
+
+  if (!plan) {
+    try {
+      if (missingPlayerCount || !keeperIds.length) throw new Error('La convocatoria histórica no permite reconstruir el plan completo.');
+      plan = buildAutoPlan({ format, playerIds: [...available], keeperIds, planMode: mode, playerNumbers: Object.fromEntries(players.map((player) => [player.id, Number(cleanPlayerNumber(player.number)) || 999])) });
+    } catch { plan = null; }
+  }
+  const suggested = callupSuggestedPlans.get(callup.id);
+  if (suggested?.mode === mode) plan = suggested.plan;
+  if(plan) callupVisiblePlans.set(callup.id,{plan,moments:prep && !plan.lineupAt ? normalizeMoments(prep) : null});
+  const fieldCount = available.size - keeperIds.length;
+  const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(callup.date || ''))?.[1];
+  const roster = players.map((player) => {
+    const isCalled = available.has(player.id);
+    const exclusion = exclusionByPlayer.get(player.id);
+    const note = exclusion ? exclusionReasonLabel(exclusion) : 'Fuera de la convocatoria';
+    return `<li class="cbx-callup-player${isCalled ? '' : ' is-out'}"><span class="cbx-callup-number">${escapeHtml(cleanPlayerNumber(player.number) || '—')}</span><span class="cbx-callup-person"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(playerPositions(player))}</small></span><span class="cbx-callup-status ${isCalled ? 'is-called' : 'is-excluded'}">${escapeHtml(isCalled ? 'Convocado' : note)}</span></li>`;
+  }).join('');
+  const bars = plan ? renderMinuteTimeline(plan, state.players, 'callup:' + callup.id) : '';
+  const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
+  return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
+    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
+      <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
+      <ul class="cbx-callup-roster">${roster}</ul>
+      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
+    </section>
+    <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
+      <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3><button type="button" class="cbx-context-gear-btn" data-gear-target="callup-plan" aria-label="Colores de Plan por tramos">⚙️</button>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-edit-callup-windows primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Abrir Plan de tiempos</button><button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
+        <div style="padding:12px 6px;text-align:center;">
+          <p class="meta" style="margin:0 0 10px;">No hay cambios previstos configurados.</p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+
+            ${matchId ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:36px;padding:0 12px;border-radius:10px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Editar en Preparación</button>` : ''}
+          </div>
+        </div>
+      `}</div>` : '<p class="meta">No se puede calcular un plan fiable para este registro histórico.</p>'}</section>
+    </div>
+  </article>`;
+}
+
+function deduplicateCallups(callups = []) {
+  const map = new Map();
+  for (const c of callups) {
+    const key = c.matchId ? `match:${c.matchId}` : `custom:${c.opponent}_${c.date}`;
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, c);
+    } else {
+      const prevTime = Number(prev.updatedAt || prev.createdAt || 0);
+      const currTime = Number(c.updatedAt || c.createdAt || 0);
+      if (currTime >= prevTime) {
+        map.set(key, c);
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 function renderCallups() {
-  const list = [...state.callups].sort((a,b)=>b.date.localeCompare(a.date));
+  const list = deduplicateCallups(state.callups).sort((a,b)=>b.date.localeCompare(a.date));
+  if (document.body.classList.contains('cb-redesign-active')) {
+    $('#callups-list').innerHTML = list.length ? list.map(renderClaudeCallup).join('') : empty('Todavía no hay convocatorias.');
+    return;
+  }
   $('#callups-list').innerHTML = list.length ? list.map((callup) => {
     const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
     const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
@@ -1536,7 +1916,8 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   const events = [
     ...details.goals.map((item) => {
       const assist = item.assistantId ? ` (asist. ${playerName(item.assistantId)})` : '';
-      const label = item.isPenalty ? '🎯 Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : '⚽ Gol');
+      const isFree = item.note && item.note.toLowerCase().includes('falta directa');
+      const label = item.isPenalty ? '🎯⚽ Gol de penalti' : (item.isOwnGoal ? '🥅 Gol P.P.' : (isFree ? '⚡⚽ Gol de falta' : '⚽ Gol de jugada'));
       return {
         id: item.id,
         second: item.second || 0,
@@ -1558,22 +1939,361 @@ function liveDetailsMarkup(prefix, availableIds, match) {
       if (item.type === 'penalty_miss') iconLabel = '❌🎯 Penalti fallado';
       else if (item.type === 'penalty_saved') iconLabel = '🧤🚫 Penalti parado';
       else if (item.type === 'penalty_conceded') iconLabel = '🧤⚽ Penalti encajado';
+      else if (item.type === 'opponent_goal') {
+        if (item.note && item.note.toLowerCase().includes('propia puerta')) iconLabel = '🥅 Gol P.P. nuestro';
+        else if (item.note && item.note.toLowerCase().includes('falta')) iconLabel = '⚡⚽ Gol de falta rival';
+        else if (item.note && item.note.toLowerCase().includes('penalti')) iconLabel = '🎯⚽ Gol de penalti rival';
+        else iconLabel = '⚽ Gol rival';
+      }
       return {
         id: item.id,
         second: item.second || 0,
-        text: `${formatMatchClock(item.second)} · ${iconLabel}: ${playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
+        text: `${formatMatchClock(item.second)} · ${iconLabel}: ${item.playerId === '__rival__' ? 'Rival' : playerName(item.playerId)}${item.note ? ` · ${item.note}` : ''}`,
       };
     }),
   ];
   const comments = roleCanUseOwnerFeatures(state.role) ? `<label>Comentarios internos<textarea id="${prefix}-comments" maxlength="2000">${escapeHtml(details.comments)}</textarea></label><button class="save-live-comments secondary" data-prefix="${prefix}">Guardar comentarios</button>` : '';
-  const scoreTeam = (name, score, team) => `<section class="score-team"><span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
+  const scoreTeam = (name, score, team) => {
+    const mine = team === 'for';
+    const badge = mine
+      ? `<img class="cbx-score-crest" src="${escapeHtml(state.settings?.clubCrest || 'icons/escudo.png')}" alt="Escudo de ${escapeHtml(name)}">`
+      : `<b class="cbx-score-crest cbx-score-rival">${escapeHtml(String(name).split(/\s+/).map((word) => word[0] || '').slice(0, 2).join('').toUpperCase())}</b>`;
+    return `<section class="score-team">${badge}<span>${escapeHtml(name)}</span><strong>${score}</strong><div><button type="button" class="score-step secondary" data-score-team="${team}" data-delta="-1" aria-label="Restar gol a ${escapeHtml(name)}">−</button><button type="button" class="score-step primary" data-score-team="${team}" data-delta="1" aria-label="Sumar gol a ${escapeHtml(name)}">+</button></div></section>`;
+  };
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
+}
+
+function arrangeClaudeLive(phase, logWasOpen, callup) {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const root = $('#live-match');
+  const log = root?.querySelector(':scope > .match-log');
+  const clock = root?.querySelector(':scope > .live-clock');
+  if (!log || !clock) return;
+  const score = log.querySelector('.stadium-score');
+  const venue = log.querySelector('.match-venue');
+  if (!score) return;
+  score.querySelector('.score-separator').textContent = ':';
+  const hero = document.createElement('section');
+  hero.className = 'cbx-live-hero';
+  hero.innerHTML = `<div class="cbx-live-hero-head"><span class="cbx-live-status">● ${escapeHtml(phase === 'ready' ? 'Preparado' : phase === 'halftime' ? 'Descanso' : 'En juego')}</span><span>${escapeHtml(venue?.textContent || '')}</span></div>`;
+  hero.append(score, clock);
+  const targets = clock.querySelector('.live-target-card');
+  let targetDetails = null;
+  if (targets) {
+    targetDetails = document.createElement('details');
+    targetDetails.className = 'cbx-live-targets';
+    targetDetails.innerHTML = '<summary>Ver minutos objetivo de todos los convocados</summary>';
+    targetDetails.append(targets);
+  }
+  const quick = document.createElement('div');
+  quick.className = 'cbx-live-quick-actions';
+  quick.innerHTML = '<button type="button" data-cbx-live-kind="goal">Gol nuestro</button><button type="button" data-cbx-live-rival-goal="1">Gol rival</button><button type="button" data-cbx-live-kind="penalty_goal">Penalti</button><button type="button" data-cbx-live-change="1">Cambio</button><button type="button" data-cbx-live-kind="yellow">Tarjeta</button><button type="button" data-cbx-live-kind="injury">Lesión</button><button type="button" data-cbx-live-kind="incident">Incidencia</button>';
+  hero.append(quick);
+  root.prepend(hero);
+  venue.remove();
+  log.querySelector('summary').textContent = 'Registrar incidencias y ver cronología';
+  log.open = logWasOpen;
+  const tactics = root.querySelector(':scope > #live-tactics');
+  const dashboard = root.querySelector(':scope > .live-reparto-visual-dashboard');
+  const grid = root.querySelector(':scope > .live-grid');
+  const actionRow = root.querySelector(':scope > .button-row');
+  const actionHelp = actionRow?.nextElementSibling;
+  const setPieces = root.querySelector(':scope > .match-set-pieces-quick-card');
+  const main = document.createElement('div');
+  main.className = 'cbx-live-main';
+  const changes = document.createElement('section');
+  changes.className = 'cbx-live-changes panel';
+  changes.innerHTML = '<div class="cbx-live-changes-header"><h3>Cambios</h3><span class="cbx-live-changes-sub">Manual de 1 a 7 · ordenados por minutos</span></div>';
+  if (grid) changes.append(grid);
+  if (actionRow) changes.append(actionRow);
+  if (actionHelp?.matches('p.meta')) changes.append(actionHelp);
+  if (tactics) main.append(tactics);
+  main.append(changes);
+  if (dashboard) main.append(dashboard);
+  if (setPieces) root.append(setPieces);
+  const preparedPlan = prepForMatch(state.timer.matchId);
+  const savedPlan = savedPlanMarkup(preparedPlan);
+  if (savedPlan) root.insertAdjacentHTML('beforeend', savedPlan);
+  else if (!preparedPlan) {
+    const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
+    try {
+      const known = new Set(state.players.map((player) => player.id));
+      if (!keepers.length || (callup.availableIds || []).some((id) => !known.has(id))) throw new Error('incomplete');
+      const baseline = buildAutoPlan({ format: callup.format || state.format, playerIds: callup.availableIds, keeperIds: keepers, planMode: 'escalonado' });
+      const times = baseline.groups.map((group) => `${group.m}′`).join(' · ');
+      root.insertAdjacentHTML('beforeend', `<details class="cbx-live-plan"><summary><span><strong>Plan inicial de convocatoria</strong><small>${escapeHtml(times || 'Sin cambios programados')} · Orientativo</small></span><b>Ver</b></summary><div class="cbx-live-plan-list">${baseline.groups.map((group) => `<p><strong>${group.m}′</strong> ${group.list.map((change) => `${escapeHtml(playerName(change.out))} → ${escapeHtml(playerName(change.inn))}`).join(' · ')}</p>`).join('') || '<p>Sin cambios previstos.</p>'}</div></details>`);
+    } catch { /* Una convocatoria histórica incompleta no genera un plan ficticio. */ }
+  }
+  if (targetDetails) root.append(targetDetails);
+  root.append(main, log);
+  quick.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    if (button.dataset.cbxLiveChange) return openClaudeLiveAction('change');
+    if (button.dataset.cbxLiveRivalGoal) return openClaudeLiveAction('goal-rival');
+    const action = { goal: 'goal-us', penalty_goal: 'penalty', yellow: 'card', injury: 'injury', incident: 'incident' }[button.dataset.cbxLiveKind];
+    if (action) openClaudeLiveAction(action);
+  });
+}
+
+function renderPostMatchSummary(match) {
+  const root = $('#live-match');
+  if (!root) return;
+  const callup = callupForMatch(match);
+  const myTeam = myTeamName();
+  const opponent = match.opponent || 'Rival';
+  const gf = match.goalsFor ?? 0;
+  const ga = match.goalsAgainst ?? 0;
+  const venue = match.venue === 'away' ? 'Visitante' : 'Local';
+  const dateFormatted = formatLongDate(match.date) || 'Hoy';
+  const playedMinutes = Math.round((match.playedSeconds || 0) / 60);
+
+  // Goles a favor
+  const goalEvents = Array.isArray(match.goals) ? match.goals : (Array.isArray(match.details?.goals) ? match.details.goals : []);
+  const scorerCounts = {};
+  for (const g of goalEvents) {
+    if (g.isOwnGoal || g.team === 'own' || g.team === 'rival') {
+      if (g.isOwnGoal && (g.team === 'for' || g.team === 'us')) {
+        scorerCounts['Gol en propia meta'] = (scorerCounts['Gol en propia meta'] || 0) + 1;
+      }
+      continue;
+    }
+    const p = state.players.find((x) => x.id === g.playerId);
+    const name = p ? p.name : (g.playerName || 'Compañero');
+    scorerCounts[name] = (scorerCounts[name] || 0) + 1;
+  }
+  let summaryGoals = '';
+  const scorersList = Object.entries(scorerCounts);
+  if (scorersList.length > 0) {
+    summaryGoals = '⚽ Goles: ' + scorersList.map(([name, count]) => `${name}${count > 1 ? ` (${count})` : ''}`).join(', ');
+  } else if (gf > 0) {
+    summaryGoals = `⚽ Goles: ${gf} ${gf === 1 ? 'gol marcado' : 'goles marcados'}`;
+  } else {
+    summaryGoals = '⚽ Sin goles a favor';
+  }
+
+  // Minutos por jugador convocado
+  const availableIds = callup?.availableIds || Object.keys(match.minuteTotals || {});
+  const minuteTotals = match.minuteTotals || {};
+  const calledPlayers = state.players.filter((p) => availableIds.includes(p.id));
+  calledPlayers.sort((a, b) => (cleanPlayerNumber(a.number) - cleanPlayerNumber(b.number)) || a.name.localeCompare(b.name));
+
+  const summaryMins = calledPlayers.length
+    ? '⏱️ Minutos: ' + calledPlayers.map((p) => {
+        const mins = Math.round((minuteTotals[p.id] || 0) / 60);
+        const dorsal = p.number ? `${cleanPlayerNumber(p.number)} · ` : '';
+        return `${dorsal}${p.name} ${mins}′`;
+      }).join(' · ')
+    : 'Sin minutos registrados';
+
+  // Panel de puntuaciones para el entrenador
+  const isOwner = roleCanUseOwnerFeatures(state.role);
+  let ratingsHtml = '';
+  if (isOwner && calledPlayers.length) {
+    const rateRows = calledPlayers.map((p) => {
+      const currentRating = Number(match.ratings?.[p.id] || 0);
+      const dorsal = p.number ? `${cleanPlayerNumber(p.number)} · ` : '';
+      const stars = [1, 2, 3, 4, 5].map((val) => {
+        const active = currentRating === val;
+        return `<button type="button" class="cbx-star-btn ${active ? 'is-active' : ''}" data-player-id="${p.id}" data-rating="${val}" aria-label="${val} estrellas">${val}</button>`;
+      }).join('');
+      return `<div class="cbx-rating-row"><span class="cbx-rating-name">${escapeHtml(dorsal)}${escapeHtml(p.name)}</span><div class="cbx-stars-group">${stars}</div></div>`;
+    }).join('');
+
+    ratingsHtml = `
+      <article class="cbx-ratings-card">
+        <div class="cbx-ratings-head">
+          <h3>Puntuar convocados</h3>
+          <span>Opcional · puedes hacerlo después</span>
+        </div>
+        <div class="cbx-rating-grid">${rateRows}</div>
+        <div class="cbx-ratings-actions">
+          <button type="button" class="cbx-ratings-save-btn" id="postmatch-save-ratings">Guardar puntuaciones</button>
+          <button type="button" class="cbx-ratings-later-btn" id="postmatch-later-ratings">Puntuar más tarde</button>
+        </div>
+      </article>
+    `;
+  }
+
+  root.innerHTML = `
+    <div class="cbx-postmatch-view">
+      <section class="cbx-postmatch-hero">
+        <span class="cbx-postmatch-badge">✓ Partido Finalizado</span>
+        <div class="cbx-postmatch-score">${escapeHtml(myTeam)} ${gf} : ${ga} ${escapeHtml(opponent)}</div>
+        <div class="cbx-postmatch-meta">${escapeHtml(dateFormatted)} · ${venue} · Tiempo jugado: ${playedMinutes} min</div>
+      </section>
+
+      <article class="cbx-family-summary-card">
+        <div class="cbx-family-subtitle">Resumen para las familias</div>
+        <div class="cbx-family-title">${escapeHtml(myTeam)} ${gf} – ${ga} ${escapeHtml(opponent)}</div>
+        <div class="cbx-family-goals">${escapeHtml(summaryGoals)}</div>
+        <div class="cbx-family-minutes">${escapeHtml(summaryMins)}</div>
+        <button type="button" class="cbx-family-wa-btn" id="postmatch-wa-btn">
+          <span>📲 Enviar resumen por WhatsApp</span>
+        </button>
+      </article>
+
+      ${ratingsHtml}
+
+      <div class="cbx-postmatch-actions">
+        <button type="button" class="secondary" id="postmatch-print-plan">🖨️ Imprimir plan y acta</button>
+        <button type="button" class="secondary" id="postmatch-go-calendar">📅 Ver en Calendario</button>
+        ${isOwner ? `<button type="button" class="secondary" id="postmatch-reopen-btn">🔄 Reabrir partido</button>` : ''}
+        <button type="button" class="secondary" id="postmatch-close-btn">✕ Cerrar y salir</button>
+      </div>
+    </div>
+  `;
+
+  // WhatsApp
+  $('#postmatch-wa-btn')?.addEventListener('click', () => {
+    const text = buildWhatsAppMatchFamilySummary({ match, players: state.players, callup, teamName: myTeam });
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    window.open(waUrl, '_blank');
+    toast('Resumen copiado y abriendo WhatsApp...');
+  });
+
+  // Puntuaciones
+  root.querySelectorAll('.cbx-star-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const row = e.currentTarget.closest('.cbx-rating-row');
+      const val = Number(e.currentTarget.dataset.rating);
+      const isAlreadyActive = e.currentTarget.classList.contains('is-active');
+      row.querySelectorAll('.cbx-star-btn').forEach((b) => b.classList.remove('is-active'));
+      if (!isAlreadyActive) {
+        e.currentTarget.classList.add('is-active');
+      }
+    });
+  });
+
+  $('#postmatch-save-ratings')?.addEventListener('click', async () => {
+    const ratings = { ...(match.ratings || {}) };
+    root.querySelectorAll('.cbx-rating-row').forEach((row) => {
+      const activeBtn = row.querySelector('.cbx-star-btn.is-active');
+      const pId = activeBtn?.dataset.playerId || row.querySelector('.cbx-star-btn')?.dataset.playerId;
+      if (pId) {
+        if (activeBtn) {
+          ratings[pId] = Number(activeBtn.dataset.rating);
+        } else {
+          delete ratings[pId];
+        }
+      }
+    });
+    const playersToUpdate = state.players.filter((p) => availableIds.includes(p.id));
+    const rated = replacePlayerRatings(playersToUpdate, ratings, { role: state.role, matchId: match.id, date: match.date, opponent: match.opponent });
+    const updatedMatch = { ...match, ratings: rated.ratings };
+    await putBatch({ players: rated.players, matches: [updatedMatch] });
+    toast('Puntuaciones guardadas en el partido y en cada ficha.');
+    await refresh(true);
+    renderPostMatchSummary(updatedMatch);
+  });
+
+  $('#postmatch-later-ratings')?.addEventListener('click', () => {
+    toast('Podrás puntuar desde el detalle del partido en Calendario.');
+    state.recentFinishedMatchId = null;
+    renderLive();
+  });
+
+  // Imprimir
+  $('#postmatch-print-plan')?.addEventListener('click', () => {
+    if (typeof window.__campobase?.printMatchPlan === 'function') {
+      window.__campobase.printMatchPlan(match.id, state);
+    }
+  });
+
+  // Calendario
+  $('#postmatch-go-calendar')?.addEventListener('click', () => {
+    state.recentFinishedMatchId = null;
+    showView('calendario');
+  });
+
+  // Reabrir
+  $('#postmatch-reopen-btn')?.addEventListener('click', () => {
+    reopenLiveMatch(match.id).catch(handleError);
+  });
+
+  // Cerrar y salir
+  $('#postmatch-close-btn')?.addEventListener('click', () => {
+    state.recentFinishedMatchId = null;
+    renderLive();
+  });
+}
+
+async function reopenLiveMatch(matchId) {
+  const match = state.matches.find((m) => m.id === matchId);
+  if (!match) return;
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo Migue puede reabrir el partido.');
+  const callup = callupForMatch(match);
+  if (!callup) return toast('No se encontró la convocatoria para este partido.');
+
+  const season = seasonKey(match.date);
+  const isPreseason = isPreseasonMatch(match);
+  const updatedPlayers = state.players.map((p) => {
+    if (!callup.availableIds.includes(p.id)) return p;
+    const playerMin = Math.round((match.minuteTotals?.[p.id] ?? 0) / 60);
+    if (!playerMin) return p;
+    const seasonMinutes = { ...(p.seasonMinutes ?? {}) };
+    const preseasonMinutes = { ...(p.preseasonMinutes ?? {}) };
+    if (isPreseason) {
+      preseasonMinutes[season] = Math.max(0, (preseasonMinutes[season] ?? 0) - playerMin);
+    } else {
+      seasonMinutes[season] = Math.max(0, (seasonMinutes[season] ?? 0) - playerMin);
+    }
+    const minuteReasons = (p.minuteReasons ?? []).filter((r) => r.matchId !== match.id);
+    return {
+      ...p,
+      totalMinutes: Math.max(0, (p.totalMinutes ?? 0) - playerMin),
+      seasonMinutes,
+      preseasonMinutes,
+      minuteReasons,
+    };
+  });
+
+  const durationSec = match.playedSeconds || 70 * 60;
+  const rawEvents = Array.isArray(match.substitutionEvents) ? [...match.substitutionEvents] : [];
+  state.timer = {
+    matchId: match.id,
+    phase: 'second_half',
+    elapsed: durationSec,
+    runningSince: null,
+    autoPaused: false,
+    initialOnField: callup.availableIds.slice(0, 7),
+    onField: [...(rawEvents.at(-1)?.inIds || callup.availableIds.slice(0, 7))],
+    events: rawEvents,
+    firstKeeper: match.goalkeeperRotation?.firstKeeper || callup.availableIds[0] || '',
+    secondKeeper: match.goalkeeperRotation?.secondKeeper || callup.availableIds[0] || '',
+    details: {
+      goalsFor: match.goalsFor ?? 0,
+      goalsAgainst: match.goalsAgainst ?? 0,
+      goals: match.goals ? [...match.goals] : [],
+      cards: match.cards ? [...match.cards] : [],
+      injuries: match.injuries ? [...match.injuries] : [],
+      incidents: match.incidents ? [...match.incidents] : [],
+      comments: match.comments || '',
+      minuteReasons: match.minuteReasons ? { ...match.minuteReasons } : {},
+    },
+    delegateUnlocked: true,
+  };
+  state.recentFinishedMatchId = null;
+  const inProgressMatch = { ...match, status: 'in_progress' };
+  await putBatch({ players: updatedPlayers, matches: [inProgressMatch], settings: [{ id: 'live', timer: state.timer, updatedAt: Date.now() }] });
+  await refresh(true);
+  showView('partido');
+  toast('Partido reabierto en el 2.º tiempo.');
 }
 
 function renderLive() {
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
+    if (state.recentFinishedMatchId) {
+      const finishedMatch = state.matches.find((m) => m.id === state.recentFinishedMatchId);
+      if (finishedMatch && finishedMatch.status === 'finished') {
+        return renderPostMatchSummary(finishedMatch);
+      }
+    }
     // Si hay una preparación guardada para un partido próximo no finalizado, cargarla automáticamente para no perder el trabajo de Migue
     const savedPrep = state.preparaciones?.find((p) => {
       if (!p.team?.length) return false;
@@ -1584,11 +2304,16 @@ function renderLive() {
       applyPreparacionToLive(savedPrep).catch(() => {});
       return;
     }
-    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : empty('Necesitas un partido con convocatoria para iniciar el control en vivo.');
+    root.innerHTML = eligible.length ? `<label>Partido convocado<select id="live-select"><option value="">Selecciona…</option>${eligible.map((match) => `<option value="${match.id}">${escapeHtml(localDate(match.date))} · ${match.venue === 'away' ? 'Visitante' : 'Local'} · ${escapeHtml(match.opponent)}</option>`).join('')}</select></label><div class="form-row keeper-selectors"><label>Portero primer tiempo<select id="first-keeper" disabled><option value="">Selecciona el partido…</option></select></label><label>Portero segundo tiempo<select id="second-keeper" disabled><option value="">Selecciona el partido…</option></select></label></div><p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p><div class="button-row"><button id="prepare-live" class="primary">Preparar partido</button></div>` : `<div class="empty-state"><p>Necesitas un partido con convocatoria para iniciar el control en vivo.</p><div class="button-row" style="margin-top:14px;justify-content:center"><button type="button" class="primary" id="live-go-prep">Ir a Preparación de partido</button></div></div>`;
     const prepBtn = $('#prepare-live');
     if (prepBtn && !prepBtn.dataset.directBound) {
       prepBtn.dataset.directBound = '1';
       prepBtn.addEventListener('click', () => prepareLive().catch(handleError));
+    }
+    const goPrepBtn = $('#live-go-prep');
+    if (goPrepBtn && !goPrepBtn.dataset.directBound) {
+      goPrepBtn.dataset.directBound = '1';
+      goPrepBtn.addEventListener('click', () => showView('preparacion'));
     }
     return;
   }
@@ -1618,22 +2343,47 @@ function renderLive() {
     }
   }
 
-  // Durante la preparación, la pizarra es la fuente de la alineación.
+  // En fase preparada, una preparación persistida es la fuente canónica de
+  // posiciones. Esto permite que Realtime/polling reemplacen una pizarra vieja
+  // en otro dispositivo antes de volver a sincronizar el timer.
   ensureLiveTactic();
-  if (state.timer.phase === 'ready' && liveTactic) syncTimerFromLiveTactic();
+  if (state.timer.phase === 'ready' && liveTactic) {
+    syncLiveTacticFromTimer();
+    syncTimerFromLiveTactic();
+  } else if (liveTactic) {
+    syncLiveTacticFromTimer();
+  }
   const phaseLabels = { ready: 'Preparado', first_half: '1.er tiempo', halftime: 'Descanso', second_half: state.timer.autoPaused ? '2.º tiempo pausado' : '2.º tiempo' };
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Final del partido' };
   const fieldIds = state.timer.onField || [];
   const unlockBtn = roleCanUseOwnerFeatures(state.role)
     ? `<button id="unlock-delegate" class="secondary" title="Permite que el delegado vea este partido antes de los 20 min">${state.timer.delegateUnlocked ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>`
     : '';
-  root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
+  // Preservar el estado abierto de TODOS los desplegables/details para que el refresco no los cierre
+  const openDetailsClasses = new Set();
+  const openDetailsSummaries = new Set();
+  root.querySelectorAll('details[open]').forEach((d) => {
+    d.className.trim().split(/\s+/).forEach((c) => c && openDetailsClasses.add(c));
+    const s = d.querySelector('summary')?.textContent?.trim();
+    if (s) openDetailsSummaries.add(s);
+  });
+  root.innerHTML = `${liveDetailsMarkup('owner', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="clock" class="clock">${formatMatchClock(seconds)}</div><div id="half" class="half">${phaseLabels[state.timer.phase]} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase]}</button><button type="button" class="cbx-live-print-plan secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button>${unlockBtn}${roleCanUseOwnerFeatures(state.role) ? '<button id="open-delegate" class="secondary">Vista Delegado</button><button id="exit-live" class="danger">Salir sin finalizar</button>' : ''}</div>${targetSummaryMarkup()}</div>
   ${setPiecesQuickBanner()}
   ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
   <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
+  arrangeClaudeLive(state.timer.phase, openDetailsClasses.has('match-log'), callup);
   renderLiveTactics();
+  updateLivePlanAlerts();
+  // Restaurar estado abierto en todos los details del partido en vivo
+  root.querySelectorAll('details').forEach((d) => {
+    const hasClass = d.className.trim().split(/\s+/).some((c) => openDetailsClasses.has(c));
+    const s = d.querySelector('summary')?.textContent?.trim();
+    if (hasClass || (s && openDetailsSummaries.has(s))) {
+      d.open = true;
+    }
+  });
   startTicks();
 }
 
@@ -1657,7 +2407,11 @@ function syncLiveTacticFromTimer() {
   if (state.timer.phase === 'ready') {
     const prep = prepForMatch(state.timer.matchId);
     if (prep?.team?.length) {
-      liveTactic.team = prep.team.map((p) => ({ ...p }));
+      liveTactic = {
+        ...liveTactic,
+        formacion: prep.formacion ?? liveTactic.formacion,
+        team: prep.team.map((p) => ({ ...p })),
+      };
       return;
     }
   }
@@ -1677,17 +2431,67 @@ function syncTimerFromLiveTactic() {
   const newField = liveTactic.team.map((p) => p.playerId).filter(Boolean);
   const oldField = state.timer.onField || [];
   const same = newField.length === oldField.length && newField.every((id, i) => id === oldField[i]);
-  if (same) return;
   if (state.timer.phase === 'ready') {
-    state.timer.onField = newField;
+    state.timer.onField = [...newField];
+    state.timer.initialOnField = [...newField];
+    const keeperSlot = liveTactic.team.find((position) => position.pos === 'Portero' && position.playerId);
+    if (keeperSlot?.playerId) state.timer.firstKeeper = keeperSlot.playerId;
     return;
   }
+  if (same) return;
   const outIds = oldField.filter((id) => !newField.includes(id));
   const inIds = newField.filter((id) => !oldField.includes(id));
   if (outIds.length || inIds.length) {
     state.timer.events.push({ second: timerSeconds(), outIds, inIds });
     state.timer.onField = newField;
   }
+}
+
+// En fase "Preparado", la pizarra del entrenador es estado persistente, no solo
+// una representación visual. Cada cambio válido se guarda como preparación
+// canónica y también actualiza settings/live para sobrevivir a recargas.
+async function persistReadyLineupFromLiveTactic() {
+  if (!state.timer || state.timer.phase !== 'ready' || !liveTactic) return false;
+  const match = state.matches.find(({ id }) => String(id) === String(state.timer.matchId));
+  const callup = callupForMatch(match);
+  if (!match || !callup) return false;
+  const format = String(callup.format || match.format || state.format || 'F7').toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const team = (liveTactic.team || []).map((position) => ({ ...position }));
+  const playerIds = team.map((position) => position.playerId).filter(Boolean);
+  if (playerIds.length !== config.players || new Set(playerIds).size !== config.players) return false;
+  const availableIds = callup.availableIds || [];
+  if (!playerIds.every((id) => availableIds.includes(id))) return false;
+
+  syncTimerFromLiveTactic();
+  const existing = prepForMatch(state.timer.matchId);
+  const record = {
+    ...existing,
+    id: existing?.id ?? uid(),
+    recordType: 'preparacion',
+    matchId: state.timer.matchId,
+    firstKeeper: state.timer.firstKeeper,
+    secondKeeper: state.timer.secondKeeper || state.timer.firstKeeper,
+    formacion: liveTactic.formacion ?? existing?.formacion ?? '1-3-2-1',
+    team,
+    delegateShown: existing?.delegateShown ?? Boolean(state.timer.delegateUnlocked),
+    savedAt: Date.now(),
+  };
+
+  const prepIndex = state.preparaciones.findIndex((item) => String(item.matchId) === String(record.matchId));
+  if (prepIndex >= 0) state.preparaciones[prepIndex] = record;
+  else state.preparaciones.push(record);
+
+  await put('settings', record);
+  await persistTimer();
+  return true;
+}
+
+function queueReadyLineupPersistence() {
+  readyLineupPersistChain = readyLineupPersistChain
+    .catch(() => {})
+    .then(() => persistReadyLineupFromLiveTactic());
+  readyLineupPersistChain.catch(handleError);
 }
 
 // Garantiza que la pizarra en vivo exista (la construye si aún no está), para
@@ -1730,47 +2534,65 @@ function fieldBenchMarkup(fieldIds, callup, config) {
   const targetMap = new Map(targets.map((t) => [t.playerId, t.minutes]));
   const defaultTarget = Math.round((config.duration * config.players) / (callup.availableIds.length || 1));
 
-  const row = (id, checkName) => {
+  const row = (id, checkName, where) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = livePlayerSeconds(id) ?? 0;
     const playedMin = Math.round(playedSec / 60);
     const targetSec = (targetMin || 1) * 60;
     const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
     const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
+    const player = playerById(state.players, id);
+    const dorsal = player?.number || '';
+    const full = playerName(id);
+    const short = nombreCorto(player?.name || full);
+    const isGk = normalizePositions(player).includes('Portero');
     return `
-      <div class="check-row live-player-row">
-        <div class="live-player-row-top">
-          <label>
-            <input type="checkbox" name="${checkName}" value="${id}">
-            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-          </label>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-        </div>
-        <div class="live-player-row-bar">
-          <div class="live-bar-track">
-            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
-          </div>
-          <div class="live-bar-meta">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
-          </div>
-        </div>
-      </div>
+      <label class="check-row live-player-row ${where === 'f' ? 'is-field-row' : 'is-bench-row'}" title="${escapeHtml(full)} · Objetivo: ${targetMin} min (Jugados: ${playedMin} / ${targetMin} min · ${percent}%)">
+        <input type="checkbox" name="${checkName}" value="${id}" class="live-player-check">
+        <span class="live-player-dorsal">${escapeHtml(dorsal)}</span>
+        <span class="live-player-body">
+          <span class="live-player-row-top">
+            <span class="live-player-header">
+              <strong class="live-player-name">${escapeHtml(short)}</strong>
+              ${isGk ? '<span class="live-gk-badge">POR</span>' : ''}
+            </span>
+          </span>
+          <span class="live-bar-track">
+            <span class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></span>
+          </span>
+        </span>
+        <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <span class="sr-only">
+          <span class="live-player-row-bar">
+            <span class="live-bar-meta">
+              <span class="live-target-badge">Obj: <strong>${targetMin} min</strong></span>
+              <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+              <span data-player-pct-label="${id}">(${percent}%)</span>
+            </span>
+          </span>
+        </span>
+      </label>
     `;
   };
 
   return `
     <div class="live-grid">
       <div class="panel on-field">
-        <h3>En campo (${fieldIds.length}/${config.players})</h3>
+        <div class="live-col-head">
+          <span class="live-col-title">En campo · sale</span>
+          <span class="live-col-count">(${fieldIds.length}/${config.players})</span>
+        </div>
         <div class="check-list">
-          ${fieldSorted.map((id) => row(id, 'sub-out')).join('')}
+          ${fieldSorted.map((id) => row(id, 'sub-out', 'f')).join('')}
         </div>
       </div>
       <div class="panel bench">
-        <h3>Suplentes</h3>
+        <div class="live-col-head">
+          <span class="live-col-title">Suplentes · entra</span>
+          <span class="live-col-count">(${benchSorted.length})</span>
+        </div>
         <div class="check-list">
-          ${benchSorted.map((id) => row(id, 'sub-in')).join('')}
+          ${benchSorted.map((id) => row(id, 'sub-in', 'b')).join('')}
         </div>
       </div>
     </div>
@@ -1831,10 +2653,21 @@ function renderTacticsBoard(which) {
   }
   const cur = sc.state();
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === cur.formacion ? 'selected' : ''}>${f}</option>`).join('');
+  const rivalBtnLabel = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
   root.innerHTML = `
     <article class="panel live-tactics">
-      <div class="section-head"><div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div><button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button></div>
-      <div class="formacion-row"><label for="${sc.p}-formacion">Táctica:</label><select id="${sc.p}-formacion">${formacionOptions}</select></div>
+      <div class="section-head">
+        <div><p class="eyebrow">Planteamiento</p><h3>Pizarra táctica en vivo</h3></div>
+        <div class="button-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="${which === 'delegate' ? 'delegate-board' : 'live-board'}" aria-label="Ajustar colores de esta pizarra">⚙️</button><button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-head-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
+          <button type="button" class="secondary live-tactics-full" id="${sc.p}-full">⛶ Ampliar</button>
+        </div>
+      </div>
+      <div class="formacion-row">
+        <label for="${sc.p}-formacion">Táctica:</label>
+        <select id="${sc.p}-formacion">${formacionOptions}</select>
+        <button type="button" class="secondary live-rival-btn" id="${sc.p}-toggle-rival-btn" aria-pressed="${String(liveTacticsShowOpponent)}">${rivalBtnLabel}</button>
+      </div>
       <div class="board-wrap"><svg id="${sc.p}-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra táctica en vivo"></svg></div>
       <div class="tactic-tools live-tactics-tools" id="${sc.p}-tools" role="toolbar" aria-label="Herramientas de la pizarra en vivo"></div>
       <div class="live-tactics-slots" id="${sc.p}-slots"></div>
@@ -1850,6 +2683,49 @@ function renderTacticsBoard(which) {
   bindTacticsBoard(sc, sc.board());
   bindTacticsBoard(sc, sc.boardFull());
   wireTacticsBoard(sc);
+  arrangeClaudeLiveBoard(sc);
+}
+
+let liveTacticsShowOpponent = false;
+let prepShowRival = false;
+
+function arrangeClaudeLiveBoard(sc) {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const root = sc.root()?.querySelector('.live-tactics');
+  const select = sc.formacion();
+  if (!root || !select) return;
+  const chips = document.createElement('div');
+  chips.className = 'cbx-live-formation-chips';
+  chips.setAttribute('role', 'group');
+  chips.setAttribute('aria-label', 'Sistema táctico');
+  chips.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-live-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('') +
+    `<button type="button" class="cbx-live-rival-btn live-rival-btn" id="live-rival-toggle-btn" aria-pressed="${String(liveTacticsShowOpponent)}" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
+  select.after(chips);
+  chips.addEventListener('click', (event) => {
+    const rivalBtn = event.target.closest('#live-rival-toggle-btn');
+    if (rivalBtn) {
+      liveTacticsShowOpponent = !liveTacticsShowOpponent;
+      const label = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      $$('.live-rival-btn, #live-rival-toggle-btn').forEach((b) => {
+        b.textContent = label;
+        b.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      });
+      renderTacticsBoardSvg(sc);
+      renderTacticsBoardSvg(sc, sc.boardFull());
+      toast(liveTacticsShowOpponent ? 'Rival visible en partido en vivo.' : 'Rival oculto.');
+      return;
+    }
+    const button = event.target.closest('[data-live-formation]');
+    if (!button) return;
+    select.value = button.dataset.liveFormation;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    chips.querySelectorAll('button[data-live-formation]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+  });
+  const optionsPanel = document.createElement('section');
+  optionsPanel.className = 'cbx-live-board-options cbx-live-slots-panel panel';
+  optionsPanel.innerHTML = '<div class="cbx-live-slots-head"><h4>Elegir jugadores y herramientas tácticas</h4><p>Puedes cambiar jugadores por puesto o dibujar movimientos tácticos sobre la pizarra.</p></div>';
+  optionsPanel.append(sc.tools(), sc.slots(), root.querySelector('.keeper-note'), root.querySelector('.live-tactics-legend'));
+  root.append(optionsPanel);
 }
 
 function renderTacticsTools(sc) {
@@ -1866,6 +2742,7 @@ function renderTacticsBoardSvg(sc, target) {
   const t = sc.state();
   const svg = target || sc.board();
   if (!svg || !t) return;
+  svg.setAttribute('viewBox', '0 0 100 100');
   const markerId = `arrow-${svg.id}`;
   const parts = [renderTacticArrowDefs(markerId)];
   parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
@@ -1875,21 +2752,25 @@ function renderTacticsBoardSvg(sc, target) {
   parts.push('<rect class="tac-area" x="4" y="80" width="92" height="16"/>');
   parts.push('<rect class="tac-goal" x="40" y="4" width="20" height="4"/>');
   parts.push('<rect class="tac-goal" x="40" y="92" width="20" height="4"/>');
-  t.moves.forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
-  t.team.forEach((p, i) => {
+  (t.moves || []).forEach((m, i) => parts.push(renderTacticArrow(m.from, m.to, m.kind, markerId, i)));
+  (t.team || []).forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
-    const dorsal = pl ? pl.number : p.n;
-    const label = pl ? nombreCorto(pl.name) : '';
-    const labelW = label ? label.length * 1.6 + 1.6 : 0;
+    const dorsal = pl ? pl.number : (p.n || (i + 1));
+    const label = pl ? nombreCorto(pl.name) : (p.pos || '');
+    const labelW = label ? label.length * 1.6 + 1.8 : 0;
     const rectX = p.x - labelW / 2;
-    const rectY = p.y + 2.1;
+    const rectY = p.y + 2.2;
     const rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.8" fill="#0f172a"/><text x="${p.x}" y="${p.y + 3.7}" class="tac-player-label name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  t.opponent.forEach((p, i) => {
-    parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`);
-  });
-  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${t.ball.x}" cy="${t.ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
+  if (liveTacticsShowOpponent || t.showOpponent) {
+    const oppList = (t.opponent && t.opponent.length) ? t.opponent : LIVE_OPPONENT;
+    oppList.forEach((p, i) => {
+      parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${escapeHtml(p.n || (i + 1))}</text></g>`);
+    });
+  }
+  const ball = t.ball || { x: 50, y: 50 };
+  parts.push(`<g class="tac-ball" data-piece="ball"><circle cx="${ball.x}" cy="${ball.y}" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>`);
   svg.innerHTML = parts.join('');
 }
 
@@ -1903,15 +2784,15 @@ function renderTacticsSlots(sc) {
     const pl = playerById(state.players, p.playerId);
     const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
     const opts = ['<option value="">— Sin asignar —</option>'];
-    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
     if (ss.length) {
       opts.push('<option disabled>— Suplentes —</option>');
-      for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+      for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`);
     }
     return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
   const suplentesHTML = suplentesList.length
-    ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
+    ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number ? pl.number + ' · ' : '')}${escapeHtml(pl.name)}</span>`).join('')}</div></div>`
     : '';
   container.innerHTML = filas + suplentesHTML;
   container.querySelectorAll('select').forEach((sel) => {
@@ -1920,7 +2801,11 @@ function renderTacticsSlots(sc) {
       if (!canAssignPlayerToSlot(state.players, sc.which, slot.pos, sel.value)) return renderTacticsSlots(sc);
       sc.setState({ ...sc.state(), team: asignarJugador(sc.state().team, Number(sel.dataset.idx), sel.value) });
       renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-      if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+      if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
     });
   });
 }
@@ -1942,19 +2827,19 @@ function openTacticsPopup(sc, idx, clientX, clientY) {
   const availableIds = liveTacticAvailableIds();
   const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, t.team, p.pos, p.playerId);
   const opts = ['<option value="">— Sin asignar —</option>'];
-  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
   if (ss.length) {
     opts.push('<option disabled>— Suplentes —</option>');
-    for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`);
+    for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`);
   }
   title.textContent = p.pos;
   select.innerHTML = opts.join('');
   select.value = p.playerId;
   popup.dataset.idx = idx;
   popup.classList.add('open');
-  const w = 240, h = 120;
-  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
-  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+  const w = Math.min(340, window.innerWidth - 24), h = 130;
+  popup.style.left = Math.min(window.innerWidth - w - 12, Math.max(12, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 12, Math.max(12, clientY - h - 10)) + 'px';
 }
 
 function bindTacticsBoard(sc, svg) {
@@ -2004,6 +2889,7 @@ function bindTacticsBoard(sc, svg) {
   svg.addEventListener('pointerup', (e) => {
     const t = sc.state();
     if (!t) return;
+    const movedOwnerPlayer = sc.which === 'owner' && t.drag?.type === 'team' && t.drag.moved;
     if (t.drag && t.drag.type === 'team' && !t.drag.moved) {
       openTacticsPopup(sc, t.drag.idx, e.clientX, e.clientY);
     }
@@ -2014,6 +2900,7 @@ function bindTacticsBoard(sc, svg) {
       renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
     }
     t.drag = null;
+    if (movedOwnerPlayer) queueReadyLineupPersistence();
   });
 }
 
@@ -2025,7 +2912,11 @@ function wireTacticsBoard(sc) {
     const team = cargarFormacion(t.team, state.players, liveTacticAvailableIds(), e.target.value, 'F7');
     sc.setState({ ...t, team, formacion: e.target.value, moves: [] });
     renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+    if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
   });
   const tools = sc.tools();
   const toolsFull = sc.toolsFull();
@@ -2038,6 +2929,24 @@ function wireTacticsBoard(sc) {
   if (tools) tools.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
   if (toolsFull) toolsFull.addEventListener('click', (e) => { const b = e.target.closest('[data-live-tool]'); if (b) setTool(b.dataset.liveTool); });
 
+  const liveRivalBtns = [
+    $(`#${sc.p}-toggle-rival-btn`),
+    $(`#${sc.p}-toggle-rival-head-btn`),
+  ].filter(Boolean);
+  liveRivalBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      liveTacticsShowOpponent = !liveTacticsShowOpponent;
+      const label = liveTacticsShowOpponent ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      $$('.live-rival-btn, #live-rival-toggle-btn').forEach((b) => {
+        b.textContent = label;
+        b.setAttribute('aria-pressed', String(liveTacticsShowOpponent));
+      });
+      renderTacticsBoardSvg(sc);
+      renderTacticsBoardSvg(sc, sc.boardFull());
+      toast(liveTacticsShowOpponent ? 'Rival visible en partido en vivo.' : 'Rival oculto.');
+    });
+  });
+
   const popup = sc.popup();
   const popupSelect = sc.popupSelect();
   if (popupSelect) popupSelect.addEventListener('change', () => {
@@ -2048,7 +2957,11 @@ function wireTacticsBoard(sc) {
     if (!canAssignPlayerToSlot(state.players, sc.which, t.team[idx].pos, popupSelect.value)) return;
     sc.setState({ ...t, team: asignarJugador(t.team, idx, popupSelect.value) });
     renderTacticsSlots(sc); renderTacticsBoardSvg(sc); renderTacticsBoardSvg(sc, sc.boardFull());
-    if (sc.which === 'owner') { syncTimerFromLiveTactic(); renderFieldBench(); }
+    if (sc.which === 'owner') {
+      syncTimerFromLiveTactic();
+      renderFieldBench();
+      queueReadyLineupPersistence();
+    }
   });
   if (!liveTacticsDocBound) {
     liveTacticsDocBound = true;
@@ -2445,32 +3358,44 @@ function renderDelegate() {
     ? `${playerName(suggestion.inIds[0])} ha jugado menos. Mételo y saca a ${playerName(suggestion.outIds[0])}.`
     : 'No hay jugadores disponibles entre los suplentes.';
 
-  const row = (id, name) => {
+  const row = (id, name, where) => {
     const targetMin = targetMap.get(id) ?? defaultTarget;
     const playedSec = played[id] ?? 0;
     const playedMin = Math.round(playedSec / 60);
     const targetSec = (targetMin || 1) * 60;
     const percent = Math.min(100, Math.round((playedSec / targetSec) * 100));
     const fillClass = percent >= 100 ? 'prog-complete' : percent >= 60 ? 'prog-good' : percent >= 30 ? 'prog-mid' : 'prog-low';
+    const player = playerById(state.players, id);
+    const dorsal = player?.number || '';
+    const full = playerName(id);
+    const short = nombreCorto(player?.name || full);
+    const isGk = normalizePositions(player).includes('Portero');
     return `
-      <div class="check-row live-player-row">
-        <div class="live-player-row-top">
-          <label>
-            <input type="checkbox" name="${name}" value="${id}">
-            <span class="live-player-name">${escapeHtml(playerName(id))}</span>
-          </label>
-          <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
-        </div>
-        <div class="live-player-row-bar">
-          <div class="live-bar-track">
-            <div class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></div>
-          </div>
-          <div class="live-bar-meta">
-            <span class="live-target-badge" title="Minutos recomendados para este partido">Obj: <strong>${targetMin} min</strong></span>
-            <span><span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span> <span data-player-pct-label="${id}">(${percent}%)</span></span>
-          </div>
-        </div>
-      </div>
+      <label class="check-row live-player-row ${where === 'f' ? 'is-field-row' : 'is-bench-row'}" title="${escapeHtml(full)} · Objetivo: ${targetMin} min (Jugados: ${playedMin} / ${targetMin} min · ${percent}%)">
+        <input type="checkbox" name="${name}" value="${id}" class="live-player-check">
+        <span class="live-player-dorsal">${escapeHtml(dorsal)}</span>
+        <span class="live-player-body">
+          <span class="live-player-row-top">
+            <span class="live-player-header">
+              <strong class="live-player-name">${escapeHtml(short)}</strong>
+              ${isGk ? '<span class="live-gk-badge">POR</span>' : ''}
+            </span>
+          </span>
+          <span class="live-bar-track">
+            <span class="live-bar-fill ${fillClass}" data-player-progress="${id}" style="width: ${percent}%;"></span>
+          </span>
+        </span>
+        <strong data-player-clock="${id}" class="live-clock-badge">${formatMatchClock(playedSec)}</strong>
+        <span class="sr-only">
+          <span class="live-player-row-bar">
+            <span class="live-bar-meta">
+              <span class="live-target-badge">Obj: <strong>${targetMin} min</strong></span>
+              <span data-player-min-label="${id}">${playedMin} / ${targetMin} min</span>
+              <span data-player-pct-label="${id}">(${percent}%)</span>
+            </span>
+          </span>
+        </span>
+      </label>
     `;
   };
 
@@ -2478,8 +3403,11 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><h3>Sale del campo</h3>${delegateFieldIds.map((id) => row(id, 'delegate-out')).join('')}</div><div class="panel bench"><h3>Entra al campo</h3>${delegateBenchIds.map((id) => row(id, 'delegate-in')).join('')}</div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
+  if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
   renderDelegateTactics();
+  updateLivePlanAlerts();
 }
 
 function enterDelegateMode() {
@@ -2556,6 +3484,58 @@ async function executeLiveSubstitution(outIds, inIds, source = '') {
   await persistTimer();
   renderLive(); renderDelegate();
   toast(source === 'delegate' ? 'Cambio del delegado registrado.' : 'Cambio registrado.');
+}
+
+async function applySavedPlanMoment(momentId) {
+  if (!state.timer) return;
+  if (state.timer.phase === 'ready') return toast('Inicia el partido antes de aplicar un momento del plan.');
+  const prep = prepForMatch(state.timer.matchId);
+  if (!prep) return;
+  const moment = normalizeMoments(prep).find((item) => item.id === momentId);
+  const callup = liveCallup();
+  if (!moment || !callup || !validLineup(moment.team, callup.availableIds || [])) return toast('Este momento necesita una alineación completa de convocados.');
+  const nextIds = lineupIds(moment.team);
+  const oldIds = state.timer.onField || [];
+  const outIds = oldIds.filter((id) => !nextIds.includes(id));
+  const inIds = nextIds.filter((id) => !oldIds.includes(id));
+  const oldTeam = ensureLiveTactic()?.team || [];
+  const changes = describeMoment({ team: oldTeam, formation: liveTactic?.formacion }, moment);
+  state.timer.events.push({ second: timerSeconds(), outIds, inIds, source: 'plan', momentId,
+    positions: changes.moved, formation: changes.formation, keeperId: changes.keeperId });
+  state.timer.onField = nextIds;
+  state.timer.planDone = [...new Set([...(state.timer.planDone || []), momentId])];
+  state.timer.planDeferred = (state.timer.planDeferred || []).filter((id) => id !== momentId);
+  liveTactic = { ...ensureLiveTactic(), formacion: moment.formation, team: moment.team.map((slot) => ({ ...slot })) };
+  const keeper = moment.team.find((slot) => slot.pos === 'Portero')?.playerId;
+  if (keeper) {
+    if (state.timer.phase === 'second_half') state.timer.secondKeeper = keeper;
+    else state.timer.firstKeeper = keeper;
+  }
+  await persistTimer();
+  renderLive(); renderDelegate();
+  toast(`Plan del ${moment.minute}′ aplicado.`);
+}
+
+function updateLivePlanAlerts() {
+  if (!state.timer) return;
+  const prep = prepForMatch(state.timer.matchId);
+  if (!prep || prep.showPlanInLive === false) return;
+  const moments = normalizeMoments(prep);
+  const now = Math.floor(timerSeconds() / 60);
+  const closed = new Set(state.timer.planAlertClosed || []);
+  const done = new Set(state.timer.planDone || []);
+  const moment = moments.slice(1).find((item) => !closed.has(item.id) && (done.has(item.id) || now >= item.minute - 1));
+  for (const root of [$('#live-match'), $('#delegate-match')]) {
+    if (!root?.querySelector('.cbx-live-plan')) continue;
+    root.querySelector('.cbx-plan-alert')?.remove();
+    if (!moment) continue;
+    const index = moments.findIndex((item) => item.id === moment.id);
+    const lines = momentLines(moments[index - 1], moment);
+    const alert = document.createElement('section');
+    alert.className = 'cbx-plan-alert';
+    alert.innerHTML = `<div><strong>Qué pasa en el ${moment.minute}′ · ${done.has(moment.id) ? 'Hecho ✓' : 'Cambio previsto'}</strong><button type="button" class="cbx-plan-close secondary" data-moment-id="${escapeHtml(moment.id)}">Cerrar aviso</button></div><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>${done.has(moment.id) ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer los cambios</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}`;
+    root.querySelector('.cbx-live-plan').after(alert);
+  }
 }
 
 async function registerDelegateSubstitution(outIds, inIds) {
@@ -2666,8 +3646,13 @@ async function prepareLive() {
     await applyPreparacionToLive(prep);
     return;
   }
-  const firstKeeper = $('#first-keeper')?.value;
-  const secondKeeper = $('#second-keeper')?.value;
+  let firstKeeper = $('#first-keeper')?.value;
+  let secondKeeper = $('#second-keeper')?.value;
+  if (!firstKeeper || !secondKeeper) {
+    updateKeeperOptions(match.id);
+    firstKeeper = $('#first-keeper')?.value;
+    secondKeeper = $('#second-keeper')?.value;
+  }
   if (!firstKeeper || !secondKeeper) return toast('Selecciona el portero de cada tiempo.');
   if (!availableIds.includes(firstKeeper) || !availableIds.includes(secondKeeper)) return toast('Los porteros deben estar convocados.');
   liveTactic = null; // reinicia la pizarra para no arrastrar la alineación del partido anterior
@@ -2737,6 +3722,7 @@ function startTicks() {
     maybeShowUrgentSubstitution(played, seconds);
     maybeShowMinuteAlert(played, seconds);
     maybeShowRepartoAlert(seconds);
+    if (seconds % 60 < 2) updateLivePlanAlerts();
   }, 1000);
 }
 
@@ -2891,9 +3877,10 @@ async function finishMatch() {
       ));
     }
     await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
+    state.recentFinishedMatchId = match.id;
     state.timer = null; clearInterval(state.tick); liveTactic = null; await refresh();
     closeDelegateMode(); showView('partido');
-    toast('Partido finalizado. Puedes puntuar a los jugadores desde el detalle del partido cuando quieras.');
+    toast('Partido finalizado.');
   } finally {
     state.finishing = false;
   }
@@ -3010,10 +3997,194 @@ function renderMatchCard(match) {
   const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
-  return `<article class="panel match-card" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${match.status === 'finished' ? 'accent' : ''}">${match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}<button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button><button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button></div></article>`;
+  const isOwner = roleCanUseOwnerFeatures(state.role);
+  const isLive = Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(match.id)) || match.status === 'in_progress');
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const date = new Date(`${String(match.date).slice(0, 10)}T12:00:00`);
+    const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+    const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+    const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
+    const liveScore = isLive && state.timer?.details ? `${teams.mySide === 'home' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}–${teams.mySide === 'away' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}` : '';
+    const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente'));
+    const resultClass = isLive ? 'live' : (hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
+    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
+  }
+  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
+}
+
+let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let claudeCalendarFilter = 'all';
+let claudeCalendarSelectedDay = null;
+
+function renderClaudeCalendar() {
+  const year = claudeCalendarMonth.getFullYear();
+  const month = claudeCalendarMonth.getMonth();
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const matchDays = new Set(state.matches.map((item) => String(item.date || '').slice(0, 10)));
+  const trainingDays = new Set([...state.trainingSessions, ...state.trainings.filter((item) => item.kind !== 'match')].map((item) => String(item.date || '').slice(0, 10)));
+  const dateKey = (day) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const cells = Array.from({ length: firstWeekday }, () => '<span class="cbx-calendar-spacer"></span>').concat(Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    const key = dateKey(day);
+    const isToday = key === new Date().toLocaleDateString('en-CA');
+    const isSelected = claudeCalendarSelectedDay === key;
+    const hasMatch = matchDays.has(key);
+    const hasTraining = trainingDays.has(key);
+    const dotsHtml = (hasMatch || hasTraining)
+      ? `<span class="cbx-cal-dots">${hasMatch ? '<i class="has-match"></i>' : ''}${hasTraining ? '<i class="has-training"></i>' : ''}</span>`
+      : '<span class="cbx-cal-dots"></span>';
+    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${hasMatch ? ', partido' : ''}${hasTraining ? ', entrenamiento' : ''}"><span>${day}</span>${dotsHtml}</button>`;
+  })).join('');
+  return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span></div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
+}
+
+function renderCalendarFilterBar() {
+  const allCount = state.matches.length + state.trainingSessions.length;
+  const leagueCount = state.matches.filter((m) => (m.type || 'league') === 'league').length;
+  const friendlyCount = state.matches.filter((m) => m.type === 'friendly').length;
+  const tournamentCount = state.matches.filter((m) => m.type === 'tournament').length;
+  const trainingCount = state.trainingSessions.length;
+
+  const filters = [
+    { id: 'all', label: `Todos (${allCount})` },
+    { id: 'league', label: `Liga (${leagueCount})` },
+    { id: 'friendly', label: `Amistosos (${friendlyCount})` },
+    { id: 'tournament', label: `Torneos (${tournamentCount})` },
+    { id: 'training', label: `Entrenos (${trainingCount})` },
+  ];
+
+  return `<nav class="cbx-calendar-filter-bar" aria-label="Filtros de calendario">${filters.map((f) => `<button type="button" class="cbx-calendar-filter-btn${claudeCalendarFilter === f.id ? ' is-active' : ''}" data-calendar-filter="${f.id}" aria-pressed="${claudeCalendarFilter === f.id}">${escapeHtml(f.label)}</button>`).join('')}</nav>`;
+}
+
+function renderTrainingCalendarCard(training) {
+  const dateStr = String(training.date || '').slice(0, 10);
+  const date = new Date(`${dateStr}T12:00:00`);
+  const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+  const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+  const time = training.time || (/^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(training.date || ''))?.[1]) || '17:30';
+  const name = training.name || 'Entrenamiento del equipo';
+  const pitch = training.pitch ? ` · ${training.pitch}` : '';
+  const duration = training.totalDuration ? ` · ${training.totalDuration} min` : '';
+
+  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>Sesión planificada</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>` : ''}</div></details></article>`;
 }
 
 function renderMatches() {
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const root = $('#matches-list');
+    if (!root) return;
+    const newMatchBtn = $('#calendario button[data-dialog="match-dialog"]');
+    if (newMatchBtn) newMatchBtn.hidden = !roleCanUseOwnerFeatures(state.role);
+
+    // 1. Filtrado de partidos
+    let matchesToRender = state.matches;
+    if (claudeCalendarFilter === 'league') {
+      matchesToRender = state.matches.filter((m) => (m.type || 'league') === 'league');
+    } else if (claudeCalendarFilter === 'friendly') {
+      matchesToRender = state.matches.filter((m) => m.type === 'friendly');
+    } else if (claudeCalendarFilter === 'tournament') {
+      matchesToRender = state.matches.filter((m) => m.type === 'tournament');
+    } else if (claudeCalendarFilter === 'training') {
+      matchesToRender = [];
+    }
+
+    if (claudeCalendarSelectedDay) {
+      matchesToRender = matchesToRender.filter((m) => String(m.date || '').slice(0, 10) === claudeCalendarSelectedDay);
+    }
+
+    // 2. Filtrado de entrenamientos
+    let relevantTrainings = [];
+    if (claudeCalendarFilter === 'all' || claudeCalendarFilter === 'training') {
+      relevantTrainings = state.trainingSessions;
+      if (claudeCalendarSelectedDay) {
+        relevantTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) === claudeCalendarSelectedDay);
+      }
+    }
+
+    const { upcoming, played } = partitionAndSortMatches(matchesToRender);
+    const isLiveMatch = (m) => Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(m.id)) || m.status === 'in_progress');
+    const liveMatches = upcoming.filter(isLiveMatch);
+    const nonLiveUpcoming = upcoming.filter((m) => !isLiveMatch(m));
+    const league = played.filter((item) => !isPreseasonMatch(item));
+    const preseason = played.filter(isPreseasonMatch);
+
+    const todayStr = localDateKey();
+    const upcomingTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) >= todayStr).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+    const pastTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) < todayStr).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+    const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
+    const trainingGroup = (title, items) => items.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${items.map(renderTrainingCalendarCard).join('')}</div></section>` : '';
+
+    const wasOpen = root.querySelector('#played-matches-collapsible')?.open ?? true;
+    const selectedDayBanner = claudeCalendarSelectedDay ? `
+      <div class="cbx-calendar-selected-day-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f1f5f9;border-radius:12px;margin:8px 0 14px;border:1px solid #e2e8f0;">
+        <span style="font-weight:750;font-size:13px;color:#1e293b;">📅 Eventos del <strong>${escapeHtml(claudeCalendarSelectedDay)}</strong></span>
+        <button type="button" class="cbx-clear-day-btn" style="padding:4px 12px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:12px;font-weight:750;color:#0f172a;">Ver todo el mes</button>
+      </div>` : '';
+
+    const hasAnyEvent = liveMatches.length || nonLiveUpcoming.length || played.length || relevantTrainings.length;
+    const emptyNotice = !hasAnyEvent ? (state.matches.length ? '<p class="meta" style="text-align:center;padding:24px 12px;">No hay eventos para el filtro seleccionado.</p>' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>') : '';
+
+    root.innerHTML = `
+      ${renderClaudeCalendar()}
+      ${renderCalendarFilterBar()}
+      ${selectedDayBanner}
+      ${group('🔴 En juego', liveMatches)}
+      ${group('Próximos', nonLiveUpcoming)}
+      ${trainingGroup('Próximos entrenamientos', upcomingTrainings)}
+      ${played.length || pastTrainings.length ? `
+        <details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
+          <summary>Jugados y completados (${played.length + pastTrainings.length})</summary>
+          ${group('Liga · Jugados', league)}
+          ${group('Pretemporada', preseason)}
+          ${trainingGroup('Entrenamientos pasados', pastTrainings)}
+        </details>` : ''}
+      ${emptyNotice}
+    `;
+
+    if (!root.dataset.claudeCalendarBound) {
+      root.dataset.claudeCalendarBound = '1';
+      root.addEventListener('click', (event) => {
+        const move = event.target.closest('[data-calendar-move]');
+        if (move) {
+          claudeCalendarMonth = new Date(claudeCalendarMonth.getFullYear(), claudeCalendarMonth.getMonth() + Number(move.dataset.calendarMove), 1);
+          renderMatches();
+          return;
+        }
+        if (event.target.closest('[data-calendar-now]')) {
+          claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+          claudeCalendarSelectedDay = null;
+          renderMatches();
+          return;
+        }
+        const filterBtn = event.target.closest('[data-calendar-filter]');
+        if (filterBtn) {
+          claudeCalendarFilter = filterBtn.dataset.calendarFilter;
+          renderMatches();
+          return;
+        }
+        if (event.target.closest('.cbx-clear-day-btn')) {
+          claudeCalendarSelectedDay = null;
+          renderMatches();
+          return;
+        }
+        const day = event.target.closest('[data-calendar-day]');
+        if (day) {
+          const clickedKey = day.dataset.calendarDay;
+          if (claudeCalendarSelectedDay === clickedKey) {
+            claudeCalendarSelectedDay = null;
+          } else {
+            claudeCalendarSelectedDay = clickedKey;
+          }
+          renderMatches();
+          return;
+        }
+      });
+    }
+    return;
+  }
   if (!state.matches.length) {
     $('#matches-list').innerHTML = empty('Añade el calendario de partidos manualmente.');
     return;
@@ -3070,18 +4241,55 @@ function prepForMatch(matchId) {
 function renderPreparaciones() {
   const root = $('#preparacion-list');
   if (!root) return;
-  const matches = preparableMatches();
+  const matches = state.matches.filter((match) => match.status !== 'finished').sort((a, b) => a.date.localeCompare(b.date));
   if (!matches.length) {
-    root.innerHTML = empty('No hay partidos convocados pendientes. Crea una convocatoria en la pestaña Convocatoria.');
+    root.innerHTML = empty('No hay partidos pendientes. Añade uno en Calendario para preparar su alineación.');
     return;
   }
   root.innerHTML = matches.map((match) => {
+    const callup = callupForMatch(match);
+    if (!callup) {
+      return `<article class="panel cbx-prep-card is-pending"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div><span class="pill">Sin preparar</span></div><p class="meta">Prepara la alineación directamente con la plantilla o personaliza la convocatoria previa.</p><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">Preparar partido</button><button type="button" class="prep-create-callup secondary" data-id="${escapeHtml(match.id)}">Convocar y preparar</button><button type="button" class="prep-open secondary" data-focus-plan="true" data-id="${escapeHtml(match.id)}">Plan por tramos</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button></div></article>`;
+    }
     const prep = prepForMatch(match.id);
     const estado = prep
       ? '<span class="pill ok">✓ Preparado</span>'
       : '<span class="pill">Sin preparar</span>';
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(match.venue === 'away' ? 'Visitante' : 'Local')}</span><h3>${escapeHtml(match.opponent)}</h3><p class="meta">${escapeHtml(localDate(match.date))} · ${estado}</p></div><div class="button-row"><button type="button" class="prep-open primary" data-id="${match.id}">${prep ? 'Editar' : 'Preparar'}</button>${prep ? `<button type="button" class="prep-toggle-delegate secondary" data-id="${match.id}">${prep.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button><button type="button" class="prep-delete secondary danger" data-id="${match.id}">Borrar</button>` : ''}</div></div></article>`;
+    return `<article class="panel cbx-prep-card ${prep ? 'is-prepared' : 'is-pending'}"><div class="section-head"><div><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · J${escapeHtml(match.round)}` : ''}</p><h3>${escapeHtml(match.opponent)}</h3></div>${estado}</div><div class="button-row"><button type="button" class="prep-open primary" data-id="${escapeHtml(match.id)}">${prep ? 'Ver y editar plan' : 'Preparar'}</button><button type="button" class="prep-open secondary" data-focus-plan="true" data-id="${escapeHtml(match.id)}">Plan por tramos</button><button type="button" class="prep-print-plan secondary" data-id="${escapeHtml(match.id)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button>${prep ? `<button type="button" class="prep-view-live secondary" data-id="${escapeHtml(match.id)}">Ver plan en Partido en vivo</button><button type="button" class="prep-toggle-delegate secondary" data-id="${escapeHtml(match.id)}">${prep.delegateShown ? 'Ocultar al delegado' : 'Mostrar al delegado'}</button><button type="button" class="prep-view-tactic secondary" data-id="${escapeHtml(match.id)}">Ver táctica (GIF/MP4)</button><button type="button" class="prep-delete secondary danger" data-id="${escapeHtml(match.id)}">Borrar preparación</button>` : ''}</div></article>`;
   }).join('');
+}
+
+async function ensureCallupForMatch(match) {
+  if (!match) return null;
+  let callup = callupForMatch(match);
+  if (callup) return callup;
+  const availableIds = state.players.map((p) => p.id);
+  const format = String(match.format || state.format || 'F7').toUpperCase();
+  const config = FORMATS[format] || FORMATS.F7;
+  const keeperIds = availableIds.filter((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero'));
+  const targets = calculateMinuteTargets(availableIds, config.duration, config.players, keeperIds);
+  callup = {
+    id: uid(),
+    matchId: match.id,
+    date: match.date,
+    opponent: match.opponent,
+    matchType: match.type ?? 'league',
+    format,
+    availableIds,
+    selectedIds: [...availableIds],
+    excludedIds: [],
+    exclusions: [],
+    targets,
+    rotationDecisions: {},
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await putBatch({
+    callups: [callup],
+    matches: [{ ...match, callupId: callup.id, format }],
+  });
+  await refresh(true);
+  return callup;
 }
 
 async function togglePrepDelegateForMatch(matchId) {
@@ -3106,29 +4314,473 @@ async function togglePrepDelegateForMatch(matchId) {
 function prepAvailableIds(matchId) {
   const match = state.matches.find(({ id }) => id === matchId);
   const callup = callupForMatch(match);
-  return callup?.availableIds ?? [];
+  if (Array.isArray(callup?.availableIds) && callup.availableIds.length > 0) {
+    return callup.availableIds;
+  }
+  return state.players.map((p) => p.id);
 }
 
 function prepBuildTeam(formation, keeperId) {
-  return buildLiveState(state.players, prepAvailableIds(prepMatchId), formation, 'F7', keeperId).team;
+  const availableIds = prepAvailableIds(prepMatchId);
+  const baseTeam = buildLiveState(state.players, availableIds, formation, 'F7', keeperId).team;
+  if (!availableIds.length) return baseTeam;
+
+  const safeKeeper = availableIds.includes(keeperId) ? keeperId : (availableIds[0] || '');
+  const outfieldAvailable = availableIds.filter((id) => id !== safeKeeper);
+  const assigned = new Set();
+  if (safeKeeper) assigned.add(safeKeeper);
+
+  return baseTeam.map((slot) => {
+    if (slot.pos === 'Portero') return { ...slot, playerId: safeKeeper };
+    const candidate = outfieldAvailable.find((id) => {
+      if (assigned.has(id)) return false;
+      const pl = state.players.find((p) => p.id === id);
+      return Array.isArray(pl?.positions) && pl.positions.includes(slot.pos);
+    }) || outfieldAvailable.find((id) => !assigned.has(id));
+
+    if (candidate) {
+      assigned.add(candidate);
+      return { ...slot, playerId: candidate };
+    }
+    return { ...slot, playerId: '' };
+  });
 }
 
 function prepCargarFormacion(team, formation, keeperId) {
   return cargarFormacion(team, state.players, prepAvailableIds(prepMatchId), formation, 'F7');
 }
 
-function openPreparacionEditor(matchId) {
+function capturePrepMoment() {
+  if (!prepDraft || !prepMomentsDraft[prepMomentIndex]) return;
+  const current = prepMomentsDraft[prepMomentIndex];
+  if (JSON.stringify(current.team) !== JSON.stringify(prepDraft) || current.formation !== $('#prep-formacion')?.value) prepSuggestedMoments = null;
+  prepMomentsDraft[prepMomentIndex].team = prepDraft.map((slot) => ({ ...slot }));
+  prepMomentsDraft[prepMomentIndex].formation = $('#prep-formacion')?.value || '1-3-2-1';
+}
+
+function momentLines(before, after) {
+  const diff = describeMoment(before, after);
+  const lines = [];
+  diff.pairs.forEach(({ inId, outId }) => lines.push(outId
+    ? `ENTRA ${playerName(inId)} POR ${playerName(outId)}`
+    : `ENTRA ${playerName(inId)}`));
+  diff.outIds.filter((id) => !diff.pairs.some((pair) => pair.outId === id))
+    .forEach((id) => lines.push(`SALE ${playerName(id)}`));
+  diff.moved.forEach(({ playerId, position }) => lines.push(`PUESTO · ${playerName(playerId)} → ${position}`));
+  if (diff.keeperId) lines.push(`PORTERO · ${playerName(diff.keeperId)}`);
+  if (diff.formation) lines.push(`SISTEMA · ${diff.formation}`);
+  return lines;
+}
+
+function savedPlanMarkup(prep) {
+  if (!prep?.team?.length || prep.showPlanInLive === false) return '';
+  const moments = normalizeMoments(prep);
+  const done = new Set(state.timer?.planDone || []);
+  const deferred = new Set(state.timer?.planDeferred || []);
+  const now = Math.floor(timerSeconds() / 60);
+  const summary = moments.slice(1).map((moment) => `${moment.minute}′`).join(' · ');
+  const count = moments.length - 1;
+  const starters = moments[0].team.map((slot) => {
+    const number = playerById(state.players, slot.playerId)?.number;
+    return `<div class="cbx-live-plan-starter"><small>${escapeHtml(slot.pos)}</small><strong>${number ? `<b>${escapeHtml(number)}</b>` : ''}${escapeHtml(playerName(slot.playerId))}</strong></div>`;
+  }).join('');
+  return `<details class="cbx-live-plan"><summary><span><strong>Plan de partido</strong><small>${count} ${count === 1 ? 'momento' : 'momentos'} de cambio${summary ? ` · ${escapeHtml(summary)}` : ''}</small></span><div class="cbx-live-plan-summary-actions"><button type="button" class="cbx-plan-print secondary" data-match-id="${escapeHtml(prep.matchId)}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir</button><b>Ver</b></div></summary><div class="cbx-live-plan-list"><section class="cbx-live-plan-start"><strong>Inicio · ${escapeHtml(moments[0].formation)}</strong><div class="cbx-live-plan-starters">${starters}</div></section>${moments.slice(1).map((moment, index) => {
+    const status = done.has(moment.id) ? 'Hecho ✓' : deferred.has(moment.id) ? 'Aplazado' : now >= moment.minute ? 'Toca ahora' : now === moment.minute - 1 ? 'En 1′' : 'Previsto';
+    const lines = momentLines(moments[index], moment);
+    return `<section class="cbx-live-plan-moment"><header><strong>${moment.minute}′ · ${escapeHtml(moment.formation)}</strong><span>${status}</span></header><ul>${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('') || '<li>Sin cambios.</li>'}</ul>${done.has(moment.id) || state.timer?.phase === 'ready' ? '' : `<button type="button" class="cbx-plan-apply primary" data-moment-id="${escapeHtml(moment.id)}">Hacer estos cambios ahora</button><button type="button" class="cbx-plan-defer secondary" data-moment-id="${escapeHtml(moment.id)}">Ahora no</button>`}</section>`;
+  }).join('')}</div></details>`;
+}
+
+let liveActionDraft = null;
+
+function openClaudeLiveAction(mode) {
+  if (!state.timer) return toast('Prepara un partido antes de registrar acciones.');
+  liveActionDraft = { mode, step: ['injury', 'incident'].includes(mode) ? 2 : 1, type: mode, playerId: '', assistantId: '', note: '', outId: '', inId: '', result: '' };
+  let dialog = $('#cbx-live-action-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'cbx-live-action-dialog';
+    dialog.className = 'cbx-live-action-dialog';
+    document.body.append(dialog);
+    dialog.addEventListener('click', async (event) => {
+      const button = event.target.closest('button');
+      if (!button || !liveActionDraft) return;
+      if (button.dataset.laClose !== undefined) { dialog.close(); return; }
+      if (button.dataset.laBack !== undefined) { liveActionDraft.step = Math.max(1, liveActionDraft.step - 1); renderClaudeLiveAction(); return; }
+      if (button.dataset.laType) {
+        liveActionDraft.type = button.dataset.laType;
+        liveActionDraft.step = ['us-own', 'rival-play', 'rival-penalty', 'rival-free', 'penalty-rival'].includes(liveActionDraft.type) ? 3 : 2;
+        renderClaudeLiveAction(); return;
+      }
+      if (button.dataset.laPlayer) {
+        if (liveActionDraft.mode === 'change') {
+          if (liveActionDraft.step === 1) { liveActionDraft.outId = button.dataset.laPlayer; liveActionDraft.step = 2; }
+          else { liveActionDraft.inId = button.dataset.laPlayer; liveActionDraft.step = 3; }
+        } else { liveActionDraft.playerId = button.dataset.laPlayer; liveActionDraft.step = 3; }
+        renderClaudeLiveAction(); return;
+      }
+      if (button.dataset.laResult) { liveActionDraft.result = button.dataset.laResult; renderClaudeLiveAction(); return; }
+      if (button.dataset.laConfirm !== undefined) {
+        liveActionDraft.assistantId = dialog.querySelector('#cbx-la-assistant')?.value || '';
+        liveActionDraft.note = dialog.querySelector('#cbx-la-note')?.value?.trim() || '';
+        await confirmClaudeLiveAction();
+        dialog.close();
+      }
+    });
+  }
+  renderClaudeLiveAction();
+  dialog.showModal();
+}
+
+function renderClaudeLiveAction() {
+  const dialog = $('#cbx-live-action-dialog');
+  const draft = liveActionDraft;
+  if (!dialog || !draft) return;
+  const callup = liveCallup();
+  const available = callup?.availableIds || [];
+  const field = state.timer?.onField || [];
+  const bench = available.filter((id) => !field.includes(id));
+  const titles = { 'goal-us': 'Gol nuestro', 'goal-rival': 'Gol rival', penalty: 'Penalti', change: 'Cambio', card: 'Tarjeta', injury: 'Lesión', incident: 'Incidencia' };
+  const tile = (label, value, selected = false) => `<button type="button" class="cbx-la-tile ${selected ? 'is-selected' : ''}" data-la-type="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
+
+  const sp = state.settings?.setPieces || {};
+  const activeTacticSlots = liveTactic?.team || [];
+  const getPlayerPos = (id) => {
+    const slot = activeTacticSlots.find((s) => s.playerId === id);
+    if (slot?.pos) return slot.pos;
+    const p = playerById(state.players, id);
+    return p?.positions?.[0] || '';
+  };
+
+  const sortPlayersForAction = (ids) => {
+    const list = [...ids];
+    if (draft.type === 'penalty-us') {
+      const p1 = sp.penalties?.primary;
+      const p2 = sp.penalties?.secondary;
+      return list.sort((a, b) => {
+        const scoreA = a === p1 ? 2 : a === p2 ? 1 : 0;
+        const scoreB = b === p1 ? 2 : b === p2 ? 1 : 0;
+        return scoreB - scoreA;
+      });
+    }
+    if (draft.type === 'us-free') {
+      const fk = [sp.freeKicksLeft?.primary, sp.freeKicksRight?.primary].filter(Boolean);
+      return list.sort((a, b) => {
+        const scoreA = fk.includes(a) ? 1 : 0;
+        const scoreB = fk.includes(b) ? 1 : 0;
+        return scoreB - scoreA;
+      });
+    }
+    return list;
+  };
+
+  const playerTiles = (ids) => {
+    const sorted = sortPlayersForAction(ids);
+    return `<div class="cbx-la-players">${sorted.map((id) => {
+      const p = playerById(state.players, id);
+      const pos = getPlayerPos(id);
+      let badge = '';
+      if (draft.type === 'penalty-us') {
+        if (id === sp.penalties?.primary) badge = '<span class="cbx-la-sp-badge">🎯 1.º Especialista</span>';
+        else if (id === sp.penalties?.secondary) badge = '<span class="cbx-la-sp-badge">🎯 2.º Especialista</span>';
+      } else if (draft.type === 'us-free') {
+        if (id === sp.freeKicksLeft?.primary || id === sp.freeKicksRight?.primary) badge = '<span class="cbx-la-sp-badge">⚡ Falta</span>';
+      }
+      return `<button type="button" class="cbx-la-player ${badge ? 'is-specialist' : ''}" data-la-player="${escapeHtml(id)}"><b>${escapeHtml(p?.number || '—')}</b><div class="cbx-la-pinfo"><span class="cbx-la-pname">${escapeHtml(playerName(id))}</span>${pos ? `<small class="cbx-la-ppos">${escapeHtml(pos)}</small>` : ''}</div>${badge}</button>`;
+    }).join('')}</div>`;
+  };
+
+  let content = '';
+  if (draft.mode === 'change' && draft.step < 3) {
+    content = `<p>${draft.step === 1 ? '¿Quién sale del campo?' : `Sale ${escapeHtml(playerName(draft.outId))}. ¿Quién entra?`}</p>${playerTiles(draft.step === 1 ? field : bench)}`;
+  } else if (draft.step === 1) {
+    const options = draft.mode === 'goal-us' ? [['De jugada', 'us-play'], ['De penalti', 'us-penalty'], ['De falta directa', 'us-free'], ['En propia puerta del rival', 'us-own']]
+      : draft.mode === 'goal-rival' ? [['De jugada', 'rival-play'], ['De penalti', 'rival-penalty'], ['De falta', 'rival-free'], ['En propia puerta nuestra', 'rival-own']]
+      : draft.mode === 'penalty' ? [['A favor (tira nuestro equipo)', 'penalty-us'], ['En contra (defiende nuestro portero)', 'penalty-rival']]
+      : [['Amarilla', 'yellow'], ['Roja', 'red']];
+    content = `<p>Elige el tipo de ${titles[draft.mode].toLowerCase()}.</p><div class="cbx-la-types">${options.map(([label, value]) => tile(label, value)).join('')}</div>`;
+  } else if (draft.step === 2) {
+    const question = draft.type === 'penalty-us' ? '¿Quién tira el penalti? (Especialistas prioritarios)' : draft.type === 'us-free' ? '¿Quién marcó la falta directa?' : draft.type === 'rival-own' ? '¿Quién marcó en propia puerta?' : draft.mode === 'card' ? '¿Quién recibe la tarjeta?' : draft.mode === 'injury' ? '¿Quién se ha lesionado?' : draft.mode === 'incident' ? '¿A quién afecta?' : '¿Quién marca?';
+    content = `<p>${question}</p>${playerTiles(draft.type === 'penalty-us' ? available : field)}`;
+  } else {
+    const activeKeeperId = liveTactic?.team.find((slot) => slot.pos === 'Portero')?.playerId || state.timer?.firstKeeper;
+    let resultOptions = [];
+    if (draft.mode === 'penalty') {
+      if (draft.type === 'penalty-us') {
+        resultOptions = [['⚽ Gol', 'goal'], ['🧤 Parado por meta rival', 'saved'], ['❌ Fuera', 'wide'], ['🪵 Al palo', 'post']];
+      } else {
+        resultOptions = [['⚽ Gol rival', 'goal'], ['🧤 ¡PARADÓN! de nuestro meta', 'saved'], ['❌ Fuera del rival', 'wide'], ['🪵 Al palo del rival', 'post']];
+      }
+    }
+    const summary = draft.mode === 'change' ? `Sale ${playerName(draft.outId)} · entra ${playerName(draft.inId)}` : draft.playerId ? playerName(draft.playerId) : titles[draft.mode];
+    const keeperNotice = draft.type === 'penalty-rival' ? `<div class="cbx-la-keeper-notice">🧤 <b>Portero bajo palos:</b> ${escapeHtml(playerName(activeKeeperId))} (Dorsal ${escapeHtml(playerById(state.players, activeKeeperId)?.number || '—')})</div>` : '';
+    const assistant = draft.mode === 'goal-us' && draft.type !== 'us-own' ? `<label>Asistencia (opcional)<select id="cbx-la-assistant"><option value="">Sin asistencia</option>${available.filter((id) => id !== draft.playerId).map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(playerName(id))}</option>`).join('')}</select></label>` : '';
+    content = `<p>Confirma la acción</p>${keeperNotice}<strong class="cbx-la-summary">${escapeHtml(summary)}</strong>${resultOptions.length ? `<div class="cbx-la-types">${resultOptions.map(([label, value]) => `<button type="button" class="cbx-la-tile ${draft.result === value ? 'is-selected' : ''}" data-la-result="${value}">${label}</button>`).join('')}</div>` : ''}${assistant}${draft.mode !== 'change' ? '<label>Detalle (opcional)<input id="cbx-la-note" maxlength="200" placeholder="Añade un detalle breve"></label>' : ''}<button type="button" class="cbx-la-confirm primary" data-la-confirm ${draft.mode === 'penalty' && !draft.result ? 'disabled' : ''}>Confirmar ${escapeHtml(titles[draft.mode].toLowerCase())}</button>`;
+  }
+  dialog.innerHTML = `<div class="cbx-la-head"><div><small>Partido en vivo · paso ${draft.step} de 3</small><h3>${titles[draft.mode]}</h3></div><button type="button" data-la-close aria-label="Cerrar">✕</button></div><div class="cbx-la-content">${content}</div><footer><button type="button" data-la-back ${draft.step === 1 ? 'disabled' : ''}>← Volver</button><button type="button" data-la-close>Cerrar</button></footer>`;
+}
+
+async function confirmClaudeLiveAction() {
+  const draft = liveActionDraft;
+  if (!draft || !state.timer) return;
+  if (draft.mode === 'change') { await executeLiveSubstitution([draft.outId], [draft.inId], state.role === 'delegate' ? 'delegate' : 'owner'); return; }
+  const details = ensureLiveDetails();
+  let kind = draft.type;
+  let playerId = draft.playerId || '__rival__';
+  let note = draft.note;
+  const activeKeeperId = liveTactic?.team.find((slot) => slot.pos === 'Portero')?.playerId || state.timer.firstKeeper;
+  if (draft.mode === 'goal-us') {
+    kind = draft.type === 'us-penalty' ? 'penalty_goal' : 'goal';
+    if (draft.type === 'us-own') playerId = '__pp__';
+    if (draft.type === 'us-free') note = `Falta directa${note ? ` · ${note}` : ''}`;
+  } else if (draft.mode === 'goal-rival') {
+    kind = 'opponent_goal';
+    note = `${draft.type === 'rival-own' ? 'Propia puerta nuestra' : draft.type === 'rival-penalty' ? 'Penalti rival' : draft.type === 'rival-free' ? 'Falta rival' : 'Jugada rival'}${note ? ` · ${note}` : ''}`;
+  } else if (draft.mode === 'penalty') {
+    playerId = draft.type === 'penalty-rival' ? activeKeeperId : draft.playerId;
+    kind = draft.type === 'penalty-us' ? (draft.result === 'goal' ? 'penalty_goal' : 'penalty_miss') : (draft.result === 'goal' ? 'penalty_conceded' : draft.result === 'saved' ? 'penalty_saved' : 'incident');
+    note = `${draft.result === 'saved' ? 'Parado' : draft.result === 'wide' ? 'Fuera' : draft.result === 'post' ? 'Al palo' : 'Gol'}${note ? ` · ${note}` : ''}`;
+  } else if (draft.mode === 'card') kind = draft.type;
+  else kind = draft.mode;
+
+  state.timer.details = addPlayerMatchEvent(details, { id: uid(), kind, playerId, assistantId: draft.assistantId, second: timerSeconds(), note, isOwnGoal: draft.type === 'us-own' });
+  await persistTimer(); renderLive(); renderDelegate();
+
+  const match = state.matches.find(({ id }) => id === state.timer?.matchId);
+  const teams = matchTeams(match);
+  const updatedDetails = ensureLiveDetails();
+  const gf = updatedDetails.goalsFor ?? 0;
+  const ga = updatedDetails.goalsAgainst ?? 0;
+  const homeScore = teams.mySide === 'home' ? gf : ga;
+  const awayScore = teams.mySide === 'away' ? gf : ga;
+  const scoreText = `${homeScore} : ${awayScore}`;
+  const minuteText = `${Math.max(1, Math.round(timerSeconds() / 60))}′`;
+
+  if (kind === 'goal' || kind === 'penalty_goal') {
+    showLiveCelebration('¡GOOOL!', playerName(playerId), false, scoreText, minuteText);
+  }
+  if (kind === 'penalty_saved') {
+    showLiveCelebration('¡PARADÓN!', playerName(playerId), true, scoreText, minuteText);
+  }
+  toast(draft.mode === 'goal-us' ? '¡GOOOL!' : `${draft.mode === 'goal-rival' ? 'Gol rival' : draft.mode === 'penalty' ? 'Penalti' : draft.mode === 'card' ? 'Tarjeta' : draft.mode === 'injury' ? 'Lesión' : 'Incidencia'} registrado.`);
+}
+
+function showLiveCelebration(title, name, saved = false, scoreText = '', minuteText = '') {
+  document.querySelector('.cbx-live-celebration')?.remove();
+  const celebration = document.createElement('div');
+  celebration.className = `cbx-live-celebration ${saved ? 'is-save' : ''}`;
+  celebration.style.cssText = `position:fixed;z-index:9999999;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;text-align:center;background:${saved ? 'rgba(120, 53, 15, 0.96)' : 'rgba(5, 44, 32, 0.96)'};color:#ffffff !important;backdrop-filter:blur(6px);`;
+  celebration.innerHTML = `<strong style="color:#ffffff !important;text-shadow:0 8px 32px rgba(0,0,0,0.7);">${escapeHtml(title)}</strong><span class="cbx-celebration-hero-name" style="color:#ffffff !important;text-shadow:0 4px 16px rgba(0,0,0,0.6);">${escapeHtml(name)}</span>${scoreText ? `<b class="cbx-celebration-score" style="color:${saved ? '#fde68a' : '#fbbf24'} !important;text-shadow:0 4px 20px rgba(0,0,0,0.8);">${escapeHtml(scoreText)}</b>` : ''}${minuteText ? `<small class="cbx-celebration-min" style="color:#ffffff !important;opacity:0.95;">Minuto ${escapeHtml(minuteText)}</small>` : ''}`;
+  celebration.addEventListener('click', () => celebration.remove());
+  document.body.append(celebration);
+  window.setTimeout(() => celebration.remove(), 2800);
+}
+
+function renderPrepMoments() {
+  const panel = $('#prep-moments');
+  if (!panel || !prepMomentsDraft.length) return;
+  const selected = prepMomentsDraft[prepMomentIndex];
+  const prepCallup = callupForMatch(state.matches.find(({ id }) => id === prepMatchId));
+  const prepConfig = FORMATS[prepCallup?.format || state.format] || FORMATS.F7;
+  const minutes = plannedMinutes(prepMomentsDraft, prepConfig.duration);
+  const availableIds = prepCallup?.availableIds || [];
+  const keeperIds = availableIds.filter(id => normalizePositions(state.players.find(player => player.id === id)).includes('Portero'));
+  const timelineMoments = prepSuggestedMoments || prepMomentsDraft;
+  const timeline = planFromMoments(timelineMoments, availableIds, keeperIds, prepConfig.duration);
+  const proposalChanges = timelineMoments.slice(1).map((moment,index) => `<div class="cbx-plan-change"><strong>${moment.minute}′</strong><span>${momentLines(timelineMoments[index],moment).map(escapeHtml).join('<br>')}</span></div>`).join('');
+  const names = Object.entries(minutes).sort((a, b) => Number(playerById(state.players, a[0])?.number || 999) - Number(playerById(state.players, b[0])?.number || 999));
+  panel.innerHTML = `<div class="cbx-moments-head"><div><p class="eyebrow">Preparar · Plan de cambios</p><h4>Cada momento es una alineación completa</h4><p>Entra X por Y; puedes mover a Z a otro puesto en el mismo momento.</p></div><label class="cbx-plan-switch"><input type="checkbox" id="prep-show-plan" ${panel.dataset.showPlan !== 'false' ? 'checked' : ''}> Mostrar este plan en Partido en vivo</label></div>
+    <div class="cbx-moment-tabs" role="tablist" aria-label="Momentos del partido">${prepMomentsDraft.map((moment, index) => `<button type="button" role="tab" data-prep-moment="${index}" aria-selected="${index === prepMomentIndex}">${index ? `${moment.minute}′` : 'Inicio'}<small>${index ? `${momentLines(prepMomentsDraft[index - 1], moment).length} acciones` : 'Titulares'}</small></button>`).join('')}<button type="button" id="prep-add-moment">+ Cambio</button></div>
+    <div class="cbx-moment-adjust"><strong>${prepMomentIndex ? `Minuto ${selected.minute}` : 'Alineación inicial'}</strong>${prepMomentIndex ? `<div><button type="button" data-prep-minute="-1" aria-label="Adelantar un minuto">−</button><button type="button" data-prep-minute="1" aria-label="Retrasar un minuto">+</button><button type="button" id="prep-remove-moment">Quitar</button></div>` : '<span>Elige a los siete titulares en la pizarra.</span>'}</div>
+    <div class="cbx-moment-summary"><strong>${prepMomentIndex ? `Qué pasa en el ${selected.minute}′` : 'Inicio'}</strong>${prepMomentIndex ? `<ul>${(momentLines(prepMomentsDraft[prepMomentIndex - 1], selected).map((line) => `<li>${escapeHtml(line)}</li>`).join('')) || '<li>Sin cambios respecto al momento anterior.</li>'}</ul>` : '<p>Los titulares serán la base de todos los cambios posteriores.</p>'}</div>
+    <details class="cbx-moment-minutes"><summary>Minutos con este plan</summary><div>${names.map(([id, value]) => `<span>${escapeHtml(playerName(id))}<b>${value}′</b></span>`).join('')}</div></details>
+    <div class="button-row" style="margin-top:0.5rem;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" id="prep-print-moments" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan de partido</button>
+    </div>
+    <section class="cbx-prep-proposal" id="prep-plan-tramos"><div class="cbx-plan-heading"><h4>Plan por tramos</h4><button type="button" class="cbx-context-gear-btn" data-gear-target="prep-plan" aria-label="Colores de Plan por tramos">⚙️</button></div><p class="meta">${prepSuggestedMoments ? 'Propuesta según los convocados y reparto de minutos. Revisa las parejas antes de usarla.' : 'Tu plan actual. Selecciona una barra para seguir los minutos de ese jugador.'}</p>
+    <p class="cbx-plan-guide"><b>1. Elige el reparto</b> · Escalonado: relevos a lo largo del partido. Por partes: relevos agrupados.<br><b>2. Pulsa Sugerir cambios</b> y revisa las barras.<br><b>3. Usa la propuesta</b> para editar jugadores y posiciones. Guarda cuando esté lista.</p><label>Tipo de reparto<select id="prep-plan-mode"><option value="escalonado" ${prepPlanMode === 'escalonado' ? 'selected' : ''}>Escalonado</option><option value="partes" ${prepPlanMode === 'partes' ? 'selected' : ''}>Por partes</option></select></label>
+    <button type="button" id="prep-edit-windows" class="primary">Abrir Plan de tiempos · editar y proponer</button>
+    <button type="button" id="prep-propose-auto" class="primary">✨ Sugerir cambios y minutos</button>
+    ${renderMinuteTimeline(timeline,state.players,'prep:' + prepMatchId)}
+    <div class="cbx-plan-changes">${proposalChanges}</div>
+    <div class="button-row">${prepSuggestedMoments ? '<button type="button" id="prep-copy-auto" class="primary">Usar esta propuesta en mi plan</button><button type="button" id="prep-discard-proposal" class="secondary">Seguir con mi plan</button>' : ''}${prepPreviousMoments ? '<button type="button" id="prep-restore-plan" class="secondary">Volver al plan anterior</button>' : ''}</div></section>`;
+  panel.querySelector('#prep-plan-mode').addEventListener('change', event => { prepPlanMode = event.target.value; prepSuggestedMoments = null; renderPrepMoments(); });
+  panel.querySelector('#prep-show-plan').addEventListener('change', (event) => { panel.dataset.showPlan = String(event.target.checked); });
+}
+
+function selectPrepMoment(index, shouldCapture = true) {
+  if (shouldCapture) capturePrepMoment();
+  if (!prepMomentsDraft[index]) return;
+  prepMomentIndex = index;
+  const moment = prepMomentsDraft[index];
+  prepDraft = moment.team.map((slot) => ({ ...slot }));
+  $('#prep-formacion').value = moment.formation;
+  $$('.cbx-formation-pills button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.prepFormation === moment.formation)));
+  renderPrepBoard(); renderPrepSlots(); renderPrepMoments();
+}
+
+function openPrepWindowEditor(selectedPlayerId = '') {
+  if (!prepMatchId || !prepMomentsDraft.length) return toast('Abre primero la preparación del partido.');
+  capturePrepMoment();
+  const matchId=prepMatchId;
+  const match=state.matches.find(m=>m.id===matchId);
+  const callup=callupForMatch(match);
+  const playerIds=prepAvailableIds(matchId);
+  const keeperIds=playerIds.filter(id=>normalizePositions(state.players.find(p=>p.id===id)).includes('Portero'));
+  const config=FORMATS[callup?.format || state.format] || FORMATS.F7;
+  try {
+    const draft=prepMomentsDraft.map(moment=>completeProposedStarters(moment,playerIds,keeperIds));
+    openMatchWindowEditor({selectedPlayerId,moments:draft,players:state.players,availableIds:playerIds,keeperIds,duration:config.duration,
+      targets:Array.isArray(callup?.targets)?callup.targets:calculateMinuteTargets(playerIds,config.duration,config.players,keeperIds),opponent:match?.opponent,
+      recommend:initial=>{
+        const proposed=structuredClone(initial);
+        for(const slot of proposed.team) {
+          if(slot.pos==='Portero'?!keeperIds.includes(slot.playerId):keeperIds.includes(slot.playerId))slot.playerId='';
+        }
+        return proposePrepMoments({initial:completeProposedStarters(proposed,playerIds,keeperIds),playerIds,keeperIds,format:callup?.format||state.format,mode:prepPlanMode,playerNumbers:Object.fromEntries(state.players.map(p=>[p.id,Number(cleanPlayerNumber(p.number))||999])),idFactory:uid});
+      },
+      onPrint:moments=>printMatchPlan(matchId,state,{momentsDraft:moments,teamDraft:moments[0].team,formacionDraft:moments[0].formation}),
+      onSave:async moments=>{
+        if(prepMatchId!==matchId)throw new Error('La preparación activa ha cambiado.');
+        prepMomentsDraft=structuredClone(moments);prepSuggestedMoments=null;
+        $('#prep-keeper1').value=moments[0].team.find(s=>s.pos==='Portero')?.playerId||'';
+        selectPrepMoment(0,false);
+        await savePreparacion();
+      },
+      onApply:moments=>{
+        if(prepMatchId!==matchId)throw new Error('La preparación activa ha cambiado. Abre de nuevo el editor de ventanas.');
+        prepPreviousMoments=structuredClone(prepMomentsDraft);prepMomentsDraft=moments;prepSuggestedMoments=null;
+        $('#prep-keeper1').value=moments[0].team.find(slot=>slot.pos==='Portero')?.playerId||'';
+        selectPrepMoment(0,false);
+        toast('Ventanas aplicadas al borrador. Guarda la preparación para conservarlas.');
+      }
+    });
+  }catch(error){toast(error.message);}
+}
+
+function suggestPrepMoments() {
+  capturePrepMoment();
+  const callup = callupForMatch(state.matches.find(({ id }) => id === prepMatchId));
+  const playerIds = callup?.availableIds || [];
+  const keeperIds = playerIds.filter(id => normalizePositions(state.players.find(player => player.id === id)).includes('Portero'));
+  try {
+    prepSuggestedMoments = proposePrepMoments({initial:completeProposedStarters(prepMomentsDraft[0],playerIds,keeperIds),playerIds,keeperIds,format:callup?.format||state.format,mode:prepPlanMode,playerNumbers:Object.fromEntries(state.players.map(player=>[player.id,Number(cleanPlayerNumber(player.number))||999])),idFactory:uid});
+    renderPrepMoments();
+    toast('Propuesta lista. Tu plan sigue intacto hasta pulsar Usar esta propuesta.');
+  } catch(error) { toast(error.message); }
+}
+function copyAutoPrepMoments() {
+  capturePrepMoment();
+  if(!prepSuggestedMoments) suggestPrepMoments();
+  if(!prepSuggestedMoments) return;
+  prepPreviousMoments = structuredClone(prepMomentsDraft);
+  prepMomentsDraft = structuredClone(prepSuggestedMoments);
+  prepSuggestedMoments = null;
+  selectPrepMoment(0,false);
+  toast('Propuesta aplicada al borrador. Puedes cambiar posiciones y guardar cuando termines.');
+}
+
+function callupPlanMoments(callupId, matchId) {
+  const visible=callupVisiblePlans.get(callupId);
+  if(!visible) throw new Error('Abre el plan de la convocatoria primero.');
+  if(visible.moments) return structuredClone(visible.moments);
+  const prep=prepForMatch(matchId);
+  const formation=prep?.formacion||'1-3-2-1';
+  const template={formation,team:prep?.team?.length ? prep.team : buildLiveState(state.players,[...visible.plan.gks,...visible.plan.field],formation,'F7',visible.plan.gks[0]).team};
+  return rotationPlanMoments(visible.plan,template,uid);
+}
+async function copyCallupPlanToPrep(callupId, matchId) {
+  const moments=callupPlanMoments(callupId,matchId);
+  showView('preparacion');
+  await openPreparacionEditor(matchId);
+  prepPreviousMoments=structuredClone(prepMomentsDraft);
+  prepMomentsDraft=moments;prepSuggestedMoments=null;
+  $('#prep-keeper1').value=moments[0].team.find(slot=>slot.pos==='Portero')?.playerId||'';
+  selectPrepMoment(0,false);
+  toast('Plan copiado al borrador. Edita jugadores, posiciones y minutos; guarda cuando termines.');
+}
+function arrangeClaudePrepEditor() {
+  if (!document.body.classList.contains('cb-redesign-active')) return;
+  const editor = $('#preparacion-editor');
+  const live = editor?.querySelector('.live-tactics');
+  const head = editor?.querySelector('.section-head');
+  if (!editor || !live || !head) return;
+  const keepers = editor.querySelector('.keeper-selectors');
+  const keeperHelp = keepers?.nextElementSibling;
+  const squad = live.nextElementSibling;
+  const actions = squad?.nextElementSibling;
+  const hint = editor.querySelector('#prep-hint');
+  const layout = document.createElement('div');
+  layout.className = 'cbx-prep-editor-layout';
+  const controls = document.createElement('div');
+  controls.className = 'cbx-prep-controls';
+  const pitch = document.createElement('div');
+  pitch.className = 'cbx-prep-pitch';
+  layout.append(pitch, controls);
+  head.after(layout);
+  layout.before(editor.querySelector('#prep-moments'));
+  controls.append(keepers, keeperHelp, squad, hint, actions);
+  const back = head.querySelector('#prep-back');
+  if (back) actions.insertBefore(back, actions.children[1] || null);
+  pitch.append(live);
+  const slots = live.querySelector('#prep-slots');
+  const slotsPanel = document.createElement('section');
+  slotsPanel.className = 'cbx-prep-slots-details cbx-prep-slots-panel panel';
+  slotsPanel.innerHTML = '<div class="cbx-prep-slots-head"><h4>Elegir jugadores y cambiar posiciones</h4><p>Puedes colocar a cualquier convocado en otro puesto, también si su ficha indica otra posición. Si ya está alineado, se intercambia con el jugador de ese puesto.</p></div>';
+  slotsPanel.append(slots);
+  controls.prepend(slotsPanel);
+  const select = $('#prep-formacion');
+  const pills = document.createElement('div');
+  pills.className = 'cbx-formation-pills';
+  pills.setAttribute('role', 'group');
+  pills.setAttribute('aria-label', 'Formación');
+  pills.innerHTML = LIVE_FORMATIONS.map((formation) => `<button type="button" data-prep-formation="${escapeHtml(formation)}" aria-pressed="${formation === select.value}">${escapeHtml(formation)}</button>`).join('') +
+    `<button type="button" id="prep-toggle-rival-pill" class="cbx-prep-rival-btn" style="margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button>`;
+  select.after(pills);
+  pills.addEventListener('click', (event) => {
+    const rivalBtn = event.target.closest('#prep-toggle-rival-pill');
+    if (rivalBtn) {
+      prepShowRival = !prepShowRival;
+      rivalBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      renderPrepBoard();
+      toast(prepShowRival ? 'Rival visible en la preparación.' : 'Rival oculto.');
+      return;
+    }
+    const button = event.target.closest('[data-prep-formation]');
+    if (!button) return;
+    select.value = button.dataset.prepFormation;
+    pills.querySelectorAll('button[data-prep-formation]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
+async function openPreparacionEditor(matchId) {
   prepMatchId = matchId;
-  const match = state.matches.find(({ id }) => id === matchId);
+  let match = state.matches.find(({ id }) => id === matchId);
+  if (!match) return;
+  let callup = callupForMatch(match);
+  if (!callup) {
+    if (!state.players.length) {
+      toast('Añade jugadores a la plantilla para preparar el partido.');
+      return;
+    }
+    callup = await ensureCallupForMatch(match);
+    match = state.matches.find(({ id }) => id === matchId) || match;
+  }
   const prep = prepForMatch(matchId);
   const availableIds = prepAvailableIds(matchId);
   const keeperOptions = availableIds.map((id) => `<option value="${id}">${escapeHtml(playerName(id))}</option>`).join('');
-  const firstKeeper = prep?.firstKeeper ?? availableIds.find((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero')) ?? availableIds[0] ?? '';
-  const secondKeeper = prep?.secondKeeper ?? firstKeeper;
+  const naturalKeepers = availableIds.filter((id) => normalizePositions(state.players.find((p) => p.id === id)).includes('Portero'));
+  const firstKeeper = prep?.firstKeeper ?? naturalKeepers[0] ?? availableIds[0] ?? '';
+  const secondKeeper = prep?.secondKeeper ?? naturalKeepers[1] ?? firstKeeper;
   const formacion = prep?.formacion ?? '1-3-2-1';
   prepDraft = prep?.team?.length
     ? prep.team.map((p) => ({ ...p }))
     : prepBuildTeam(formacion, firstKeeper);
+  prepMomentsDraft = normalizeMoments({ team: prepDraft, formacion, moments: prep?.moments });
+  prepMomentIndex = 0;
+  prepSuggestedMoments = null; prepPreviousMoments = null;
+  prepPlanMode = callupPlanModes.get(callup.id) || 'escalonado';
   const formacionOptions = LIVE_FORMATIONS.map((f) => `<option value="${f}" ${f === formacion ? 'selected' : ''}>${f}</option>`).join('');
   const convocados = availableIds
     .map((id) => state.players.find((p) => p.id === id))
@@ -3137,33 +4789,39 @@ function openPreparacionEditor(matchId) {
     .map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`)
     .join('');
   $('#preparacion-editor').innerHTML = `
-    <div class="section-head"><div><p class="eyebrow">Preparando</p><h3>${escapeHtml(match.opponent)} · ${escapeHtml(localDate(match.date))}</h3></div><button type="button" id="prep-back" class="secondary">← Volver</button></div>
+    <div class="section-head"><div><p class="eyebrow">Preparando · ${escapeHtml(localDate(match.date))}</p><h3>${match.round ? `J${escapeHtml(match.round)} · ` : ''}${escapeHtml(match.opponent)}</h3></div><div class="button-row"><button type="button" id="prep-print-head" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" id="prep-back-head" class="secondary" title="Volver al listado de partidos">← Volver a partidos</button></div></div>
+    <section class="cbx-prep-moments panel" id="prep-moments" data-show-plan="${prep?.showPlanInLive === false ? 'false' : 'true'}"></section>
     <div class="form-row keeper-selectors"><label>Portero 1er tiempo<select id="prep-keeper1">${keeperOptions}</select></label><label>Portero 2º tiempo<select id="prep-keeper2">${keeperOptions}</select></label></div>
     <p class="meta">Puedes elegir a cualquier convocado como portero, aunque su ficha tenga otra posición.</p>
     <div class="panel live-tactics" style="margin-top:1rem">
-      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button></div>
+      <div class="formacion-row"><label for="prep-formacion">Táctica:</label><select id="prep-formacion">${formacionOptions}</select><button type="button" id="prep-gif" class="secondary">▶ Ver táctica (GIF/MP4)</button><button type="button" id="prep-full-btn" class="secondary" title="Ampliar la pizarra a pantalla completa">⛶ Ampliar pizarra</button><button type="button" id="prep-toggle-rival-btn" class="secondary">${prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival'}</button></div>
       <div class="board-wrap"><svg id="prep-board" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación"></svg></div>
       <div class="live-tactics-slots" id="prep-slots"></div>
       <div class="keeper-note"><strong>Regla del portero:</strong> 1 portero juega el partido completo; si hay 2 porteros, un tiempo cada uno. El portero del 1er tiempo entra en portería automáticamente.</div>
       <div class="live-tactics-legend compact"><strong>Leyenda:</strong><span><i class="dot mi"></i>equipo</span><span><i class="dot rival"></i>rival</span><span><i class="dot ball"></i>balón</span><span>toque = elegir jugador</span></div>
     </div>
     <div class="panel" style="margin-top:1rem"><p class="eyebrow" style="margin-bottom:.4rem">Convocados (desde Convocatoria)</p><div class="suplente-list">${convocados || '<span class="meta">Sin convocados.</span>'}</div></div>
-    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
-    <p class="meta" id="prep-hint">${prep ? 'Preparación guardada. Puedes editarla y volver a guardar.' : 'Completa los 7 titulares (portero incluido) y guarda.'}</p>
+    <div class="button-row"><button type="button" id="prep-save" class="primary">Guardar preparación</button><button type="button" id="prep-print-current" class="secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" id="prep-back" class="secondary">← Volver a partidos</button><button type="button" id="prep-delegate" class="secondary">${prep?.delegateShown ? 'Ocultar al Delegado' : 'Mostrar al Delegado'}</button>${prep ? '<button type="button" id="prep-delete" class="secondary danger">Borrar preparación</button>' : ''}</div>
+    <p class="meta" id="prep-hint">Toca una ficha de la pizarra o usa «Elegir jugadores y cambiar posiciones». Completa los 7 titulares y guarda la preparación.</p>
     <div class="popup live-tactics-popup" id="prep-popup"><h4 class="live-tactics-popup-title" id="prep-popup-title">Posición</h4><select class="live-tactics-popup-select" id="prep-popup-select"></select></div>
-    <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
+    <div class="lightbox live-tactics-lightbox" id="prep-lightbox"><button type="button" class="lb-close" title="Cerrar">✕</button><div class="lb-board" style="display:none;flex-direction:column;align-items:center;gap:.5rem;width:100%"><svg id="prep-board-full" viewBox="0 0 100 100" role="img" aria-label="Pizarra de preparación ampliada" style="background:#0c3b2e;border-radius:12px;touch-action:none;width:min(92vw,calc(100dvh - 10rem));max-width:760px;aspect-ratio:1"></svg></div><div class="lb-controls"><button type="button" class="lb-play" title="Reproducir / Pausar">▶</button><div class="speed"><button type="button" data-s="2" class="on">1×</button><button type="button" data-s="4">2×</button><button type="button" data-s="8">4×</button></div></div></div>`;
   $('#prep-keeper1').value = firstKeeper;
   $('#prep-keeper2').value = secondKeeper;
   $('#preparacion-list').classList.add('hidden');
   $('#preparacion-editor').classList.remove('hidden');
+  $('#preparacion')?.classList.add('is-editing');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  arrangeClaudePrepEditor();
   renderPrepBoard();
   renderPrepSlots();
+  renderPrepMoments();
   wirePrepEditor();
 }
 
-function renderPrepBoard() {
-  const svg = $('#prep-board');
+function renderPrepBoard(targetSvg = null) {
+  const svg = targetSvg || $('#prep-board');
   if (!svg || !prepDraft) return;
+  svg.setAttribute('viewBox', '0 0 100 100');
   const parts = [];
   parts.push('<rect class="tac-field" x="4" y="4" width="92" height="92" rx="3"/>');
   parts.push('<path class="tac-line" d="M50 4v92 M4 50h92"/>');
@@ -3175,16 +4833,22 @@ function renderPrepBoard() {
   prepDraft.forEach((p, i) => {
     const pl = playerById(state.players, p.playerId);
     const dorsal = pl ? pl.number : '';
-    const label = pl ? nombreCorto(pl.name) : '';
+    const label = pl ? nombreCorto(pl.name) : (p.pos || '');
     const labelW = label ? label.length * 1.6 + 1.6 : 0;
-    const rectX = p.x - labelW / 2, rectY = p.y + 2.1, rectH = 3.0;
-    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y - 0.4}" class="num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.6" fill="#000"/><text x="${p.x}" y="${p.y + 3.6}" class="name">${escapeHtml(label)}</text>` : ''}</g>`);
+    const rectX = p.x - labelW / 2, rectY = p.y + 2.2, rectH = 3.0;
+    parts.push(`<g class="tac-player" data-piece="team" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.2"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-player-num num">${escapeHtml(dorsal)}</text>${label ? `<rect x="${rectX}" y="${rectY}" width="${labelW}" height="${rectH}" rx="0.8" fill="#0f172a"/><text x="${p.x}" y="${p.y + 3.7}" class="tac-player-label name">${escapeHtml(label)}</text>` : ''}</g>`);
   });
-  // Rival (mitad superior).
-  const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
-  OPP.forEach((p) => parts.push(`<g class="tac-opponent"><circle cx="${p.x}" cy="${p.y}" r="4.0"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num">${escapeHtml(p.n)}</text></g>`));
-  parts.push('<g class="tac-ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
+  if (prepShowRival) {
+    const OPP = [{ n: '1', x: 50, y: 10 }, { n: '2', x: 30, y: 24 }, { n: '3', x: 50, y: 20 }, { n: '4', x: 70, y: 24 }, { n: '5', x: 30, y: 40 }, { n: '6', x: 70, y: 40 }, { n: '7', x: 50, y: 44 }];
+    OPP.forEach((p, i) => parts.push(`<g class="tac-opponent" data-piece="opponent" data-idx="${i}"><circle cx="${p.x}" cy="${p.y}" r="4.0" fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"/><text x="${p.x}" y="${p.y + 1.3}" class="tac-opp-num" fill="#ffffff" font-size="3.6" font-weight="900" text-anchor="middle">${escapeHtml(p.n)}</text></g>`));
+  }
+  parts.push('<g class="tac-ball" data-piece="ball"><circle cx="50" cy="50" r="2.4" fill="#fff" stroke="#111" stroke-width="0.6"/></g>');
   svg.innerHTML = parts.join('');
+  const fullSvg = $('#prep-board-full');
+  if (fullSvg && svg !== fullSvg && $('#prep-lightbox')?.classList.contains('open')) {
+    fullSvg.setAttribute('viewBox', '0 0 100 100');
+    fullSvg.innerHTML = parts.join('');
+  }
 }
 
 function renderPrepSlots() {
@@ -3194,22 +4858,22 @@ function renderPrepSlots() {
   const suplentesList = suplentes(state.players, availableIds, prepDraft);
   const filas = prepDraft.map((p, i) => {
     const pl = playerById(state.players, p.playerId);
-    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+    const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
     const opts = ['<option value="">— Sin asignar —</option>'];
-    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
-    if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+    for (const x of tt) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
+    if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}" ${x.id === p.playerId ? 'selected' : ''}>${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`); }
     return `<div class="slot"><div class="slot-head"><span class="pos">${escapeHtml(p.pos)}</span><span class="dorsal">${pl ? 'Dorsal ' + escapeHtml(pl.number) : '—'}</span></div><select data-idx="${i}" aria-label="${escapeHtml(p.pos)}">${opts.join('')}</select></div>`;
   }).join('');
-  const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number)} ${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
+  const suplentesHTML = suplentesList.length ? `<div class="suplentes"><h4>SUPLENTES</h4><div class="suplente-list">${suplentesList.map((pl) => `<span class="suplente">${escapeHtml(pl.number ? pl.number + ' · ' : '')}${escapeHtml(pl.name)}</span>`).join('')}</div></div>` : '';
   container.innerHTML = filas + suplentesHTML;
   container.querySelectorAll('select').forEach((sel) => {
     sel.addEventListener('change', () => {
       const idx = Number(sel.dataset.idx);
       const slot = prepDraft[idx];
-      if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, sel.value)) return renderPrepSlots();
+      if (sel.value && !availableIds.includes(sel.value)) return renderPrepSlots();
       prepDraft = asignarJugador(prepDraft, idx, sel.value);
-      if (slot.pos === 'Portero') $('#prep-keeper1').value = sel.value;
-      renderPrepSlots(); renderPrepBoard();
+      if (slot.pos === 'Portero' && prepMomentIndex === 0) $('#prep-keeper1').value = sel.value;
+      capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
     });
   });
 }
@@ -3221,21 +4885,38 @@ function prepOpenPopup(idx, clientX, clientY) {
   if (!popup || !select || !title || !prepDraft) return;
   const p = prepDraft[idx];
   const availableIds = prepAvailableIds(prepMatchId);
-  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId);
+  const { titulares: tt, suplentes: ss } = opcionesPosicion(state.players, availableIds, prepDraft, p.pos, p.playerId, true);
   const opts = ['<option value="">— Sin asignar —</option>'];
-  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)}</option>`);
-  if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number)} ${escapeHtml(x.name)} (Suplente)</option>`); }
+  for (const x of tt) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}</option>`);
+  if (ss.length) { opts.push('<option disabled>— Suplentes —</option>'); for (const x of ss) opts.push(`<option value="${x.id}">${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)} (Suplente)</option>`); }
   title.textContent = p.pos;
   select.innerHTML = opts.join('');
   select.value = p.playerId;
   popup.dataset.idx = idx;
   popup.classList.add('open');
-  const w = 240, h = 120;
-  popup.style.left = Math.min(window.innerWidth - w - 10, Math.max(10, clientX - w / 2)) + 'px';
-  popup.style.top = Math.min(window.innerHeight - h - 10, Math.max(10, clientY - h - 10)) + 'px';
+  const w = Math.min(340, window.innerWidth - 24), h = 130;
+  popup.style.left = Math.min(window.innerWidth - w - 12, Math.max(12, clientX - w / 2)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - h - 12, Math.max(12, clientY - h - 10)) + 'px';
 }
 
 function wirePrepEditor() {
+  const toggleRivalBtn = $('#prep-toggle-rival-btn');
+  if (toggleRivalBtn) {
+    toggleRivalBtn.addEventListener('click', () => {
+      prepShowRival = !prepShowRival;
+      toggleRivalBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+      toggleRivalBtn.setAttribute('aria-pressed', String(prepShowRival));
+      toggleRivalBtn.classList.toggle('active', prepShowRival);
+      const pillBtn = $('#prep-toggle-rival-pill');
+      if (pillBtn) {
+        pillBtn.textContent = prepShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+        pillBtn.setAttribute('aria-pressed', String(prepShowRival));
+        pillBtn.classList.toggle('active', prepShowRival);
+      }
+      renderPrepBoard();
+      toast(prepShowRival ? 'Rival visible en la preparación.' : 'Rival oculto.');
+    });
+  }
   const svg = $('#prep-board');
   if (svg) {
     svg.addEventListener('pointerdown', (e) => {
@@ -3250,14 +4931,14 @@ function wirePrepEditor() {
   }
   const formacion = $('#prep-formacion');
   if (formacion) formacion.addEventListener('change', () => {
-    prepDraft = prepCargarFormacion(prepDraft, formacion.value, $('#prep-keeper1').value);
-    renderPrepSlots(); renderPrepBoard();
+    prepDraft = prepCargarFormacion(prepDraft, formacion.value, prepDraft.find((slot) => slot.pos === 'Portero')?.playerId || $('#prep-keeper1').value);
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
   const keeper1 = $('#prep-keeper1');
   if (keeper1) keeper1.addEventListener('change', () => {
     const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
     prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1.value);
-    renderPrepSlots(); renderPrepBoard();
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
   const popupSelect = $('#prep-popup-select');
   if (popupSelect) popupSelect.addEventListener('change', () => {
@@ -3265,44 +4946,139 @@ function wirePrepEditor() {
     const idx = Number(popup.dataset.idx);
     popup.classList.remove('open');
     const slot = prepDraft[idx];
-    if (!canAssignPlayerToSlot(state.players, 'owner', slot.pos, popupSelect.value)) return;
+    if (popupSelect.value && !prepAvailableIds(prepMatchId).includes(popupSelect.value)) return;
     prepDraft = asignarJugador(prepDraft, idx, popupSelect.value);
-    if (slot.pos === 'Portero') $('#prep-keeper1').value = popupSelect.value;
-    renderPrepSlots(); renderPrepBoard();
+    if (slot.pos === 'Portero' && prepMomentIndex === 0) $('#prep-keeper1').value = popupSelect.value;
+    capturePrepMoment(); renderPrepSlots(); renderPrepBoard(); renderPrepMoments();
   });
-  const back = $('#prep-back');
-  if (back) back.addEventListener('click', () => {
+  const closePopup = (e) => {
+    const popup = $('#prep-popup');
+    if (!popup || !popup.classList.contains('open')) return;
+    if (e.type === 'keydown' && e.key === 'Escape') {
+      popup.classList.remove('open');
+      return;
+    }
+    if (e.type === 'pointerdown' && !popup.contains(e.target) && !e.target.closest('#prep-board')) {
+      popup.classList.remove('open');
+    }
+  };
+  document.removeEventListener('pointerdown', closePopup);
+  document.removeEventListener('keydown', closePopup);
+  document.addEventListener('pointerdown', closePopup);
+  document.addEventListener('keydown', closePopup);
+
+  $('#prep-moments')?.addEventListener('click', (event) => {
+    const target = event.target.closest('button');
+    if (!target) return;
+    if (target.dataset.prepMoment !== undefined) return selectPrepMoment(Number(target.dataset.prepMoment));
+    if (target.id === 'prep-add-moment') {
+      capturePrepMoment();
+      const used = new Set(prepMomentsDraft.map((moment) => moment.minute));
+      let minute = Math.min(69, (prepMomentsDraft.at(-1)?.minute || 0) + 15);
+      while (used.has(minute) && minute < 69) minute += 1;
+      if (used.has(minute)) return toast('No queda otro minuto libre para añadir un cambio.');
+      prepSuggestedMoments = null;
+      const base = prepMomentsDraft.at(-1);
+      prepMomentsDraft.push({ id: uid(), minute, formation: base.formation, team: base.team.map((slot) => ({ ...slot })) });
+      selectPrepMoment(prepMomentsDraft.length - 1);
+    }
+    if (target.id === 'prep-remove-moment' && prepMomentIndex > 0) {
+      capturePrepMoment();
+      prepSuggestedMoments = null;
+      prepMomentsDraft.splice(prepMomentIndex, 1);
+      selectPrepMoment(Math.max(0, prepMomentIndex - 1), false);
+    }
+    if (target.dataset.prepMinute) {
+      capturePrepMoment();
+      const moment = prepMomentsDraft[prepMomentIndex];
+      const next = moment.minute + Number(target.dataset.prepMinute);
+      if (next <= (prepMomentsDraft[prepMomentIndex - 1]?.minute || 0) || next >= (prepMomentsDraft[prepMomentIndex + 1]?.minute || 70)) return;
+      prepSuggestedMoments = null;
+      moment.minute = next; renderPrepMoments();
+    }
+    if (target.id === 'prep-edit-windows') openPrepWindowEditor();
+    if (target.id === 'prep-propose-auto') suggestPrepMoments();
+    if (target.id === 'prep-discard-proposal') { prepSuggestedMoments = null; renderPrepMoments(); }
+    if (target.id === 'prep-restore-plan' && prepPreviousMoments) { prepMomentsDraft = prepPreviousMoments; prepPreviousMoments = null; prepSuggestedMoments = null; selectPrepMoment(0,false); }
+    if (target.id === 'prep-copy-auto') copyAutoPrepMoments();
+    if (target.id === 'prep-print-moments') {
+      capturePrepMoment();
+      printMatchPlan(prepMatchId, state, {
+        momentsDraft: prepMomentsDraft,
+        teamDraft: prepDraft,
+        formacionDraft: $('#prep-formacion')?.value,
+      });
+    }
+  });
+  const closeEditor = () => {
     $('#preparacion-editor').classList.add('hidden');
     $('#preparacion-list').classList.remove('hidden');
-    prepDraft = null; prepMatchId = null;
-  });
+    $('#preparacion')?.classList.remove('is-editing');
+    prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
+    renderPreparaciones();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const back = $('#prep-back');
+  if (back) back.addEventListener('click', closeEditor);
+  const backHead = $('#prep-back-head');
+  if (backHead) backHead.addEventListener('click', closeEditor);
   const save = $('#prep-save');
   if (save) save.addEventListener('click', () => savePreparacion());
+  const printCurrent = $('#prep-print-current');
+  const printAction = () => {
+    capturePrepMoment();
+    printMatchPlan(prepMatchId, state, {
+      momentsDraft: prepMomentsDraft,
+      teamDraft: prepDraft,
+      formacionDraft: $('#prep-formacion')?.value,
+    });
+  };
+  if (printCurrent) printCurrent.addEventListener('click', printAction);
+  const printHead = $('#prep-print-head');
+  if (printHead) printHead.addEventListener('click', printAction);
   const delegate = $('#prep-delegate');
   if (delegate) delegate.addEventListener('click', () => togglePrepDelegate());
   const del = $('#prep-delete');
   if (del) del.addEventListener('click', () => deletePreparacion());
   const gifBtn = $('#prep-gif');
+  const fullBtn = $('#prep-full-btn');
   const lightbox = $('#prep-lightbox');
-  if (gifBtn && lightbox) {
+  const lbBoard = lightbox?.querySelector('.lb-board');
+  const lbControls = lightbox?.querySelector('.lb-controls');
+  if (lightbox) {
     const closeLb = () => {
       lightbox.classList.remove('open');
       lightbox.querySelectorAll('video').forEach((v) => v.pause());
+      if (lbBoard) lbBoard.style.display = 'none';
+      if (lbControls) lbControls.style.display = 'flex';
     };
-    gifBtn.addEventListener('click', () => {
-      const formacion = $('#prep-formacion').value;
-      lightbox.querySelectorAll('video').forEach((n) => n.remove());
-      const video = document.createElement('video');
-      video.src = TACTICA_MP4[formacion] || TACTICA_MP4['1-3-2-1'];
-      video.playsInline = true; video.muted = true; video.loop = true;
-      lightbox.appendChild(video);
-      lightbox.classList.add('open');
-      video.muted = true;
-      video.defaultMuted = true;
-      video.playsInline = true;
-      video.play().catch(() => {});
-    });
-    lightbox.querySelector('.lb-close').addEventListener('click', closeLb);
+    if (gifBtn) {
+      gifBtn.addEventListener('click', () => {
+        if (lbBoard) lbBoard.style.display = 'none';
+        if (lbControls) lbControls.style.display = 'flex';
+        const formacion = $('#prep-formacion').value;
+        lightbox.querySelectorAll('video').forEach((n) => n.remove());
+        const video = document.createElement('video');
+        video.src = TACTICA_MP4[formacion] || TACTICA_MP4['1-3-2-1'];
+        video.playsInline = true; video.muted = true; video.loop = true;
+        lightbox.appendChild(video);
+        lightbox.classList.add('open');
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.play().catch(() => {});
+      });
+    }
+    if (fullBtn) {
+      fullBtn.addEventListener('click', () => {
+        if (lbControls) lbControls.style.display = 'none';
+        lightbox.querySelectorAll('video').forEach((n) => n.remove());
+        if (lbBoard) lbBoard.style.display = 'flex';
+        renderPrepBoard($('#prep-board-full'));
+        lightbox.classList.add('open');
+      });
+    }
+    lightbox.querySelector('.lb-close')?.addEventListener('click', closeLb);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLb(); });
     const lbPlay = lightbox.querySelector('.lb-play');
     if (lbPlay) lbPlay.addEventListener('click', () => {
@@ -3328,17 +5104,19 @@ function wirePrepEditor() {
 
 async function savePreparacion() {
   if (!prepDraft || !prepMatchId) return toast('No hay preparación activa para guardar.');
+  capturePrepMoment();
   const keeper1 = $('#prep-keeper1')?.value || '';
   const keeper2 = $('#prep-keeper2')?.value || keeper1;
-  const formacion = $('#prep-formacion')?.value || '1-3-2-1';
-  const keeperIndex = prepDraft.findIndex((position) => position.pos === 'Portero');
-  if (keeperIndex >= 0 && keeper1 && prepDraft[keeperIndex].playerId !== keeper1) {
-    prepDraft = asignarJugador(prepDraft, keeperIndex, keeper1);
+  const initial = prepMomentsDraft[0];
+  const keeperIndex = initial.team.findIndex((position) => position.pos === 'Portero');
+  if (keeperIndex >= 0 && keeper1 && initial.team[keeperIndex].playerId !== keeper1) {
+    initial.team = asignarJugador(initial.team, keeperIndex, keeper1);
   }
-  const onField = prepDraft.map((p) => p.playerId).filter(Boolean);
-  if (onField.length !== 7 || new Set(onField).size !== 7 || !onField.includes(keeper1)) {
+  const availableIds = prepAvailableIds(prepMatchId);
+  if (!validLineup(initial.team, availableIds) || !lineupIds(initial.team).includes(keeper1)) {
     return toast('Completa la alineación de 7 jugadores con el portero antes de guardar.');
   }
+  if (prepMomentsDraft.some((moment) => !validLineup(moment.team, availableIds))) return toast('Completa los 7 puestos de cada momento antes de guardar.');
   const existing = prepForMatch(prepMatchId);
   const record = {
     ...existing,
@@ -3347,8 +5125,10 @@ async function savePreparacion() {
     matchId: prepMatchId,
     firstKeeper: keeper1,
     secondKeeper: keeper2,
-    formacion,
-    team: prepDraft.map((p) => ({ ...p })),
+    formacion: initial.formation,
+    team: initial.team.map((p) => ({ ...p })),
+    moments: prepMomentsDraft.slice(1).map((moment) => ({ ...moment, team: moment.team.map((slot) => ({ ...slot })) })),
+    showPlanInLive: $('#prep-moments')?.dataset.showPlan !== 'false',
     delegateShown: existing?.delegateShown ?? false,
     savedAt: Date.now(),
   };
@@ -3357,9 +5137,11 @@ async function savePreparacion() {
   await applyPreparacionToLive(record);
   $('#preparacion-editor')?.classList.add('hidden');
   $('#preparacion-list')?.classList.remove('hidden');
-  prepDraft = null; prepMatchId = null;
+  $('#preparacion')?.classList.remove('is-editing');
+  prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
   renderPreparaciones();
   toast('Preparación guardada.');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 async function deletePreparacion() {
@@ -3374,12 +5156,17 @@ async function deletePreparacionById(matchId) {
   await refresh();
   $('#preparacion-editor').classList.add('hidden');
   $('#preparacion-list').classList.remove('hidden');
+  $('#preparacion')?.classList.remove('is-editing');
   prepDraft = null; prepMatchId = null;
+  renderPreparaciones();
   toast('Preparación borrada.');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 async function togglePrepDelegate() {
+  capturePrepMoment();
   const existing = prepForMatch(prepMatchId);
+  const initial = prepMomentsDraft[0];
   const record = {
     ...existing,
     id: existing?.id ?? uid(),
@@ -3387,8 +5174,10 @@ async function togglePrepDelegate() {
     matchId: prepMatchId,
     firstKeeper: $('#prep-keeper1').value,
     secondKeeper: $('#prep-keeper2').value,
-    formacion: $('#prep-formacion').value,
-    team: prepDraft.map((p) => ({ ...p })),
+    formacion: initial.formation,
+    team: initial.team.map((p) => ({ ...p })),
+    moments: prepMomentsDraft.slice(1).map((moment) => ({ ...moment, team: moment.team.map((slot) => ({ ...slot })) })),
+    showPlanInLive: $('#prep-moments')?.dataset.showPlan !== 'false',
     delegateShown: !(existing?.delegateShown ?? false),
     savedAt: Date.now(),
   };
@@ -3562,10 +5351,16 @@ async function saveTraining(event) {
 function renderTrainings() {
   const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente' };
   const stats = state.players.map((player) => ({ player, stats: calculateAttendanceStats(player.id, state.trainings) }));
-  $('#attendance-stats').innerHTML = stats.length ? `<div class="attendance-grid">${stats.map(({ player, stats: item }) => {
+  const ranking = stats.filter(({ stats: item }) => item.totalRecords > 0).map(({ player, stats: item }) => ({
+    player,
+    stats: item,
+    percent: Math.round(100 * Math.max(0, item.totalRecords - item.totalAbsences - item.lateCount) / item.totalRecords),
+  })).sort((a, b) => b.percent - a.percent || a.stats.totalAbsences - b.stats.totalAbsences || a.player.name.localeCompare(b.player.name, 'es'));
+  const wasStatsOpen = $('#attendance-stat-details')?.open ?? false;
+  $('#attendance-stats').innerHTML = stats.length ? `<section class="attendance-ranking panel" aria-labelledby="attendance-ranking-title"><h3 id="attendance-ranking-title">Ranking de asistencia</h3>${ranking.length ? `<div class="attendance-ranking-list">${ranking.map(({ player, stats: item, percent }) => `<div class="attendance-ranking-row"><div><strong>${escapeHtml(player.name)}</strong><small>${item.lateCount} tarde · ${item.totalAbsences} ausencias</small></div><div class="attendance-ranking-track" role="meter" aria-label="Asistencia puntual de ${escapeHtml(player.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div><b>${percent}%</b></div>`).join('')}</div>` : '<p class="meta">El ranking aparecerá al registrar la primera asistencia.</p>'}</section><details class="attendance-stat-details" id="attendance-stat-details"${wasStatsOpen ? ' open' : ''}><summary>Ver estadísticas detalladas de jugadores</summary><div class="attendance-grid">${stats.map(({ player, stats: item }) => {
     const history = sortAttendanceRecords(state.trainings).map((record) => ({ record, entry: record.attendance?.find(({ playerId }) => playerId === player.id) })).filter(({ entry }) => entry);
     return `<article class="panel attendance-player"><h3>${escapeHtml(player.name)}</h3><div class="mini-stats"><span><strong>${item.totalAbsences}</strong> ausencias</span><span><strong>${item.currentTrainingAbsenceStreak}</strong> racha actual</span><span><strong>${item.longestTrainingAbsenceStreak}</strong> racha máxima</span><span class="${item.oftenLate ? 'alert' : ''}"><strong>${item.lateCount}</strong> tardanzas${item.oftenLate ? ' · frecuente' : ''}</span></div><details><summary>Historial (${item.totalRecords})</summary><table class="minute-table"><tr><th>Fecha</th><th>Actividad</th><th>Estado</th></tr>${history.map(({ record, entry }) => `<tr><td>${escapeHtml(localDate(record.date))}</td><td>${record.kind === 'match' ? `Partido · ${escapeHtml(state.matches.find(({ id }) => id === record.matchId)?.opponent ?? 'eliminado')}` : 'Entrenamiento'}</td><td>${labels[entry.status]}${entry.arrivalTime ? ` · ${escapeHtml(entry.arrivalTime)}` : ''}${entry.note ? ` · ${escapeHtml(entry.note)}` : ''}</td></tr>`).join('')}</table></details></article>`;
-  }).join('')}</div>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
+  }).join('')}</div></details>` : empty('Añade jugadores para calcular estadísticas de asistencia.');
   const list = sortAttendanceRecords(state.trainings);
   const wasAttendanceHistoryOpen = $('#attendance-history-collapsible')?.open ?? false;
   $('#trainings-list').innerHTML = list.length ? `
@@ -3624,6 +5419,14 @@ function setExerciseLibraryMode(mode = 'all') {
   renderExercises();
 }
 
+function isUsableExercisePreview(value = '') {
+  const source = String(value || '').trim();
+  if (!source) return false;
+  if (/\/ejercicio-previews\//i.test(source)) return false;
+  if (/\.(?:mp4|webm|mov|m4v)(?:$|[?#])/i.test(source)) return false;
+  return true;
+}
+
 function renderExercises() {
   const form = $('#exercise-filters');
   if (!form) return;
@@ -3631,9 +5434,9 @@ function renderExercises() {
   const allExerciseCount = state.exercises.length;
   const myExerciseCount = state.exercises.filter((item) => item.userCreated === true).length;
   const allCountEl = $('#all-exercises-count');
-  if (allCountEl) allCountEl.textContent = `(${allExerciseCount})`;
+  if (allCountEl) allCountEl.textContent = `${allExerciseCount}`;
   const countEl = $('#my-exercises-count');
-  if (countEl) countEl.textContent = `(${myExerciseCount})`;
+  if (countEl) countEl.textContent = `${myExerciseCount}`;
   $$('.exercise-library-tab').forEach((button) => {
     const active = button.dataset.exerciseLibraryMode === exerciseLibraryMode;
     button.classList.toggle('active', active);
@@ -3642,16 +5445,132 @@ function renderExercises() {
 
   const filters = {
     formato_juego: form.elements.formato_juego?.value || form.elements.format?.value || 'todos',
-    category: form.elements.category.value,
+    category: form.elements.category?.value || '',
     ludico: form.elements.ludico?.value || '',
-    players: form.elements.players.value,
-    material: form.elements.material.value,
-    difficulty: form.elements.difficulty.value,
-    favorites: form.elements.favorites.checked,
-    video: form.elements.video.checked,
+    players: form.elements.players?.value || '',
+    material: form.elements.material?.value || '',
+    difficulty: form.elements.difficulty?.value || '',
+    duration: form.elements.duration?.value || '',
+    dimension: form.elements.dimension?.value || '',
+    search: form.elements.search?.value || '',
+    text: form.elements.search?.value || '',
+    favorites: form.elements.favorites?.checked || false,
+    video: form.elements.video?.checked || false,
   };
   const mineCategorySelected = filters.category === '__mine__';
   if (mineCategorySelected) filters.category = '';
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    // Sincronizar estado visual de los chips de dimensión y conmutadores con los filtros actuales
+    $$('.cbx-dim-chip').forEach((chip) => {
+      chip.classList.toggle('active', (chip.dataset.dim || '') === (filters.dimension || ''));
+    });
+    $('#cbx-filter-fav')?.classList.toggle('active', Boolean(filters.favorites));
+    $('#cbx-filter-video')?.classList.toggle('active', Boolean(filters.video));
+
+    const humanVideoExerciseIds = new Set(
+      state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
+    );
+    const withVideoFlags = humanVideoExerciseIds.size
+      ? state.exercises.map((item) => (
+          humanVideoExerciseIds.has(String(item.id)) && item.hasHumanVideo !== true
+            ? { ...item, hasHumanVideo: true }
+            : item
+        ))
+      : state.exercises;
+
+    const filterableExercises = (exerciseLibraryMode === 'mine' || mineCategorySelected)
+      ? withVideoFlags.filter((item) => item.userCreated === true)
+      : withVideoFlags;
+
+    let exercises = filterExercises(filterableExercises, filters);
+
+    exercises.sort((a, b) => {
+      const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
+      const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
+      const aValid = aIdx !== -1, bValid = bIdx !== -1;
+      if (aValid && bValid) return aIdx - bIdx;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return Number(b.favorite) - Number(a.favorite) || (a.category || '').localeCompare(b.category || '', 'es') || (a.name || '').localeCompare(b.name || '', 'es');
+    });
+
+    const countBadge = $('#cbx-exercise-count');
+    if (countBadge) {
+      countBadge.textContent = `${exercises.length} ejercicios`;
+    }
+
+    const list = $('#exercises-list');
+    if (!exercises.length) {
+      list.innerHTML = `
+        <div class="cbx-empty-exercises">
+          <div class="cbx-empty-title">${exerciseLibraryMode === 'mine' ? 'Todavía no has creado ejercicios propios' : 'Ningún ejercicio con estos filtros'}</div>
+          <div class="cbx-empty-desc">${exerciseLibraryMode === 'mine' ? 'Usa el botón + Ejercicio para diseñar tu primer ejercicio personalizado.' : 'Prueba con otra categoría o quita «Solo favoritos» y «Solo con vídeo».'}</div>
+          <button type="button" class="cbx-clear-filters-action" id="cbx-empty-clear-btn">${exerciseLibraryMode === 'mine' ? '+ Crear ejercicio' : 'Quitar filtros'}</button>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = exercises.map((rawItem) => {
+      const validated = findValidatedExercise(rawItem.id);
+      const ex = validated ? { ...validated, favorite: Boolean(rawItem.favorite) } : rawItem;
+      const cleanNombre = String(ex.nombre || ex.name || '').replace(/^--\s*/, '').trim();
+      const dr = ex.datos_rapidos || {};
+      const playersRaw = String(dr.jugadores || ex.players || '').replace(/jugadores|jug\.?/gi, '').trim() || '8';
+      const dur = String(ex.carga?.duracion || dr.tiempo || ex.duration || 15).replace(/[^\d]/g, '') || '15';
+      const diff = ex.dificultad || ex.difficulty || 'Media';
+      const diffClass = diff.toLowerCase() === 'alta' ? 'alta' : diff.toLowerCase() === 'baja' ? 'baja' : 'media';
+      const fmt = ex.formato_juego === 'futbol_7' ? 'F7' : (ex.formato_juego === 'futbol_11' ? 'F11' : 'F7 · F11');
+      const mat = dr.material || (ex.materiales ? ex.materiales.map((m) => m.nombre).filter(Boolean).join(', ') : (ex.material || 'Balones y conos'));
+      const cat = ex.categoria || ex.category || 'Técnico-táctico';
+      const hasRealVideo = Boolean(ex.hasHumanVideo || ex.video_muestra_humanos || (ex.media && ex.media.video_muestra_humanos));
+
+      const media = ex.media || {};
+      const rawPreview = media.preview || ex.preview || '';
+      const preview = isUsableExercisePreview(rawPreview) ? rawPreview : '';
+
+      const previewThumbHtml = preview
+        ? `<img src="${escapeHtml(preview)}" alt="${escapeHtml(cleanNombre)}" class="cbx-card-preview-img" loading="lazy">`
+        : `
+          <div class="cbx-card-pitch-mock" aria-hidden="true">
+            <div class="cbx-pitch-markings"></div>
+            <span class="cbx-pitch-dot dot-red" style="left:30%;top:40%;"></span>
+            <span class="cbx-pitch-dot dot-red" style="left:44%;top:62%;"></span>
+            <span class="cbx-pitch-dot dot-black" style="left:62%;top:34%;"></span>
+            <span class="cbx-pitch-dot dot-ball" style="left:54%;top:50%;"></span>
+          </div>
+        `;
+
+      return `
+        <article class="cbx-exercise-card panel exercise-card exercise-v2-card" data-exercise-id="${escapeHtml(ex.id)}">
+          <div class="cbx-card-thumb-wrap view-exercise" data-exercise-id="${escapeHtml(ex.id)}" role="button" tabindex="0" aria-label="Ver demostración de ${escapeHtml(cleanNombre)}">
+            ${previewThumbHtml}
+            <span class="cbx-card-badge-demo">Ver demostración · GIF/MP4</span>
+            ${hasRealVideo ? '<span class="cbx-card-badge-realvideo">Vídeo real</span>' : ''}
+            <button type="button" class="favorite-exercise cbx-card-star-btn ${ex.favorite ? 'active' : ''}" data-id="${escapeHtml(ex.id)}" aria-label="Favorito">
+              ${ex.favorite ? '★' : '☆'}
+            </button>
+          </div>
+          <div class="cbx-card-body">
+            <div class="cbx-card-pills-row">
+              <span class="cbx-card-pill-players">${escapeHtml(playersRaw)} jug.</span>
+              <span class="cbx-card-pill-dur">${escapeHtml(dur)}′</span>
+              <span class="cbx-card-pill-diff diff-${diffClass}">${escapeHtml(diff)}</span>
+            </div>
+            <h3 class="cbx-card-title view-exercise" data-exercise-id="${escapeHtml(ex.id)}">${escapeHtml(cleanNombre)}</h3>
+            <div class="cbx-card-cat-fmt">${escapeHtml(cat)} · ${escapeHtml(fmt)}</div>
+            <div class="cbx-card-mat">Material: ${escapeHtml(mat)}</div>
+            <div class="cbx-card-actions">
+              <button type="button" class="view-exercise cbx-card-btn-demo" data-exercise-id="${escapeHtml(ex.id)}">Ver demostración</button>
+              <button type="button" class="add-exercise-to-session cbx-card-btn-add" data-id="${escapeHtml(ex.id)}">+ Añadir a sesión</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+    return;
+  }
 
   const humanVideoExerciseIds = new Set(
     state.videos.map(({ exerciseId }) => String(exerciseId || '')).filter(Boolean)
@@ -3980,6 +5899,7 @@ function wireExerciseDialogLifecycle(dialog) {
 
   // Teardown completo al cerrar: previene bloqueos en móviles, libera decodificadores y memoria
   dialog.addEventListener('close', () => {
+    if (dialog.open) return;
     // 1. Pausar y forzar descarga inmediata de todos los vídeos (libera recursos de hardware y de red)
     const videos = dialog.querySelectorAll('video');
     videos.forEach((video) => {
@@ -4008,7 +5928,14 @@ function showExerciseDetail(exerciseId) {
   const dialog = $('#exercise-detail-dialog');
   if (dialog) wireExerciseDialogLifecycle(dialog);
 
+  const custom = state.exercises.find(item => item.id === exerciseId && item.customBoard);
+  if (custom) {
+    window.dispatchEvent(new CustomEvent('campobase:view-own-exercise', { detail: { exerciseId } }));
+    return;
+  }
   const validated = findValidatedExercise(exerciseId);
+  const resumeSession = suspendSessionDetail();
+  dialog?.addEventListener('close', resumeSession, { once: true });
   const stickyFooter = dialog?.querySelector('.dialog-sticky-footer');
   if (stickyFooter) {
     stickyFooter.style.display = validated ? 'none' : '';
@@ -4030,16 +5957,199 @@ function showExerciseDetail(exerciseId) {
     return;
   }
   const item = state.exercises.find(({ id }) => id === exerciseId);
-  if (!item) return toast('El ejercicio ya no está disponible.');
+  if (!item) { resumeSession(); return toast('El ejercicio ya no está disponible.'); }
   $('#exercise-detail-title').textContent = item.name;
   $('#exercise-detail-body').innerHTML = exerciseCardHTML(item);
   if (dialog && !dialog.open) dialog.showModal();
   if (dialog) dialog.scrollTop = 0;
 }
 
+async function toggleTrainingSessionCompleted(id) {
+  const session = state.trainingSessions.find((s) => s.id === id);
+  if (!session) return;
+  const isCompleted = !session.completed;
+  const updated = {
+    ...session,
+    completed: isCompleted,
+    updatedAt: Date.now(),
+  };
+  await put('settings', updated);
+  await refresh(true);
+  renderTrainingSessions();
+  toast(isCompleted ? 'Entrenamiento archivado como realizado.' : 'Entrenamiento desmarcado y movido a pendientes.');
+}
+
+function openOwnExercisesPrint() {
+  const own=state.exercises.filter(item=>item.customBoard===true);
+  if(!own.length) return toast('Todavía no hay ejercicios tuyos disponibles en esta copia.');
+  let picker=$('#own-exercises-print-dialog');
+  if(!picker){picker=document.createElement('dialog');picker.id='own-exercises-print-dialog';document.body.append(picker);}
+  picker.innerHTML=`<div class="dialog-head"><h2>Imprimir mis ejercicios</h2><button type="button" data-print-cancel aria-label="Cerrar">×</button></div><p>Elige tus ejercicios actuales. Se usará su portada guardada, con dos ejercicios por página. No cambia ninguna sesión antigua.</p><div class="stack">${own.map(item=>`<label><input type="checkbox" name="ownPrint" value="${escapeHtml(item.id)}" checked> ${escapeHtml(item.name)} · ${Number(item.duration)||15} min</label>`).join('')}</div><div class="button-row"><button type="button" class="primary" data-print-selected>Ver ficha de impresión</button><button type="button" class="secondary" data-print-cancel>Cancelar</button></div>`;
+  picker.querySelectorAll('[data-print-cancel]').forEach(button=>button.addEventListener('click',()=>picker.close()));
+  picker.querySelector('[data-print-selected]').addEventListener('click',()=>{
+    const ids=[...picker.querySelectorAll('[name="ownPrint"]:checked')].map(input=>input.value);
+    if(!ids.length)return toast('Selecciona al menos un ejercicio.');
+    picker.close();
+    printTrainingSession({id:'own-print-preview',name:'Mis ejercicios · ficha de sesión',date:localDateKey(),blocks:ids.map(id=>({exerciseId:id,type:'main',duration:Number(own.find(item=>item.id===id)?.duration)||15}))},state);
+  });
+  picker.showModal();
+}
+
 function renderTrainingSessions() {
-  const sessions = sortTrainingSessions(state.trainingSessions, localDateKey());
-  $('#sessions-list').innerHTML = sessions.length ? sessions.map((session) => {
+  const banner=$('#sesiones .cbx-banner');
+  if(banner&&!$('#print-own-exercises')) {
+    const button=document.createElement('button');button.id='print-own-exercises';button.type='button';button.className='secondary';button.textContent='Imprimir mis ejercicios';button.addEventListener('click',openOwnExercisesPrint);
+    (banner.querySelector('.button-row')||banner).append(button);
+  }
+  const allSessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  const activeSessions = allSessions.filter((s) => !s.completed);
+  const completedSessions = allSessions.filter((s) => !!s.completed);
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    const root = $('#sessions-list');
+    if (!allSessions.length) {
+      root.innerHTML = `<div class="cbx-card empty-state" style="text-align:center;padding:32px 16px;">
+        <h3 style="font:800 20px var(--cbx-disp);text-transform:uppercase;color:var(--cbx-ink);margin-bottom:8px;">Todavía no hay sesiones de entrenamiento guardadas</h3>
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">Usa «+ Sesión» para crear una sesión o «WhatsApp semana» para compartir horarios.</p>
+      </div>`;
+      return;
+    }
+
+    const renderCard = (session) => {
+      const targetDuration = Number(session.targetDuration) || 60;
+      const totalDuration = Number(session.totalDuration) || (session.blocks || []).reduce((acc, b) => acc + (Number(b.duration) || 0), 0);
+
+      // Status pill
+      let statusPill = '';
+      if (session.completed) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green" style="background:var(--btn, #10b981);color:var(--btnInk, #ffffff);font-weight:800;">✓ Realizado</span>`;
+      } else if (totalDuration < targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-amber">Quedan ${targetDuration - totalDuration} min</span>`;
+      } else if (totalDuration === targetDuration) {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-green">Completa</span>`;
+      } else {
+        statusPill = `<span class="cbx-session-pill cbx-session-pill-red">Exceso ${totalDuration - targetDuration} min</span>`;
+      }
+
+      // Attendance status
+      const hasAttendance = (state.trainings || []).some((t) => (t.sessionId && t.sessionId === session.id) || (t.date && String(t.date).slice(0, 10) === String(session.date).slice(0, 10) && t.kind !== 'match'));
+      const attendancePill = hasAttendance
+        ? `<span class="cbx-session-pill cbx-session-pill-green">Asistencia pasada</span>`
+        : `<span class="cbx-session-pill cbx-session-pill-gray">Asistencia pendiente</span>`;
+
+      // Warmup tag if applicable
+      const isWarmup = session.sessionKind === 'match-warmup';
+      const warmupPill = isWarmup ? `<span class="cbx-session-pill cbx-session-pill-blue">Calentamiento de partido</span>` : '';
+
+      // Date and time
+      const dateFormatted = localDate(session.date);
+      const timeStr = session.time ? ` · ${session.time}` : '';
+
+      // Proportional bar segments
+      const maxDuration = Math.max(totalDuration, targetDuration, 1);
+      const barSegments = (session.blocks || []).map((b) => {
+        const dur = Number(b.duration) || 15;
+        const pct = Math.max(3, Math.round((dur / maxDuration) * 100));
+        const colorClass = b.type === 'warmup' ? 'bar-warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'bar-game' : 'bar-main';
+        return `<span class="cbx-session-bar-seg ${colorClass}" style="flex: ${dur} 0 auto; width:${pct}%;"></span>`;
+      }).join('');
+
+      // Blocks list
+      const blocksHtml = (session.blocks || []).map((b, idx) => {
+        const validated = findValidatedExercise(b.exerciseId);
+        const exName = validated?.nombre || exerciseName(b.exerciseId);
+        const phaseType = b.type === 'warmup' ? 'warmup' : (b.type === 'game' || b.type === 'scrimmage') ? 'game' : 'main';
+        const phaseLabel = sessionBlockLabel(b.type);
+        const duration = Number(b.duration) || 15;
+
+        return `
+          <div class="cbx-session-block-row">
+            <span class="cbx-session-block-dot dot-${phaseType}">${idx + 1}</span>
+            <span class="cbx-session-mini-pitch" aria-hidden="true">
+              <svg viewBox="0 0 46 32" class="cbx-mini-pitch-svg">
+                <rect width="46" height="32" rx="4" fill="#1f5a41"/>
+                <path d="M23 0v32M0 8h8v16H0M46 8h-8v16h8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                <circle cx="12" cy="14" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="28" cy="20" r="2.5" fill="#c8102e" stroke="#fff" stroke-width="0.8"/>
+                <circle cx="36" cy="10" r="2" fill="#fff"/>
+              </svg>
+            </span>
+            <div class="cbx-session-block-info">
+              <button type="button" class="session-exercise-link cbx-session-exercise-name" data-exercise-id="${escapeHtml(b.exerciseId)}" aria-label="Ver ejercicio ${escapeHtml(exName)}">${escapeHtml(exName)}</button>
+              <span class="cbx-session-block-phase">${escapeHtml(phaseLabel)}</span>
+            </div>
+            <strong class="cbx-session-block-duration">${duration}′</strong>
+            <button type="button" class="open-whistle-session cbx-session-block-play" data-id="${session.id}" data-block-index="${idx}" title="Cronómetro del bloque">▶</button>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <article class="cbx-session-card panel session-card ${session.completed ? 'is-completed' : ''}" data-session-id="${session.id}">
+          <div class="cbx-session-pills-row">
+            <span class="cbx-session-pill cbx-session-pill-date">${escapeHtml(dateFormatted)}${escapeHtml(timeStr)}</span>
+            ${statusPill}
+            ${attendancePill}
+            ${warmupPill}
+          </div>
+          <div>
+            <h3 class="cbx-session-name"><button type="button" class="view-session link-button" data-id="${session.id}" style="font:inherit;color:inherit;text-decoration:none;text-align:left;padding:0;background:none;border:0;cursor:pointer;">${escapeHtml(session.name)}</button></h3>
+            <p class="cbx-session-meta">${escapeHtml(session.pitch || 'Campo de entrenamiento')} · ${totalDuration} / ${targetDuration} min</p>
+          </div>
+          <div class="cbx-session-bar-track">
+            ${barSegments}
+          </div>
+          <div class="cbx-session-blocks-list">
+            ${blocksHtml}
+          </div>
+          <div class="cbx-session-actions-row">
+            <button type="button" class="open-whistle-session cbx-btn-whistle" data-id="${session.id}">⏱️ Silbato</button>
+            <button type="button" class="open-whatsapp-session cbx-btn-wa" data-id="${session.id}">📱 WhatsApp</button>
+            <button type="button" class="print-session cbx-btn-sub" data-id="${session.id}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir</button>
+            <button type="button" class="edit-session cbx-btn-sub" data-id="${session.id}">✏️ Editar</button>
+            <button type="button" class="toggle-session-completed cbx-btn-completed ${session.completed ? 'is-completed' : ''}" data-id="${session.id}" title="${session.completed ? 'Marcar como pendiente' : 'Marcar como realizado'}">
+              ${session.completed ? '✓ Realizado' : '○ Realizado'}
+            </button>
+          </div>
+          <details class="cbx-session-more-details">
+            <summary>Más opciones</summary>
+            <div class="button-row">
+              <button type="button" class="view-session secondary compact" data-id="${session.id}">Ver ficha técnica</button>
+              <button type="button" class="delete-session danger compact" data-id="${session.id}">Borrar sesión</button>
+            </div>
+          </details>
+        </article>
+      `;
+    };
+
+    let html = '';
+    if (activeSessions.length) {
+      html += `<div class="cbx-sessions-grid">${activeSessions.map(renderCard).join('')}</div>`;
+    } else if (completedSessions.length) {
+      html += `<div class="cbx-card empty-state" style="text-align:center;padding:24px 16px;margin-bottom:16px;">
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay entrenamientos pendientes. Todos los entrenamientos están archivados como realizados abajo.</p>
+      </div>`;
+    }
+
+    if (completedSessions.length) {
+      html += `
+        <details class="cbx-completed-sessions-accordion" ${!activeSessions.length ? 'open' : ''}>
+          <summary class="cbx-completed-sessions-summary">
+            <span>📁 Entrenamientos realizados (${completedSessions.length})</span>
+            <span class="cbx-accordion-indicator">▾</span>
+          </summary>
+          <div class="cbx-sessions-grid cbx-completed-sessions-grid">
+            ${completedSessions.map(renderCard).join('')}
+          </div>
+        </details>
+      `;
+    }
+
+    root.innerHTML = html;
+    return;
+  }
+
+  $('#sessions-list').innerHTML = allSessions.length ? allSessions.map((session) => {
     const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
     const durationInfo = formatSessionDurationInfo(session.totalDuration, session.targetDuration, session.pitch);
     const badgeExtra = durationInfo.badgeText
@@ -4149,12 +6259,204 @@ function showSessionDetail(sessionId) {
   $('#session-detail-dialog').showModal();
 }
 
+let claudeTacticFormation = '1-3-2-1';
+let claudeTacticAspect = 'estructura';
+let claudeTacticTool = 'select';
+let claudeTacticShowRival = false; // Por defecto SIN rival, según directriz de Migue
+let claudeTacticDraft = null;
+let claudeBoardController = null;
+
+function renderClaudeTactics() {
+  const toggleRivalBtn = $('#cbx-toggle-rival-btn');
+  if (toggleRivalBtn) {
+    toggleRivalBtn.setAttribute('aria-pressed', String(claudeTacticShowRival));
+    toggleRivalBtn.classList.toggle('active', claudeTacticShowRival);
+    toggleRivalBtn.textContent = claudeTacticShowRival ? '👥 Ocultar rival' : '👥 Mostrar rival';
+  }
+
+  const formationsRow = $('#cbx-tactics-formations-row');
+  if (formationsRow) {
+    formationsRow.innerHTML = SISTEMAS_F7_ORDEN.map((f) => `
+      <button type="button" class="cbx-f7-chip ${f === claudeTacticFormation ? 'active' : ''}" data-f7-sys="${f}">${f}</button>
+    `).join('');
+  }
+
+  const toolsGrid = $('#cbx-tactics-tools-grid');
+  if (toolsGrid) {
+    const activeTool = claudeBoardController ? claudeBoardController.getTool() : claudeTacticTool;
+    const toolsList = [
+      { id: 'select', label: 'Mover', icon: renderTacticToolIcon('select') },
+      { id: 'pass', label: 'Pase', icon: renderTacticToolIcon('pass') },
+      { id: 'move', label: 'Movimiento', icon: renderTacticToolIcon('move') },
+      { id: 'dribble', label: 'Conducción', icon: renderTacticToolIcon('dribble') },
+      { id: 'shot', label: 'Disparo', icon: renderTacticToolIcon('shot') },
+      { id: 'sprint', label: 'Sprint', icon: renderTacticToolIcon('sprint') },
+      { id: 'ball', label: 'Balón', icon: renderTacticToolIcon('ball') },
+    ];
+    toolsGrid.innerHTML = toolsList.map((t) => `
+      <button type="button" class="cbx-tool-btn ${t.id === activeTool ? 'active' : ''}" data-board-tool="${t.id}">
+        <span class="cbx-tool-btn-icon">${t.icon}</span>
+        <span class="cbx-tool-btn-label">${t.label}</span>
+      </button>
+    `).join('');
+  }
+
+  const boardEl = $('#cbx-tactics-pitch-board');
+  if (boardEl) {
+    if (!claudeTacticDraft || claudeTacticDraft.formation !== claudeTacticFormation || claudeTacticDraft.aspect !== claudeTacticAspect) {
+      const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
+      claudeTacticDraft = {
+        ...aspectData,
+        id: `claude-tactic-${claudeTacticFormation}-${claudeTacticAspect}`,
+        name: `Sistema ${claudeTacticFormation} · ${aspectData.title || claudeTacticAspect}`,
+        formation: claudeTacticFormation,
+        aspect: claudeTacticAspect,
+        showOpponent: claudeTacticShowRival,
+      };
+      if (claudeTacticShowRival && (!claudeTacticDraft.opponent || !claudeTacticDraft.opponent.length)) {
+        const aspectOpp = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+        claudeTacticDraft.opponent = aspectOpp.opponent;
+      }
+    } else {
+      claudeTacticDraft.showOpponent = claudeTacticShowRival;
+      if (claudeTacticShowRival && (!claudeTacticDraft.opponent || !claudeTacticDraft.opponent.length)) {
+        const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+        claudeTacticDraft.opponent = aspectData.opponent;
+      }
+    }
+    boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
+    if (!claudeBoardController || !boardEl.__hasTacticListener) {
+      boardEl.__hasTacticListener = true;
+      claudeBoardController = initTacticBoard({
+        board: boardEl,
+        tools: null,
+        getState: () => claudeTacticDraft,
+        setState: (ns) => { claudeTacticDraft = ns; },
+        render: () => {
+          boardEl.innerHTML = renderTacticBoard(claudeTacticDraft, { showOpponent: claudeTacticShowRival });
+        },
+      });
+    }
+  }
+
+  const guidesTitle = $('#cbx-guides-title');
+  if (guidesTitle) {
+    guidesTitle.textContent = `GUÍAS TÁCTICAS · SISTEMA ${claudeTacticFormation}`;
+  }
+  $$('.cbx-aspect-chip[data-aspect]').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.aspect === claudeTacticAspect);
+  });
+
+  const contentEl = $('#cbx-guides-content');
+  if (contentEl) {
+    const sys = getSistemaF7Pdf(claudeTacticFormation);
+    const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
+
+    let aspectTextHtml = '';
+    if (claudeTacticAspect === 'estructura') {
+      aspectTextHtml = `
+        <p><strong>Líneas del sistema:</strong> ${escapeHtml(sys.lineas)}</p>
+        <p><strong>Resumen:</strong> ${escapeHtml(sys.resumen)}</p>
+        <p><strong>Estructura:</strong> ${escapeHtml(sys.estructura)}</p>
+        <div style="margin-top:6px">
+          <strong>Funciones por puesto:</strong>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+            ${sys.funciones.map((f) => `<div class="cbx-guide-bullet"><span>${escapeHtml(f)}</span></div>`).join('')}
+          </div>
+        </div>
+      `;
+    } else if (claudeTacticAspect === 'salida') {
+      aspectTextHtml = `
+        <p><strong>Salida de balón y superioridad:</strong></p>
+        <p>${escapeHtml(sys.salida)}</p>
+      `;
+    } else if (claudeTacticAspect === 'progresion') {
+      aspectTextHtml = `
+        <p><strong>Ataque y progresión en campo rival:</strong></p>
+        <p>${escapeHtml(sys.progresion)}</p>
+      `;
+    } else if (claudeTacticAspect === 'basculaciones') {
+      aspectTextHtml = `
+        <p><strong>Basculaciones y equilibrio defensivo:</strong></p>
+        <p>${escapeHtml(sys.basculaciones)}</p>
+      `;
+    } else if (claudeTacticAspect === 'pressing') {
+      aspectTextHtml = `
+        <p><strong>Presión y recuperación tras pérdida:</strong></p>
+        <p>${escapeHtml(sys.pressing)}</p>
+      `;
+    } else if (claudeTacticAspect === 'ventajas') {
+      aspectTextHtml = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <strong style="color:#166534">Ventajas del sistema:</strong>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+              ${sys.ventajas.map((v) => `<div class="cbx-guide-bullet"><span>${escapeHtml(v)}</span></div>`).join('')}
+            </div>
+          </div>
+          <div>
+            <strong style="color:#991b1b">Inconvenientes:</strong>
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+              ${sys.inconvenientes.map((i) => `<div class="cbx-guide-bullet"><span>${escapeHtml(i)}</span></div>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (claudeTacticAspect === 'f11') {
+      aspectTextHtml = `
+        <p><strong>Importancia formativa y adaptación al Fútbol 11:</strong></p>
+        <p>${escapeHtml(sys.f11)}</p>
+      `;
+    }
+
+    contentEl.innerHTML = `
+      <div class="cbx-guide-aspect-container">
+        <div class="cbx-guide-aspect-header-text" style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #e2e8f0;margin-bottom:8px">
+          <span class="cbx-guide-aspect-badge" style="font-weight:800;color:#0f766e;text-transform:uppercase">${escapeHtml(aspectData.title || claudeTacticAspect.toUpperCase())}</span>
+          <span class="cbx-guide-aspect-formation" style="font-size:12px;font-weight:700;color:#64748b">SISTEMA ${escapeHtml(claudeTacticFormation)}</span>
+        </div>
+        <div class="cbx-guide-aspect-text">
+          ${aspectTextHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  const savedListEl = $('#cbx-saved-tactics-list');
+  if (savedListEl) {
+    const userTactics = state.tactics || [];
+    if (!userTactics.length) {
+      savedListEl.innerHTML = `
+        <div class="cbx-saved-tactics-empty" style="padding:16px 14px;text-align:center;color:var(--cbx-muted, #64748b);font:500 13px var(--cbx-ui, sans-serif)">
+          Aún no tienes tácticas guardadas. Diseña tu pizarra táctica y pulsa «Guardar táctica» para verla aquí.
+        </div>
+      `;
+    } else {
+      savedListEl.innerHTML = userTactics.map((t) => `
+        <div class="cbx-saved-tactic-item">
+          <div class="cbx-saved-tactic-info">
+            <span class="cbx-saved-tactic-name">${escapeHtml(t.name)}</span>
+            <span class="cbx-saved-tactic-sub">${escapeHtml(t.formation || '1-3-2-1')}${t.situation ? ' · ' + escapeHtml(t.situation) : ''}${t.rival ? ' · vs ' + escapeHtml(t.rival) : ''}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="cbx-btn-view-tactic" data-id="${escapeHtml(t.id)}">Ver</button>
+            <button type="button" class="delete-tactic danger compact" data-id="${escapeHtml(t.id)}">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
 function renderTactics() {
   const tactics = sortTactics(state.tactics);
   $('#tactics-list').innerHTML = tactics.length ? tactics.map((tactic) => {
     return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(tactic.format)}</span><h3>${escapeHtml(tactic.name)}</h3><p class="meta">${tactic.rival ? `vs ${escapeHtml(tactic.rival)}` : 'Sin rival'}${tactic.situation ? ` · ${escapeHtml(tactic.situation)}` : ''}</p></div><div class="button-row"><button type="button" class="view-tactic secondary" data-id="${tactic.id}">Ver</button><button type="button" class="edit-tactic secondary" data-id="${tactic.id}">Editar</button><button type="button" class="delete-tactic danger" data-id="${tactic.id}">Borrar</button></div></div>${renderTacticBoard(tactic)}${tactic.notes ? `<p><strong>Notas:</strong> ${escapeHtml(tactic.notes)}</p>` : ''}</article>`;
   }).join('') : '';
   renderTacticasInteractivas();
+  if (document.body.classList.contains('cb-redesign-active')) {
+    renderClaudeTactics();
+  }
 }
 
 // Renderiza el manual táctico como un selector desplegable que muestra una
@@ -4673,11 +6975,569 @@ const COLOR_TO_TEXT_MAP = {
   '#ffffff': 'pure-white',
 };
 
+const TITLE_FONT_MAP = {
+  auto: '',
+  sport: "'Barlow Condensed', sans-serif",
+  barlow: "'Barlow Condensed', sans-serif",
+  oswald: "'Oswald', sans-serif",
+  bebas: "'Bebas Neue', sans-serif",
+  system: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  readable: "'Inter', sans-serif",
+  inter: "'Inter', sans-serif",
+  modern: "'Outfit', sans-serif",
+  outfit: "'Outfit', sans-serif",
+  technical: "'JetBrains Mono', monospace",
+  mono: "'JetBrains Mono', monospace",
+  classic: "'Merriweather', Georgia, serif",
+  serif: "'Merriweather', Georgia, serif",
+};
+
+const TITLE_FONT_OPTIONS = [
+  { id: 'auto', label: 'Igual que el texto (por defecto)', sample: 'Unión Viera', font: "'Barlow Condensed', sans-serif" },
+  { id: 'sport', label: 'Deportiva de estadio (Barlow)', sample: 'Unión Viera', font: "'Barlow Condensed', sans-serif" },
+  { id: 'oswald', label: 'Oswald Táctica', sample: 'Unión Viera', font: "'Oswald', sans-serif" },
+  { id: 'bebas', label: 'Bebas Neue Impacto', sample: 'Unión Viera', font: "'Bebas Neue', sans-serif" },
+  { id: 'system', label: 'Sistema moderna', sample: 'Unión Viera', font: "system-ui, -apple-system, sans-serif" },
+  { id: 'inter', label: 'Inter Máxima legibilidad', sample: 'Unión Viera', font: "'Inter', sans-serif" },
+  { id: 'outfit', label: 'Outfit Moderna geométrica', sample: 'Unión Viera', font: "'Outfit', sans-serif" },
+  { id: 'technical', label: 'JetBrains Pizarra técnica', sample: 'Unión Viera', font: "'JetBrains Mono', monospace" },
+  { id: 'classic', label: 'Merriweather Clásica', sample: 'Unión Viera', font: "'Merriweather', serif" },
+];
+
+const DEFAULT_TACTIC_BOARD = {
+  pitch: '#1e523d',
+  lines: 'rgba(255,255,255,0.4)',
+  team: '#c8102e',
+  rival: '#111827',
+  arrow: '#facc15'
+};
+
+const EXTENDED_SWATCH_CONFIGS = {
+  appBgHue: {
+    containerId: 'cbx-app-bg-swatches',
+    swatches: [
+      ['', 'Por defecto'],
+      ['#ffffff', 'Blanco luz'],
+      ['#f4f6f5', 'Gris campo'],
+      ['#0a251b', 'Campo Esmeralda'],
+      ['#040806', 'Noche OLED'],
+      ['#021e12', 'Césped Intenso'],
+      ['#061021', 'Azul Marino'],
+      ['#111827', 'Negro Grafito'],
+      ['#f6f3eb', 'Arena cálida'],
+      ['#eee6d8', 'Papiro / Sepia'],
+      ['#10b981', 'Verde Club'],
+      ['#2563eb', 'Azul Real'],
+      ['#c8102e', 'Rojo Club']
+    ]
+  },
+  cardHue: {
+    containerId: 'cbx-card-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#ffffff', 'Blanco puro'],
+      ['#f8fafc', 'Gris perla'],
+      ['#fef9ee', 'Crema suave'],
+      ['#f0fdf4', 'Verde menta'],
+      ['#eff6ff', 'Azul suave'],
+      ['#11221b', 'Noche oscura'],
+      ['#18181b', 'Grafito pro'],
+      ['#000000', 'Negro puro'],
+      ['#10b981', 'Esmeralda'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo club'],
+      ['#f59e0b', 'Dorado']
+    ]
+  },
+  cardTitle: {
+    containerId: 'cbx-card-title-swatches',
+    swatches: [
+      ['', 'Por defecto'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#0a251b', 'Verde campo'],
+      ['#c8102e', 'Rojo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  btn2Bg: {
+    containerId: 'cbx-btn2-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#f0f7f3', 'Verde suave'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#dbeafe', 'Azul suave'],
+      ['#fde8ec', 'Rojo suave'],
+      ['#fff8eb', 'Dorado suave'],
+      ['#111827', 'Negro']
+    ]
+  },
+  btn2Ink: {
+    containerId: 'cbx-btn2-ink-swatches',
+    swatches: [
+      ['', 'Por defecto'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#0a251b', 'Verde campo'],
+      ['#c8102e', 'Rojo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  waBg: {
+    containerId: 'cbx-wa-bg-swatches',
+    swatches: [
+      ['', 'Verde WhatsApp (#25d366)'],
+      ['#25d366', 'Verde WhatsApp'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro']
+    ]
+  },
+  waInk: {
+    containerId: 'cbx-wa-ink-swatches',
+    swatches: [
+      ['', 'Verde oscuro (por defecto)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Negro'],
+      ['#053b1d', 'Verde oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  dorsalBg: {
+    containerId: 'cbx-dorsal-bg-swatches',
+    swatches: [
+      ['', 'Auto (Tema)'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#111827', 'Negro'],
+      ['#c8102e', 'Rojo club'],
+      ['#2563eb', 'Azul real'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  dorsalInk: {
+    containerId: 'cbx-dorsal-ink-swatches',
+    swatches: [
+      ['', 'Auto (Blanco)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
+    ]
+  },
+  resInk: {
+    containerId: 'cbx-res-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  gfColor: {
+    containerId: 'cbx-gf-swatches',
+    swatches: [
+      ['', 'Acento'],
+      ['#10b981', 'Verde'],
+      ['#2563eb', 'Azul'],
+      ['#0a251b', 'Verde campo'],
+      ['#f59e0b', 'Dorado']
+    ]
+  },
+  gfBg: {
+    containerId: 'cbx-gf-bg-swatches',
+    swatches: [
+      ['', 'Verde suave'],
+      ['#ffffff', 'Blanco'],
+      ['#10b981', 'Verde'],
+      ['#0a251b', 'Verde campo'],
+      ['#dbeafe', 'Azul suave']
+    ]
+  },
+  gfInk: {
+    containerId: 'cbx-gf-ink-swatches',
+    swatches: [
+      ['', 'Verde oscuro'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  gaColor: {
+    containerId: 'cbx-ga-swatches',
+    swatches: [
+      ['', 'Rojo'],
+      ['#c8102e', 'Rojo club'],
+      ['#f59e0b', 'Dorado'],
+      ['#64748b', 'Gris'],
+      ['#111827', 'Negro']
+    ]
+  },
+  gaBg: {
+    containerId: 'cbx-ga-bg-swatches',
+    swatches: [
+      ['', 'Rojo suave'],
+      ['#ffffff', 'Blanco'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro'],
+      ['#fff8eb', 'Dorado suave']
+    ]
+  },
+  gaInk: {
+    containerId: 'cbx-ga-ink-swatches',
+    swatches: [
+      ['', 'Granate'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  bannerBg: {
+    containerId: 'cbx-bn-bg-swatches',
+    swatches: [
+      ['', 'Igual que el tema'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#1e3a8a', 'Azul marino'],
+      ['#c8102e', 'Rojo club'],
+      ['#111827', 'Negro'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  bannerInk: {
+    containerId: 'cbx-bn-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
+    ]
+  },
+  btnBg: {
+    containerId: 'cbx-btn-bg-swatches',
+    swatches: [
+      ['', 'Igual que el acento'],
+      ['#10b981', 'Esmeralda'],
+      ['#0a251b', 'Verde campo'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo'],
+      ['#f59e0b', 'Dorado'],
+      ['#111827', 'Negro'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  btnInk: {
+    containerId: 'cbx-btn-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  sidebarBg: {
+    containerId: 'cbx-sidebar-bg-swatches',
+    swatches: [
+      ['', 'Auto (Tema)'],
+      ['#0a251b', 'Verde campo'],
+      ['#064e3b', 'Esmeralda'],
+      ['#061021', 'Azul marino'],
+      ['#040806', 'Negro noche'],
+      ['#171d24', 'Gris acero'],
+      ['#170408', 'Rojo burdeos'],
+      ['#110722', 'Púrpura'],
+      ['#ffffff', 'Blanco']
+    ]
+  },
+  sidebarInk: {
+    containerId: 'cbx-sidebar-ink-swatches',
+    swatches: [
+      ['', 'Auto'],
+      ['#ffffff', 'Blanco'],
+      ['#f59e0b', 'Dorado'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro'],
+      ['#0f172a', 'Oscuro']
+    ]
+  },
+  spLeadBg: {
+    containerId: 'cbx-sp-lead-bg-swatches',
+    swatches: [
+      ['', 'Rojo (#c8102e por defecto)'],
+      ['#c8102e', 'Rojo club'],
+      ['#dc2626', 'Rojo fuego'],
+      ['#b91c1c', 'Granate'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#1e3a8a', 'Azul marino'],
+      ['#2563eb', 'Azul real'],
+      ['#f59e0b', 'Dorado'],
+      ['#111827', 'Negro']
+    ]
+  },
+  spLeadInk: {
+    containerId: 'cbx-sp-lead-ink-swatches',
+    swatches: [
+      ['', 'Blanco (por defecto)'],
+      ['#ffffff', 'Blanco'],
+      ['#0f172a', 'Oscuro'],
+      ['#facc15', 'Amarillo'],
+      ['#86efac', 'Verde claro']
+    ]
+  },
+  spSubBg: {
+    containerId: 'cbx-sp-sub-bg-swatches',
+    swatches: [
+      ['', 'Gris suave (por defecto)'],
+      ['#f1f5f9', 'Gris suave'],
+      ['#e2e8f0', 'Gris perla'],
+      ['#0a251b', 'Verde campo'],
+      ['#10b981', 'Esmeralda'],
+      ['#dbeafe', 'Azul suave'],
+      ['#fde8ec', 'Rojo suave'],
+      ['#fff8eb', 'Dorado suave'],
+      ['#111827', 'Negro']
+    ]
+  },
+  spSubInk: {
+    containerId: 'cbx-sp-sub-ink-swatches',
+    swatches: [
+      ['', 'Oscuro (por defecto)'],
+      ['#0f172a', 'Oscuro'],
+      ['#ffffff', 'Blanco'],
+      ['#334155', 'Gris pizarra'],
+      ['#0a251b', 'Verde campo'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  tbPitch: {
+    containerId: 'cbx-tb-pitch-swatches',
+    swatches: [
+      ['', 'Esmeralda (#1e523d)'],
+      ['#1e523d', 'Esmeralda'],
+      ['#0c3b2e', 'Verde oscuro'],
+      ['#061021', 'Azul marino'],
+      ['#040806', 'Negro OLED'],
+      ['#166534', 'Césped vivo'],
+      ['#1e293b', 'Pizarra gris']
+    ]
+  },
+  tbLines: {
+    containerId: 'cbx-tb-lines-swatches',
+    swatches: [
+      ['', 'Tiza suave'],
+      ['rgba(255,255,255,0.4)', 'Tiza suave'],
+      ['rgba(255,255,255,0.8)', 'Blanco puro'],
+      ['#facc15', 'Amarillo']
+    ]
+  },
+  tbTeam: {
+    containerId: 'cbx-tb-team-swatches',
+    swatches: [
+      ['', 'Rojo (#c8102e)'],
+      ['#c8102e', 'Rojo club'],
+      ['#2563eb', 'Azul real'],
+      ['#10b981', 'Verde'],
+      ['#f59e0b', 'Dorado'],
+      ['#ffffff', 'Blanco'],
+      ['#111827', 'Negro']
+    ]
+  },
+  tbRival: {
+    containerId: 'cbx-tb-rival-swatches',
+    swatches: [
+      ['', 'Negro (#111827)'],
+      ['#111827', 'Negro'],
+      ['#ffffff', 'Blanco'],
+      ['#2563eb', 'Azul'],
+      ['#c8102e', 'Rojo'],
+      ['#f59e0b', 'Amarillo']
+    ]
+  },
+  tbArrow: {
+    containerId: 'cbx-tb-arrow-swatches',
+    swatches: [
+      ['', 'Amarillo (#facc15)'],
+      ['#facc15', 'Amarillo'],
+      ['#ffffff', 'Blanco'],
+      ['#ef4444', 'Rojo'],
+      ['#38bdf8', 'Celeste'],
+      ['#4ade80', 'Verde neón']
+    ]
+  }
+};
+
+const CAMPOBASE_VIEW_IDS = [
+  'hoy', 'plantilla', 'cuerpo-tecnico', 'convocatorias',
+  'partido', 'delegado', 'preparacion', 'calendario',
+  'asistencia', 'ejercicios', 'sesiones', 'tacticas', 'ajustes', 'exercise-detail', 'comunicador'
+];
+
+function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, defaultBtn2, defaultBtn2Ink, defaultCardBg, defaultCardBorder, defaultFontColor) {
+  const viewsData = theme?.views || {};
+  CAMPOBASE_VIEW_IDS.forEach((viewId) => {
+    const viewEl = document.getElementById(viewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId]);
+    if (!viewEl) return;
+    const v = viewsData[viewId] || (viewId === 'exercise-detail' ? viewsData.ejercicios : null) || {};
+
+    const bn = v.bannerBg || theme?.bannerBg || defaultHero || '#0a251b';
+    const bnInk = v.bannerInk || theme?.bannerInk || '#ffffff';
+    const btn = v.btnBg || theme?.btnBg || defaultBtn || '#10b981';
+    const btnInk = v.btnInk || theme?.btnInk || defaultBtnInk || '#ffffff';
+    const btn2 = v.btn2Bg || theme?.btn2Bg || defaultBtn2 || '#ffffff';
+    const btn2Ink = v.btn2Ink || theme?.btn2Ink || defaultBtn2Ink || '#0f172a';
+    const vFontColor = v.fontColor || v.textColor || theme?.fontColor || defaultFontColor || '#0f172a';
+    const cardTitle = v.cardTitle || theme?.cardTitle || vFontColor || '#0f172a';
+    const cardBg = v.cardBg || v.cardHue || theme?.cardHue || defaultCardBg || '#ffffff';
+    const cardBorder = v.cardBorder || theme?.cardBorder || defaultCardBorder || '#e2e8f0';
+    const dorsalBg = v.dorsalBg || theme?.dorsalBg || bn;
+    const dorsalInk = v.dorsalInk || theme?.dorsalInk || bnInk;
+    const waBg = v.waBg || theme?.waBg || '#25d366';
+    const waInk = v.waInk || theme?.waInk || '#ffffff';
+    const gfBg = v.gfBg || theme?.gfBg || '#f0f7f3';
+    const gfInk = v.gfInk || theme?.gfInk || '#14532d';
+    const gaBg = v.gaBg || theme?.gaBg || '#fdf2f4';
+    const gaInk = v.gaInk || theme?.gaInk || '#9f1239';
+    const spLeadBg = v.spLeadBg || theme?.spLeadBg || '#c8102e';
+    const spLeadInk = v.spLeadInk || theme?.spLeadInk || '#ffffff';
+    const spSubBg = v.spSubBg || theme?.spSubBg || '#f1f5f9';
+    const spSubInk = v.spSubInk || theme?.spSubInk || '#0f172a';
+    const tbPitch = v.tbPitch || theme?.tbPitch || '#064e3b';
+    const tbLines = v.tbLines || theme?.tbLines || '#ffffff';
+    const tbTeam = v.tbTeam || theme?.tbTeam || '#10b981';
+    const tbRival = v.tbRival || theme?.tbRival || '#ef4444';
+    const tbArrow = v.tbArrow || theme?.tbArrow || '#fbbf24';
+
+    const todayMatchBg = v.todayMatchBg || bn;
+    const todayMatchInk = v.todayMatchInk || bnInk;
+    const callupBtnBg = v.callupBtnBg || v.btnBg || btn;
+    const callupBtnInk = v.callupBtnInk || v.btnInk || btnInk;
+    const callupHeaderBg = v.callupHeaderBg || bn;
+    const callupHeaderInk = v.callupHeaderInk || bnInk;
+    const callupBadgeBg = v.callupBadgeBg || 'rgba(255, 255, 255, 0.2)';
+    const callupBadgeInk = v.callupBadgeInk || '#ffffff';
+    const callupOutBg = v.callupOutBg || '#ef4444';
+    const callupOutInk = v.callupOutInk || '#ffffff';
+    const planModeTrack = v.planModeTrack || 'color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0))';
+    const planModeBg = v.planModeBg || 'transparent';
+    const planModeInk = v.planModeInk || 'var(--cbx-muted, #64748b)';
+    const planModeActiveBg = v.planModeActiveBg || 'var(--cardBg, #ffffff)';
+    const planModeActiveInk = v.planModeActiveInk || 'var(--cardTitle, #0f172a)';
+
+    const prepHeaderBg = v.prepHeaderBg || bn;
+    const prepHeaderInk = v.prepHeaderInk || bnInk;
+    const prepStatusBg = v.prepStatusBg || '#fff1d6';
+    const prepStatusInk = v.prepStatusInk || '#8a5900';
+    const whistleBg = v.whistleBg || bn;
+    const whistleInk = v.whistleInk || bnInk;
+    const printBg = v.printBg || btn2;
+    const printInk = v.printInk || btn2Ink;
+    const editBg = v.editBg || btn2;
+    const editInk = v.editInk || btn2Ink;
+    const completedBg = v.completedBg || '#f1f5f9';
+    const completedInk = v.completedInk || '#0f172a';
+    const completedActiveBg = v.completedActiveBg || btn;
+    const completedActiveInk = v.completedActiveInk || btnInk;
+    const calloutBg = v.calloutBg || 'color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0))';
+    const calloutInk = v.calloutInk || vFontColor;
+
+    viewEl.style.setProperty('--bn', bn);
+    viewEl.style.setProperty('--bnInk', bnInk);
+    viewEl.style.setProperty('--btn', btn);
+    viewEl.style.setProperty('--btnBg', btn);
+    viewEl.style.setProperty('--btnInk', btnInk);
+    viewEl.style.setProperty('--btn2', btn2);
+    viewEl.style.setProperty('--btn2Bg', btn2);
+    viewEl.style.setProperty('--btn2Ink', btn2Ink);
+    viewEl.style.setProperty('--view-font-color', vFontColor);
+    viewEl.style.setProperty('--cardTitle', cardTitle);
+    viewEl.style.setProperty('--cardBg', cardBg);
+    viewEl.style.setProperty('--cardBorder', cardBorder);
+    viewEl.style.setProperty('--dorsal-bg', dorsalBg);
+    viewEl.style.setProperty('--dorsal-ink', dorsalInk);
+    viewEl.style.setProperty('--wa-bg', waBg);
+    viewEl.style.setProperty('--wa-ink', waInk);
+    viewEl.style.setProperty('--waInk', waInk);
+    viewEl.style.setProperty('--gfBg', gfBg);
+    viewEl.style.setProperty('--gfInk', gfInk);
+    viewEl.style.setProperty('--gaBg', gaBg);
+    viewEl.style.setProperty('--gaInk', gaInk);
+    viewEl.style.setProperty('--sp-lead-bg', spLeadBg);
+    viewEl.style.setProperty('--sp-lead-ink', spLeadInk);
+    viewEl.style.setProperty('--sp-sub-bg', spSubBg);
+    viewEl.style.setProperty('--sp-sub-ink', spSubInk);
+    for (const rank of [1, 2, 3]) {
+      viewEl.style.setProperty('--captain-' + rank + '-bg', v['captain' + rank + 'Bg'] || (rank === 1 ? spLeadBg : spSubBg));
+      viewEl.style.setProperty('--captain-' + rank + '-ink', v['captain' + rank + 'Ink'] || (rank === 1 ? spLeadInk : spSubInk));
+    }
+    viewEl.style.setProperty('--season-goals-for', v.seasonGoalsForColor || v.gfColor || theme?.gfColor || '#10b981');
+    viewEl.style.setProperty('--season-goals-against', v.seasonGoalsAgainstColor || v.gaColor || theme?.gaColor || '#e11d48');
+    viewEl.style.setProperty('--tb-pitch', tbPitch);
+    viewEl.style.setProperty('--tb-lines', tbLines);
+    viewEl.style.setProperty('--tb-team', tbTeam);
+    viewEl.style.setProperty('--tb-rival', tbRival);
+    viewEl.style.setProperty('--tb-arrow', tbArrow);
+
+    viewEl.style.setProperty('--today-match-bg', todayMatchBg);
+    viewEl.style.setProperty('--today-match-ink', todayMatchInk);
+    viewEl.style.setProperty('--callup-btn-bg', callupBtnBg);
+    viewEl.style.setProperty('--callup-btn-ink', callupBtnInk);
+    viewEl.style.setProperty('--callup-header-bg', callupHeaderBg);
+    viewEl.style.setProperty('--callup-header-ink', callupHeaderInk);
+    viewEl.style.setProperty('--callup-badge-bg', callupBadgeBg);
+    viewEl.style.setProperty('--callup-badge-ink', callupBadgeInk);
+    viewEl.style.setProperty('--callup-status-bg', v.badgeBg || '#dcfce7');
+    viewEl.style.setProperty('--callup-status-ink', v.badgeInk || vFontColor);
+    viewEl.style.setProperty('--callup-out-bg', callupOutBg);
+    viewEl.style.setProperty('--callup-out-ink', callupOutInk);
+    for (const prop of ['planBarColor','planTrackColor','planTextColor','planRowColor','planSelectionColor','planCursorColor']) {
+      const name = '--' + prop.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
+      if (v[prop]) viewEl.style.setProperty(name,v[prop]); else viewEl.style.removeProperty(name);
+    }
+    viewEl.style.setProperty('--plan-mode-track', planModeTrack);
+    viewEl.style.setProperty('--plan-mode-bg', planModeBg);
+    viewEl.style.setProperty('--plan-mode-ink', planModeInk);
+    viewEl.style.setProperty('--plan-mode-active-bg', planModeActiveBg);
+    viewEl.style.setProperty('--plan-mode-active-ink', planModeActiveInk);
+    viewEl.style.setProperty('--prep-header-bg', prepHeaderBg);
+    viewEl.style.setProperty('--prep-header-ink', prepHeaderInk);
+    viewEl.style.setProperty('--prep-status-bg', prepStatusBg);
+    viewEl.style.setProperty('--prep-status-ink', prepStatusInk);
+    viewEl.style.setProperty('--whistle-bg', whistleBg);
+    viewEl.style.setProperty('--whistle-ink', whistleInk);
+    viewEl.style.setProperty('--print-bg', printBg);
+    viewEl.style.setProperty('--print-ink', printInk);
+    viewEl.style.setProperty('--edit-bg', editBg);
+    viewEl.style.setProperty('--edit-ink', editInk);
+    viewEl.style.setProperty('--completed-bg', completedBg);
+    viewEl.style.setProperty('--completed-ink', completedInk);
+    viewEl.style.setProperty('--completed-active-bg', completedActiveBg);
+    viewEl.style.setProperty('--completed-active-ink', completedActiveInk);
+    viewEl.style.setProperty('--callout-bg', calloutBg);
+    viewEl.style.setProperty('--callout-ink', calloutInk);
+    viewEl.style.setProperty('--cbx-acc', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--accent', v.accentColor || theme?.accentColor || btn);
+    viewEl.style.setProperty('--close-bg', v.closeBg || btn2);
+    viewEl.style.setProperty('--close-ink', v.closeInk || btn2Ink);
+    viewEl.style.setProperty('--view-font-color', vFontColor);
+    viewEl.style.setProperty('--badge-bg', v.badgeBg || '#f1f5f9');
+    viewEl.style.setProperty('--badge-ink', v.badgeInk || vFontColor);
+  });
+}
+
 function applyCustomTheme(themeInput) {
+  themeInput = colorPreviewTheme() || themeInput;
   let localTheme = {};
   try {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
   } catch {}
+
+  const mergedViews = {
+    ...(state.settings?.theme?.views || {}),
+    ...(localTheme.views || {}),
+    ...(themeInput?.views || {}),
+  };
 
   const theme = {
     themeBg: 'default',
@@ -4687,9 +7547,11 @@ function applyCustomTheme(themeInput) {
     fontScale: 'normal',
     fontWeight: 'bold',
     textColor: 'dark-slate',
+    fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
-    ...(themeInput || {})
+    ...(themeInput || {}),
+    views: mergedViews,
   };
 
   const root = document.documentElement;
@@ -4787,7 +7649,28 @@ function applyCustomTheme(themeInput) {
   root.style.setProperty('--cb-font-family', fontFamVal);
   body.style.setProperty('--cb-font-family', fontFamVal);
 
-  // 4. Tamaño / Escala de fuentes (data-font-scale y rem base en html)
+  // Mapeo héroe y fondos canónicos de Claude
+  const claudeHeroes = {
+    default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+    navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+    steel: '#171d24', burgundy: '#170408', purple: '#110722',
+    light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+  };
+  const claudeBackgrounds = {
+    default: '#f4f6f5', dark: '#eef1ef', 'pitch-vivid': '#eef6f1',
+    navy: '#f1f4f9', ocean: '#eff5f8', charcoal: '#f2f2f3',
+    steel: '#f1f3f5', burgundy: '#f8f2f3', purple: '#f4f2f8',
+    light: '#ffffff', warm: '#f6f3eb', sepia: '#eee6d8', 'high-vis': '#ffffff',
+  };
+  const hero = claudeHeroes[bg] || claudeHeroes.default;
+
+  // Fuente de títulos y marcadores independiente
+  const ft = theme.fontTitle && theme.fontTitle !== 'auto'
+    ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle)
+    : null;
+  const displayFont = ft || (['modern', 'technical', 'classic'].includes(family) ? fontFamVal : '"Barlow Condensed", sans-serif');
+
+  // 4. Tamaño / Escala de fuentes
   const scale = theme.fontScale || 'normal';
   if (scale && scale !== 'normal') {
     root.setAttribute('data-font-scale', scale);
@@ -4799,7 +7682,7 @@ function applyCustomTheme(themeInput) {
   const fontSizePx = FONT_SCALE_MAP[scale] || '16px';
   root.style.fontSize = fontSizePx;
 
-  // 5. Grosor / Negritas (data-font-weight)
+  // 5. Grosor / Negritas
   const weight = theme.fontWeight || 'bold';
   if (weight && weight !== 'normal') {
     root.setAttribute('data-font-weight', weight);
@@ -4809,7 +7692,7 @@ function applyCustomTheme(themeInput) {
     body.removeAttribute('data-font-weight');
   }
 
-  // 6. Color y contraste de textos (data-theme-font)
+  // 6. Color y contraste de textos
   const textColor = theme.textColor || 'dark-slate';
   if (textColor && textColor !== 'dark-slate') {
     root.setAttribute('data-theme-font', textColor);
@@ -4819,7 +7702,7 @@ function applyCustomTheme(themeInput) {
     body.removeAttribute('data-theme-font');
   }
 
-  // 7. Color de fuente personalizado (fontColor)
+  // 7. Color de fuente personalizado
   let fontColor = theme.fontColor;
   if (!fontColor && textColor && TEXT_COLOR_MAP[textColor]) {
     fontColor = TEXT_COLOR_MAP[textColor];
@@ -4882,6 +7765,213 @@ function applyCustomTheme(themeInput) {
     body.style.removeProperty('color');
   }
 
+  // 8. Cálculo de color-mix para fondos e intensidades de app y tarjetas
+  const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
+  let calculatedAppBg = null;
+  if (theme.appBgHue) {
+    if (theme.appBgPct !== undefined && theme.appBgPct !== null && theme.appBgPct < 95 && theme.appBgPct > 0) {
+      calculatedAppBg = mix(theme.appBgHue, theme.appBgPct, '#ffffff');
+    } else {
+      calculatedAppBg = theme.appBgHue;
+    }
+  }
+
+  let calculatedCardBg = null;
+  if (theme.cardHue) {
+    if (theme.cardPct !== undefined && theme.cardPct !== null && theme.cardPct < 95 && theme.cardPct > 0) {
+      calculatedCardBg = mix(theme.cardHue, theme.cardPct, '#ffffff');
+    } else {
+      calculatedCardBg = theme.cardHue;
+    }
+  }
+
+  // Comprobación de luminancia: si la fuente es clara (>170), forzar fondo oscuro para mantener legibilidad
+  const cleanHexColor = (fontColor || '#0f172a').replace('#', '');
+  const lum = cleanHexColor.length >= 6
+    ? 0.299 * parseInt(cleanHexColor.substring(0, 2), 16) + 0.587 * parseInt(cleanHexColor.substring(2, 4), 16) + 0.114 * parseInt(cleanHexColor.substring(4, 6), 16)
+    : 0;
+
+  const finalAppBg = calculatedAppBg || (lum > 170 ? '#0b1712' : (bg !== 'default' && preset?.bg ? preset.bg : claudeBackgrounds[bg] || '#f4f6f5'));
+  const finalCardBg = calculatedCardBg || (lum > 170 ? '#11221b' : (preset?.card || '#ffffff'));
+
+  // Semáforos con significado
+  const sem = state.settings?.sem || DEFAULT_SEM;
+
+  // Héroe canónico o personalizado
+  const heroBase = theme.bannerBg || claudeHeroes[bg] || claudeHeroes.default;
+
+  // Barra lateral
+  const sidebarBg = theme.sidebarBg || heroBase;
+  let sidebarInk = theme.sidebarInk;
+  if (!sidebarInk) {
+    const sClean = String(sidebarBg).replace('#', '');
+    if (sClean.length === 6) {
+      const r = parseInt(sClean.substring(0, 2), 16);
+      const g = parseInt(sClean.substring(2, 4), 16);
+      const b = parseInt(sClean.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      sidebarInk = yiq > 135 ? '#0f172a' : '#ffffff';
+    } else {
+      sidebarInk = '#ffffff';
+    }
+  }
+  const sidebarSub = sidebarInk === '#ffffff' ? '#81958d' : `color-mix(in srgb, ${sidebarInk} 70%, transparent)`;
+
+  const btnBgVal = theme.btnBg || theme.accentColor || '#10b981';
+  const btnInkVal = theme.btnInk || '#ffffff';
+
+  let btn2InkVal = theme.btn2Ink;
+  const btn2BgVal = theme.btn2Bg || '#ffffff';
+  const cHex = String(btn2BgVal).replace('#', '');
+  let bgYiq = 255;
+  if (cHex.length === 6) {
+    const r = parseInt(cHex.substring(0, 2), 16);
+    const g = parseInt(cHex.substring(2, 4), 16);
+    const b = parseInt(cHex.substring(4, 6), 16);
+    bgYiq = (r * 299 + g * 587 + b * 114) / 1000;
+  }
+  if (!btn2InkVal) {
+    btn2InkVal = bgYiq < 135 ? '#ffffff' : '#0f172a';
+  } else {
+    const cleanInk = String(btn2InkVal).replace('#', '');
+    if (cleanInk.length === 6) {
+      const ir = parseInt(cleanInk.substring(0, 2), 16);
+      const ig = parseInt(cleanInk.substring(2, 4), 16);
+      const ib = parseInt(cleanInk.substring(4, 6), 16);
+      const inkYiq = (ir * 299 + ig * 587 + ib * 114) / 1000;
+      if (Math.abs(bgYiq - inkYiq) < 45) {
+        btn2InkVal = bgYiq > 140 ? '#0f172a' : '#ffffff';
+      }
+    }
+  }
+
+  // Pizarra táctica
+  const tb = theme.tb || state.settings?.tb || DEFAULT_TACTIC_BOARD;
+  const tbPitch = theme.tbPitch || tb.pitch || DEFAULT_TACTIC_BOARD.pitch;
+  const tbLines = theme.tbLines || tb.lines || DEFAULT_TACTIC_BOARD.lines;
+  const tbTeam = theme.tbTeam || tb.team || DEFAULT_TACTIC_BOARD.team;
+  const tbRival = theme.tbRival || tb.rival || DEFAULT_TACTIC_BOARD.rival;
+  const tbArrow = theme.tbArrow || tb.arrow || DEFAULT_TACTIC_BOARD.arrow;
+
+  // Inyección de todas las variables en root y body
+  for (const target of [root, body]) {
+    target.style.setProperty('--acc', theme.accentColor || '#10b981');
+    target.style.setProperty('--cbx-acc', btnBgVal);
+    target.style.setProperty('--hero', heroBase);
+    target.style.setProperty('--cbx-hero', heroBase);
+    target.style.setProperty('--cb-shell-hero', sidebarBg);
+    target.style.setProperty('--sidebar-bg', sidebarBg);
+    target.style.setProperty('--sidebar-ink', sidebarInk);
+    target.style.setProperty('--sidebar-sub', sidebarSub);
+
+    target.style.setProperty('--ui', fontFamVal);
+    target.style.setProperty('--cbx-ui', fontFamVal);
+    target.style.setProperty('--disp', displayFont);
+    target.style.setProperty('--cbx-disp', displayFont);
+    target.style.setProperty('--bg', finalAppBg);
+    target.style.setProperty('--cbx-bg', finalAppBg);
+    target.style.setProperty('--paper', finalAppBg);
+    target.style.setProperty('--cb-surface-bg', finalAppBg);
+    target.style.setProperty('--cardBg', finalCardBg);
+    target.style.setProperty('--card', finalCardBg);
+    target.style.setProperty('--cardTitle', theme.cardTitle || fontColor || 'var(--ink, #0f172a)');
+    target.style.setProperty('--cardBorder', theme.cardBorder || '#e2e8f0');
+    target.style.setProperty('--cbx-ink', fontColor || theme.cardTitle || 'var(--ink, #0f172a)');
+    target.style.setProperty('--cbx-line', theme.cardBorder || '#e2e8f0');
+
+    target.style.setProperty('--bn', heroBase);
+    target.style.setProperty('--bnInk', theme.bannerInk || '#ffffff');
+    target.style.setProperty('--btn', btnBgVal);
+    target.style.setProperty('--btnInk', btnInkVal);
+
+    target.style.setProperty('--btn2', theme.btn2Bg || '#ffffff');
+    target.style.setProperty('--btn2Ink', btn2InkVal);
+    target.style.setProperty('--wa-bg', theme.waBg || '#25d366');
+    target.style.setProperty('--wa-ink', theme.waInk || '#053b1d');
+    target.style.setProperty('--waInk', theme.waInk || '#053b1d');
+    target.style.setProperty('--dorsal-bg', theme.dorsalBg || theme.bannerBg || heroBase);
+    target.style.setProperty('--dorsal-ink', theme.dorsalInk || theme.bannerInk || '#ffffff');
+    target.style.setProperty('--sp-lead-bg', theme.spLeadBg || '#c8102e');
+    target.style.setProperty('--sp-lead-ink', theme.spLeadInk || '#ffffff');
+    target.style.setProperty('--sp-sub-bg', theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${theme.cardBorder || '#e2e8f0'})`);
+    target.style.setProperty('--sp-sub-ink', theme.spSubInk || theme.cardTitle || fontColor || '#0f172a');
+    target.style.setProperty('--resInk', theme.resInk || '#ffffff');
+
+    target.style.setProperty('--gf', theme.gfColor || theme.accentColor || '#10b981');
+    target.style.setProperty('--gfBg', theme.gfBg || '#f0f7f3');
+    target.style.setProperty('--gfInk', theme.gfInk || '#14532d');
+    target.style.setProperty('--ga', theme.gaColor || '#e02444');
+    target.style.setProperty('--gaBg', theme.gaBg || '#fdf2f4');
+    target.style.setProperty('--gaInk', theme.gaInk || '#9f1239');
+
+    // Semáforos
+    target.style.setProperty('--sem-gk', sem.gk || DEFAULT_SEM.gk);
+    target.style.setProperty('--sem-def', sem.def || DEFAULT_SEM.def);
+    target.style.setProperty('--sem-mid', sem.mid || DEFAULT_SEM.mid);
+    target.style.setProperty('--sem-fw', sem.fw || DEFAULT_SEM.fw);
+    target.style.setProperty('--sem-win', sem.win || DEFAULT_SEM.win);
+    target.style.setProperty('--sem-draw', sem.draw || DEFAULT_SEM.draw);
+    target.style.setProperty('--sem-loss', sem.loss || DEFAULT_SEM.loss);
+
+    // Pizarra táctica
+    target.style.setProperty('--tb-pitch', tbPitch);
+    target.style.setProperty('--tb-lines', tbLines);
+    target.style.setProperty('--tb-team', tbTeam);
+    target.style.setProperty('--tb-rival', tbRival);
+    target.style.setProperty('--tb-arrow', tbArrow);
+    // Barra inferior minimizada
+    const bottomNavBg = theme.bottomNavBg || '#ffffff';
+    const bottomNavInk = theme.bottomNavInk || '#64748b';
+    const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+    target.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    target.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    target.style.setProperty('--bottom-nav-active', bottomNavActive);
+    target.style.setProperty('--sub-nav-bg', theme.subNavBg || '#f1f5f9');
+    target.style.setProperty('--sub-nav-ink', theme.subNavInk || '#334155');
+    target.style.setProperty('--sub-nav-active-bg', theme.subNavActiveBg || '#ffffff');
+    target.style.setProperty('--sub-nav-active-ink', theme.subNavActiveInk || bottomNavActive);
+  }
+
+  // Aplicar fondo directamente en el canvas HTML y body
+  document.body.style.setProperty('background', finalAppBg, 'important');
+  document.documentElement.style.setProperty('background', finalAppBg, 'important');
+
+  // Actualizar DOM directo de la barra lateral si existe
+  const sidebarEl = $('#cb-claude-sidebar');
+  if (sidebarEl) {
+    sidebarEl.style.setProperty('background', sidebarBg, 'important');
+    sidebarEl.style.setProperty('color', sidebarInk, 'important');
+    sidebarEl.style.setProperty('--sidebar-bg', sidebarBg);
+    sidebarEl.style.setProperty('--sidebar-ink', sidebarInk);
+    sidebarEl.style.setProperty('--sidebar-sub', sidebarSub);
+  }
+
+  const bottomNavBg = theme.bottomNavBg || '#ffffff';
+  const bottomNavInk = theme.bottomNavInk || '#64748b';
+  const bottomNavActive = theme.bottomNavActive || theme.btnBg || '#c8102e';
+  // Actualizar DOM directo de la barra inferior minimizada si existe
+  const bottomNavEl = $('#cb-bottom-nav');
+  if (bottomNavEl) {
+    bottomNavEl.style.setProperty('background', bottomNavBg, 'important');
+    bottomNavEl.style.setProperty('--bottom-nav-bg', bottomNavBg);
+    bottomNavEl.style.setProperty('--bottom-nav-ink', bottomNavInk);
+    bottomNavEl.style.setProperty('--bottom-nav-active', bottomNavActive);
+  }
+
+  // Aplicar colores y estilos exclusivos por pestaña (scoped theme per view)
+  applyViewScopedTheme(theme, heroBase, btnBgVal, btnInkVal, btn2BgVal, btn2InkVal, finalCardBg, theme.cardBorder || '#e2e8f0', fontColor);
+
+  applyComponentColors(theme);
+
+  // Actualizar mini pizarra táctica de previsualización
+  updateTacticBoardPreviewBox(tbPitch, tbLines, tbTeam, tbRival, tbArrow);
+
+  // Actualizar tarjeta de vista previa interactiva
+  updateThemePreviewBox(theme);
+
+  // Sincronizar controles interactivos de Ajustes
+  syncCustomizerControls(theme);
+
   // Sincronizar controles en el formulario si está en el DOM
   const themeForm = $('#theme-settings-form');
   if (themeForm) {
@@ -4909,6 +7999,821 @@ function applyCustomTheme(themeInput) {
     $$('.font-color-swatch-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.color?.toLowerCase() === fontColor?.toLowerCase());
     });
+  }
+}
+
+function updateThemePreviewBox(theme) {
+  const bg = theme.themeBg || 'default';
+  const claudeHeroes = {
+    default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+    navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+    steel: '#171d24', burgundy: '#170408', purple: '#110722',
+    light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+  };
+  const hero = claudeHeroes[bg] || claudeHeroes.default;
+  const bannerBg = theme.bannerBg || hero;
+  const bannerInk = theme.bannerInk || '#ffffff';
+  const btnBg = theme.btnBg || theme.accentColor || '#10b981';
+  const btnInk = theme.btnInk || '#ffffff';
+
+  let btn2Ink = theme.btn2Ink;
+  const b2 = theme.btn2Bg || '#ffffff';
+  const cleanB2 = String(b2).replace('#', '');
+  let b2Yiq = 255;
+  if (cleanB2.length === 6) {
+    const r = parseInt(cleanB2.substring(0, 2), 16);
+    const g = parseInt(cleanB2.substring(2, 4), 16);
+    const b = parseInt(cleanB2.substring(4, 6), 16);
+    b2Yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  }
+  if (!btn2Ink) {
+    btn2Ink = b2Yiq < 135 ? '#ffffff' : '#0f172a';
+  } else {
+    const cleanInk = String(btn2Ink).replace('#', '');
+    if (cleanInk.length === 6) {
+      const ir = parseInt(cleanInk.substring(0, 2), 16);
+      const ig = parseInt(cleanInk.substring(2, 4), 16);
+      const ib = parseInt(cleanInk.substring(4, 6), 16);
+      const inkYiq = (ir * 299 + ig * 587 + ib * 114) / 1000;
+      if (Math.abs(b2Yiq - inkYiq) < 45) {
+        btn2Ink = b2Yiq > 140 ? '#0f172a' : '#ffffff';
+      }
+    }
+  }
+  const btn2Bg = theme.btn2Bg || '#ffffff';
+
+  const family = theme.fontFamily || 'system';
+  const fontFamVal = FONT_FAMILY_MAP[family] || FONT_FAMILY_MAP['system'];
+  const ft = theme.fontTitle && theme.fontTitle !== 'auto'
+    ? (TITLE_FONT_MAP[theme.fontTitle] || theme.fontTitle)
+    : null;
+  const displayFont = ft || (['modern', 'technical', 'classic'].includes(family) ? fontFamVal : '"Barlow Condensed", sans-serif');
+
+  const mix = (c, p, base) => `color-mix(in srgb, ${c} ${p}%, ${base})`;
+  let calculatedAppBg = null;
+  if (theme.appBgHue) {
+    if (theme.appBgPct !== undefined && theme.appBgPct !== null && theme.appBgPct < 95 && theme.appBgPct > 0) {
+      calculatedAppBg = mix(theme.appBgHue, theme.appBgPct, '#ffffff');
+    } else {
+      calculatedAppBg = theme.appBgHue;
+    }
+  }
+  const finalAppBg = calculatedAppBg || (bg !== 'default' && THEME_PRESETS[bg]?.bg ? THEME_PRESETS[bg].bg : '#f4f6f5');
+
+  let calculatedCardBg = null;
+  if (theme.cardHue) {
+    if (theme.cardPct !== undefined && theme.cardPct !== null && theme.cardPct < 95 && theme.cardPct > 0) {
+      calculatedCardBg = mix(theme.cardHue, theme.cardPct, '#ffffff');
+    } else {
+      calculatedCardBg = theme.cardHue;
+    }
+  }
+  const finalCardBg = calculatedCardBg || '#ffffff';
+  const cardTitle = theme.cardTitle || 'var(--cardTitle, #0f172a)';
+  const cardBorder = theme.cardBorder || '#e2e8f0';
+  const fontColor = theme.fontColor || '#0f172a';
+
+  // 1. Panel Scoreboard & Botones
+  const previewScoreboardHeader = $('#preview-scoreboard-header');
+  if (previewScoreboardHeader) {
+    previewScoreboardHeader.style.background = bannerBg;
+    previewScoreboardHeader.style.color = bannerInk;
+    previewScoreboardHeader.style.fontFamily = displayFont;
+  }
+  const previewCrestDemo = $('#preview-crest-demo');
+  if (previewCrestDemo) {
+    previewCrestDemo.src = $('#club-crest-value')?.value || state.settings?.clubCrest || 'icons/escudo.png';
+  }
+  const previewTeamName = $('#preview-team-name');
+  if (previewTeamName) {
+    previewTeamName.textContent = state.settings?.teamName || 'Unión Viera';
+    previewTeamName.style.fontFamily = displayFont;
+    previewTeamName.style.color = bannerInk;
+  }
+  const previewOppName = $('#preview-opp-name');
+  if (previewOppName) {
+    previewOppName.style.fontFamily = displayFont;
+    previewOppName.style.color = bannerInk;
+  }
+  const previewScore = $('#preview-score');
+  if (previewScore) {
+    previewScore.style.fontFamily = displayFont;
+    previewScore.style.color = bannerInk;
+  }
+  const previewGfNum = $('#preview-gf-num');
+  if (previewGfNum) {
+    previewGfNum.style.background = theme.gfBg || '#f0f7f3';
+    previewGfNum.style.color = theme.gfInk || '#14532d';
+    previewGfNum.style.fontFamily = displayFont;
+  }
+  const previewGaNum = $('#preview-ga-num');
+  if (previewGaNum) {
+    previewGaNum.style.background = theme.gaBg || '#fdf2f4';
+    previewGaNum.style.color = theme.gaInk || '#9f1239';
+    previewGaNum.style.fontFamily = displayFont;
+  }
+  $$('.cbx-preview-gf-badge').forEach((badge) => {
+    badge.style.background = theme.gfBg || '#f0f7f3';
+    badge.style.color = theme.gfInk || '#14532d';
+    const dot = badge.querySelector('.dot');
+    if (dot) dot.style.background = theme.gfColor || theme.accentColor || '#10b981';
+  });
+  $$('.cbx-preview-ga-badge').forEach((badge) => {
+    badge.style.background = theme.gaBg || '#fdf2f4';
+    badge.style.color = theme.gaInk || '#9f1239';
+    const dot = badge.querySelector('.dot');
+    if (dot) dot.style.background = theme.gaColor || '#e02444';
+  });
+  const previewScoreboardBody = $('#preview-scoreboard-body');
+  if (previewScoreboardBody) {
+    previewScoreboardBody.style.background = finalAppBg;
+    previewScoreboardBody.style.color = fontColor;
+  }
+  const previewSampleBtn = $('#preview-sample-btn');
+  if (previewSampleBtn) {
+    previewSampleBtn.style.background = btnBg;
+    previewSampleBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewSampleBtn2 = $('#preview-sample-btn2');
+  if (previewSampleBtn2) {
+    previewSampleBtn2.style.background = btn2Bg;
+    previewSampleBtn2.style.color = btn2Ink;
+  }
+  const waBgVal = theme.waBg || '#25d366';
+  const waInkVal = theme.waInk || '#053b1d';
+  const dorsalBgVal = theme.dorsalBg || theme.bannerBg || hero;
+  const dorsalInkVal = theme.dorsalInk || theme.bannerInk || '#ffffff';
+
+  const previewSampleWa = $('#preview-sample-wa');
+  if (previewSampleWa) {
+    previewSampleWa.style.background = waBgVal;
+    previewSampleWa.style.color = waInkVal;
+  }
+  const previewSampleRes = $('#preview-sample-res');
+  if (previewSampleRes) {
+    previewSampleRes.style.color = theme.resInk || '#ffffff';
+  }
+
+  // Mini-previsualización en vivo en la tarjeta de Fondos, tarjetas y botones
+  const surfacesBox = $('#cbx-surfaces-preview-box');
+  if (surfacesBox) {
+    surfacesBox.style.background = finalCardBg;
+    surfacesBox.style.borderColor = cardBorder;
+  }
+  const surfacesTitle = $('#cbx-preview-card-sample-title');
+  if (surfacesTitle) {
+    surfacesTitle.style.color = cardTitle;
+    surfacesTitle.style.fontFamily = displayFont;
+  }
+  const surfacesText = $('#cbx-preview-card-sample-text');
+  if (surfacesText) {
+    surfacesText.style.color = fontColor;
+  }
+  const surfacesBtn2 = $('#cbx-preview-btn2-sample');
+  if (surfacesBtn2) {
+    surfacesBtn2.style.background = btn2Bg;
+    surfacesBtn2.style.color = btn2Ink;
+    surfacesBtn2.style.borderColor = cardBorder;
+  }
+  ['#cbx-preview-quick-btn-1', '#cbx-preview-quick-btn-2'].forEach((sel) => {
+    const qbtn = $(sel);
+    if (qbtn) {
+      qbtn.style.background = btn2Bg;
+      qbtn.style.color = btn2Ink;
+      qbtn.style.borderColor = cardBorder;
+    }
+  });
+  const surfacesWa = $('#cbx-preview-wa-sample');
+  if (surfacesWa) {
+    surfacesWa.style.background = waBgVal;
+    surfacesWa.style.color = waInkVal;
+  }
+  const surfacesRes = $('#cbx-preview-res-sample');
+  if (surfacesRes) surfacesRes.style.color = theme.resInk || '#ffffff';
+
+  const dorsalBox = $('#cbx-preview-dorsal-box');
+  if (dorsalBox) {
+    dorsalBox.style.background = finalCardBg;
+    dorsalBox.style.borderColor = cardBorder;
+  }
+  const dorsalBadge = $('#cbx-preview-dorsal-badge');
+  if (dorsalBadge) {
+    dorsalBadge.style.background = dorsalBgVal;
+    dorsalBadge.style.color = dorsalInkVal;
+  }
+  $$('.preview-sp-dorsal-circle').forEach((badge) => {
+    badge.style.background = dorsalBgVal;
+    badge.style.color = dorsalInkVal;
+  });
+
+  const previewCardWrap = $('#preview-card-demo-wrap');
+  if (previewCardWrap) {
+    previewCardWrap.style.background = finalCardBg;
+    previewCardWrap.style.borderColor = cardBorder;
+  }
+  const previewCardTitle = $('#preview-card-demo-title');
+  if (previewCardTitle) {
+    previewCardTitle.style.color = cardTitle;
+    previewCardTitle.style.fontFamily = displayFont;
+  }
+  const previewCardText = $('#preview-card-demo-text');
+  if (previewCardText) {
+    previewCardText.style.color = fontColor;
+  }
+
+  // 2. Panel Hoy
+  const previewHoyHero = $('#preview-hoy-hero');
+  if (previewHoyHero) {
+    previewHoyHero.style.background = bannerBg;
+    previewHoyHero.style.color = bannerInk;
+  }
+  const previewHoyTitle = $('#preview-hoy-title');
+  if (previewHoyTitle) {
+    previewHoyTitle.style.fontFamily = displayFont;
+    previewHoyTitle.style.color = bannerInk;
+  }
+  $$('#preview-pane-hoy [style*="color:var(--bnInk"]').forEach((el) => {
+    el.style.color = bannerInk;
+  });
+  const previewHoyCard = $('#preview-hoy-card');
+  if (previewHoyCard) {
+    previewHoyCard.style.background = finalCardBg;
+    previewHoyCard.style.borderColor = cardBorder;
+  }
+  const previewHoyCardTitle = $('#preview-hoy-card-title');
+  if (previewHoyCardTitle) {
+    previewHoyCardTitle.style.color = cardTitle;
+    previewHoyCardTitle.style.fontFamily = displayFont;
+  }
+  ['#preview-hoy-pending-card', '#preview-hoy-quick-card'].forEach((sel) => {
+    const c = $(sel);
+    if (c) {
+      c.style.background = finalCardBg;
+      c.style.borderColor = cardBorder;
+    }
+  });
+  ['#preview-hoy-pending-title', '#preview-hoy-quick-title'].forEach((sel) => {
+    const t = $(sel);
+    if (t) {
+      t.style.color = cardTitle;
+      t.style.fontFamily = displayFont;
+    }
+  });
+  $$('.preview-hoy-pending-item').forEach((item) => {
+    item.style.background = finalCardBg;
+    item.style.borderColor = cardBorder;
+  });
+  $$('.preview-hoy-pending-item-name').forEach((name) => {
+    name.style.color = cardTitle;
+  });
+  $$('.preview-hoy-pending-btn, .preview-hoy-quick-btn').forEach((btn) => {
+    btn.style.background = btn2Bg;
+    btn.style.color = btn2Ink;
+    btn.style.borderColor = cardBorder;
+  });
+
+  // 3. Panel Convocatoria
+  const previewCallupBanner = $('#preview-callup-banner');
+  if (previewCallupBanner) {
+    previewCallupBanner.style.background = bannerBg;
+    previewCallupBanner.style.color = bannerInk;
+  }
+  const previewCallupBtn = $('#preview-callup-btn');
+  if (previewCallupBtn) {
+    previewCallupBtn.style.background = btnBg;
+    previewCallupBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewCallupCard = $('#preview-callup-card');
+  if (previewCallupCard) {
+    previewCallupCard.style.background = finalCardBg;
+    previewCallupCard.style.borderColor = cardBorder;
+  }
+  const previewCallupMatchHeader = $('#preview-callup-match-header');
+  if (previewCallupMatchHeader) {
+    previewCallupMatchHeader.style.background = bannerBg;
+    previewCallupMatchHeader.style.color = bannerInk;
+  }
+  const previewCallupNum = $('#preview-callup-num');
+  if (previewCallupNum) {
+    previewCallupNum.style.background = dorsalBgVal;
+    previewCallupNum.style.color = dorsalInkVal;
+    previewCallupNum.style.fontFamily = displayFont;
+  }
+  const previewCallupPlayerName = $('#preview-callup-player-name');
+  if (previewCallupPlayerName) {
+    previewCallupPlayerName.style.color = cardTitle;
+  }
+
+  // 4. Panel Lanzadores y Tarjeta de Especialistas
+  const spLeadBg = theme.views?.plantilla?.spLeadBg || theme.spLeadBg || '#c8102e';
+  const spLeadInk = theme.views?.plantilla?.spLeadInk || theme.spLeadInk || '#ffffff';
+  const spSubBg = theme.views?.plantilla?.spSubBg || theme.spSubBg || `color-mix(in srgb, ${finalCardBg} 85%, ${cardBorder})`;
+  const spSubInk = theme.views?.plantilla?.spSubInk || theme.spSubInk || cardTitle;
+
+  const spBox = $('#cbx-specialists-preview-box');
+  if (spBox) {
+    spBox.style.background = finalCardBg;
+    spBox.style.borderColor = cardBorder;
+  }
+  const spTitle = $('#cbx-sp-preview-title');
+  if (spTitle) {
+    spTitle.style.color = cardTitle;
+    spTitle.style.fontFamily = displayFont;
+  }
+  const spLeadRow = $('#cbx-sp-preview-row-lead');
+  if (spLeadRow) {
+    spLeadRow.style.background = spLeadBg;
+    spLeadRow.style.color = spLeadInk;
+  }
+  const spSubRow = $('#cbx-sp-preview-row-sub');
+  if (spSubRow) {
+    spSubRow.style.background = spSubBg;
+    spSubRow.style.color = spSubInk;
+    spSubRow.style.borderColor = cardBorder;
+  }
+  $$('#cbx-specialists-preview-box [data-sp-dorsal]').forEach((badge) => {
+    badge.style.background = dorsalBgVal;
+    badge.style.color = dorsalInkVal;
+  });
+
+  const previewSpConfigBtn = $('#preview-sp-config-btn');
+  if (previewSpConfigBtn) {
+    previewSpConfigBtn.style.background = btn2Bg;
+    previewSpConfigBtn.style.color = btn2Ink;
+  }
+  ['#preview-sp-card-1', '#preview-sp-card-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = finalCardBg;
+      el.style.borderColor = cardBorder;
+    }
+  });
+  ['#preview-sp-icon-1', '#preview-sp-icon-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = bannerBg;
+      el.style.color = bannerInk;
+    }
+  });
+  ['#preview-sp-title-1', '#preview-sp-title-2'].forEach((sel) => {
+    const el = $(sel);
+    if (el) el.style.color = cardTitle;
+  });
+  ['#preview-sp-rank-1', '#preview-sp-rank-3'].forEach((sel) => {
+    const el = $(sel);
+    if (el) {
+      el.style.background = spLeadBg;
+      el.style.color = spLeadInk;
+    }
+  });
+  const spRank2 = $('#preview-sp-rank-2');
+  if (spRank2) {
+    spRank2.style.background = spSubBg;
+    spRank2.style.color = spSubInk;
+  }
+
+  // 5. Panel Cuerpo Técnico
+  const previewStaffBanner = $('#preview-staff-banner');
+  if (previewStaffBanner) {
+    previewStaffBanner.style.background = bannerBg;
+    previewStaffBanner.style.color = bannerInk;
+  }
+  const previewStaffBtn = $('#preview-staff-btn');
+  if (previewStaffBtn) {
+    previewStaffBtn.style.background = btnBg;
+    previewStaffBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewStaffCard = $('#preview-staff-card');
+  if (previewStaffCard) {
+    previewStaffCard.style.background = finalCardBg;
+    previewStaffCard.style.borderColor = cardBorder;
+  }
+  const previewStaffStrip = $('#preview-staff-strip');
+  if (previewStaffStrip) {
+    previewStaffStrip.style.background = `linear-gradient(120deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 75%, #000000))`;
+  }
+  const previewStaffInitials = $('#preview-staff-avatar-initials');
+  if (previewStaffInitials) {
+    previewStaffInitials.style.fontFamily = displayFont;
+    previewStaffInitials.style.color = bannerBg;
+  }
+  const previewStaffName = $('#preview-staff-name');
+  if (previewStaffName) {
+    previewStaffName.style.color = cardTitle;
+  }
+
+  // Pestaña activa: mantener estilo del botón primario
+  const activeTabBtn = $('.cbx-preview-tab-btn.active');
+  if (activeTabBtn) {
+    activeTabBtn.style.background = btnBg;
+    activeTabBtn.style.setProperty('color', btnInk, 'important');
+  }
+
+  // Compatibilidad con cajas legacy si existen
+  const previewBannerBox = $('#cbx-preview-banner-box');
+  if (previewBannerBox) {
+    previewBannerBox.style.background = `linear-gradient(135deg, ${bannerBg}, color-mix(in srgb, ${bannerBg} 72%, #297053))`;
+    previewBannerBox.style.color = bannerInk;
+  }
+  const previewBannerBtn = $('#cbx-preview-banner-btn');
+  if (previewBannerBtn) {
+    previewBannerBtn.style.background = btnBg;
+    previewBannerBtn.style.setProperty('color', btnInk, 'important');
+  }
+  const previewBannerBtn2 = $('#cbx-preview-banner-btn2');
+  if (previewBannerBtn2) {
+    previewBannerBtn2.style.background = btn2Bg;
+    previewBannerBtn2.style.setProperty('color', btn2Ink, 'important');
+  }
+
+  const fontPreviewBox = $('#cbx-font-preview-box');
+  if (fontPreviewBox) {
+    fontPreviewBox.style.background = finalCardBg;
+    fontPreviewBox.style.borderColor = cardBorder;
+    const fontSample = $('#cbx-font-preview-sample');
+    if (fontSample) fontSample.style.color = fontColor;
+    const fontVal = $('#cbx-font-preview-val');
+    if (fontVal) fontVal.textContent = fontColor;
+  }
+
+  // Semáforos
+  const sem = state.settings?.sem || DEFAULT_SEM;
+  const semMap = {
+    'preview-sem-gk': sem.gk || '#0284c7',
+    'preview-sem-def': sem.def || '#16a34a',
+    'preview-sem-mid': sem.mid || '#eab308',
+    'preview-sem-fw': sem.fw || '#dc2626',
+    'preview-sem-win': sem.win || '#10b981',
+    'preview-sem-draw': sem.draw || '#f59e0b',
+    'preview-sem-loss': sem.loss || '#ef4444',
+  };
+  Object.entries(semMap).forEach(([id, col]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.background = col;
+  });
+
+  const sidebarPreviewBox = $('#cbx-sidebar-preview-box');
+  if (sidebarPreviewBox) {
+    sidebarPreviewBox.style.background = theme.sidebarBg || hero;
+    sidebarPreviewBox.style.color = theme.sidebarInk || '#ffffff';
+  }
+}
+
+function updateTacticBoardPreviewBox(pitch, lines, team, rival, arrow) {
+  ['#cbx-mini-pitch-preview', '#preview-tab-mini-pitch'].forEach((sel) => {
+    const pitchEl = $(sel);
+    if (!pitchEl) return;
+    pitchEl.style.background = pitch;
+    pitchEl.querySelectorAll('svg [stroke]').forEach((el) => {
+      if (!el.id.includes('arrow-path')) el.setAttribute('stroke', lines);
+    });
+    pitchEl.querySelectorAll('svg circle[r="1.2"]').forEach((el) => {
+      el.setAttribute('fill', lines);
+    });
+    pitchEl.querySelectorAll('.cbx-mini-token.team').forEach((el) => {
+      el.style.background = team;
+    });
+    pitchEl.querySelectorAll('.cbx-mini-token.rival').forEach((el) => {
+      el.style.background = rival;
+    });
+  });
+  const arrowPoly = $('#mini-arrow-poly');
+  if (arrowPoly) arrowPoly.setAttribute('fill', arrow);
+  const arrowPath = $('#mini-arrow-path');
+  if (arrowPath) arrowPath.setAttribute('stroke', arrow);
+  const tabArrowPoly = $('#tab-arrow-poly');
+  if (tabArrowPoly) tabArrowPoly.setAttribute('fill', arrow);
+  const tabArrowPath = $('#tab-arrow-path');
+  if (tabArrowPath) tabArrowPath.setAttribute('stroke', arrow);
+}
+
+function renderCustomizerControls() {
+  const currentTheme = state.settings?.theme || {};
+  Object.entries(EXTENDED_SWATCH_CONFIGS).forEach(([key, config]) => {
+    const container = document.getElementById(config.containerId);
+    if (!container || container.children.length > 0) return;
+    container.innerHTML = '';
+    config.swatches.forEach(([color, title]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cbx-swatch-btn' + ((currentTheme[key] || '') === color ? ' active' : '');
+      btn.title = title;
+      btn.dataset.key = key;
+      btn.dataset.color = color;
+      if (color) {
+        btn.style.background = color;
+      } else {
+        btn.textContent = 'Auto';
+        btn.style.background = '#ffffff';
+      }
+      btn.addEventListener('click', () => {
+        if (key === 'appBgHue') {
+          updateThemeProperty('appBgHue', color, { appBgPct: 100 });
+        } else if (key === 'cardHue') {
+          updateThemeProperty('cardHue', color, { cardPct: 100 });
+        } else {
+          updateThemeProperty(key, color);
+        }
+      });
+      container.appendChild(btn);
+    });
+
+    // Selector libre de color
+    const picker = document.createElement('input');
+    picker.type = 'color';
+    picker.className = 'cbx-color-picker-input';
+    picker.title = 'Selector libre de color';
+    picker.dataset.key = key;
+    picker.value = currentTheme[key] && currentTheme[key].startsWith('#') ? currentTheme[key] : '#10b981';
+    picker.addEventListener('input', (e) => {
+      if (key === 'appBgHue') {
+        updateThemeProperty('appBgHue', e.target.value, { appBgPct: 100 });
+      } else if (key === 'cardHue') {
+        updateThemeProperty('cardHue', e.target.value, { cardPct: 100 });
+      } else {
+        updateThemeProperty(key, e.target.value);
+      }
+    });
+    container.appendChild(picker);
+  });
+
+  renderTitleFontOptions(currentTheme.fontTitle);
+  renderSavedThemePresets();
+}
+
+function renderTitleFontOptions(currentFontTitle) {
+  const container = document.getElementById('title-font-options');
+  if (!container) return;
+  container.innerHTML = '';
+  const activeVal = currentFontTitle || 'auto';
+  TITLE_FONT_OPTIONS.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cbx-title-font-btn' + (activeVal === opt.id ? ' active' : '');
+    btn.dataset.id = opt.id;
+    btn.innerHTML = `
+      <span class="cbx-title-font-radio"></span>
+      <span style="flex:1;">
+        <span class="cbx-title-font-sample" style="font-family:${opt.font};">${opt.sample}</span>
+        <span style="font-size:12px;color:#64748b;display:block;">${opt.label}</span>
+      </span>
+    `;
+    btn.addEventListener('click', () => {
+      updateThemeProperty('fontTitle', opt.id);
+      renderTitleFontOptions(opt.id);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function syncCustomizerControls(theme) {
+  Object.entries(EXTENDED_SWATCH_CONFIGS).forEach(([key, config]) => {
+    const container = document.getElementById(config.containerId);
+    if (!container) return;
+    const currentVal = (/^sp(Lead|Sub)(Bg|Ink)$/.test(key) ? theme.views?.plantilla?.[key] : null) || theme[key] || '';
+    container.querySelectorAll('.cbx-swatch-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.color === currentVal);
+    });
+    const picker = container.querySelector('.cbx-color-picker-input');
+    if (picker && currentVal && currentVal.startsWith('#')) {
+      picker.value = currentVal;
+    }
+  });
+
+  const appBgSlider = $('#cbx-app-bg-pct-slider');
+  const appBgValText = $('#cbx-app-bg-pct-val');
+  if (appBgSlider) {
+    const pct = theme.appBgPct ?? 12;
+    appBgSlider.value = pct;
+    if (appBgValText) appBgValText.textContent = `${pct}%`;
+  }
+
+  const cardSlider = $('#cbx-card-pct-slider');
+  const cardValText = $('#cbx-card-pct-val');
+  if (cardSlider) {
+    const pct = theme.cardPct ?? 6;
+    cardSlider.value = pct;
+    if (cardValText) cardValText.textContent = `${pct}%`;
+  }
+
+  const sem = state.settings?.sem || DEFAULT_SEM;
+  Object.entries(sem).forEach(([k, val]) => {
+    const input = document.getElementById(`sem-${k}`);
+    if (input) input.value = val;
+  });
+
+  $$('.cbx-title-font-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.id === (theme.fontTitle || 'auto'));
+  });
+}
+
+function renderSavedThemePresets() {
+  const container = document.getElementById('cbx-presets-list');
+  const infoEl = document.getElementById('match-preset-info');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const presets = state.settings?.presets || DEFAULT_PRESETS;
+  const matchIdx = state.settings?.matchPreset ?? null;
+  const currentTheme = state.settings?.theme || {};
+
+  presets.forEach((p, idx) => {
+    const isApplied = currentTheme.themeBg === p.theme && currentTheme.accentColor === p.accent;
+    const isMatch = matchIdx === idx;
+    const claudeHeroes = {
+      default: '#0a251b', dark: '#040806', 'pitch-vivid': '#021e12',
+      navy: '#061021', ocean: '#03141f', charcoal: '#0f1113',
+      steel: '#171d24', burgundy: '#170408', purple: '#110722',
+      light: '#0a251b', warm: '#0a251b', sepia: '#0a251b', 'high-vis': '#000000',
+    };
+    const tHero = claudeHeroes[p.theme || 'default'] || '#0a251b';
+    const pAccent = p.accent || p.accentColor || '#10b981';
+
+    const chip = document.createElement('div');
+    chip.className = 'cbx-preset-chip';
+    chip.innerHTML = `
+      <button type="button" class="cbx-preset-apply-btn ${isApplied ? 'active' : ''}" title="Aplicar tema ${p.name}">
+        <span class="cbx-preset-dot" style="background:linear-gradient(135deg, ${tHero} 50%, ${pAccent} 50%)"></span>
+        ${p.name}
+      </button>
+      <button type="button" class="cbx-preset-match-btn ${isMatch ? 'active' : ''}" title="Usar en el partido en vivo">Partido</button>
+      <button type="button" class="cbx-preset-del-btn" title="Eliminar tema">×</button>
+    `;
+
+    chip.querySelector('.cbx-preset-apply-btn').addEventListener('click', () => applyThemePreset(idx));
+    chip.querySelector('.cbx-preset-match-btn').addEventListener('click', () => setMatchThemePreset(idx));
+    chip.querySelector('.cbx-preset-del-btn').addEventListener('click', () => deleteThemePreset(idx));
+    container.appendChild(chip);
+  });
+
+  if (infoEl) {
+    const mp = matchIdx !== null && presets[matchIdx];
+    infoEl.textContent = mp
+      ? `«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora: «${mp.name}» en el partido.`
+      : '«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora el partido usa el tema general.';
+  }
+}
+
+async function saveCurrentThemePreset(name) {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!Array.isArray(state.settings.presets)) {
+    state.settings.presets = [...DEFAULT_PRESETS];
+  }
+  const currentTheme = { ...(state.settings.theme || {}) };
+  const count = state.settings.presets.length + 1;
+  const presetName = (name && name.trim()) || `Tema ${count}`;
+  const newPreset = {
+    name: presetName,
+    theme: currentTheme.themeBg || 'default',
+    accent: currentTheme.accentColor || '#10b981',
+    font: currentTheme.fontFamily || 'system',
+    fontTitle: currentTheme.fontTitle || 'auto',
+    ...currentTheme,
+  };
+  state.settings.presets.push(newPreset);
+  try {
+    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema «${presetName}» guardado.`);
+}
+
+async function applyThemePreset(index) {
+  const presets = state.settings?.presets || DEFAULT_PRESETS;
+  const p = presets[index];
+  if (!p) return;
+  const updatedTheme = {
+    ...(state.settings?.theme || {}),
+    ...p,
+    themeBg: p.theme || p.themeBg || 'default',
+    accentColor: p.accent || p.accentColor || '#10b981',
+    fontFamily: p.font || p.fontFamily || 'system',
+    fontTitle: p.fontTitle || 'auto',
+  };
+  state.settings.theme = updatedTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(updatedTheme));
+  } catch {}
+  applyCustomTheme(updatedTheme);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema aplicado: ${p.name}`);
+}
+
+async function setMatchThemePreset(index) {
+  if (!state.settings) state.settings = { id: 'main' };
+  const current = state.settings.matchPreset;
+  if (current === index) {
+    state.settings.matchPreset = null;
+    toast('Ahora el partido usa el tema general.');
+  } else {
+    state.settings.matchPreset = index;
+    const p = state.settings.presets?.[index];
+    toast(`Tema para partido en vivo: ${p?.name || 'Seleccionado'}`);
+  }
+  try {
+    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+}
+
+async function deleteThemePreset(index) {
+  if (!state.settings?.presets) return;
+  const deleted = state.settings.presets.splice(index, 1)[0];
+  if (state.settings.matchPreset === index) {
+    state.settings.matchPreset = null;
+  } else if (state.settings.matchPreset > index) {
+    state.settings.matchPreset--;
+  }
+  try {
+    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
+    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+  } catch {}
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  renderSavedThemePresets();
+  toast(`Tema «${deleted?.name || ''}» eliminado.`);
+}
+
+async function resetExtendedColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = [
+    'gfColor', 'gaColor', 'gfBg', 'gaBg', 'gfInk', 'gaInk',
+    'appBgHue', 'cardHue', 'cardTitle', 'btn2Bg', 'btn2Ink',
+    'waBg', 'waInk', 'dorsalBg', 'dorsalInk', 'resInk', 'bannerBg', 'bannerInk', 'btnBg', 'btnInk',
+    'sidebarBg', 'sidebarInk', 'cardBorder'
+  ];
+  keysToReset.forEach((k) => delete t[k]);
+  t.appBgPct = 12;
+  t.cardPct = 6;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores restablecidos');
+}
+
+async function resetSpecialistsColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = ['spLeadBg', 'spLeadInk', 'spSubBg', 'spSubInk'];
+  keysToReset.forEach((k) => delete t[k]);
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores de especialistas restablecidos');
+}
+
+async function resetTacticBoardColors() {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.theme) state.settings.theme = {};
+  const t = state.settings.theme;
+  const keysToReset = ['tbPitch', 'tbLines', 'tbTeam', 'tbRival', 'tbArrow'];
+  keysToReset.forEach((k) => delete t[k]);
+  if (t.tb) delete t.tb;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(t));
+  } catch {}
+  applyCustomTheme(t);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
+  }
+  syncCustomizerControls(t);
+  toast('Colores de pizarra restablecidos');
+}
+
+async function setSemanticColor(key, color) {
+  if (!state.settings) state.settings = { id: 'main' };
+  if (!state.settings.sem) state.settings.sem = { ...DEFAULT_SEM };
+  state.settings.sem[key] = color;
+  try {
+    localStorage.setItem('campobase.sem', JSON.stringify(state.settings.sem));
+  } catch {}
+  document.documentElement.style.setProperty(`--sem-${key}`, color);
+  document.body.style.setProperty(`--sem-${key}`, color);
+  if (roleCanUseOwnerFeatures(state.role)) {
+    await put('settings', state.settings).catch(() => {});
   }
 }
 
@@ -4949,6 +8854,8 @@ async function saveThemeSettings(event) {
     fontWeight: values.fontWeight || 'bold',
     textColor: textColor,
     fontColor: fontColor,
+    fontTitle: state.settings?.theme?.fontTitle || 'auto',
+    ...(state.settings?.theme || {}),
   };
   try {
     localStorage.setItem('campobase.theme', JSON.stringify(theme));
@@ -4963,6 +8870,7 @@ async function saveThemeSettings(event) {
 }
 
 function updateThemeProperty(prop, val, extra = {}) {
+  if (/^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) { updateViewThemeProperty('plantilla', prop, val); updateThemePreviewBox(state.settings.theme); return; }
   let localTheme = {};
   try {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
@@ -4975,6 +8883,7 @@ function updateThemeProperty(prop, val, extra = {}) {
     fontScale: 'normal',
     fontWeight: 'bold',
     textColor: 'dark-slate',
+    fontTitle: 'auto',
     ...(state.settings?.theme || {}),
     ...localTheme,
     [prop]: val,
@@ -4985,7 +8894,1264 @@ function updateThemeProperty(prop, val, extra = {}) {
     localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
   } catch {}
   applyCustomTheme(currentTheme);
+  updateThemePreviewBox(currentTheme);
 }
+
+function updateViewThemeProperty(viewId, prop, val) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (!currentTheme.views) currentTheme.views = {};
+  if (!currentTheme.views[viewId]) currentTheme.views[viewId] = {};
+  if (viewId === 'plantilla' && /^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) {
+    const view = currentTheme.views[viewId];
+    for (const rank of [1, 2, 3]) {
+      const prefix = rank === 1 ? 'spLead' : 'spSub';
+      view['captain' + rank + 'Bg'] ||= view[prefix + 'Bg'] || currentTheme[prefix + 'Bg'] || (rank === 1 ? '#c8102e' : '#f1f5f9');
+      view['captain' + rank + 'Ink'] ||= view[prefix + 'Ink'] || currentTheme[prefix + 'Ink'] || (rank === 1 ? '#ffffff' : '#0f172a');
+    }
+  }
+  const viewSettings = currentTheme.views[viewId];
+  const actionTargets = {
+    btnBg: '.primary,.cbx-btn,.btn-new-tactic-claude', btnInk: '.primary,.cbx-btn,.btn-new-tactic-claude',
+    btn2Bg: '.secondary,.cbx-btn-light,.cbx-btn-sub', btn2Ink: '.secondary,.cbx-btn-light,.cbx-btn-sub',
+    whistleBg: '.cbx-btn-whistle', whistleInk: '.cbx-btn-whistle', printBg: '.print-session', printInk: '.print-session',
+    editBg: '.edit-session', editInk: '.edit-session', completedBg: '.cbx-btn-completed:not(.is-completed)', completedInk: '.cbx-btn-completed:not(.is-completed)',
+    completedActiveBg: '.cbx-btn-completed.is-completed', completedActiveInk: '.cbx-btn-completed.is-completed',
+    waBg: '.cbx-btn-wa,[class*="open-whatsapp"],.staff-wa-btn', waInk: '.cbx-btn-wa,[class*="open-whatsapp"],.staff-wa-btn',
+    closeBg: '.modal-bottom-close-btn,.dialog-close-prominent-btn', closeInk: '.modal-bottom-close-btn,.dialog-close-prominent-btn'
+  };
+  if (actionTargets[prop]) {
+    const containerId = { 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId] || viewId;
+    const selector = actionTargets[prop].split(',').map((part) => '#' + containerId + ' ' + part).join(',');
+    clearColourConflicts(viewSettings, selector, [prop.endsWith('Bg') ? 'background' : 'color']);
+  }
+  if(viewId==='hoy' && /^seasonGoals(For|Against)Color$/.test(prop))clearColourConflicts(viewSettings,'#hoy .cbx-season-goals-'+(prop.includes('Against')?'against':'for'),['background']);
+  if (viewId === 'plantilla') {
+    const sharedControls = {cardBg: ['.cbx-player','background'], cardTitle: ['.cbx-player .player-name h3','color'], fontColor: ['.cbx-player .player-body','color'], dorsalBg: ['.cbx-player .player-data > span:first-child','background'], dorsalInk: ['.cbx-player .player-data > span:first-child','color']};
+    if (sharedControls[prop]) clearColourConflicts(viewSettings, '#plantilla ' + sharedControls[prop][0], [sharedControls[prop][1]]);
+  }
+  if (viewId === 'plantilla' && /^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) {
+    const rank = prop.startsWith('spLead') ? 1 : 2;
+    clearColourConflicts(viewSettings, '#plantilla-specialists-bar [data-specialist-kind="launcher"] [data-specialist-rank="' + rank + '"]' + (prop.endsWith('Bg') ? ', #plantilla-specialists-bar [data-specialist-kind="launcher"] [data-specialist-rank="' + rank + '"] .specialist-rank' : ''), [prop.endsWith('Bg') ? 'background' : 'color']);
+  }
+  currentTheme.views[viewId][prop] = val;
+  if (state.settings) state.settings.theme = currentTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function resetViewTheme(viewId) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (currentTheme.views && currentTheme.views[viewId]) {
+    delete currentTheme.views[viewId];
+  }
+  if (state.settings?.theme?.views && state.settings.theme.views[viewId]) {
+    delete state.settings.theme.views[viewId];
+  }
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function copyViewThemeToAll(viewId) {
+  let localTheme = {};
+  try {
+    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+  } catch {}
+  const currentTheme = {
+    ...(state.settings?.theme || {}),
+    ...localTheme,
+  };
+  if (!currentTheme.views) currentTheme.views = {};
+  const source = currentTheme.views[viewId] || {};
+  CAMPOBASE_VIEW_IDS.forEach((id) => {
+    currentTheme.views[id] = { ...(currentTheme.views[id] || {}), ...source };
+  });
+  if (state.settings) state.settings.theme = currentTheme;
+  try {
+    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+  } catch {}
+  applyCustomTheme(currentTheme);
+}
+
+function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
+  const sectionRoot=sectionId && document.getElementById(sectionId);
+  const dialog = $('#cbx-quick-color-dialog');
+  const titleEl = $('#cbx-quick-color-title');
+  const bodyEl = $('#cbx-quick-color-body');
+  const resetBtn = $('#cbx-quick-color-reset');
+  const saveBtn = $('#cbx-quick-color-save');
+  const copyAllBtn = $('#cbx-quick-color-copy-all');
+  if (!dialog || !bodyEl) return;
+
+  const VIEWS_INFO = [
+    { id: 'navegacion', name: 'Cabecera y menús', icon: '☰', subtabs: [{ id: 'general', label: 'Elementos compartidos de navegación' }] },
+    { id: 'exercise-detail', name: 'Ficha de ejercicio', icon: '📖', subtabs: [{ id: 'general', label: 'Texto, fondos y cierre' }] },
+    { id: 'comunicador', name: 'Comunicador WhatsApp', icon: '💬', subtabs: [{ id: 'general', label: 'Texto, fondos y botones' }] },
+    { id: 'plantilla', name: 'Plantilla', icon: '👥', desc: 'Jugadores, minutos y dorsales', hasDorsales: true, hasSetPieces: true, subtabs: [{ id: 'general', label: '📋 General & Dorsales' }, { id: 'specialists', label: '🎯 Balón Parado' }] },
+    { id: 'cuerpo-tecnico', name: 'Cuerpo Técnico', icon: '💬', desc: 'Entrenadores y WhatsApp', hasWa: true, subtabs: [{ id: 'general', label: '📋 Técnicos & WhatsApp' }] },
+    { id: 'convocatorias', name: 'Convocatoria', icon: '📋', desc: 'Bajas, dorsales y envío', hasDorsales: true, hasWa: true, subtabs: [{ id: 'general', label: '📋 Convocatoria & Tarjetas' }] },
+    { id: 'partido', name: 'Partido en Vivo', icon: '⚽', desc: 'Marcador, cambios y pizarra', hasDorsales: true, hasGoals: true, hasTacticBoard: true, subtabs: [{ id: 'live', label: '⚽ Marcador & Goles' }, { id: 'tactic-board', label: '📐 Pizarra en Vivo' }] },
+    { id: 'tacticas', name: 'Tácticas', icon: '📐', desc: 'Pizarra interactiva libre', hasTacticBoard: true, subtabs: [{ id: 'general', label: '📑 Hero, Botones & Callout' }, { id: 'tactic-board', label: '📐 Pizarra Táctica' }] },
+    { id: 'preparacion', name: 'Preparación', icon: '⏱️', desc: 'Alineación y plan PDF', hasDorsales: true, subtabs: [{ id: 'general', label: '📋 Tarjetas de Partido & Acciones' }] },
+    { id: 'sesiones', name: 'Sesiones', icon: '⏱️', desc: 'Planificación por bloques', hasWa: true, subtabs: [{ id: 'general', label: '⏱️ Acciones, Silbato & Fichas' }] },
+    { id: 'hoy', name: 'Tu Día', icon: '🏠', desc: 'Resumen diario y marcador', subtabs: [{ id: 'general', label: '🏠 Resumen & Tarjeta de Marcador' }] },
+    { id: 'calendario', name: 'Calendario', icon: '📅', desc: 'Próximos partidos y resultados', subtabs: [{ id: 'general', label: '📅 Partidos & Resultados' }] },
+    { id: 'asistencia', name: 'Asistencia', icon: '📝', desc: 'Control de faltas y dorsales', hasDorsales: true, subtabs: [{ id: 'general', label: '📝 Asistencia & Dorsales' }] },
+    { id: 'ejercicios', name: 'Ejercicios', icon: '📖', desc: 'Biblioteca de fichas tácticas', subtabs: [{ id: 'general', label: '📖 Biblioteca de Fichas' }] },
+    { id: 'delegado', name: 'Modo Campo', icon: '⚽', desc: 'Controles de campo', subtabs: [{ id: 'general', label: 'Modo Campo' }] },
+    { id: 'ajustes', name: 'Ajustes', icon: '⚙️', desc: 'Preferencias y temas', subtabs: [{ id: 'general', label: '⚙️ Ajustes del Sistema' }] },
+  ];
+
+  const activeDomView = document.querySelector('.view.active')?.id || '';
+  let currentViewId = activeDomView && VIEWS_INFO.some(v => v.id === activeDomView) ? activeDomView : 'plantilla';
+  let currentSubTab = 'general';
+
+  if (targetKind) {
+    if (targetKind === 'callup-plan' || targetKind === 'prep-plan') { currentViewId = targetKind === 'callup-plan' ? 'convocatorias' : 'preparacion'; currentSubTab = 'plan'; }
+    else if (targetKind === 'dorsales') { currentViewId = 'plantilla'; currentSubTab = 'general'; }
+    else if (targetKind === 'specialists') { currentViewId = 'plantilla'; currentSubTab = 'specialists'; }
+    else if (targetKind === 'whatsapp') { currentViewId = 'cuerpo-tecnico'; currentSubTab = 'general'; }
+    else if (targetKind === 'callups') { currentViewId = 'convocatorias'; currentSubTab = 'general'; }
+    else if (targetKind === 'live') { currentViewId = 'partido'; currentSubTab = 'live'; }
+    else if (targetKind === 'delegate-board') { currentViewId = 'delegado'; currentSubTab = 'tactic-board'; }
+    else if (targetKind === 'live-board') { currentViewId = 'partido'; currentSubTab = 'tactic-board'; }
+    else if (targetKind === 'tactic-board') { currentViewId = 'tacticas'; currentSubTab = 'tactic-board'; }
+    else if (VIEWS_INFO.some(v => v.id === targetKind)) {
+      currentViewId = targetKind;
+      currentSubTab = VIEWS_INFO.find(v => v.id === targetKind).subtabs[0].id;
+    }
+  }
+
+  if(sectionRoot){currentViewId=sectionRoot.closest('.view')?.id||currentViewId;currentSubTab='section';}
+  let currentElementOptions = [];
+  let currentTab = currentSubTab;
+  if (currentSubTab === 'general') {
+    if (currentViewId === 'plantilla') currentTab = 'dorsales';
+    else if (currentViewId === 'cuerpo-tecnico') currentTab = 'whatsapp';
+    else if (currentViewId === 'convocatorias') currentTab = 'callups';
+    else currentTab = 'banners';
+  }
+
+  function updateQcPreviews(kind, prop, val) {
+    const pBanner = $('#qc-mock-banner');
+    const pBannerTitle = $('#qc-mock-banner-title');
+    const pBtn = $('#qc-mock-btn');
+    const pBtn2 = $('#qc-mock-btn2');
+    const pCard = $('#qc-mock-card');
+    const pCardTitle = $('#qc-mock-card-title');
+    const pCardText = $('#qc-mock-card-text');
+    const pDorsal1 = $('#qc-mock-dorsal-1');
+    const pDorsal2 = $('#qc-mock-dorsal-2');
+    const pWa = $('#qc-mock-wa');
+    const pGf = $('#qc-mock-live-gf');
+    const pGa = $('#qc-mock-live-ga');
+    const pSpLead = $('#qc-mock-sp-lead');
+    const pSpSub = $('#qc-mock-sp-sub');
+    const pPitch = $('#qc-mock-tb-pitch');
+    const pTeam = $('#qc-mock-tb-team');
+    const pRival = $('#qc-mock-tb-rival');
+    const pArrow = $('#qc-mock-tb-arrow');
+
+    const pTodayMatch = $('#qc-mock-today-match');
+    const pTodayMatchScore = $('#qc-mock-today-score');
+    const pCallupHeader = $('#qc-mock-callup-header');
+    const pCallupBadge = $('#qc-mock-callup-badge');
+    const pCallupOut = $('#qc-mock-callup-out');
+    const pPrepHeader = $('#qc-mock-prep-header');
+    const pWhistleBtn = $('#qc-mock-btn-whistle');
+    const pPrintBtn = $('#qc-mock-btn-print');
+    const pEditBtn = $('#qc-mock-btn-edit');
+    const pCompletedBtn = $('#qc-mock-btn-completed');
+    const pCallout = $('#qc-mock-callout');
+    const pCalloutText = $('#qc-mock-callout-text');
+
+    if (prop === 'bannerBg' && pBanner) pBanner.style.background = val;
+    if (prop === 'bannerInk') {
+      if (pBanner) pBanner.style.color = val;
+      if (pBannerTitle) pBannerTitle.style.color = val;
+    }
+    if (prop === 'btnBg' && pBtn) pBtn.style.background = val;
+    if (prop === 'btnInk' && pBtn) pBtn.style.color = val;
+    if (prop === 'btn2Bg' && pBtn2) pBtn2.style.background = val;
+    if (prop === 'btn2Ink' && pBtn2) pBtn2.style.color = val;
+    if (prop === 'cardBg' && pCard) pCard.style.background = val;
+    if (prop === 'cardBorder' && pCard) pCard.style.borderColor = val;
+    if (prop === 'cardTitle' && pCardTitle) pCardTitle.style.color = val;
+    if ((prop === 'fontColor' || prop === 'textColor') && pCardText) pCardText.style.color = val;
+    if (prop === 'dorsalBg') {
+      if (pDorsal1) pDorsal1.style.background = val;
+      if (pDorsal2) pDorsal2.style.background = val;
+      const cd1 = $('#qc-mock-callup-dorsal-1');
+      if (cd1) cd1.style.background = val;
+    }
+    if (prop === 'dorsalInk') {
+      if (pDorsal1) pDorsal1.style.color = val;
+      if (pDorsal2) pDorsal2.style.color = val;
+      const cd1 = $('#qc-mock-callup-dorsal-1');
+      if (cd1) cd1.style.color = val;
+    }
+    if (prop === 'waBg') {
+      if (pWa) pWa.style.background = val;
+      const w1 = $('#qc-mock-wa-1');
+      if (w1) w1.style.background = val;
+      const cw = $('#qc-mock-callup-wa');
+      if (cw) cw.style.background = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.background = val;
+    }
+    if (prop === 'waInk') {
+      if (pWa) pWa.style.color = val;
+      const w1 = $('#qc-mock-wa-1');
+      if (w1) w1.style.color = val;
+      const cw = $('#qc-mock-callup-wa');
+      if (cw) cw.style.color = val;
+      const sbwa = $('#qc-mock-btn-wa');
+      if (sbwa) sbwa.style.color = val;
+    }
+    if (prop === 'spLeadBg' && pSpLead) pSpLead.style.background = val;
+    if (prop === 'spLeadInk' && pSpLead) pSpLead.style.color = val;
+    if (prop === 'spSubBg' && pSpSub) pSpSub.style.background = val;
+    if (prop === 'spSubInk' && pSpSub) pSpSub.style.color = val;
+    if (prop === 'gfBg' && pGf) pGf.style.background = val;
+    if (prop === 'gfInk' && pGf) pGf.style.color = val;
+    if (prop === 'gaBg' && pGa) pGa.style.background = val;
+    if (prop === 'gaInk' && pGa) pGa.style.color = val;
+    if (prop === 'tbPitch' && pPitch) pPitch.style.background = val;
+    if (prop === 'tbLines' && pPitch) pPitch.style.borderColor = val;
+    if (prop === 'tbTeam' && pTeam) pTeam.style.background = val;
+    if (prop === 'tbRival' && pRival) pRival.style.background = val;
+    if (prop === 'tbArrow' && pArrow) {
+      pArrow.style.background = val;
+      const arrowText = $('#qc-mock-tb-arrow-text');
+      if (arrowText) arrowText.style.color = val;
+    }
+
+    if (prop === 'todayMatchBg' && pTodayMatch) pTodayMatch.style.background = val;
+    if (prop === 'todayMatchInk' && pTodayMatch) {
+      pTodayMatch.style.color = val;
+      if (pTodayMatchScore) pTodayMatchScore.style.color = val;
+      pTodayMatch.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupHeaderBg' && pCallupHeader) pCallupHeader.style.background = val;
+    if (prop === 'callupHeaderInk' && pCallupHeader) {
+      pCallupHeader.style.color = val;
+      pCallupHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'callupBadgeBg' && pCallupBadge) pCallupBadge.style.background = val;
+    if (prop === 'callupBadgeInk' && pCallupBadge) pCallupBadge.style.color = val;
+    if (prop === 'callupOutBg' && pCallupOut) pCallupOut.style.background = val;
+    if (prop === 'callupOutInk' && pCallupOut) pCallupOut.style.color = val;
+    if (prop === 'prepHeaderBg' && pPrepHeader) pPrepHeader.style.background = val;
+    if (prop === 'prepHeaderInk' && pPrepHeader) {
+      pPrepHeader.style.color = val;
+      pPrepHeader.querySelectorAll('*').forEach((el) => { el.style.color = val; });
+    }
+    if (prop === 'whistleBg' && pWhistleBtn) pWhistleBtn.style.background = val;
+    if (prop === 'whistleInk' && pWhistleBtn) pWhistleBtn.style.color = val;
+    if (prop === 'printBg' && pPrintBtn) pPrintBtn.style.background = val;
+    if (prop === 'printInk' && pPrintBtn) pPrintBtn.style.color = val;
+    if (prop === 'editBg' && pEditBtn) pEditBtn.style.background = val;
+    if (prop === 'editInk' && pEditBtn) pEditBtn.style.color = val;
+    if (prop === 'completedBg' && pCompletedBtn) pCompletedBtn.style.background = val;
+    if (prop === 'completedInk' && pCompletedBtn) pCompletedBtn.style.color = val;
+    if (prop === 'calloutBg' && pCallout) pCallout.style.background = val;
+    if (prop === 'calloutInk') {
+      if (pCallout) pCallout.style.color = val;
+      if (pCalloutText) pCalloutText.style.color = val;
+    }
+  }
+
+  function renderContent() {
+    let localTheme = {};
+    try { localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+    const theme = {
+      ...(state.settings?.theme || {}),
+      ...localTheme,
+    };
+    const viewsData = theme.views || {};
+    const vSettings = viewsData[currentViewId] || {};
+
+    const activeViewConfig = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
+    const subtabs = activeViewConfig.subtabs || [{ id: 'general', label: 'General' }];
+    if (!sectionRoot && !(currentSubTab === 'plan' && ['convocatorias','preparacion'].includes(currentViewId)) && !subtabs.some((st) => st.id === currentSubTab)) {
+      currentSubTab = subtabs[0].id;
+    }
+
+    currentTab = currentSubTab;
+    if (currentSubTab === 'general') {
+      if (currentViewId === 'plantilla') currentTab = 'dorsales';
+      else if (currentViewId === 'cuerpo-tecnico') currentTab = 'whatsapp';
+      else if (currentViewId === 'convocatorias') currentTab = 'callups';
+      else currentTab = 'banners';
+    }
+
+    const val = (prop, fallback) => vSettings[prop] !== undefined ? vSettings[prop] : (theme[prop] !== undefined ? theme[prop] : fallback);
+
+    const bannerBg = val('bannerBg', '#0a251b');
+    const bannerInk = val('bannerInk', '#ffffff');
+    const btnBg = val('btnBg', '#10b981');
+    const btnInk = val('btnInk', '#ffffff');
+    const btn2Bg = val('btn2Bg', '#ffffff');
+    const btn2Ink = val('btn2Ink', '#0f172a');
+    const fontColor = val('fontColor', val('textColor', '#0f172a'));
+    const cardTitle = val('cardTitle', '#0f172a');
+    const cardBg = val('cardBg', val('cardHue', '#ffffff'));
+    const cardBorder = val('cardBorder', '#e2e8f0');
+    const dorsalBg = val('dorsalBg', bannerBg);
+    const dorsalInk = val('dorsalInk', bannerInk);
+    const waBg = val('waBg', '#25d366');
+    const waInk = val('waInk', '#ffffff');
+    const gfBg = val('gfBg', '#f0f7f3');
+    const gfInk = val('gfInk', '#14532d');
+    const gaBg = val('gaBg', '#fdf2f4');
+    const gaInk = val('gaInk', '#9f1239');
+    const spLeadBg = val('spLeadBg', '#c8102e');
+    const spLeadInk = val('spLeadInk', '#ffffff');
+    const spSubBg = val('spSubBg', '#f1f5f9');
+    const spSubInk = val('spSubInk', '#0f172a');
+    const tbPitch = val('tbPitch', '#064e3b');
+    const tbLines = val('tbLines', '#ffffff');
+    const tbTeam = val('tbTeam', '#10b981');
+    const tbRival = val('tbRival', '#ef4444');
+    const tbArrow = val('tbArrow', '#fbbf24');
+
+    const todayMatchBg = val('todayMatchBg', bannerBg);
+    const todayMatchInk = val('todayMatchInk', bannerInk);
+    const callupHeaderBg = val('callupHeaderBg', bannerBg);
+    const callupHeaderInk = val('callupHeaderInk', bannerInk);
+    const callupBadgeBg = val('callupBadgeBg', 'rgba(255, 255, 255, 0.2)');
+    const callupBadgeInk = val('callupBadgeInk', '#ffffff');
+    const callupOutBg = val('callupOutBg', btnBg);
+    const callupOutInk = val('callupOutInk', btnInk);
+    const prepHeaderBg = val('prepHeaderBg', bannerBg);
+    const prepHeaderInk = val('prepHeaderInk', bannerInk);
+    const whistleBg = val('whistleBg', bannerBg);
+    const whistleInk = val('whistleInk', bannerInk);
+    const printBg = val('printBg', btn2Bg);
+    const printInk = val('printInk', btn2Ink);
+    const editBg = val('editBg', btn2Bg);
+    const editInk = val('editInk', btn2Ink);
+    const completedBg = val('completedBg', '#f1f5f9');
+    const completedInk = val('completedInk', '#0f172a');
+    const calloutBg = val('calloutBg', '#dcfce7');
+    const calloutInk = val('calloutInk', fontColor);
+
+    const viewsBarHtml = '';
+    const subtabsBarHtml = '';
+    const viewNoticeHtml = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 88%, var(--cardBorder, #e2e8f0));padding:8px 12px;border-radius:10px;font-size:12px;border:1px solid var(--cardBorder, #e2e8f0);margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--cardTitle, #0f172a);">
+          🎨 Ajustes exclusivos para: <u>${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}</u>
+        </span>
+        <span style="font-size:11px;font-weight:800;color:#047857;background:#dcfce7;padding:2px 8px;border-radius:999px;">
+          Solo esta pantalla o sección
+        </span>
+      </div>
+    `;
+
+    const colorRow = (label, propName, currentVal, fallbackVal, presets = []) => `
+      <div class="cbx-color-control-row" style="display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--cardBorder, #e2e8f0));padding:10px 12px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font:700 13px var(--cbx-ui);color:var(--cardTitle, #0f172a);">${label}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" data-prop="${propName}" value="${currentVal || fallbackVal}" style="width:36px;height:32px;padding:1px;border-radius:6px;border:1px solid #cbd5e1;cursor:pointer;background:transparent;">
+            <code style="font-size:11px;color:var(--cbx-muted, #64748b);min-width:55px;">${currentVal || fallbackVal}</code>
+          </div>
+        </div>
+        <p class="cbx-color-control-help">${escapeHtml(colorControlDescription(propName, label, activeViewConfig.name))}</p>
+        ${presets && presets.length ? `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;align-items:center;">
+            <span style="font-size:11px;color:var(--cbx-muted, #64748b);">Sugerencias:</span>
+            ${presets.map((p) => `
+              <button type="button" class="cbx-swatch-btn" data-prop="${propName}" data-val="${p.val}" title="${p.name}" style="background:${p.val};width:22px;height:22px;border-radius:50%;border:2px solid ${p.val === '#ffffff' ? '#cbd5e1' : '#ffffff'};box-shadow:0 1px 3px rgba(0,0,0,0.2);cursor:pointer;padding:0;"></button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    let previewHtml = '';
+    let controlsHtml = '';
+
+    if (currentSubTab === 'tactic-board') {
+      previewHtml = `
+        <div id="qc-mock-tb-pitch" style="padding:10px;background:${tbPitch};border-radius:12px;display:flex;justify-content:space-around;align-items:center;min-height:75px;border:2px solid ${tbLines};">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-team" style="width:32px;height:32px;border-radius:50%;background:${tbTeam};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;color:#ffffff;font:800 13px var(--disp);box-shadow:0 2px 4px rgba(0,0,0,0.4);">9</div>
+            <span style="font-size:10px;font-weight:700;color:#ffffff;">Tu Equipo</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-rival" style="width:32px;height:32px;border-radius:50%;background:${tbRival};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;color:#ffffff;font:800 13px var(--disp);box-shadow:0 2px 4px rgba(0,0,0,0.4);">R4</div>
+            <span style="font-size:10px;font-weight:700;color:#ffffff;">Rival</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div id="qc-mock-tb-arrow" style="width:28px;height:4px;background:${tbArrow};border-radius:2px;"></div>
+            <span id="qc-mock-tb-arrow-text" style="font-size:10px;font-weight:700;color:${tbArrow};">Trazo</span>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Césped (fondo de la pizarra)', 'tbPitch', tbPitch, '#064e3b', [
+          { name: 'Césped Clásico', val: '#064e3b' }, { name: 'Césped Profundo', val: '#022c22' }, { name: 'Verde Vivo', val: '#047857' }, { name: 'Pizarra Negra', val: '#0f172a' }, { name: 'Azul Táctico', val: '#0f2942' }
+        ])}
+        ${colorRow('Líneas del campo', 'tbLines', tbLines, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#facc15' }, { name: 'Gris Claro', val: '#cbd5e1' }
+        ])}
+        ${colorRow('Fichas de tu equipo', 'tbTeam', tbTeam, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Club', val: '#2563eb' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Rojo', val: '#dc2626' }
+        ])}
+        ${colorRow('Fichas del rival', 'tbRival', tbRival, '#ef4444', [
+          { name: 'Rojo Alerta', val: '#ef4444' }, { name: 'Granate', val: '#991b1b' }, { name: 'Naranja', val: '#ea580c' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#ca8a04' }
+        ])}
+        ${colorRow('Flechas y dibujos tácticos', 'tbArrow', tbArrow, '#fbbf24', [
+          { name: 'Amarillo Neón', val: '#fbbf24' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Cyan Eléctrico', val: '#06b6d4' }, { name: 'Rojo Marcador', val: '#f87171' }
+        ])}
+      `;
+    } else if (currentSubTab === 'specialists') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-sp-lead" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spLeadBg};color:${spLeadInk};">
+            <span style="font:800 12px var(--cbx-ui);">1.er lanzador (Principal)</span>
+            <strong>Capitán Ejemplo</strong>
+          </div>
+          <div id="qc-mock-sp-sub" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:${spSubBg};color:${spSubInk};border:1px solid #cbd5e1;">
+            <span style="font:800 12px var(--cbx-ui);">2.º lanzador (Suplente)</span>
+            <strong>Segundo Ejemplo</strong>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo 1.er Lanzador (Principal)', 'spLeadBg', spLeadBg, '#c8102e', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Real', val: '#1e40af' }, { name: 'Verde Élite', val: '#059669' }, { name: 'Dorado', val: '#d97706' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto 1.er Lanzador', 'spLeadInk', spLeadInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo 2.º Lanzador (Suplente)', 'spSubBg', spSubBg, '#f1f5f9', [
+          { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Oscuro Sutil', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto 2.º Lanzador', 'spSubInk', spSubInk, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#065f46' }
+        ])}
+      `;
+    } else if (currentSubTab === 'live') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Partido en Vivo</span>
+              <h4 id="qc-mock-banner-title" style="margin:1px 0 0;font:800 15px var(--disp);color:${bannerInk};">Marcador 3 - 1</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Finalizar</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Pausa</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button type="button" id="qc-mock-live-gf" style="flex:1;padding:10px 12px;border-radius:10px;background:${gfBg};color:${gfInk};border:1px solid currentColor;font:800 13px var(--cbx-ui);text-align:center;">+ Gol Nuestro</button>
+            <button type="button" id="qc-mock-live-ga" style="flex:1;padding:10px 12px;border-radius:10px;background:${gaBg};color:${gaInk};border:1px solid currentColor;font:800 13px var(--cbx-ui);text-align:center;">+ Gol Rival</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 14px var(--disp);">9</span>
+            <span id="qc-mock-card-title" style="font-weight:700;font-size:13px;color:${cardTitle};">Goleador del Encuentro</span>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Verde Hero', val: '#0a251b' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Gris Carbón', val: '#0f1113' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Botón + Gol Nuestro', 'gfBg', gfBg, '#f0f7f3', [
+          { name: 'Verde Pastel', val: '#f0f7f3' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Botón + Gol Nuestro', 'gfInk', gfInk, '#14532d', [
+          { name: 'Verde Oscuro', val: '#14532d' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Botón + Gol Rival', 'gaBg', gaBg, '#fdf2f4', [
+          { name: 'Rojo Pastel', val: '#fdf2f4' }, { name: 'Rojo Vivo', val: '#ef4444' }
+        ])}
+        ${colorRow('Texto Botón + Gol Rival', 'gaInk', gaInk, '#9f1239', [
+          { name: 'Rojo Oscuro', val: '#9f1239' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo del Dorsal en Cambios', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Texto Principal (Minutos, incidencias)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres de Jugadores y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+      `;
+    } else if (currentViewId === 'hoy') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera de Tu Día</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Tu Día en CampoBase</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Principal</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Secundario</button>
+            </div>
+          </div>
+          <div id="qc-mock-today-match" style="padding:12px 14px;background:${todayMatchBg};color:${todayMatchInk};border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:0.9;">
+              <strong style="color:${todayMatchInk};">C.F. UNIÓN VIERA ALEVÍN D vs HURACÁN A</strong>
+              <span style="padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${todayMatchInk};">Finalizado</span>
+            </div>
+            <div id="qc-mock-today-score" style="font:800 24px var(--disp);text-align:center;color:${todayMatchInk};">1 - 15</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.85;">
+              <span style="color:${todayMatchInk};">09:00 · Casa · Alfonso Silva</span>
+              <span style="color:${todayMatchInk};">Asistencia registrada</span>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13px;color:${cardTitle};">Próximos Eventos y Estado</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};line-height:1.4;">Resumen general de la jornada, asistencias y notas informativas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Tarjeta Marcador / Partido', 'todayMatchBg', todayMatchBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Gris Grafito', val: '#1e293b' }, { name: 'Negro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y Números del Marcador', 'todayMatchInk', todayMatchInk, bannerInk, [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Amarillo Oro', val: '#facc15' }, { name: 'Gris Claro', val: '#e2e8f0' }, { name: 'Verde Claro', val: '#a7f3d0' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas, datos)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Títulos y Nombres', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Fondo de Tarjetas', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }, { name: 'Marfil', val: '#fafaf9' }
+        ])}
+        ${colorRow('Borde de Tarjetas', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }, { name: 'Oscuro Sutil', val: '#334155' }
+        ])}
+      `;
+    } else if (currentViewId === 'convocatorias') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Convocatorias</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Convocatorias</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Convocatoria</button>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-callup-header" style="padding:10px 14px;background:${callupHeaderBg};color:${callupHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${callupHeaderInk};">F7 · LIGA · 09:00</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${callupHeaderInk};">HURACÁN A</h4>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span id="qc-mock-callup-badge" style="padding:3px 8px;border-radius:999px;background:${callupBadgeBg};color:${callupBadgeInk};font:800 11px var(--cbx-ui);">14 convocados</span>
+                <span id="qc-mock-callup-out" style="padding:3px 8px;border-radius:999px;background:${callupOutBg};color:${callupOutInk};font:800 11px var(--cbx-ui);">0 fuera</span>
+              </div>
+            </div>
+            <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-callup-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">10</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Jugador Convocado</strong>
+              </div>
+              <button type="button" id="qc-mock-wa" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:700 11px var(--cbx-ui);">💬 WhatsApp</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Convocatoria', 'callupHeaderBg', callupHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Convocatoria', 'callupHeaderInk', callupHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Píldora «14 convocados»', 'callupBadgeBg', callupBadgeBg, 'rgba(255, 255, 255, 0.2)', [
+          { name: 'Translúcido Blanco', val: 'rgba(255, 255, 255, 0.2)' }, { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Gris Nieve', val: '#f1f5f9' }
+        ])}
+        ${colorRow('Texto Píldora «14 convocados»', 'callupBadgeInk', callupBadgeInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Oscuro', val: '#065f46' }
+        ])}
+        ${colorRow('Fondo Botón / Píldora «0 fuera»', 'callupOutBg', callupOutBg, btnBg, [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Dorado', val: '#f59e0b' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Texto Botón / Píldora «0 fuera»', 'callupOutInk', callupOutInk, btnInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Fondo Botón WhatsApp', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }
+        ])}
+        ${colorRow('Texto WhatsApp', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul', val: '#2563eb' }, { name: 'Rojo', val: '#dc2626' }
+        ])}
+        ${colorRow('Botón Principal (Texto)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'preparacion') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Preparación</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Preparación de Partidos</h4>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:0;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div id="qc-mock-prep-header" style="padding:10px 14px;background:${prepHeaderBg};color:${prepHeaderInk};display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;color:${prepHeaderInk};">Próximo Rival</span>
+                <h4 style="margin:1px 0 0;font:800 14px var(--disp);color:${prepHeaderInk};">UD. Jinámar</h4>
+              </div>
+              <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:${prepHeaderInk};">Jornada 5</span>
+            </div>
+            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">8</span>
+                <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Medio Centro Titular</strong>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" id="qc-mock-btn" style="flex:1;padding:7px 10px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 11.5px var(--cbx-ui);text-align:center;">Preparar partido</button>
+                <button type="button" id="qc-mock-btn2" style="flex:1;padding:7px 10px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">Convocar y preparar</button>
+                <button type="button" id="qc-mock-btn-print" style="flex:1;padding:7px 10px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11.5px var(--cbx-ui);text-align:center;">🖨️ Imprimir plan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Fondo Cabecera Tarjeta de Partido', 'prepHeaderBg', prepHeaderBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Cabecera Tarjeta de Partido', 'prepHeaderInk', prepHeaderInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón Acción Principal («Preparar partido»)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Acción Principal', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Acción Secundaria («Convocar y preparar»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Acción Secundaria', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Botón «Imprimir plan» (Texto)', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Principal (Párrafos, notas)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'sesiones') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera Sesiones</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">Sesiones de Entrenamiento</h4>
+            </div>
+            <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Sesión</button>
+          </div>
+          <div id="qc-mock-card" style="padding:12px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div>
+              <strong id="qc-mock-card-title" style="font-size:14px;color:${cardTitle};cursor:pointer;">Entrenamiento: Posesión y Finalización</strong>
+              <p id="qc-mock-card-text" style="margin:2px 0 0;font-size:12px;color:${fontColor};">1. Calentamiento: Rondos 4x2 (15′) · 2. Partido (30′)</p>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" id="qc-mock-btn-whistle" style="flex:1;padding:6px 4px;border-radius:8px;background:${whistleBg};color:${whistleInk};border:0;font:700 11px var(--cbx-ui);text-align:center;">⏱️ Silbato</button>
+              <button type="button" id="qc-mock-btn-wa" style="flex:1;padding:6px 4px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:800 11px var(--cbx-ui);text-align:center;">📱 WhatsApp</button>
+              <button type="button" id="qc-mock-btn-print" style="flex:1;padding:6px 4px;border-radius:8px;background:${printBg};color:${printInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">🖨️ Imprimir</button>
+              <button type="button" id="qc-mock-btn-edit" style="flex:1;padding:6px 4px;border-radius:8px;background:${editBg};color:${editInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✏️ Editar</button>
+              <button type="button" id="qc-mock-btn-completed" style="flex:1;padding:6px 4px;border-radius:8px;background:${completedBg};color:${completedInk};border:1px solid #cbd5e1;font:700 11px var(--cbx-ui);text-align:center;">✓ Realizado</button>
+            </div>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Cabecera de Vista (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto Cabecera de Vista', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Sesión» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Sesión»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón «⏱️ Silbato» (Fondo)', 'whistleBg', whistleBg, bannerBg, [
+          { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Texto Botón «⏱️ Silbato»', 'whistleInk', whistleInk, bannerInk, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Botón «📱 WhatsApp» (Fondo)', 'waBg', waBg, '#25d366', [
+          { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }
+        ])}
+        ${colorRow('Texto Botón «📱 WhatsApp»', 'waInk', waInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Oscuro', val: '#053b1d' }
+        ])}
+        ${colorRow('Botón «🖨️ Imprimir» (Fondo)', 'printBg', printBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «🖨️ Imprimir»', 'printInk', printInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✏️ Editar» (Fondo)', 'editBg', editBg, btn2Bg, [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón «✏️ Editar»', 'editInk', editInk, btn2Ink, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Botón «✓ Realizado» (Fondo)', 'completedBg', completedBg, '#f1f5f9', [
+          { name: 'Gris Suave', val: '#f1f5f9' }, { name: 'Verde Esmeralda', val: '#10b981' }, { name: 'Azul Suave', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Botón «✓ Realizado»', 'completedInk', completedInk, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Verde', val: '#15803d' }
+        ])}
+        ${colorRow('Título de Sesión (Enlace)', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }
+        ])}
+        ${colorRow('Nombres de Ejercicios y Textos', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else if (currentViewId === 'tacticas' && currentSubTab === 'general') {
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:14px 16px;background:${bannerBg};color:${bannerInk};border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Pizarra Táctica & Estrategia</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 17px var(--disp);color:${bannerInk};">Tácticas</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">+ Táctica</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Mostrar rival</button>
+            </div>
+          </div>
+          <div id="qc-mock-callout" style="padding:10px 14px;background:${calloutBg};border-radius:10px;border:1px solid #cbd5e1;">
+            <p id="qc-mock-callout-text" style="margin:0;font-size:12px;color:${calloutInk};line-height:1.4;">
+              Arrastra los jugadores en la pizarra para organizar la salida de balón, presión y bloque defensivo.
+            </p>
+          </div>
+          <div id="qc-mock-card" style="padding:10px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;display:flex;flex-direction:column;gap:4px;">
+            <strong id="qc-mock-card-title" style="font-size:13.5px;color:${cardTitle};">Sistema F7 1-3-2-1 (Árbol)</strong>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12px;color:${fontColor};">Equilibrio entre líneas y progresión por bandas.</p>
+          </div>
+        </div>
+      `;
+      controlsHtml = `
+        ${colorRow('Hero Banner Fondo', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Verde Hero', val: '#0a251b' }, { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Hero Banner Texto', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }
+        ])}
+        ${colorRow('Botón «+ Táctica» (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }
+        ])}
+        ${colorRow('Texto Botón «+ Táctica»', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario («Mostrar rival»)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }
+        ])}
+        ${colorRow('Texto Botón Secundario', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Fondo Caja Informativa (Callout / pestaña verde)', 'calloutBg', calloutBg, '#dcfce7', [
+          { name: 'Verde Menta Suave', val: '#dcfce7' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Amarillo Alerta', val: '#fef3c7' }, { name: 'Azul Tenue', val: '#eff6ff' }
+        ])}
+        ${colorRow('Texto Caja Informativa', 'calloutInk', calloutInk, fontColor, [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Verde Bosque', val: '#166534' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Blanco', val: '#ffffff' }
+        ])}
+        ${colorRow('Nombres y Títulos de Tácticas', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${colorRow('Texto Principal (Descripción)', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Fondo de Tarjeta', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Suave', val: '#f8fafc' }
+        ])}
+        ${colorRow('Borde de Tarjeta', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }
+        ])}
+      `;
+    } else {
+      // standard / 'general'
+      previewHtml = `
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--cbx-bg, #f4f6f5);border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);">
+          <div id="qc-mock-banner" style="padding:10px 14px;background:${bannerBg};color:${bannerInk};border-radius:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.15);">
+            <div>
+              <span style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;">Cabecera de ${activeViewConfig.name}</span>
+              <h4 id="qc-mock-banner-title" style="margin:2px 0 0;font:800 15px var(--disp);color:${bannerInk};">${activeViewConfig.name}</h4>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" id="qc-mock-btn" style="padding:6px 12px;border-radius:8px;background:${btnBg};color:${btnInk};border:0;font:800 12px var(--cbx-ui);">Principal</button>
+              <button type="button" id="qc-mock-btn2" style="padding:6px 12px;border-radius:8px;background:${btn2Bg};color:${btn2Ink};border:1px solid #cbd5e1;font:700 12px var(--cbx-ui);">Secundario</button>
+            </div>
+          </div>
+          <div id="qc-mock-card" style="padding:12px 14px;background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${activeViewConfig.hasDorsales ? `
+                  <span id="qc-mock-dorsal-1" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${dorsalBg};color:${dorsalInk};font:800 13px var(--disp);">7</span>
+                ` : ''}
+                <strong id="qc-mock-card-title" style="font-size:14px;color:${cardTitle};">Elemento / Nombre de Ejemplo</strong>
+              </div>
+              ${activeViewConfig.hasWa ? `
+                <button type="button" id="qc-mock-wa" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:${waBg};color:${waInk};border:0;font:700 11px var(--cbx-ui);">💬 WhatsApp</button>
+              ` : ''}
+            </div>
+            <p id="qc-mock-card-text" style="margin:0;font-size:12.5px;color:${fontColor};line-height:1.4;">
+              Texto descriptivo de la pantalla: datos, etiquetas, párrafos informativos y métricas de ${activeViewConfig.name}.
+            </p>
+          </div>
+        </div>
+      `;
+
+      controlsHtml = `
+        ${colorRow('Fondo de Cabecera (Banner)', 'bannerBg', bannerBg, '#0a251b', [
+          { name: 'Rojo Carmesí', val: '#c8102e' }, { name: 'Verde Hero', val: '#0a251b' }, { name: 'Azul Noche', val: '#061021' }, { name: 'Granate', val: '#170408' }, { name: 'Gris Carbón', val: '#0f1113' }, { name: 'Negro Puro', val: '#000000' }
+        ])}
+        ${colorRow('Texto y título de Cabecera', 'bannerInk', bannerInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Gris Claro', val: '#e2e8f0' }, { name: 'Dorado', val: '#f59e0b' }
+        ])}
+        ${colorRow('Botón Principal (Fondo)', 'btnBg', btnBg, '#10b981', [
+          { name: 'Esmeralda', val: '#10b981' }, { name: 'Azul Real', val: '#2563eb' }, { name: 'Rojo Carmesí', val: '#dc2626' }, { name: 'Dorado', val: '#f59e0b' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Principal (Texto / Fuente)', 'btnInk', btnInk, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }
+        ])}
+        ${colorRow('Botón Secundario (Fondo)', 'btn2Bg', btn2Bg, '#ffffff', [
+          { name: 'Blanco', val: '#ffffff' }, { name: 'Gris Claro', val: '#f1f5f9' }, { name: 'Gris Oscuro', val: '#1e293b' }, { name: 'Negro', val: '#0f172a' }
+        ])}
+        ${colorRow('Botón Secundario (Texto / Fuente)', 'btn2Ink', btn2Ink, '#0f172a', [
+          { name: 'Oscuro', val: '#0f172a' }, { name: 'Blanco', val: '#ffffff' }, { name: 'Gris', val: '#475569' }
+        ])}
+        ${colorRow('Texto Principal de la Pestaña', 'fontColor', fontColor, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Negro Puro', val: '#000000' }, { name: 'Azul Noche', val: '#0a1c36' }, { name: 'Gris Grafito', val: '#334155' }
+        ])}
+        ${colorRow('Nombres y Títulos de Tarjetas', 'cardTitle', cardTitle, '#0f172a', [
+          { name: 'Negro Elegante', val: '#0f172a' }, { name: 'Azul Marino', val: '#1e3a8a' }, { name: 'Verde Bosque', val: '#064e3b' }, { name: 'Rojo Carmesí', val: '#991b1b' }
+        ])}
+        ${activeViewConfig.hasDorsales ? `
+          ${colorRow('Fondo del Dorsal', 'dorsalBg', dorsalBg, '#0a251b', [
+            { name: 'Verde Club', val: '#0a251b' }, { name: 'Rojo', val: '#c8102e' }, { name: 'Azul', val: '#1e3a8a' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#eab308' }, { name: 'Blanco', val: '#ffffff' }
+          ])}
+          ${colorRow('Color Número del Dorsal', 'dorsalInk', dorsalInk, '#ffffff', [
+            { name: 'Blanco', val: '#ffffff' }, { name: 'Negro', val: '#0f172a' }, { name: 'Amarillo', val: '#fde047' }, { name: 'Dorado', val: '#f59e0b' }
+          ])}
+        ` : ''}
+        ${activeViewConfig.hasWa ? `
+          ${colorRow('Fondo Botón WhatsApp', 'waBg', waBg, '#25d366', [
+            { name: 'WhatsApp Oficial', val: '#25d366' }, { name: 'WhatsApp Oscuro', val: '#128c7e' }, { name: 'Verde Campo', val: '#10b981' }, { name: 'Negro Elegante', val: '#0f172a' }
+          ])}
+          ${colorRow('Texto e Icono WhatsApp', 'waInk', waInk, '#ffffff', [
+            { name: 'Blanco', val: '#ffffff' }, { name: 'Verde Muy Oscuro', val: '#053b1d' }, { name: 'Negro', val: '#0f172a' }
+          ])}
+        ` : ''}
+        ${colorRow('Fondo de Tarjetas y Paneles', 'cardBg', cardBg, '#ffffff', [
+          { name: 'Blanco Puro', val: '#ffffff' }, { name: 'Gris Nieve', val: '#f8fafc' }, { name: 'Marfil Suave', val: '#fafaf9' }, { name: 'Menta Tenue', val: '#f0fdf4' }
+        ])}
+        ${colorRow('Borde de Tarjetas y Paneles', 'cardBorder', cardBorder, '#e2e8f0', [
+          { name: 'Slate Suave', val: '#e2e8f0' }, { name: 'Gris Borde', val: '#cbd5e1' }, { name: 'Oscuro Sutil', val: '#334155' }, { name: 'Verde Tenue', val: '#bbf7d0' }
+        ])}
+      `;
+    }
+
+
+    if (!['specialists', 'tactic-board', 'plan', 'section'].includes(currentSubTab)) {
+    if (!controlsHtml.includes('data-prop="bannerBg"')) controlsHtml += colorRow('Cabecera · Fondo', 'bannerBg', bannerBg, '#0a251b', []);
+    if (!controlsHtml.includes('data-prop="bannerInk"')) controlsHtml += colorRow('Cabecera · Texto', 'bannerInk', bannerInk, '#ffffff', []);
+    controlsHtml += colorRow('Acentos de esta pestaña', 'accentColor', val('accentColor', btnBg), btnBg, []);
+    controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Fondo' : 'Etiquetas de esta pantalla · Fondo', 'badgeBg', val('badgeBg', '#f1f5f9'), '#f1f5f9', []);
+    controlsHtml += colorRow(currentViewId === 'hoy' ? 'Etiquetas del resumen de Hoy · Texto' : 'Etiquetas de esta pantalla · Texto', 'badgeInk', val('badgeInk', fontColor), fontColor, []);
+    }
+    if(sectionRoot){controlsHtml='';previewHtml='<p>Personaliza solo esta sección. Cada control muestra el elemento y los colores elegidos.</p>';}
+    const extraRows = (entries) => entries.map(([label, prop, fallback]) => colorRow(label, prop, val(prop, fallback), fallback, [])).join('');
+    if (!sectionRoot && currentViewId === 'convocatorias') controlsHtml += extraRows([
+      ['Editar y abrir Preparación · Fondo', 'btn2Bg', btn2Bg], ['Editar y abrir Preparación · Texto', 'btn2Ink', btn2Ink],
+      ['Tarjetas y filas · Fondo', 'cardBg', cardBg],
+      ['Botón + Convocatoria · Fondo', 'callupBtnBg', btnBg], ['Botón + Convocatoria · Texto', 'callupBtnInk', btnInk],
+      ['Plan por tramos · Fondo del selector', 'planModeTrack', '#e2e8f0'],
+      ['Plan · Opción inactiva fondo', 'planModeBg', '#f1f5f9'], ['Plan · Opción inactiva texto', 'planModeInk', '#334155'],
+      ['Plan · Opción activa fondo', 'planModeActiveBg', '#ffffff'], ['Plan · Opción activa texto', 'planModeActiveInk', '#0f172a']
+    ]);
+    if (currentViewId === 'hoy' && (!sectionRoot || sectionRoot.matches('.cbx-season'))) controlsHtml += extraRows([
+      ['Goles a favor · Color de barras', 'seasonGoalsForColor', vSettings.gfColor || theme.gfColor || '#10b981'], ['Goles en contra · Color de barras', 'seasonGoalsAgainstColor', vSettings.gaColor || theme.gaColor || '#e11d48']
+    ]);
+    if (currentSubTab === 'specialists') controlsHtml += extraRows([1, 2, 3].flatMap((rank) => [
+      [rank + '.º capitán · Fondo del distintivo', 'captain' + rank + 'Bg', rank === 1 ? spLeadBg : spSubBg],
+      [rank + '.º capitán · Texto del distintivo', 'captain' + rank + 'Ink', rank === 1 ? spLeadInk : spSubInk]
+    ]));
+    if (!sectionRoot && currentViewId === 'sesiones') controlsHtml += extraRows([
+      ['Realizado marcado · Fondo', 'completedActiveBg', btnBg], ['Realizado marcado · Texto', 'completedActiveInk', btnInk]
+    ]);
+    if (!sectionRoot && currentViewId === 'exercise-detail') controlsHtml += extraRows([
+      ['Cerrar ejercicio · Fondo', 'closeBg', btn2Bg], ['Cerrar ejercicio · Texto', 'closeInk', btn2Ink]
+    ]);
+    if (currentViewId === 'ajustes' || currentViewId === 'navegacion') controlsHtml += `<details><summary>Menú lateral y navegación inferior (independientes)</summary>${[
+      ['Menú lateral · Fondo', 'sidebarBg', '#0a251b'], ['Menú lateral · Texto', 'sidebarInk', '#ffffff'],
+      ['Barra inferior · Fondo', 'bottomNavBg', '#ffffff'], ['Barra inferior · Texto e iconos', 'bottomNavInk', '#64748b'],
+      ['Barra inferior · Texto e iconos activos', 'bottomNavActive', '#c8102e'],
+      ['Subpestañas · Fondo', 'subNavBg', '#f1f5f9'], ['Subpestañas · Texto', 'subNavInk', '#334155'],
+      ['Subpestaña activa · Fondo', 'subNavActiveBg', '#ffffff'], ['Subpestaña activa · Texto', 'subNavActiveInk', '#c8102e']
+    ].map(([label, prop, fallback]) => colorRow(label, prop, theme[prop] || fallback, fallback, [])).join('')}</details>`;
+
+
+    if (currentSubTab === 'plan') {
+      const planRoot = currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan');
+      const actualPlanColor = (selector, property, fallback) => {
+        const element = planRoot?.querySelector(selector);
+        const color = element && getComputedStyle(element).getPropertyValue(property);
+        const rgb = color?.startsWith('rgb') ? color.match(/\d+/g) : null;
+        return rgb?.length >= 3 ? '#' + rgb.slice(0,3).map(value => Number(value).toString(16).padStart(2,'0')).join('') : fallback;
+      };
+      previewHtml = `<div class="cbx-plan-colour-example"><strong>Plan por tramos</strong><p>Titular · 0′–35′ · 35 minutos</p><div class="cbx-minute-track"><i style="left:0;width:50%"></i></div></div>`;
+      controlsHtml = extraRows([
+        ['Barra de minutos jugados', 'planBarColor', actualPlanColor('.cbx-minute-track i','background-color',btnBg)],
+        ['Barra de tiempo sin jugar', 'planTrackColor', actualPlanColor('.cbx-minute-track','background-color','#e2e8f0')],
+        ['Nombres y minutos · Texto', 'planTextColor', actualPlanColor('.cbx-minute-row','color',cardTitle)],
+        ['Filas de jugadores · Fondo', 'planRowColor', actualPlanColor('.cbx-minute-row','background-color',cardBg)],
+        ['Jugador seleccionado · Contorno', 'planSelectionColor', actualPlanColor('.cbx-minute-row[aria-pressed=true]','outline-color',btnBg)],
+        ['Minuto que estás consultando · Línea', 'planCursorColor', actualPlanColor('.cbx-minute-track em','border-left-color',cardTitle)],
+        ['Reparto · Fondo del selector', 'planModeTrack', '#e2e8f0'],
+        ['Reparto · Opción inactiva fondo', 'planModeBg', '#f1f5f9'],
+        ['Reparto · Opción inactiva texto', 'planModeInk', '#334155'],
+        ['Reparto · Opción activa fondo', 'planModeActiveBg', '#ffffff'],
+        ['Reparto · Opción activa texto', 'planModeActiveInk', '#0f172a']
+      ]);
+    }
+    const buttonRoot = (currentSubTab === 'plan' ? (currentViewId === 'preparacion' ? document.getElementById('prep-plan-tramos') : document.querySelector('#convocatorias .cbx-callup-plan')) : null) || (currentSubTab === 'specialists' ? document.getElementById('plantilla-specialists-bar') : currentSubTab === 'tactic-board' ? document.getElementById(currentViewId === 'tacticas' ? 'cbx-tactics-board-section' : currentViewId === 'delegado' ? 'delegate-tactics' : 'live-tactics') : null) || document.getElementById(currentViewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[currentViewId]);
+    if (currentSubTab === 'plan' && buttonRoot && !buttonRoot.id) buttonRoot.id = 'callup-plan-tramos';
+    const elementRoots = [...(currentViewId === 'navegacion' ? ['cbx-header', 'cb-claude-sidebar', 'cb-bottom-nav', 'cb-sub-nav'].map((id) => document.getElementById(id)) : [buttonRoot])];
+    const elements = (sectionRoot?(sectionRoot.id==='players-list'||sectionRoot.id==='squad-leaderboards'?configurableElements(document.getElementById(currentViewId)):configurableElements(sectionRoot)):elementRoots.flatMap(configurableElements)).filter((item) => {
+      const element = document.querySelector(item.selector);
+      if(sectionRoot && !(element && (sectionRoot===element || sectionRoot.contains(element))))return false;
+      return !((currentSubTab === 'general' && currentViewId === 'plantilla' && element?.closest('#plantilla-specialists-bar')) || (currentSubTab === 'general' && currentViewId === 'tacticas' && element?.closest('#cbx-tactics-board-section')) || (currentSubTab === 'live' && element?.closest('#live-tactics')));
+    });
+    if(sectionRoot){for(const item of elements)item.shared=true;}
+    currentElementOptions = elements;
+    const asHex = (value) => {
+      if (/^#[0-9a-f]{6}$/i.test(value || '')) return value;
+      const rgb = String(value).match(/\d+/g);
+      return rgb?.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('') : '#ffffff';
+    };
+    if(currentSubTab==='specialists')controlsHtml='';
+    controlsHtml = '<section class="cbx-general-color-controls">' + controlsHtml + '</section>';
+    controlsHtml += '<section class="cbx-named-colors"><h3>Elementos propios de ' + escapeHtml(activeViewConfig.name) + '</h3><label>Buscar un elemento<input type="search" id="qc-element-search" placeholder="Buscar en esta pantalla…"></label><p>Abre un grupo para personalizar cada elemento por su nombre. Estos ajustes concretos tienen prioridad sobre los colores generales de arriba. Si una ventana o un desplegable tiene contenido adicional, ábrelo y pulsa su rueda para ver también sus elementos.</p>';
+    for (const group of [...new Set(elements.map((element) => element.group))]) {
+      controlsHtml += '<details class="cbx-colour-group"><summary>' + escapeHtml(group) + '</summary>';
+      for (const item of elements.filter((element) => element.group === group)) {
+        const target = document.querySelector(item.selector);
+        if (!target) continue;
+        const style = getComputedStyle(target);
+        const graphical = group === 'Iconos y gráficos';
+        const properties = graphical ? [['fill', 'Relleno'], ['stroke', 'Línea'], ['color', 'Color del icono']] : [['background', 'Fondo'], ['color', 'Texto e iconos'], ['border-color', 'Borde'], ...(target.matches('input[type="checkbox"],input[type="radio"],progress,meter') ? [['accent-color', 'Marca o progreso']] : [])];
+        const buttonIndex = elements.indexOf(item);
+        controlsHtml += `<fieldset class="cbx-named-colour" data-element-index="${buttonIndex}"><legend>${escapeHtml(item.label)}${item.index > 1 ? ' · ' + item.index : ''}</legend><p class="cbx-color-control-help">${escapeHtml(item.context && item.context !== item.label ? 'Dentro de «' + item.context + '». ' : '')}${item.shared ? escapeHtml(item.context) + '.' : 'Cambia solo este elemento de ' + escapeHtml(activeViewConfig.name) + '.'}</p>`;
+        for (const [prop, label] of properties) {
+          const value = asHex(vSettings.elementColors?.[item.selector]?.[prop] || style.getPropertyValue(prop));
+          controlsHtml += `<div class="cbx-color-control-row"><label>${label}<input type="color" data-element="${buttonIndex}" data-element-prop="${prop}" value="${value}" aria-label="${escapeHtml(label + ' de ' + item.label)}"><code>${value}</code></label><p class="cbx-color-control-help">${prop === 'background' ? 'Fondo de «' + escapeHtml(item.label) + '».' : prop === 'color' ? 'Texto de «' + escapeHtml(item.label) + '».' : prop === 'border-color' ? 'Color del contorno existente; no añade un borde.' : prop === 'fill' ? 'Color interior de esta figura del gráfico.' : prop === 'accent-color' ? 'Marca de selección o barra de progreso.' : 'Color del trazo de esta figura del gráfico.'}</p></div>`;
+        }
+        controlsHtml += `<button type="button" class="secondary" data-reset-element="${buttonIndex}">Restablecer ${escapeHtml(item.label)}</button></fieldset>`;
+      }
+      controlsHtml += '</details>';
+    }
+    controlsHtml += '</section>';
+    titleEl.textContent = sectionRoot ? '⚙️ Personalizar: '+(sectionRoot.id==='players-list'?'Fichas de jugadores · todas iguales':sectionRoot.querySelector('h2,h3,h4,summary')?.textContent||sectionRoot.querySelector('span')?.textContent||'esta sección') : `⚙️ Personalizar: ${currentSubTab === 'plan' ? 'Plan por tramos · ' : ''}${activeViewConfig.name}`;
+    if(sectionRoot || currentSubTab==='specialists')previewHtml='<p>Cada elemento tiene debajo una muestra con su texto real. Cambia Fondo o Texto y verás inmediatamente la combinación elegida.</p>';
+    bodyEl.innerHTML = viewsBarHtml + subtabsBarHtml + viewNoticeHtml + '<div class="cbx-adjustments-layout"><aside class="cbx-adjustments-preview"><h4>Vista previa</h4><p>Comprueba aquí los colores de esta pantalla.</p>' + previewHtml + '</aside><div class="cbx-adjustments-controls">' + controlsHtml + '</div></div>';
+    bodyEl.querySelectorAll('.cbx-colour-group').forEach(group=>{
+      const summary=group.querySelector('summary');
+      const count=group.querySelectorAll('[data-element-index]').length;
+      const icons={'Botones':'◉','Textos':'Aa','Fondos y tarjetas':'▤','Iconos y gráficos':'◈','Campos y selectores':'☑'};
+      summary.innerHTML='<span class="cbx-adjustment-icon">'+(icons[summary.textContent]||'◈')+'</span><span>'+summary.innerHTML+'</span><small>'+count+' elementos</small>';
+    });
+    enhanceColorSettings(bodyEl, elements);
+    bodyEl.scrollTop = 0;
+    bodyEl.querySelector('#qc-element-search').addEventListener('input', (event) => {
+      const query = event.target.value.trim().toLocaleLowerCase('es');
+      bodyEl.querySelectorAll('[data-element-index]').forEach((item) => {
+        item.hidden = !item.textContent.toLocaleLowerCase('es').includes(query);
+      });
+      bodyEl.querySelectorAll('.cbx-colour-group').forEach((group) => {
+        group.hidden = ![...group.querySelectorAll('[data-element-index]')].some((item) => !item.hidden);
+        if (query && !group.hidden) group.open = true;
+      });
+    });
+    bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
+      picker.dataset.renderedColour = picker.value;
+      picker.addEventListener('input', () => { picker.dataset.renderedColour = picker.value; });
+      picker.addEventListener('change', () => picker.dispatchEvent(new Event('input', { bubbles: true })));
+    });
+    bodyEl.querySelectorAll('[data-element-prop]').forEach((picker) => {
+      picker.addEventListener('input', (event) => {
+        const item = elements[Number(picker.dataset.element)];
+        const saved = structuredClone(state.settings?.theme?.views?.[currentViewId] || {});
+        const previous = saved.elementColors?.[item.selector] || {};
+        if (item.shared) clearColourConflicts(saved, item.selector, [picker.dataset.elementProp], !!sectionRoot);
+        const colours = saved.elementColors || {};
+        delete colours[item.selector];
+        colours[item.selector] = { ...previous, [picker.dataset.elementProp]: event.target.value };
+        if (item.shared && state.settings.theme.views[currentViewId]) {
+          state.settings.theme.views[currentViewId].buttonColors = saved.buttonColors;
+          state.settings.theme.views[currentViewId].elementColors = saved.elementColors;
+          localStorage.setItem('campobase.theme', JSON.stringify(state.settings.theme));
+        }
+
+        picker.nextElementSibling.textContent = event.target.value;
+        updateViewThemeProperty(currentViewId, 'elementColors', colours);
+      });
+    });
+    bodyEl.querySelectorAll('[data-reset-element]').forEach((button) => {
+      button.onclick = () => {
+        const item = elements[Number(button.dataset.resetElement)];
+        const colours = { ...(state.settings?.theme?.views?.[currentViewId]?.elementColors || {}) };
+        delete colours[item.selector];
+        updateViewThemeProperty(currentViewId, 'elementColors', colours);
+        const target = document.querySelector(item.selector);
+        if (target) button.closest('fieldset').querySelectorAll('[data-element-prop]').forEach((picker) => {
+          picker.value = asHex(getComputedStyle(target).getPropertyValue(picker.dataset.elementProp));
+          picker.nextElementSibling.textContent = picker.value;
+        });
+      };
+    });
+
+    // Listeners para cambio de pestaña principal
+    bodyEl.querySelectorAll('.cbx-qc-view-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        currentViewId = chip.dataset.view;
+        const cfg = VIEWS_INFO.find((v) => v.id === currentViewId) || VIEWS_INFO[0];
+        currentSubTab = cfg.subtabs ? cfg.subtabs[0].id : 'general';
+        renderContent();
+      });
+    });
+
+    // Listeners para cambio de subpestaña
+    bodyEl.querySelectorAll('.cbx-qc-subtab-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        currentSubTab = chip.dataset.subtab;
+        renderContent();
+      });
+    });
+
+    // Listeners para color pickers
+    bodyEl.querySelectorAll('input[type="color"][data-prop]').forEach((picker) => {
+      picker.addEventListener('input', (e) => {
+        const prop = e.target.dataset.prop;
+        const val = e.target.value;
+        const codeEl = e.target.nextElementSibling;
+        if (codeEl) codeEl.textContent = val;
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
+        updateQcPreviews(currentTab, prop, val);
+      });
+    });
+
+    // Listeners para swatches de sugerencias
+    bodyEl.querySelectorAll('.cbx-swatch-btn').forEach((swatch) => {
+      swatch.addEventListener('click', () => {
+        const prop = swatch.dataset.prop;
+        const val = swatch.dataset.val;
+        const picker = bodyEl.querySelector(`input[data-prop="${prop}"]`);
+        if (picker) {
+          picker.value = val;
+          picker.dataset.renderedColour = val;
+          const codeEl = picker.nextElementSibling;
+          if (codeEl) codeEl.textContent = val;
+        }
+        if (['sidebarBg', 'sidebarInk', 'bottomNavBg', 'bottomNavInk', 'bottomNavActive', 'subNavBg', 'subNavInk', 'subNavActiveBg', 'subNavActiveInk'].includes(prop)) updateThemeProperty(prop, val);
+        else updateViewThemeProperty(currentViewId, prop, val);
+        updateQcPreviews(currentTab, prop, val);
+      });
+    });
+  }
+
+  resetBtn.onclick = async () => {
+    const theme = structuredClone(state.settings?.theme || {});
+    const view = theme.views?.[currentViewId];
+    if (view) {
+      bodyEl.querySelectorAll('[data-prop]').forEach((input) => { delete view[input.dataset.prop]; });
+      for (const entry of currentElementOptions) delete view.elementColors?.[entry.selector];
+    }
+    state.settings.theme = theme;
+    localStorage.setItem('campobase.theme', JSON.stringify(theme));
+    applyCustomTheme(theme);
+    if (roleCanUseOwnerFeatures(state.role)) await put('settings', state.settings).catch(() => {});
+    toast('Colores de esta sección restablecidos.');
+    renderContent();
+  };
+  if (copyAllBtn) { copyAllBtn.hidden = true; copyAllBtn.style.display = 'none'; copyAllBtn.onclick = null; }
+
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      bodyEl.querySelectorAll('input[type="color"]').forEach((picker) => {
+        if (picker.value !== picker.dataset.renderedColour) picker.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const savedTheme = structuredClone(state.settings?.theme || {});
+      applyCustomTheme(savedTheme);
+      try {
+        localStorage.setItem('campobase.theme', JSON.stringify(savedTheme));
+      } catch {}
+      if (roleCanUseOwnerFeatures(state.role)) {
+        if (!state.settings) state.settings = { id: 'main' };
+        state.settings.theme = savedTheme;
+        state.settings.updatedAt = Date.now();
+        await put('settings', { ...state.settings, theme: savedTheme }).catch(() => {});
+      }
+      applyCustomTheme(savedTheme);
+      toast('✅ Todos los colores guardados correctamente');
+      dialog.close();
+    };
+  }
+
+  renderContent();
+  dialog.showModal();
+}
+function openQuickColorDialog(targetKind = null, sectionId = null) {
+  const scope=sectionId?document.getElementById(sectionId):null;
+  const targets={specialists:'plantilla',dorsales:'plantilla','callup-plan':'convocatorias','prep-plan':'preparacion',callups:'convocatorias',live:'partido','live-board':'partido','delegate-board':'delegado','tactic-board':'tacticas',whatsapp:'cuerpo-tecnico'};
+  const viewId=scope?.closest('.view')?.id || scope?.dataset.themeView || targets[targetKind] || (targetKind && (document.getElementById(targetKind)||['navegacion','exercise-detail','comunicador'].includes(targetKind))?targetKind:document.querySelector('.view.active')?.id) || 'plantilla';
+  const planScope=targetKind==='prep-plan'?document.getElementById('prep-plan-tramos'):targetKind==='callup-plan'?document.querySelector('#convocatorias .cbx-callup-plan'):null;
+  const actualScope=scope||planScope||(targetKind==='specialists'?document.getElementById('plantilla-specialists-bar'):null);
+  const title=actualScope?.querySelector('h2,h3,h4')?.textContent?.trim() || ({plantilla:'Plantilla',hoy:'Hoy','cuerpo-tecnico':'Cuerpo técnico',asistencia:'Asistencia',convocatorias:'Convocatoria',preparacion:'Preparación',partido:'Partido en vivo',sesiones:'Sesiones',ejercicios:'Ejercicios',tacticas:'Tácticas',navegacion:'Navegación compartida'})[viewId] || viewId;
+  openClaudeColorEditor({viewId,scope:actualScope,title,
+    readTheme:()=>{let local={};try{local=JSON.parse(localStorage.getItem('campobase.theme')||'{}');}catch{}return {...state.settings?.theme,...local,views:{...state.settings?.theme?.views,...local.views}};},
+    applyTheme:applyCustomTheme,
+    saveTheme:async theme=>{
+      if(!roleCanUseOwnerFeatures(state.role))throw new Error('Solo el entrenador puede guardar estos ajustes.');
+      const settings={...state.settings,theme,updatedAt:Date.now()};
+      await put('settings',settings);
+      localStorage.setItem('campobase.theme',JSON.stringify(theme));
+      if(localStorage.getItem('campobase.theme')!==JSON.stringify(theme))throw new Error('No coincide la comprobación del guardado.');
+      state.settings=settings;
+    }
+  });
+}
+window.openQuickColorDialog = openQuickColorDialog;
+
 
 function initCustomizationListeners() {
   const uploadBtn = $('#upload-crest-btn');
@@ -5012,6 +10178,7 @@ function initCustomizationListeners() {
       console.warn('Error guardando escudo en configuración:', err);
     }
     applyTeamIdentity(state.settings);
+    updateThemePreviewBox(state.settings?.theme || {});
     toast(successMessage);
   };
 
@@ -5050,14 +10217,36 @@ function initCustomizationListeners() {
     themeForm.addEventListener('submit', (e) => saveThemeSettings(e).catch(handleError));
   }
 
-  // Delegación global para botones de tono de fondo (chips)
+  // Delegación global para botones de tono de fondo (chips) y pestañas de preview
   document.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('.cbx-preview-tab-btn');
+    if (tabBtn) {
+      const paneKey = tabBtn.dataset.previewPane;
+      $$('.cbx-preview-tab-btn').forEach((btn) => {
+        const isCurrent = btn === tabBtn;
+        btn.classList.toggle('active', isCurrent);
+        if (isCurrent) {
+          btn.style.background = 'var(--btn, #10b981)';
+          btn.style.setProperty('color', 'var(--btnInk, #ffffff)', 'important');
+          btn.style.borderColor = 'transparent';
+        } else {
+          btn.style.background = '#ffffff';
+          btn.style.color = '#334155';
+          btn.style.borderColor = '#cbd5e1';
+        }
+      });
+      $$('.cbx-preview-pane').forEach((pane) => {
+        pane.style.display = (pane.id === `preview-pane-${paneKey}`) ? 'block' : 'none';
+      });
+      return;
+    }
+
     const bgBtn = e.target.closest('.theme-bg-btn');
     if (bgBtn) {
       const bgVal = bgBtn.dataset.bg;
       const hiddenInput = $('#theme-bg-select');
       if (hiddenInput) hiddenInput.value = bgVal;
-      updateThemeProperty('themeBg', bgVal);
+      updateThemeProperty('themeBg', bgVal, { appBgHue: '' });
       return;
     }
 
@@ -5125,6 +10314,66 @@ function initCustomizationListeners() {
     }
   });
 
+  // Botón guardar preset actual
+  const savePresetBtn = $('#save-current-preset-btn');
+  const presetNameInput = $('#new-preset-name');
+  if (savePresetBtn) {
+    savePresetBtn.addEventListener('click', () => {
+      saveCurrentThemePreset(presetNameInput?.value);
+      if (presetNameInput) presetNameInput.value = '';
+    });
+  }
+
+  // Botón restablecer colores extendidos
+  const resetColorsBtn = $('#cbx-reset-colors-btn');
+  if (resetColorsBtn) {
+    resetColorsBtn.addEventListener('click', () => resetExtendedColors());
+  }
+
+  // Botón restablecer colores de pizarra táctica
+  const resetTacticBtn = $('#cbx-reset-tactic-colors-btn');
+  if (resetTacticBtn) {
+    resetTacticBtn.addEventListener('click', () => resetTacticBoardColors());
+  }
+
+  // Botón restablecer colores de especialistas
+  const resetSpecialistsBtn = $('#cbx-reset-specialists-btn');
+  if (resetSpecialistsBtn) {
+    resetSpecialistsBtn.addEventListener('click', () => resetSpecialistsColors());
+  }
+
+  // Sliders de intensidad
+  const appBgSlider = $('#cbx-app-bg-pct-slider');
+  const appBgValText = $('#cbx-app-bg-pct-val');
+  if (appBgSlider) {
+    appBgSlider.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      if (appBgValText) appBgValText.textContent = `${v}%`;
+      updateThemeProperty('appBgPct', v);
+    });
+  }
+
+  const cardSlider = $('#cbx-card-pct-slider');
+  const cardValText = $('#cbx-card-pct-val');
+  if (cardSlider) {
+    cardSlider.addEventListener('input', (e) => {
+      const v = Number(e.target.value);
+      if (cardValText) cardValText.textContent = `${v}%`;
+      updateThemeProperty('cardPct', v);
+    });
+  }
+
+  // Semáforos inputs
+  $$('#semantic-colors-grid input[type="color"]').forEach((input) => {
+    input.addEventListener('change', (e) => {
+      const semKey = e.dataset.sem;
+      if (semKey) setSemanticColor(semKey, e.value);
+    });
+  });
+
+  renderCustomizerControls();
+  renderSavedThemePresets();
+
   // Delegación para replegar estadísticas con el botón al final del desplegable
   document.addEventListener('click', (e) => {
     const collapseBtn = e.target.closest('.collapse-stats-btn');
@@ -5166,7 +10415,12 @@ async function savePins(ownerPin, delegatePin) {
 
 function applyRole(role) {
   state.role = role;
+  if (typeof window !== 'undefined') {
+    window.__campobaseRole = role;
+  }
+  document.body.dataset.userRole = role;
   try { sessionStorage.setItem(SESSION_ROLE_KEY, role); } catch { /* La app sigue operativa aunque el navegador bloquee el almacenamiento de sesión. */ }
+  try { localStorage.setItem('campobase.lastAuthRole', role); } catch {}
   const userId = getBoundSaasUserId();
   if (userId) {
     try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(userId)); } catch {}
@@ -5217,6 +10471,8 @@ async function startDemoSession(session) {
 
 async function endDemoSession(message = '') {
   const session = state.demoSession;
+  clearAccessMarkers();
+  state.role = null;
   state.demoSession = null;
   state.timer = null;
   clearInterval(state.tick);
@@ -5231,7 +10487,17 @@ async function endDemoSession(message = '') {
   if (message) $('#auth-error').textContent = message;
 }
 
+function clearAccessMarkers() {
+  window.__campobaseRole = null;
+  delete document.body.dataset.userRole;
+  const label = $('#role-label');
+  if (label) label.textContent = '';
+  try { localStorage.removeItem('campobase.lastAuthRole'); } catch {}
+  try { sessionStorage.removeItem('campobase.saasActiveBrowserSession'); } catch {}
+}
+
 async function logoutUser() {
+  clearAccessMarkers();
   if (state.role === 'demo') {
     await endDemoSession();
     return;
@@ -5245,7 +10511,7 @@ async function logoutUser() {
   } catch {}
   document.body.classList.remove('delegate-mode', 'delegate-single-view', 'delegate-multi-view', 'delegate-allow-modo-campo');
   restoreNormalNavUi();
-  showAuth();
+  await showAuth(false, { hydrate: false });
   toast('Sesión cerrada.');
 }
 
@@ -5297,8 +10563,9 @@ async function hydratePinSettingsFromSupabase() {
   }
 }
 
-async function showAuth(forceInitial = false) {
-  await hydratePinSettingsFromSupabase();
+async function showAuth(forceInitial = false, { hydrate = true } = {}) {
+  // El cierre explícito debe bloquear la interfaz sin esperar a la red.
+  if (hydrate) await hydratePinSettingsFromSupabase();
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
     const candidates = await getLocalPinSettingsCandidates().catch(() => []);
     for (const candidate of candidates) {
@@ -5722,7 +10989,9 @@ async function pollLiveState() {
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   state.timer = live.timer;
-  syncLiveTacticFromTimer();
+  // Un live remoto nuevo invalida la pizarra en memoria. refresh() cargará
+  // primero la preparación sincronizada y renderLive() la reconstruirá exacta.
+  liveTactic = null;
   await refresh();
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
@@ -6570,7 +11839,7 @@ function playFox40Whistle(type = 'alarm') {
   }
 }
 
-function openWhistleDialog(sessionId) {
+function openWhistleDialog(sessionId, startBlockIndex = 0) {
   const dialog = $('#whistle-dialog');
   if (!dialog) return;
 
@@ -6595,8 +11864,9 @@ function openWhistleDialog(sessionId) {
     ];
   }
 
-  whistleCurrentIndex = 0;
-  setupWhistleBlock(0);
+  const initialIdx = Math.max(0, Math.min(Number(startBlockIndex) || 0, whistleBlocks.length - 1));
+  whistleCurrentIndex = initialIdx;
+  setupWhistleBlock(initialIdx);
   renderWhistleBlocksList();
   dialog.showModal();
 }
@@ -6766,13 +12036,21 @@ function wireEvents() {
   $('#kit-settings-form')?.addEventListener('submit', (event) => saveKitSettings(event).catch(handleError));
 
   document.addEventListener('click', (event) => {
+    const gearBtn = event.target.closest('#topbar-quick-color-btn, .topbar-gear-btn, .cbx-context-gear-btn, [data-gear-target]');
+    if (gearBtn) {
+      event.preventDefault();
+      openQuickColorDialog(gearBtn.dataset.gearTarget || null,gearBtn.dataset.themeSection || null);
+      return;
+    }
+
     const openSetPiecesBtn = event.target.closest('#open-set-pieces-btn, .open-set-pieces-trigger');
     if (openSetPiecesBtn) {
-      if (!roleCanUseOwnerFeatures(state.role)) {
-        toast('Solo Migue puede configurar los especialistas.');
-        return;
-      }
       populateSetPiecesForm();
+      const canEdit = roleCanUseOwnerFeatures(state.role);
+      const form = $('#set-pieces-form');
+      form?.querySelectorAll('select').forEach((select) => { select.disabled = !canEdit; });
+      const saveButton = form?.querySelector('button[type="submit"]');
+      if (saveButton) saveButton.hidden = !canEdit;
       $('#set-pieces-dialog')?.showModal();
       return;
     }
@@ -6800,6 +12078,19 @@ function wireEvents() {
     if (lbScopeBtn) {
       state.leaderboardScope = lbScopeBtn.dataset.lbScope;
       renderSquadLeaderboards();
+      return;
+    }
+
+    const expandButton = event.target.closest('[data-lb-expand]');
+    if (expandButton) {
+      event.preventDefault();
+      state.leaderboardExpanded = !state.leaderboardExpanded;
+      const card = expandButton.closest('.squad-leaderboards-card');
+      card?.classList.toggle('cbx-leaders-all', state.leaderboardExpanded);
+      if (card) card.open = true;
+      state.isLeaderboardsOpen = true;
+      expandButton.textContent = state.leaderboardExpanded ? 'Mostrar cinco primeros' : 'Ver clasificación completa';
+      expandButton.setAttribute('aria-expanded', state.leaderboardExpanded ? 'true' : 'false');
       return;
     }
   });
@@ -7395,9 +12686,234 @@ function wireEvents() {
     if (target.matches('.open-whatsapp-match')) openWhatsAppDialog({ mode: 'callup', matchId: target.dataset.id });
     if (target.matches('.open-whatsapp-session')) openWhatsAppDialog({ mode: 'training', sessionId: target.dataset.id });
     const waPlayerBtn = target.closest('.open-whatsapp-player');
-    if (waPlayerBtn) openWhatsAppDialog({ mode: 'callup', playerId: waPlayerBtn.dataset.id });
-    if (target.matches('.open-whistle-session')) openWhistleDialog(target.dataset.id);
-    if (target.matches('.cancel-builder')) $('#callup-builder').classList.add('hidden');
+    if (target.id === 'open-whatsapp-week-header-btn' || target.closest('#open-whatsapp-week-header-btn')) openWhatsAppDialog({ mode: 'week' });
+    if (target.matches('.toggle-session-completed') || target.closest('.toggle-session-completed')) {
+      const completedBtn = target.closest('.toggle-session-completed') || target;
+      toggleTrainingSessionCompleted(completedBtn.dataset.id).catch(handleError);
+      return;
+    }
+    if (target.matches('.open-whistle-session') || target.closest('.open-whistle-session')) {
+      const whistleBtn = target.closest('.open-whistle-session') || target;
+      openWhistleDialog(whistleBtn.dataset.id, whistleBtn.dataset.blockIndex);
+    }
+    // Interacciones de filtros del rediseño Claude en Ejercicios
+    const ftabBtn = target.closest('.cbx-ftab');
+    if (ftabBtn) {
+      const paneName = ftabBtn.dataset.pane;
+      $$('.cbx-ftab').forEach((b) => b.classList.toggle('active', b === ftabBtn));
+      $$('.cbx-fpane').forEach((p) => {
+        p.style.display = p.dataset.pane === paneName ? 'flex' : 'none';
+        p.classList.toggle('active', p.dataset.pane === paneName);
+      });
+      return;
+    }
+
+    const dimChipBtn = target.closest('.cbx-dim-chip');
+    if (dimChipBtn) {
+      const dimVal = dimChipBtn.dataset.dim || '';
+      const form = $('#exercise-filters');
+      if (form && form.elements.dimension) {
+        form.elements.dimension.value = dimVal;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    const fchipBtn = target.closest('.cbx-chip');
+    if (fchipBtn) {
+      const filterKey = fchipBtn.dataset.filter;
+      const filterVal = fchipBtn.dataset.val;
+      const form = $('#exercise-filters');
+      if (form) {
+        if (filterKey === 'category' && form.elements.category) form.elements.category.value = filterVal;
+        if (filterKey === 'format' && form.elements.formato_juego) form.elements.formato_juego.value = filterVal;
+        if (filterKey === 'players' && form.elements.players) form.elements.players.value = filterVal;
+        if (filterKey === 'material' && form.elements.material) form.elements.material.value = filterVal;
+        if (filterKey === 'difficulty' && form.elements.difficulty) form.elements.difficulty.value = filterVal;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-filter-fav' || target.closest('#cbx-filter-fav')) {
+      const form = $('#exercise-filters');
+      if (form && form.elements.favorites) {
+        form.elements.favorites.checked = !form.elements.favorites.checked;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-filter-video' || target.closest('#cbx-filter-video')) {
+      const form = $('#exercise-filters');
+      if (form && form.elements.video) {
+        form.elements.video.checked = !form.elements.video.checked;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-clear-exercise-filters' || target.closest('#cbx-clear-exercise-filters')) {
+      const form = $('#exercise-filters');
+      if (form) {
+        if (form.elements.dimension) form.elements.dimension.value = '';
+        if (form.elements.category) form.elements.category.value = '';
+        if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
+        if (form.elements.players) form.elements.players.value = '';
+        if (form.elements.material) form.elements.material.value = '';
+        if (form.elements.difficulty) form.elements.difficulty.value = '';
+        if (form.elements.duration) form.elements.duration.value = '';
+        if (form.elements.search) form.elements.search.value = '';
+        if (form.elements.favorites) form.elements.favorites.checked = false;
+        if (form.elements.video) form.elements.video.checked = false;
+        form.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-empty-clear-btn' || target.closest('#cbx-empty-clear-btn')) {
+      if (exerciseLibraryMode === 'mine') {
+        $('#new-exercise')?.click();
+      } else {
+        const form = $('#exercise-filters');
+        if (form) {
+          if (form.elements.dimension) form.elements.dimension.value = '';
+          if (form.elements.category) form.elements.category.value = '';
+          if (form.elements.formato_juego) form.elements.formato_juego.value = 'todos';
+          if (form.elements.players) form.elements.players.value = '';
+          if (form.elements.material) form.elements.material.value = '';
+          if (form.elements.difficulty) form.elements.difficulty.value = '';
+          if (form.elements.duration) form.elements.duration.value = '';
+          if (form.elements.search) form.elements.search.value = '';
+          if (form.elements.favorites) form.elements.favorites.checked = false;
+          if (form.elements.video) form.elements.video.checked = false;
+          form.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      return;
+    }
+
+    // Claude Tácticas interactions
+    const f7Chip = target.closest('.cbx-f7-chip[data-f7-sys]');
+    if (f7Chip) {
+      claudeTacticFormation = f7Chip.dataset.f7Sys;
+      claudeTacticDraft = null;
+      renderClaudeTactics();
+      return;
+    }
+
+    const claudeToolBtn = target.closest('.cbx-tool-btn[data-board-tool]');
+    if (claudeToolBtn) {
+      const toolId = claudeToolBtn.dataset.boardTool;
+      claudeTacticTool = toolId;
+      if (claudeBoardController) claudeBoardController.setTool(toolId);
+      $$('.cbx-tool-btn[data-board-tool]').forEach((b) => b.classList.toggle('active', b === claudeToolBtn));
+      return;
+    }
+
+    const aspectChip = target.closest('.cbx-aspect-chip[data-aspect]');
+    if (aspectChip) {
+      claudeTacticAspect = aspectChip.dataset.aspect;
+      claudeTacticDraft = null;
+      renderClaudeTactics();
+      return;
+    }
+
+    if (target.id === 'cbx-toggle-rival-btn' || target.closest('#cbx-toggle-rival-btn')) {
+      claudeTacticShowRival = !claudeTacticShowRival;
+      if (!claudeTacticDraft) {
+        const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, claudeTacticShowRival);
+        claudeTacticDraft = {
+          ...aspectData,
+          id: `claude-tactic-${claudeTacticFormation}-${claudeTacticAspect}`,
+          name: `Sistema ${claudeTacticFormation} · ${aspectData.title || claudeTacticAspect}`,
+          formation: claudeTacticFormation,
+          aspect: claudeTacticAspect,
+          showOpponent: claudeTacticShowRival,
+        };
+      } else {
+        claudeTacticDraft.showOpponent = claudeTacticShowRival;
+        if (claudeTacticShowRival) {
+          const aspectData = getAspectBoardData(claudeTacticFormation, claudeTacticAspect, true);
+          claudeTacticDraft.opponent = aspectData.opponent;
+        }
+      }
+      renderClaudeTactics();
+      toast(claudeTacticShowRival ? 'Rival visible en la pizarra.' : 'Rival oculto. Mostrando solo tu equipo.');
+      return;
+    }
+
+    if (target.id === 'cbx-btn-anim' || target.closest('#cbx-btn-anim')) {
+      const found = TACTICAS_INTERACTIVAS.find((t) => t.formacion === claudeTacticFormation) || TACTICAS_INTERACTIVAS[0];
+      if (found) {
+        showTacticaInteractiva(found.id);
+      } else {
+        toast('Animación no disponible para este sistema.');
+      }
+      return;
+    }
+
+    if (target.id === 'cbx-new-tactic-btn' || target.closest('#cbx-new-tactic-btn')) {
+      const base = defaultTactic('F7', claudeTacticFormation);
+      claudeTacticDraft = {
+        ...base,
+        id: `claude-tactic-${claudeTacticFormation}-${Date.now()}`,
+        name: `Táctica ${claudeTacticFormation}`,
+        formation: claudeTacticFormation,
+        moves: [],
+      };
+      renderClaudeTactics();
+      $('#cbx-tactics-pitch-board')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast('Pizarra lista para crear la nueva táctica.');
+      return;
+    }
+
+    if (target.id === 'cbx-save-tactic-btn' || target.closest('#cbx-save-tactic-btn')) {
+      const name = claudeTacticDraft?.name || `Sistema ${claudeTacticFormation}`;
+      const saved = buildTactic({
+        name,
+        formation: claudeTacticFormation,
+        format: 'F7',
+        team: claudeTacticDraft?.team,
+        opponent: claudeTacticDraft?.opponent,
+        ball: claudeTacticDraft?.ball,
+        moves: claudeTacticDraft?.moves,
+        showOpponent: claudeTacticShowRival,
+      }, {
+        id: uid(),
+        createdAt: Date.now(),
+        now: Date.now(),
+      });
+      await put('settings', { ...saved, recordType: 'tactic' });
+      await refresh(true);
+      renderTactics();
+      toast('Táctica guardada correctamente.');
+      return;
+    }
+
+    if (target.id === 'cbx-clear-tactic-btn' || target.closest('#cbx-clear-tactic-btn')) {
+      claudeTacticDraft = null;
+      renderClaudeTactics();
+      toast('Pizarra restablecida a la posición base del aspecto.');
+      return;
+    }
+
+    const viewSavedTacticBtn = target.closest('.cbx-btn-view-tactic[data-id]');
+    if (viewSavedTacticBtn) {
+      const tacId = viewSavedTacticBtn.dataset.id;
+      const tac = state.tactics.find((t) => t.id === tacId);
+      if (tac) {
+        claudeTacticFormation = tac.formation || '1-3-2-1';
+        claudeTacticDraft = { ...tac };
+        renderClaudeTactics();
+        $('#cbx-tactics-pitch-board')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        showTacticDetail(tacId);
+      }
+      return;
+    }
+
+    if (target.matches('.cancel-builder')) { $('#callup-builder').classList.add('hidden'); pendingPrepAfterCallupMatchId = ''; }
     if (target.matches('.cancel-training')) $('#training-builder').classList.add('hidden');
     if (target.matches('.cancel-session')) $('#session-builder').classList.add('hidden');
     if (target.matches('.cancel-tactic')) $('#tactic-builder').classList.add('hidden');
@@ -7417,7 +12933,31 @@ function wireEvents() {
     const editPlayerStatsBtn = target.closest('.edit-player-stats');
     if (editPlayerStatsBtn) editPlayerStats(editPlayerStatsBtn.dataset.playerId, editPlayerStatsBtn.dataset.scope);
     const deletePlayerBtn = target.closest('.delete-player');
-    if (deletePlayerBtn && await askConfirmation({ title: 'Borrar jugador', message: 'Los históricos conservarán su identificador, pero la ficha del jugador se eliminará.', acceptLabel: 'Borrar', danger: true })) { await remove('players', deletePlayerBtn.dataset.id); await refresh(true); renderPlayers(); }
+    const restorePlanBtn = target.closest('.cbx-restore-callup-plan');
+    if (restorePlanBtn) { callupSuggestedPlans.delete(restorePlanBtn.dataset.callupId); renderCallups(); }
+    if (target.matches('[data-callup-plan-mode]')) { callupSuggestedPlans.delete(target.dataset.callupId); callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
+    const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
+    if (genRotationBtn) { suggestCallupRotation(genRotationBtn.dataset.callupId); }
+    const editPlayer=target.closest('[data-minute-edit]');
+    if(editPlayer) {
+      const timeline=editPlayer.closest('[data-minute-timeline]');
+      const playerId=editPlayer.dataset.minuteEdit;
+      if(timeline?.dataset.minuteTimeline.startsWith('prep:'))openPrepWindowEditor(playerId);
+      else {
+        const card=editPlayer.closest('[data-callup-id]');
+        const callup=state.callups.find(c=>c.id===card?.dataset.callupId);
+        if(callup?.matchId)copyCallupPlanToPrep(callup.id,callup.matchId).then(()=>openPrepWindowEditor(playerId)).catch(handleError);
+      }
+    }
+    const editCallupWindows=target.closest('.cbx-edit-callup-windows');
+    if(editCallupWindows) copyCallupPlanToPrep(editCallupWindows.dataset.callupId,editCallupWindows.dataset.matchId).then(openPrepWindowEditor).catch(handleError);
+    const copyCallupPlanBtn=target.closest('.cbx-copy-callup-plan');
+    if(copyCallupPlanBtn) copyCallupPlanToPrep(copyCallupPlanBtn.dataset.callupId,copyCallupPlanBtn.dataset.matchId).catch(handleError);
+    const printCallupPlanBtn=target.closest('.cbx-print-callup-plan');
+    if(printCallupPlanBtn) {
+      try {const moments=callupPlanMoments(printCallupPlanBtn.dataset.callupId,printCallupPlanBtn.dataset.matchId);printMatchPlan(printCallupPlanBtn.dataset.matchId,state,{momentsDraft:moments,teamDraft:moments[0].team,formacionDraft:moments[0].formation});} catch(error) {handleError(error);}
+    }
+    if (target.matches('.callup-open-prep')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
     if (target.matches('.delete-callup')) await deleteCallup(target.dataset.id);
     if (target.matches('.edit-callup')) callupBuilder('', target.dataset.id);
     if (target.matches('.edit-match')) editMatch(target.dataset.id);
@@ -7430,7 +12970,29 @@ function wireEvents() {
     if (target.matches('.edit-attendance')) attendanceBuilder('', target.dataset.id);
     if (target.matches('.callup-match')) { $$('.bottom-nav button').forEach((item) => item.classList.toggle('active', item.dataset.view === 'convocatorias')); $$('.view').forEach((view) => view.classList.toggle('active', view.id === 'convocatorias')); callupBuilder(target.dataset.id); }
     if (target.matches('.delete-match')) await deleteMatch(target.dataset.id);
-    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id);
+    if (target.matches('.prep-open')) openPreparacionEditor(target.dataset.id).then(() => { if (target.dataset.focusPlan) document.querySelector('#prep-plan-tramos')?.scrollIntoView({block:'start',behavior:'smooth'}); }).catch(handleError);
+    if (target.matches('.prep-print-plan')) printMatchPlan(target.dataset.id, state);
+    if (target.matches('#prep-print-banner')) {
+      const targetMatch = state.matches.find((m) => prepForMatch(m.id)) || state.matches.find((m) => m.status !== 'finished') || state.matches[0];
+      if (targetMatch) printMatchPlan(targetMatch.id, state);
+      else toast('No hay partidos disponibles para imprimir.');
+    }
+    if (target.matches('.cbx-live-print-plan')) {
+      const matchId = state.timer?.matchId || state.matches.find((m) => prepForMatch(m.id))?.id || state.matches[0]?.id;
+      if (matchId) printMatchPlan(matchId, state);
+      else toast('No hay partido activo para imprimir.');
+    }
+    if (target.matches('.prep-open-from-cal')) { showView('preparacion'); openPreparacionEditor(target.dataset.id).catch(handleError); }
+    if (target.matches('.prep-view-live')) {
+      const prep = prepForMatch(target.dataset.id);
+      if (state.timer && state.timer.phase !== 'ready' && state.timer.matchId !== target.dataset.id) return toast('Hay otro partido en juego. Termínalo antes de abrir este plan.');
+      if (prep && (!state.timer || state.timer.matchId !== target.dataset.id)) await applyPreparacionToLive(prep);
+      showView('partido');
+      const plan = $('#live-match .cbx-live-plan');
+      if (plan) plan.open = true;
+    }
+    if (target.matches('.prep-create-callup')) { pendingPrepAfterCallupMatchId = target.dataset.id; showView('convocatorias'); callupBuilder(target.dataset.id); }
+    if (target.matches('.prep-view-tactic')) { openPreparacionEditor(target.dataset.id).then(() => $('#prep-gif')?.click()).catch(handleError); }
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
@@ -7509,6 +13071,23 @@ function wireEvents() {
     }
     if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
     if (target.id === 'prepare-live') await prepareLive();
+    const planPrintBtn = target.closest('.cbx-plan-print');
+    if (planPrintBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const matchId = planPrintBtn.dataset.matchId || state.timer?.matchId;
+      printMatchPlan(matchId, state);
+      return;
+    }
+    if (target.matches('.cbx-plan-apply')) await applySavedPlanMoment(target.dataset.momentId);
+    if (target.matches('.cbx-plan-defer') && state.timer) {
+      state.timer.planDeferred = [...new Set([...(state.timer.planDeferred || []), target.dataset.momentId])];
+      await persistTimer(); renderLive(); renderDelegate();
+    }
+    if (target.matches('.cbx-plan-close') && state.timer) {
+      state.timer.planAlertClosed = [...new Set([...(state.timer.planAlertClosed || []), target.dataset.momentId])];
+      await persistTimer(); renderLive(); renderDelegate();
+    }
     if (target.id === 'advance-live') await advanceLivePhase();
     if (target.id === 'make-sub') await makeSubstitution();
     if (target.id === 'exit-live') await cancelLiveMatch();
@@ -7701,6 +13280,18 @@ async function init() {
   addSessionForm.elements.dateDay.innerHTML = dayOptions();
   addSessionForm.elements.dateMonth.innerHTML = monthOptions();
   addSessionForm.elements.dateYear.innerHTML = yearOptions();
+
+  document.addEventListener('change', (event) => {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+    const match = /^(.*)(Month|Year)$/.exec(select.name || '');
+    if (!match) return;
+    const name = match[1];
+    const form = select.closest('form');
+    if (!form) return;
+    refreshDateDayOptions(form, name);
+  });
+
   const categoryOptions = CANONICAL_V2_CATEGORIES.map((category) => `<option value="${category}">${category}</option>`).join('');
   $('#exercise-form').elements.category.innerHTML = categoryOptions;
   $('#exercise-filters').elements.category.insertAdjacentHTML(
@@ -7736,6 +13327,7 @@ async function init() {
     });
   }
   wireEvents(); networkStatus();
+  observeComponentColors();
   realtimeCloudStore = createCampoBaseCloudStore();
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
@@ -7748,7 +13340,7 @@ async function init() {
     || location.hostname.startsWith('192.168.')
     || location.hostname.startsWith('10.');
   const isValidationPreview = location.pathname.endsWith('/validacion-estabilidad.html');
-  if ('serviceWorker' in navigator && !isValidationPreview) {
+  if ('serviceWorker' in navigator && !isValidationPreview && !window.__CAMPOBASE_READONLY_PREVIEW) {
     if (isLocal) {
       const reloadKey = 'campobase.localServiceWorkerReloaded';
       const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
@@ -7766,7 +13358,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20260924-v59-delegate-views-visible-render-fix').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261006-telefonos-padres-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -7845,7 +13437,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPreparaciones, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 

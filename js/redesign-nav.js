@@ -5,8 +5,8 @@
 // Totalmente desacoplado de la lógica de negocio y datos reales.
 // ==========================================================================
 
-import { renderTodayDashboard } from './today-dashboard.js?v=2456';
-import { refreshStaffView, initStaffManagement } from './staff-management.js';
+import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
+import { refreshStaffView, initStaffManagement } from './staff-management.js?v=claude-tecnicos-1';
 import './pwa-install-manager.js?v=1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -15,7 +15,7 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 // Mapeo entre las 5 pestañas maestras y sus subvistas operativas
 export const MODULE_CONFIG = {
   inicio: {
-    label: 'Inicio',
+    label: 'Hoy',
     icon: `<svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
     defaultView: 'hoy',
     views: ['hoy'],
@@ -35,7 +35,7 @@ export const MODULE_CONFIG = {
       },
       {
         id: 'cuerpo-tecnico',
-        label: 'Cuerpo Técnico',
+        label: 'Técnicos',
         desc: 'Entrenadores, preparadores y delegados',
         icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>`,
       },
@@ -48,7 +48,7 @@ export const MODULE_CONFIG = {
     ],
   },
   partidos: {
-    label: 'Partidos',
+    label: 'Partido',
     icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="3"/></svg>`,
     defaultView: 'convocatorias',
     views: ['convocatorias', 'preparacion', 'partido', 'calendario'],
@@ -61,7 +61,7 @@ export const MODULE_CONFIG = {
       },
       {
         id: 'preparacion',
-        label: 'Alineación',
+        label: 'Preparación',
         desc: 'Titulares, suplentes y táctica',
         icon: `<svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="3"/></svg>`,
       },
@@ -80,10 +80,10 @@ export const MODULE_CONFIG = {
     ],
   },
   entrenos: {
-    label: 'Entrenos',
+    label: 'Entreno',
     icon: `<svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 18h6"/><path d="M9 10h6"/></svg>`,
     defaultView: 'sesiones',
-    views: ['sesiones', 'ejercicios'],
+    views: ['sesiones', 'ejercicios', 'tacticas'],
     subTabs: [
       {
         id: 'sesiones',
@@ -97,29 +97,122 @@ export const MODULE_CONFIG = {
         desc: 'Biblioteca de fichas tácticas',
         icon: `<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
       },
-    ],
-  },
-  mas: {
-    label: 'Más',
-    icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/></svg>`,
-    defaultView: 'tacticas',
-    views: ['tacticas', 'ajustes'],
-    subTabs: [
       {
         id: 'tacticas',
-        label: 'Pizarra Táctica',
+        label: 'Tácticas',
         desc: 'Pizarra táctica interactiva libre',
         icon: `<svg viewBox="0 0 24 24"><path d="m3 3 18 18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`,
       },
-      {
-        id: 'ajustes',
-        label: 'Ajustes y Tema',
-        desc: 'Escudo, equipo, colores y PIN',
-        icon: `<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
-      },
     ],
   },
+  ajustes: {
+    label: 'Ajustes',
+    icon: `<svg viewBox="0 0 24 24"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    defaultView: 'ajustes',
+    views: ['ajustes'],
+    subTabs: [],
+  },
 };
+
+const SHELL_GROUPS = [
+  ['Equipo', [['hoy', 'Hoy'], ['plantilla', 'Plantilla'], ['cuerpo-tecnico', 'Cuerpo técnico'], ['asistencia', 'Asistencia']]],
+  ['Partido', [['convocatorias', 'Convocatoria'], ['preparacion', 'Preparación'], ['partido', 'Partido en vivo'], ['calendario', 'Calendario']]],
+  ['Entrenamiento', [['sesiones', 'Sesiones'], ['ejercicios', 'Ejercicios'], ['tacticas', 'Tácticas']]],
+  ['Sistema', [['ajustes', 'Ajustes']]],
+];
+
+// Presentation only: keep the existing role and permission sources authoritative.
+export function isShellViewAllowed(viewId) {
+  if (typeof window === 'undefined') return true;
+  const app = window.__campobase;
+  const role = app?.state?.role;
+  if (viewId === 'ajustes' && role === 'demo') return false;
+  if (document.body.classList.contains('delegate-mode')) {
+    if (viewId === 'ajustes') return false;
+    const permissions = app?.getDelegatePermissions?.() || app?.state?.settings?.delegatePermissions || ['partido'];
+    if (viewId === 'partido' || viewId === 'delegado') return permissions.includes('partido') || permissions.includes('delegado');
+    return permissions.includes(viewId);
+  }
+  const allowed = window.__campobaseAllowedViews;
+  return !Array.isArray(allowed) || allowed.includes(viewId);
+}
+
+function renderClaudeShell() {
+  if ($('#cb-claude-sidebar')) return;
+  const sidebar = document.createElement('aside');
+  sidebar.id = 'cb-claude-sidebar';
+  sidebar.setAttribute('aria-label', 'Navegación principal');
+  sidebar.innerHTML = `<div class="cb-shell-brand"><img alt="Escudo del equipo"><div><p>Gestión de equipo</p><strong></strong></div></div>
+    <nav>${SHELL_GROUPS.map(([label, views]) => `<section class="cb-shell-group"><h2>${label}</h2>${views.map(([id, title]) => `<button type="button" data-target-view="${id}">${title}</button>`).join('')}</section>`).join('')}</nav>
+    <div class="cb-shell-role"></div>`;
+  document.body.prepend(sidebar);
+  const search = document.createElement('div');
+  search.className = 'cbx-global-search';
+  search.innerHTML = '<input type="search" placeholder="Buscar jugador, ejercicio o partido…" aria-label="Buscar jugadores, ejercicios y partidos"><div class="cbx-search-results" hidden></div>';
+  $('.topbar .status')?.before(search);
+  const input = search.querySelector('input'), results = search.querySelector('div');
+  input.addEventListener('input', () => {
+    results.replaceChildren();
+    const query = input.value.trim().toLocaleLowerCase('es');
+    results.hidden = query.length < 2;
+    if (results.hidden) return;
+    const state = window.__campobase?.state || {};
+    const groups = [['players','plantilla','Jugador'],['exercises','ejercicios','Ejercicio'],['matches','calendario','Partido']];
+    for (const [key,view,label] of groups) {
+      if (!isShellViewAllowed(view)) continue;
+      for (const record of (state[key] || []).filter(item => String(item.name || item.opponent || '').toLocaleLowerCase('es').includes(query)).slice(0,5)) {
+        const button = document.createElement('button'); button.type = 'button';
+        button.textContent = `${label} · ${record.name || record.opponent}`;
+        button.addEventListener('click', () => {
+          triggerStandardView(view); results.hidden = true;
+          if (key === 'matches') window.__campobase?.showMatchDetail?.(record.id);
+          else if (key === 'exercises') window.__campobase?.showExerciseDetail?.(record.id);
+          else { const filter = $('#global-search'); if (filter) { filter.value = record.name; filter.dispatchEvent(new Event('input', {bubbles:true})); } }
+        }); results.append(button);
+      }
+    }
+    if (!results.childElementCount) results.textContent = 'Sin resultados';
+  });
+  input.addEventListener('keydown', event => { if (event.key === 'Escape') results.hidden = true; });
+  document.addEventListener('click', event => { if (!search.contains(event.target)) results.hidden = true; });
+
+  const title = document.createElement('p');
+  title.id = 'cb-shell-view-title';
+  $('.topbar-brand > div')?.append(title);
+  const identityObserver = new MutationObserver(syncClaudeShell);
+  for (const element of [$('#topbar-team-name'), $('#topbar-club-crest'), $('#role-label')]) {
+    if (element) identityObserver.observe(element, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['src'] });
+  }
+  new MutationObserver(syncClaudeShell).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  syncClaudeShell();
+}
+
+function syncClaudeShell() {
+  const sidebar = $('#cb-claude-sidebar');
+  if (!sidebar) return;
+  const view = getActiveViewId();
+  const current = view === 'delegado' ? 'partido' : view;
+  const setText = (element, value) => { if (element && element.textContent !== value) element.textContent = value; };
+  setText(sidebar.querySelector('.cb-shell-brand strong'), $('#topbar-team-name')?.textContent || 'CampoBase');
+  setText(sidebar.querySelector('.cb-shell-role'), $('#role-label')?.textContent || 'CampoBase');
+  const crest = $('#topbar-club-crest')?.getAttribute('src');
+  if (crest && sidebar.querySelector('img').getAttribute('src') !== crest) sidebar.querySelector('img').setAttribute('src', crest);
+  const title = SHELL_GROUPS.flatMap(([, views]) => views).find(([id]) => id === current)?.[1] || 'CampoBase';
+  setText($('#cb-shell-view-title'), title);
+  sidebar.querySelectorAll('[data-target-view]').forEach((button) => {
+    button.hidden = !isShellViewAllowed(button.dataset.targetView);
+    if (button.dataset.targetView === current) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+  sidebar.querySelectorAll('.cb-shell-group').forEach((group) => { group.hidden = !group.querySelector('button:not([hidden])'); });
+  $$('#cb-bottom-nav .cb-nav-tab').forEach((button) => {
+    const config = MODULE_CONFIG[button.dataset.module];
+    const allowed = config?.views.some(isShellViewAllowed);
+    button.hidden = !allowed;
+    if (button.classList.contains('active')) button.setAttribute('aria-current', 'page');
+    else button.removeAttribute('aria-current');
+  });
+}
 
 export function getActiveViewId() {
   const activeView = $('.view.active');
@@ -135,6 +228,7 @@ export function getActiveModule(viewId) {
 }
 
 export function triggerStandardView(viewId) {
+  if (!isShellViewAllowed(viewId)) return;
   if (Array.isArray(window.__campobaseAllowedViews)) {
     const allowed = window.__campobaseAllowedViews.includes(viewId)
       || (viewId === 'delegado' && window.__campobaseAllowedViews.includes('partido'))
@@ -226,6 +320,7 @@ export function installSubNavDelegation() {
     const pill = event.target?.closest?.('.cb-sub-pill, [data-target-view]');
     if (!pill) return;
     const viewId = pill.dataset.targetView;
+    if (!isShellViewAllowed(viewId)) return;
     if (!viewId) return;
     event.preventDefault();
     triggerStandardView(viewId);
@@ -502,6 +597,7 @@ export function updateNavState() {
     btn.classList.toggle('active', isActive);
   });
 
+  syncClaudeShell();
   renderSubNav();
 }
 
@@ -768,6 +864,7 @@ export function initRedesign() {
   syncTopbarHeight();
   installSubNavDelegation();
   renderBottomNav();
+  renderClaudeShell();
   renderSubNav();
   initStaffManagement();
   initBottomCloseControls();

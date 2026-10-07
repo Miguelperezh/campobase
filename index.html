@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <script src="js/preview-readonly.js?v=claude-partido-2"></script>
+  <script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=claude-partido-2","./js/live-tactics.js":"./js/live-tactics.js?v=claude-partido-2","./js/domain.js":"./js/domain.js?v=claude-partido-4","./js/match-moments.js":"./js/match-moments.js?v=claude-partido-5"}}</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
@@ -12,10 +14,18 @@
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260924-v59-delegate-views-visible-render-fix">
-  <link rel="stylesheet" href="styles-redesign.css?v=20260924-v59-delegate-views-visible-render-fix">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Oswald:wght@600;700&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260927-v66-real-calendar-dates">
+  <link rel="stylesheet" href="styles-redesign.css?v=color-controls-8">
   <link rel="stylesheet" href="billing.css?v=1">
+  <link rel="stylesheet" href="css/campobase-diseno.css?v=hoy-real-2">
+  <link rel="stylesheet" href="css/claude-shell.css?v=color-controls-8">
+  <link rel="stylesheet" href="css/claude-hoy.css?v=goal-series-1">
+  <link rel="stylesheet" href="css/claude-plantilla.css?v=telefonos-padres-1">
+  <link rel="stylesheet" href="css/claude-partido.css?v=plan-intuitivo-5">
+  <link rel="stylesheet" href="css/claude-entreno.css?v=color-controls-8">
+  <link rel="stylesheet" href="css/match-window-editor.css?v=windows-1">
+  <link rel="stylesheet" href="css/theme-component-colors.css?v=claude-proposal-3">
   <style>
     #network-label { display: none !important; }
     body.offline #network-label, body.demo-mode #network-label { display: inline !important; }
@@ -73,18 +83,19 @@
       try {
         new MutationObserver(sanitizeNetworkLabel).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
       } catch (e) {}
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
         navigator.serviceWorker.getRegistration().then(function(reg) {
           if (reg) reg.update();
         }).catch(function() {});
       }
     })();
   </script>
+<link rel="stylesheet" href="styles-claude-proposal.css?v=claude-proposal-3">
 </head>
 <body class="auth-locked">
-  <header class="topbar">
-    <div class="topbar-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
-    <div class="status"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label"></span><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
+  <header class="topbar" id="cbx-header">
+    <div class="topbar-brand" id="cbx-header-brand"><img src="icons/escudo.png" alt="Escudo C.F. Unión Viera" class="club-crest" id="topbar-club-crest"><div><p class="eyebrow">Gestión de equipo</p><h1 id="topbar-team-name">CampoBase</h1></div></div>
+    <div class="status" id="cbx-header-actions"><strong id="active-format" class="format-badge">F7 · 7 en campo · 70 min</strong><span id="role-label"></span><span id="network-dot" aria-hidden="true"></span><span id="network-label"></span><button type="button" id="topbar-quick-color-btn" class="topbar-gear-btn" title="Personalizar colores de la aplicación" aria-label="Personalizar colores">⚙️</button><button id="logout" class="secondary compact" type="button">Cerrar sesión</button></div>
   </header>
   <header id="cb-delegate-topbar" class="cb-delegate-topbar" aria-label="Cabecera del delegado">
     <div class="cb-delegate-topbar-info">
@@ -99,38 +110,40 @@
     <section id="hoy" class="view active" aria-labelledby="title-hoy">
       <div class="section-head today-section-head">
         <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
+        <div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="hoy" title="Ajustar colores de Tu Día" aria-label="Ajustar colores">⚙️</button></div>
       </div>
       <div id="today-dashboard"><div class="panel empty">Cargando el día…</div></div>
     </section>
 
-    <section id="plantilla" class="view" aria-labelledby="title-plantilla">
-      <div class="section-head"><div><p class="eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="secondary" id="open-set-pieces-btn">🎯 Balón parado y Capitanes</button><button data-dialog="player-dialog" class="primary">+ Jugador</button></div></div>
+    <section id="plantilla" class="view cbx-plantilla" aria-labelledby="title-plantilla">
+      <div class="section-head cbx-banner"><div><p class="cbx-eyebrow">Equipo</p><h2 id="title-plantilla">Plantilla</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="plantilla" title="Ajustar colores de Plantilla" aria-label="Ajustar colores">⚙️</button><button type="button" class="cbx-btn-light" id="open-set-pieces-btn">Balón parado y Capitanes</button><button data-dialog="player-dialog" class="cbx-btn">+ Jugador</button></div></div>
       <article id="demo-team-panel" class="panel hidden"><h3>Equipo de demostración</h3><p class="meta">Esta información es temporal, no se sincroniza y se elimina al cerrar la demo o al cumplirse dos horas.</p><form id="demo-team-form"><label>Nombre del equipo de prueba<input name="teamName" maxlength="100" required placeholder="Ej. Equipo de prueba"></label><label>Formato<select name="format"><option value="F7">Fútbol 7</option><option value="F11">Fútbol 11</option></select></label><button class="primary" type="submit">Guardar equipo de prueba</button></form></article>
-      <div id="plantilla-staff-top" class="plantilla-staff-top"></div>
-      <div id="squad-stats" class="stats"></div>
-      <div id="plantilla-specialists-bar" class="plantilla-specialists-bar"></div>
-      <div id="squad-leaderboards" class="squad-leaderboards"></div>
-      <div id="players-list" class="card-grid"></div>
+      <div id="plantilla-staff-top" class="plantilla-staff-top cbx-plantilla-staff"></div>
+      <div id="squad-stats" class="stats cbx-plantilla-stats"></div>
+      <div id="plantilla-specialists-bar" class="plantilla-specialists-bar cbx-plantilla-specialists"></div>
+      <div id="squad-leaderboards" class="squad-leaderboards cbx-plantilla-leaders"></div>
+      <div id="players-list" class="card-grid cbx-plantilla-players"></div>
     </section>
 
-    <section id="cuerpo-tecnico" class="view" aria-labelledby="title-cuerpo-tecnico">
-      <div class="section-head">
-        <div><p class="eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
+    <section id="cuerpo-tecnico" class="view cbx-equipo-tecnicos" aria-labelledby="title-cuerpo-tecnico">
+      <div class="section-head cbx-banner">
+        <div><p class="cbx-eyebrow">Equipo · Estructura técnica</p><h2 id="title-cuerpo-tecnico">Cuerpo Técnico</h2></div>
         <div class="button-row">
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="cuerpo-tecnico" title="Ajustar colores de Cuerpo Técnico" aria-label="Ajustar colores">⚙️</button>
           <span class="badge staff-count-badge" id="staff-total-count">0 miembros</span>
-          <button type="button" id="new-staff-btn" class="primary">+ Añadir técnico</button>
+          <button type="button" id="new-staff-btn" class="cbx-btn">+ Añadir técnico</button>
         </div>
       </div>
       <div id="staff-list-container" class="staff-container"></div>
     </section>
 
-    <section id="convocatorias" class="view" aria-labelledby="title-callups">
-      <div class="section-head"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><button id="new-callup" class="primary">+ Convocatoria</button></div>
+    <section id="convocatorias" class="view cbx-partido-convocatorias" aria-labelledby="title-callups">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Rotación justa</p><h2 id="title-callups">Convocatorias</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="convocatorias" title="Ajustar colores de Convocatorias" aria-label="Ajustar colores">⚙️</button><button id="new-callup" class="primary">+ Convocatoria</button></div></div>
       <div id="callup-builder" class="panel hidden"></div><div id="callups-list" class="stack"></div>
     </section>
 
-    <section id="partido" class="view" aria-labelledby="title-live">
-      <div class="section-head"><div><p class="eyebrow">Calculadora en tiempo real</p><h2 id="title-live">Partido en vivo</h2></div></div>
+    <section id="partido" class="view cbx-partido-vivo" aria-labelledby="title-live">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Calculadora en tiempo real</p><h2 id="title-live">Partido en vivo</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="partido" title="Ajustar colores de Partido en vivo" aria-label="Ajustar colores">⚙️</button></div></div>
       <div id="live-match" class="panel"></div>
     </section>
 
@@ -138,61 +151,523 @@
       <div id="delegate-match"></div>
     </section>
 
-    <section id="preparacion" class="view" aria-labelledby="title-preparacion">
-      <div class="section-head"><div><p class="eyebrow">Alineación previa</p><h2 id="title-preparacion">Preparación de partido</h2></div></div>
+    <section id="preparacion" class="view cbx-partido-preparacion" aria-labelledby="title-preparacion">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Alineación previa</p><h2 id="title-preparacion">Preparación de partido</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="preparacion" title="Ajustar colores de Preparación" aria-label="Ajustar colores">⚙️</button><button type="button" id="prep-print-banner" class="secondary cbx-btn-sub" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button></div></div>
       <div id="preparacion-list" class="stack"></div>
       <div id="preparacion-editor" class="panel hidden"></div>
     </section>
 
-    <section id="calendario" class="view" aria-labelledby="title-calendar">
-      <div class="section-head"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><button data-dialog="match-dialog" class="primary">+ Partido</button></div>
+    <section id="calendario" class="view cbx-partido-calendario" aria-labelledby="title-calendar">
+      <div class="section-head cbx-banner"><div><p class="eyebrow">Temporada</p><h2 id="title-calendar">Calendario y resultados</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="calendario" title="Ajustar colores de Calendario" aria-label="Ajustar colores">⚙️</button><button data-dialog="match-dialog" class="primary">+ Partido</button></div></div>
       <div id="matches-list" class="stack"></div>
     </section>
 
-    <section id="asistencia" class="view" aria-labelledby="title-training">
-      <div class="section-head"><div><p class="eyebrow">Entrenos y partidos</p><h2 id="title-training">Asistencia</h2></div><button id="new-training" class="primary">+ Registro</button></div>
+    <section id="asistencia" class="view cbx-equipo-asistencia" aria-labelledby="title-training">
+      <div class="section-head cbx-banner"><div><p class="cbx-eyebrow">Entrenos y partidos</p><h2 id="title-training">Asistencia</h2></div><div class="button-row"><button type="button" class="cbx-context-gear-btn" data-gear-target="asistencia" title="Ajustar colores de Asistencia" aria-label="Ajustar colores">⚙️</button><button id="new-training" class="cbx-btn">+ Registro</button></div></div>
       <div id="attendance-stats" class="stack"></div>
       <div id="training-builder" class="panel hidden"></div><div id="trainings-list" class="stack"></div>
     </section>
 
     <section id="ejercicios" class="view" aria-labelledby="title-exercises">
-      <div class="section-head"><div><p class="eyebrow">Planificación de entrenamientos</p><h2 id="title-exercises">Ejercicios</h2></div><div class="button-row"><button type="button" id="new-exercise" data-dialog="exercise-dialog" class="primary">+ Ejercicio</button><button id="new-session-exercises" class="secondary">+ Sesión</button></div></div>
+      <div class="section-head cbx-banner">
+        <div>
+          <p class="cbx-eyebrow eyebrow">Planificación de entrenamientos</p>
+          <h2 id="title-exercises">Ejercicios</h2>
+        </div>
+        <div class="button-row">
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="ejercicios" title="Ajustar colores de Ejercicios" aria-label="Ajustar colores">⚙️</button>
+          <button type="button" id="new-exercise" data-dialog="exercise-dialog" class="primary cbx-btn-main">+ Ejercicio</button>
+          <button id="new-session-exercises" class="secondary cbx-btn-sub">+ Sesión</button>
+        </div>
+      </div>
       <div class="exercise-library-tabs" role="tablist" aria-label="Tipo de biblioteca de ejercicios">
-        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca <span id="all-exercises-count" class="exercise-library-tab-count"></span></button>
-        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
+        <button type="button" class="exercise-library-tab active" data-exercise-library-mode="all" role="tab" aria-selected="true">Biblioteca · <span id="all-exercises-count" class="exercise-library-tab-count"></span></button>
+        <button type="button" class="exercise-library-tab" data-exercise-library-mode="mine" role="tab" aria-selected="false">Mis ejercicios · <span id="my-exercises-count" class="exercise-library-tab-count"></span></button>
       </div>
       <form id="exercise-filters" class="panel exercise-filters">
-        <label>Formato<select name="formato_juego" id="filter-formato-juego"><option value="todos" selected>Todos</option><option value="futbol_7">Fútbol 7</option><option value="futbol_11">Fútbol 11</option></select></label>
-        <label>Categoría<select name="category"><option value="">Todas las categorías</option></select></label>
-        <label>Carácter<select name="ludico" id="filter-ludico"><option value="" selected>Todos</option><option value="ludico">Lúdico</option><option value="no_ludico">No lúdico</option></select></label>
-        <label>N.º de jugadores<select name="players"><option value="">Cualquier número</option></select></label>
-        <label>Material<select name="material"><option value="">Todos los materiales</option></select></label>
-        <label>Dificultad<select name="difficulty"><option value="">Todas las dificultades</option><option value="Baja">Baja</option><option value="Media">Media</option><option value="Alta">Alta</option></select></label>
-        <label class="favorite-filter"><input name="favorites" type="checkbox"> Solo favoritos</label>
-        <label class="favorite-filter"><input name="video" type="checkbox"> Solo con video</label>
+        <div class="cbx-filter-card">
+          <!-- Dimensiones de trabajo en Fútbol 7 (Multi-dimensional tags) -->
+          <div class="cbx-filter-dims-container">
+            <div class="cbx-filter-dims-header">
+              <span class="cbx-filter-dims-label">Dimensión de trabajo (Fútbol 7)</span>
+            </div>
+            <div class="cbx-filter-dims-row" role="toolbar" aria-label="Dimensiones de entrenamiento">
+              <button type="button" class="cbx-dim-chip active" data-dim="">Todas</button>
+              <button type="button" class="cbx-dim-chip" data-dim="tactica">⚽ Táctica</button>
+              <button type="button" class="cbx-dim-chip" data-dim="tecnica">⚡ Técnica / Tecnificación</button>
+              <button type="button" class="cbx-dim-chip" data-dim="fisica">💪 Física</button>
+              <button type="button" class="cbx-dim-chip" data-dim="ludico">🎮 Lúdico / Juegos</button>
+              <button type="button" class="cbx-dim-chip" data-dim="finalizacion">🎯 Finalización</button>
+              <button type="button" class="cbx-dim-chip" data-dim="calentamiento">🔥 Calentamiento</button>
+              <button type="button" class="cbx-dim-chip" data-dim="porteros">🧤 Porteros</button>
+            </div>
+          </div>
+
+          <!-- Filtros directos y buscador -->
+          <div class="cbx-filter-controls-grid">
+            <div class="cbx-filter-control-item cbx-filter-search-box">
+              <label for="cbx-filter-search">Buscar</label>
+              <input type="search" id="cbx-filter-search" name="search" placeholder="🔍 Buscar por nombre, tarea, concepto..." class="cbx-filter-input" autocomplete="off">
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-formato-juego">Formato</label>
+              <select name="formato_juego" id="filter-formato-juego" class="cbx-filter-select">
+                <option value="todos" selected>Todos los formatos</option>
+                <option value="futbol_7">Fútbol 7</option>
+                <option value="futbol_11">Fútbol 11</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-difficulty">Dificultad</label>
+              <select name="difficulty" id="filter-difficulty" class="cbx-filter-select">
+                <option value="">Todas las dificultades</option>
+                <option value="Baja">Baja</option>
+                <option value="Media">Media</option>
+                <option value="Alta">Alta</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-players">Jugadores</label>
+              <select name="players" id="filter-players" class="cbx-filter-select">
+                <option value="">Cualquier número</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-material">Material</label>
+              <select name="material" id="filter-material" class="cbx-filter-select">
+                <option value="">Todos los materiales</option>
+              </select>
+            </div>
+            <div class="cbx-filter-control-item">
+              <label for="filter-duration">Duración</label>
+              <select name="duration" id="filter-duration" class="cbx-filter-select">
+                <option value="">Cualquier duración</option>
+                <option value="<=5">≤ 5 min</option>
+                <option value="6-10">6–10 min</option>
+                <option value="11-15">11–15 min</option>
+                <option value="16-20">16–20 min</option>
+                <option value=">20">&gt; 20 min</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cbx-filter-bottom-bar">
+            <div class="cbx-filter-toggles">
+              <button type="button" class="cbx-toggle-chip" id="cbx-filter-fav">★ Solo favoritos</button>
+              <button type="button" class="cbx-toggle-chip" id="cbx-filter-video">▶ Solo con vídeo</button>
+            </div>
+            <span class="cbx-spacer" style="flex:1"></span>
+            <span class="cbx-filter-count" id="cbx-exercise-count"></span>
+            <button type="button" class="cbx-filter-clear-btn" id="cbx-clear-exercise-filters">Quitar filtros</button>
+          </div>
+        </div>
+
+        <div class="cbx-native-filter-fields" style="display:none">
+          <input type="hidden" name="dimension" id="filter-dimension" value="">
+          <select name="category"><option value="">Todas las categorías</option></select>
+          <input name="favorites" type="checkbox">
+          <input name="video" type="checkbox">
+        </div>
       </form>
       <div id="exercises-list" class="exercise-grid"></div>
     </section>
 
-    <section id="sesiones" class="view" aria-labelledby="title-sessions">
-      <div class="section-head"><div><p class="eyebrow">Fecha y bloques</p><h2 id="title-sessions">Sesiones de entrenamiento</h2></div><div class="button-row"><button id="new-session" class="primary">+ Sesión</button></div></div>
+    <section id="sesiones" class="view cbx-entreno-sesiones" aria-labelledby="title-sessions">
+      <div class="section-head cbx-banner">
+        <div>
+          <p class="cbx-eyebrow eyebrow">Fecha y bloques</p>
+          <h2 id="title-sessions">Sesiones de entrenamiento</h2>
+        </div>
+        <div class="button-row">
+          <button type="button" class="cbx-context-gear-btn" data-gear-target="sesiones" title="Ajustar colores de Sesiones" aria-label="Ajustar colores">⚙️</button>
+          <button id="open-whatsapp-week-header-btn" type="button" class="cbx-btn-whatsapp-week">WhatsApp semana</button>
+          <button id="new-session" class="primary">+ Sesión</button>
+        </div>
+      </div>
+      <div class="cbx-sessions-legend">
+        <span><i class="legend-warmup"></i>Calentamiento</span>
+        <span><i class="legend-main"></i>Parte principal</span>
+        <span><i class="legend-game"></i>Juego final</span>
+      </div>
       <div id="session-builder" class="panel hidden"></div>
       <div id="sessions-list" class="stack"></div>
     </section>
 
     <section id="tacticas" class="view" aria-labelledby="title-tactics">
-      <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
-      <div id="tactic-builder" class="panel hidden"></div>
-      <div id="tactics-list" class="stack"></div>
-      <form id="tactica-filters" class="panel exercise-filters">
-        <label>Selecciona una táctica<select name="formacion"><option value="">Elige una táctica…</option></select></label>
-      </form>
-      <div id="tacticas-interactivas" class="exercise-grid"></div>
+      <!-- Contenedor Rediseño Claude (movil-11-tacticas.png) -->
+      <div id="cbx-tacticas-redesign" class="cbx-tactics-page">
+        <!-- Hero Banner Card -->
+        <div class="cbx-tactics-hero">
+          <div class="cbx-tactics-hero-text">
+            <span class="cbx-tactics-eyebrow">PIZARRA TÁCTICA</span>
+            <h2 class="cbx-tactics-title">TÁCTICAS</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" class="cbx-context-gear-btn" data-gear-target="tacticas" title="Ajustar colores de Tácticas" aria-label="Ajustar colores">⚙️</button>
+            <button type="button" class="btn-new-tactic-claude" id="cbx-new-tactic-btn">+ Táctica</button>
+          </div>
+        </div>
+
+        <!-- Pizarra Interactiva Principal Card -->
+        <div class="cbx-tactics-board-card" id="cbx-tactics-board-section">
+          <!-- Selector de Formación F7 -->
+          <div class="cbx-tactics-section-group">
+            <span class="cbx-tactics-label">FORMACIÓN F7</span>
+            <div class="cbx-tactics-formations-row" id="cbx-tactics-formations-row" role="radiogroup" aria-label="Formación F7">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+
+          <!-- Selector de Fase / Aspecto Táctico -->
+          <div class="cbx-tactics-section-group">
+            <span class="cbx-tactics-label">FASE / ASPECTO TÁCTICO</span>
+            <div class="cbx-tactics-aspects-row" id="cbx-tactics-aspects-row" role="radiogroup" aria-label="Fase táctica">
+              <button type="button" class="cbx-aspect-chip active" data-aspect="estructura">Estructura</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="salida">Salida</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="progresion">Ataque / Progresión</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="basculaciones">Basculaciones</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="pressing">Pressing</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="ventajas">Ventajas / Desventajas</button>
+              <button type="button" class="cbx-aspect-chip" data-aspect="f11">Adaptación F11</button>
+            </div>
+          </div>
+
+          <!-- Barra de Herramientas -->
+          <div class="cbx-tactics-section-group">
+            <span class="cbx-tactics-label">HERRAMIENTAS</span>
+            <div class="cbx-tactics-tools-grid" id="cbx-tactics-tools-grid" role="toolbar" aria-label="Herramientas de dibujo táctico">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+
+          <!-- Callout informativo Claude -->
+          <div class="cbx-tactics-callout">
+            <p>Arrastra jugadores o dibuja pases, movimientos, conducciones, disparos y sprints. Selecciona cualquier aspecto táctico (Estructura, Salida, Progresión...) para ver la pizarra del manual oficial. Elige si deseas mostrar el rival o analizar solo a tu equipo.</p>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="cbx-tactics-actions-row">
+            <button type="button" class="btn-rival-toggle-claude" id="cbx-toggle-rival-btn" aria-pressed="false">👥 Mostrar rival</button>
+            <button type="button" class="cbx-context-gear-btn" data-gear-target="tactic-board" title="Ajustar colores de la pizarra táctica" aria-label="Ajustar colores">⚙️</button>
+            <button type="button" class="btn-save-tactic-claude" id="cbx-save-tactic-btn">Guardar táctica</button>
+            <button type="button" class="btn-clear-tactic-claude" id="cbx-clear-tactic-btn">Borrar todo</button>
+          </div>
+
+          <!-- Contenedor del Campo / Pizarra SVG -->
+          <div class="cbx-tactics-pitch-container">
+            <div id="cbx-tactics-pitch-board" class="cbx-tactics-pitch-board"></div>
+          </div>
+        </div>
+
+        <!-- Sección de Guías Tácticas (del PDF y manual) -->
+        <div class="cbx-tactics-guides-card">
+          <div class="cbx-guides-header">
+            <h3 class="cbx-guides-title" id="cbx-guides-title">GUÍAS TÁCTICAS · SISTEMA 1-3-2-1</h3>
+            <button type="button" class="btn-anim-claude" id="cbx-btn-anim">Ver animación</button>
+          </div>
+
+          <!-- Chips de aspecto -->
+          <div class="cbx-guides-aspects-row" id="cbx-guides-aspects-row" role="tablist">
+            <button type="button" class="cbx-aspect-chip active" data-aspect="estructura">Estructura</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="salida">Salida</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="progresion">Progresión</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="basculaciones">Basculaciones</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="pressing">Pressing</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="ventajas">Ventajas / Inconvenientes</button>
+            <button type="button" class="cbx-aspect-chip" data-aspect="f11">Adaptación F11</button>
+          </div>
+
+          <!-- Caja de contenido dinámico -->
+          <div class="cbx-guides-content-box" id="cbx-guides-content">
+            <!-- Rellenado dinámicamente por JS desde el PDF -->
+          </div>
+        </div>
+
+        <!-- Sección Tácticas Guardadas -->
+        <div class="cbx-saved-tactics-card">
+          <span class="cbx-saved-tactics-title">TÁCTICAS GUARDADAS</span>
+          <div class="cbx-saved-tactics-list" id="cbx-saved-tactics-list">
+            <!-- Rellenado dinámicamente por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Elementos legacy para compatibilidad de tests y fallback -->
+      <div class="cbx-legacy-tactics-wrapper">
+        <div class="section-head"><div><p class="eyebrow">Pizarra táctica</p><h2 id="title-tactics">Tácticas</h2></div><div class="button-row"><button id="new-tactic" class="primary">+ Táctica</button></div></div>
+        <div id="tactic-builder" class="panel hidden"></div>
+        <div id="tactics-list" class="stack"></div>
+        <form id="tactica-filters" class="panel exercise-filters">
+          <label>Selecciona una táctica<select name="formacion"><option value="">Elige una táctica…</option></select></label>
+        </form>
+        <div id="tacticas-interactivas" class="exercise-grid"></div>
+      </div>
     </section>
 
     <section id="ajustes" class="view" aria-labelledby="title-settings">
       <div class="section-head"><div><p class="eyebrow">Nube y caché local</p><h2 id="title-settings">Ajustes</h2></div></div>
       <div class="settings-grid">
+        <article class="panel cbx-theme-preview-card" id="theme-preview-card" style="grid-column: 1 / -1;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Vista previa del tema</h3>
+            <span class="cbx-badge-new">En vivo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Previsualización en directo de todos tus colores, tipografías, marcadores, botones y bloques para cada pantalla del sistema.</p>
+          <div class="cbx-preview-tabs" id="cbx-preview-tabs" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin:8px 0 10px;border-bottom:1px solid #e2e8f0;">
+            <button type="button" class="cbx-preview-tab-btn active" data-preview-pane="scoreboard" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:var(--btn, #10b981);color:var(--btnInk, #ffffff);cursor:pointer;white-space:nowrap;">Marcador &amp; Botones</button>
+            <button type="button" class="cbx-preview-tab-btn" data-preview-pane="hoy" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;white-space:nowrap;">⚽ Hoy</button>
+            <button type="button" class="cbx-preview-tab-btn" data-preview-pane="convocatoria" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;white-space:nowrap;">📋 Convocatoria</button>
+            <button type="button" class="cbx-preview-tab-btn" data-preview-pane="lanzadores" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;white-space:nowrap;">🎯 Lanzadores</button>
+            <button type="button" class="cbx-preview-tab-btn" data-preview-pane="staff" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;white-space:nowrap;">👥 Cuerpo Técnico</button>
+            <button type="button" class="cbx-preview-tab-btn" data-preview-pane="pizarra" style="padding:6px 12px;border-radius:999px;font:700 12px var(--ui, sans-serif);border:1px solid #cbd5e1;background:#fff;color:#334155;cursor:pointer;white-space:nowrap;">📌 Pizarra Táctica</button>
+          </div>
+
+          <!-- Panel 1: Marcador y Botones -->
+          <div id="preview-pane-scoreboard" class="cbx-preview-pane">
+            <div class="cbx-preview-scoreboard-wrap" style="border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;margin-top:4px;">
+              <div id="preview-scoreboard-header" style="background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);padding:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <img id="preview-crest-demo" src="icons/escudo.png" data-crest="1" alt="Escudo demo" style="width:34px;height:34px;object-fit:contain;background:#fff;border-radius:9px;padding:2px">
+                  <span id="preview-team-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase">Unión Viera</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div id="preview-score" style="font:900 36px/1 var(--disp, 'Barlow Condensed', sans-serif);letter-spacing:1px;display:flex;align-items:center;gap:6px;">
+                    <span id="preview-gf-num" style="padding:2px 8px;border-radius:8px;background:var(--gfBg, #f0f7f3);color:var(--gfInk, #14532d);">4</span>
+                    <span style="opacity:0.6;">:</span>
+                    <span id="preview-ga-num" style="padding:2px 8px;border-radius:8px;background:var(--gaBg, #fdf2f4);color:var(--gaInk, #9f1239);">2</span>
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center;">
+                    <span id="preview-card-gf-badge" class="cbx-preview-gf-badge"><span class="dot"></span>A favor · 4</span>
+                    <span id="preview-card-ga-badge" class="cbx-preview-ga-badge"><span class="dot"></span>En contra · 2</span>
+                  </div>
+                </div>
+                <span id="preview-opp-name" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;text-align:right">Rival</span>
+              </div>
+              <div id="preview-scoreboard-body" style="background:var(--bg, #f4f6f5);padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <span style="flex:1;min-width:140px;font:600 13px var(--ui, sans-serif);color:var(--ink, #0f172a)">Texto en listas y fichas</span>
+                <button type="button" id="preview-sample-btn" class="primary cbx-preview-banner-btn" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;display:flex;align-items:center;font:800 13px var(--ui, sans-serif);border:0;cursor:default;">Guardar</button>
+                <button type="button" id="preview-sample-btn2" class="secondary" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);border:1px solid #cbd5e1;font:700 13px var(--ui, sans-serif);cursor:default;">Secundario</button>
+                <span id="preview-sample-wa" style="color:var(--waInk, #053b1d);font:800 12px var(--ui, sans-serif);padding:3px 7px;border-radius:6px;background:rgba(37,211,102,0.18);">WhatsApp</span>
+                <span id="preview-sample-res" class="round-badge" style="color:var(--resInk, #ffffff);background:#1e293b;padding:3px 8px;border-radius:8px;font:800 11px var(--ui, sans-serif);">J8 · V</span>
+              </div>
+            </div>
+            <div id="preview-card-demo-wrap" style="margin-top:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+                <div id="preview-card-demo-title" style="font:800 15px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Muestra de bloque · Tarjeta</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;" id="preview-sem-pills">
+                  <span id="preview-sem-gk" style="background:var(--sem-gk, #0284c7);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">POR</span>
+                  <span id="preview-sem-def" style="background:var(--sem-def, #16a34a);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">DEF</span>
+                  <span id="preview-sem-mid" style="background:var(--sem-mid, #eab308);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">MED</span>
+                  <span id="preview-sem-fw" style="background:var(--sem-fw, #dc2626);color:#fff;padding:2px 6px;border-radius:5px;font:800 9.5px var(--ui, sans-serif);">DEL</span>
+                </div>
+              </div>
+              <p id="preview-card-demo-text" style="margin:0 0 8px 0;font:500 13px var(--ui, sans-serif);color:var(--ink, #0f172a);">Vista en directo del color del bloque, título, contraste de fuentes y semáforos.</p>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="preview-sem-results">
+                <span id="preview-sem-win" style="background:var(--sem-win, #10b981);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Victoria</span>
+                <span id="preview-sem-draw" style="background:var(--sem-draw, #f59e0b);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Empate</span>
+                <span id="preview-sem-loss" style="background:var(--sem-loss, #ef4444);color:#fff;padding:2px 7px;border-radius:6px;font:800 10px var(--ui, sans-serif);">Derrota</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Hoy -->
+          <div id="preview-pane-hoy" class="cbx-preview-pane" style="display:none;">
+            <div id="preview-hoy-hero" style="border-radius:18px;padding:16px 18px;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
+              <div>
+                <span id="preview-hoy-eyebrow" style="font:800 11px var(--ui, sans-serif);letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:var(--bnInk, #ffffff);">Tu equipo de un vistazo</span>
+                <h4 id="preview-hoy-title" style="margin:4px 0 0;font:800 24px/1.1 var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--bnInk, #ffffff);">Viernes, 2 de Octubre</h4>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div id="preview-hoy-count-1" style="flex:1;min-width:85px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.25);">
+                  <strong style="display:block;font:900 22px/1 var(--disp, 'Barlow Condensed', sans-serif);color:var(--bnInk, #ffffff);">0</strong>
+                  <span style="font:700 11px var(--ui, sans-serif);opacity:0.85;color:var(--bnInk, #ffffff);">sesiones hoy</span>
+                </div>
+                <div id="preview-hoy-count-2" style="flex:1;min-width:85px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.25);">
+                  <strong style="display:block;font:900 22px/1 var(--disp, 'Barlow Condensed', sans-serif);color:var(--bnInk, #ffffff);">0</strong>
+                  <span style="font:700 11px var(--ui, sans-serif);opacity:0.85;color:var(--bnInk, #ffffff);">partidos hoy</span>
+                </div>
+                <div id="preview-hoy-count-3" style="flex:1;min-width:85px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.25);">
+                  <strong style="display:block;font:900 22px/1 var(--disp, 'Barlow Condensed', sans-serif);color:var(--bnInk, #ffffff);">5</strong>
+                  <span style="font:700 11px var(--ui, sans-serif);opacity:0.85;color:var(--bnInk, #ffffff);">pendientes</span>
+                </div>
+              </div>
+            </div>
+            <div id="preview-hoy-card" style="margin-top:10px;padding:14px 16px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h5 id="preview-hoy-card-title" style="margin:0;font:800 16px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Tu Día</h5>
+                <span style="padding:3px 8px;border-radius:999px;background:#f1f5f9;color:#475569;font:700 11px var(--ui, sans-serif);">0 actividades</span>
+              </div>
+              <div style="padding:12px;border-radius:10px;border:1px dashed #cbd5e1;font:500 12.5px var(--ui, sans-serif);color:var(--ink, #64748b);">
+                Hoy no tienes sesión ni partido creado.
+              </div>
+            </div>
+
+            <!-- Pendiente de hacer en Hoy -->
+            <div id="preview-hoy-pending-card" style="margin-top:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h5 id="preview-hoy-pending-title" style="margin:0;font:800 15px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Pendiente de hacer</h5>
+                <span style="padding:2px 7px;border-radius:999px;background:#fef3c7;color:#92400e;font:800 10.5px var(--ui, sans-serif);">2 pendientes</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div class="preview-hoy-pending-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+                  <div>
+                    <strong class="preview-hoy-pending-item-name" style="display:block;font:700 12.5px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Falta convocatoria</strong>
+                    <small style="color:#64748b;font:500 11px var(--ui, sans-serif);">Siete Palmas A · dom, 25 oct</small>
+                  </div>
+                  <button type="button" class="preview-hoy-pending-btn secondary" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 12px var(--ui, sans-serif);cursor:default;">Abrir</button>
+                </div>
+                <div class="preview-hoy-pending-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+                  <div>
+                    <strong class="preview-hoy-pending-item-name" style="display:block;font:700 12.5px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Asistencia pendiente</strong>
+                    <small style="color:#64748b;font:500 11px var(--ui, sans-serif);">Entrenamiento · jue, 1 oct</small>
+                  </div>
+                  <button type="button" class="preview-hoy-pending-btn secondary" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 12px var(--ui, sans-serif);cursor:default;">Abrir</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accesos Rápidos en Hoy -->
+            <div id="preview-hoy-quick-card" style="margin-top:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+              <h5 id="preview-hoy-quick-title" style="margin:0 0 8px;font:800 15px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Accesos Rápidos</h5>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button type="button" class="preview-hoy-quick-btn secondary" style="min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 13px var(--ui, sans-serif);text-align:left;cursor:default;">⚡ Sesiones</button>
+                <button type="button" class="preview-hoy-quick-btn secondary" style="min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 13px var(--ui, sans-serif);text-align:left;cursor:default;">⏱️ Asistencia</button>
+                <button type="button" class="preview-hoy-quick-btn secondary" style="min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 13px var(--ui, sans-serif);text-align:left;cursor:default;">📅 Calendario</button>
+                <button type="button" class="preview-hoy-quick-btn secondary" style="min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 13px var(--ui, sans-serif);text-align:left;cursor:default;">📋 Convocatoria</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Convocatoria -->
+          <div id="preview-pane-convocatoria" class="cbx-preview-pane" style="display:none;">
+            <div id="preview-callup-banner" style="border-radius:18px;padding:16px 18px;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div>
+                <span style="font:800 11px var(--ui, sans-serif);letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:var(--bnInk, #ffffff);">Rotación justa</span>
+                <h4 style="margin:2px 0 0;font:800 22px/1 var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--bnInk, #ffffff);">Convocatorias</h4>
+              </div>
+              <button type="button" id="preview-callup-btn" class="primary" style="height:36px;padding:0 14px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;font:800 12.5px var(--ui, sans-serif);border:0;cursor:default;">+ Convocatoria</button>
+            </div>
+            <div id="preview-callup-card" style="margin-top:10px;border-radius:14px;border:1px solid var(--cardBorder, #e2e8f0);overflow:hidden;background:var(--cardBg, #ffffff);">
+              <div id="preview-callup-match-header" style="padding:12px 14px;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);">
+                <small style="display:block;font:800 10.5px var(--ui, sans-serif);opacity:0.75;text-transform:uppercase;color:var(--bnInk, #ffffff);">F7 · Liga · 09:00</small>
+                <h5 style="margin:2px 0 6px;font:900 17px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--bnInk, #ffffff);">Pedro Hidalgo B</h5>
+                <div style="display:flex;gap:6px;">
+                  <span style="padding:3px 7px;border-radius:6px;background:rgba(255,255,255,0.18);font:800 10.5px var(--ui, sans-serif);color:var(--bnInk, #ffffff);">16 convocados</span>
+                  <span style="padding:3px 7px;border-radius:6px;background:var(--btn, #10b981);font:800 10.5px var(--ui, sans-serif);color:var(--btnInk, #ffffff);">0 fuera</span>
+                </div>
+              </div>
+              <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;border-top:1px solid #e2e8f0;">
+                <span id="preview-callup-num" style="display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--dorsal-bg, var(--bn, #0a251b));color:var(--dorsal-ink, var(--bnInk, #ffffff));font:900 14px var(--disp, 'Barlow Condensed', sans-serif);">1</span>
+                <div style="flex:1;min-width:0;">
+                  <strong id="preview-callup-player-name" style="display:block;font:800 13px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Mateo Moyano Santana</strong>
+                  <small style="color:#64748b;font:600 11px var(--ui, sans-serif);">Portero</small>
+                </div>
+                <span style="padding:4px 8px;border-radius:999px;background:#dcfce7;color:#166534;font:800 11px var(--ui, sans-serif);">Convocado</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 4: Lanzadores -->
+          <div id="preview-pane-lanzadores" class="cbx-preview-pane" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font:800 12px var(--ui, sans-serif);color:#64748b;">Especialistas a balón parado</span>
+              <button type="button" id="preview-sp-config-btn" class="secondary" style="height:32px;padding:0 10px;border-radius:8px;background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);border:1px solid #cbd5e1;font:700 12px var(--ui, sans-serif);cursor:default;">Configurar lanzadores</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;">
+              <div id="preview-sp-card-1" style="padding:10px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span id="preview-sp-icon-1" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);font:900 14px var(--ui, sans-serif);">🎯</span>
+                  <strong id="preview-sp-title-1" style="font:800 12px var(--ui, sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Penaltis</strong>
+                </div>
+                <div style="display:grid;gap:5px;">
+                  <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:5px 7px;background:var(--bg, #f8fafc);border-radius:8px;border:1px solid var(--cardBorder, #e2e8f0);">
+                    <span id="preview-sp-rank-1" style="padding:3px 5px;border-radius:5px;background:var(--sp-lead-bg, var(--bn, #0a251b));color:var(--sp-lead-ink, var(--bnInk, #ffffff));font:800 9.5px var(--ui, sans-serif);">1.er lanzador</span>
+                    <span style="font:700 12px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Alejandro Pedrós</span>
+                    <span class="preview-sp-dorsal-circle" style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--dorsal-bg, #edf2f6);font:800 10.5px var(--disp, 'Barlow Condensed', sans-serif);color:var(--dorsal-ink, #0f172a);">7</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:5px 7px;background:var(--bg, #f8fafc);border-radius:8px;border:1px solid var(--cardBorder, #e2e8f0);">
+                    <span id="preview-sp-rank-2" style="padding:3px 5px;border-radius:5px;background:var(--sp-sub-bg, color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0)));color:var(--sp-sub-ink, var(--cardTitle, #153c2c));font:800 9.5px var(--ui, sans-serif);">2.º lanzador</span>
+                    <span style="font:700 12px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Diego Andrés Anaya</span>
+                    <span class="preview-sp-dorsal-circle" style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--dorsal-bg, #edf2f6);font:800 10.5px var(--disp, 'Barlow Condensed', sans-serif);color:var(--dorsal-ink, #0f172a);">5</span>
+                  </div>
+                </div>
+              </div>
+              <div id="preview-sp-card-2" style="padding:10px;border-radius:12px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span id="preview-sp-icon-2" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);font:900 14px var(--ui, sans-serif);">⚡</span>
+                  <strong id="preview-sp-title-2" style="font:800 12px var(--ui, sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Faltas Izq. · Diestro</strong>
+                </div>
+                <div style="display:grid;gap:5px;">
+                  <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:5px 7px;background:var(--bg, #f8fafc);border-radius:8px;border:1px solid var(--cardBorder, #e2e8f0);">
+                    <span id="preview-sp-rank-3" style="padding:3px 5px;border-radius:5px;background:var(--sp-lead-bg, var(--bn, #0a251b));color:var(--sp-lead-ink, var(--bnInk, #ffffff));font:800 9.5px var(--ui, sans-serif);">1.er lanzador</span>
+                    <span style="font:700 12px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pablo Montesdeoca</span>
+                    <span class="preview-sp-dorsal-circle" style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--dorsal-bg, #edf2f6);font:800 10.5px var(--disp, 'Barlow Condensed', sans-serif);color:var(--dorsal-ink, #0f172a);">16</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 5: Cuerpo Técnico -->
+          <div id="preview-pane-staff" class="cbx-preview-pane" style="display:none;">
+            <div id="preview-staff-banner" style="border-radius:18px;padding:16px 18px;background:var(--bn, #0a251b);color:var(--bnInk, #ffffff);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div>
+                <span style="font:800 11px var(--ui, sans-serif);letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:var(--bnInk, #ffffff);">Equipo técnico</span>
+                <h4 style="margin:2px 0 0;font:800 22px/1 var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--bnInk, #ffffff);">Cuerpo Técnico</h4>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span id="preview-staff-count" style="padding:4px 9px;border-radius:999px;background:rgba(255,255,255,0.2);font:800 11px var(--ui, sans-serif);color:var(--bnInk, #ffffff);">2 miembros</span>
+                <button type="button" id="preview-staff-btn" class="primary" style="height:34px;padding:0 12px;border-radius:10px;background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;font:800 12px var(--ui, sans-serif);border:0;cursor:default;">+ Nuevo</button>
+              </div>
+            </div>
+            <div id="preview-staff-card" style="margin-top:10px;position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);padding:60px 14px 14px;">
+              <div id="preview-staff-strip" style="position:absolute;inset:0 0 auto;height:52px;background:linear-gradient(120deg, var(--bn, #0a251b), color-mix(in srgb, var(--bn, #0a251b) 75%, #000000));"></div>
+              <div id="preview-staff-badge" style="position:absolute;top:10px;right:12px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.2);color:#fff;font:800 10px var(--ui, sans-serif);text-transform:uppercase;">1.er Entrenador</div>
+              <div style="position:absolute;top:24px;left:14px;width:44px;height:44px;border-radius:12px;background:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.15);display:grid;place-items:center;font:900 16px var(--disp, 'Barlow Condensed', sans-serif);" id="preview-staff-avatar-initials">MP</div>
+              <div style="margin-top:2px;">
+                <strong id="preview-staff-name" style="display:block;font:800 15px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Miguel Ángel Pérez</strong>
+                <small style="color:#64748b;font:600 11.5px var(--ui, sans-serif);">Tel. 612 345 678</small>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:10px;">
+                <span style="flex:1;height:30px;display:grid;place-items:center;border-radius:999px;background:#20d266;color:#053b1d;font:800 11px var(--ui, sans-serif);">WhatsApp</span>
+                <span style="flex:1;height:30px;display:grid;place-items:center;border-radius:999px;background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);border:1px solid #cbd5e1;font:800 11px var(--ui, sans-serif);">Editar</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 6: Pizarra Táctica -->
+          <div id="preview-pane-pizarra" class="cbx-preview-pane" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font:800 12px var(--ui, sans-serif);color:#64748b;">Previsualización de campo, fichas y trazos</span>
+              <span style="padding:3px 8px;border-radius:999px;background:#f1f5f9;color:#475569;font:700 11px var(--ui, sans-serif);">Sincronizada con todas</span>
+            </div>
+            <div id="preview-tab-mini-pitch" style="position:relative;width:100%;max-width:320px;margin:0 auto;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--tb-pitch, #1e523d);border:2px solid rgba(0,0,0,0.15);box-shadow:inset 0 0 16px rgba(0,0,0,0.25);">
+              <svg viewBox="0 0 100 75" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+                <rect x="4" y="4" width="92" height="67" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2" rx="2"/>
+                <line x1="50" y1="4" x2="50" y2="71" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <circle cx="50" cy="37.5" r="9" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <circle cx="50" cy="37.5" r="1.2" fill="var(--tb-lines, rgba(255,255,255,0.4))"/>
+                <rect x="4" y="21" width="14" height="33" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <rect x="82" y="21" width="14" height="33" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <defs>
+                  <marker id="tab-arrow-head" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                    <polygon id="tab-arrow-poly" points="0 0, 6 3, 0 6" fill="var(--tb-arrow, #facc15)" />
+                  </marker>
+                </defs>
+                <path id="tab-arrow-path" d="M 36 25 Q 46 16 56 22" fill="none" stroke="var(--tb-arrow, #facc15)" stroke-width="2" stroke-dasharray="3,2" marker-end="url(#tab-arrow-head)"/>
+              </svg>
+              <div class="cbx-mini-token team" id="preview-tab-token-1" style="position:absolute;left:18%;top:46%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">1</div>
+              <div class="cbx-mini-token team" id="preview-tab-token-2" style="position:absolute;left:34%;top:28%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">4</div>
+              <div class="cbx-mini-token team" id="preview-tab-token-3" style="position:absolute;left:58%;top:26%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">9</div>
+              <div class="cbx-mini-token rival" id="preview-tab-rival-1" style="position:absolute;left:48%;top:38%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--tb-rival, #111827);color:#fff;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font:800 9px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">R</div>
+              <div class="cbx-mini-token rival" id="preview-tab-rival-2" style="position:absolute;left:74%;top:46%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--tb-rival, #111827);color:#fff;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font:800 9px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">R</div>
+              <div style="position:absolute;left:39%;top:33%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#ffffff;border:1.5px solid #111;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>
+            </div>
+            <p class="meta" style="text-align:center;margin-top:8px;">Este ajuste aplica a la Pizarra en Vivo, Preparación y Tácticas.</p>
+          </div>
+
+          <p class="meta" style="margin-top:8px;">Cambia en directo con lo que elijas en los controles de abajo.</p>
+        </article>
         <article class="panel">
           <h3>Identidad del club</h3>
           <p class="meta">Personaliza el escudo y nombre de tu equipo para toda la aplicación.</p>
@@ -314,6 +789,13 @@
                 <input type="color" id="theme-font-color-picker" name="fontColorPicker" value="#0f172a" style="width:36px;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
                 <input type="hidden" id="theme-font-color" name="fontColor" value="#0f172a">
               </div>
+              <div id="cbx-font-preview-box" style="margin-top:0.6rem;padding:10px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span id="cbx-font-preview-sample" style="font-size:14px;font-weight:700;color:var(--cb-font-custom-color, #0f172a);">Vista previa: Texto general de la aplicación</span>
+                  <small style="font-size:11px;color:#64748b;">Este color aplica a textos, títulos y etiquetas sin alterar botones.</small>
+                </div>
+                <span id="cbx-font-preview-val" style="font-size:11px;font-weight:800;font-family:monospace;padding:3px 8px;border-radius:6px;background:#e2e8f0;color:#1e293b;">#0f172a</span>
+              </div>
             </div>
 
             <button class="primary" type="submit">Guardar preferencias visuales</button>
@@ -434,6 +916,377 @@
             <button type="button" id="settings-logout" class="secondary">Cerrar sesión</button>
             <button type="button" id="settings-reload" class="primary">🔄 Recargar / Actualizar app</button>
             <button type="button" id="toggle-video-debug" class="secondary">🐞 Diagnóstico de vídeo</button>
+          </div>
+        </article>
+
+        <article class="panel cbx-saved-themes-card" id="saved-themes-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Temas guardados</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <div id="cbx-presets-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:34px;align-items:center;">
+            <!-- Renderizado dinámico de presets con chips -->
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+            <input type="text" id="new-preset-name" placeholder="Nombre para guardar este tema…" style="flex:1;height:38px;padding:0 10px;border-radius:10px;border:1px solid #e2e8f0;font:600 13px var(--ui, sans-serif);">
+            <button type="button" id="save-current-preset-btn" class="primary" style="height:38px;padding:0 14px;white-space:nowrap;">Guardar tema actual</button>
+          </div>
+          <p id="match-preset-info" class="meta" style="margin-top:6px;">«Partido» marca el tema que se aplica solo al entrar en En vivo. Ahora el partido usa el tema general.</p>
+        </article>
+
+        <article class="panel cbx-title-font-card" id="title-font-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Fuente de títulos y marcadores</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Independiente de la fuente del texto.</p>
+          <div id="title-font-options" style="display:flex;flex-direction:column;gap:6px">
+            <!-- Renderizado dinámico de opciones de fuentes de títulos -->
+          </div>
+        </article>
+
+        <article class="panel cbx-semantic-colors-card" id="semantic-colors-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Colores con significado</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Líneas de juego en fichas y resultados en la temporada.</p>
+          <div id="semantic-colors-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-gk" data-sem="gk" value="#0284c7" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Porteros
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-def" data-sem="def" value="#16a34a" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Defensas
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-mid" data-sem="mid" value="#eab308" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Medios
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-fw" data-sem="fw" value="#dc2626" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Delanteros
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-win" data-sem="win" value="#10b981" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Victoria
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-draw" data-sem="draw" value="#f59e0b" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Empate
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;font:700 12.5px var(--ui, sans-serif);color:#334155;background:#fff;cursor:pointer;">
+              <input type="color" id="sem-loss" data-sem="loss" value="#ef4444" style="width:30px;height:28px;border:0;padding:0;background:none;cursor:pointer;"> Derrota
+            </label>
+          </div>
+        </article>
+
+        <article class="panel cbx-surfaces-buttons-card" id="surfaces-buttons-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Fondos, tarjetas y botones</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Color del fondo de la app y de las tarjetas con la intensidad que quieras, y colores de los botones secundarios, del texto de WhatsApp y de los resultados de temporada.</p>
+          
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de la app</div>
+            <div class="cbx-swatches-row" id="cbx-app-bg-swatches"></div>
+            <div class="cbx-slider-row">
+              <span class="cbx-slider-label">Intensidad</span>
+              <input type="range" min="0" max="100" value="12" id="cbx-app-bg-pct-slider" class="cbx-slider-input">
+              <span class="cbx-slider-val" id="cbx-app-bg-pct-val">12%</span>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de tarjetas</div>
+            <div class="cbx-swatches-row" id="cbx-card-swatches"></div>
+            <div class="cbx-slider-row">
+              <span class="cbx-slider-label">Intensidad</span>
+              <input type="range" min="0" max="100" value="6" id="cbx-card-pct-slider" class="cbx-slider-input">
+              <span class="cbx-slider-val" id="cbx-card-pct-val">6%</span>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Títulos de tarjetas</div>
+            <div class="cbx-swatches-row" id="cbx-card-title-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de botones secundarios y accesos rápidos (Hoy)</div>
+            <div class="cbx-swatches-row" id="cbx-btn2-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de botones secundarios y accesos rápidos (Hoy)</div>
+            <div class="cbx-swatches-row" id="cbx-btn2-ink-swatches"></div>
+          </div>
+
+          <!-- Vista previa en directo de tarjetas, secundarios y accesos rápidos -->
+          <div class="cbx-surfaces-preview-box" id="cbx-surfaces-preview-box" style="margin-top:12px;padding:12px;border-radius:12px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--cardBg, #ffffff);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong id="cbx-preview-card-sample-title" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Vista previa en directo: Tarjetas y Botones</strong>
+              <span class="cbx-badge-new" style="font-size:10px;">En vivo</span>
+            </div>
+            <p id="cbx-preview-card-sample-text" style="font:500 12px var(--ui, sans-serif);color:var(--ink, #334155);margin:0 0 8px;">
+              Muestra del tono y contraste configurado para tus botones secundarios y accesos rápidos de Hoy:
+            </p>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;border:1px solid var(--cardBorder, #e2e8f0);background:var(--cardBg, #ffffff);">
+                <span style="font:700 12px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Falta convocatoria</span>
+                <button type="button" id="cbx-preview-btn2-sample" class="secondary" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 12px var(--ui, sans-serif);cursor:default;">Abrir</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button type="button" id="cbx-preview-quick-btn-1" class="secondary" style="min-height:40px;padding:6px 10px;border-radius:8px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 12.5px var(--ui, sans-serif);text-align:left;cursor:default;">⚡ Sesiones</button>
+                <button type="button" id="cbx-preview-quick-btn-2" class="secondary" style="min-height:40px;padding:6px 10px;border-radius:8px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a);font:700 12.5px var(--ui, sans-serif);text-align:left;cursor:default;">📋 Convocatoria</button>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+                <span id="cbx-preview-wa-sample" style="display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 12px;border-radius:999px;background:var(--wa-bg, #25d366);color:var(--wa-ink, var(--waInk, #053b1d));font:800 11px var(--ui, sans-serif);">WhatsApp</span>
+                <span id="cbx-preview-res-sample" style="display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 10px;border-radius:8px;background:#0a251b;color:var(--resInk, #ffffff);font:800 11px var(--disp, 'Barlow Condensed', sans-serif);">J1 · 3-1</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo del botón de WhatsApp</div>
+            <div class="cbx-swatches-row" id="cbx-wa-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto del botón de WhatsApp</div>
+            <div class="cbx-swatches-row" id="cbx-wa-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group" style="padding-top:10px;border-top:1px solid #f1f5f9;margin-top:10px;">
+            <div style="font:800 11px var(--ui, sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#1e523d;margin-bottom:6px;">Dorsales de los jugadores (Plantilla y Convocatoria)</div>
+            
+            <div id="cbx-preview-dorsal-box" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;background:var(--cardBg, #ffffff);border:1px solid var(--cardBorder, #e2e8f0);margin-bottom:8px;">
+              <span id="cbx-preview-dorsal-badge" style="width:34px;height:34px;border-radius:8px;background:var(--dorsal-bg, var(--bn, #0a251b));color:var(--dorsal-ink, #ffffff);display:grid;place-items:center;font:900 16px var(--disp, 'Barlow Condensed', sans-serif);">7</span>
+              <div>
+                <strong style="display:block;font:800 13px var(--ui, sans-serif);color:var(--cardTitle, #0f172a);">Mateo Moyano</strong>
+                <span style="font:600 11px var(--ui, sans-serif);color:var(--cbx-muted, #64748b);">Vista previa del dorsal de jugador</span>
+              </div>
+            </div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:4px;">Fondo del dorsal</div>
+            <div class="cbx-swatches-row" id="cbx-dorsal-bg-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Número / texto del dorsal</div>
+            <div class="cbx-swatches-row" id="cbx-dorsal-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de resultados de temporada (J1, J2…)</div>
+            <div class="cbx-swatches-row" id="cbx-res-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group" style="padding-top:10px;border-top:1px solid #f1f5f9;margin-top:10px;">
+            <div style="font:800 11px var(--ui, sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#1e523d;margin-bottom:6px;">Goles «A favor» y «En contra» (Temporada · Liga)</div>
+            
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:4px;">A favor · color de barras</div>
+            <div class="cbx-swatches-row" id="cbx-gf-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">A favor · fondo del botón</div>
+            <div class="cbx-swatches-row" id="cbx-gf-bg-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">A favor · texto del botón</div>
+            <div class="cbx-swatches-row" id="cbx-gf-ink-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">En contra · color de barras</div>
+            <div class="cbx-swatches-row" id="cbx-ga-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">En contra · fondo del botón</div>
+            <div class="cbx-swatches-row" id="cbx-ga-bg-swatches"></div>
+
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">En contra · texto del botón</div>
+            <div class="cbx-swatches-row" id="cbx-ga-ink-swatches"></div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+              <span class="cbx-preview-gf-badge" id="cbx-preview-gf-badge"><span class="dot"></span>A favor · 10</span>
+              <span class="cbx-preview-ga-badge" id="cbx-preview-ga-badge"><span class="dot"></span>En contra · 5</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <button type="button" id="cbx-reset-colors-btn" class="secondary" style="width:100%;height:40px;border-radius:10px;font:700 13px var(--ui, sans-serif);">Restablecer estos colores</button>
+          </div>
+        </article>
+
+        <article class="panel cbx-banners-buttons-card" id="banners-buttons-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Cabeceras y botones</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Colores de las bandas de título de cada pantalla y de todos los botones («Guardar…», «Subir», «Exportar»…), aparte del tema.</p>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de cabeceras</div>
+            <div class="cbx-swatches-row" id="cbx-bn-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de cabeceras</div>
+            <div class="cbx-swatches-row" id="cbx-bn-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de botones</div>
+            <div class="cbx-swatches-row" id="cbx-btn-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de botones</div>
+            <div class="cbx-swatches-row" id="cbx-btn-ink-swatches"></div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid #f1f5f9;margin-top:12px;">
+            <div id="cbx-preview-banner-box" style="flex:1;min-width:160px;padding:12px 14px;border-radius:14px;color:var(--bnInk, #ffffff);background:linear-gradient(135deg,var(--bn, #0a251b),color-mix(in srgb,var(--bn, #0a251b) 72%,#297053))">
+              <div style="font:800 10.5px var(--ui, sans-serif);letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--bnInk, #ffffff) 72%,transparent)">Fecha y bloques</div>
+              <div style="font:800 22px/1 var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase">Sesiones</div>
+            </div>
+            <button type="button" id="cbx-preview-banner-btn" class="primary cbx-preview-banner-btn" style="height:42px;padding:0 16px;border-radius:12px;border:0;background:var(--btn, #10b981);color:var(--btnInk, #ffffff) !important;display:flex;align-items:center;font:800 14px var(--ui, sans-serif);cursor:default;">Guardar</button>
+            <button type="button" id="cbx-preview-banner-btn2" class="secondary cbx-preview-banner-btn2" style="height:42px;padding:0 16px;border-radius:12px;border:1px solid #cbd5e1;background:var(--btn2, #ffffff);color:var(--btn2Ink, #0f172a) !important;display:flex;align-items:center;font:800 14px var(--ui, sans-serif);cursor:default;">Secundario</button>
+          </div>
+        </article>
+
+        <article class="panel cbx-specialists-colors-card" id="specialists-colors-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Especialistas y balón parado</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Colores para las tarjetas y distintivos de 1.er lanzador, capitanes y especialistas secundarios (penaltis, faltas, córners).</p>
+
+          <!-- Vista previa en directo de especialistas -->
+          <div id="cbx-specialists-preview-box" style="margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--cardBorder, #cbd5e1);background:var(--cardBg, #ffffff);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong id="cbx-sp-preview-title" style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a);">Vista previa en directo: 🎯 Penaltis</strong>
+              <span class="cbx-badge-new" style="font-size:10px;">En vivo</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div id="cbx-sp-preview-row-lead" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;background:var(--sp-lead-bg, #c8102e);color:var(--sp-lead-ink, #ffffff);">
+                <span style="font:800 12px var(--ui, sans-serif);">1.er lanzador</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font:700 12.5px var(--ui, sans-serif);">Mateo Moyano</span>
+                  <span data-sp-dorsal="true" style="display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--dorsal-bg, #0a251b);color:var(--dorsal-ink, #ffffff);font:900 12px var(--disp, 'Barlow Condensed', sans-serif);">7</span>
+                </div>
+              </div>
+              <div id="cbx-sp-preview-row-sub" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;background:var(--sp-sub-bg, #f1f5f9);color:var(--sp-sub-ink, #0f172a);border:1px solid var(--cardBorder, #e2e8f0);">
+                <span style="font:800 12px var(--ui, sans-serif);">2.º lanzador</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font:700 12.5px var(--ui, sans-serif);">Lucas Santana</span>
+                  <span data-sp-dorsal="true" style="display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--dorsal-bg, #0a251b);color:var(--dorsal-ink, #ffffff);font:900 12px var(--disp, 'Barlow Condensed', sans-serif);">10</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:10px;">Fondo de 1.er lanzador y capitanes</div>
+            <div class="cbx-swatches-row" id="cbx-sp-lead-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de 1.er lanzador y capitanes</div>
+            <div class="cbx-swatches-row" id="cbx-sp-lead-ink-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fondo de 2.º / 3.er lanzador</div>
+            <div class="cbx-swatches-row" id="cbx-sp-sub-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto de 2.º / 3.er lanzador</div>
+            <div class="cbx-swatches-row" id="cbx-sp-sub-ink-swatches"></div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <button type="button" id="cbx-reset-specialists-btn" class="secondary" style="width:100%;height:40px;border-radius:10px;font:700 13px var(--ui, sans-serif);">Restablecer colores de especialistas</button>
+          </div>
+        </article>
+
+        <article class="panel cbx-sidebar-colors-card" id="sidebar-colors-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Barra lateral y navegación</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Personaliza el color de fondo y de texto del menú lateral izquierdo en pantallas de ordenador y tablet.</p>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Fondo de la barra lateral</div>
+            <div class="cbx-swatches-row" id="cbx-sidebar-bg-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Texto y enlaces de la barra lateral</div>
+            <div class="cbx-swatches-row" id="cbx-sidebar-ink-swatches"></div>
+          </div>
+
+          <div id="cbx-sidebar-preview-box" style="margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sidebar-bg, var(--cb-shell-hero, #0a251b));color:var(--sidebar-ink, #ffffff);display:flex;align-items:center;gap:12px;">
+            <div style="width:34px;height:34px;border-radius:9px;background:#ffffff;display:flex;align-items:center;justify-content:center;font:900 13px var(--disp, 'Barlow Condensed', sans-serif);color:#0a251b;">CV</div>
+            <div style="flex:1;">
+              <div style="font:800 10.5px var(--ui, sans-serif);letter-spacing:.08em;text-transform:uppercase;opacity:.7;">Gestión de equipo</div>
+              <div style="font:800 14px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;">Unión Viera</div>
+            </div>
+            <span style="font:700 12px var(--ui, sans-serif);padding:3px 9px;border-radius:8px;background:rgba(255,255,255,0.18);">Activo</span>
+          </div>
+        </article>
+
+        <article class="panel cbx-tactic-board-colors-card" id="tactic-board-colors-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3 style="margin:0;font:800 19px var(--disp, 'Barlow Condensed', sans-serif);text-transform:uppercase;color:var(--cardTitle, #0f172a)">Pizarra táctica · Colores y fichas</h3>
+            <span class="cbx-badge-new">Nuevo</span>
+          </div>
+          <p class="meta" style="margin:4px 0 8px;">Ajusta los colores del césped, líneas del campo, fichas de tu equipo, del rival y flechas tácticas para todas las pizarras del sistema.</p>
+
+          <div style="display:flex;justify-content:center;margin:10px 0;">
+            <div id="cbx-mini-pitch-preview" style="position:relative;width:100%;max-width:280px;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:var(--tb-pitch, #1e523d);border:2px solid rgba(0,0,0,0.15);box-shadow:inset 0 0 16px rgba(0,0,0,0.25);">
+              <svg viewBox="0 0 100 75" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+                <rect x="4" y="4" width="92" height="67" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2" rx="2"/>
+                <line x1="50" y1="4" x2="50" y2="71" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <circle cx="50" cy="37.5" r="9" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <circle cx="50" cy="37.5" r="1.2" fill="var(--tb-lines, rgba(255,255,255,0.4))"/>
+                <rect x="4" y="21" width="14" height="33" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <rect x="82" y="21" width="14" height="33" fill="none" stroke="var(--tb-lines, rgba(255,255,255,0.4))" stroke-width="1.2"/>
+                <defs>
+                  <marker id="mini-arrow-head" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                    <polygon id="mini-arrow-poly" points="0 0, 6 3, 0 6" fill="var(--tb-arrow, #facc15)" />
+                  </marker>
+                </defs>
+                <path id="mini-arrow-path" d="M 36 25 Q 46 16 56 22" fill="none" stroke="var(--tb-arrow, #facc15)" stroke-width="2" stroke-dasharray="3,2" marker-end="url(#mini-arrow-head)"/>
+              </svg>
+              <div class="cbx-mini-token team" id="cbx-mini-token-1" style="position:absolute;left:18%;top:46%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">1</div>
+              <div class="cbx-mini-token team" id="cbx-mini-token-2" style="position:absolute;left:34%;top:28%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">4</div>
+              <div class="cbx-mini-token team" id="cbx-mini-token-3" style="position:absolute;left:58%;top:26%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--tb-team, #c8102e);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:800 10px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">9</div>
+              <div class="cbx-mini-token rival" id="cbx-mini-rival-1" style="position:absolute;left:48%;top:38%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--tb-rival, #111827);color:#fff;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font:800 9px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">R</div>
+              <div class="cbx-mini-token rival" id="cbx-mini-rival-2" style="position:absolute;left:74%;top:46%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--tb-rival, #111827);color:#fff;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font:800 9px var(--disp, 'Barlow Condensed', sans-serif);box-shadow:0 2px 4px rgba(0,0,0,0.3);">R</div>
+              <div style="position:absolute;left:39%;top:33%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#ffffff;border:1.5px solid #111;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>
+            </div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:6px;">Césped / Fondo del campo</div>
+            <div class="cbx-swatches-row" id="cbx-tb-pitch-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Líneas del campo</div>
+            <div class="cbx-swatches-row" id="cbx-tb-lines-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fichas de mi equipo</div>
+            <div class="cbx-swatches-row" id="cbx-tb-team-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Fichas del rival</div>
+            <div class="cbx-swatches-row" id="cbx-tb-rival-swatches"></div>
+          </div>
+
+          <div class="cbx-color-group">
+            <div style="font:800 12px var(--ui, sans-serif);color:#334155;margin-top:8px;">Flechas y trazos tácticos</div>
+            <div class="cbx-swatches-row" id="cbx-tb-arrow-swatches"></div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <button type="button" id="cbx-reset-tactic-colors-btn" class="secondary" style="width:100%;height:40px;border-radius:10px;font:700 13px var(--ui, sans-serif);">Restablecer colores de pizarra</button>
           </div>
         </article>
       </div>
@@ -712,6 +1565,25 @@
     </form>
   </dialog>
 
+  <!-- Modal Ajuste Global de Colores (Tuerca Gris ⚙️ Superior) -->
+  <dialog id="cbx-quick-color-dialog" class="cbx-quick-color-dialog" style="max-width:580px;width:95vw;border-radius:18px;border:1px solid var(--cbx-line);padding:0;background:var(--cardBg, #ffffff);box-shadow:0 12px 36px rgba(0,0,0,0.25);">
+    <div class="dialog-head" style="padding:14px 18px;border-bottom:1px solid var(--cbx-line);display:flex;justify-content:space-between;align-items:center;background:var(--cardBg, #ffffff);">
+      <h3 id="cbx-quick-color-title" style="margin:0;font:800 16px var(--cbx-ui);color:var(--cardTitle, #0f172a);display:flex;align-items:center;gap:8px;">⚙️ Personalizar Colores</h3>
+      <button type="button" data-close aria-label="Cerrar" style="background:transparent;border:0;font-size:20px;cursor:pointer;color:var(--cbx-muted);">✕</button>
+    </div>
+    <div id="cbx-quick-color-body" style="padding:16px 18px;max-height:75vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;"></div>
+    <div class="cbx-color-dialog-actions" style="padding:12px 18px;border-top:1px solid var(--cbx-line);display:flex;justify-content:space-between;align-items:center;gap:8px;background:color-mix(in srgb, var(--cardBg, #ffffff) 95%, var(--bg, #f4f6f5));flex-wrap:wrap;">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button type="button" id="cbx-quick-color-reset" class="secondary" style="font-size:12px;padding:6px 12px;border-radius:8px;" title="Restablecer los colores de esta pestaña a los valores predeterminados">↺ Restablecer esta pestaña</button>
+        <button type="button" id="cbx-quick-color-copy-all" class="secondary" style="font-size:12px;padding:6px 12px;border-radius:8px;" title="Copiar los colores configurados en esta pestaña a todas las demás pantallas">🌐 Copiar a todas</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" id="cbx-quick-color-save" class="primary" style="font-size:13px;font-weight:800;padding:7px 16px;border-radius:8px;">💾 Guardar colores</button>
+        <button type="button" class="secondary" data-close style="font-size:13px;padding:7px 14px;border-radius:8px;">Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="whistle-dialog" class="whistle-dialog">
     <div class="dialog-head">
       <h2 id="whistle-dialog-title">⏱️ Modo Silbato & Cronómetro de Campo</h2>
@@ -758,10 +1630,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20260924-v59-delegate-views-visible-render-fix';
-    if ('serviceWorker' in navigator) {
+    window.__CAMPOBASE_BUILD = '20261006-telefonos-padres-1';
+    if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20260924-v59-delegate-views-visible-render-fix')
+      navigator.serviceWorker.register('./sw.js?v=20261006-telefonos-padres-1')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -782,15 +1654,16 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20260924-v59-delegate-views-visible-render-fix"></script>
-  <script type="module" src="js/redesign-nav.js?v=20260924-v59-delegate-views-visible-render-fix"></script>
+  <script type="module" src="js/app.js?v=claude-proposal-3"></script>
+  <script type="module" src="js/redesign-nav.js?v=goal-series-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {
       window.setTimeout(() => {
         const app = window.__campobase;
         if (app?.state?.role) return;
-        try { if (sessionStorage.getItem('campobase.sessionRole')) return; } catch {}
+        if (window.__campobaseRole || window.__campobaseState?.role || document.body?.dataset?.userRole) return;
+        try { if (sessionStorage.getItem('campobase.sessionRole') || localStorage.getItem('campobase.lastAuthRole')) return; } catch {}
         const dialog = document.getElementById('auth-dialog');
         if (!dialog) return;
         document.body.classList.add('auth-locked');

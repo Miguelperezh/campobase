@@ -1,0 +1,2 @@
+# Estilos comunes de ejercicios y clasificación
+Solo corregir el alcance de ajustes estándar de ejercicios (todas las tarjetas, sin identificadores de ejercicio) y los controles ausentes de clasificación. El resto está validado. Mantener datos y preferencias: al elegir un estilo común, sustituir exclusivamente las elecciones de esa misma propiedad que afecten a sus elementos. Etiquetar cada botón/filtro y el aviso explicativo. Publicación autorizada en main y producción continúa vigente.

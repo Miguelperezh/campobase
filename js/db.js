@@ -4,6 +4,7 @@ import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userD
 
 var REAL_DB_NAME = 'campobase';
 const DB_VERSION = 2;
+const isReadOnlyPreview = () => globalThis.__CAMPOBASE_READONLY_PREVIEW === true;
 export const STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 const SYNC_QUEUE = 'syncQueue';
 const PLAYER_PROFILE_FIELDS = Object.freeze([
@@ -133,7 +134,7 @@ async function removeQueuedMutation(id) {
 }
 
 function canUseCloud() {
-  return Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
+  return !isReadOnlyPreview() && Boolean(cloudStore) && (typeof navigator === 'undefined' || navigator.onLine);
 }
 
 async function prepareStorageBindingForWrite() {
@@ -179,7 +180,7 @@ export async function put(store, value) {
     notifyDataChanged(store, 'upsert');
     return value;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
   const genericRecord = mergeLocalRecordForWrite(store, existing, value);
   const recordToStore = store === 'players' && existing
@@ -203,7 +204,7 @@ export async function putPlayerProfile(value) {
     notifyDataChanged('players', 'profile-upsert');
     return recordToStore;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction(['players', SYNC_QUEUE], 'readwrite');
   transaction.objectStore('players').put(recordToStore);
@@ -227,7 +228,7 @@ export async function putBatch(recordsByStore) {
     notifyDataChanged(storeNames, 'batch');
     return;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const normalizedRecordsByStore = {};
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
@@ -261,7 +262,7 @@ export async function remove(store, id) {
     notifyDataChanged(store, 'delete');
     return;
   }
-  await prepareStorageBindingForWrite();
+  if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
   const db = await openDatabase();
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).delete(id);
@@ -272,7 +273,7 @@ export async function remove(store, id) {
 }
 
 export async function flushSyncQueue() {
-  if (isDemoDatabase()) return false;
+  if (isDemoDatabase() || isReadOnlyPreview()) return false;
   if (!canUseCloud()) return false;
   // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
   // abrir/leer syncQueue para que una cola de la base legado nunca pueda
@@ -315,22 +316,53 @@ export async function flushSyncQueue() {
 
 async function replaceLocalStore(store, cloudRecords) {
   const db = await openDatabase();
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  const completed = transactionDone(transaction);
-  const objectStore = transaction.objectStore(store);
-  const [localRecords, pendingMutations] = await Promise.all([
-    requestResult(objectStore.getAll()),
-    requestResult(transaction.objectStore(SYNC_QUEUE).getAll()),
-  ]);
-  if (store === 'players' && (!cloudRecords || cloudRecords.length === 0) && localRecords.length > 0) {
-    console.warn('Protección activa: se omite vaciado local de jugadores sin confirmación explícita del servidor.');
-    await completed;
-    return;
-  }
-  const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
-  objectStore.clear();
-  for (const record of reconciledRecords) objectStore.put(record);
-  await completed;
+
+  // Safari/iOS puede cerrar una transacción IndexedDB si se cede el control
+  // entre las lecturas y las escrituras. Las dos lecturas y el clear/put deben
+  // permanecer en la misma transacción atómica y las escrituras se encolan
+  // desde el callback onsuccess de la última lectura, mientras sigue activa.
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
+    const objectStore = transaction.objectStore(store);
+    const queueStore = transaction.objectStore(SYNC_QUEUE);
+    const localRequest = objectStore.getAll();
+    const pendingRequest = queueStore.getAll();
+
+    let localRecords = [];
+    let pendingMutations = [];
+    let localReady = false;
+    let pendingReady = false;
+    let reconciled = false;
+
+    const reconcileAndWrite = () => {
+      if (reconciled || !localReady || !pendingReady) return;
+      reconciled = true;
+
+      if (store === 'players' && (!cloudRecords || cloudRecords.length === 0) && localRecords.length > 0) {
+        console.warn('Protección activa: se omite vaciado local de jugadores sin confirmación explícita del servidor.');
+        return;
+      }
+
+      const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
+      objectStore.clear();
+      for (const record of reconciledRecords) objectStore.put(record);
+    };
+
+    localRequest.onsuccess = () => {
+      localRecords = localRequest.result ?? [];
+      localReady = true;
+      reconcileAndWrite();
+    };
+    pendingRequest.onsuccess = () => {
+      pendingMutations = pendingRequest.result ?? [];
+      pendingReady = true;
+      reconcileAndWrite();
+    };
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error('No se pudo reconciliar la copia local.'));
+    transaction.onabort = () => reject(transaction.error ?? new Error('La reconciliación local se canceló.'));
+  });
 }
 
 async function queueInitialRecords(store, records) {
@@ -343,6 +375,29 @@ async function queueInitialRecords(store, records) {
 }
 
 export async function syncFromCloud() {
+  if (isReadOnlyPreview()) {
+    if (!canUseCloud()) return { online:false, pending:0 };
+    // The preview uses its own browser database. Serialize reads so two refreshes
+    // cannot replace stores in opposite orders and render a partial snapshot.
+    if (syncPromise) return syncPromise;
+    syncPromise = (async () => {
+      try {
+        let downloaded = 0;
+        for (const store of STORES) {
+          const snapshot = await cloudStore.getSnapshot(store);
+          await replaceLocalStore(store, snapshot.records);
+          downloaded += snapshot.records.length;
+        }
+        return { online:true, pending:0, downloaded, changed:true, readOnly:true };
+      } catch (error) {
+        if (error?.code === 'CAMPOBASE_AUTH_REQUIRED') return {online:false,pending:0,authRequired:true};
+        throw error;
+      }
+    })();
+    try { return await syncPromise; }
+    finally { syncPromise = null; }
+  }
+
   if (isDemoDatabase()) return { online: false, pending: 0, demo: true };
   if (!canUseCloud()) return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length };
   if (syncPromise) return syncPromise;
@@ -599,6 +654,7 @@ export async function exportDatabase() {
 }
 
 export async function importDatabase(backup) {
+  if (isReadOnlyPreview()) throw new Error('Importación bloqueada en la preview.');
   if (backup.saasUserId && typeof getBoundSaasUserId === 'function' && !getBoundSaasUserId()) {
     try { setBoundSaasUserId(backup.saasUserId); configureRealDatabase(); } catch {}
   }

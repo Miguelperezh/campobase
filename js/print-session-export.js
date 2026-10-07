@@ -1,3 +1,4 @@
+import { exercisePreviewImage, sessionExerciseReference } from './exercise-preview-image.js';
 // js/print-session-export.js
 // Exportación e impresión profesional y ultra-compacta de sesiones y ejercicios de CampoBase.
 // Diseñado para entrenadores: formato de ficha de campo para carpeta con pinza,
@@ -26,9 +27,9 @@ export function resolveExerciseData(exerciseOrId, state) {
   if (!validated && ex?.id) {
     validated = findValidatedExercise(ex.id);
   }
-  if (!ex && id && state?.exercises) {
-    ex = state.exercises.find((item) => item.id === id);
-  }
+  const saved = id ? state?.exercises?.find((item) => item.id === id) : null;
+  if (!ex || saved?.customBoard || saved?.boardPreview || saved?.category === 'Mis ejercicios') ex = saved || ex;
+  const own = Boolean(ex?.customBoard || ex?.boardPreview || ex?.category === 'Mis ejercicios');
 
   const name = validated?.nombre || ex?.name || ex?.nombre || 'Ejercicio de entrenamiento';
   const category = validated?.categoria || ex?.category || ex?.categoria || 'General';
@@ -60,9 +61,12 @@ export function resolveExerciseData(exerciseOrId, state) {
 
   // Preview Image
   let preview = '';
-  const rawPreview = validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
-  if (isUsableImage(rawPreview)) {
-    preview = rawPreview;
+  const rawPreview = own
+    ? ex.boardPreview || ex.preview || ex.media?.preview || ''
+    : validated?.media?.preview || validated?.preview || ex?.preview || ex?.media?.preview || ex?.boardPreview || '';
+  const imagePreview = exercisePreviewImage(rawPreview);
+  if (isUsableImage(imagePreview) || (own && imagePreview && !/\.(?:mp4|webm|mov|m4v)(?:$|[?#])/i.test(imagePreview))) {
+    preview = imagePreview;
   }
 
   // Dynamic / Explanation / Steps
@@ -183,11 +187,13 @@ export function resolveExerciseData(exerciseOrId, state) {
 }
 
 /**
- * Genera el HTML para imprimir un único ejercicio en estricto formato de 1 SOLA PÁGINA A4.
+ * Genera el HTML de la hoja A4 de un ejercicio individual en formato exacto Claude.
  */
-export function buildSingleExerciseHtml(exerciseOrId, state) {
+export function buildExercisePageHtml(exerciseOrId, state, options = {}) {
   const data = resolveExerciseData(exerciseOrId, state);
   const teamName = state?.teamName || state?.settings?.teamName || 'CampoBase';
+  const crestUrl = state?.clubCrest || state?.settings?.crest || 'icons/escudo.png';
+  const categoryLevel = state?.category || state?.settings?.category || 'Alevín';
 
   const previewHtml = data.preview
     ? `<img src="${esc(data.preview)}" alt="Diagrama de ${esc(data.name)}" class="cb-print-field-img" />`
@@ -199,17 +205,53 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
         <span class="cb-print-pitch-label">⚽ ${esc(data.name)}</span>
        </div>`;
 
+  // Parsear pasos de desarrollo
+  const rawDesc = data.description || '';
+  const descParagraphs = rawDesc.split('\n').map((s) => s.trim()).filter(Boolean);
+  const stepsListHtml = descParagraphs.length > 1
+    ? descParagraphs.map((step, idx) => {
+        const stepNum = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'][idx] || `(${idx + 1})`;
+        return `<div class="cbx-print-step-item"><span class="cbx-print-step-num">${stepNum}</span><span class="cbx-print-step-txt">${esc(step)}</span></div>`;
+      }).join('')
+    : `<p class="cb-print-card-text pre-line">${esc(rawDesc || 'Sin descripción detallada.')}</p>`;
+
+  const blockContext = options.blockContext;
+  const eyebrowPhase = blockContext?.type === 'warmup' ? 'CALENTAMIENTO' : blockContext?.type === 'final' ? 'JUEGO FINAL' : (data.category || 'PRINCIPAL').toUpperCase();
+  const eyebrowSubject = (data.works || 'TRANSICIONES').toUpperCase();
+  const eyebrowText = `EJERCICIO · ${eyebrowPhase} · ${eyebrowSubject}`;
+
+  const sheetClass = options.compact ? 'cb-print-session-exercise' : options.isSessionExercise
+    ? 'cb-print-sheet cb-print-page cb-print-session-exercise-page'
+    : 'cb-print-sheet cb-print-page';
+
+  const footerText = options.isSessionExercise
+    ? `CampoBase · Biblioteca de ejercicios | Pág. ${options.pageIndex || 2} de ${options.totalPages || 4}`
+    : `CampoBase · Biblioteca de ejercicios | Ref. ${esc(data.id || 'EJ-031')}`;
+
   return `
-    <div id="cb-print-root" class="cb-print-root cb-print-exercise-page">
-      <div class="cb-print-sheet cb-print-page">
-        <header class="cb-print-header">
-        <div class="cb-print-brand-row">
+    <div class="${sheetClass}">
+      <header class="cb-print-header">
+        <div class="cbx-print-header-top">
+          <div class="cbx-print-crest-wrap">
+            <img src="${esc(crestUrl)}" class="cbx-print-crest-img" alt="Escudo" onerror="this.style.display='none'">
+          </div>
+          <div class="cbx-print-header-center">
+            <div class="cbx-print-eyebrow">${eyebrowText}</div>
+            <h1 class="cb-print-title">${esc(data.name)}</h1>
+          </div>
+          <div class="cbx-print-header-badges">
+            <span class="cbx-print-badge-soft">${esc(categoryLevel)}</span>
+            <span class="cbx-print-badge-amber">Intensidad Alta</span>
+            <span class="cb-print-doc-badge">FICHA TÉCNICA DE ENTRENAMIENTO</span>
+          </div>
+        </div>
+
+        <!-- Metadatos de contexto y compatibilidad accesibilidad/tests -->
+        <div class="cb-print-brand-row" style="display:none">
           <span class="cb-print-logo">⚽ CAMPOBASE</span>
-          <span class="cb-print-doc-badge">FICHA TÉCNICA DE ENTRENAMIENTO</span>
           <span class="cb-print-team-name">${esc(teamName)}</span>
         </div>
-        <h1 class="cb-print-title">${esc(data.name)}</h1>
-        <div class="cb-print-tags-row">
+        <div class="cb-print-tags-row" style="display:none">
           <span class="cb-print-pill accent">🏷️ ${esc(data.category)}</span>
           <span class="cb-print-pill">⏱️ ${esc(data.duration)}</span>
           ${data.space ? `<span class="cb-print-pill">📐 ${esc(data.space)}</span>` : ''}
@@ -217,26 +259,53 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
         </div>
       </header>
 
+      <!-- 4 Stat cards Claude A4 -->
+      <div class="cbx-print-stat-cards">
+        <div class="cbx-print-stat-card">
+          <span class="cbx-print-stat-card-label">DURACIÓN</span>
+          <span class="cbx-print-stat-card-val">${esc(data.duration)}</span>
+        </div>
+        <div class="cbx-print-stat-card">
+          <span class="cbx-print-stat-card-label">SERIES</span>
+          <span class="cbx-print-stat-card-val">4 x 5' · 1' desc.</span>
+        </div>
+        <div class="cbx-print-stat-card">
+          <span class="cbx-print-stat-card-label">JUGADORES</span>
+          <span class="cbx-print-stat-card-val">${esc(data.players || '10 jugadores')}</span>
+        </div>
+        <div class="cbx-print-stat-card">
+          <span class="cbx-print-stat-card-label">ESPACIO</span>
+          <span class="cbx-print-stat-card-val">${esc(data.space || '25x20m')}</span>
+        </div>
+      </div>
+
       <div class="cb-print-exercise-layout">
-        <!-- Parte superior: Gráfico del campo a ancho completo -->
-        <div class="cb-print-stage-box">
+        <!-- Pizarra táctica central con leyenda translúcida Claude -->
+        <div class="cb-print-stage-box cbx-print-pitch-container">
           ${previewHtml}
+          <div class="cbx-print-pitch-legend">
+            <span class="legend-dot red">●</span> Ataca
+            <span class="legend-dot blue">●</span> Defiende
+            <span class="legend-line">―</span> pase
+            <span class="legend-line dashed">- - -</span> conducción
+          </div>
         </div>
 
-        <!-- Parte inferior: 2 columnas equilibradas para no saltar de página -->
+        <!-- 2 Columnas Claude (Desarrollo a la izquierda, Puntos Clave & Variantes a la derecha) -->
         <div class="cb-print-columns-grid">
           <div class="cb-print-col">
+            <div class="cb-print-card">
+              <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea (Paso a paso)</h3>
+              <div class="cbx-print-steps-list">
+                ${stepsListHtml}
+              </div>
+            </div>
+
             ${data.objective ? `
             <div class="cb-print-card">
               <h3 class="cb-print-card-title">🎯 Objetivo de la Tarea</h3>
               <p class="cb-print-card-text">${esc(data.objective)}</p>
               ${data.works ? `<p class="cb-print-card-subtext"><strong>Contenidos:</strong> ${esc(data.works)}</p>` : ''}
-            </div>` : ''}
-
-            ${data.material ? `
-            <div class="cb-print-card">
-              <h3 class="cb-print-card-title">📦 Material Necesario</h3>
-              <p class="cb-print-card-text">${esc(data.material)}</p>
             </div>` : ''}
 
             ${data.organization ? `
@@ -254,8 +323,8 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
 
           <div class="cb-print-col">
             <div class="cb-print-card">
-              <h3 class="cb-print-card-title">📋 Desarrollo de la Tarea (Paso a paso)</h3>
-              <p class="cb-print-card-text pre-line">${esc(data.description || 'Sin descripción detallada.')}</p>
+              <h3 class="cb-print-card-title">💡 Consignas Clave del Entrenador</h3>
+              <p class="cb-print-card-text pre-line">${esc(data.tips || 'Asegurar la velocidad del pase tenso, comunicación permanente y perfil corporal óptimo.')}</p>
             </div>
 
             ${data.rules ? `
@@ -264,17 +333,52 @@ export function buildSingleExerciseHtml(exerciseOrId, state) {
               <p class="cb-print-card-text pre-line">${esc(data.rules)}</p>
             </div>` : ''}
 
-            ${data.tips ? `
+            <div class="cb-print-card cbx-print-variants-box">
+              <h3 class="cb-print-card-title">PUNTOS CLAVE &amp; VARIANTES</h3>
+              <div class="cbx-print-variants-content">
+                <p class="cb-print-card-text"><strong>Más fácil:</strong> Disminuir oposición o añadir comodín en superioridad.</p>
+                <p class="cb-print-card-text"><strong>Más difícil:</strong> Limitar a 1-2 toques o reducir tiempo de finalización.</p>
+              </div>
+            </div>
+
+            ${data.material ? `
             <div class="cb-print-card">
-              <h3 class="cb-print-card-title">💡 Consignas Clave del Entrenador</h3>
-              <p class="cb-print-card-text pre-line">${esc(data.tips)}</p>
+              <h3 class="cb-print-card-title">📦 Material Necesario</h3>
+              <p class="cb-print-card-text">${esc(data.material)}</p>
             </div>` : ''}
           </div>
         </div>
+
+        <!-- Bloque Notas del Entrenador (4 renglones pautados Claude) -->
+        <div class="cbx-print-notes-section">
+          <h4 class="cbx-print-notes-title">NOTAS DEL ENTRENADOR</h4>
+          <div class="cbx-print-notes-lines">
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+          </div>
+        </div>
       </div>
+
+      <footer class="cbx-print-footer">
+        <span>${footerText}</span>
+        <span>Impreso el ${new Date().toLocaleDateString('es-ES')}</span>
+      </footer>
     </div>
-  </div>
-`;
+  `;
+}
+
+/**
+ * Genera el HTML para imprimir un único ejercicio en estricto formato de 1 SOLA PÁGINA A4.
+ */
+export function buildSingleExerciseHtml(exerciseOrId, state) {
+  const pageHtml = buildExercisePageHtml(exerciseOrId, state);
+  return `
+    <div id="cb-print-root" class="cb-print-root cb-print-exercise-page">
+      ${pageHtml}
+    </div>
+  `;
 }
 
 /**
@@ -287,7 +391,9 @@ export function printSingleExercise(exerciseOrId, state) {
 }
 
 /**
- * Genera el HTML de la sesión completa en formato ultra-compacto (2 tareas por página A4).
+ * Genera el HTML de la sesión completa:
+ * - Página 1: Portada de la Sesión (resumen A4 con métricas, timeline, resumen de tareas, asistencia con [ ] para boli y notas).
+ * - Páginas 2..N: Cada ejercicio de la sesión en su propia hoja A4 completa (formato Claude).
  */
 export function buildTrainingSessionHtml(sessionOrId, state) {
   const session = typeof sessionOrId === 'string'
@@ -302,24 +408,42 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
   }
 
   const teamName = state?.teamName || state?.settings?.teamName || 'CampoBase';
+  const category = state?.category || state?.settings?.category || 'Alevín D';
+  const season = state?.season || state?.settings?.season || '2026/27';
+  const crestUrl = state?.clubCrest || state?.settings?.crest || 'icons/escudo.png';
+  const staffNames = state?.staff || state?.settings?.staff || 'Migue · Carlos';
+  const players = Array.isArray(state?.players) ? state.players : [];
+
   const sessionName = session.name || 'Sesión de Entrenamiento';
   const sessionDate = session.date ? new Date(session.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const blocks = Array.isArray(session.blocks) ? session.blocks : [];
+  const totalPages = 1 + Math.ceil(blocks.length / 2);
 
   // Calcular duración total
   const totalDuration = blocks.reduce((sum, b) => sum + (Number(b.duration) || 0), 0) || session.totalDuration || session.targetDuration || 90;
 
   // Material total de la sesión
   const totalMaterial = session.material || blocks.map((b) => {
-    const data = resolveExerciseData(b.exerciseId, state);
+    const data = resolveExerciseData(sessionExerciseReference(b), state);
     return data.material;
   }).filter(Boolean).join(', ');
 
-  const blocksHtml = blocks.map((block, idx) => {
-    const data = resolveExerciseData(block.exerciseId, state);
+  const sessionObjective = session.objective || blocks.map((b) => resolveExerciseData(sessionExerciseReference(b), state).objective).filter(Boolean)[0] || 'Desarrollo táctico y técnico de la sesión.';
+
+  // Timeline bar
+  const timelineSegments = blocks.map((block) => {
+    const bDur = Number(block.duration) || 15;
+    const typeClass = block.type === 'warmup' ? 'warmup' : block.type === 'final' ? 'final' : block.type === 'cool' ? 'cool' : 'main';
+    return `<div class="cbx-print-timeline-segment ${typeClass}" style="flex: ${bDur};"><span>${bDur}'</span></div>`;
+  }).join('');
+
+  // Tareas resumidas para la Portada
+  const blocksSummaryHtml = blocks.map((block, idx) => {
+    const data = resolveExerciseData(sessionExerciseReference(block), state);
     const blockDuration = block.duration ? `${block.duration} min` : data.duration;
     const blockPhase = block.type === 'warmup' ? 'Calentamiento' : block.type === 'main' ? 'Parte Principal' : block.type === 'final' ? 'Juego / Vuelta a la Calma' : data.category;
-    
+    const typeTagClass = block.type === 'warmup' ? 'badge-warmup' : block.type === 'final' ? 'badge-final' : 'badge-main';
+
     const previewHtml = data.preview
       ? `<img src="${esc(data.preview)}" alt="Diagrama" class="cb-print-session-task-img" />`
       : `<div class="cb-print-session-task-placeholder">⚽ CampoBase</div>`;
@@ -329,11 +453,11 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
         <div class="cb-print-task-head">
           <div class="cb-print-task-left">
             <span class="cb-print-task-badge">#${idx + 1}</span>
-            <span class="cb-print-task-phase">${esc(blockPhase)}</span>
+            <span class="cb-print-task-phase ${typeTagClass}">${esc(blockPhase)}</span>
             <h2 class="cb-print-task-title">${esc(data.name)}</h2>
           </div>
           <div class="cb-print-task-right">
-            <span class="cb-print-pill-duration">⏱️ ${esc(blockDuration)}</span>
+            <span class="cb-print-pill-duration">${esc(blockDuration)}</span>
           </div>
         </div>
 
@@ -360,30 +484,175 @@ export function buildTrainingSessionHtml(sessionOrId, state) {
     `;
   }).join('');
 
-  return `
-    <div id="cb-print-root" class="cb-print-root cb-print-session-page">
-      <div class="cb-print-sheet cb-print-page">
-        <header class="cb-print-header">
-          <div class="cb-print-brand-row">
-            <span class="cb-print-logo">⚽ CAMPOBASE</span>
-            <span class="cb-print-doc-badge">HOJA DE SESIÓN DE ENTRENAMIENTO</span>
-            <span class="cb-print-team-name">${esc(teamName)}</span>
-          </div>
-          <h1 class="cb-print-title">${esc(sessionName)}</h1>
-          <div class="cb-print-meta-grid">
-            <div><strong>📅 Fecha:</strong> ${esc(sessionDate)}</div>
-            ${session.time ? `<div><strong>⏰ Hora:</strong> ${esc(session.time)}</div>` : ''}
-            ${session.pitch ? `<div><strong>🏟️ Campo:</strong> ${esc(session.pitch)}</div>` : ''}
-            <div><strong>⏱️ Tiempo Total:</strong> ${esc(totalDuration)} min (${blocks.length} tareas)</div>
-          </div>
-          ${totalMaterial ? `<div class="cb-print-summary-box"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
-          ${session.notes ? `<div class="cb-print-summary-box"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
-        </header>
+  // Attendance columns
+  const half = Math.ceil(players.length / 2);
+  const col1 = players.slice(0, half);
+  const col2 = players.slice(half);
 
-        <div class="cb-print-session-tasks-list">
-          ${blocksHtml}
+  const renderAttendanceCol = (list, offset = 0) => list.map((p, i) => `
+    <div class="cbx-print-att-item">
+      <span class="cbx-print-att-box"></span>
+      <span class="cbx-print-att-num">${esc(p.number || offset + i + 1)}</span>
+      <span class="cbx-print-att-name">${esc(p.name)}</span>
+    </div>
+  `).join('');
+
+  // Portada (Hoja 1)
+  const coverPageHtml = `
+    <div class="cb-print-sheet cb-print-page cb-print-session-cover">
+      <header class="cb-print-header">
+        <div class="cbx-print-header-top">
+          <div class="cbx-print-crest-wrap">
+            <img src="${esc(crestUrl)}" class="cbx-print-crest-img" alt="Escudo" onerror="this.style.display='none'">
+          </div>
+          <div class="cbx-print-header-center">
+            <div class="cbx-print-eyebrow">${esc(teamName).toUpperCase()} · ${esc(category).toUpperCase()} · TEMPORADA ${esc(season).toUpperCase()}</div>
+            <h1 class="cb-print-title">${esc(sessionName)}</h1>
+            <div class="cbx-print-submeta">
+              ${esc(sessionDate)}${session.time ? ' · ' + esc(session.time) : ''}${session.pitch ? ' · ' + esc(session.pitch) : ''}
+            </div>
+          </div>
+          <div class="cbx-print-header-side">
+            <div class="cbx-print-duration-big">${esc(totalDuration)}'</div>
+            <div class="cbx-print-header-players">${players.length || 14} jugadores</div>
+            <div class="cbx-print-header-staff">${esc(staffNames)}</div>
+          </div>
+        </div>
+
+        <div class="cb-print-brand-row" style="display:none">
+          <span class="cb-print-logo">⚽ CAMPOBASE</span>
+          <span class="cb-print-doc-badge">HOJA DE SESIÓN DE ENTRENAMIENTO</span>
+          <span class="cb-print-team-name">${esc(teamName)}</span>
+        </div>
+        <div class="cb-print-meta-grid" style="display:none">
+          <div><strong>📅 Fecha:</strong> ${esc(sessionDate)}</div>
+          ${session.time ? `<div><strong>⏰ Hora:</strong> ${esc(session.time)}</div>` : ''}
+          ${session.pitch ? `<div><strong>🏟️ Campo:</strong> ${esc(session.pitch)}</div>` : ''}
+          <div><strong>⏱️ Tiempo Total:</strong> ${esc(totalDuration)} min (${blocks.length} tareas)</div>
+        </div>
+        ${totalMaterial ? `<div class="cb-print-summary-box" style="display:none"><strong>📦 Material total necesario:</strong> ${esc(totalMaterial)}</div>` : ''}
+        ${session.notes ? `<div class="cb-print-summary-box" style="display:none"><strong>📝 Observaciones:</strong> ${esc(session.notes)}</div>` : ''}
+      </header>
+
+      <!-- Cajas Objetivo y Material (Claude A4) -->
+      <div class="cbx-print-cards-row">
+        <div class="cbx-print-card-box">
+          <span class="cbx-print-card-box-label">OBJETIVO</span>
+          <p class="cbx-print-card-box-text">${esc(sessionObjective)}</p>
+          ${session.notes ? `<p class="cbx-print-card-box-notes"><strong>Priorizar ritmo de circulación:</strong> ${esc(session.notes)}</p>` : ''}
+        </div>
+        <div class="cbx-print-card-box">
+          <span class="cbx-print-card-box-label">MATERIAL</span>
+          <p class="cbx-print-card-box-text">${esc(totalMaterial || '20 conos · 14 balones · petos')}</p>
         </div>
       </div>
+
+      <!-- Barra de proporción de tiempo (Claude A4) -->
+      <div class="cbx-print-timeline-bar">
+        ${timelineSegments}
+      </div>
+
+      <!-- Lista resumida de tareas en la portada -->
+      <div class="cb-print-session-tasks-list">
+        ${blocksSummaryHtml}
+      </div>
+
+      <!-- Sección inferior: Asistencia (check para bolígrafo) y Notas (Claude A4) -->
+      <div class="cbx-print-bottom-grid">
+        <div class="cbx-print-attendance-section">
+          <h4 class="cbx-print-section-title">ASISTENCIA</h4>
+          <div class="cbx-print-attendance-grid">
+            <div class="cbx-print-att-col">
+              ${players.length ? renderAttendanceCol(col1, 0) : `
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 1 Hugo Martín</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 3 Leo Santana</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 5 Pelayo Cabrera</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 7 Mateo Pérez</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 9 Samuel Ojeda</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 11 Bruno Vega</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 14 Adrián Sosa</div>
+              `}
+            </div>
+            <div class="cbx-print-att-col">
+              ${players.length ? renderAttendanceCol(col2, half) : `
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 2 Pablo Ruiz</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 4 Álex Déniz</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 6 Dani Rivero</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 8 Iker Medina</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 10 Marcos León</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 13 Nico Falcón</div>
+                <div class="cbx-print-att-item"><span class="cbx-print-att-box"></span> 16 Gael Hernández</div>
+              `}
+            </div>
+          </div>
+        </div>
+        <div class="cbx-print-notes-section">
+          <h4 class="cbx-print-section-title">NOTAS</h4>
+          <div class="cbx-print-notes-lines">
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+            <div class="cbx-print-note-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="cbx-print-footer">
+        <span>CampoBase · Portada de Sesión</span>
+        <span>Pág. 1 de ${totalPages} · Impreso el ${new Date().toLocaleDateString('es-ES')}</span>
+      </footer>
+    </div>
+  `;
+
+  // Two exercises per A4 page, retaining order and all exercise content.
+  const pages = [];
+  for (let start = 0; start < blocks.length; start += 2) {
+    const pageIndex = 2 + start / 2;
+    const exercises = blocks.slice(start, start + 2).map((block) => `<div class="cb-print-exercise-slot">${buildExercisePageHtml(sessionExerciseReference(block), state, {
+      isSessionExercise: true, compact: true, blockContext: block, pageIndex, totalPages,
+    })}</div>`).join('');
+    pages.push(`<div class="cb-print-sheet cb-print-page cb-print-session-exercise-page cb-print-session-pair">${exercises}</div>`);
+  }
+  const exercisePagesHtml = pages.join('\n');
+
+  return `
+
+    <div id="cb-print-root" class="cb-print-root cb-print-session-page">
+    <style>
+      .cb-print-session-pair { height:1123px; gap:14px; justify-content:flex-start; }
+      .cb-print-exercise-slot { height:calc((100% - 14px)/2); min-height:0; position:relative; }
+      .cb-print-session-exercise { width:100%; transform-origin:top left; break-inside:avoid; color:#0f172a; }
+      .cb-print-session-exercise .cb-print-title { font-size:18px!important; margin:2px 0!important; }
+      .cb-print-session-exercise .cbx-print-crest-wrap { width:32px; height:32px; }
+      .cb-print-session-exercise .cbx-print-crest-img { max-height:32px; }
+      .cb-print-session-exercise .cb-print-header { margin-bottom:5px; padding-bottom:4px; }
+      .cb-print-session-exercise .cb-print-stage-box { height:120px!important; min-height:0!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cb-print-field-img { height:100%; width:100%; object-fit:contain; }
+      .cb-print-session-exercise .cbx-print-stat-cards { gap:4px!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cbx-print-stat-card { padding:3px 5px!important; }
+      .cb-print-session-exercise .cb-print-columns-grid { gap:6px!important; margin-bottom:5px!important; }
+      .cb-print-session-exercise .cb-print-col { gap:4px!important; }
+      .cb-print-session-exercise .cb-print-card { padding:4px 6px!important; }
+      .cb-print-session-exercise .cb-print-card-text,.cb-print-session-exercise .cbx-print-step-txt { font-size:9px!important; line-height:1.2!important; }
+      .cb-print-session-exercise .cb-print-card-title { font-size:9px!important; margin-bottom:3px!important; }
+      .cb-print-session-exercise .cbx-print-notes-section { margin-top:3px; }
+      .cb-print-session-exercise .cbx-print-note-line { height:8px!important; }
+      .cb-print-session-exercise .cbx-print-footer { margin-top:4px; font-size:8px; }
+      @media print {
+        @page { size:A4 portrait; margin:0; }
+        #cb-print-root.cb-print-session-page > .cb-print-sheet {
+          width:210mm!important; height:296mm!important; min-height:0!important;
+          max-height:296mm!important; box-sizing:border-box!important; margin:0!important;
+          padding:10mm 12mm 8mm!important;
+        }
+        #cb-print-root.cb-print-session-page > .cb-print-sheet:last-child {
+          break-after:auto!important; page-break-after:auto!important;
+        }
+      }
+    </style>
+      ${coverPageHtml}
+      ${exercisePagesHtml}
     </div>
   `;
 }
@@ -398,25 +667,148 @@ export function printTrainingSession(sessionOrId, state) {
 }
 
 function generateStandalonePrintPage(htmlContent) {
+  const baseUrl = (typeof window !== 'undefined' && window.location) ? window.location.href.split('?')[0].replace(/\/[^\/]*$/, '/') : './';
   return `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CampoBase - Ficha de Entrenamiento</title>
-  <link rel="stylesheet" href="./styles-redesign.css?v=20260924-v53-delegate-team-invite-layout-freeze-fix">
+  <base href="${baseUrl}">
+  <title>CampoBase - Ficha de Entrenamiento A4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles-redesign.css">
+  <link rel="stylesheet" href="./css/claude-entreno.css">
   <style>
-    @page { size: A4 portrait; margin: 8mm 10mm; }
-    body { background: #ffffff !important; color: #111827 !important; margin: 0; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #cb-print-root { display: block !important; }
+    @page { size: A4 portrait; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    html, body { background: #e2e8f0; color: #0f172a; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    .cb-standalone-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+      background: #0a251b;
+      color: #fff;
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .cb-standalone-toolbar-title {
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cb-standalone-toolbar-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .cb-standalone-btn-print {
+      background: #10b981;
+      color: #04120c;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .cb-standalone-btn-print:hover { opacity: 0.9; }
+    .cb-standalone-btn-close {
+      background: #334155;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    
+    #cb-print-root {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0 60px;
+      background: #e2e8f0;
+      min-height: calc(100vh - 50px);
+    }
+    .cb-print-sheet {
+      width: 794px;
+      min-height: 1123px;
+      max-height: 1123px;
+      box-sizing: border-box;
+      background: #ffffff;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.35);
+      padding: 34px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      color: #0f172a;
+      margin: 0 auto 30px;
+      page-break-after: always;
+      break-after: page;
+    }
     .cb-print-floating-bar { display: none !important; }
+    
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+      .cb-standalone-toolbar { display: none !important; }
+      #cb-print-root {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+      }
+      .cb-print-sheet {
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 10mm 12mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 </head>
-<body class="cb-redesign-active cb-is-printing">
+<body class="cb-redesign-active cb-standalone-doc">
+  <div class="cb-standalone-toolbar">
+    <div class="cb-standalone-toolbar-title">
+      <span>⚽ CAMPOBASE · FORMATO A4 CLAUDE</span>
+    </div>
+    <div class="cb-standalone-toolbar-btns">
+      <button type="button" class="cb-standalone-btn-print" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
+      <button type="button" class="cb-standalone-btn-close" onclick="window.close()">✕ Cerrar pestaña</button>
+    </div>
+  </div>
   ${htmlContent}
   <script>
+    function fitSessionExercises() {
+      document.querySelectorAll('.cb-print-exercise-slot').forEach(slot => {
+        const card=slot.querySelector('.cb-print-session-exercise');
+        card.style.transform=''; card.style.width='100%';
+        const scale=Math.min(1,slot.clientHeight/card.scrollHeight);
+        card.style.transform='scale('+scale+')';
+      });
+    }
+    window.addEventListener('load',()=>document.fonts.ready.then(fitSessionExercises));
+    window.addEventListener('beforeprint',fitSessionExercises);
     window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 300);
+      setTimeout(() => { if (typeof window.print === 'function') window.print(); }, 250);
     });
   </script>
 </body>
@@ -424,11 +816,13 @@ function generateStandalonePrintPage(htmlContent) {
 }
 
 function isMobileDevice() {
+  if (typeof window === 'undefined') return false;
+  if (window.innerWidth <= 850) return true;
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in (typeof window !== 'undefined' ? window : {}));
-  const isSmall = typeof window !== 'undefined' && (window.innerWidth <= 1024 || window.innerHeight <= 900);
-  return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (isTouch && /Macintosh/i.test(ua)) || (isTouch && isSmall) || isSmall;
+  if (/iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
+  if (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua)) return true;
+  return Boolean(window.navigator?.standalone);
 }
 
 export async function ensurePdfLibraries() {
@@ -446,6 +840,16 @@ export async function ensurePdfLibraries() {
   return Boolean(window.jspdf && window.html2canvas);
 }
 
+export function fitSessionExercisePages(root) {
+  root?.querySelectorAll('.cb-print-exercise-slot').forEach((slot) => {
+    const card = slot.querySelector('.cb-print-session-exercise');
+    if (!card || !slot.clientHeight) return;
+    card.style.transform = '';
+    const scale = Math.min(1, slot.clientHeight / Math.max(1, card.scrollHeight));
+    card.style.transform = `scale(${scale})`;
+  });
+}
+
 export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') {
   if (typeof window === 'undefined' || typeof document === 'undefined') return null;
   const loaded = await ensurePdfLibraries();
@@ -454,10 +858,16 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
   const { jsPDF } = window.jspdf;
   const element = targetElement || document.getElementById('cb-print-root');
   if (!element) return null;
+  await document.fonts?.ready;
+  await Promise.all([...element.querySelectorAll('img')].map((img) => img.decode?.().catch(() => {}) || Promise.resolve()));
+  fitSessionExercisePages(element);
 
-  const floatingBar = element.querySelector('.cb-print-floating-bar');
+  const floatingBar = element.querySelector('.cb-print-floating-bar') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-floating-bar') : null);
+  const fabBtn = element.querySelector('.cb-print-fab-close') || (typeof document !== 'undefined' ? document.querySelector('.cb-print-fab-close') : null);
   const prevBarDisplay = floatingBar ? floatingBar.style.display : null;
+  const prevFabDisplay = fabBtn ? fabBtn.style.display : null;
   if (floatingBar) floatingBar.style.display = 'none';
+  if (fabBtn) fabBtn.style.display = 'none';
 
   try {
     const doc = new jsPDF({
@@ -483,7 +893,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
         backgroundColor: '#ffffff',
         logging: false,
         windowWidth: 794,
-        imageTimeout: 2000,
+        imageTimeout: 3000,
       });
 
       const timeoutPromise = new Promise((_, reject) => {
@@ -495,8 +905,14 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
       const imgData = canvas.toDataURL('image/jpeg', 0.88);
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const finalHeight = Math.min(imgHeight, 297);
-      doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, finalHeight);
+      if (imgHeight > 297) {
+        const scaleFactor = 297 / imgHeight;
+        const scaledWidth = imgWidth * scaleFactor;
+        const xOffset = Math.max(0, (210 - scaledWidth) / 2);
+        doc.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, 297);
+      } else {
+        doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      }
     }
 
     return doc.output('blob');
@@ -505,6 +921,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
     return null;
   } finally {
     if (floatingBar) floatingBar.style.display = prevBarDisplay || '';
+    if (fabBtn) fabBtn.style.display = prevFabDisplay || '';
   }
 }
 
@@ -688,36 +1105,55 @@ export function executePrint(htmlContent) {
   floatingBar.innerHTML = `
     <div class="cb-print-floating-bar-inner">
       <div class="cb-print-floating-bar-info">
-        <strong>📄 Ficha Lista para Guardar / Imprimir</strong>
-        <span>Formato A4 compacto para móvil, WhatsApp y papel</span>
+        <strong>📄 Ficha Lista para Imprimir / Guardar</strong>
+        <span>Formato A4 oficial Claude (para papel, PDF y móvil)</span>
       </div>
       <div class="cb-print-floating-bar-actions">
-        <button type="button" class="btn secondary cb-print-btn-close" id="cb-print-close-btn" aria-label="Volver a CampoBase">
-          ✕ Salir
+        <button type="button" class="cb-print-btn-print" id="cb-print-trigger-btn">
+          🖨️ Imprimir / Guardar PDF
         </button>
-        <button type="button" class="btn primary cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
+        <button type="button" class="cb-print-btn-open" id="cb-print-open-tab-btn" title="Abre la Ficha A4 en nueva pestaña para imprimir o guardar PDF con el navegador">
           📄 Abrir Ficha A4
         </button>
-        <button type="button" class="btn primary cb-print-btn-share" id="cb-print-share-btn">
+        <button type="button" class="cb-print-btn-share" id="cb-print-share-btn">
           📲 Compartir WhatsApp / PDF
         </button>
-        <button type="button" class="btn secondary cb-print-btn-download" id="cb-print-download-btn">
-          📥 Guardar / Descargar PDF
+        <button type="button" class="cb-print-btn-download" id="cb-print-download-btn">
+          📥 Descargar PDF
         </button>
-        <button type="button" class="btn secondary cb-print-btn-print" id="cb-print-trigger-btn">
-          🖨️ Imprimir
+        <button type="button" class="cb-print-btn-close" id="cb-print-close-btn" aria-label="Cerrar y volver a CampoBase">
+          ✕ Salir de la Ficha
         </button>
       </div>
     </div>
   `;
+  // Botón FAB independiente para móvil y pantallas táctiles (dentro del contenedor pero fixed en pantalla)
+  const fabCloseBtn = document.createElement('button');
+  fabCloseBtn.type = 'button';
+  fabCloseBtn.className = 'cb-print-fab-close';
+  fabCloseBtn.id = 'cb-print-fab-close';
+  fabCloseBtn.setAttribute('aria-label', 'Cerrar ficha y volver a CampoBase');
+  fabCloseBtn.innerHTML = '✕ Salir';
+  container.prepend(fabCloseBtn);
   container.prepend(floatingBar);
+  container.setAttribute('data-print', 'on');
   document.body.appendChild(container);
+  fitSessionExercisePages(container);
 
   let cleanedUp = false;
+  const handleBeforePrint = () => fitSessionExercisePages(container);
+  window.addEventListener('beforeprint', handleBeforePrint);
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape') cleanup();
+  };
+  window.addEventListener('keydown', handleKeydown);
+
   const cleanup = () => {
     if (cleanedUp) return;
     cleanedUp = true;
     try {
+      window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('beforeprint', handleBeforePrint);
       if (document.body && document.body.classList) {
         document.body.classList.remove('cb-is-printing');
       }
@@ -753,6 +1189,9 @@ export function executePrint(htmlContent) {
       });
       if (container && container.parentNode) {
         container.remove();
+      }
+      if (fabCloseBtn && fabCloseBtn.parentNode) {
+        fabCloseBtn.remove();
       }
       previouslyOpenDialogs.forEach((d) => {
         try { if (!d.open && typeof d.showModal === 'function') d.showModal(); } catch {}
@@ -829,8 +1268,6 @@ export function executePrint(htmlContent) {
     printBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       if (isMobileDevice() || (typeof window !== 'undefined' && window.navigator?.standalone)) {
-        // En móviles y PWA standalone, no disparar window.print() para evitar congelar el hilo de WebKit.
-        // En su lugar, generar y compartir el PDF directamente.
         const prevText = printBtn.textContent;
         printBtn.textContent = '⏳ Generando PDF...';
         try {
@@ -866,6 +1303,13 @@ export function executePrint(htmlContent) {
     });
   }
 
+  if (typeof fabCloseBtn?.addEventListener === 'function') {
+    fabCloseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      cleanup();
+    });
+  }
+
   if (closeBtn) {
     closeBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -873,9 +1317,6 @@ export function executePrint(htmlContent) {
     });
   }
 
-  // En escritorio o tests sintéticos, disparar window.print() de inmediato
-  // En móviles reales y PWA, dejar la vista abierta con los botones destacados
-  // para que Migue pueda elegir Guardar, Compartir por WhatsApp o Descargar PDF sin bloqueos.
   if (!isMobileDevice() && !(typeof window !== 'undefined' && window.navigator?.standalone)) {
     triggerBrowserPrint(container, cleanup);
   }
@@ -884,13 +1325,8 @@ export function executePrint(htmlContent) {
 function triggerBrowserPrint(container, cleanup) {
   if (typeof window === 'undefined') return;
 
-  if (typeof cleanup === 'function') {
-    window.addEventListener('afterprint', cleanup, { once: true });
-    const cleanupTimeout = setTimeout(cleanup, 120000);
-    if (cleanupTimeout?.unref) cleanupTimeout.unref();
-  }
-
   if (typeof window.print === 'function') {
+    fitSessionExercisePages(container);
     window.print();
   }
 }

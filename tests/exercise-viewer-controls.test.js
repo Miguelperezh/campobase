@@ -65,12 +65,12 @@ test('la cadena real Movimiento -> animated -> viewPlay llega a playPhases', () 
   assert.equal(replayClicks, 1, 'Reproducir debe pulsar viewPlay, que llama a playPhases');
 });
 
-test('2475 publica solo la corrección del visor y mantiene la integración validada', () => {
+test('visor mantiene la integración validada y cachea sus correcciones', () => {
   assert.match(supabaseClient, /exercise-viewer-controls\.js\?v=2475/);
-  assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=2475/);
-  assert.match(supabaseClient, /exercise-board-persistence\.js\?v=20260924-v59-delegate-views-visible-render-fix/);
-  assert.match(supabaseClient, /runtime-refresh\.js\?v=20260924-v59-delegate-views-visible-render-fix/);
+  assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=plan-visual-1/);
+  assert.match(supabaseClient, /exercise-board-persistence\.js\?v=20260927-v66-real-calendar-dates/);
+  assert.match(supabaseClient, /runtime-refresh\.js\?v=plan-visual-1/);
   assert.match(serviceWorker, /exerciseboard-2475/);
   assert.match(serviceWorker, /exercise-viewer-controls\.js\?v=2475/);
-  assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=2475/);
+  assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=plan-visual-1/);
 });

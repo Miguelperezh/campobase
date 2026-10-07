@@ -1,0 +1,2 @@
+- [x] Regla específica y prueba en navegador a 1280, 390 y 320 px.
+- [ ] Publicación.

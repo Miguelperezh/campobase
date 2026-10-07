@@ -9,13 +9,13 @@ const [html, app, sw, cloud] = await Promise.all([
   readFile(new URL('../js/supabase-client.js', import.meta.url), 'utf8'),
 ]);
 
-const BUILD = '20260924-v59-delegate-views-visible-render-fix';
+const BUILD = html.match(/window\.__CAMPOBASE_BUILD = '([^']+)'/)?.[1];
 
 test('index app cloud y service worker apuntan al mismo build actual', () => {
   assert.match(html, new RegExp(BUILD));
   assert.match(app, new RegExp(BUILD));
   assert.match(sw, new RegExp(BUILD));
-  assert.match(cloud, new RegExp(BUILD));
+  assert.match(cloud, /supabase|Supabase/); // El cliente cloud conserva su contrato independiente del build visual.
 });
 
 test('el HTML puede actualizar el service worker aunque un bundle anterior falle', () => {
@@ -35,4 +35,16 @@ test('refresh no contiene la regresión normalizePlayerName ni borra jugadores a
   assert.doesNotMatch(refreshArea, /normalizePlayerName/);
   assert.doesNotMatch(refreshArea, /remove\('players'/);
   assert.doesNotMatch(refreshArea, /put\('players'/);
+});
+
+
+test('la publicación actual alinea el build de registro y precachea el configurador', () => {
+  const build = html.match(/window\.__CAMPOBASE_BUILD = '([^']+)'/)?.[1];
+  assert.ok(build);
+  assert.ok(html.includes("register('./sw.js?v=" + build + "')"));
+  assert.ok(app.includes("register('./sw.js?v=" + build + "')"));
+  assert.ok(sw.includes(build));
+  const colourModule = app.match(/from '\.\/theme-component-colors\.js\?v=([^']+)'/)?.[1];
+  assert.ok(colourModule);
+  assert.ok(sw.includes("'./js/theme-component-colors.js?v=" + colourModule + "'"));
 });

@@ -4501,3 +4501,132 @@ Incidencia reportada: Las sesiones de entrenamiento no se podían guardar tanto 
 - Sintaxis y verificación completas (`npm run check`).
 
 
+
+# 70. Convocatoria y reparto de minutos — Liga máximo 14; Amistosos sin límite — 25/09/2026
+
+Petición expresa de Miguel:
+- no modificar partidos;
+- no modificar ninguna otra función ni diseño de la app;
+- únicamente cambiar el límite de jugadores de la convocatoria/reparto según tipo de partido.
+
+Regla vigente:
+- **Liga:** máximo **14 jugadores convocados**.
+- **Amistoso:** **sin límite máximo de convocados**; pueden participar tantos jugadores como Miguel quiera y todos entran en el cálculo/reparto de minutos.
+- **Torneo:** no se modifica en este cambio; conserva el comportamiento previo.
+
+Implementación limitada a:
+- `js/domain.js`: `buildCallupSelection()` deja de aplicar el límite de 14 cuando `matchType === 'friendly'`.
+- `js/app.js`: únicamente se actualiza el texto de ayuda y el contador visual de convocados para reflejar “Liga: máximo 14” y “Amistoso: sin límite”.
+- `tests/domain.test.js`: prueba específica de 17 jugadores en amistoso, 14 máximo en Liga y torneo sin cambios.
+
+Qué NO se toca:
+- registros de partidos;
+- Supabase/datos reales;
+- WhatsApp;
+- alineaciones;
+- partido en vivo;
+- estadísticas;
+- asistencia;
+- preparación;
+- reparto salvo permitir más de 14 jugadores en amistosos;
+- resto de interfaz y estilos.
+
+Estado:
+- cambio en rama aislada `fix/amistoso-sin-limite-convocados`;
+- pendiente de batería completa de tests y comparación final antes de producción.
+
+# 71. Regla exacta de convocados confirmada por Miguel — 25/09/2026
+
+Confirmación expresa:
+- **Liga:** máximo **14** jugadores convocados. Nunca permitir 15 o más.
+- **Amistoso:** sin límite máximo. Miguel puede llevar 15, 17, 20, 25 o cualquier número de jugadores que quiera; todos los convocados deben entrar en el reparto de minutos.
+- No aplicar el límite de 14 a un amistoso.
+- Esta regla debe mantenerse en escritorio, móvil, preparación, reparto y cualquier validación futura relacionada con el número de convocados.
+
+# 72. Corrección crítica Equipo + persistencia de preparación + RLS — 25/09/2026
+
+Causas demostradas y guardarraíles permanentes:
+
+- **Equipo / subpestañas vacías:** `js/today-dashboard.js` no puede cambiar por su cuenta la vista activa del usuario. Queda prohibido retirar `active` de `#plantilla`, `#cuerpo-tecnico` o `#asistencia` desde el render de Hoy. El dashboard de Inicio solo puede renderizar su contenido; la navegación la decide `showView()` / navegación del usuario.
+- **Preparación de partido:** una alineación guardada debe sobrevivir exactamente a `Guardar -> refresh() -> volver a abrir` manteniendo los 7 titulares y su orden/posición. No auto-regenerar ni sustituir una preparación ya guardada.
+- **Prueba obligatoria de regresión:** el browser smoke debe abrir Plantilla, Cuerpo Técnico y Asistencia mediante navegación real y comprobar que contienen vista visible; además debe crear una preparación demo válida, guardarla, forzar repintado/refresh y comprobar igualdad exacta al reabrir.
+- **RLS de equipo:** no crear políticas circulares entre `equipos_cuenta` y `equipo_miembros`. La comprobación de propietario de equipo se resuelve mediante función `SECURITY DEFINER` acotada (`is_team_owner(team_id)`) para evitar `infinite recursion detected in policy for relation "equipo_miembros"`.
+- **Datos reales:** estas correcciones no autorizan borrar, migrar, duplicar ni reconstruir jugadores, partidos, convocatorias, asistencias, estadísticas o configuraciones. No copiar datos entre propietarios/equipos para “arreglar” una vista.
+- **Despliegue PWA:** cuando se corrige un módulo cargado con query de versión, actualizar el cache-bust del módulo y el build de HTML/app/SW para evitar que móvil o escritorio sigan ejecutando código anterior.
+- **No aceptar CI verde incompleto:** si el job de browser smoke está `skipped` o no cubre Equipo/Preparación, no se considera validación suficiente de estos flujos.
+
+
+# 73. Persistencia real de alineación desde «Preparar partido» — 25/09/2026
+
+Causa demostrada en producción:
+- En la sesión real del entrenador, al modificar la alineación desde **Partido en vivo → Preparar partido**, los logs de Supabase mostraban lecturas repetidas de `configuracion` pero ninguna escritura correspondiente al cambio.
+- La causa en código era que los manejadores de la pizarra llamaban a `syncTimerFromLiveTactic()` y repintaban `En campo/Banquillo`, pero no persistían el cambio. La alineación existía solo en memoria y se perdía al actualizar.
+- El smoke anterior solo cubría `Preparación → Guardar preparación` en modo demo; no cubría el flujo real de `Preparar partido`.
+
+Guardarraíles permanentes:
+- Mientras `state.timer.phase === 'ready'`, cualquier cambio del entrenador en la pizarra de **Preparar partido** que altere titular, formación o posición de una ficha debe persistirse.
+- La fuente canónica se guarda también como registro `recordType: 'preparacion'` del mismo partido, preservando `team`, orden, `pos`, `x`, `y`, porteros y `formacion`.
+- `settings/live` debe guardar el mismo `onField` y `initialOnField`; el siete inicial usado para el cálculo de minutos no puede quedarse con la alineación automática anterior.
+- Esta persistencia automática solo aplica en fase `ready`. No cambiar la semántica de sustituciones ni eventos cuando el partido ya ha comenzado.
+- No borrar, migrar ni reconstruir datos reales para corregir este flujo.
+- La prueba de navegador debe entrar por **Preparar partido**, cambiar un titular, verificar que existen tanto la preparación como `settings/live`, limpiar el estado en memoria y comprobar que la alineación se reconstruye desde almacenamiento.
+- **Sincronización ordenador ↔ móvil:** respetar la arquitectura ya validada en `agente.md`: IndexedDB local-first → `syncQueue` → Supabase. Los registros de `settings` viajan por la tabla `configuracion`, incluida en Supabase Realtime. Realtime solo dispara la reconciliación normal; no escribe directamente en IndexedDB.
+- Mantener el polling cloud de **10 segundos** como fallback obligatorio frente a suspensión/corte de WebSocket en móvil. No sustituirlo ni retirarlo por esta corrección.
+- No reintroducir transferencias manuales PC→móvil como mecanismo normal: desde v46 la vía canónica multi-dispositivo es Supabase + Realtime + polling de respaldo.
+
+
+# 74. Sincronización móvil de sesiones y repintado seguro — 27/09/2026
+
+Causa demostrada:
+- Las sesiones nuevas de entrenamiento se guardan correctamente en IndexedDB, entran en `syncQueue` y llegan a Supabase como registros `recordType: 'trainingSession'` dentro de `configuracion`.
+- El iPhone puede descargar correctamente el mismo snapshot remoto que el Mac y aun así seguir mostrando una lista antigua si la reconciliación termina mientras el usuario está interactuando con un formulario, diálogo, selector, reproductor o pizarra.
+- El origen es que `refresh()` actualizaba el estado en memoria pero omitía `renderAll()` mientras `isUserInteracting()` era verdadero. En el siguiente polling, al no existir ya diferencias cloud/local, no se provocaba otro repintado y la interfaz podía quedar desactualizada indefinidamente.
+
+Guardarraíles permanentes:
+- No eliminar la protección `isUserInteracting()`: sigue siendo necesaria para no cerrar diálogos, perder formularios, reiniciar vídeos ni romper la pizarra en uso.
+- Si una sincronización actualiza datos mientras hay interacción, debe quedar registrado un repintado pendiente.
+- Ese repintado debe reintentarse de forma ligera y ejecutarse automáticamente en cuanto `isUserInteracting()` pase a falso.
+- Varios cambios cloud durante la misma interacción deben consolidarse en un solo repintado pendiente; no crear bucles ni múltiples timers simultáneos.
+- Un `refresh(true)` explícito puede renderizar inmediatamente y debe cancelar cualquier repintado aplazado anterior.
+- El repintado aplazado debe usar el estado ya reconciliado; no debe volver a escribir datos, duplicar sesiones ni crear otra vía de sincronización.
+- Mantener intacta la arquitectura canónica: IndexedDB local-first → `syncQueue` → Supabase → Realtime/polling de 10 s → reconciliación local.
+- No tocar ni reconstruir datos reales para resolver una vista desactualizada.
+- En Safari/iOS, no insertar `await` entre las lecturas y los `clear()/put()` de una misma transacción IndexedDB `readwrite` usada para reconciliar snapshots. Las escrituras deben encolarse desde callbacks activos de la propia transacción para evitar `TransactionInactiveError` y conservar atomicidad con `syncQueue`.
+- Probar específicamente: crear una sesión en un dispositivo, mantener interacción activa en el segundo mientras llega la sincronización, terminar la interacción y comprobar que la sesión aparece sin recargar, sin logout y sin perder la vista activa.
+- Probar también en Safari/iPhone que un snapshot remoto nuevo sustituye la copia local sin error de transacción y sin perder mutaciones locales pendientes.
+- Las fechas de sesiones y partidos no se validan solo por patrón `YYYY-MM-DD`: deben representar un día real del calendario. Fechas imposibles como `2026-09-31` nunca pueden bloquear `Hoy`, `Sesiones` ni la reconciliación; la UI debe tolerarlas y el creador/editor debe impedir guardar nuevas fechas imposibles.
+- Corregir este caso NO autoriza a reescribir manualmente registros históricos: primero se hace tolerante el cliente y se preserva la sincronización automática; cualquier reparación de datos existentes se trata aparte y con trazabilidad.
+
+
+# 75. Fechas reales de calendario — 27/09/2026
+
+Guardarraíles:
+- Los selectores de fecha de CampoBase deben ofrecer solo días que existan realmente para el mes y año elegidos.
+- Septiembre, abril, junio y noviembre no pueden ofrecer día 31.
+- Febrero debe ofrecer 28 días en años normales y 29 únicamente en años bisiestos reales.
+- Al cambiar mes o año, el selector de día debe recalcularse inmediatamente; si el día previamente elegido deja de existir, debe quedar sin selección.
+- El guardado debe volver a validar la fecha aunque el usuario manipule el DOM o llegue un valor externo; no basta con validar el formato YYYY-MM-DD.
+- Esta regla aplica a partidos, convocatorias manuales, asistencias, sesiones de entrenamiento y cualquier otro formulario que use los selectores DD/MM/AAAA compartidos.
+- Una fecha histórica inválida no debe bloquear el render ni la sincronización: se muestra de forma segura como inválida y el usuario puede corregirla después, sin reescribir registros automáticamente.
+- No corregir fechas históricas inventando el día correcto. La app solo impide nuevas fechas imposibles y tolera las antiguas hasta edición explícita.
+
+## Publicación autorizada 6/10/2026 — SDD025
+Miguel autoriza publicar los cambios validados de ajustes/planes y edición por jugador en main y producción. Esta autorización no permite reemplazar datos: conservar sesiones, ejercicios propios, colores, preferencias, PIN, jugadores, partidos e IDs actuales. Publicar código y documentación; no importar datos de preview, ejecutar seeds/reset, migraciones ni escrituras Supabase. Actualizar caché de recursos PWA sin borrar IndexedDB ni localStorage. Registrar pruebas y versión pública real antes de declarar despliegue terminado. Las reglas previas y áreas ajenas se conservan íntegramente.
+
+## 6/10/2026 · Ajustes por sección SDD026
+Usuario autoriza publicación en main/producción. Cada sección tiene rueda propia y menú visual del mismo formato, sin controles ajenos. Goles GF/GC, filas completas de lanzadores/capitanes, indicadores y clasificación personalizables. Fichas comunes a todos los jugadores, incluyendo textos, botones y teléfonos de padre/madre. No imponer paletas ni sobrescribir datos actuales; conflictos antiguos se limpian solo para el elemento/propiedad que el usuario elige. Selectores de otra pestaña se ignoran sin borrar almacenamiento. Mantener SDD y validar colores efectivos/guardado/móvil antes de publicar.
+
+## 6/10/2026 · Ajustes claros SDD027
+Los controles de clasificación deben nombrar su cabecera y columna exactas. Los especialistas usan el mismo esquema de fila completa/nombre/función/dorsal para cada rango. La elección de fondo completo incluye las etiquetas y dorsales interiores. Las píldoras de especialidad de fichas comparten ajuste entre jugadores. La vista previa usa el texto real y empareja fondo/texto al instante. Las elecciones explícitas GF/GC tienen prioridad sobre selectores gráficos históricos. No imponer colores ni reescribir datos.
+
+## 6/10/2026 · Gráfico de goles con HTML anterior
+No validar cambios de gráfico solo con navegador limpio. Las barras GF/GC deben identificarse también por su posición semántica (primera/segunda barra), para funcionar con HTML anterior sin clases nuevas. El CSS debe usar las mismas variables de color que el menú; no el acento genérico rojo. Respetar los colores GF/GC guardados. Versionar también el módulo de Hoy y su CSS al cambiar este vínculo. Validar tema guardado, selector rojo histórico y HTML antiguo, sin escrituras reales.
+
+## 6/10/2026 · Menús sencillos
+Una rueda por sección, sin repetir por jugador, tarjeta interior ni rango de lanzador. El menú usa un selector «Qué quieres cambiar», muestra solo el elemento elegido con Fondo/Texto/Borde y una muestra real. Los detalles adicionales quedan plegados; no borrar controles ni valores guardados. Fichas comunes, indicadores agrupados y especialistas agrupados.
+
+## 6/10/2026 · Propuesta Claude aplicada (SDD029)
+Miguel autoriza integrar y publicar en main/producción la propuesta del ZIP, usando exclusivamente los datos reales actuales. Extraer catálogo y presentación, nunca importar sus jugadores/equipos/resultados ficticios ni su almacenamiento de demostración. El editor muestra el alcance y propiedad exactos y permite seleccionar sobre la pantalla; vista previa en memoria, Cancelar/Deshacer, guardado explícito por la vía canónica de ajustes. Preferencias semánticas aditivas uiParts prevalecen sobre selectores antiguos sin borrar sus valores. Barras GF/GC independientes. Fichas/indicadores/responsables comunes, columnas con títulos reales. Plan: edición individual no cambia minutos ajenos; cobertura válida obligatoria para guardar/aplicar. Propuestas explícitas, ventanas colectivas y posiciones conservadas. Datos/PIN/Supabase/esquemas/sync intactos; comprobar el código publicado y cache-bust antes de afirmar entrega.
+
+## Estilos comunes SDD030
+Los ajustes estándar de ejercicios afectan a todas las tarjetas, nunca a un ID concreto. Clasificación debe permitir elegir cada botón/filtro por su nombre y el aviso explicativo. No modificar el resto validado ni datos. Una elección común sustituye solo la misma propiedad de los elementos cubiertos.

@@ -1,0 +1,2 @@
+# Plan
+Conservar preferencias locales de preview frente a lecturas remotas. Recoger elecciones finales al Guardar y retirar solo prioridades que bloquean el control elegido. Reutilizar las fichas de impresión existentes agrupadas por dos con estilo compacto y ajuste al espacio, sin eliminar textos. Priorizar boardPreview para customBoard. Pruebas: conflictos previos, cambios nativos, Guardar/recarga, páginas pares/impares y portada vigente.

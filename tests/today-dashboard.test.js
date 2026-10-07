@@ -33,18 +33,48 @@ test('Hoy separa actividades actuales, próximas y tareas pendientes', () => {
 });
 
 test('el nuevo Inicio se carga desde la app y queda disponible offline', async () => {
-  const [demo, sw, pkg, source] = await Promise.all([
+  const [demo, sw, pkg, source, app, nav] = await Promise.all([
     projectFile('js/demo-session.js'),
     projectFile('sw.js'),
     projectFile('package.json'),
     projectFile('js/today-dashboard.js'),
+    projectFile('js/app.js'),
+    projectFile('js/redesign-nav.js'),
   ]);
-  assert.match(demo, /today-dashboard\.js\?v=2456/);
-  assert.match(sw, /today-dashboard\.js\?v=2456/);
-  assert.match(sw, /today-2456/);
+  const resource=app.match(/today-dashboard\.js\?v=[^'"]+/)?.[0];
+  assert.ok(resource);
+  for(const consumer of [demo,nav,sw])assert.ok(consumer.includes(resource),'Cada consumidor y caché debe usar la misma versión de Hoy');
+  assert.match(sw, /today-2457/);
   assert.match(pkg, /node --check js\/today-dashboard\.js/);
   assert.match(source, /section\.id = 'hoy'/);
   assert.match(source, /navButton\.textContent = 'Hoy'/);
   assert.match(source, /today-event-grid/);
   assert.match(source, /Pendiente de hacer/);
+});
+
+
+test('renderizar Hoy nunca cambia por su cuenta la vista activa del usuario', async () => {
+  const source = await projectFile('js/today-dashboard.js');
+  assert.doesNotMatch(source, /plantilla\.classList\.remove\('active'\)/);
+  assert.match(source, /document\.querySelector\('\.view\.active'\) \? 'view' : 'view active'/);
+});
+
+
+test('Hoy ignora fechas imposibles sin bloquear el render ni la sincronización', () => {
+  const now = new Date(2026, 8, 27, 12, 0, 0);
+  const summary = buildTodaySummary({
+    sessions: [
+      { id: 'bad-session', date: '2026-09-31', name: 'Fecha imposible' },
+      { id: 'good-session', date: '2026-09-28', name: 'Sesión válida' },
+    ],
+    matches: [
+      { id: 'bad-match', date: '2026-02-30T19:00', opponent: 'Fecha imposible' },
+    ],
+    now,
+  });
+
+  assert.equal(summary.nextSession?.id, 'good-session');
+  assert.equal(summary.todaySessions.length, 0);
+  assert.equal(summary.todayMatches.length, 0);
+  assert.ok(!summary.attendancePending.some((item) => item.id === 'bad-session'));
 });

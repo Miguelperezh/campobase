@@ -29,6 +29,18 @@ test('las actividades de Asistencia reutilizan sesiones y partidos sin duplicarl
   assert.equal(rows.find((row) => row.source === 'match').ready, true);
 });
 
+test('la selección de asistencia distingue liga, amistoso y torneo y exige convocatoria para cada partido', () => {
+  const matches = [
+    { id: 'liga', date: '2026-09-10', opponent: 'A', type: 'league' },
+    { id: 'amistoso', date: '2026-09-11', opponent: 'B', type: 'friendly' },
+    { id: 'torneo', date: '2026-09-12', opponent: 'C', type: 'tournament' },
+  ];
+  const rows = buildAttendanceActivities({ matches, callups: [{ id: 'c1', matchId: 'amistoso', availableIds: ['p1'] }] });
+  assert.deepEqual(Object.fromEntries(rows.map((row) => [row.id, [row.subtitle, row.ready]])), {
+    liga: ['Liga', false], amistoso: ['Amistoso', true], torneo: ['Torneo', false],
+  });
+});
+
 test('cada mutación de datos emite el evento transversal que actualiza Plantilla', async () => {
   const db = await projectFile('js/db.js');
   assert.match(db, /campobase:data-changed/);
@@ -65,10 +77,10 @@ test('Asistencia usa controles visuales y un resumen que cambia al marcar Presen
   assert.match(source, /matchId: match\?\.id \|\| null/);
 });
 
-test('la nueva sincronización y Asistencia 2453 se cargan en la app y en la PWA', async () => {
+test('la sincronización y Asistencia se cargan en la app y en la PWA', async () => {
   const demo = await projectFile('js/demo-session.js');
   const sw = await projectFile('sw.js');
-  assert.match(demo, /attendance-linked-sources\.js\?v=2453/);
+  assert.match(demo, /attendance-linked-sources\.js\?v=[^'"\s]+/);
   assert.match(demo, /player-data-sync\.js\?v=2453/);
   assert.match(sw, /attendance-linked-sources\.js\?v=2453/);
   assert.match(sw, /player-data-sync\.js\?v=2453/);

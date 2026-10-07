@@ -140,7 +140,9 @@ export function buildCallupSelection(players, options = {}) {
   if ([...selected].some((id) => manuallyExcluded.has(id))) {
     throw new RangeError('Un jugador no puede estar convocado y fuera a la vez.');
   }
-  if (selected.size > limit) throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+  if (matchType !== 'friendly' && selected.size > limit) {
+    throw new RangeError(`La convocatoria no puede superar ${limit} jugadores.`);
+  }
 
   const eligible = uniquePlayers.filter(({ id }) => !manuallyExcluded.has(id));
   const exclusions = manualExclusions.map(({ playerId, reason, note }) => ({
@@ -149,8 +151,16 @@ export function buildCallupSelection(players, options = {}) {
     ...(note ? { note } : {}),
     automatic: false,
   }));
+
+  // Amistoso: sin máximo de convocados. Todos los disponibles pueden entrar
+  // en el reparto de minutos; las únicas bajas son las exclusiones manuales.
+  if (matchType === 'friendly') {
+    return { availableIds: eligible.map(({ id }) => id), exclusions };
+  }
+
+  // Torneo mantiene el comportamiento anterior y su límite actual.
   if (matchType !== 'league') {
-    if (eligible.length > limit) throw new RangeError(`En amistosos y torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
+    if (eligible.length > limit) throw new RangeError(`En torneos van todos los disponibles, con un máximo de ${limit}. Marca las bajas manuales necesarias.`);
     return { availableIds: eligible.map(({ id }) => id), exclusions };
   }
 
@@ -547,7 +557,7 @@ export function adjustLiveScore(details, team, delta) {
 }
 
 export function addPlayerMatchEvent(details, event) {
-  const allowedKinds = ['goal', 'penalty_goal', 'penalty_miss', 'penalty_saved', 'penalty_conceded', 'own_goal', 'yellow', 'red', 'injury', 'incident'];
+  const allowedKinds = ['goal', 'opponent_goal', 'penalty_goal', 'penalty_miss', 'penalty_saved', 'penalty_conceded', 'own_goal', 'yellow', 'red', 'injury', 'incident'];
   if (!event?.playerId || !allowedKinds.includes(event.kind)) throw new TypeError('La incidencia del partido no es válida.');
   const next = structuredClone(details);
   for (const field of ['goals', 'cards', 'injuries', 'incidents']) next[field] ??= [];
@@ -555,6 +565,9 @@ export function addPlayerMatchEvent(details, event) {
   if (kind === 'goal' || kind === 'own_goal') {
     next.goals.push(entry);
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
+  } else if (kind === 'opponent_goal') {
+    next.incidents.push({ ...entry, type: 'opponent_goal', note: entry.note || 'Gol rival' });
+    next.goalsAgainst = (Number(next.goalsAgainst) || 0) + 1;
   } else if (kind === 'penalty_goal') {
     next.goals.push({ ...entry, isPenalty: true });
     next.goalsFor = (Number(next.goalsFor) || 0) + 1;
@@ -586,7 +599,7 @@ export function removePlayerMatchEvent(details, eventId) {
   const incidentIdx = next.incidents.findIndex((i) => i.id === eventId);
   if (incidentIdx >= 0) {
     const item = next.incidents[incidentIdx];
-    if (item.type === 'penalty_conceded') {
+    if (item.type === 'penalty_conceded' || item.type === 'opponent_goal') {
       next.goalsAgainst = Math.max(0, (Number(next.goalsAgainst) || 0) - 1);
     }
     next.incidents.splice(incidentIdx, 1);

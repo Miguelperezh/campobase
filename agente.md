@@ -4,7 +4,52 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ---
 
-## 1. Resumen de Mejoras Recientes (v20 — v25)
+## 1. Resumen de Mejoras Recientes
+
+### 1.0 Personalización Cromática Total e Independiente por Pantalla y Archivo de Entrenamientos Realizados (v81 - SDD 015)
+- **Causa anterior:**
+  1. Los ajustes cromáticos alteraban de forma global todas las pantallas de la aplicación.
+  2. En varias pantallas persistían textos negros o contrastes deficientes sobre fondos oscuros o banners rojos (por ejemplo, en el marcador de *Tu Día*, cabeceras de *Convocatorias*, tarjetas de *Preparación* y *Partido en Vivo*).
+  3. Los títulos de entrenamientos y enlaces de ejercicios heredaban fondos y bordes de botones globales (`button:not(...)`), desvirtuando su aspecto textual.
+  4. En *Sesiones*, faltaba un flujo para marcar entrenamientos completados («✓ Realizado») y archivarlos limpiamente sin borrarlos.
+  5. En *Tácticas*, la caja informativa verde y los banners no disponían de personalización cromática independiente.
+  6. El acceso al diálogo de colores requería un icono discreto y sin fondo para no sobrecargar la barra superior.
+- **Solución implementada:**
+  - **Tuerca de configuración discreta y minimalista:** Botón de cabecera `#topbar-quick-color-btn` con clase `.topbar-gear-btn`, color gris neutro `#94a3b8`, fondo 100% transparente y sin sombras ni bordes invasivos.
+  - **Aislamiento cromático absoluto (`views` en tema):** Cada pantalla (`plantilla`, `cuerpo-tecnico`, `convocatorias`, `partido`, `tacticas`, `preparacion`, `calendario`, `asistencia`, `ejercicios`, `sesiones`, `hoy`, `ajustes`) y sus subpestañas operativas (`general`, `specialists`, `live`, `tactic-board`) disponen de su propia configuración independiente en `state.settings.theme.views[viewId]`. Modificar una pantalla no afecta en absoluto a las demás («sin que afecten al resto»).
+  - **Contraste y elementos aislados por pantalla:**
+    - **Tu Día (`#hoy`):** Tarjeta de marcador de partido `.cbx-today-match-score` con variables dedicadas `--today-match-bg` (fondo) y `--today-match-ink` (texto, nombres de equipos, resultado, metadata y asistencia).
+    - **Convocatorias (`#convocatorias`):** Cabecera de partido con `--callup-header-bg` y `--callup-header-ink`; píldora de convocados ("14 convocados") con `--callup-badge-bg` y `--callup-badge-ink`; píldora de no convocados contigua ("0 fuera") con `--callup-out-bg` y `--callup-out-ink`.
+    - **Preparación (`#preparacion`):** Cabeceras de tarjetas de partido ("UD. Jinámar", etc.) con `--prep-header-bg` y `--prep-header-ink`; botones de acción ("Preparar partido", "Convocar y preparar", "Imprimir plan") con estilos desacoplados.
+    - **Partido en Vivo (`#partido`):** Cabecera con `.cbx-banner` unificada; botones «+ Gol Nuestro» (`gfBg`, `gfInk`) y «+ Gol Rival» (`gaBg`, `gaInk`); pizarra táctica en vivo independiente.
+    - **Tácticas (`#tacticas`):** Hero banner, eyebrow, título y caja informativa ("la pestaña verde") `.cbx-tactics-callout` vinculada a `--callout-bg` y `--callout-ink`.
+  - **Sesiones de entrenamiento — 5 Botones y Archivo de Realizados:**
+    - **Limpieza visual:** Títulos `.view-session.link-button` y enlaces de ejercicios `.session-exercise-link` libres de fondos o bordes de botones.
+    - **5 botones de acción por sesión:**
+      1. ⏱️ Silbato (`.cbx-btn-whistle`, variables `--whistle-bg` y `--whistle-ink`).
+      2. 📱 WhatsApp (`.cbx-btn-wa`, variables `--waBg` y `--waInk`).
+      3. 🖨️ Imprimir (`.print-session.cbx-btn-sub`, variables `--print-bg` y `--print-ink`).
+      4. ✏️ Editar (`.edit-session.cbx-btn-sub`, variables `--edit-bg` y `--edit-ink`).
+      5. ✓ Realizado / Pendiente (`.cbx-btn-completed`, variables `--completed-bg` y `--completed-ink`).
+    - **Acordeón colapsable inferior:** Las sesiones marcadas como realizadas se archivan automáticamente en `<details class="cbx-completed-sessions-accordion">` al final del listado, permitiendo desplegarlas o plegarlas cómodamente y desmarcar su estado cuando sea necesario.
+    - **Persistencia en modelo:** `js/exercise-planning.js` (`buildFlexibleTrainingSession`) conserva la bandera `completed: Boolean(values.completed)`.
+  - **Modal unificado con previsualización en vivo (`openQuickColorDialog`):**
+    - Selector horizontal de las 12 pantallas y subpestañas.
+    - Previsualizaciones interactivas fieles en tiempo real para todas las vistas.
+    - Controles de color especializados según la pantalla activa.
+    - Botón «↺ Restablecer esta pestaña» y botón «🌐 Copiar a todas».
+  - **Blindaje de impresión de plan:** El motor de impresión en PDF (`js/print-match-plan.js`, `#cb-print-root`, `.cb-print-sheet`) permanece 100% aislado y blindado.
+
+### 1.0.1 Estabilidad de Acceso tras PIN, Blindaje de Tema en Sincronización Cloud y Tuercas por Pestaña
+- **Causas resueltas:**
+  1. *Bloqueo / expulsión tras introducir PIN:* En entornos donde conviven sesión SaaS y acceso local por PIN, el polling de verificación de sesión remota volvía a abrir el diálogo o forzar el bloqueo tras 2–3 segundos al no detectar inmediatamente el rol autenticado.
+  2. *Pérdida de colores validados tras sincronización:* Durante la sincronización periódica con Supabase (`sync-core.js`), si el registro remoto de `settings` no contenía la estructura de `theme` (o sus `views` por pestaña), el `mergeCloudRecord` sobreescribía la configuración local borrando los colores configurados por el usuario.
+  3. *Tuercas contextuales por pestaña:* Se habían retirado u ocultado las tuercas discretas en las cabeceras individuales de cada pestaña y subpestaña.
+- **Solución implementada:**
+  - **Detección robusta de autenticación en `js/saas-auth-ui-v2.js`:** Se implementó `isUserAlreadyAuthenticated()` evaluando `window.__campobaseRole`, `window.__campobaseState?.role`, `document.body.dataset.userRole`, `sessionStorage` y `localStorage`. Dentro del bucle de sondeo de `handlePersistentSession`, si el usuario ya está autenticado o tiene rol activo, el bucle finaliza inmediatamente, cierra `#auth-dialog`, retira `auth-locked` y nunca vuelve a solicitar credenciales.
+  - **Blindaje y reconciliación de tema en `js/sync-core.js`:** En `mergeCloudRecord`, se protegen y fusionan explícitamente `localRecord.theme` (con deep-merge de `views` por pestaña), `localRecord.presets`, `localRecord.matchPreset` y `localRecord.sem`, garantizando que ninguna sincronización con la nube destruya los colores personalizados.
+  - **Restauración de botones de tuerca discretos (`.cbx-context-gear-btn`):**
+    - Se mantuvieron visibles y estilizados como un icono de tuerca gris minimalista (`#94a3b8`), 26px, fondo 100% transparente y sin bordes en todas las cabeceras de vistas (`data-gear-target`): `#hoy`, `#plantilla`, `#cuerpo-tecnico`, `#convocatorias`, `#partido`, `#preparacion`, `#calendario`, `#asistencia`, `#ejercicios`, `#sesiones`, `#tacticas` (cabecera y barra de acciones de pizarra). Al pulsarlos abren directamente el configurador enfocado en esa sección.
 
 ### 1.1 Rendimiento Inmediato y Eliminación de Lentitud al Entrar y Poner PIN (v20)
 - **Causa anterior:** Al arrancar o introducir el PIN se encadenaban múltiples llamadas bloqueantes a la nube (Supabase), recargas forzadas (`location.reload()`) y sincronizaciones redundantes que congelaban el hilo de JavaScript y la respuesta de la pantalla táctil.
@@ -1030,3 +1075,758 @@ Partidos activos próximos verificados:
     - **Sincronización y Servidor:**
       - Servidor activo en puerto 8766 (`http://localhost:8766/prueba-aislada.html`).
       - Archivos sincronizados en scratch y Desktop. 573 tests pasando al 100%.
+
+## Claude — Shell + Hoy real, pendiente de validación visual
+
+Rama `implement/claude-hoy-real` creada desde origin/main `e9dfac33`. Se descarta el experimento Sites/local como base. El controlador y los renderizadores de CampoBase permanecen; los nuevos estilos están en css/campobase-diseno.css (fuente Claude), claude-shell.css y claude-hoy.css. Datos, Auth y tablas Supabase sin sustitución. No seguir con Equipo sin validación de Miguel.
+
+La URL /campobase-preview/ en GitHub Pages activa preview-readonly.js: se preservan las lecturas y el acceso existente, se bloquean mutaciones remotas y las funciones de escritura de db.js. La reconciliación usa el adaptador y almacenes existentes sin enviar ni añadir syncQueue; no hay stores alternativos. No registrar otro service worker de preview ni borrar cachés globales. El alojamiento solo publica la rama real; no almacena exportaciones de datos. Producción fuera de ese path conserva su flujo.
+
+Validación acotada: tests de Hoy, Liga, fechas, repintado de sesiones y barrera de red; capturas 390×844 y 1440×960 con lecturas reales en perfil temporal, nunca exportadas al repositorio. Ajustes personales de fuente/tamaño siguen vigentes, por lo que las capturas pueden diferir tipográficamente del ejemplo de Claude.
+
+### 20. Entrega v60 (01/10/2026) — Validaciones Tácticas F7, Dossier A4 Claude, Corrección de Flechas y Sincronización Vista Previa = Impresión
+
+1. **Pizarra Táctica Única Interactiva y Sistemas F7 del Manual:**
+   - Se unificó la pizarra táctica para que sea una sola pizarra dinámica en `js/tactics.js` y `js/tactic-board-controller.js`. Al cambiar el sistema de juego (1-3-2-1, 1-2-3-1, 1-2-2-2, 1-3-1-2, 1-1-3-2, 1-3-3, 1-4-1-1, 1-2-1-3, 1-1-3-1-1, 1-1-4-1, 1-2-2-1-1) o la fase (con balón, sin balón, basculación, pérdida), las fichas y flechas se actualizan en la misma pizarra sin generar pizarras duplicadas.
+   - **Toggle Rival en todas las pizarras:** El rival se oculta por defecto (`showOpponent = false`) y el entrenador dispone del botón conmutable `«Mostrar rival / Ocultar rival»` tanto en la pestaña Tácticas como en Preparar Partido y Partido en Vivo.
+   - Normalización de proporciones de campo `100x100` en todas las pantallas.
+
+2. **Catálogo de 1060 Ejercicios con Filtrado Multidimensional F7:**
+   - Integración completa de los ejercicios del catálogo con normalización de taxonomía F7.
+   - La función `matchesDimension` evalúa tanto categorías como contenidos, objetivos y descripciones, permitiendo filtrar fielmente por cualquier dimensión metodológica de Fútbol 7.
+
+3. **Corrección Definitiva de Flechas Tácticas y Leyenda Autocontenida (Eliminación de bultos y desbordamientos):**
+   - **Causa raíz de la deformación colosal en la leyenda (`media_1790844885292.png`):**
+     - En `styles.css:18`, la regla `.tactic-board svg { display: block; width: 100%; aspect-ratio: 1; }` aplicaba a **todos** los elementos `<svg>` contenidos dentro de `<figure class="tactic-board">`.
+     - Al estar la leyenda `<p class="board-legend">` dentro de `<figure class="tactic-board">`, cada icono de flecha recibía `width: 100%`, expandiéndose a más de 400px de ancho y creando flechas monstruosas.
+   - **Solución implementada («Otra Forma» radical y autocontenida):**
+     - En `js/tactics.js`: Se desacopló la leyenda de los markers SVG con la nueva función `renderLegendArrow(kind)`. Esta función renderiza un SVG puro de `28×14px` con punta directa `<polygon points="18,3.5 26,7 18,10.5" fill="...">`, sin `<marker>`, sin `<defs>`, con estilos inline `!important` inmutables y colores canónicos (`#2563eb` Pase, `#4b5563` Movimiento, `#8b5cf6` Conducción, `#dc2626` Disparo, `#f59e0b` Sprint).
+     - En `styles.css`: Se restringió la regla al SVG del campo táctico exclusivamente con `.tactic-board > svg:first-child`, y se añadieron selectores estrictos para `.board-legend svg` y `svg.tactic-legend-arrow` fijando `width: 28px !important; height: 14px !important;`.
+     - En `css/claude-entreno.css`: Se reforzaron las reglas de la leyenda con máxima especificidad.
+     - En `tests/tactics.test.js`: Se blindó la renderización verificando la clase `tactic-legend-arrow`, el polígono directo y las dimensiones exactas.
+
+4. **Sincronización Exacta entre Vista Previa en Pantalla e Impresión A4:**
+   - **Causa anterior:** Los estilos de la hoja (`.cb-print-columns-grid`, `.cb-print-col`, `.cb-print-card`, `.cbx-print-step-item`, etc.) estaban encerrados exclusivamente dentro de `@media print` en `styles-redesign.css`. Al abrir la vista previa en pantalla dentro de CampoBase (`#cb-print-root`), el navegador no aplicaba el grid y el contenido se colapsaba en una sola columna vertical continua con textos desproporcionados.
+   - **Solución implementada:**
+     - En `css/claude-entreno.css`: Se definieron todas las reglas de la hoja `.cb-print-sheet` tanto para pantalla como para impresión. En pantalla se muestra como una hoja física A4 blanca de `794px × 1123px` centrada con sombra, con la maquetación a 2 columnas (`display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px;`), tarjetas de métricas, diagrama de campo con leyenda y sección de notas pautadas exactamente idéntica al PDF final.
+     - **Dossier de Sesión A4:** La portada de sesión (`.cbx-print-cover-page`) con tarjetas de objetivo/material, barra temporal de fases, lista de tareas, checklist de asistencia y notas, seguida de una hoja A4 individual para cada ejercicio de la sesión.
+
+5. **Corrección del Botón de Impresión y Apertura Fiable (`window.print()`):**
+   - **Causa anterior:** `isMobileDevice()` clasificaba erróneamente cualquier pantalla con `window.innerHeight <= 900` como móvil. En ordenadores portátiles (MacBook Air / Pro) donde el alto de ventana suele ser de 700–850px, la app bloqueaba `window.print()` y ejecutaba un fallback de exportación que no abría el diálogo del navegador.
+   - **Solución:** Se corrigió `isMobileDevice()` para detectar únicamente dispositivos táctiles móviles reales (teléfonos iOS/Android). Al pulsar `«🖨️ Imprimir / Guardar PDF»`, se ejecuta `window.print()` directamente sin bloqueos.
+   - Se independizó el botón `«📄 Abrir Ficha A4»` con fondo azul `#2563eb` y texto blanco nítido, eliminando el conflicto de clases `.primary` con colores personalizados.
+   - Se desvinculó el cierre prematuro en `afterprint`: cerrar o cancelar el diálogo de impresión del navegador mantiene la vista previa en pantalla, permitiendo al usuario revisarla y pulsar `✕ Salir` o presionar la tecla `Escape` cuando desee salir.
+
+6. **Adopción Metodológica de Spec-Driven Development (SDD):**
+   - Implementación de la jerarquía de especificaciones solicitada por el usuario:
+     - `docs/constitution.md`: Principios fundacionales inmutables (Local-First IndexedDB, 0 € coste de almacenamiento, cero dependencias runtime pesadas, 100% tests en verde, diseño Claude A4 intacto).
+     - `specs/001-tacticas-leyenda-impresion-a4/`:
+       - `spec.md`: Especificación formal de requisitos funcionales y criterios de aceptación.
+       - `plan.md`: Plan de arquitectura técnica, aislamiento y control de regresión.
+       - `tasks.md`: Desglose atómico de tareas con trazabilidad y verificación.
+      - `specs/002-partido-en-vivo-pizarra-preparacion/`:
+        - `spec.md`: Unificación de pizarra única en Partido en Vivo y Preparación, conmutador de rival por defecto oculto y blindaje de leyenda.
+        - `plan.md`: Arquitectura técnica de actualización sobre el mismo SVG y persistencia en IndexedDB.
+        - `tasks.md`: Verificación de tareas y paso de tests al 100%.
+      - `specs/003-catalogo-tarjetas-filtros-ejercicios-f7/`:
+        - `spec.md`: Tarjeta en rejilla Claude con acciones rápidas, filtros multidimensionales F7 y biblioteca local-first.
+        - `plan.md`: Diseño de componentes de tarjeta, delegación de eventos e integración con el planificador de sesiones.
+        - `tasks.md`: Verificación de tareas y paso de tests al 100%.
+
+### 21. Entrega v61 (01/10/2026) — Desbloqueo y Flujo Integral de Preparar Partido (Spec 004)
+
+1. **Desbloqueo Total de la Interfaz en Preparación (`#preparacion`):**
+   - **Diagnóstico de la Causa Raíz:** En `js/app.js`, la función `openPreparacionEditor(matchId)` contenía la condición invertida `if (!document.body.classList.contains('cb-redesign-active')) $('#preparacion-list').classList.add('hidden');`. Bajo el modo rediseño Claude (`cb-redesign-active`), la lista de partidos `#preparacion-list` nunca recibía la clase `hidden`, manteniéndose en el DOM con `display: grid` y empujando el editor `#preparacion-editor` varios cientos de píxeles por debajo del fold visible. Parecía que el botón "Preparar" no hacía nada.
+   - **Solución Implementada:**
+     - `openPreparacionEditor` ahora oculta incondicionalmente `#preparacion-list` (`$('#preparacion-list').classList.add('hidden')`), muestra `#preparacion-editor` (`$('#preparacion-editor').classList.remove('hidden')`), añade la clase `.is-editing` al contenedor `#preparacion` y ejecuta `window.scrollTo({ top: 0, behavior: 'instant' })`.
+     - En `css/claude-partido.css` se agregaron reglas de alta especificidad con `!important` para que `#preparacion-list` quede oculto bajo cualquier circunstancia cuando el editor esté activo (`body.cb-redesign-active #preparacion #preparacion-list.hidden`, `body.cb-redesign-active #preparacion.is-editing #preparacion-list`, y el selector de árbol `:has(#preparacion-editor:not(.hidden)) #preparacion-list`).
+
+2. **Acceso Inmediato a Preparar sin Fricción de Convocatoria Previa:**
+   - Anteriormente, los partidos sin convocatoria manual solo ofrecían `[Convocar y preparar]`, lo cual expulsaba al entrenador fuera de la pestaña hacia el módulo Convocatorias.
+   - Se añadió el botón directo `[Preparar partido]` en las tarjetas de partidos sin convocatoria en `renderPreparaciones()`.
+   - Se implementó la función `ensureCallupForMatch(match)`: si el partido no dispone de convocatoria en IndexedDB, la crea automáticamente con todos los jugadores disponibles de la plantilla activa y continúa directamente a la apertura del editor táctico en milisegundos.
+
+3. **Auto-población Inteligente del 7 Inicial (`prepBuildTeam`):**
+   - Anteriormente, al abrir un partido nuevo sin preparación previa, los 6 puestos de campo quedaban vacíos (`playerId: ''`), obligando al usuario a desplegar 6 selects o imposibilitando guardar la alineación.
+   - `prepBuildTeam(formation, keeperId)` ahora auto-asigna de forma inteligente al portero y a los 6 jugadores de campo según compatibilidad posicional y disponibilidad, entregando una pizarra táctica lista para usar, modificar o guardar de inmediato.
+
+4. **Navegación Fluida, Botones de Retorno y Cierre de Popups:**
+   - Se añadió el botón `[← Volver a partidos]` (`#prep-back-head`) en la cabecera superior de `#preparacion-editor`, además del botón `#prep-back` en las acciones inferiores.
+   - Ambos botones invocan `closeEditor()`, que retira `.is-editing`, repinta la lista de partidos con los estados actualizados (`✓ Preparado` / `Sin preparar`) y hace scroll suave al inicio.
+   - Se blindó el popup táctico flotante `#prep-popup` con eventos de cierre seguro mediante clic exterior y tecla `Escape`.
+   - Se añadió un botón directo `[Ir a Preparación de partido]` en el estado vacío de Partido en vivo (`#partido`) y botones `[Preparar]` directos en el Calendario.
+
+5. **Especificación SDD y Tests:**
+   - Carpeta de especificación formal `specs/004-preparar-partido-flujo-y-editor/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de tests en `tests/preparacion-flujo.test.js` verificando la eliminación de la condición limitante, auto-creación de convocatoria, auto-asignación de 7 jugadores, presencia de botones de retorno y exportación de API.
+   - Batería de 610 tests pasando al 100% y `npm run check` verificado sin errores.
+
+### 22. Entrega v62 (01/10/2026) — Ampliación de Pizarra Táctica de Cambios y Corrección de Desplegables de Nombres (Spec 005)
+
+1. **Ampliación de la Pizarra Táctica en el Plan de Cambios (`#prep-board`):**
+   - **Diagnóstico:** En la vista de preparación (`#preparacion`), la cuadrícula `.cbx-prep-editor-layout` reservaba `1.15fr` a los controles y solo `0.95fr` al campo, imponiendo además un tope rígido de `max-width: 420px;` en `.board-wrap` y `max-width: 440px;` en `#prep-board`. En pantallas de escritorio y portátiles, la pizarra se apreciaba diminuta respecto al espacio disponible.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, la cuadrícula se reestructuró a `grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 24px;`, dando prioridad y protagonismo completo a la pizarra táctica.
+     - `.board-wrap` y `#prep-board` se ampliaron a `max-width: 640px;` con `padding: 12px` y `border-radius: 20px;`, ganando más de un 120% en superficie visual y permitiendo que fichas, dorsales y nombres tácticos se lean con máxima claridad.
+     - En `Partido en vivo` (`#partido`), se amplió asimismo `.board-wrap` a `max-width: 600px;`.
+     - **Botón de Ampliación de Pizarra (`#prep-full-btn`):** Se añadió el botón `⛶ Ampliar pizarra` en la barra táctica de preparación. Al pulsarlo, abre `#prep-lightbox` con el visor de alta resolución `#prep-board-full` a escala completa (`min(92vw, calc(100dvh - 10rem))`).
+
+2. **Corrección de Nombres Cortados en Desplegables de Cambios y Puestos:**
+   - **Ajuste de Puestos (`#prep-slots`):** Anteriormente en `.cbx-prep-slots-details .live-tactics-slots` se empleaba `grid-template-columns: repeat(2, minmax(0, 1fr))`, lo que dejaba apenas ~180px por selector y provocaba que nombres con suplencia (`12 Alejandro Pedrós (Suplente)`) aparecieran cortados. Se transformó a `grid-template-columns: 1fr;` con selectores a ancho completo (>580px útiles), tipografía aumentada a `13.5px`, `font-weight: 600`, `min-height: 42px`, `text-overflow: ellipsis` y formateo `${dorsal} · ${nombre}`.
+   - **Popup Táctico Flotante (`#prep-popup`):** Se amplió el ancho calculado en JavaScript de `240px` a `Math.min(340, window.innerWidth - 24)`, con `min-width: 320px !important;` y selectores cómodos de 44px de altura.
+   - **Modal de Cambios de Calendario (`#calendar-substitutions-v2-dialog`):** Se amplió la ventana modal de `560px` a `min(820px, calc(100% - 2rem))` y se maquetaron las filas de sustitución (`Quién sale`, `Quién entra`, cambios de posición y observaciones) a doble columna ancha de ~360px útiles cada una con fuente de `13.5px`, garantizando que todos los nombres y dorsales quepan completos.
+
+3. **Especificación SDD 005 y Tests Automatizados:**
+   - Carpeta formal en `specs/005-pizarra-cambios-tamano-desplegables/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/cambios-pizarra-desplegables.test.js` verificando el límite de 640px en la pizarra, maquetación a 1 columna de `#prep-slots`, dimensiones de popup a 340px y modal de calendario a 820px.
+   - Batería de **614/614 tests pasando al 100%** y `npm run check` totalmente limpio.
+
+### 23. Entrega v63 (01/10/2026) — Pizarra Hero de 640px en Pantallas Estándar y Desplegables de Puestos Siempre Visibles (Spec 006)
+
+1. **Pizarra Hero de 640px en Pantallas Portátiles y Estándar (1024px):**
+   - **Diagnóstico de Causa Raíz (`media_1790858964644.png`):** En portátiles MacBook (resolución viewport 1024×886px), con la barra lateral de 220px, el ancho disponible en `#preparacion` es de ~768px. Al estar el breakpoint en `@media(max-width: 900px)`, la pantalla de 1024px activaba la maquetación de 2 columnas (`minmax(300px, 360px) minmax(0, 1fr)`). La columna de controles consumía 360px a la izquierda, forzando a la columna de la pizarra a reducirse a escasos ~330px-360px y haciendo que el campo se viese comprimido.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, `.cbx-prep-editor-layout` se estableció por defecto (< 1280px) a una sola columna centrada con ancho máximo de 720px (`grid-template-columns: 1fr; max-width: 720px; margin: 0 auto;`).
+     - Esto permite que `.cbx-prep-pitch .board-wrap` y `#prep-board` alcancen su tamaño hero completo de **640px × 640px** en cualquier portátil, tablet o pantalla estándar, multiplicando por más de 3.1 su superficie visual útil respecto a los 360px anteriores.
+     - En pantallas ultra-anchas (`@media(min-width: 1280px)`), se activa la doble columna con `grid-template-columns: minmax(560px, 640px) minmax(360px, 1fr); max-width: 1180px;`, garantizando que la pizarra nunca descienda de 560px-640px.
+     - En `js/app.js` (`arrangeClaudePrepEditor`), se antepuso la pizarra en el orden del DOM (`layout.append(pitch, controls)`), de modo que el campo táctico se presenta de inmediato como elemento estelar.
+
+2. **Desplegables de Puestos Permanentemente Visibles («los desplegables ya no salen»):**
+   - **Diagnóstico de Causa Raíz:** En la versión anterior, los 7 selectores de puesto (`#prep-slots`) se envolvieron dentro de un `<details class="cbx-prep-slots-details">` con `details.open = prepDraft.some(pos => !pos.playerId)`. Debido a que el sistema auto-asigna a los 7 titulares de inicio, `details.open` evaluaba a `false`. El acordeón aparecía cerrado por defecto (`▶ Elegir jugadores y cambiar posiciones`), ocultando totalmente los 7 desplegables de la vista del usuario.
+   - **Solución Implementada:**
+     - Se eliminó el elemento `<details>` plegable y su atributo `open` condicional.
+     - Los desplegables se alojan en un contenedor abierto y permanente `<section class="cbx-prep-slots-details cbx-prep-slots-panel panel">` con encabezado claro (`<h4>Elegir jugadores y cambiar posiciones</h4><p>...</p>`), antepuesto en `controls` (`controls.prepend(slotsPanel)`).
+     - Los 7 selectores quedan siempre desplegados, accesibles e inmediatamente visibles sin requerir clics previos.
+     - Se maquetó `.live-tactics-slots` con cuadrícula adaptativa `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;`. En el contenedor de 640px forma 2 columnas holgadas de ~300px por selector, permitiendo leer dorsales y nombres completos sin solapamientos ni truncamientos, y adaptándose a 1 columna en pantallas móviles (<580px). Los suplentes se expanden a ancho completo (`grid-column: 1 / -1`).
+
+3. **Especificación SDD 006 y Validación de Calidad:**
+   - Carpeta formal en `specs/006-pizarra-hero-640px-desplegables-visibles/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas actualizada en `tests/cambios-pizarra-desplegables.test.js` verificando el layout de 1 columna por defecto, dimensiones de 640px, ausencia de `<details>` plegables y orden `pitch` antes de `controls`.
+   - **614/614 tests pasando al 100%** y `npm run check` con cero errores.
+
+### 24. Entrega v64 (01/10/2026) — Partido en Vivo: Pizarra Táctica Hero de 640px y Controles Homogeneizados (Spec 007)
+
+1. **Pizarra Táctica Hero de 640px en Partido en Vivo y Vista Delegado (`#live-tactics` y `#delegate-tactics`):**
+   - **Diagnóstico de Causa Raíz:** En `#partido`, `.cbx-live-main` imponía una cuadrícula fija de 3 columnas (`grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr)`). En ordenadores portátiles estándar (pantallas de 1024px MacBook con sidebar de 220px), cada columna quedaba constreñida a escasos ~230px. Además, `@media(max-width: 1100px)` forzaba 2 columnas, impidiendo que la pizarra alcanzase el protagonismo visual y operativo de 640px validado en Preparación.
+   - **Solución Implementada:**
+     - En `css/claude-partido.css`, `.cbx-live-main` se estableció por defecto (< 1280px) a 1 sola columna centrada de hasta 720px (`grid-template-columns: 1fr; gap: 18px; align-items: start; max-width: 720px; margin: 0 auto;`), eliminando la regla limitante de 1100px.
+     - En pantallas ultra-anchas (`@media(min-width: 1280px)`), se organiza en 3 columnas holgadas con la pizarra reservada en `minmax(560px, 640px)` y los cambios/dashboard en `minmax(340px, 1fr)` y `minmax(280px, 1fr)`.
+     - `#live-tactics .board-wrap` y `#delegate-tactics .board-wrap` se ampliaron a `max-width: 640px`, padding generoso de `12px`, border-radius de `20px` y fondo unificado `#155438`.
+     - Los estilos del campo `.tac-field` (`fill: #205f43;`), aros de fichas (`stroke: #cbd5e1; stroke-width: .6;`) y dorsales (`fill: #0b2d20;`) quedaron 100% homogeneizados con la experiencia de Preparación.
+
+2. **Herramientas Tácticas y Desplegables de Puestos Siempre Visibles en Directo:**
+   - **Diagnóstico de Causa Raíz:** En `arrangeClaudeLiveBoard`, las herramientas interactivas (`#live-tactics-tools`) y los 7 puestos por posición (`#live-tactics-slots`) se envolvían dentro de un acordeón `<details class="cbx-live-board-options">` cerrado por defecto (`▶ Herramientas y asignación por puestos`), forzando al entrenador y al delegado a desplegarlo manualmente en cada refresco.
+   - **Solución Implementada:**
+     - Se reemplazó el contenedor `<details>` por un panel abierto permanente `<section class="cbx-live-board-options cbx-live-slots-panel panel">` con encabezado descriptivo claro.
+     - La barra de herramientas tácticas (`.live-tactics-tools`: selección, balón, 5 tipos de flecha, goma y limpiar) queda permanentemente visible e interactiva inmediatamente debajo de la pizarra táctica.
+     - Los 7 selectores de puesto (`#live-tactics-slots`) se organizan mediante la cuadrícula adaptativa `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;`, garantizando ~300px por selector para que nombres y dorsales nunca se recorten. Los suplentes se expanden a ancho completo (`grid-column: 1 / -1`).
+
+3. **Popup Táctico Ampliado y Formateo Limpio (`openTacticsPopup`):**
+   - Se actualizó `openTacticsPopup` en `js/app.js` para calcular ancho de hasta `Math.min(340, window.innerWidth - 24)` y altura de `130px`.
+   - Se formatearon las opciones de titulares y suplentes con el separador canónico `${escapeHtml(x.number ? x.number + ' · ' : '')}${escapeHtml(x.name)}` sin truncamientos ni solapamientos.
+
+4. **Especificación SDD 007 y Validación de Calidad:**
+   - Carpeta formal de especificación en `specs/007-partido-en-vivo-pizarra-hero-y-controles/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Nueva suite de pruebas en `tests/partido-en-vivo-pizarra-hero.test.js` verificando el layout hero de 640px, ausencia de `<details>` cerrados, dimensiones de popup a 340px y colores tácticos.
+   - **618/618 tests en verde al 100%** y `npm run check` con 0 errores de sintaxis.
+
+### 25. Entrega v65 (01/10/2026) — Plan de Partido: Impresión Profesional en Ficha A4 y Explicación Detallada (Spec 008)
+
+1. **Ficha Oficial A4 y Explicación Didáctica del Plan de Partido (`js/print-match-plan.js`):**
+   - **Módulo Dedicado de Impresión:** Se implementó `buildMatchPlanHtml(matchOrId, state, options)` y `printMatchPlan(matchOrId, state, options)` integrándose de forma limpia con la infraestructura de impresión `executePrint(html)` de `js/print-session-export.js`.
+   - **Cabecera Oficial:** Escudo oficial del club (`state.settings.crest` o `icons/escudo.png`), nombre del equipo (`Unión Viera`), rival (`vs [Rival]`), condición (`Local / Visitante`), jornada / competición, fecha formateada en lenguaje natural, hora de inicio, campo de juego y datos del cuerpo técnico (entrenador y delegado).
+   - **Alineación Inicial (0′):** Formación táctica de partida (ej. 1-3-2-1), cuadrícula de los 7 titulares con posición asignada, dorsal en distintivo circular y nombre completo (resaltando el portero con clase e icono `.is-gk`), acompañado de la lista visible de suplentes de inicio en banquillo con dorsal y nombre.
+   - **Cronograma Didáctico y Detallado de Sustituciones ("muy bien explicado"):**
+     - Desglose cronológico momento a momento (ej. minuto 12′, descanso 25′, minuto 38′...).
+     - 🟢 **ENTRA:** Dorsal + Nombre del convocado que ingresa + Posición táctica donde va a jugar.
+     - 🔴 **SALE:** Dorsal + Nombre del jugador que descansa al banquillo.
+     - 🔄 **REUBICACIÓN:** Jugadores en el campo que rotan de posición interna (ej. central a lateral, mediocentro a punta).
+     - 🧤 **PORTERÍA:** Detección y destaque automático del relevo de portero en descanso o tiempo programado.
+     - **Foto fija de la ventana:** Resumen explícito de los 7 jugadores que quedan en el césped con su puesto y los suplentes que descansan en el banquillo durante esa fase.
+   - **Tabla de Reparto de Minutos Formativos:**
+     - Tabla ordenada por dorsal con todos los convocados: dorsal, nombre, posición habitual, rol inicial (titular 0′ / suplente inicio), minutos totales previstos, barra de porcentaje visual del partido y **tramos exactos en el césped** calculados (ej. `0′–12′, 25′–50′`), garantizando transparencia y equidad formativa.
+   - **Pautas de Banquillo y Acta para Bolígrafo:**
+     - Pautas clave del cuerpo técnico: regla del portero (un tiempo cada uno si hay 2 porteros), gestión de imprevistos / golpes (reemplazo hombre por hombre) y auto-pausa de reloj.
+     - Acta de campo con casillas recuadradas para anotar a mano con bolígrafo: resultado final, goleadores / asistencias, incidencias y notas técnicas de Migue.
+   - **Soporte de Borradores en Vivo:** Si el entrenador está ajustando momentos en `#preparacion-editor`, el botón de impresión captura el borrador activo (`momentsDraft`, `teamDraft`, `formacionDraft`) sin obligar a guardar previamente.
+
+2. **Puntos de Acceso Omnipresentes en la Interfaz (`js/app.js`, `index.html`):**
+   - **En Lista de Preparación (`#preparacion-list`):** Botón `🖨️ Imprimir plan` en **todas** las tarjetas de partidos (tanto preparados como pendientes o sin convocatoria previa con fallback inteligente).
+   - **En Banner Principal de Preparación (`#prep-print-banner`):** Botón de acceso directo en la cabecera general de la sección Preparación.
+   - **En Cabecera Superior del Editor (`#prep-print-head`):** Botón prominente en la barra superior junto al botón de retorno (`← Volver a partidos`).
+   - **En Barra de Acciones del Editor (`#prep-print-current`):** Botón `🖨️ Imprimir plan` junto al botón principal de Guardar.
+   - **En Pestaña de Momentos (`#prep-moments`):** Botón `🖨️ Imprimir plan de partido` ubicado junto a «Copiar cambios del reparto automático».
+   - **En Calendario (`#calendario`):** Botón `🖨️ Imprimir plan` en cada tarjeta de partido programado.
+   - **En Partido en Vivo (`#partido`):** Botón `🖨️ Imprimir plan` en la botonera de acciones del cronómetro en vivo y en la cabecera `.cbx-live-plan`.
+   - **Exposición Global:** Registrado en `window.__campobase.printMatchPlan`.
+
+3. **Estilos de Pantalla e Impresión A4 (`css/claude-partido.css`):**
+   - Reglas completas para `.cb-print-match-plan-root` y `.cb-print-sheet.cbx-pmp-sheet` (794px × auto, padding 28px 34px).
+   - **Overlay de Previsualización en Pantalla:** Configurado con `position: fixed; inset: 0; z-index: 999999; padding: 95px 20px 60px 20px; backdrop-filter: blur(6px);` para que la barra flotante de acciones («Imprimir», «Descargar PDF», «Cerrar») nunca tape ni solape la cabecera del documento.
+   - Estilizado de tarjetas de titulares, etiquetas cromáticas para entradas/salidas/reubicaciones/portería, tabla de minutos y cajas de notas para bolígrafo.
+   - Configuración `@media print`: fondo blanco eco-ink, eliminación de sombras, márgenes limpios y evitación de saltos de página huérfanos (`page-break-inside: avoid`).
+
+4. **Sincronización PWA y Service Worker (`sw.js`, `index.html`):**
+   - Inclusión de `js/print-match-plan.js` y `css/claude-partido.css` en `ASSETS` y en `REVALIDATE_PATHS` con cache-busting para garantizar que los navegadores cliente en GitHub Pages reciban siempre los recursos actualizados sin bloqueos de caché.
+
+5. **Especificación SDD 008 y Validación:**
+   - Carpeta formal en `specs/008-plan-partido-impresion-explicada/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/print-match-plan.test.js` (6 tests pasando).
+   - **624/624 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+### 26. Entrega v66 (01/10/2026) — Partido en Vivo: Goles por Tipo, Penaltis con Especialistas, Asistencias, Celebraciones y Cronología en Vivo (Spec 009)
+
+1. **Goles por Tipo y Asistencias (`js/app.js`):**
+   - **Tipos de gol propio:** Registro asistido con diferenciación explícita entre `De jugada` (`us-play`), `De penalti` (`us-penalty`), `De falta directa` (`us-free`) y `En propia puerta del rival` (`us-own`).
+   - **Goles rivales:** Desglose entre `De jugada`, `De penalti`, `De falta` y `En propia puerta nuestra` (`rival-own`), solicitando qué jugador propio cometió la acción fortuita para reflejarlo en el acta sin distorsionar el casillero rival.
+   - **Asistencias opcionales:** Selector dinámico de asistentes en goles propios (excluyendo automáticamente al anotador) para alimentar las estadísticas de la plantilla.
+
+2. **Penaltis con Doctrina Táctica y Regla del Portero (`js/app.js`):**
+   - **Penaltis a favor con Especialistas Prioritarios:** Lectura en tiempo real de `state.settings.setPieces.penalties`. El lanzador primario y secundario encabezan la lista con insignia visual `🎯 1.º Especialista` y `🎯 2.º Especialista`.
+   - **Faltas directas:** Lectura de especialistas de falta (`freeKicksLeft` y `freeKicksRight`) con insignia `⚡ Falta`.
+   - **Penaltis en contra con Regla del Portero:** Identificación y aviso automático del portero activo bajo palos (`🧤 Portero bajo palos: [Nombre] [Dorsal]`) según la formación táctica y los cambios en el césped.
+   - **Desenlaces de penalti:** Opciones `Gol`, `Parado`, `Fuera` y `Al palo`. Los penaltis fallados (fuera o poste) no incrementan el marcador.
+
+3. **Celebraciones Visuales Enriquecidas (`js/app.js`, `css/claude-partido.css`):**
+   - **Celebración `¡GOOOL!`:** Pantalla completa inmersiva con fondo esmeralda semitransparente (`rgba(5, 44, 32, 0.94)`), tipografía heroica Barlow/Outfit, nombre del anotador, marcador actualizado (`X : Y`) y minuto de juego en tiempo real.
+   - **Celebración `¡PARADÓN!`:** Pantalla en tono dorado/ámbar (`rgba(120, 53, 15, 0.94)`) reconociendo la parada del meta en penaltis o intervenciones clave.
+   - Cierre táctil inmediato al tocar la pantalla o tras 2,8 segundos automáticos.
+
+4. **Cronología Enriquecida y Reversión Inmediata (Deshacer):**
+   - Filas de evento con iconos específicos (`⚽`, `🎯⚽`, `⚡⚽`, `🥅`, `❌🎯`, `🧤🚫`, `🧤⚽`, `🟨`, `🟥`, `🩹`, `📋`).
+   - Botón directo `✕ Anular` conectado a `removeLiveEvent`: descuenta inmediatamente el gol del marcador (`goalsFor` o `goalsAgainst`), persiste en IndexedDB (`put('timers', state.timer)`) y repinta la vista sin efectos secundarios.
+
+5. **Especificación SDD 009 y Validación:**
+   - Carpeta formal en `specs/009-partido-en-vivo-goles-penaltis-eventos-cronologia/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/partido-en-vivo-eventos.test.js` (3 tests pasando).
+   - **627/627 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+### 27. Entrega v67 (01/10/2026) — Finalización de Partido, Puntuaciones 1–5 y Resumen para Familias (Spec 010)
+
+1. **Flujo Completo de Finalización de Partido (`finishMatch`, `renderPostMatchSummary`):**
+   - **Eliminación del estado vacío abrupto:** Al pulsar «Final del partido» en el 2.º tiempo, el sistema ya no expulsa al entrenador a una pantalla vacía. Se consolida el resultado, se persisten los minutos y asistencias y se activa la vista inmediata de post-partido (`renderPostMatchSummary`) vinculada a `state.recentFinishedMatchId`.
+   - **Cabecera Oficial:** Marcador final con distintivo `✓ Partido Finalizado`, resultado `${miEquipo} X : Y ${rival}`, fecha en lenguaje natural, condición (Local/Visitante) y duración total del partido.
+   - **Prevención de doble conteo y reversibilidad:** Al finalizar, el recálculo atómico de minutos y asistencia se ejecuta una sola vez. Con `reopenLiveMatch(matchId)`, el entrenador puede restaurar el partido al 2.º tiempo en vivo para corregir incidencias sin duplicar minutos acumulados en las fichas de los jugadores.
+
+2. **Resumen para las Familias y Generador WhatsApp (`js/whatsapp-suite.js`):**
+   - **Tarjeta Visual Claude:** Fondo con gradiente esmeralda profundo (`linear-gradient(160deg, #053b24, #124c36)`), textos en blanco puro (`#ffffff !important`) inmunes a personalizaciones de fuente, subtítulo en mayúsculas `RESUMEN PARA LAS FAMILIAS`, marcador hero y lista de goleadores a favor.
+   - **Minutos formativos:** Desglose completo de todos los convocados ordenados por dorsal con sus minutos jugados (`1 · Mario Rodríguez (35′) · 9 · Hugo Santana (40′) ...`).
+   - **Botón `📲 Enviar resumen por WhatsApp`:**
+     - Genera automáticamente el mensaje deportivo mediante `buildWhatsAppMatchFamilySummary()`.
+     - Abre WhatsApp (`wa.me/?text=...`) y copia el texto al portapapeles.
+     - **Filtro estricto de privacidad:** NUNCA incluye puntuaciones 1–5, notas disciplinarias ni valoraciones técnicas privadas del cuerpo técnico. Incluye mensaje cálido de agradecimiento y deportividad hacia las familias.
+
+3. **Puntuar Convocados (Puntuaciones 1–5):**
+   - **Tarjeta con Borde Ámbar Claude:** Maquetada con `border: 2px solid #f59e0b; border-radius: 18px; background: #fff;`.
+   - **Aislamiento de permisos:** Disponible exclusivamente para el entrenador (`roleCanUseOwnerFeatures`); el delegado en su vista no puede calificar ni modificar notas.
+   - **Botones interactivos de nota 1 a 5 (`.cbx-star-btn`):** Cada convocado dispone de 5 botones táctiles de 34×34px (`1` a `5`). Al pulsar una nota, se resalta en ámbar brillante con sombra.
+   - **Guardado y sincronización inmediata:** `Guardar puntuaciones` actualiza `match.ratings`, registra en `player.ratingHistory` y recalcula de inmediato la media individual de temporada de cada jugador.
+   - **Opcionalidad sin bloqueo:** Botón `Puntuar más tarde` permite cerrar la vista sin forzar la calificación inmediata, pudiendo calificar más adelante desde el Calendario.
+
+4. **Acciones Operativas Post-Partido:**
+   - Botón directo `🖨️ Imprimir plan y acta` para generar el documento oficial en A4.
+   - Botón `📅 Ver en Calendario`.
+   - Botón `🔄 Reabrir partido` para corregir detalles del acta en vivo si fuera necesario.
+
+5. **Especificación SDD 010 y Validación:**
+   - Carpeta formal en `specs/010-finalizacion-partido-puntuaciones-resumen-familias/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/partido-finalizacion-resumen-puntuaciones.test.js` (4 tests pasando).
+   - **631/631 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+### 28. Entrega v68 (01/10/2026) — Calendario: Vista Mensual, Puntos Múltiples, Filtros y Lista Integrada (Spec 011)
+
+1. **Vista Mensual con Puntos Simultáneos (`renderClaudeCalendar`):**
+   - **Puntos dobles independientes (`.cbx-cal-dots`):** Solucionada la limitación donde un partido y un entrenamiento en el mismo día se anulaban mutuamente. Ahora se renderizan ambos puntos de forma simultánea e independiente: punto rojo (`#c8102e`, `.has-match`) y punto verde (`#10b981`, `.has-training`).
+   - **Navegación mensual reactiva:** Botones de mes anterior, mes siguiente y «Hoy» para saltar rápidamente al mes actual sin perder filtros.
+   - **Selección de día táctil:** Al pulsar un día del mes, se activa `.is-selected`, mostrando un banner informativo superior (`📅 Eventos del AAAA-MM-DD`) y un botón para volver a «Ver todo el mes».
+
+2. **Barra de Filtros Reactiva (`renderCalendarFilterBar`):**
+   - **Chips de filtro:** `Todos`, `Liga`, `Amistosos`, `Torneos` y `Entrenos` con recuentos dinámicos en tiempo real entre paréntesis.
+   - **Filtrado instantáneo:** Actualización reactiva sin recargas de página ni pérdida del mes que se está explorando.
+
+3. **Partidos en Directo y Lista Cronológica:**
+   - **Partido en juego destacado:** Si un partido está en disputa (`status === 'in_progress'` o fase de partido activa), se resalta en la parte superior con borde rojo brillante, fondo rosado tenue, distintivo animado `🔴 EN DIRECTO` y marcador en vivo.
+   - **Próximos eventos ordenados:** Próximos partidos y entrenamientos ordenados cronológicamente (el más cercano arriba).
+   - **Historial de jugados y completados:** Agrupados bajo el acordeón desplegable `Jugados y completados`, ordenados en orden cronológico descendente (el más reciente arriba), con marcadores coloreados según victoria (`.win`), empate (`.draw`) o derrota (`.loss`).
+
+4. **Tarjetas de Entrenamientos Integradas (`renderTrainingCalendarCard`):**
+   - Tarjetas con franja lateral verde (`border-left: 4px solid #10b981`), fecha desglosada, hora, campo, nombre de sesión y objetivos.
+   - Acciones directas integradas: `🖨️ Imprimir sesión`, `📱 WhatsApp` y `Ver sesión`.
+
+5. **Aislamiento de Permisos del Delegado:**
+   - El botón `+ Partido` de la cabecera y los botones `Editar` y `Borrar` de las tarjetas de partido se ocultan automáticamente si el usuario tiene rol de delegado (`state.role === 'delegate'`), reservándolos para el entrenador (Migue).
+
+6. **Especificación SDD 011 y Validación:**
+   - Carpeta formal en `specs/011-calendario-vista-mensual-filtros-y-navegacion/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/calendario-filtros-vista-mensual.test.js` (6 tests pasando).
+   - **637/637 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+### 29. Entrega v69 (01/10/2026) — Ajustes: Personalización Visual Completa, Colores, Fuentes y Presets Fiel a Claude (Spec 012)
+
+1. **Vista Previa del Tema en Directo (`#theme-preview-card`):**
+   - Marcador demo interactivo con escudo de muestra, nombres de equipo y rival, resultado demo, lista de convocados y botón de muestra con insignias reactivas.
+   - Refleja instantáneamente cualquier ajuste sobre la paleta de colores, tipografía de títulos, fondos o tarjetas sin necesidad de recargar la página ni abandonar la pantalla.
+
+2. **Temas Guardados (Presets) y Asignación Exclusiva para el Partido en Vivo (`#saved-themes-card`):**
+   - Colección de presets predefinidos y creados por el usuario con dot de gradiente cromático.
+   - Botón directo para aplicar preset al club (`applyThemePreset`).
+   - Botón exclusivo `⚡ Usar en vivo` (`setMatchThemePreset`) para asignar un tema específico al partido en directo (`partido` y `delegado`), destacado con insignia roja `#c8102e`.
+   - Guardado del tema actual como nuevo preset (`saveCurrentThemePreset`) y eliminación de presets personalizados (`deleteThemePreset`).
+   - **Reversión automática:** En `showView`, al entrar a `partido` o `delegado` se activa automáticamente el preset de partido; al regresar a cualquier otra vista se restaura el tema general del club.
+
+3. **Fuente de Títulos y Marcadores (`#title-font-card`):**
+   - Tipografía independiente del texto del cuerpo: `Auto`, `Barlow`, `Oswald`, `Bebas Neue`, `Inter`, `Outfit`, `System`, `Technical` y `Classic`.
+   - Carga desde Google Fonts e inyección dinámica en `--font-title` y `--title-font`, gobernando marcadores de partidos, cabeceras de paneles y títulos principales.
+
+4. **Colores con Significado (Semáforos) (`#semantic-colors-card`):**
+   - Selectores cromáticos individuales para demarcaciones tácticas: Porteros (`gk`), Defensas (`def`), Medios (`mid`), Delanteros (`fw`).
+   - Selectores cromáticos individuales para desenlaces de partidos: Victoria (`win`), Empate (`draw`), Derrota (`loss`).
+   - Inyección en variables CSS `--sem-gk`, `--sem-def`, `--sem-mid`, `--sem-fw`, `--sem-win`, `--sem-draw`, `--sem-loss`.
+
+5. **Fondos, Tarjetas y Botones Secundarios (`#surfaces-buttons-card`):**
+   - Swatches de acceso rápido + color picker libre + sliders de intensidad (0–100%) para fondo general (`appBgHue`, `appBgPct`) y tarjetas (`cardHue`, `cardPct`).
+   - Cálculo dinámico de tonalidad mediante `color-mix(in srgb, ${hue} ${pct}%, #ffffff)`.
+   - Selectores para títulos de tarjetas (`cardTitle`), fondo y texto de botones secundarios (`btn2Bg`, `btn2Ink`), enlaces de WhatsApp (`waInk`), resultados de temporada (`resInk`), y goles a favor / en contra (barras, fondo y texto con badges interactivos).
+   - Botón directo «Restablecer estos colores» (`resetExtendedColors`) para restaurar las superficies recomendadas.
+
+6. **Cabeceras y Botones Principales (`#banners-buttons-card`):**
+   - Selectores independientes de fondo y texto de cabeceras (`bannerBg`, `bannerInk`) inyectados en `--bn` y `--bnInk`.
+   - Selectores independientes de fondo y texto de botones principales (`btnBg`, `btnInk`) inyectados en `--btn` y `--btnInk`.
+   - Detección reactiva de luminancia: si el color de texto elegido es claro, la app adapta automáticamente el fondo y las tarjetas a tonos oscuros para salvaguardar la legibilidad y el contraste.
+
+7. **Especificación SDD 012 y Validación:**
+### 30. Entrega v70 (02/10/2026) — Ajustes: Pizarra Táctica Compacta, Personalización de Barra Lateral, Bloques Sólidos y Contraste de Botones (Spec 013)
+
+1. **Pizarra Táctica de Previsualización Compacta y Personalización de Colores (`#tactic-board-colors-card`):**
+   - Mini campo SVG interactivo y compacto (280px máx.) orientado exclusivamente a la previsualización cromática en tiempo real (sin menús tácticos innecesarios de formaciones o sistemas).
+   - Muestra césped, líneas reglamentarias, 3 fichas de equipo propio (1, 4, 9), 2 fichas de rival (R), balón y flecha táctica discontinua.
+   - Controles cromáticos reactivos para Césped (`tbPitch`), Líneas de campo (`tbLines`), Fichas de equipo (`tbTeam`), Fichas de rival (`tbRival`) y Flechas tácticas (`tbArrow`).
+   - Botón directo «Restablecer colores de pizarra» (`resetTacticBoardColors`) para volver a los valores estándar de campo.
+   - Propagación automática de variables `--tb-pitch`, `--tb-lines`, `--tb-team`, `--tb-rival` y `--tb-arrow` a todas las pizarras del sistema (`#cbx-tactics-pitch-board`, `.live-tactics svg`, `.board-wrap svg`).
+
+2. **Personalización del Menú y Barra Lateral Izquierda (`#sidebar-colors-card`):**
+   - Selectores dedicados de fondo de barra lateral (`sidebarBg`) y texto/iconos (`sidebarInk`).
+   - Caja de previsualización en directo `#cbx-sidebar-preview-box` que refleja inmediatamente la estética del menú de navegación.
+   - Inyección dinámica en `--sidebar-bg`, `--sidebar-ink` y `--sidebar-sub`, desacoplando completamente el lateral del color general de la cabecera.
+
+3. **Corrección de Contraste en Botón «Guardar» y Botones Primarios:**
+   - Corrección de la regla CSS destructiva en `styles-redesign.css` que forzaba el texto a negro en elementos `span` bajo `data-has-custom-font-color="true"`.
+   - Modificación del botón de muestra en cabecera a `<button class="primary cbx-preview-banner-btn">` con regla de contraste `color: var(--btnInk, #ffffff) !important;`.
+   - Garantía de tipografía siempre blanca y brillante en botones primarios y de guardado independientemente del tema activo.
+
+4. **Personalización Directa e Intuitiva de Bloques/Tarjetas:**
+   - Swatches con colores sólidos directos (`#ffffff` blanco puro, `#f8fafc` gris suave, `#fef9ee` crema, `#11221b` esmeralda oscuro, `#18181b` grafito) además del color picker libre.
+   - Previsualización en tiempo real de bloque/tarjeta dentro de la tarjeta demo de tema (`#preview-card-demo-wrap`).
+
+5. **Especificación SDD 013 y Validación Automatizada:**
+   - Documentación completa en `specs/013-ajustes-personalizacion-pizarra-lateral-bloques-botones/` (`spec.md`, `plan.md`, `tasks.md`).
+   - Suite de pruebas en `tests/ajustes-pizarra-lateral-bloques.test.js` (7 tests específicos pasando).
+   - **649/649 tests pasando al 100%** en `npm test` y verificación sintáctica `npm run check` con 0 errores.
+
+---
+
+### 31. Entrega v71 (02/10/2026) — Corrección de Fuga de Pizarra en Ajustes, Fondo Reactivo Sólido, Previsualización Rica con Marcadores/Botones/Semáforos y Propagación Global de Pizarras
+
+1. **Corrección de Fuga Visual de `#tacticas` (`css/claude-entreno.css`):**
+   - **Causa anterior:** En `css/claude-entreno.css` la regla `body.cb-redesign-active #tacticas { display: flex; ... }` no tenía la pseudoclase `:not(.active)`. Al poseer un selector con ID `#tacticas`, anulaba la regla global `.view { display: none; }` de `styles.css`. Por ello, la pizarra táctica completa de sistemas de juego permanecía permanentemente visible sobre la pantalla de Ajustes.
+   - **Solución implementada:** Reglas estrictas:
+     - `body.cb-redesign-active #tacticas:not(.active) { display: none !important; }`
+     - `body.cb-redesign-active #tacticas.active { display: flex; flex-direction: column; ... }`
+   - La pantalla de Ajustes solo muestra su propia mini pizarra de previsualización cromática compacta, libre de sistemas de juego y formaciones ajenas.
+
+2. **Fondo de la App Reactivo, Inmediato y Sólido (`css/claude-shell.css`, `styles-redesign.css`, `js/app.js`):**
+   - **Causa anterior:** `html:not([data-theme-bg]):has(body.cb-redesign-active) { background: #f4f6f5 !important; }` fijaba el fondo a gris claro e impedía que los selectores de `appBgHue` se vieran. Además, la función `calculatedAppBg` diluía los colores al 12% con blanco, haciendo imperceptibles los colores oscuros seleccionados por el usuario.
+   - **Solución implementada:**
+     - En `css/claude-shell.css` y `styles-redesign.css` se sincronizó a `var(--bg, var(--cb-surface-bg, #f4f6f5)) !important;`.
+     - `applyCustomTheme` aplica directamente el color sólido seleccionado en `appBgHue` (sin dilución artificial innecesaria) y lo inyecta forzosamente en `document.body.style.backgroundColor`, `document.documentElement.style.backgroundColor`, `--bg`, `--app-bg` y `--cb-surface-bg`.
+     - Los swatches de `EXTENDED_SWATCH_CONFIGS.appBgHue` se dotaron de colores sólidos y elegantes (`#0a251b`, `#040806`, `#021e12`, `#061021`, `#111827`, `#f4f6f5`, `#ffffff`).
+     - El cambio de fondo reacciona al instante sin recarga ni retrasos.
+
+3. **Previsualización Rica e Interactiva en Ajustes (`index.html`, `js/app.js`):**
+   - **Marcador en directo con goles a favor y en contra:** Se incorporó un marcador de muestra con contadores numéricos independientes (`#preview-gf-num` y `#preview-ga-num`), barras de progreso cromáticas (`#preview-gf-bar`, `#preview-ga-bar`) y badges estilizados (`#preview-card-gf-badge`, `#preview-card-ga-badge`). Al cambiar los colores de GF o GA, la previsualización refleja exactamente el impacto en el marcador.
+   - **Botones de muestra completos:** La tarjeta demo exhibe Botón Primario (`#preview-sample-btn`), Botón Secundario (`#preview-sample-btn2`), Botón WhatsApp (`#preview-sample-wa`) y Resultado de partido (`#preview-sample-res`).
+   - **Semáforos de demarcación y desenlaces:** Previsualizadores en tiempo real de Porteros (`gk`), Defensas (`def`), Medios (`mid`), Delanteros (`fw`) y Resultados (Victoria `win`, Empate `draw`, Derrota `loss`).
+   - La función `updateThemePreviewBox` sincroniza todos estos elementos en tiempo real según los inputs o el tema guardado.
+
+4. **Propagación Cromática Global a Todas las Pizarras del Sistema (`css/claude-partido.css`):**
+   - Se vincularon las clases estándar `.tac-field` (`var(--tb-pitch)`), `.tac-line` y `.tac-area` (`var(--tb-lines)`), `.tac-player circle` (`var(--tb-team)`), `.tac-opponent circle` (`var(--tb-rival)`), `.tac-arrow` (`var(--tb-arrow)`) y `.tac-legend-*` en `css/claude-partido.css`.
+   - Modificar los colores en la mini pizarra de Ajustes traslada los cambios armónicamente a las pizarras de entrenamiento, visor de tácticas, tácticas interactivas y partido en vivo.
+
+5. **Integridad de Ejercicios y Batería de Pruebas:**
+   - La biblioteca de ejercicios («Mis ejercicios», «+ Ejercicios») se mantiene intacta y completamente validada.
+   - 4 nuevos tests añadidos en `tests/ajustes-pizarra-lateral-bloques.test.js` cubriendo:
+     - Reglas de visibilidad estricta de `#tacticas:not(.active)`.
+     - Fondo reactivo en CSS y soporte sólido en `applyCustomTheme`.
+     - Componentes del marcador y semáforos en la previsualización.
+     - Selectores de propagación de variables `--tb-*` a `.tac-*`.
+   - Total: **653/653 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service Worker actualizado a `-20261002-v71-ajustes-preview-rico-bg-tacticas-fix`.
+
+---
+
+### 32. Entrega v72 (02/10/2026) — Desacoplamiento Total de Botones, Selector de 6 Paneles de Previsualización en Vivo, Eliminación de Verdes Hardcodeados y Sincronización Global de Ajustes
+
+1. **Desacoplamiento Estricto de Tipografía en Botones (`styles-redesign.css`):**
+   - **Causa resuelta:** La regla `body.cb-redesign-active[data-has-custom-font-color="true"] span:not(...)` forzaba el texto a oscuro (`--cb-font-custom-color`, `#0f172a`) en botones que contenían texto o spans interiores (como `#manual-refresh` en cabecera o botones primarios y de guardado en formularios), provocando texto negro sobre fondos de botón rojos o esmeralda.
+   - **Solución implementada:**
+     - Exclusiones estrictas para `:not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode)` en la regla de fuentes personalizadas del cuerpo.
+     - Reglas prioritarias con `!important` para `.primary`, `button.primary`, `button[type="submit"]:not(.secondary)`, `#manual-refresh` y `#cbx-preview-banner-btn` usando `var(--btnInk, #ffffff) !important;`.
+     - `#manual-refresh` garantizado con fondo rojo `#c8102e` y texto blanco puro `#ffffff !important;` en `css/claude-hoy.css`.
+
+2. **Selector de 6 Paneles de Previsualización en Vivo en Ajustes (`index.html`, `js/app.js`):**
+   - **Causa resuelta:** El usuario debía navegar continuamente entre diferentes pestañas (Hoy, Convocatorias, Plantilla, Partido) para verificar cómo quedaban sus cambios de tema y colores, lo cual no era intuitivo ni ágil.
+   - **Solución implementada:**
+     - Selector interactivo de pestañas integradas en la tarjeta superior `#theme-preview-card`:
+       `[ Marcador & Botones | ⚽ Hoy | 📋 Convocatoria | 🎯 Lanzadores | 👥 Cuerpo Técnico | 📌 Pizarra Táctica ]`
+     - 6 paneles fidedignos con visualización inmediata:
+       1. `#preview-pane-scoreboard`: Marcador con goles a favor y en contra, botones primarios/secundarios/WhatsApp, tarjeta de muestra y semáforos.
+       2. `#preview-pane-hoy`: Banner hero de Hoy con fecha, contadores y bloque de actividades diarias.
+       3. `#preview-pane-convocatoria`: Banner de convocatoria, botón «+ Convocatoria», cabecera de partido con hora/rival y fila con dorsal y estado del jugador.
+       4. `#preview-pane-lanzadores`: Tarjetas de especialistas de balón parado (Penaltis, Faltas), iconos, badges de 1.er/2.º lanzador y botón de configuración.
+       5. `#preview-pane-staff`: Banner de equipo técnico, botón «+ Nuevo», tarjeta con franja de acento, avatar de iniciales y botones de acción.
+       6. `#preview-pane-pizarra`: Campo SVG compacto con líneas, fichas de equipo, rivales, balón y flechas tácticas sincronizadas.
+     - Delegación de clics en `.cbx-preview-tab-btn` que conmuta instantáneamente el panel visible y resalta la pestaña activa con los colores del botón primario (`var(--btn)` y `var(--btnInk)`).
+     - La función `updateThemePreviewBox` y `updateTacticBoardPreviewBox` actualizan los 6 paneles en vivo al mover cualquier control o swatch de Ajustes.
+
+3. **Eliminación Definitiva de Verdes Hardcodeados en Toda la Aplicación:**
+   - **Causa resuelta:** Módulos clave contenían gradientes y colores fijos (`#297053`, `#116847`, `#092b21`, `#155438`, `#1a4d34`) que no se adaptaban al elegir temas azules, rojos, oscuros o claros.
+   - **Solución implementada:**
+     - `css/claude-hoy.css`: Banner `#hoy .today-hero` migrado a `var(--bn, var(--cbx-hero))` y `color-mix(..., #000000)` dinámico. Paneles `.panel` migrados de `#fff` fijo a `var(--cardBg, var(--card, #fff))`.
+     - `css/claude-plantilla.css`: Lanzadores y Cuerpo Técnico migrados de `#092b21` / `#116847` a variables dinámicas `--cardBg`, `--btn`, `--bn` y `--ink`.
+     - `css/claude-partido.css`: Convocatorias y preparaciones migradas de verdes estáticos a `var(--bn)`, `var(--cardBg)` y `var(--bnInk)`.
+     - `css/claude-entreno.css`: Contenedores tácticos `.cbx-tactics-pitch-container` migrados de `#1a4d34` a `var(--tb-pitch)`.
+     - `styles-redesign.css`: Paneles y tarjetas `.panel` y `.card` enlazados a `var(--cardBg)` y `var(--cardBorder)`.
+
+4. **Sincronización Global de Fondos de App, Bloques y Pizarra Táctica:**
+   - Al seleccionar un color de fondo (`appBgHue`) o bloque (`cardHue`), se activa al 100% de intensidad visible para que el usuario perciba el cambio de inmediato, manteniendo el slider disponible para ajustar la opacidad deseada.
+   - Al pulsar un chip de tono predeterminado (Azul Marino, Noche OLED, Rojo Burdeos, etc.), se limpia automáticamente cualquier `appBgHue` residual para aplicar el tema de inmediato.
+   - La barra lateral izquierda se adapta por defecto al banner o al color de fondo seleccionado con contraste automático en tipografía (`sidebarInk`).
+   - Las pizarras tácticas de toda la app (en vivo, preparación, visor de tácticas, modales y previsualización) adoptan unificadamente `--tb-pitch`, `--tb-lines`, `--tb-team`, `--tb-rival` y `--tb-arrow`.
+
+5. **Pruebas y Validación:**
+   - 2 nuevos tests añadidos en `tests/ajustes-pizarra-lateral-bloques.test.js` para las 6 pestañas de previsualización y la eliminación de verdes fijos.
+   - **655/655 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v72-ajustes-live-preview-completo`.
+
+### 33. Entrega v73 (02/10/2026) — Previsualización Principal al Inicio de Ajustes, Mini-Previsualización Inline en Tarjetas y Reparación Integral de Botones de Hoy y Accesos Rápidos
+1. **Reubicación de la Previsualización Principal al Inicio de Ajustes (`#theme-preview-card`):**
+   - Se trasladó `#theme-preview-card` a la posición **#1 de Ajustes** (`grid-column: 1 / -1;`), situándose inmediatamente visible antes de cualquier otro panel en cuanto el usuario entra a la pantalla.
+   - La tarjeta de previsualización cuenta con 6 pestañas interactivas en vivo (Marcador & Botones, Hoy, Convocatoria, Lanzadores, Cuerpo Técnico, Pizarra Táctica).
+   - Se enriqueció la pestaña demo de **«Hoy»** con los bloques de **«Pendiente de hacer»** (con "Falta convocatoria" y "Asistencia pendiente" y sus botones [Abrir]) y **«Accesos Rápidos»** (con los 4 botones: Sesiones, Asistencia, Calendario, Convocatoria), permitiendo comprobar cómo lucen todas las áreas de la pantalla de inicio con los colores configurados.
+
+2. **Mini-Previsualización Inmediata en «Fondos, tarjetas y botones» (`#surfaces-buttons-card`):**
+   - En la tarjeta donde se personalizan los fondos, tarjetas y botones secundarios, se integró una caja de vista previa en directo (`#cbx-surfaces-preview-box`) situada justo bajo los selectores de botones secundarios.
+   - Ofrece retroalimentación visual al instante sobre cómo cambia una tarjeta con su título, un botón secundario de acción («Abrir»), los botones de accesos rápidos («⚡ Sesiones», «📋 Convocatoria»), el botón de WhatsApp y la píldora de resultados (J1 · 3-1).
+
+3. **Reparación Integral de Botones de Hoy y Accesos Rápidos:**
+   - En `css/claude-hoy.css`, `.today-quick button` forzaba `background: var(--cbx-soft) !important;` impidiendo aplicar la personalización de botones secundarios y provocando texto blanco invisible sobre fondo blanco. Se reconfiguró para usar `background: var(--btn2, #ffffff) !important;` y `color: var(--btn2Ink, #0f172a) !important;` con borde `1px solid var(--cardBorder, var(--cbx-line, #cbd5e1))`.
+   - `.today-pending button` y `.today-pending .cbx-btn-secondary` adoptan `var(--btn2)` y `var(--btn2Ink)` con tipografía destacada y borde coordinado con la tarjeta.
+   - En `css/claude-hoy.css`, se blindó el botón `#logout` («Salir») con `::after` para evitar que aparezca como un cuadro en blanco.
+
+4. **Salvaguarda Automática de Contraste:**
+   - En `js/app.js` (`applyTheme` y `updateThemePreview`), se introdujo una comprobación de luminancia relativa (YIQ) que detecta si el fondo y el texto de los botones secundarios tienen contraste insuficiente (< 45). En caso de conflicto (como blanco sobre blanco o negro sobre negro), ajusta automáticamente la tinta a `#0f172a` o `#ffffff` para impedir que el texto quede ilegible o invisible.
+
+5. **Pruebas y Verificación:**
+   - Nuevo test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` para asegurar la posición de la previsualización al inicio de Ajustes, la presencia de pendientes y accesos rápidos en la preview de Hoy, la mini-previsualización en `surfaces-buttons-card` y las reglas de `var(--btn2)` en `css/claude-hoy.css`.
+   - **656/656 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v73-preview-top-hoy-quick-buttons-fix`.
+
+### 34. Entrega v74 (02/10/2026) — Blindaje Responsivo y Fluidez en Vista Móvil (< 760px / iPhone / Android)
+1. **Ajustes y Rejilla a Columna Única en Móviles (`styles-redesign.css`):**
+   - **Diagnóstico:** La regla `body.cb-redesign-active .settings-grid` forzaba `grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)) !important;` fuera de media queries. En pantallas móviles estrechas (< 380px, como iPhone de 375px/390px o Android de 360px), el ancho mínimo de 380px provocaba un ligero desbordamiento horizontal.
+   - **Solución:** Se aplicó `@media (max-width: 760px) { body.cb-redesign-active .settings-grid { grid-template-columns: 1fr !important; gap: 1rem !important; } }`, garantizando una lectura vertical holgada, sin recortes y perfectamente adaptada al 100% del viewport móvil.
+
+2. **Desplazamiento Táctil en Píldoras de Previsualización (`.cbx-preview-tabs`):**
+   - Se añadió `flex-shrink: 0 !important;` a `.cbx-preview-tab-btn` y `-webkit-overflow-scrolling: touch !important;` a `.cbx-preview-tabs`, asegurando que las 6 pestañas de previsualización (Marcador, Hoy, Convocatoria, Lanzadores, Staff, Pizarra) se desplacen con suavidad táctil sin comprimir su texto en pantallas pequeñas.
+
+3. **Adaptación de Cabecera de Marcador en Teléfonos (< 480px):**
+   - En pantallas ultracompactas, `#preview-scoreboard-header` ajusta sus paddings a `10px 8px` y las píldoras de «A favor» / «En contra» a `padding: 3px 7px; font-size: 11px;`, evitando solapamientos entre escudos, nombres y marcadores.
+
+4. **Pruebas y Verificación:**
+   - Test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` para asegurar las reglas móviles de `.settings-grid`, `.cbx-preview-tab-btn` y scroll táctil.
+   - **657/657 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v74-mobile-settings-grid-responsive-fix`.
+
+### 35. Entrega v75 (02/10/2026) — Eliminación de Tácticas Ficticias / Presets de Prueba en Producción
+1. **Eliminación de Tácticas de Prueba Ficticias (`js/app.js`):**
+   - **Diagnóstico:** En la sección «Tácticas guardadas» de la Pizarra Táctica, cuando el usuario no tenía tácticas creadas aún, se inyectaban tres tácticas fijas de prueba («Salida ante presión alta vs UD Lomo Verde», «Córner a favor · bloqueo», «Bloqueo bajo con ventaja»), procedentes de una maqueta estática previa, lo cual daba la impresión de datos inventados / prueba aislada.
+   - **Solución:** Se eliminó la inyección de `defaultPresets` en `renderClaudeTactics()`. Ahora, si el usuario no tiene tácticas guardadas, se muestra un mensaje limpio de estado vacío indicando que puede diseñar su pizarra y pulsar «Guardar táctica» para verla allí. Si existen tácticas creadas por el usuario, se listan única y exclusivamente sus tácticas reales.
+2. **Pruebas y Verificación:**
+   - Test añadido en `tests/ajustes-personalizacion-temas-colores.test.js` comprobando que `UD Lomo Verde` ya no aparece y que existe el contenedor de estado vacío limpio.
+
+### 36. Entrega v76 (02/10/2026) — Corrección Cromática de Especialistas (Sin Tinte Rosáceo) y Experiencia de Impresión / PDF en Móvil
+1. **Desvinculación Cromática de Especialistas respecto al Botón Principal (`css/claude-plantilla.css`, `index.html`, `js/app.js`):**
+   - **Diagnóstico:** En Plantilla -> Especialistas a balón parado (y capitanes), las tarjetas de cada rol («Penaltis», «Faltas», «Córners», «Capitanes») tenían forzado un estilo `background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, var(--btn, #10b981))`. Cuando el usuario configuraba botones rojos o burdeos, las tarjetas se teñían de un color rosáceo/salmón inmutable que ignoraba el color de tarjeta configurado en Ajustes. Asimismo, los badges de 2.º y 3.er lanzador sufrían el mismo tinte.
+   - **Solución:** Se eliminó el `color-mix(..., var(--btn))` de `.specialist-item` y de los badges secundarios. Ahora las tarjetas de especialistas usan directamente `var(--cardBg, #ffffff) !important` y su borde `var(--cardBorder, var(--cbx-line, #e2e8f0)) !important`, reflejando exactamente el color de tarjeta elegido por el usuario. Los badges secundarios usan un fondo neutro coordinado `color-mix(in srgb, var(--cardBg, #ffffff) 85%, var(--cardBorder, #e2e8f0))` con el texto en `var(--cardTitle)`.
+   - **Previsualización en Directo:** En el panel de previsualización de Ajustes (pestaña «🎯 Lanzadores»), se actualizaron `#preview-sp-card-1` y `#preview-sp-card-2` tanto en su marcado inline como en la reactividad JavaScript de `updateThemePreview()`, mostrando en tiempo real los cambios de color de tarjetas y bordes.
+2. **Corrección Integral de la Vista de Impresión y PDF en Móvil (`css/claude-entreno.css`, `css/claude-partido.css`, `js/print-session-export.js`):**
+   - **Diagnóstico:** Al abrir la vista de impresión o exportación a PDF (ficha de sesión, ejercicio o plan de partido) en iPhone/Android, el contenedor A4 (`.cb-print-sheet` y `.cbx-pmp-sheet`) tenía un ancho fijo de `794px`, cortando la mitad derecha de la pantalla y desplazando el campo táctico. Además, la barra de acciones flotante colocaba 5 botones en una sola fila horizontal, haciendo que el botón «✕ Salir» desbordara hacia la derecha y quedara completamente fuera del viewport móvil, dejando al usuario bloqueado sin poder cerrar la vista previa.
+   - **Solución:**
+     - Se añadieron reglas `@media screen and (max-width: 850px)` en `css/claude-entreno.css` y `css/claude-partido.css`.
+     - La barra flotante `.cb-print-floating-bar` en móvil se fija en la parte superior (`top: 0; left: 0; right: 0; width: 100%`) con fondo oscuro contrastado (`#0b1e16`) y z-index prioritario (`1000002`).
+     - El botón de cierre `.cb-print-btn-close` se colocó arriba del todo (`order: -1; grid-column: 1 / -1; min-height: 44px;`) en rojo llamativo (`#dc2626`) con texto «✕ Salir de la Ficha», siendo 100% visible, accesible y táctilmente cómodo.
+     - Se ocultó el botón nativo `🖨️ Imprimir` en móvil (que suele fallar o congelarse en Safari/Chrome móvil) y se dispusieron los botones operativos («📄 Abrir Ficha A4», «📥 Descargar PDF», «📲 Compartir») en una rejilla fluida de 2 columnas.
+     - Tanto `.cb-print-sheet` como `.cbx-pmp-sheet` adoptan `width: 100% !important; max-width: 100% !important; min-height: auto !important; height: auto !important; padding: 16px 12px;` con adaptación automática a 1 columna en todas las rejillas internas, diagramas y tablas con desplazamiento táctil horizontal.
+3. **Pruebas y Verificación:**
+   - **660/660 tests pasando al 100%** en `npm test` y 0 errores en `npm run check`.
+   - Service worker actualizado a `campobase-v2.44.0-...-20261002-v76-mobile-print-pdf-specialists-theme-fix`.
+
+### 37. Entrega v77 (03/10/2026) — Corrección de Colores Inmutables, Plan de Partido 2 Páginas, Cálculo 70 min F7, Convocatorias y FAB Móvil
+1. **Textos y Dorsales Inmutables en Especialistas y Convocatoria (`css/claude-plantilla.css`, `css/claude-partido.css`, `js/app.js`):**
+   - **Diagnóstico:** En Plantilla -> Especialistas y en Convocatoria (jugadores, reparto por puestos y tramos), los textos y dorsales no respetaban el color de fuente (`fontColor`), color de títulos (`cardTitle`) ni los bordes/fondos configurados en Ajustes, mostrándose como textos negros rígidos dentro de casillas blancas.
+   - **Solución:**
+     - En `js/app.js`, `applyCustomTheme(theme)` ahora inyecta automáticamente `--cbx-ink` a partir de `fontColor` / `cardTitle`, y `--cbx-line` a partir de `cardBorder`.
+     - En `css/claude-plantilla.css`, `.specialist-rank-row strong`, `.specialist-item h4` y `.specialist-number` quedan vinculados a `var(--cardTitle, var(--cbx-ink))` y su fondo/borde a `var(--cardBg)` y `var(--cardBorder)`.
+     - En `css/claude-partido.css`, `.cbx-callup-person strong`, `.cbx-plan-row > span`, `.cbx-plan-row > b` y `.cbx-plan-change` respetan los colores configurados. En `.cbx-callup-metrics > div` se erradicó el verde `#f0f8f3` fijo, adoptando `var(--cardBg)` y `var(--bg)` adaptables.
+
+2. **Cronograma y Visibilidad de Minutos en Plan de Partido (`styles-redesign.css`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Una regla CSS de alta especificidad en `styles-redesign.css` (`body.cb-redesign-active[data-has-custom-font-color="true"] span:not(...)`) forzaba texto negro (`#000000`) sobre todos los spans, provocando que las píldoras oscuras de minutos («MINUTO 17'», «MINUTO 35'», «CRONOGRAMA») quedaran ilegibles (texto negro sobre fondo oscuro).
+   - **Solución:** Se protegieron las píldoras y badges en la regla de exclusión de `styles-redesign.css` para `.cbx-pmp-min-pill`, `.cbx-pmp-badge-accent`, `.cbx-pmp-tag-in`, `.cbx-pmp-tag-out`, `.cbx-pmp-tag-move`, `.cbx-pmp-tag-gk`, `.cb-print-floating-bar *` y `.cb-print-sheet *`. En `css/claude-partido.css`, `.cbx-pmp-min-pill` y `.cbx-pmp-badge-accent` adoptan `var(--bn, var(--cbx-hero))` con texto blanco forzado (`#ffffff !important`).
+
+3. **Descarga de PDF de 2 Páginas Completas (`js/print-match-plan.js`, `js/print-session-export.js`):**
+   - **Diagnóstico:** El generador de PDF solo guardaba 1 página porque el documento no estaba dividido en elementos de página `.cb-print-page`. `generatePdfBlob` renderizaba el contenedor completo y lo recortaba a los 297mm de la primera página, perdiendo la tabla de minutos y el acta de campo.
+   - **Solución:** `buildMatchPlanHtml` divide la ficha en 2 hojas A4 independientes con clases `cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-1` y `cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-2`. `generatePdfBlob` itera por todos los elementos con `.cb-print-page` y crea páginas secuenciales con `doc.addPage('a4', 'portrait')`, generando un PDF limpio y completo de 2 páginas.
+
+4. **Cálculo de Minutos en F7 y Tramo hasta los 70 Minutos Oficiales (`js/print-match-plan.js`):**
+   - **Diagnóstico:** La duración estaba fijada estáticamente a `totalDuration = 50; halfDuration = 25;` en F7. En partidos reales de Alevines con cambios al minuto 50, los cambios sumaban 0 min (50'-50') y el cómputo totalizaba sobre `/ 50'` dejando a los jugadores sin sus minutos reglamentarios.
+   - **Solución:** Se implementó detección dinámica de duración y descanso. Si el partido cuenta con tramos superiores a 25 min (como 35' o 50'), `totalDuration` se establece en 70 minutos oficiales (descanso a los 35 min). Los jugadores que entran al minuto 50 disputan el tramo final 50'–70' (20 min) y los porcentajes y sumas reflejan con exactitud los 70 minutos.
+
+5. **Eliminación de Rival Duplicado en Convocatorias ("Huracán A") (`js/app.js`):**
+   - **Diagnóstico:** Al guardar una convocatoria desde el formulario (`saveCallup`), si el usuario no tenía el id en el campo hidden del form, se generaba un nuevo `uid()`, duplicando la tarjeta del rival en el listado.
+   - **Solución:** `saveCallup` ahora busca previamente si ya existe una convocatoria registrada para ese partido (`state.callups.find(c => c.matchId === match.id)`) y reutiliza su identificador (`existingForMatch.id`). Además, `nextCallups` filtra por `mId !== match.id` y `renderCallups()` ejecuta `deduplicateCallups(callups)` asegurando que nunca se muestre más de una convocatoria por partido.
+
+6. **Sincronización del Plan por Tramos en Convocatoria con la Preparación (`js/app.js`):**
+   - **Diagnóstico:** La vista de convocatoria generaba su plan por tramos llamando siempre al algoritmo automático `buildAutoPlan()`, ignorando las sustituciones reales configuradas manualmente por el entrenador en Preparación de partido.
+   - **Solución:** En `renderClaudeCallup`, se obtiene la preparación guardada para ese encuentro mediante `prepForMatch(matchId)` y se derivan los tramos, segmentos y rotaciones directamente a partir de sus momentos planificados (`normalizeMoments(prep)`), reflejando con total fidelidad los cambios definidos por el entrenador.
+
+7. **Botón FAB Flotante Independiente en Móvil (`js/print-session-export.js`, `css/claude-entreno.css`):**
+   - Se añadió un botón flotante persistente `.cb-print-fab-close` con z-index ultra-prioritario (`2147483647`) fijado en la pantalla que permite salir de cualquier ficha A4 o vista de impresión en dispositivos táctiles en cualquier momento sin depender del scroll.
+   - Se verificaron 666/666 tests unitarios y de integración pasando al 100%.
+
+
+### 38. Entrega v78 (04/10/2026) — Corrección de PDF de Plan de Partido, Rotación Masiva en Alevines (1 a 7 Cambios), Edición de Tramos en Convocatoria y Personalización Visual En Vivo (Especialistas, Dorsales y WhatsApp)
+
+1. **Corrección Definitiva del PDF de Plan de Partido y Motor de Paginación (`js/print-match-plan.js`, `js/print-session-export.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** El PDF de plan de partido se cortaba físicamente a la mitad del minuto 50′ (en la caja de «Relevo bajo palos»). El motivo era doble: en `generatePdfBlob` se aplicaba un recorte rígido `Math.min(imgHeight, 297)` que amputaba cualquier exceso vertical; y la Hoja 1 (`cbx-pmp-page-1`) desbordaba los 297 mm estándar cuando existían 4 o más momentos con múltiples sustituciones apiladas verticalmente.
+   - **Solución implementada:**
+     - **Paginación dinámica de 2 o 3 hojas:** Si el plan cuenta con `<= 3` ventanas de cambio, se maqueta en 2 páginas (`cbx-pmp-page-1` y `cbx-pmp-page-2`). Si cuenta con `> 3` ventanas, el motor pagina automáticamente a 3 hojas A4 limpias (`cbx-pmp-page-1`, `cbx-pmp-page-1b` y `cbx-pmp-page-2`), repartiendo los momentos y actualizando la numeración del pie a `(Página 1 de 3)`, `(Página 2 de 3)` y `(Página 3 de 3)`.
+     - **Soporte de rotación masiva en Alevines (de 1 a todos los jugadores):** En fútbol 7 / Alevines las sustituciones son volantes y reglamentariamente un entrenador puede sustituir desde 1 jugador hasta el bloque completo de 7 a la vez. Cuando un momento tiene 4 o más cambios simultáneos, se asigna la clase `.is-multi-changes`, maquetando los pares de sustitución en una rejilla fluida de 2 columnas para no desbordar la hoja.
+     - **Escalado proporcional preventivo en `generatePdfBlob`:** Se eliminó el truncado forzado por un escalado matemático `if (imgHeight > 297) { const scaleFactor = 297 / imgHeight; ... }`, garantizando que ningún texto, caja ni milímetro de contenido sea recortado al generar el PDF.
+
+2. **Cálculo de Minutos Reales y Edición Interactiva de Tramos en Convocatoria (`js/app.js`, `js/match-moments.js`):**
+   - **Diagnóstico:** En la vista de Convocatoria, la tarjeta «Plan por tramos» mostraba «No hay cambios previstos» con barras estáticas de 0′ y 70′ si no se había configurado previamente en Preparación, y no permitía generar o ajustar la rotación desde la propia convocatoria.
+   - **Solución implementada:**
+     - En `js/app.js`, se implementó `generateAndSaveCallupRotation(callupId, matchId)`, que calcula la rotación equitativa con `buildAutoPlan()`, normaliza y guarda los momentos en la colección `preparaciones`, refresca el estado y actualiza Convocatoria en un solo clic.
+     - En la tarjeta `cbx-callup-plan` se incorporó el botón `⚡ Generar rotación equitativa` cuando no hay cambios, y el botón `✏️ Ajustar cambios en Preparación` cuando ya existen, permitiendo una transición fluida sin bloqueos.
+     - En `js/match-moments.js`, `normalizeMoments()` se fortaleció para extraer la alineación inicial tanto de `prep.team` como de `prep.moments[0].team`, asegurando coherencia matemática exacta sobre los 70′ en F7 (490 minutos-jugador repartidos equitativamente).
+
+3. **Personalización Cromática Completa y Previsualizaciones En Vivo WYSIWYG (`index.html`, `js/app.js`, `css/claude-plantilla.css`, `css/claude-partido.css`, `css/claude-hoy.css`, `css/claude-entreno.css`):**
+   - **Diagnóstico:** El usuario no disponía de previsualizaciones inmediatas para ver cómo cambiaba cada elemento en directo mientras ajustaba colores. Los textos y fondo de 1.er lanzador eran fijos e inmutables, los colores de los dorsales de los jugadores no tenían controles propios, y el botón de WhatsApp tenía colores fijos con `!important` en el CSS que impedían personalizarlo.
+   - **Solución implementada:**
+     - **Nueva tarjeta de Especialistas y Balón Parado (`#specialists-colors-card`):** Controles independientes para Fondo de 1.er lanzador y capitanes (`--sp-lead-bg`), Texto de 1.er lanzador (`--sp-lead-ink`), Fondo de 2.º / 3.er lanzador (`--sp-sub-bg`) y Texto de 2.º / 3.er lanzador (`--sp-sub-ink`), con su botón de restablecimiento `#cbx-reset-specialists-btn`.
+     - **Previsualización en vivo (WYSIWYG) de Especialistas (`#cbx-specialists-preview-box`):** Muestra reactiva instantánea que dibuja una tarjeta de Penaltis con 1.er lanzador (Mateo Moyano, dorsal 7) y 2.º lanzador (Lucas Santana, dorsal 10), reaccionando a cada movimiento del selector de color en tiempo real.
+     - **Personalización y Previsualización de Dorsales:** Controles de fondo (`--dorsal-bg`) y texto/número (`--dorsal-ink`), acompañados de la caja `#cbx-preview-dorsal-box` con insignia de muestra en vivo, conectando las insignias de dorsal de Plantilla, Convocatoria y Asistencia a estas variables.
+     - **Personalización y Previsualización de WhatsApp:** Controles de Fondo (`--wa-bg`) y Texto (`--wa-ink`) con muestra en vivo reactiva (`#cbx-preview-wa-sample`). Se eliminaron los valores `#053b1d` / `#25d366` fijos con `!important` en `css/claude-hoy.css`, `css/claude-partido.css`, `css/claude-plantilla.css` y `css/claude-entreno.css`, enlazando todos los botones de WhatsApp de la app a las variables configurables.
+     - **Integración en `EXTENDED_SWATCH_CONFIGS` y `applyCustomTheme`:** Registro completo con paletas armonizadas, sincronización bidireccional y actualización reactiva inmediata en el DOM.
+
+4. **Verificación y Pruebas Automatizadas:**
+   - Creada suite de pruebas unitarias y de integración `tests/pdf-plan-and-live-preview.test.js` con 11 tests cubriendo paginación dinámica (2 y 3 hojas), rotación masiva en 2 columnas, cálculo de minutos reales, botones de tramos en convocatoria, controles en index.html, variables de tema y reglas CSS.
+   - **677/677 tests pasando al 100% en `npm test`** y **0 errores en `npm run check`**.
+
+
+### 39. Entrega v79 (04/10/2026) — Visibilidad de Rival en Pizarras, Desacoplamiento de Color de Fuente sobre Botones con Previsualización En Vivo y Perfeccionamiento del Plan de Partido A4
+
+1. **Visibilidad Inmediata del Rival («Mostrar rival») en Tácticas, Partido en Vivo y Preparación (`js/tactics.js`, `js/app.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Al alternar el interruptor «Mostrar rival» en la pestaña Tácticas, en Partido en vivo o en Preparación de partido, las piezas del rival no se mostraban o quedaban invisibles debido a drafts inicializados con arreglos `opponent: []` vacíos, SVG sin atributos de contraste explícitos sobre el césped verde oscuro y variables de color sin trazado.
+   - **Solución implementada:**
+     - En `js/tactics.js` (`renderTacticBoard`), cuando `showOpponent` es activo, si `t.opponent` no está definido o está vacío, se aplica automáticamente la plantilla de adversario oficial (`F11_OPPONENT` o `F7_OPPONENT`), renderizando cada pieza con atributos SVG explícitos: `fill="var(--tb-rival, #1e293b)" stroke="#ffffff" stroke-width="0.9"` y número con `fill="#ffffff" font-weight="900"`.
+     - En `js/app.js`, en `renderClaudeTactics()`, si `claudeTacticShowRival` está activo y `claudeTacticDraft.opponent` está vacío, se puebla de inmediato desde `getAspectBoardData(..., true).opponent`.
+     - En `js/app.js`, al pulsar `#cbx-toggle-rival-btn`, se conmuta el estado y se asegura que `claudeTacticDraft.opponent` contenga las 7 fichas rivales.
+     - En `js/app.js` (`renderTacticsBoardSvg` para Partido en vivo), se incorporó el fallback `oppList = (t.opponent && t.opponent.length) ? t.opponent : LIVE_OPPONENT` con stroke y texto `#ffffff` de alta nitidez.
+     - En `js/app.js` (`renderPrepBoard` y `wirePrepEditor` para Preparación de partido), se conectó `prepShowRival` con botones `#prep-toggle-rival-btn` y `#prep-toggle-rival-pill`, sincronizando `aria-pressed`, clases `.active` y repintado de piezas con `stroke="#ffffff"`.
+     - En `css/claude-partido.css`, se blindaron selectores para `.tac-opponent circle`, `.live-tactics .tac-opponent circle`, `#cbx-tactics-pitch-board .tac-opponent circle` y `#prep-board .tac-opponent circle`, garantizando visibilidad bajo cualquier tema.
+
+2. **Desacoplamiento del Color de Fuente de la App sobre Botones y Previsualización En Vivo (`styles-redesign.css`, `index.html`, `js/app.js`):**
+   - **Diagnóstico:** Al seleccionar un color de texto general de la aplicación (`[data-has-custom-font-color="true"]`), las reglas globales de CSS sobre `span`, `strong`, `h1`-`h6` invadían los botones de la interfaz, sobrescribiendo el color del texto y provocando que botones primarios, secundarios o de WhatsApp quedaran ilegibles. Asimismo, no existía una caja de previsualización en vivo justo al lado o debajo del selector de color de fuente general ni de los botones secundarios.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se excluyeron explícitamente todos los botones y sus descendientes de las reglas de fuente personalizada: `:not(button):not(button *):not(.secondary):not(.secondary *):not(.primary):not(.primary *):not(#cb-print-root *):not(.cb-print-sheet *)`.
+     - Se reforzaron reglas con máxima especificidad para que los botones primarios utilicen estrictamente `--btnInk`, los secundarios `--btn2Ink` y los botones de WhatsApp `var(--wa-ink, #053b1d)` con fondo `var(--wa-bg, #25d366)`.
+     - En `index.html`, se incorporó la caja `#cbx-font-preview-box` justo debajo de los swatches de «Color de fuente / Texto de la app», con muestra tipográfica `#cbx-font-preview-sample` y valor hexadecimal `#cbx-font-preview-val`.
+     - En `index.html` (`#banners-buttons-card`), se incorporó la muestra `#cbx-preview-banner-btn2` para previsualizar botones secundarios en vivo.
+     - En `js/app.js` (`updateThemePreviewBox`), se conectó la reactividad instantánea para que tanto `#cbx-font-preview-box` como `#cbx-preview-banner-btn2` actualicen sus colores en tiempo real ante cualquier interacción del usuario.
+
+3. **Perfeccionamiento del Plan de Partido A4 Impreso (`js/print-match-plan.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** Los minutos de los jugadores se calculaban erróneamente porque una regla arbitraria reducía la duración a 50′ cuando había cambios antes del minuto 25. En las tarjetas de los 7 titulares iniciales, los nombres se recortaban con puntos suspensivos («Carlos Campil...») debido a `white-space: nowrap; text-overflow: ellipsis`. Además, si se imprimía el plan sin haber guardado cambios en la preparación, los 7 titulares figuraban con 70′ y los suplentes con 0′.
+   - **Solución implementada:**
+     - En `js/print-match-plan.js`, se eliminó el truncado arbitrario a 50′ o 60′: en Alevines F7 la duración oficial de 70′ (2 x 35′) y en F11 de 90′ (2 x 45′) se preservan íntegramente. Solo se asigna descanso a 25′ si explícitamente existe un cambio al descanso en el minuto 25 exacto y ningún cambio posterior.
+     - Si se imprime una ficha sin preparación previa guardada pero habiendo suplentes disponibles, el sistema deriva automáticamente una rotación equitativa mediante `buildAutoPlan()`, garantizando que todos los jugadores convocados figuren con minutos reales y justos en la tabla y en el cronograma.
+     - Si existe una preparación guardada por el entrenador con 0 sustituciones, se respeta fielmente su decisión indicando con claridad en el cronograma que los titulares disputarán el partido completo.
+     - En `css/claude-partido.css` (`.cbx-pmp-starter-name`), se eliminó `white-space: nowrap; text-overflow: ellipsis;` y se configuró `-webkit-line-clamp: 2` con salto de línea limpio y altura mínima asegurada, permitiendo que nombres completos como «Carlos Campillo» o «Alejandro Pedrós» se lean íntegramente en 2 líneas sin recortar ni un solo carácter.
+     - En `js/print-match-plan.js`, se implementó la función auxiliar `getPrevMoment(m)` para calcular sin desfases de índice las diferencias de cada ventana entre la Hoja 1 y la Hoja 2.
+
+4. **Verificación y Regresiones Cero:**
+   - **677/677 tests unitarios y de integración pasando al 100%** en la suite de Node.js (`npm test`).
+   - **0 errores de sintaxis** en `npm run check`.
+   - Cero regresiones en cronómetro de partido en vivo, marcador, goles, incidencias, actas ni valoraciones.
+
+
+### 40. Entrega v80 (04/10/2026) — Sistema de Personalización Cromática Contextual (Tuerca ⚙️ In-Context), Visibilidad Completa de Rival en Pizarra en Vivo y Tácticas, y Blindaje de Contrastes en Dorsales y Botones de WhatsApp
+
+1. **Ajuste de Colores In-Context con Botón de Tuerca ⚙️ («en absolutamente todo») (`index.html`, `js/app.js`, `css/claude-partido.css`):**
+   - **Solicitud del usuario:** *"Creo que es mejor que cada cosa tenga su botón de ajustar colores de fondo y fuentes con un botón de tuerca de ajustes al lado, así mientras cambio lo veo, pero en absolutamente todo"*.
+   - **Solución implementada:**
+     - En `index.html`, se incorporó el diálogo nativo accesible `<dialog id="cbx-quick-color-dialog">` con cabecera dinámica, cuerpo interactivo de ajuste, botón de restablecimiento contextual y botón de cierre («✓ Listo»).
+     - Se crearon e integraron botones de tuerca `.cbx-context-gear-btn` en las cabeceras y tarjetas operativas de todas las pantallas de la aplicación:
+       - **Hoy:** Cabecera principal (`data-gear-target="banners"`).
+       - **Plantilla:** Cabecera de plantilla para dorsales (`data-gear-target="dorsales"`).
+       - **Lanzadores y Especialistas:** Encabezado de la tarjeta de lanzadores y capitanes (`data-gear-target="specialists"`).
+       - **Cuerpo Técnico:** Tarjeta de cuerpo técnico (`data-gear-target="whatsapp"`).
+       - **Convocatorias:** Cabecera de sección y cada tarjeta de convocatoria individual junto al contador y botón de WhatsApp (`data-gear-target="dorsales"` y `data-gear-target="whatsapp"`).
+       - **Partido en Vivo:** Cabecera de partido (`data-gear-target="live"`) y cabecera de la pizarra táctica en vivo (`data-gear-target="tactic-board"`).
+       - **Tácticas:** Encabezado de la pizarra táctica de Claude (`data-gear-target="tactic-board"`).
+       - **Preparación, Calendario, Asistencia, Ejercicios y Sesiones:** Cabeceras de sección para banners y botones de acción (`data-gear-target="banners"`).
+     - En `js/app.js`, se implementó `openQuickColorDialog(targetKind)` con soporte completo para:
+       - `dorsales`: Fondos de círculo (`dorsalBg`) y números (`dorsalInk`) con swatches de clubes y previsualización en vivo de dorsales 7 y 10.
+       - `whatsapp`: Fondo (`waBg`) y texto/icono (`waInk`) con muestra interactiva de botón de WhatsApp a técnico y convocatoria.
+       - `specialists`: Distintivos de 1.er lanzador/capitán (`spLeadBg`, `spLeadInk`), 2.º lanzador/suplente (`spSubBg`, `spSubInk`) y dorsal.
+       - `tactic-board`: Césped (`tbPitch`), líneas (`tbLines`), fichas de tu equipo (`tbTeam`), rival (`tbRival`) y flechas (`tbArrow`) con muestra de mini-campo táctico.
+       - `live`: Botones de gol a favor (`gfBg`, `gfInk`) y gol en contra (`gaBg`, `gaInk`).
+       - `banners`: Fondos y textos de cabecera (`bannerBg`, `bannerInk`), botones primarios (`btnBg`, `btnInk`) y secundarios (`btn2Bg`, `btn2Ink`).
+     - **Reactividad instantánea sin recarga ni cierre del selector:** Los cambios sobre los `<input type="color">` y swatches disparan inmediatamente `updateThemeProperty()`, actualizando las variables CSS en `:root` y `body`, la vista que se encuentra abierta de fondo y la previsualización dentro del modal en tiempo real.
+
+2. **Visibilidad Total y Alternancia del Rival en Partido en Vivo y en Tácticas (`js/app.js`, `js/tactics.js`, `css/claude-partido.css`):**
+   - **Diagnóstico:** En la pizarra de Partido en vivo faltaba el botón visible de «Mostrar rival» en cabecera y el intento de renderizarlo lanzaba un error de referencia `LIVE_OPPONENT is not defined`. En Tácticas, el draft no sincronizaba el oponente al alternar el botón.
+   - **Solución implementada:**
+     - En `js/app.js`, se importó `LIVE_OPPONENT` desde `./live-tactics.js`.
+     - En la pizarra de Partido en vivo, se ubicaron botones destacados `.live-rival-btn` tanto en el encabezado principal (junto a «⛶ Ampliar») como en la barra de selección de sistema y selector de táctica (`#${sc.p}-toggle-rival-head-btn` y `#${sc.p}-toggle-rival-btn`), sincronizados automáticamente con el estado `liveTacticsShowOpponent` y con etiquetas reactivas («👥 Mostrar rival» / «👥 Ocultar rival»).
+     - En `wireTacticsBoard(sc)`, se conectó la escucha y refresco inmediato del SVG tanto en la vista estándar como en la ampliada.
+     - En Tácticas (`wireEvents`), se corrigió el evento `#cbx-toggle-rival-btn` para inicializar el draft completo si aún no existía y poblar `claudeTacticDraft.opponent` desde `getAspectBoardData(..., true).opponent`.
+     - En `css/claude-partido.css`, se blindaron las fichas rivales `.tac-opponent circle` con borde blanco nítido (`stroke-width: 1.1px`) y filtro `drop-shadow(0 1px 2px rgba(0,0,0,0.45))` para que resalten con alto contraste sobre cualquier tono de césped.
+
+3. **Protección de Contraste en Dorsales y Botones de WhatsApp (`styles-redesign.css`, `css/claude-partido.css`, `css/claude-plantilla.css`):**
+   - **Diagnóstico:** Los números de los dorsales en Convocatoria y Plantilla se volvían negros sobre fondos oscuros debido a reglas de `data-has-custom-font-color="true"` sobre etiquetas `span`, y el botón de WhatsApp de Cuerpo técnico forzaba texto en rojo oscuro (`var(--cbx-hero)`) sobre fondo verde.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se excluyeron explícitamente de las reglas globales de tipografía: `.cbx-callup-number`, `[data-sp-dorsal]`, `.preview-sp-dorsal-circle`, `.dorsal-badge`, `.player-dorsal`, `.specialist-rank`, `.specialist-number`, `.staff-wa-btn`, `[class*="open-whatsapp"]`, `.cbx-context-gear-btn` y fichas tácticas.
+     - En `css/claude-partido.css`, se garantizó `color: var(--dorsal-ink, var(--bnInk, #ffffff)) !important;` y `background: var(--dorsal-bg, var(--bn, var(--cbx-hero, #0a251b))) !important;` para `.cbx-callup-number`.
+     - En `css/claude-plantilla.css`, `.staff-wa-btn` utiliza estrictamente `color: var(--wa-ink, #053b1d) !important;` y `background: var(--wa-bg, #25d366) !important;`.
+
+4. **Preservación Rigurosa y Verificación Automatizada:**
+   - Se mantuvo íntegro y sin alteraciones el motor de impresión de Plan de Partido A4, confirmado como óptimo por el usuario (*"la impresión está bien"*).
+   - Se preservó el cronómetro en directo, silbato, cálculo de minutos, goles, eventos y sustituciones sin ninguna alteración ni riesgo de regresión.
+   - **680/680 tests unitarios y de integración pasando al 100% en `npm test`**.
+   - **0 errores de sintaxis en `npm run check`**.
+
+### Sesión 04/10/2026 (13:50) - Tuerca Superior Discreta, Blindaje de Textos en Banners y Configurador Global Multi-Pantalla
+
+1. **Tuerca Superior Discreta en la Barra de Navegación (`index.html`, `css/claude-partido.css`, `js/app.js`):**
+   - **Requerimiento del usuario:** Sustituir las tuercas grandes con fondo blanco dentro de los banners por una única tuerca gris arriba sin fondo que configure los colores de absolutamente todo lo que se ve en cada pestaña y subpestaña y lo guarde permanentemente.
+   - **Solución implementada:**
+     - En `index.html`, se ubicó el botón `<button type="button" id="topbar-quick-color-btn" class="topbar-gear-btn" title="Personalizar colores de la aplicación" aria-label="Personalizar colores">⚙️</button>` en la barra superior `#cbx-header-actions` junto al botón de cierre de sesión.
+     - En `css/claude-partido.css`, se definió `.topbar-gear-btn` como icono minimalista gris (`color: #94a3b8; background: transparent; border: 0; font-size: 21px; padding: 4px 6px;`) con animación sutil al hover (`transform: rotate(30deg) scale(1.15)`).
+     - Se eliminaron todos los botones de tuerca invasivos dentro de los banners (`.cbx-context-gear-btn`), y se forzó `display: none !important;` en CSS para evitar cualquier visualización residual.
+     - En `js/app.js`, se conectó la delegación de eventos al hacer clic sobre `#topbar-quick-color-btn`.
+
+2. **Blindaje Definitivo de Textos en Cabeceras y Banners (`styles-redesign.css`, `css/claude-plantilla.css`, `css/campobase-diseno.css`):**
+   - **Diagnóstico:** Los textos y títulos dentro del banner rojo de Plantilla ("EQUIPO", "PLANTILLA") y la barra superior de cuerpo técnico se teñían de negro cuando el usuario seleccionaba tipografía negra personalizada en los ajustes de la aplicación, porque las reglas de `[data-has-custom-font-color="true"]` sobreescribían los encabezados.
+   - **Solución implementada:**
+     - En `styles-redesign.css`, se añadieron exclusiones de alta especificidad `:not(.cbx-banner *):not(.cbx-banner):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *)` sobre las reglas globales de `body.cb-redesign-active[data-has-custom-font-color="true"]`.
+     - Se agregaron reglas explícitas garantizando que `.cbx-banner`, `.cbx-banner h2`, `.cbx-banner .cbx-eyebrow`, `.plantilla-staff-bar`, `.plantilla-staff-title` hereden siempre `var(--bnInk, #ffffff) !important` y `color-mix(in srgb, var(--bnInk, #ffffff) 80%, transparent) !important;`.
+     - En `css/claude-plantilla.css` y `css/campobase-diseno.css`, se eliminaron los colores fijos (`#fff` y `rgba(255,255,255,.72)`) y se enlazaron a las variables dinámicas `var(--bnInk, #ffffff)`, `var(--btn)`, `var(--btn2)` y `var(--bn)`.
+     - En móviles (`@media (max-width: 700px)`), se cambió `#plantilla .cbx-banner .button-row` de cuadrícula forzada `grid-template-columns: 1fr 1fr;` a `display: flex; flex-wrap: wrap; gap: 8px;`, impidiendo que los botones se deformen en pastillas gigantes.
+
+3. **Configurador Global de Colores Multi-Pantalla con Guardado Persistente (`js/app.js`, `index.html`):**
+   - **Navegación por Pestañas:** El diálogo `#cbx-quick-color-dialog` cuenta con selector horizontal de pantallas (`📑 Cabeceras & Botones`, `👥 Plantilla & Dorsales`, `💬 WhatsApp & Equipo`, `📋 Convocatorias`, `⚽ Partido en Vivo`, `📐 Pizarra Táctica`, `🎨 Textos & Tarjetas`).
+   - **Detección Automática:** Al pulsar la tuerca gris superior, el diálogo detecta la vista en la que se encuentra el usuario (Plantilla, Convocatorias, Partido, etc.) y abre directamente la sección correspondiente. El usuario puede alternar entre pestañas en el mismo modal sin salir.
+   - **Ajustes de Absolutamente Todo:**
+     - Banners: fondo y color de texto.
+     - Botones: principal y secundario (fondo y texto).
+     - Dorsales de jugadores: círculo y número.
+     - Lanzadores y capitanes: 1.er especialista y 2.º especialista (fondo y texto).
+     - WhatsApp: fondo de botones y color de texto/icono.
+     - Partido en vivo: botones de goles (+ Gol Nuestro y + Gol Rival) y marcador.
+     - Pizarra táctica: césped, líneas, fichas de tu equipo, fichas del rival y flechas/trazos.
+     - General: color general de texto de la app, fondo de tarjetas, títulos de tarjetas y fondo global.
+   - **Guardado Permanente:** Botón «💾 Guardar colores» que llama a `put('settings', state.settings)` para persistencia inmediata en almacenamiento local y sincronización en la nube, con feedback visual vía `toast`.
+
+4. **Verificación Automatizada:**
+   - 680/680 tests unitarios y de integración pasando con éxito en `npm test`.
+   - 0 errores en `npm run check`.
+   - Sin alteraciones en el motor de impresión de planes de partido ni en el temporizador/silbato de partido en vivo.
+
+
+
+
+### Sesión 05/10/2026 — Personalización detallada validada y presentación visual de ajustes
+
+- Miguel valida la prueba aislada y autoriza explícitamente fusionar en main y publicar en producción.
+- SDD: `specs/016-controles-colores-por-componente/` y `specs/017-ajustes-visuales-publicacion/`.
+- Controles de colores efectivos por componente, con nombres y explicaciones, búsqueda, bordes, campos, SVG, restauración individual y compatibilidad con preferencias anteriores. Menús lateral, inferior y subpestañas independientes.
+- La mejora final afecta únicamente al diálogo de ajustes: navegación visual en tarjetas, filas agrupadas, foco visible, tamaños táctiles y pie accesible. Se mantienen contenido, opciones, valores, listeners, guardado y restauración.
+- PWA: build `20261005-ajustes-visuales-detallados`; recursos del configurador precacheados con su versión. Los tests verifican correspondencia entre recursos del HTML y cache sin depender de una fecha histórica.
+- Validación: 690 tests pasan, sintaxis correcta; browser smoke de navegación de Equipo, Preparación, Preparar partido persistente y ejercicios pasa. Prueba específica de colores y persistencia en navegador aislado sin escrituras remotas superada.
+- No se modifican tablas, RLS, datos reales, bibliotecas, estadísticas, impresión ni motores de partido. La protección de preview sigue limitada a `/campobase-preview/`; producción mantiene su funcionamiento normal.
+
+- Publicación confirmada: PR #92 fusionado (13c8ad5e), CI de PR y main correctos, GitHub Pages completado; producción sirve HTML, CSS y módulo nuevos comprobados. URL: https://miguelperezh.github.io/campobase/.
+
+
+## 2026-10-05 · Corrección acotada de colores locales y sugerencias
+SDD: specs/018-ajustes-locales-rotaciones. Rama fix/ajustes-locales-colores-rotaciones. Controles de cada pantalla sin selector de otras pantallas; navegación compartida accesible desde Ajustes. Selectores por acción evitan recolorear varios botones que comparten ID. Barras GF/GC y capitanes 1/2/3 independientes; banner Tácticas efectivo. Reutiliza buildAutoPlan en memoria para sugerencias, sin sustituir planes ni escribir en un almacén inexistente. Pruebas: sintaxis, 690 tests y navegadores crítico/específico con Supabase bloqueado. Sin cambios de backend, RLS ni datos de producción.
+
+
+## 2026-10-05 · Elecciones de menú y fichas comunes
+SDD019: segundo lanzador responde a fondo/texto de menú y limpia solo los overrides conflictivos cuando el usuario elige un color; no se imponen colores nuevos. Controles antiguos de especialistas escriben en Plantilla. Fichas y clasificación usan selectores comunes en vez de controles por jugador. Hoy muestra únicamente sus elementos y etiquetas. Prueba con overrides anteriores, persistencia y todas las fichas: correcta. Suite 690/690. Entrega únicamente en preview aislada.
+
+
+## 2026-10-05 · Guardado, impresión y cierre de acceso
+SDD020: Guardar recoge la selección final del selector nativo; preview conserva tema local frente a snapshots antiguos. Limpieza acotada de prioridades de color solo para el componente elegido. Impresión de sesiones: portada más dos ejercicios por A4, conserva textos y usa boardPreview vigente de Mis ejercicios. Cierre de sesión limpia marcadores redundantes y muestra acceso sin esperar a la red; SaaS usa cierre local. Validación: 692 tests, sintaxis, navegador aislado y PDF real. Cambios solo en rama fix/ajustes-locales-colores-rotaciones y preview separada; sin cambios de datos, main original ni Supabase.
+
+## 2026-10-05 · Mandato acumulativo de Miguel: personalización y planes
+Referencia SDD: specs/016-controles-colores-por-componente, 017-ajustes-visuales-publicacion, 018-ajustes-locales-rotaciones, 019-colores-compartidos-plantilla, 020-guardar-tema-imprimir-sesiones y 021-plan-visual-sesiones-reproductor. Conservar íntegros los bloques validados y las funciones existentes; no imponer colores manualmente para tapar fallos del menú. Cada pestaña y subpestaña configura exclusivamente sus elementos, fondos, fuentes, botones, acentos y estados. Navegación lateral y navegación inferior tienen textos/iconos independientes. Segundo lanzador y segundo/tercer capitán, insignias, Convocatoria y rival, pills del reparto, gráficos GF/GC, banner Tácticas, comunicador y cerrar ejercicio deben responder a sus controles. Fichas comunes: elegir colores una vez afecta a todos los jugadores, sin opciones por jugador. Guardar y recargar conserva elecciones.
+Media liga dentro del recuadro. Plan por tramos visual e intuitivo en Convocatorias y Preparación: propuestas según convocados/reparto, parejas exactas entra por sale, cambios simultáneos y movimientos de posición; elegir jugador/barra y recorrer minutos muestra acumulados y total. Propuestas editables y aplicadas solo por acción explícita; conservar titulares y poder recuperar borrador anterior. No guardar automáticamente ni alterar planes existentes.
+Sesiones impresas: portada y dos ejercicios por página, portada/frame propio elegido incluido si está guardado como SVG. No añadir tareas a sesiones antiguas arbitrariamente para una prueba; proporcionar selección de ejercicios propios vigentes. Desde sesión preparada, Ver abre el ejercicio y vuelve a la sesión sin romper sus desplegables. Play de MP4 fiable por gesto único en móvil/escritorio; no silenciar fallos ni afirmar que se probaron todos los archivos.
+Continuar solo en rama de implementación y preview separada; no publicar nuevos cambios en main original ni escribir producción sin autorización para esa versión. Validación real relacionada, SDD spec/plan/tasks/validation y URL clickable en cada entrega. No volver a auditar Fase 0 ni 2.487 requisitos. Seguridad multiusuario aplazada; sin proyectos de pago ni instalaciones de entorno largo.
+
+
+### Resultado de SDD021
+Visualizador compartido en Convocatorias/Preparación, propuestas remapeadas a titulares elegidos y cambios simultáneos (incluye trece jugadores y redondeo). Selección de barras y minuto con acumulado/total; uso explícito y recuperación del borrador anterior. SVG de portada propia convertido a URL de imagen para PDF; impresión seleccionable de Mis ejercicios vigentes sin tocar sesiones antiguas. Suspender modal de sesión mientras se abre visor propio o catálogo y restaurar DOM/scroll/desplegable al cerrar. Reproductores reciben solo click, no triple touch/pointer/click; Play/pausa sin debounce que ignore gestos, sin toggles desde controles de velocidad. Promesas de carga liberadas tras error/timeout y reintento con fuente compatible cuando procede. Evento close antiguo no vacía un visor recién abierto. Media liga ajustado con geometría y texto multilínea, sin cambiar colores. Validación 697 tests y navegador táctil aislado con MP4/PDF reales; no se afirma validación global de todos los vídeos ni de iPhone físico.
+
+Entrega SDD021: fuente 7c9fed13 y preview abd15e2 subidos a sus repositorios aislados. Paquete exacto probado; GitHub Pages 37365255624 en cola, URL pública aún sirve 2c6bf0a7. No declarar visibles los cambios hasta confirmar despliegue y archivos. Main original verificado 360b2b2dce3cc454a644b5d8fe428ccdc2df8557, sin escrituras Supabase.
+
+## SDD022 · Plan copiable, portada propia y ajustes visuales
+Miguel exige copiar el plan visible a Preparación sin regenerarlo, editar jugadores/posiciones/minutos e imprimirlo. Mostrar límites y duración exacta de cada tramo, acumulados y total. Copiar conserva borrador anterior y solo Guardar persiste. Media liga debe caber, con colores del usuario. Portadas propias actuales e históricas no se descartan por directorio ni por ausencia de customBoard. Ajustes: vista previa separada, grupos visuales con nombres y cantidad, muestras de color grandes; conservar todas las opciones, valores y guardado, solo elementos propios de la pantalla. Validación SDD022: 42 tests relacionados y navegador con SVG obtenido del creador real, PDF, copia/edición/impresión y cero escrituras remotas.
+
+### Publicación aislada: comprobar versión real, no parámetros del enlace
+Un parámetro revision no selecciona un commit en GitHub Pages. Antes de pedir validación, comprobar workflow exitoso y contenido real de source-commit.txt y archivos corregidos. No afirmar que los cambios están visibles porque se hayan subido al repositorio. Fallo de asignación de runner en deploy legacy: solución preparada con un job que empaqueta y publica en el mismo runner, solo campobase-preview; original y Supabase intactos. La conexión GitHub existente aceptó el archivo sin renovar permisos.
+
+
+## 2026-10-05 · Plan por tramos y ajustes intuitivos (SDD 023)
+Preservar todos los bloques validados y valores de personalización. Dar acceso visible a Plan por tramos desde Preparación, con propuesta, revisión y uso del borrador explicados; consultas rápidas de inicio/descanso/final. La rueda del plan ajusta solo el plan de su propia pantalla. Los menús de colores y fuentes deben mostrar una muestra inmediata junto a cada control y separar ajustes generales de elementos concretos sin eliminar opciones. No publicar estos cambios en main ni producción antes de validación.
+
+
+## 2026-10-06 · Ventanas de cambios editables (SDD 024)
+Mantener los ajustes validados. Permitir intervalos repetidos arbitrarios por jugador, con un relevo que cubre descansos; sumar exactamente 0–5, 10–15 y 20–30 = 20 min. Ventana modal de borrador con selección de todas las alineaciones por tramo, intercambios de posición y recomendaciones según convocados/objetivos. Convertir siempre a los momentos completos existentes para guardar, imprimir y Partido en vivo; no crear persistencia paralela ni sobrescribir planes sin aplicar/guardar explícitamente. Preservar jugadores/posiciones restantes, impedir duplicados y solapamientos, admitir deshacer/cancelar. No alterar ajustes, main ni producción en esta fase.
+
+- Plan por tramos: seleccionar una fila debe abrir edición de ese jugador; consultar el minuto no altera los totales previstos del resto. Edición de intervalos cambia únicamente jugador/relevo y conserva otros tramos. Mostrar consulta y edición con acciones distintas.
+
+## 2026-10-06 · Publicación autorizada preservando datos (SDD025)
+Usuario autoriza main/producción para versión validada SDD018–024. Publicación exclusiva de código/documentación y actualización de recursos PWA; datos, sesiones nuevas, ejercicios propios, colores/preferencias y registros de Supabase quedan intactos. Sin importación de fixtures/preview, seeds, reset ni migraciones. AGENTS.md se amplía de forma acumulativa. Guardado de cambios del plan sigue siendo explícito por el usuario.
+
+SDD025: PR93 integrado e5e7517d con 707 pruebas y browser CI correctos. Pages legacy esperando runner: usar production-pages.yml con un solo runner, mismo patrón probado en preview. Cambiar solo método de publicación, sin código funcional adicional ni datos.
+
+## 6/10/2026 · Ajustes por sección SDD026
+Usuario autoriza publicación en main/producción. Cada sección tiene rueda propia y menú visual del mismo formato, sin controles ajenos. Goles GF/GC, filas completas de lanzadores/capitanes, indicadores y clasificación personalizables. Fichas comunes a todos los jugadores, incluyendo textos, botones y teléfonos de padre/madre. No imponer paletas ni sobrescribir datos actuales; conflictos antiguos se limpian solo para el elemento/propiedad que el usuario elige. Selectores de otra pestaña se ignoran sin borrar almacenamiento. Mantener SDD y validar colores efectivos/guardado/móvil antes de publicar.
+
+## 6/10/2026 · Ajustes claros SDD027
+Los controles de clasificación deben nombrar su cabecera y columna exactas. Los especialistas usan el mismo esquema de fila completa/nombre/función/dorsal para cada rango. La elección de fondo completo incluye las etiquetas y dorsales interiores. Las píldoras de especialidad de fichas comparten ajuste entre jugadores. La vista previa usa el texto real y empareja fondo/texto al instante. Las elecciones explícitas GF/GC tienen prioridad sobre selectores gráficos históricos. No imponer colores ni reescribir datos.
+
+## 6/10/2026 · Gráfico de goles con HTML anterior
+No validar cambios de gráfico solo con navegador limpio. Las barras GF/GC deben identificarse también por su posición semántica (primera/segunda barra), para funcionar con HTML anterior sin clases nuevas. El CSS debe usar las mismas variables de color que el menú; no el acento genérico rojo. Respetar los colores GF/GC guardados. Versionar también el módulo de Hoy y su CSS al cambiar este vínculo. Validar tema guardado, selector rojo histórico y HTML antiguo, sin escrituras reales.
+
+## 6/10/2026 · Menús sencillos
+Una rueda por sección, sin repetir por jugador, tarjeta interior ni rango de lanzador. El menú usa un selector «Qué quieres cambiar», muestra solo el elemento elegido con Fondo/Texto/Borde y una muestra real. Los detalles adicionales quedan plegados; no borrar controles ni valores guardados. Fichas comunes, indicadores agrupados y especialistas agrupados.
+
+## 6/10/2026 · SDD029 propuesta Claude con datos reales
+Integrar el panel lateral de personalización y el editor de tiempos de CampoBase Propuesta Ajustes y Plan usando DOM y datos actuales, sin cargar CBP.PL ni registros ficticios. Controles uiParts con prioridad final y valores actuales como base, vista previa en memoria y persistencia explícita theme.views. Plan de intervalos independientes: validación de cobertura, conversión a momentos canónicos y exportador/guardado existentes. Publicación autorizada por Miguel para main/producción; sin seeds, migraciones, borrado ni escrituras remotas de pruebas.
+
+## Estilos comunes SDD030
+Ajustes estándar de ejercicios compartidos por todas las tarjetas. Clasificación: botones/filtros por nombre y aviso explicativo ajustable. Mantener el resto validado y datos actuales. Ver specs/030-estilos-compartidos.
