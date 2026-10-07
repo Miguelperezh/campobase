@@ -89,7 +89,7 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
     const f7Match = path.match(/^library-v2-preview\/f7-(\d+)\/ejercicio\.mp4$/i);
     if (f7Match) {
       const num = parseInt(f7Match[1], 10);
-      isMigrated = num >= 1 && num <= 150;
+      isMigrated = num >= 1;
     } else {
       const pdf150Match = path.match(/^library-v2-preview\/pdf150-(\d+)\/ejercicio\.mp4$/i);
       if (pdf150Match) {
