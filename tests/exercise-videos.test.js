@@ -111,7 +111,7 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
         if (resolved !== value) {
           migratedRefs.add(path);
           assert.ok(knownPaths.has(path), `Referencia transformada sin asset: ${path}`);
-          assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+          assert.match(resolved, /\/releases\/download\/campobase-videos-(?:v1|v2)\//);
         }
       }
       return;
@@ -130,7 +130,7 @@ test('todas las referencias que se transforman apuntan a assets existentes y el 
     const synthetic = `https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/${name}`;
     const resolved = resolveHostedVideoUrl(synthetic);
     assert.notEqual(resolved, synthetic, `El manifiesto no es resoluble: ${name}`);
-    assert.match(resolved, /\/releases\/download\/campobase-videos-v1\//);
+    assert.match(resolved, /\/releases\/download\/campobase-videos-(?:v1|v2)\//);
   }
 });
 

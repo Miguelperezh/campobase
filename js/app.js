@@ -3643,6 +3643,7 @@ function renderExercises() {
   const filters = {
     formato_juego: form.elements.formato_juego?.value || form.elements.format?.value || 'todos',
     category: form.elements.category.value,
+    ludico: form.elements.ludico?.value || '',
     players: form.elements.players.value,
     material: form.elements.material.value,
     difficulty: form.elements.difficulty.value,
@@ -7753,6 +7754,10 @@ async function init() {
       const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
       const wasControlled = Boolean(navigator.serviceWorker.controller);
       await Promise.all(registrations.map((registration) => registration.unregister()));
+      if (typeof caches !== 'undefined') {
+        const cacheKeys = await caches.keys().catch(() => []);
+        await Promise.all(cacheKeys.map((k) => caches.delete(k)));
+      }
       if (wasControlled && sessionStorage.getItem(reloadKey) !== '1') {
         sessionStorage.setItem(reloadKey, '1');
         location.reload();

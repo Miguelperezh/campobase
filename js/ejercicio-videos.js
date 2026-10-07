@@ -15,6 +15,18 @@ export const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 export const GITHUB_VIDEO_RELEASE_TAG = 'campobase-videos-v1';
 export const GITHUB_VIDEO_RELEASE_BASE = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG}`;
+export const GITHUB_VIDEO_RELEASE_TAG_V2 = 'campobase-videos-v2';
+export const GITHUB_VIDEO_RELEASE_BASE_V2 = `https://github.com/Miguelperezh/campobase/releases/download/${GITHUB_VIDEO_RELEASE_TAG_V2}`;
+
+export function isReleaseV2Asset(asset) {
+  const name = String(asset || '');
+  const m = name.match(/library-v2-preview__f7-(\d+)__/);
+  if (m) {
+    const num = parseInt(m[1], 10);
+    return num > 150;
+  }
+  return false;
+}
 
 function isMobileVideoEnvironment() {
   if (typeof navigator === 'undefined') return false;
@@ -23,25 +35,30 @@ function isMobileVideoEnvironment() {
 }
 
 function releaseUrlForAsset(asset) {
-  return `${GITHUB_VIDEO_RELEASE_BASE}/${encodeURIComponent(asset)}`;
+  const base = isReleaseV2Asset(asset) ? GITHUB_VIDEO_RELEASE_BASE_V2 : GITHUB_VIDEO_RELEASE_BASE;
+  return `${base}/${encodeURIComponent(asset)}`;
 }
 
 function mobileReleaseAsset(asset) {
+  if (isReleaseV2Asset(asset)) return asset;
   const name = String(asset || '');
   if (!/\.mp4$/i.test(name) || /-mobile\.mp4$/i.test(name)) return name;
   return name.replace(/\.mp4$/i, '-mobile.mp4');
 }
 
-// El Release contiene una pareja móvil para cada uno de los 423 MP4 originales.
-// En móvil usamos la variante H.264 compatible; en escritorio conservamos el original.
+// El Release v1 contiene una pareja móvil para cada uno de los 423 MP4 originales.
+// En v2 (lotes 151-650) los MP4 son H.264 ligeros compatibles nativamente en móvil y escritorio.
 export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment() } = {}) {
   const source = String(value ?? '').trim();
   if (!source) return '';
 
   const cleanSource = source.split(/[?#]/, 1)[0];
   const releasePrefix = `${GITHUB_VIDEO_RELEASE_BASE}/`;
-  if (cleanSource.startsWith(releasePrefix)) {
-    const rawAsset = cleanSource.slice(releasePrefix.length);
+  const releasePrefixV2 = `${GITHUB_VIDEO_RELEASE_BASE_V2}/`;
+  if (cleanSource.startsWith(releasePrefix) || cleanSource.startsWith(releasePrefixV2)) {
+    const rawAsset = cleanSource.startsWith(releasePrefix)
+      ? cleanSource.slice(releasePrefix.length)
+      : cleanSource.slice(releasePrefixV2.length);
     let asset;
     try {
       asset = decodeURIComponent(rawAsset);
@@ -49,7 +66,7 @@ export function resolveHostedVideoUrl(value, { mobile = isMobileVideoEnvironment
       asset = rawAsset;
     }
     if (!/\.mp4$/i.test(asset)) return source;
-    return mobile ? releaseUrlForAsset(mobileReleaseAsset(asset)) : source;
+    return mobile ? releaseUrlForAsset(mobileReleaseAsset(asset)) : releaseUrlForAsset(asset);
   }
 
   const marker = `/storage/v1/object/public/${VIDEO_BUCKET}/`;

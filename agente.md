@@ -996,3 +996,37 @@ Partidos activos próximos verificados:
       - Se eliminó la referencia corrupta y se sincronizó el repositorio del Escritorio con `origin/main`.
       - Integrada la lógica de **Fase 1** (`js/reparto-plan.js`, `tests/reparto-plan.test.js`, `preview-fase1.html`, `INSTRUCCIONES.md`).
       - **573 tests en verde (100%)** y `npm run check` limpio en ambos workspaces.
+
+20. **Entrega v60 (24/09/2026) — Despliegue de Maqueta y Prueba Aislada Oficial (Diseño Fiel Campo Esmeralda):**
+    - **Origen:** Migue indicó que el diseño de `preview-fase1.html` anterior (un formulario plano de pruebas) no correspondía con el diseño de la aplicación y aportó el paquete oficial de GitHub (`CampoBase app en GitHub.zip`).
+    - **Análisis del paquete de diseño:**
+      - Contenía: `campobase-diseno.css` (sistema de diseño con variables `--cbx-*`, tipografía Barlow Condensed 800-900 en mayúsculas, tarjetas `.cbx-card`, marcador `.cbx-live`, pizarra táctica `.cbx-pitch`, anillos de minutos `.cbx-token-ring`, hojas modales `.cbx-sheet`), capturas de referencia (`capturas/`) y la maqueta interactiva completa (`maqueta/CampoBase Prueba Aislada v2.dc.html`, `maqueta/CampoBase App.dc.html`, `maqueta/cb-store.js`, `maqueta/support.js`).
+    - **Implementación de la Prueba Aislada Oficial:**
+      - Creado `prueba-aislada.html` y actualizado `preview-fase1.html` con una interfaz de control y navegación fluida:
+        1. **Barra de navegación interactiva:** Permite conmutar con un solo clic entre Lienzo Multipantalla (`canvas`), Móvil En Vivo (`#1b`), Ordenador 3 Columnas (`#2a`), Convocatoria y Reparto (`#2b`), Delegado PIN 5678 (`#1c`), Modo Campo (`#1d`), Ajustes (`#2c`) y Verificador de Fórmulas Matemáticas de Fase 1 (`fase1`).
+        2. **Controles rápidos de simulación:** Botones directos para avanzar al 17′ (aviso de cambio previsto), al 61′ (aviso de 10 minutos para suplentes) y reiniciar partido al 0′, comunicados directamente con el store en memoria (`window.CB.A`).
+        3. **Servicio y aliases locales:** Accesibles a través del servidor local en el puerto 8766:
+           - `http://localhost:8766/prueba-aislada.html`
+           - `http://localhost:8766/preview-fase1.html`
+           - `http://localhost:8766/maqueta/index.html` (o `http://localhost:8766/maqueta/`)
+    - **Suite de pruebas:** Los 573 tests continúan pasando al 100% y `npm run check` limpio en ambos repositorios.
+
+21. **Entrega v61 (24/09/2026) — Perfeccionamiento de Prueba Aislada Oficial (Aro Concéntrico CSS Puro, Reloj Prominente, Asistencias, Tarjetas y Lesión):**
+    - **Aro verde concéntrico 100% alineado:**
+      - Se sustituyó el SVG flotante de posición fija por el borde concéntrico CSS canónico con doble capa (`padding-box` + `border-box` con `conic-gradient`), garantizando alineación geométrica milimétrica en cualquier resolución o dispositivo.
+    - **Reloj gigante y botón «Iniciar Reloj» prominente:**
+      - Tipografía de reloj en números gigantes (`clamp(3.2rem, 8vw, 4.6rem)`) en amarillo oro (`--accent: #ffd700`) con botón de acción primario blanco/rojo destacado bajo el marcador.
+    - **Flujo de Gol Completo con Asistencia y Celebración:**
+      - Selector de tipo de gol (jugada, penalti, falta, propia puerta).
+      - Selector de goleador con fichas tácticas grandes de los jugadores en campo.
+      - Selector opcional de asistente entre el resto de jugadores de campo o «— Sin asistencia».
+      - Nombre del goleador y asistente destacados en tipografía mayúscula grande tanto en el marcador bajo el escudo como en el banner de celebración.
+    - **Flujo de Tarjetas (Amarilla / Roja con Dorsal):**
+      - Modal para elegir tipo de tarjeta (amarilla o roja) y selector táctico de a quién se le aplica.
+      - Insignia visual visible sobre la ficha del jugador en la pizarra (`🟨` o `🟥`) y registro en la cronología con opción de deshacer.
+    - **Protocolo de Lesión con Sustituto Propuesto:**
+      - Selector táctico de quién se lesiona con colocación de insignia `🩹` sobre la ficha en la pizarra.
+      - Tarjeta de aviso persistente con cálculo automático del suplente con menos minutos para cambio inmediato y botón «Hacer cambio».
+    - **Sincronización y Servidor:**
+      - Servidor activo en puerto 8766 (`http://localhost:8766/prueba-aislada.html`).
+      - Archivos sincronizados en scratch y Desktop. 573 tests pasando al 100%.

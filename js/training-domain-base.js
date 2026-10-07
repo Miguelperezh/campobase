@@ -346,6 +346,18 @@ export function filterExercises(exercises, filters = {}) {
     if (filters.favorites && !item.favorite) return false;
     if (filters.video && !item.video) return false;
 
+    // Filtro por carácter lúdico
+    if (filters.ludico) {
+      const isLudico = Boolean(
+        item.ludico === true
+        || (Array.isArray(item.etiquetas) && item.etiquetas.some((t) => /l[uú]dic/i.test(String(t))))
+        || (Array.isArray(item.categorias_adicionales) && item.categorias_adicionales.some((c) => /l[uú]dic/i.test(String(c))))
+        || (Array.isArray(item.categorias_visibles) && item.categorias_visibles.some((c) => /l[uú]dic/i.test(String(c))))
+      );
+      if (filters.ludico === 'ludico' && !isLudico) return false;
+      if (filters.ludico === 'no_ludico' && isLudico) return false;
+    }
+
     // Filtro por texto si se especifica
     if (queryText) {
       const haystack = `${item.id || ''} ${item.name || ''} ${item.description || ''} ${item.category || ''} ${item.material || ''} ${item.space || ''}`.toLocaleLowerCase('es');

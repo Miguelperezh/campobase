@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
+  <title>CampoBase · Biblioteca de Ejercicios y Filtro Lúdico</title>
+  <link rel="icon" href="icons/escudo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #6b6b6b;
+      --paper: #f7f5f0;
+      --card: #ffffff;
+      --brand: #c8102e;        /* Rojo Unión Viera / CampoBase */
+      --brand-dark: #a70d26;
+      --accent: #ffd700;       /* Amarillo oro */
+      --green: #173f35;        /* Verde oscuro CampoBase */
+      --green-pitch: #285f42;  /* Césped pizarra */
+      --green-light: #e6f4ea;
+      --line: #e3e0d8;
+      --danger: #a13d3d;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, #e6eddf 0, transparent 35%), var(--paper);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.4;
+      padding-bottom: 60px;
+    }
+
+    /* TOPBAR OFICIAL */
+    .topbar {
+      background: #173f35;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-brand img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+    .topbar-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .topbar-subtitle {
+      font-size: 11px;
+      opacity: .8;
+      font-weight: 500;
+    }
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-topbar {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-topbar:hover { background: rgba(255,255,255,.25); }
+
+    /* CONTENEDOR PRINCIPAL */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    .hero-banner {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.03);
+    }
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .hero-desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* FILTROS PANEL */
+    .filter-panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.03);
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: .5px;
+    }
+    .filter-group select, .filter-group input {
+      padding: 10px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fafaf8;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s, background .15s;
+    }
+    .filter-group select:focus, .filter-group input:focus {
+      border-color: var(--green);
+      background: #fff;
+    }
+
+    /* PRESETS RAPIDOS */
+    .presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+      align-items: center;
+    }
+    .preset-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .preset-btn {
+      background: #f0f0eb;
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .preset-btn:hover {
+      background: #e2e2da;
+    }
+    .preset-btn.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    /* STATS HEADER */
+    .results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .results-count {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .results-badge {
+      background: var(--green-light);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* GRID DE EJERCICIOS */
+    .exercise-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .exercise-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 10px rgba(0,0,0,.04);
+      transition: transform .15s, box-shadow .15s;
+      cursor: pointer;
+    }
+    .exercise-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.08);
+      border-color: #cbd5e1;
+    }
+
+    .card-thumb {
+      width: 100%;
+      height: 160px;
+      background: #111827;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .exercise-card:hover .card-play-overlay {
+      opacity: 1;
+    }
+    .play-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(200, 16, 46, .9);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      padding-left: 3px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    }
+
+    .card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 8px;
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .badge-f7 { background: #e0f2fe; color: #0369a1; }
+    .badge-f11 { background: #fef3c7; color: #b45309; }
+    .badge-todos { background: #ede9fe; color: #6d28d9; }
+    .badge-ludico { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: 800; }
+    .badge-category { background: #f1f5f9; color: #475569; }
+    .badge-new { background: #fee2e2; color: #b91c1c; font-weight: 800; }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding-top: 8px;
+      border-top: 1px solid #f0f0eb;
+    }
+
+    /* MODAL DE VÍDEO */
+    .video-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .video-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 720px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      background: #173f35;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-video-wrap {
+      background: #000;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .modal-details {
+      padding: 16px 20px;
+      font-size: 14px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .modal-details h4 {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .modal-details p {
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <img src="icons/escudo.png" alt="CampoBase">
+      <div>
+        <div class="topbar-title">CampoBase · Biblioteca</div>
+        <div class="topbar-subtitle">Validación de Nuevos Lotes 151-1000 y Filtro Lúdico</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a href="index.html#ejercicios" class="btn-topbar">Abrir en App Principal</a>
+      <a href="preview-fase1.html" class="btn-topbar">Fase 1 (Partidos)</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="hero-banner">
+      <h1 class="hero-title">Biblioteca Certificada CampoBase (1239 Ejercicios)</h1>
+      <p class="hero-desc">
+        Se han integrado <strong>829 nuevos ejercicios certificados</strong> (lotes 151 a 1000), ordenados con <strong>los más nuevos arriba</strong>.
+        Además se ha añadido el <strong>filtro desplegable «Carácter: Lúdico»</strong> combinable libremente con Categoría (ej. Táctica) y Formato (ej. Fútbol 7).
+      </p>
+    </div>
+
+    <!-- PANEL DE FILTROS -->
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label for="f-formato">Formato de Juego</label>
+          <select id="f-formato">
+            <option value="todos">Todos los formatos</option>
+            <option value="futbol_7">Fútbol 7</option>
+            <option value="futbol_11">Fútbol 11</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="f-category">Categoría</label>
+          <select id="f-category">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="f-ludico">Carácter</label>
+          <select id="f-ludico">
+            <option value="" selected>Todos los caracteres</option>
+            <option value="ludico">✨ Lúdico</option>
+            <option value="no_ludico">No lúdico</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="f-search">Buscar por nombre o descripción</label>
+          <input type="text" id="f-search" placeholder="Escribe para buscar...">
+        </div>
+      </div>
+
+      <!-- PRESETS RAPIDOS DE VALIDACION -->
+      <div class="presets-row">
+        <span class="preset-label">Accesos rápidos:</span>
+        <button type="button" class="preset-btn" id="btn-combo-user">🎯 Ejemplo: Táctica + Lúdico + Fútbol 7</button>
+        <button type="button" class="preset-btn" id="btn-solo-ludico">✨ Solo Lúdicos (282)</button>
+        <button type="button" class="preset-btn" id="btn-f7">⚽ Solo Fútbol 7</button>
+        <button type="button" class="preset-btn active" id="btn-todos">Todos (1239)</button>
+      </div>
+    </div>
+
+    <!-- CABECERA DE RESULTADOS -->
+    <div class="results-head">
+      <div class="results-count" id="results-count">Cargando ejercicios...</div>
+      <div class="results-badge" id="results-badge">Catálogo actualizado</div>
+    </div>
+
+    <!-- LISTA DE EJERCICIOS -->
+    <div class="exercise-grid" id="exercise-grid"></div>
+  </div>
+
+  <!-- MODAL DE VIDEO -->
+  <div class="video-modal" id="video-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">Título del ejercicio</div>
+        <button type="button" class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-video-wrap">
+        <video id="modal-video" controls autoplay playsinline loop></video>
+      </div>
+      <div class="modal-details" id="modal-details"></div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { EJERCICIOS_VALIDADOS, toCampoBaseExercise, findValidatedExercise } from './js/ejercicios-validados.js';
+    import { filterExercises } from './js/training-domain.js';
+    import { resolveHostedVideoUrl } from './js/ejercicio-videos.js';
+
+    const mappedExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+    console.log('Total ejercicios cargados:', mappedExercises.length);
+
+    // Llenar selector de categorías
+    const catSelect = document.getElementById('f-category');
+    const categories = Array.from(new Set(mappedExercises.map(e => e.category).filter(Boolean))).sort();
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      catSelect.appendChild(opt);
+    });
+
+    const formatoSelect = document.getElementById('f-formato');
+    const ludicoSelect = document.getElementById('f-ludico');
+    const searchInput = document.getElementById('f-search');
+    const countEl = document.getElementById('results-count');
+    const badgeEl = document.getElementById('results-badge');
+    const gridEl = document.getElementById('exercise-grid');
+
+    function render() {
+      const filters = {
+        formato_juego: formatoSelect.value,
+        category: catSelect.value,
+        ludico: ludicoSelect.value,
+        text: searchInput.value.trim()
+      };
+
+      const results = filterExercises(mappedExercises, filters);
+      countEl.textContent = `${results.length} ejercicios encontrados`;
+      badgeEl.textContent = `${Math.round((results.length / mappedExercises.length) * 100)}% del catálogo`;
+
+      if (!results.length) {
+        gridEl.innerHTML = '<div class="empty-state"><h3>No se encontraron ejercicios</h3><p>Prueba a cambiar los filtros o los términos de búsqueda.</p></div>';
+        return;
+      }
+
+      gridEl.innerHTML = results.map(ex => {
+        const isLudico = ex.ludico === true;
+        const fmtBadge = ex.formato_juego === 'futbol_7' ? '<span class="badge badge-f7">Fútbol 7</span>' : (ex.formato_juego === 'futbol_11' ? '<span class="badge badge-f11">Fútbol 11</span>' : '<span class="badge badge-todos">F7 + F11</span>');
+        const ludicoBadge = isLudico ? '<span class="badge badge-ludico">✨ Lúdico</span>' : '';
+        const isNew = String(ex.id).startsWith('f7-1999') || String(ex.id).startsWith('f7-20');
+        const newBadge = isNew ? '<span class="badge badge-new">Nuevo</span>' : '';
+        const previewSrc = ex.preview || `library-v2/assets/previews/${ex.id}.png`;
+
+        return `
+          <div class="exercise-card" data-id="${ex.id}">
+            <div class="card-thumb">
+              <img src="${previewSrc}" alt="${ex.name}" onerror="this.onerror=null; this.src='icons/escudo.png'; this.style.objectFit='contain'; this.style.padding='20px';">
+              <div class="card-play-overlay">
+                <div class="play-icon">▶</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-badges">
+                ${newBadge}
+                ${fmtBadge}
+                ${ludicoBadge}
+                <span class="badge badge-category">${ex.category}</span>
+              </div>
+              <div class="card-title">${ex.name}</div>
+              <div class="card-desc">${ex.description || 'Ejercicio táctico certificado CampoBase.'}</div>
+              <div class="card-meta">
+                <span>👥 ${ex.players || 'Varios'}</span>
+                <span>⏱️ ${ex.duration ? ex.duration + ' min' : '15 min'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Modal de vídeo
+    const modal = document.getElementById('video-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalVideo = document.getElementById('modal-video');
+    const modalDetails = document.getElementById('modal-details');
+    const modalClose = document.getElementById('modal-close');
+
+    gridEl.addEventListener('click', (e) => {
+      const card = e.target.closest('.exercise-card');
+      if (!card) return;
+      const id = card.dataset.id;
+      const ex = findValidatedExercise(id) || mappedExercises.find(item => item.id === id);
+      if (!ex) return;
+
+      const videoUrl = resolveHostedVideoUrl(ex.video || ex.media?.video || '');
+      modalTitle.textContent = ex.name || ex.nombre;
+      modalVideo.src = videoUrl;
+      modalVideo.onerror = () => {
+        const localPath = `library-v2/assets/videos/${id}.mp4`;
+        if (modalVideo.src && !modalVideo.src.endsWith(localPath)) {
+          modalVideo.src = localPath;
+          modalVideo.play().catch(() => {});
+        }
+      };
+      modalVideo.play().catch(() => {});
+
+      const steps = ex.como_se_hace || (ex.fases ? ex.fases.map(f => f.descripcion) : []);
+      modalDetails.innerHTML = `
+        <h4>Objetivo Principal</h4>
+        <p>${ex.description || ex.objetivo_principal || 'N/A'}</p>
+        ${steps.length ? `<h4>Desarrollo</h4><p>${steps.join('<br>')}</p>` : ''}
+        <h4>Qué se trabaja</h4>
+        <p>${Array.isArray(ex.works) && ex.works.length ? ex.works.join(', ') : (Array.isArray(ex.que_se_trabaja) ? ex.que_se_trabaja.join(', ') : 'Técnica y táctica')}</p>
+        <h4>Material y Espacio</h4>
+        <p>${ex.material || 'Material estándar'} · ${ex.space || 'Espacio adaptado'}</p>
+      `;
+
+      modal.classList.add('open');
+    });
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modalVideo.pause();
+      modalVideo.src = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+    });
+
+    // Listeners de filtros
+    [formatoSelect, catSelect, ludicoSelect].forEach(s => s.addEventListener('change', () => {
+      clearPresetsActive();
+      render();
+    }));
+    searchInput.addEventListener('input', () => {
+      clearPresetsActive();
+      render();
+    });
+
+    // Presets rápidos
+    const btnCombo = document.getElementById('btn-combo-user');
+    const btnSoloLudico = document.getElementById('btn-solo-ludico');
+    const btnF7 = document.getElementById('btn-f7');
+    const btnTodos = document.getElementById('btn-todos');
+
+    function clearPresetsActive() {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    btnCombo.addEventListener('click', () => {
+      clearPresetsActive();
+      btnCombo.classList.add('active');
+      formatoSelect.value = 'futbol_7';
+      catSelect.value = 'Táctica';
+      ludicoSelect.value = 'ludico';
+      searchInput.value = '';
+      render();
+    });
+
+    btnSoloLudico.addEventListener('click', () => {
+      clearPresetsActive();
+      btnSoloLudico.classList.add('active');
+      formatoSelect.value = 'todos';
+      catSelect.value = '';
+      ludicoSelect.value = 'ludico';
+      searchInput.value = '';
+      render();
+    });
+
+    btnF7.addEventListener('click', () => {
+      clearPresetsActive();
+      btnF7.classList.add('active');
+      formatoSelect.value = 'futbol_7';
+      catSelect.value = '';
+      ludicoSelect.value = '';
+      searchInput.value = '';
+      render();
+    });
+
+    btnTodos.addEventListener('click', () => {
+      clearPresetsActive();
+      btnTodos.classList.add('active');
+      formatoSelect.value = 'todos';
+      catSelect.value = '';
+      ludicoSelect.value = '';
+      searchInput.value = '';
+      render();
+    });
+
+    // Render inicial
+    render();
+  </script>
+</body>
+</html>

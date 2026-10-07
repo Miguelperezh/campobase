@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<script src="cb-store.js"></script>
+<style>body{margin:0;background:#e6e9e7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a}a{color:#1e523d}a:hover{color:#0a251b}</style>
+</helmet>
+<div style="padding:64px 72px 120px;display:flex;flex-direction:column;gap:56px;min-width:max-content">
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px;max-width:3000px">
+    <div style="display:flex;gap:18px;align-items:center"><img src="icons/escudo.png" alt="" style="width:60px;height:60px;object-fit:contain"><div><div style="font:800 13px sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#1e523d">CampoBase · Prueba aislada v2 · no toca la app</div><div style="font:900 48px/1 'Barlow Condensed',sans-serif;text-transform:uppercase">Campo Esmeralda pulido · móvil y ordenador</div></div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font:700 13px sans-serif;color:#475569">Demo del partido:</span><button onClick="{{ j17 }}" style="height:38px;padding:0 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font:700 13px sans-serif">Ir al 17′ (cambio previsto)</button><button onClick="{{ j60 }}" style="height:38px;padding:0 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font:700 13px sans-serif">Ir al 61′ (aviso 10 min)</button><button onClick="{{ jReset }}" style="height:38px;padding:0 14px;border-radius:10px;border:0;background:#0a251b;color:#fff;font:700 13px sans-serif">Reiniciar</button></div>
+  </header>
+  <section style="display:flex;flex-direction:column;gap:22px">
+    <div style="font:800 28px 'Barlow Condensed',sans-serif;text-transform:uppercase">1 · Móvil <span style="font:600 15px sans-serif;text-transform:none;color:#64748b">— todo navegable y sincronizado entre pantallas</span></div>
+    <div style="display:flex;gap:44px;align-items:flex-start">
+      <div id="1a" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">1a</b> Migue · Hoy</span>
+        <div style="width:390px;height:844px;border-radius:54px;background:#0b0c0b;padding:10px;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)"><div style="width:100%;height:100%;border-radius:44px;overflow:hidden;display:flex;flex-direction:column;background:#fff"><div style="height:40px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font:700 14px sans-serif">9:41<span style="width:24px;height:11px;border:1.5px solid #0f172a;border-radius:3px"></span></div><div style="flex:1;min-height:0;position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="mobile" start-role="migue" start-view="hoy" hint-size="100%,100%"></dc-import></div></div></div></div>
+      <div id="1b" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">1b</b> Migue · Partido en vivo</span>
+        <div style="width:390px;height:844px;border-radius:54px;background:#0b0c0b;padding:10px;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)"><div style="width:100%;height:100%;border-radius:44px;overflow:hidden;display:flex;flex-direction:column;background:#fff"><div style="height:40px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font:700 14px sans-serif">9:41<span style="width:24px;height:11px;border:1.5px solid #0f172a;border-radius:3px"></span></div><div style="flex:1;min-height:0;position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="mobile" start-role="migue" start-view="partido" hint-size="100%,100%"></dc-import></div></div></div></div>
+      <div id="1c" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">1c</b> Delegado · entra con PIN 5678</span>
+        <div style="width:390px;height:844px;border-radius:54px;background:#0b0c0b;padding:10px;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)"><div style="width:100%;height:100%;border-radius:44px;overflow:hidden;display:flex;flex-direction:column;background:#0a251b"><div style="height:40px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font:700 14px sans-serif;color:#fff">9:41<span style="width:24px;height:11px;border:1.5px solid #fff;border-radius:3px"></span></div><div style="flex:1;min-height:0;position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="mobile" hint-size="100%,100%"></dc-import></div></div></div></div>
+      <div id="1d" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">1d</b> Modo Campo</span>
+        <div style="width:390px;height:844px;border-radius:54px;background:#0b0c0b;padding:10px;box-shadow:0 40px 80px -30px rgba(0,0,0,.45)"><div style="width:100%;height:100%;border-radius:44px;overflow:hidden;display:flex;flex-direction:column;background:#fff"><div style="height:40px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font:700 14px sans-serif">9:41<span style="width:24px;height:11px;border:1.5px solid #0f172a;border-radius:3px"></span></div><div style="flex:1;min-height:0;position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="mobile" start-view="modocampo" hint-size="100%,100%"></dc-import></div></div></div></div>
+    </div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:22px">
+    <div style="font:800 28px 'Barlow Condensed',sans-serif;text-transform:uppercase">2 · Ordenador</div>
+    <div style="display:flex;gap:44px;align-items:flex-start">
+      <div id="2a" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">2a</b> Partido en vivo · banquillo</span>
+        <div style="width:1440px;height:960px;border-radius:14px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.4);position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="desktop" start-role="migue" start-view="partido" hint-size="100%,100%"></dc-import></div></div>
+      <div id="2b" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">2b</b> Convocatoria + reparto</span>
+        <div style="width:1440px;height:960px;border-radius:14px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.4);position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="desktop" start-role="migue" start-view="convocatorias" hint-size="100%,100%"></dc-import></div></div>
+      <div id="2c" style="display:flex;flex-direction:column;gap:12px"><span style="font:700 14px sans-serif;color:#334155"><b style="background:#c8102e;color:#fff;padding:2px 7px;border-radius:5px">2c</b> Ajustes completos</span>
+        <div style="width:1440px;height:960px;border-radius:14px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.4);position:relative"><dc-import name="CampoBase App" style="position:absolute;inset:0;display:block;width:100%;height:100%" device="desktop" start-role="migue" start-view="ajustes" hint-size="100%,100%"></dc-import></div></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;speed&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[1,5,20],&quot;default&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.t = setInterval(() => { if (window.CB) { window.CB.A.setSpeed(this.props.speed ?? 1); } }, 500); }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    return {
+      j17: () => window.CB && window.CB.A.jump(17),
+      j60: () => window.CB && window.CB.A.jump(61),
+      jReset: () => window.CB && window.CB.A.reset(),
+    };
+  }
+}
+</script>
+</body>
+</html>

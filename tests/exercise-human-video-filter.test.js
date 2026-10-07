@@ -143,8 +143,8 @@ test('el filtro real devuelve exactamente ejercicios con vídeo humano y mantien
 
   const f7 = filterExercises(mapped, { formato_juego: 'futbol_7' });
   const f11 = filterExercises(mapped, { formato_juego: 'futbol_11' });
-  const expectedF7New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_7').map((item) => item.id);
-  const expectedF11New = mapped.slice(0, 12).filter((item) => item.formato_juego === 'futbol_11').map((item) => item.id);
+  const expectedF7New = mapped.slice(0, 12).filter((item) => item.formatos_juego?.includes('futbol_7') || item.formato_juego === 'futbol_7').map((item) => item.id);
+  const expectedF11New = mapped.slice(0, 12).filter((item) => item.formatos_juego?.includes('futbol_11') || item.formato_juego === 'futbol_11').map((item) => item.id);
   assert.deepEqual(f7.slice(0, expectedF7New.length).map((item) => item.id), expectedF7New);
   assert.deepEqual(f11.slice(0, expectedF11New.length).map((item) => item.id), expectedF11New);
 });

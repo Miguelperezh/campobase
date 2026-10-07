@@ -11,6 +11,7 @@ import {
 import { EJERCICIOS_VALIDADOS, toCampoBaseExercise } from '../js/ejercicios-validados.js';
 import { NUEVOS_EJERCICIOS_IDS } from '../js/ejercicios-nuevo-formato.js';
 import { NUEVOS_LOTES_IDS } from '../js/ejercicios-nuevos-lotes.js';
+import { LOTES_151_650_IDS } from '../js/ejercicios-lotes-151-650.js';
 import { formatSessionDurationInfo } from '../js/exercise-planning.js';
 
 test('FORMATO_JUEGO_OPTIONS contiene las 3 opciones canónicas con valores estables', () => {
@@ -36,18 +37,19 @@ test('normalizeFormatoJuego mapea todas las variaciones de Astra para F7 y F11',
   assert.equal(normalizeFormatoJuego('todos'), 'todos');
 });
 
-test('el catálogo conserva los 298 históricos, antepone los 100 nuevos lotes arriba y 12 nuevos después respetando F7/F11', () => {
+test('el catálogo conserva los 298 históricos, antepone los 859 nuevos lotes arriba, 100 de lotes anteriores y 12 nuevos después respetando F7/F11', () => {
   const mapped = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
-  assert.equal(mapped.length, 410);
-  assert.deepEqual(mapped.slice(0, 100).map((e) => e.id), NUEVOS_LOTES_IDS, 'Los 100 últimos introducidos deben estar en la punta de arriba');
-  assert.deepEqual(mapped.slice(100, 112).map((e) => e.id), NUEVOS_EJERCICIOS_IDS, 'Los 12 del lote anterior van a continuación');
+  assert.equal(mapped.length, 1269);
+  assert.deepEqual(mapped.slice(0, 859).map((e) => e.id), LOTES_151_650_IDS, 'Los 859 de lotes 151-1050 deben estar en la punta de arriba');
+  assert.deepEqual(mapped.slice(859, 959).map((e) => e.id), NUEVOS_LOTES_IDS, 'Los 100 de lotes anteriores van a continuación');
+  assert.deepEqual(mapped.slice(959, 971).map((e) => e.id), NUEVOS_EJERCICIOS_IDS, 'Los 12 del lote anterior van después');
 
   const f11 = mapped.filter((e) => e.formato_juego === 'futbol_11');
   const f7 = mapped.filter((e) => e.formato_juego === 'futbol_7');
   const todos = mapped.filter((e) => e.formato_juego === 'todos');
-  assert.equal(todos.length, 130, '92 nuevos lotes + 38 históricos base sin regla específica van a ambos filtros');
+  assert.equal(todos.length, 489);
 
-  const nuevosLotes = mapped.slice(0, 100);
+  const nuevosLotes = mapped.slice(0, 859);
   for (const ex of nuevosLotes) {
     assert.ok(Array.isArray(ex.formatos_juego) && ex.formatos_juego.length > 0);
   }
@@ -66,21 +68,21 @@ test('buildExercise asigna por defecto futbol_11 cuando no viene especificado', 
   assert.equal(ex.formato_juego, 'futbol_11');
 });
 
-test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 410 ejercicios', () => {
+test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 1269 ejercicios', () => {
   const currentExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
 
   const allFiltered = filterExercises(currentExercises, { formato_juego: 'todos' });
-  assert.equal(allFiltered.length, 410);
-  assert.deepEqual(allFiltered.slice(0, 100).map((e) => e.id), NUEVOS_LOTES_IDS);
+  assert.equal(allFiltered.length, 1269);
+  assert.deepEqual(allFiltered.slice(0, 859).map((e) => e.id), LOTES_151_650_IDS);
 
   const f11Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_11' });
-  assert.equal(f11Filtered.length, 388);
+  assert.equal(f11Filtered.length, 792);
 
   const f7Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_7' });
-  assert.equal(f7Filtered.length, 152);
+  assert.equal(f7Filtered.length, 966);
 
   const f7ByFormatKey = filterExercises(currentExercises, { format: 'futbol_7' });
-  assert.equal(f7ByFormatKey.length, 152);
+  assert.equal(f7ByFormatKey.length, 966);
 });
 
 test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combinado', () => {
@@ -101,20 +103,51 @@ test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combi
   const pool = [astraExercise, ...baseExercises];
 
   const f7Only = filterExercises(pool, { formato_juego: 'futbol_7' });
-  assert.equal(f7Only.length, 153);
+  assert.equal(f7Only.length, 967);
   assert.ok(f7Only.some(e => e.id === 'astra-f7-001'));
 
   const f11Only = filterExercises(pool, { formato_juego: 'futbol_11' });
-  assert.equal(f11Only.length, 388);
+  assert.equal(f11Only.length, 792);
   assert.ok(!f11Only.some(e => e.id === 'astra-f7-001'));
 
   const todosOnly = filterExercises(pool, { formato_juego: 'todos' });
-  assert.equal(todosOnly.length, 411);
+  assert.equal(todosOnly.length, 1270);
   assert.ok(todosOnly.some(e => e.id === 'astra-f7-001'));
 
   const textF7 = filterExercises(pool, { text: 'transiciones extra', formato_juego: 'futbol_7' });
   assert.equal(textF7.length, 1);
   assert.equal(textF7[0].id, 'astra-f7-001');
+});
+
+test('filtro desplegable Lúdico funciona de forma individual y combinada con formato y categoría', () => {
+  const currentExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
+
+  // Filtro solo lúdico
+  const ludicos = filterExercises(currentExercises, { ludico: 'ludico' });
+  assert.ok(ludicos.length > 0, 'Debe haber ejercicios lúdicos en el catálogo');
+  for (const ex of ludicos) {
+    assert.equal(ex.ludico, true);
+  }
+
+  // Filtro no lúdico
+  const noLudicos = filterExercises(currentExercises, { ludico: 'no_ludico' });
+  assert.ok(noLudicos.length > 0);
+  for (const ex of noLudicos) {
+    assert.equal(ex.ludico, false);
+  }
+  assert.equal(ludicos.length + noLudicos.length, currentExercises.length);
+
+  // Filtro combinado: Táctica + Lúdico + Fútbol 7 (ejemplo del usuario)
+  const tacticaLudicoF7 = filterExercises(currentExercises, {
+    category: 'Táctica',
+    ludico: 'ludico',
+    formato_juego: 'futbol_7',
+  });
+  for (const ex of tacticaLudicoF7) {
+    assert.equal(ex.category, 'Táctica');
+    assert.equal(ex.ludico, true);
+    assert.ok(ex.formatos_juego?.includes('futbol_7') || ex.formato_juego === 'futbol_7');
+  }
 });
 
 test('index.html contiene el desplegable Formato con exactamente las 3 opciones requeridas y sin no_especificado', () => {
