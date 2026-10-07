@@ -1,3 +1,4 @@
+import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
 import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-3';
 import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-3';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
@@ -6,8 +7,8 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=claude-proposal-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=delegate-refresh-1';
-import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=fluid-refresh-1';
+import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
@@ -598,6 +599,8 @@ async function deduplicatePlayers() {
   return false;
 }
 
+let validatedExerciseCache = null;
+const validatedExerciseOrder = new Map(EJERCICIOS_VALIDADOS.map((item, index) => [item.id, index]));
 async function refresh() {
   const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
@@ -617,7 +620,7 @@ async function refresh() {
   const persistedExerciseRecords = settingRecords.filter(({ recordType }) => recordType === 'exercise');
   const persistedById = new Map(persistedExerciseRecords.map((item) => [String(item.id), item]));
 
-  const validatedExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise).map((item) => {
+  const validatedExercises = (validatedExerciseCache ||= EJERCICIOS_VALIDADOS.map(toCampoBaseExercise)).map((item) => {
     const persisted = persistedById.get(String(item.id));
     return persisted ? { ...item, favorite: Boolean(persisted.favorite) } : item;
   });
@@ -660,7 +663,7 @@ async function refresh() {
       if (!target || target <= 0) {
         target = (session.pitch && session.pitch.toLowerCase().includes('pilar')) ? 75 : 60;
       }
-      return { ...session, targetDuration: target };
+      return { ...session, ...(isTrainingSessionCompleted(session) ? { completed: true } : {}), targetDuration: target };
     });
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
@@ -730,6 +733,7 @@ async function refresh() {
     restoreNormalNavUi();
   }
   renderOrDefer(force);
+  state.dataLoaded = true;
 }
 
 function syncDirectFieldCache() {
@@ -758,7 +762,9 @@ function syncDirectFieldCache() {
 function renderAll() {
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
-  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings(); renderExercises(); renderTrainingSessions(); renderTactics(); renderPreparaciones();
+  renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings();
+  if ($('#ejercicios')?.classList.contains('active')) renderExercises();
+  renderTrainingSessions(); renderTactics(); renderPreparaciones();
   refreshPlantillaStaff().catch(() => {});
   refreshStaffView().catch(() => {});
   renderTodayDashboard().catch(() => {});
@@ -5493,8 +5499,8 @@ function renderExercises() {
     let exercises = filterExercises(filterableExercises, filters);
 
     exercises.sort((a, b) => {
-      const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
-      const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
+      const aIdx = (validatedExerciseOrder.get(a.id) ?? -1);
+      const bIdx = (validatedExerciseOrder.get(b.id) ?? -1);
       const aValid = aIdx !== -1, bValid = bIdx !== -1;
       if (aValid && bValid) return aIdx - bIdx;
       if (aValid) return -1;
@@ -5596,8 +5602,8 @@ function renderExercises() {
 
   const exercises = filterExercises(filterableExercises, filters)
     .sort((a, b) => {
-      const aIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === a.id);
-      const bIdx = EJERCICIOS_VALIDADOS.findIndex((e) => e.id === b.id);
+      const aIdx = (validatedExerciseOrder.get(a.id) ?? -1);
+      const bIdx = (validatedExerciseOrder.get(b.id) ?? -1);
       const aValid = aIdx !== -1, bValid = bIdx !== -1;
       if (aValid && bValid) return aIdx - bIdx;
       if (aValid) return -1;
@@ -5974,12 +5980,8 @@ function showExerciseDetail(exerciseId) {
 async function toggleTrainingSessionCompleted(id) {
   const session = state.trainingSessions.find((s) => s.id === id);
   if (!session) return;
-  const isCompleted = !session.completed;
-  const updated = {
-    ...session,
-    completed: isCompleted,
-    updatedAt: Date.now(),
-  };
+  const isCompleted = !isTrainingSessionCompleted(session);
+  const updated = withTrainingSessionCompleted(session, isCompleted);
   await put('settings', updated);
   await refresh(true);
   renderTrainingSessions();
@@ -10624,7 +10626,9 @@ function ensureAuthPromptVisible() {
 
 async function completePinLogin(role, pin, userId = '', authenticated = false) {
   const accessRevision = beginPinAccess();
-  if (role === 'owner' && !authenticated) {
+  const currentSession = role === 'owner' && !authenticated
+    ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
+  if (role === 'owner' && !authenticated && currentSession?.user?.id !== (userId || getBoundSaasUserId())) {
     try {
       const session = await signInWithCampoBasePin(getSupabaseAuthClient(), userId, pin);
       if (session?.user?.id) setBoundSaasUserId(session.user.id);
@@ -10639,9 +10643,9 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   await synchronizeCloud();
   // A startup sync may have begun before authentication; its completed result
   // is not a hydrated session. Retry once now that the account is bound.
-  if (navigator.onLine && bound && !state.cloudConnected) await synchronizeCloud();
+  if (navigator.onLine && bound && !state.cloudConnected && !hasUsableTeamSnapshot(state)) await synchronizeCloud();
   await refresh(true);
-  if (navigator.onLine && bound && !state.cloudConnected) {
+  if (navigator.onLine && bound && !state.cloudConnected && !hasUsableTeamSnapshot(state)) {
     throw new Error(state.cloudError || 'No se han podido cargar los datos del equipo. Vuelve a intentar entrar; no se ha modificado ningún dato.');
   }
   if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
@@ -13240,20 +13244,28 @@ async function ensureRealtimeSubscription() {
   }
 }
 
+let cloudSynchronizationPromise = null;
 async function synchronizeCloud() {
+  if (cloudSynchronizationPromise) return cloudSynchronizationPromise;
+  cloudSynchronizationPromise = runCloudSynchronization().finally(() => { cloudSynchronizationPromise = null; });
+  return cloudSynchronizationPromise;
+}
+
+async function runCloudSynchronization() {
   if (isDemoDatabase()) {
     await refresh();
     networkStatus();
     await refreshSyncStatusPanel();
-    return;
+    return { online: false, demo: true };
   }
   if (!navigator.onLine) {
     networkStatus();
     await refreshSyncStatusPanel();
-    return;
+    return { online: false, error: 'Sin conexión. Se conservan los datos de este dispositivo.' };
   }
+  let result;
   try {
-    const result = await syncFromCloud();
+    result = await syncFromCloud();
     state.cloudConnected = result.online;
     state.cloudError = result?.cloudRestricted
       ? 'Supabase está temporalmente restringido por cuota. CampoBase mantiene los datos locales de este dispositivo.'
@@ -13265,11 +13277,13 @@ async function synchronizeCloud() {
   } catch (error) {
     state.cloudConnected = false;
     state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
+    result = { online: false, error: state.cloudError };
   } finally {
     lastCloudSyncTimestamp = Date.now();
   }
   networkStatus();
   await refreshSyncStatusPanel();
+  return result;
 }
 
 async function init() {
@@ -13361,7 +13375,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-refresh-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261007-fluid-refresh-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -13431,16 +13445,13 @@ async function init() {
     if (requestedView) showView(requestedView);
   }
   // Sincronización en segundo plano sin bloquear el arranque ni la interacción inmediata
-  synchronizeCloud().then(async () => {
-    await refreshSyncStatusPanel();
-    await refresh();
-  }).catch(handleError);
+  synchronizeCloud().catch(handleError);
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 

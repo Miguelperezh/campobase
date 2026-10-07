@@ -10,7 +10,7 @@ test('sesiones desde 15/09/2026 solo se archivan mediante Realizado', async () =
   assert.match(source, /MANUAL_CLOSE_FROM = '2026-09-15'/);
   assert.match(source, /mark-session-complete/);
   assert.match(source, /textContent = '✓ Realizado'/);
-  assert.match(source, /status: 'closed'/);
+  assert.match(source, /withTrainingSessionCompleted\(session, true, now\)/);
   assert.match(source, /closedAt: now/);
   assert.doesNotMatch(source, /sessionHasFinished/);
   assert.doesNotMatch(source, /attendance/);

@@ -4639,3 +4639,6 @@ Cerrar acceso PIN bloquea la app y conserva la conexión SaaS del equipo; salir 
 
 ## 7/10/2026 · Actualizar delegado SDD036
 La cabecera exclusiva del delegado debe conservar Actualizar junto a Cerrar sesión, en escritorio y móvil. Reutilizar la actualización controlada existente, preservando PIN/rol, vista permitida y conexión. El botón no concede permisos ni abre Ajustes. No borrar almacenamiento ni alterar datos reales.
+
+## 7/10/2026 · Actualización fluida y estados realizados SDD037
+Actualizar sincroniza en la pantalla actual, sin navegación forzada ni pérdida de PIN, vista, formularios o colores. Agrupar sincronizaciones simultáneas y consultas repetidas al contexto del mismo equipo; no reutilizar contextos entre cuentas ni cachear errores. No construir la biblioteca oculta en cada refresco. Esperar a que los datos estén preparados antes de revelar la app; permitir datos conservados del equipo autenticado cuando falle la red, sin inventar datos. Leer de forma compatible completed/status/closedAt/archived de las sesiones: consultar no reescribe registros; solo la acción explícita del usuario marca o reabre. Probar entrada, salida, Actualizar, recarga y fallos de red con titular/delegado y pantalla móvil. No borrar datos, asistencias, colores, sesiones, colas pendientes ni cambiar permisos/PIN/RLS.

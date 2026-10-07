@@ -27,40 +27,52 @@ function buttonMarkup(id = BUTTON_ID) {
   button.type = 'button';
   button.className = 'secondary compact';
   button.textContent = 'Actualizar';
-  button.title = 'Sincronizar datos y recargar CampoBase';
+  button.title = 'Sincronizar datos sin salir de CampoBase';
   button.setAttribute('aria-label', 'Actualizar y sincronizar datos');
   return button;
 }
 
+let manualRefreshPromise = null;
 async function refreshNow(button) {
+  if (manualRefreshPromise) return manualRefreshPromise;
   if (button) { button.disabled = true; button.textContent = 'Actualizando…'; }
-  try {
-    const activeView = document.querySelector('.view.active')?.id || '';
-    const role = window.__campobase?.state?.role || '';
-    if (activeView) sessionStorage.setItem('campobase.activeView', activeView);
-    if (role) sessionStorage.setItem('campobase.sessionRole', role);
-
-    await syncFromCloud().catch(() => null);
-
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations().catch(() => []);
-      await Promise.all(regs.map(async (reg) => {
-        await reg.update().catch(() => null);
-        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }));
+  manualRefreshPromise = (async () => {
+    try {
+      const activeView = document.querySelector('.view.active')?.id || '';
+      const role = window.__campobase?.state?.role || '';
+      if (activeView) sessionStorage.setItem('campobase.activeView', activeView);
+      if (role) sessionStorage.setItem('campobase.sessionRole', role);
+      const app = window.__campobase;
+      if (app?.synchronizeCloud) {
+        const result = await app.synchronizeCloud();
+        if (result?.online === false && !result.demo) {
+          throw new Error(result.error || app.state.cloudError || 'Sin conexión. Tus datos siguen disponibles; vuelve a pulsar Actualizar.');
+        }
+        // Reconcile in place: do not navigate, reset the PIN or replace the theme.
+        // synchronizeCloud already refreshes changed records and defers edits.
+        if (button) button.title = 'Datos actualizados';
+      } else {
+        // Compatibility only for a previous bundle without the public sync API.
+        await syncFromCloud();
+        const url = new URL(window.location.href);
+        url.searchParams.set('_cb', String(Date.now()));
+        window.location.replace(url.toString());
+      }
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        // Check code updates in the background; a slow worker never blocks data.
+        void navigator.serviceWorker.getRegistrations().then((regs) => Promise.all(
+          regs.map((reg) => reg.update().catch(() => null)),
+        )).catch(() => null);
+      }
+    } catch (error) {
+      console.warn('No se pudo completar la actualización:', error);
+      if (button) button.title = error.message || 'No se pudo actualizar; vuelve a intentarlo.';
+      window.__campobase?.toast?.('No se pudo conectar. Tus datos siguen disponibles; puedes volver a actualizar.');
+    } finally {
+      if (button) { button.disabled = false; button.textContent = 'Actualizar'; }
     }
-
-    sessionStorage.setItem('campobase.safeReloadAfterUpdate', '1');
-    const url = new URL(window.location.href);
-    url.searchParams.set('_cb', String(Date.now()));
-    window.location.replace(url.toString());
-  } catch (error) {
-    console.warn('No se pudo completar la actualización controlada:', error);
-    if (button) {
-      button.disabled = false;
-      button.textContent = 'Actualizar';
-    }
-  }
+  })().finally(() => { manualRefreshPromise = null; });
+  return manualRefreshPromise;
 }
 
 export function installRuntimeRefresh() {

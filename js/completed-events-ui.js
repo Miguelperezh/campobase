@@ -1,3 +1,4 @@
+import { isTrainingSessionCompleted, withTrainingSessionCompleted } from './training-session-status.js';
 import './exercise-view-mode-ui.js?v=2519';
 import './modo-campo-integration.js?v=1';
 import { put } from './db.js';
@@ -25,7 +26,8 @@ function installStaffRoleThemeParity() {
 }
 
 function sessionIsArchived(session) {
-  if (session?.status === 'closed' || session?.status === 'finished' || session?.closedAt || session?.archived === true) return true;
+  if (isTrainingSessionCompleted(session)) return true;
+  if (session?.completed === false) return false;
   const day = String(session?.date || '').slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(day) && day < MANUAL_CLOSE_FROM;
 }
@@ -169,7 +171,7 @@ async function completeSessionManually(sessionId, button) {
   button.disabled = true;
   try {
     const now = Date.now();
-    await put('settings', { ...session, status: 'closed', closedAt: now, updatedAt: now });
+    await put('settings', withTrainingSessionCompleted(session, true, now));
     if (typeof window.__campobase?.refresh === 'function') {
       await window.__campobase.refresh(true);
       window.__campobase.renderTrainingSessions?.();
