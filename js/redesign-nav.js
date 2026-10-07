@@ -877,6 +877,9 @@ export function initRedesign() {
     } catch {}
   }
   if (typeof window !== 'undefined') {
+    // Permissions may change without a view or body-class change. Refresh
+    // both desktop and mobile navigation after each reconciled snapshot.
+    window.addEventListener('campobase:data-updated', updateNavState);
     window.addEventListener('resize', syncTopbarHeight, { passive: true });
     window.addEventListener('orientationchange', syncTopbarHeight, { passive: true });
   }

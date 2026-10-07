@@ -1,0 +1,1 @@
+Corregir fusión de permisos remotos, actualizar navegación tras datos reconciliados y esperar descarga antes de abrir el PIN del delegado. Mantener polling/Realtime canónicos y sin cambios de backend.

@@ -1,0 +1,4 @@
+- [x] Corrección de fusión y entrada PIN.
+- [x] Actualización de menús sin cambio de vista.
+- [x] Pruebas de concesión/retirada repetida en contextos separados.
+- [ ] Publicación y verificación pública.

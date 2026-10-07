@@ -12,7 +12,7 @@ const [appCode, navCode, html, teamAccessCode] = await Promise.all([
   readFile(new URL('../js/team-access.js', import.meta.url), 'utf8'),
 ]);
 
-test('mergeCloudRecord conserva los permisos locales aunque la nube ya tenga un registro antiguo', () => {
+test('mergeCloudRecord no resucita permisos locales tras descargar la configuración canónica', () => {
   const local = {
     id: 'main',
     format: 'F7',
@@ -28,12 +28,12 @@ test('mergeCloudRecord conserva los permisos locales aunque la nube ya tenga un 
     updatedAt: 1000,
   };
   const merged = mergeCloudRecord('settings', local, cloud);
-  assert.deepEqual(merged.delegatePermissions, ['partido', 'convocatorias', 'asistencia']);
+  assert.deepEqual(merged.delegatePermissions, ['partido']);
   assert.equal(merged.delegatePin, '1234');
   assert.equal(merged.updatedAt, 2000);
 });
 
-test('mergeCloudRecord no pierde permisos locales cuando ninguno tiene timestamp', () => {
+test('mergeCloudRecord usa permisos remotos explícitos incluso sin timestamp', () => {
   const local = {
     id: 'main',
     format: 'F7',
@@ -45,7 +45,7 @@ test('mergeCloudRecord no pierde permisos locales cuando ninguno tiene timestamp
     delegatePermissions: ['partido'],
   };
   const merged = mergeCloudRecord('settings', local, cloud);
-  assert.deepEqual(merged.delegatePermissions, ['partido', 'plantilla', 'modo-campo']);
+  assert.deepEqual(merged.delegatePermissions, ['partido']);
 });
 
 test('getActiveModule asocia correctamente convocatorias a partidos y plantilla a equipo', () => {

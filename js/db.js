@@ -1,4 +1,4 @@
-import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js';
+import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=delegate-sync-1';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 

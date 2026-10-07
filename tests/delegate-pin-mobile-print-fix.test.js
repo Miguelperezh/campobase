@@ -95,8 +95,8 @@ test('el delegado ve el partido en cuanto Migue pulsa Mostrar al Delegado', () =
   // togglePrepDelegateForMatch aplica la preparación al timer en vivo cuando se activa delegateShown
   assert.match(appCode, /else if \(prep\.delegateShown\) \{\s*await applyPreparacionToLive\(prep\);/);
 
-  // Login del delegado con PIN 0000 sincroniza en segundo plano para traerse datos frescos
-  assert.match(appCode, /applyRole\('delegate'\);\s*void \(async \(\) => \{\s*try \{\s*await synchronizeCloud\(\);\s*await refresh\(true\);\s*renderDelegate\(\);/);
+  // Login del delegado espera los datos frescos antes de revelar sus permisos
+  assert.match(appCode, /await completePinLogin\('delegate', pin\)/);
 });
 
 test('la preparación no altera la alineación táctica elegida por Migue', () => {
