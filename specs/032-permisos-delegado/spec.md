@@ -1,0 +1,1 @@
+Permisos del delegado: los cambios recibidos deben actualizar la navegación y expulsar de una sección retirada. Un enlace antiguo no debe reemplazar configuración canónica. Preservar datos, interfaz validada y reglas de cuenta existentes.
