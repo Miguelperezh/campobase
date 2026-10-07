@@ -7,6 +7,49 @@ export const DATABASE_VERSION = 2;
 export const DATABASE_STORES = ['players', 'callups', 'matches', 'trainings', 'settings', 'syncQueue'];
 export const PRODUCTION_APP_URL = 'https://miguelperezh.github.io/campobase/';
 
+// PIN access locks the visible app while retaining the authenticated team
+// connection. A revision invalidates restores that began before a PIN switch.
+const PIN_MODE_KEY = 'campobase.pinAccessMode';
+const PIN_LOCK_KEY = 'campobase.pinAccessLocked';
+const PIN_REVISION_KEY = 'campobase.pinAccessRevision';
+const pinAccessFallback = new Map();
+function readPinAccess(key) {
+  try { return sessionStorage.getItem(key); } catch { return pinAccessFallback.get(key) || null; }
+}
+function writePinAccess(key, value) {
+  if (value === null) pinAccessFallback.delete(key); else pinAccessFallback.set(key, value);
+  try { if (value === null) sessionStorage.removeItem(key); else sessionStorage.setItem(key, value); } catch {}
+}
+export function getPinAccessRevision() {
+  return Number(readPinAccess(PIN_REVISION_KEY) || 0);
+}
+export function isPinAccessLocked() {
+  return readPinAccess(PIN_LOCK_KEY) === '1';
+}
+export function isPinAccessSession() {
+  return readPinAccess(PIN_MODE_KEY) === 'pin';
+}
+export function lockPinAccess() {
+  const revision = getPinAccessRevision() + 1;
+  writePinAccess(PIN_LOCK_KEY, '1');
+  writePinAccess(PIN_REVISION_KEY, String(revision));
+  return revision;
+}
+export function beginPinAccess() {
+  writePinAccess(PIN_MODE_KEY, 'pin');
+  return lockPinAccess();
+}
+export function finishPinAccess(revision) {
+  if (revision !== getPinAccessRevision()) return false;
+  writePinAccess(PIN_LOCK_KEY, null);
+  return true;
+}
+export function clearPinAccess() {
+  lockPinAccess();
+  writePinAccess(PIN_MODE_KEY, null);
+  writePinAccess(PIN_LOCK_KEY, null);
+}
+
 export function normalizeUsername(raw = '') {
   return String(raw).trim().toLocaleLowerCase('es').replace(/^@/, '').replace(/\s+/g, '_');
 }

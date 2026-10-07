@@ -1630,10 +1630,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261007-delegate-sync-1';
+    window.__CAMPOBASE_BUILD = '20261007-pin-switch-1';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261007-delegate-sync-1')
+      navigator.serviceWorker.register('./sw.js?v=20261007-pin-switch-1')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1654,8 +1654,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=delegate-sync-1"></script>
-  <script type="module" src="js/redesign-nav.js?v=delegate-sync-1"></script>
+  <script type="module" src="js/app.js?v=pin-switch-1"></script>
+  <script type="module" src="js/redesign-nav.js?v=pin-switch-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

@@ -1,4 +1,5 @@
 import {
+  isPinAccessSession, isPinAccessLocked, getPinAccessRevision, clearPinAccess,
   bootstrapUserDatabase,
   claimLegacyOwner,
   clearBoundSaasUserId,
@@ -493,6 +494,7 @@ async function getProfileOrFallback(client, user) {
 }
 
 async function activateAccount(user, profile, { migrateLegacy = false } = {}) {
+  clearPinAccess();
   if (!user?.id) throw new Error('No se ha podido identificar la cuenta.');
   if (migrateLegacy) await migrateLegacyDatabaseToUser(user.id);
   await bootstrapUserDatabase(user.id, profile);
@@ -596,6 +598,8 @@ function waitForApp(timeoutMs = 12000) {
 }
 
 async function unlockBoundSession(client) {
+  if (isPinAccessLocked()) return false;
+  const accessRevision = getPinAccessRevision();
   const session = await getCurrentSession(client).catch(() => null);
   const bound = getBoundSaasUserId();
   if (!session?.user || !bound || bound !== session.user.id) return false;
@@ -618,6 +622,7 @@ async function unlockBoundSession(client) {
   if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected) {
     throw new Error(app.state.cloudError || 'No se han podido cargar los datos del equipo. Intenta entrar de nuevo.');
   }
+  if (isPinAccessLocked() || accessRevision !== getPinAccessRevision()) return false;
   if (typeof app.renderAll === 'function') app.renderAll();
   app.state.role = localRole;
   // La cuenta SaaS de delegado usa navegación configurable. No activamos el
@@ -633,12 +638,13 @@ async function unlockBoundSession(client) {
   if (settingsNav) settingsNav.hidden = isDelegate;
   $('#demo-team-panel')?.classList.add('hidden');
   try {
-    const { initTeamAccess } = await import('./team-access.js?v=20260924-v59-delegate-views-visible-render-fix');
+    const { initTeamAccess } = await import('./team-access.js?v=pin-switch-1');
     await initTeamAccess(client);
   } catch (error) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
   }
 
+  if (isPinAccessLocked() || accessRevision !== getPinAccessRevision()) return false;
   if (pinDelegate) app.applyRole?.('delegate');
   // Reveal the application only after loading the bound account.
   const dialog = $('#auth-dialog');
@@ -647,6 +653,7 @@ async function unlockBoundSession(client) {
 }
 
 async function handlePersistentSession(client) {
+  if (isPinAccessLocked()) { showLocalPin(); return true; }
   const session = await getCurrentSession(client).catch(() => null);
   if (!session?.user) return false;
   let bound = getBoundSaasUserId();
@@ -821,6 +828,16 @@ function bindEvents(client) {
         return setMessage('#saas-remembered-message', error.message || 'PIN incorrecto.');
       }
     } else {
+      const app = await waitForApp();
+      if (app?.getConfiguredPinRole && await app.getConfiguredPinRole(enteredPin)) {
+        try {
+          await app.loginWithPin(enteredPin);
+          setMessage('#saas-remembered-message', '');
+        } catch (error) {
+          setMessage('#saas-remembered-message', error.message || 'No se pudo abrir CampoBase.');
+        }
+        return;
+      }
       const deviceOk = await verifyRememberedPin(account, enteredPin).catch(() => false);
       let accountOk = false;
       if (!deviceOk) {
@@ -833,6 +850,7 @@ function bindEvents(client) {
       if (!deviceOk && !accountOk) return setMessage('#saas-remembered-message', 'PIN incorrecto.');
     }
 
+    clearPinAccess();
     markBrowserSessionActive(session.user.id);
     try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
     setMessage('#saas-remembered-message', '');
@@ -917,13 +935,25 @@ function bindEvents(client) {
   });
 
   document.addEventListener('click', async (event) => {
-    const button = event.target?.closest?.('#logout, #settings-logout');
+    const button = event.target?.closest?.('#logout, #settings-logout, #cb-delegate-logout-btn');
     if (!button) return;
-    const session = await getCurrentSession(client).catch(() => null);
-    if (!session?.user || getBoundSaasUserId() !== session.user.id) return;
+    // Intercept synchronously: an await here lets the app logout and an old
+    // restore run before this handler decides which access is being closed.
     event.preventDefault();
     event.stopImmediatePropagation();
     event.stopPropagation();
+    const app = window.__campobase;
+    if (isPinAccessSession()) {
+      await app?.logoutUser?.();
+      showLocalPin();
+      return;
+    }
+    const session = await getCurrentSession(client).catch(() => null);
+    if (!session?.user || getBoundSaasUserId() !== session.user.id) {
+      await app?.logoutUser?.();
+      return;
+    }
+    clearPinAccess();
     await client.auth.signOut({ scope: 'local' }).catch(() => {});
     clearBoundSaasUserId();
     clearBrowserSessionActive();
@@ -972,6 +1002,7 @@ export async function initSaasAuth(client) {
   bindEvents(client);
   prefillRememberedIdentifier();
   observeDialog(client);
+  if (isPinAccessLocked()) { showLocalPin(); return; }
 
   const session = await getCurrentSession(client).catch(() => null);
   let bound = getBoundSaasUserId();

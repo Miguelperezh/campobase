@@ -183,7 +183,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=delegate-sync-1'))
+    .then(() => import('./saas-auth-ui-v2.js?v=pin-switch-1'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -212,7 +212,7 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el estado de la cuenta:', error);
     });
 
-  void import('./team-access.js?v=20260927-v66-real-calendar-dates')
+  void import('./team-access.js?v=pin-switch-1')
     .then(({ initTeamAccess }) => initTeamAccess(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso del equipo:', error);
