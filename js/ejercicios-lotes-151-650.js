@@ -1,7 +1,12 @@
-// Lotes 151 a 1050 (859 ejercicios nuevos certificados CampoBase V2)
+// Lotes 151 a 1050 (864 ejercicios nuevos certificados CampoBase V2)
 // Ordenados de más nuevos (1001-1050, 951-1000...) a más antiguos (151-200).
 
 export const LOTES_151_650_IDS = Object.freeze([
+  'f7-1999158',
+  'f7-1999159',
+  'f7-1999160',
+  'f7-1999161',
+  'f7-1999162',
   'f7-1999163',
   'f7-1999164',
   'f7-1999165',
@@ -870,6 +875,1996 @@ export const LOTES_151_1050_IDS = LOTES_151_650_IDS;
 
 export const EJERCICIOS_LOTES_151_650 = Object.freeze(
 [
+  {
+    "id": "f7-1999158",
+    "nombre": "Los cabeceadores: posesión 4x4 y servicio de otro balón desde el apoyo de esquina",
+    "titulo_original_fuente": "EJERCICIO",
+    "categoria": "Juego reducido",
+    "subcategoria": "Conservación y finalización de cabeza con servicios de apoyo",
+    "formato_juego": "futbol_7",
+    "formatos_juego": [
+      "futbol_7"
+    ],
+    "format": "F7",
+    "etiquetas": [
+      "Posesión 4x4",
+      "Comodines de esquina",
+      "Desmarque",
+      "Servicio con la mano",
+      "Remate de cabeza",
+      "Competición",
+      "Adaptable a Fútbol 7",
+      "Lúdico"
+    ],
+    "categorias_adicionales": [
+      "Lúdico"
+    ],
+    "ludico": true,
+    "que_se_trabaja": [
+      "Conservación con el pie, apoyos y desmarques en un juego 4x4.",
+      "Cambio de referencia entre el balón de posesión y el balón lanzado por el comodín.",
+      "Servicio con la mano, ataque de la zona de remate y finalización de cabeza.",
+      "Presión, seguimiento del desmarque y anticipación defensiva."
+    ],
+    "objetivo_principal": "Crear ocasiones de cabeza activando al comodín con un pase al pie y atacar después su servicio aéreo para marcar.",
+    "objetivos_secundarios": [],
+    "datos_rapidos": {
+      "jugadores": "12 jugadores",
+      "duracion": "15 min",
+      "espacio": "Zona de entrenamiento",
+      "material": "10 Balón, 20 Seta, 3 Color de peto, 2 Cono, 1 Portería grande"
+    },
+    "organizacion": {
+      "resumen_jugadores": "12 jugadores",
+      "participantes_totales": 12,
+      "porteros": 0,
+      "entrenadores": 1,
+      "roles": [
+        {
+          "id": "A1",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A2",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A3",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A4",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "D1",
+          "rol": "defensor",
+          "color": "#DC2626",
+          "funcion": "defensor",
+          "posicion": null,
+          "grupo": "defensor"
+        },
+        {
+          "id": "D2",
+          "rol": "defensor",
+          "color": "#DC2626",
+          "funcion": "defensor",
+          "posicion": null,
+          "grupo": "defensor"
+        },
+        {
+          "id": "D3",
+          "rol": "defensor",
+          "color": "#DC2626",
+          "funcion": "defensor",
+          "posicion": null,
+          "grupo": "defensor"
+        },
+        {
+          "id": "D4",
+          "rol": "defensor",
+          "color": "#DC2626",
+          "funcion": "defensor",
+          "posicion": null,
+          "grupo": "defensor"
+        },
+        {
+          "id": "N1",
+          "rol": "neutral",
+          "color": "#FACC15",
+          "funcion": "neutral",
+          "posicion": null,
+          "grupo": "neutral"
+        },
+        {
+          "id": "N2",
+          "rol": "neutral",
+          "color": "#FACC15",
+          "funcion": "neutral",
+          "posicion": null,
+          "grupo": "neutral"
+        },
+        {
+          "id": "N3",
+          "rol": "neutral",
+          "color": "#FACC15",
+          "funcion": "neutral",
+          "posicion": null,
+          "grupo": "neutral"
+        },
+        {
+          "id": "N4",
+          "rol": "neutral",
+          "color": "#FACC15",
+          "funcion": "neutral",
+          "posicion": null,
+          "grupo": "neutral"
+        },
+        {
+          "id": "E",
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "funcion": "entrenador",
+          "posicion": null,
+          "grupo": "entrenador"
+        }
+      ],
+      "grupos": [
+        {
+          "rol": "atacante",
+          "cantidad_representada": 4
+        },
+        {
+          "rol": "defensor",
+          "cantidad_representada": 4
+        },
+        {
+          "rol": "neutral",
+          "cantidad_representada": 4
+        },
+        {
+          "rol": "entrenador",
+          "cantidad_representada": 1
+        }
+      ],
+      "equipos": [
+        {
+          "funcion": "poseedor",
+          "jugadores": [
+            "A1",
+            "A2",
+            "A3",
+            "A4"
+          ]
+        },
+        {
+          "funcion": "defensor",
+          "jugadores": [
+            "D1",
+            "D2",
+            "D3",
+            "D4"
+          ]
+        },
+        {
+          "funcion": "apoyos ofensivos",
+          "jugadores": [
+            "N1",
+            "N2",
+            "N3",
+            "N4"
+          ]
+        }
+      ],
+      "oposicion": true
+    },
+    "montaje": {
+      "explicacion": "Preparar un 4x4 con cuatro comodines en las esquinas, cada uno con un balón en la mano, y balones de reserva.",
+      "dimensiones": "Zona de entrenamiento",
+      "espacio_tipo": "Zona de entrenamiento"
+    },
+    "materiales": [
+      {
+        "nombre": "Balón",
+        "cantidad": 10,
+        "funcion": "Posesión y servicios distintos",
+        "icono": "⚽"
+      },
+      {
+        "nombre": "Seta",
+        "cantidad": 20,
+        "funcion": "Referencias de zona y perímetro",
+        "icono": "🟡"
+      },
+      {
+        "nombre": "Color de peto",
+        "cantidad": 3,
+        "funcion": "Equipos atacante, defensor y apoyos",
+        "icono": "🎽"
+      },
+      {
+        "nombre": "Cono",
+        "cantidad": 2,
+        "funcion": "Puerta opuesta a la portería",
+        "icono": "🔺"
+      },
+      {
+        "nombre": "Portería grande",
+        "cantidad": 1,
+        "funcion": "Finalización de cabeza",
+        "icono": "🥅"
+      }
+    ],
+    "como_se_hace": [
+      "Preparar un 4x4 con cuatro comodines en las esquinas, cada uno con un balón en la mano, y balones de reserva.",
+      "Conservar con el pie, dando apoyos y creando espacio para activar un comodín.",
+      "Pasar al pie del comodín; este recibe el balón de posesión y lanza otro balón con la mano a la zona de remate.",
+      "El equipo que tenía la posesión ataca el servicio para finalizar de cabeza; el rival sigue y anticipa.",
+      "Contar los goles del mini partido y preparar de nuevo los balones de los comodines para continuar.",
+      "Rotar los equipos para que cada uno haga una vez de comodín; comparar los goles al final."
+    ],
+    "fases": [
+      {
+        "orden": 1,
+        "titulo": "Paso 1",
+        "descripcion": "Preparar un 4x4 con cuatro comodines en las esquinas, cada uno con un balón en la mano, y balones de reserva.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Conservar con el pie, dando apoyos y creando espacio para activar un comodín.",
+        "condicion_final": null
+      },
+      {
+        "orden": 2,
+        "titulo": "Paso 2",
+        "descripcion": "Conservar con el pie, dando apoyos y creando espacio para activar un comodín.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Pasar al pie del comodín; este recibe el balón de posesión y lanza otro balón con la mano a la zona de remate.",
+        "condicion_final": null
+      },
+      {
+        "orden": 3,
+        "titulo": "Paso 3",
+        "descripcion": "Pasar al pie del comodín; este recibe el balón de posesión y lanza otro balón con la mano a la zona de remate.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "El equipo que tenía la posesión ataca el servicio para finalizar de cabeza; el rival sigue y anticipa.",
+        "condicion_final": null
+      },
+      {
+        "orden": 4,
+        "titulo": "Paso 4",
+        "descripcion": "El equipo que tenía la posesión ataca el servicio para finalizar de cabeza; el rival sigue y anticipa.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Contar los goles del mini partido y preparar de nuevo los balones de los comodines para continuar.",
+        "condicion_final": null
+      },
+      {
+        "orden": 5,
+        "titulo": "Paso 5",
+        "descripcion": "Contar los goles del mini partido y preparar de nuevo los balones de los comodines para continuar.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Rotar los equipos para que cada uno haga una vez de comodín; comparar los goles al final.",
+        "condicion_final": null
+      },
+      {
+        "orden": 6,
+        "titulo": "Paso 6",
+        "descripcion": "Rotar los equipos para que cada uno haga una vez de comodín; comparar los goles al final.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reinicio del ejercicio según consigna.",
+        "condicion_final": null
+      }
+    ],
+    "carga": {
+      "duracion": "15 min",
+      "series": "",
+      "repeticiones": "",
+      "descanso": null,
+      "ciclo_repeticion": "Mantener continuidad de la tarea."
+    },
+    "rotacion": {
+      "hay_rotacion": true,
+      "explicacion": "Cada equipo realiza una vez la función de cuatro comodines ofensivos.",
+      "detalles": [
+        "Cada equipo realiza una vez la función de cuatro comodines ofensivos."
+      ]
+    },
+    "que_observar": [
+      "Distinguir el balón recibido al pie del que el comodín tiene en la mano.",
+      "Coordinar el desmarque con el momento del servicio y orientar el cabeceo.",
+      "Mantener apoyos y vigilancia defensiva durante la preparación del remate."
+    ],
+    "consignas": [
+      "Se juega una posesión 4x4 con el pie, con cuatro comodines ofensivos situados en las esquinas. Cada comodín tiene preparado otro balón en la mano. Cuando recibe un pase al pie de un jugador, lanza el balón que ya tenía en la mano hacia la zona de remate. Los jugadores del equipo que tenía la posesión atacan ese servicio y deben finalizar de cabeza. El balón recibido al pie y el balón lanzado con la mano son distintos; no se transforma el pase raso en un centro. Se busca generar muchas ocasiones y ejecutar correctamente las acciones. Gana el equipo que más goles consigue en los mini partidos. Cada equipo realiza una vez la función de comodines. La demostración muestra una posesión de cuatro pases, la recepción al pie de N1, su servicio con el otro balón y el gol de cabeza de A2. Los cuatro defensores acompañan y protegen la zona; los demás atacantes se ofrecen y se incorporan. Los otros tres comodines mantienen preparado su balón. El cambio de equipos se conserva como regla del entrenamiento, sin fingir que un mini partido de cuatro minutos se completa en catorce segundos."
+    ],
+    "errores_correcciones": [],
+    "variantes": [],
+    "vista_rapida": {
+      "explicacion_breve": "Crear ocasiones de cabeza activando al comodín con un pase al pie y atacar después su servicio aéreo para marcar.",
+      "que_se_trabaja": [
+        "Conservación con el pie, apoyos y desmarques en un juego 4x4.",
+        "Cambio de referencia entre el balón de posesión y el balón lanzado por el comodín.",
+        "Servicio con la mano, ataque de la zona de remate y finalización de cabeza.",
+        "Presión, seguimiento del desmarque y anticipación defensiva."
+      ],
+      "material": "10 Balón, 20 Seta, 3 Color de peto, 2 Cono, 1 Portería grande",
+      "jugadores": "12 jugadores",
+      "tiempo": "15 min"
+    },
+    "leyenda_visual": {
+      "jugadores": [
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "defensor",
+          "color": "#DC2626",
+          "letra": "D",
+          "funcion": "defensor"
+        },
+        {
+          "rol": "defensor",
+          "color": "#DC2626",
+          "letra": "D",
+          "funcion": "defensor"
+        },
+        {
+          "rol": "defensor",
+          "color": "#DC2626",
+          "letra": "D",
+          "funcion": "defensor"
+        },
+        {
+          "rol": "defensor",
+          "color": "#DC2626",
+          "letra": "D",
+          "funcion": "defensor"
+        },
+        {
+          "rol": "neutral",
+          "color": "#FACC15",
+          "letra": "N",
+          "funcion": "neutral"
+        },
+        {
+          "rol": "neutral",
+          "color": "#FACC15",
+          "letra": "N",
+          "funcion": "neutral"
+        },
+        {
+          "rol": "neutral",
+          "color": "#FACC15",
+          "letra": "N",
+          "funcion": "neutral"
+        },
+        {
+          "rol": "neutral",
+          "color": "#FACC15",
+          "letra": "N",
+          "funcion": "neutral"
+        },
+        {
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "letra": "E",
+          "funcion": "entrenador"
+        }
+      ],
+      "materiales": [
+        {
+          "nombre": "Balón",
+          "icono": "⚽",
+          "cantidad": 10,
+          "funcion": "Posesión y servicios distintos"
+        },
+        {
+          "nombre": "Seta",
+          "icono": "🟡",
+          "cantidad": 20,
+          "funcion": "Referencias de zona y perímetro"
+        },
+        {
+          "nombre": "Color de peto",
+          "icono": "🎽",
+          "cantidad": 3,
+          "funcion": "Equipos atacante, defensor y apoyos"
+        },
+        {
+          "nombre": "Cono",
+          "icono": "🔺",
+          "cantidad": 2,
+          "funcion": "Puerta opuesta a la portería"
+        },
+        {
+          "nombre": "Portería grande",
+          "icono": "🥅",
+          "cantidad": 1,
+          "funcion": "Finalización de cabeza"
+        }
+      ],
+      "acciones": [
+        {
+          "tipo": "linea_blanca",
+          "nombre": "Pase",
+          "estilo": "continua",
+          "trazo": "──────▶",
+          "color": "#FFFFFF",
+          "significado": "Pase"
+        },
+        {
+          "tipo": "linea_azul_discontinua",
+          "nombre": "Desplazamiento",
+          "estilo": "discontinua",
+          "trazo": "- - - - ▶",
+          "color": "#429FE2",
+          "significado": "Desplazamiento"
+        }
+      ],
+      "zonas": null
+    },
+    "media": {
+      "preview": "library-v2/assets/previews/f7-1999158.png",
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-1999158/ejercicio.mp4"
+    },
+    "_qa": {
+      "source_folder": "1999158_los-cabeceadores-posesion-4x4-y-servicio-de-otro-balon-desde-el-apoyo-de-esquina",
+      "collection": "Fútbol 7 (1001-1050)",
+      "lote": "1001-1050"
+    }
+  },
+  {
+    "id": "f7-1999159",
+    "nombre": "Tres postas simultáneas: vallas y cabeza, escalera y voltereta, aros y tiro",
+    "titulo_original_fuente": "EJERCICIO",
+    "categoria": "Técnico-táctico",
+    "subcategoria": "Circuito coordinativo de tres postas con finalización",
+    "formato_juego": "todos",
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ],
+    "format": "F7",
+    "etiquetas": [
+      "Coordinación",
+      "Vallas",
+      "Escalera",
+      "Voltereta",
+      "Aros",
+      "Zigzag",
+      "Remate de cabeza",
+      "Empeine total",
+      "Interior",
+      "Relevos de servidor"
+    ],
+    "categorias_adicionales": [],
+    "ludico": false,
+    "que_se_trabaja": [
+      "Coordinación de apoyos: salto de vallas, doble apoyo en escalera, voltereta y zancada entre aros.",
+      "Cambio de dirección y ritmo en el zigzag de picas.",
+      "Finalización de cabeza, con empeine total y con interior ante un balón servido por el compañero."
+    ],
+    "objetivo_principal": "Completar con coordinación los tres recorridos y ajustar cada finalización a la superficie de contacto indicada, relevando después al compañero que sirve el balón.",
+    "objetivos_secundarios": [],
+    "datos_rapidos": {
+      "jugadores": "15 jugadores",
+      "duracion": "15 min",
+      "espacio": "Zona de entrenamiento",
+      "material": "12 Balón, 5 Aro, 2 Escalera, 9 Pica, 3 Valla, 1 Esterilla, 1 Portería grande, 2 Miniportería"
+    },
+    "organizacion": {
+      "resumen_jugadores": "15 jugadores",
+      "participantes_totales": 15,
+      "porteros": 0,
+      "entrenadores": 1,
+      "roles": [
+        {
+          "id": "A1",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A2",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A3",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A4",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A5",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A6",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A7",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A8",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A9",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A10",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A11",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A12",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A13",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A14",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A15",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "E",
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "funcion": "entrenador",
+          "posicion": null,
+          "grupo": "entrenador"
+        }
+      ],
+      "grupos": [
+        {
+          "rol": "atacante",
+          "cantidad_representada": 15
+        },
+        {
+          "rol": "entrenador",
+          "cantidad_representada": 1
+        }
+      ],
+      "equipos": null,
+      "oposicion": "Sin oposición"
+    },
+    "montaje": {
+      "explicacion": "Organizar tres postas de cinco jugadores, cada una con cuatro en la fila y un servidor, y preparar el material indicado.",
+      "dimensiones": "Zona de entrenamiento",
+      "espacio_tipo": "Zona de entrenamiento"
+    },
+    "materiales": [
+      {
+        "nombre": "Balón",
+        "cantidad": 12,
+        "funcion": "Servicios y reservas",
+        "icono": "⚽"
+      },
+      {
+        "nombre": "Aro",
+        "cantidad": 5,
+        "funcion": "Apoyos de distancia creciente",
+        "icono": "⭕"
+      },
+      {
+        "nombre": "Escalera",
+        "cantidad": 2,
+        "funcion": "Una activa en posta dos y otra conservada como material de reserva",
+        "icono": "🪜"
+      },
+      {
+        "nombre": "Pica",
+        "cantidad": 9,
+        "funcion": "Cinco en zigzag de posta uno y cuatro en posta tres como reparto ilustrativo",
+        "icono": "📍"
+      },
+      {
+        "nombre": "Valla",
+        "cantidad": 3,
+        "funcion": "Salto en posta uno",
+        "icono": "🚧"
+      },
+      {
+        "nombre": "Esterilla",
+        "cantidad": 1,
+        "funcion": "Voltereta",
+        "icono": "📦"
+      },
+      {
+        "nombre": "Portería grande",
+        "cantidad": 1,
+        "funcion": "Finalización con empeine total",
+        "icono": "🥅"
+      },
+      {
+        "nombre": "Miniportería",
+        "cantidad": 2,
+        "funcion": "Finalizaciones de cabeza e interior",
+        "icono": "🥅"
+      }
+    ],
+    "como_se_hace": [
+      "Organizar tres postas de cinco jugadores, cada una con cuatro en la fila y un servidor, y preparar el material indicado.",
+      "A la señal del entrenador, salir simultáneamente de las tres postas.",
+      "Posta uno: tres vallas, zigzag de picas y remate de cabeza al balón servido por el compañero.",
+      "Posta dos: doble apoyo en escalera, voltereta en esterilla y tiro con empeine total a portería grande.",
+      "Posta tres: apoyos en aros cada vez más separados, slalom de picas y tiro con interior.",
+      "Quien finaliza pasa a servir; el antiguo servidor vuelve a la fila y todos avanzan para continuar."
+    ],
+    "fases": [
+      {
+        "orden": 1,
+        "titulo": "Paso 1",
+        "descripcion": "Organizar tres postas de cinco jugadores, cada una con cuatro en la fila y un servidor, y preparar el material indicado.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "A la señal del entrenador, salir simultáneamente de las tres postas.",
+        "condicion_final": null
+      },
+      {
+        "orden": 2,
+        "titulo": "Paso 2",
+        "descripcion": "A la señal del entrenador, salir simultáneamente de las tres postas.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Posta uno: tres vallas, zigzag de picas y remate de cabeza al balón servido por el compañero.",
+        "condicion_final": null
+      },
+      {
+        "orden": 3,
+        "titulo": "Paso 3",
+        "descripcion": "Posta uno: tres vallas, zigzag de picas y remate de cabeza al balón servido por el compañero.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Posta dos: doble apoyo en escalera, voltereta en esterilla y tiro con empeine total a portería grande.",
+        "condicion_final": null
+      },
+      {
+        "orden": 4,
+        "titulo": "Paso 4",
+        "descripcion": "Posta dos: doble apoyo en escalera, voltereta en esterilla y tiro con empeine total a portería grande.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Posta tres: apoyos en aros cada vez más separados, slalom de picas y tiro con interior.",
+        "condicion_final": null
+      },
+      {
+        "orden": 5,
+        "titulo": "Paso 5",
+        "descripcion": "Posta tres: apoyos en aros cada vez más separados, slalom de picas y tiro con interior.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Quien finaliza pasa a servir; el antiguo servidor vuelve a la fila y todos avanzan para continuar.",
+        "condicion_final": null
+      },
+      {
+        "orden": 6,
+        "titulo": "Paso 6",
+        "descripcion": "Quien finaliza pasa a servir; el antiguo servidor vuelve a la fila y todos avanzan para continuar.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reinicio del ejercicio según consigna.",
+        "condicion_final": null
+      }
+    ],
+    "carga": {
+      "duracion": "15 min",
+      "series": "",
+      "repeticiones": "",
+      "descanso": null,
+      "ciclo_repeticion": "Mantener continuidad de la tarea."
+    },
+    "rotacion": {
+      "hay_rotacion": true,
+      "explicacion": "El ejecutante que finaliza sustituye al servidor.",
+      "detalles": [
+        "El ejecutante que finaliza sustituye al servidor.",
+        "El antiguo servidor se reincorpora a la fila."
+      ]
+    },
+    "que_observar": [
+      "Priorizar la coordinación y el apoyo seguro sobre la rapidez.",
+      "Preparar el servicio para la superficie de finalización de cada posta.",
+      "No dejar de atender al compañero al cambiar de ejecutante a servidor."
+    ],
+    "consignas": [
+      "Se organizan tres postas de cinco participantes, incluido en cada una el compañero que sirve los balones. Un jugador de cada posta empieza a la vez a la señal del entrenador. En la primera, supera tres vallas medias, realiza zigzag entre picas y remata de cabeza el balón lanzado por su compañero. En la segunda, realiza doble apoyo en la escalera, voltereta sobre esterilla y tiro con empeine total a la portería grande ante el balón lanzado. En la tercera, realiza apoyos en cinco aros con distancia creciente, slalom entre picas y tiro con interior ante otro lanzamiento del compañero. Quien finaliza se queda como servidor del siguiente, y el antiguo servidor se reincorpora a la fila. Se representan quince jugadores de campo y un entrenador adicional; no se añade un portero que no aparece en el montaje. El MP4 muestra dos salidas simultáneas completas, seis lanzamientos con la mano, las finalizaciones y el cambio de servidores; las colas avanzan. Se preservan las tres superficies de finalización y no se convierte el lanzamiento del compañero en un pase por el suelo."
+    ],
+    "errores_correcciones": [],
+    "variantes": [],
+    "vista_rapida": {
+      "explicacion_breve": "Completar con coordinación los tres recorridos y ajustar cada finalización a la superficie de contacto indicada, relevando después al compañero que sirve el balón.",
+      "que_se_trabaja": [
+        "Coordinación de apoyos: salto de vallas, doble apoyo en escalera, voltereta y zancada entre aros.",
+        "Cambio de dirección y ritmo en el zigzag de picas.",
+        "Finalización de cabeza, con empeine total y con interior ante un balón servido por el compañero."
+      ],
+      "material": "12 Balón, 5 Aro, 2 Escalera, 9 Pica, 3 Valla, 1 Esterilla, 1 Portería grande, 2 Miniportería",
+      "jugadores": "15 jugadores",
+      "tiempo": "15 min"
+    },
+    "leyenda_visual": {
+      "jugadores": [
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "letra": "E",
+          "funcion": "entrenador"
+        }
+      ],
+      "materiales": [
+        {
+          "nombre": "Balón",
+          "icono": "⚽",
+          "cantidad": 12,
+          "funcion": "Servicios y reservas"
+        },
+        {
+          "nombre": "Aro",
+          "icono": "⭕",
+          "cantidad": 5,
+          "funcion": "Apoyos de distancia creciente"
+        },
+        {
+          "nombre": "Escalera",
+          "icono": "🪜",
+          "cantidad": 2,
+          "funcion": "Una activa en posta dos y otra conservada como material de reserva"
+        },
+        {
+          "nombre": "Pica",
+          "icono": "📍",
+          "cantidad": 9,
+          "funcion": "Cinco en zigzag de posta uno y cuatro en posta tres como reparto ilustrativo"
+        },
+        {
+          "nombre": "Valla",
+          "icono": "🚧",
+          "cantidad": 3,
+          "funcion": "Salto en posta uno"
+        },
+        {
+          "nombre": "Esterilla",
+          "icono": "📦",
+          "cantidad": 1,
+          "funcion": "Voltereta"
+        },
+        {
+          "nombre": "Portería grande",
+          "icono": "🥅",
+          "cantidad": 1,
+          "funcion": "Finalización con empeine total"
+        },
+        {
+          "nombre": "Miniportería",
+          "icono": "🥅",
+          "cantidad": 2,
+          "funcion": "Finalizaciones de cabeza e interior"
+        }
+      ],
+      "acciones": [
+        {
+          "tipo": "linea_blanca",
+          "nombre": "Pase",
+          "estilo": "continua",
+          "trazo": "──────▶",
+          "color": "#FFFFFF",
+          "significado": "Pase"
+        },
+        {
+          "tipo": "linea_azul_discontinua",
+          "nombre": "Desplazamiento",
+          "estilo": "discontinua",
+          "trazo": "- - - - ▶",
+          "color": "#429FE2",
+          "significado": "Desplazamiento"
+        }
+      ],
+      "zonas": null
+    },
+    "media": {
+      "preview": "library-v2/assets/previews/f7-1999159.png",
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-1999159/ejercicio.mp4"
+    },
+    "_qa": {
+      "source_folder": "1999159_tres-postas-simultaneas-vallas-y-cabeza-escalera-y-voltereta-aros-y-tiro",
+      "collection": "Fútbol 7 (1001-1050)",
+      "lote": "1001-1050"
+    }
+  },
+  {
+    "id": "f7-1999160",
+    "nombre": "Duelo de malabares: competir 90 segundos y ascender o descender entre seis zonas",
+    "titulo_original_fuente": "EJERCICIO",
+    "categoria": "Técnico-táctico",
+    "subcategoria": "Malabares individuales con ascenso y descenso",
+    "formato_juego": "todos",
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ],
+    "format": "F7",
+    "etiquetas": [
+      "Malabares",
+      "Empeine",
+      "Control aéreo",
+      "Equilibrio",
+      "Coordinación",
+      "Competición",
+      "Fútbol 7",
+      "U9-U15",
+      "Lúdico"
+    ],
+    "categorias_adicionales": [
+      "Lúdico"
+    ],
+    "ludico": true,
+    "que_se_trabaja": [
+      "Toques alternos con ambos empeines y regulación de la altura del balón.",
+      "Equilibrio y coordinación de los apoyos para encadenar contactos aéreos.",
+      "Concentración y constancia en una competición individual de continuidad."
+    ],
+    "objetivo_principal": "Superar la mejor secuencia de contactos consecutivos del rival de la zona para ascender hacia la zona uno y terminar el juego en ella.",
+    "objetivos_secundarios": [],
+    "datos_rapidos": {
+      "jugadores": "12 jugadores",
+      "duracion": "15 min",
+      "espacio": "Zona de entrenamiento",
+      "material": "12 Balón, 24 Seta"
+    },
+    "organizacion": {
+      "resumen_jugadores": "12 jugadores",
+      "participantes_totales": 12,
+      "porteros": 0,
+      "entrenadores": 0,
+      "roles": [
+        {
+          "id": "A1",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A2",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A3",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A4",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A5",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A6",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A7",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A8",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A9",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A10",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A11",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A12",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        }
+      ],
+      "grupos": [
+        {
+          "rol": "atacante",
+          "cantidad_representada": 12
+        }
+      ],
+      "equipos": null,
+      "oposicion": "Sin oposición"
+    },
+    "montaje": {
+      "explicacion": "Montar seis cuadrados de cinco por cinco metros y numerarlos del uno al seis, con dos jugadores y dos balones en cada zona.",
+      "dimensiones": "Zona de entrenamiento",
+      "espacio_tipo": "Zona de entrenamiento"
+    },
+    "materiales": [
+      {
+        "nombre": "Balón",
+        "cantidad": 12,
+        "funcion": "Malabares individuales",
+        "icono": "⚽"
+      },
+      {
+        "nombre": "Seta",
+        "cantidad": 24,
+        "funcion": "Delimitar las seis zonas",
+        "icono": "🟡"
+      }
+    ],
+    "como_se_hace": [
+      "Montar seis cuadrados de cinco por cinco metros y numerarlos del uno al seis, con dos jugadores y dos balones en cada zona.",
+      "Realizar malabares durante una ronda de noventa segundos e intentar superar la mejor secuencia del compañero.",
+      "Reiniciar el recuento a cero si cae el balón y conservar la mejor secuencia lograda.",
+      "Comparar las mejores puntuaciones; resolver por sorteo si hay empate.",
+      "El ganador asciende una zona hacia la uno y el perdedor desciende una hacia la seis; mantener los límites del recorrido.",
+      "Repetir las rondas dentro del juego de diez minutos; al finalizar, ganan quienes estén en la zona uno."
+    ],
+    "fases": [
+      {
+        "orden": 1,
+        "titulo": "Paso 1",
+        "descripcion": "Montar seis cuadrados de cinco por cinco metros y numerarlos del uno al seis, con dos jugadores y dos balones en cada zona.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Realizar malabares durante una ronda de noventa segundos e intentar superar la mejor secuencia del compañero.",
+        "condicion_final": null
+      },
+      {
+        "orden": 2,
+        "titulo": "Paso 2",
+        "descripcion": "Realizar malabares durante una ronda de noventa segundos e intentar superar la mejor secuencia del compañero.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reiniciar el recuento a cero si cae el balón y conservar la mejor secuencia lograda.",
+        "condicion_final": null
+      },
+      {
+        "orden": 3,
+        "titulo": "Paso 3",
+        "descripcion": "Reiniciar el recuento a cero si cae el balón y conservar la mejor secuencia lograda.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Comparar las mejores puntuaciones; resolver por sorteo si hay empate.",
+        "condicion_final": null
+      },
+      {
+        "orden": 4,
+        "titulo": "Paso 4",
+        "descripcion": "Comparar las mejores puntuaciones; resolver por sorteo si hay empate.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "El ganador asciende una zona hacia la uno y el perdedor desciende una hacia la seis; mantener los límites del recorrido.",
+        "condicion_final": null
+      },
+      {
+        "orden": 5,
+        "titulo": "Paso 5",
+        "descripcion": "El ganador asciende una zona hacia la uno y el perdedor desciende una hacia la seis; mantener los límites del recorrido.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Repetir las rondas dentro del juego de diez minutos; al finalizar, ganan quienes estén en la zona uno.",
+        "condicion_final": null
+      },
+      {
+        "orden": 6,
+        "titulo": "Paso 6",
+        "descripcion": "Repetir las rondas dentro del juego de diez minutos; al finalizar, ganan quienes estén en la zona uno.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reinicio del ejercicio según consigna.",
+        "condicion_final": null
+      }
+    ],
+    "carga": {
+      "duracion": "15 min",
+      "series": "",
+      "repeticiones": "",
+      "descanso": null,
+      "ciclo_repeticion": "Mantener continuidad de la tarea."
+    },
+    "rotacion": {
+      "hay_rotacion": true,
+      "explicacion": "Ganador: una zona hacia la uno.",
+      "detalles": [
+        "Ganador: una zona hacia la uno.",
+        "Perdedor: una zona hacia la seis.",
+        "Empate: sorteo."
+      ]
+    },
+    "que_observar": [
+      "Regular la altura y equilibrarse antes del siguiente contacto.",
+      "Comparar secuencias consecutivas, sin sumar intentos separados por una caída.",
+      "Mantener dos participantes en cada zona al completar todos los cambios."
+    ],
+    "consignas": [
+      "Se delimitan seis zonas cuadradas de cinco por cinco metros, numeradas del uno al seis, con dos jugadores y un balón por jugador en cada una. Durante noventa segundos, cada participante intenta enlazar su mayor número de malabares seguidos. Si el balón cae, el recuento vuelve a cero; se compara la mejor secuencia, no la suma de intentos. Al acabar la ronda, el ganador asciende una zona hacia la uno y el perdedor desciende una hacia la seis. Los empates se resuelven por sorteo. Al finalizar el juego ganan quienes estén en la zona uno. El MP4 muestra una ronda completa sin caídas, los tanteos individuales y el posterior cambio de zona de los diez jugadores que cambian de nivel. El ganador de la zona uno y el perdedor de la seis permanecen en sus zonas extremas. Los doce jugadores realizan contactos con ambos empeines y se reajustan para conservar el balón. La fuente indica diez minutos de duración total."
+    ],
+    "errores_correcciones": [],
+    "variantes": [
+      "Indicar la superficie: pierna dominante, no dominante, cabeza o alternancia de ambas piernas.",
+      "Por parejas, compartir el balón y contar los intercambios."
+    ],
+    "vista_rapida": {
+      "explicacion_breve": "Superar la mejor secuencia de contactos consecutivos del rival de la zona para ascender hacia la zona uno y terminar el juego en ella.",
+      "que_se_trabaja": [
+        "Toques alternos con ambos empeines y regulación de la altura del balón.",
+        "Equilibrio y coordinación de los apoyos para encadenar contactos aéreos.",
+        "Concentración y constancia en una competición individual de continuidad."
+      ],
+      "material": "12 Balón, 24 Seta",
+      "jugadores": "12 jugadores",
+      "tiempo": "15 min"
+    },
+    "leyenda_visual": {
+      "jugadores": [
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        }
+      ],
+      "materiales": [
+        {
+          "nombre": "Balón",
+          "icono": "⚽",
+          "cantidad": 12,
+          "funcion": "Malabares individuales"
+        },
+        {
+          "nombre": "Seta",
+          "icono": "🟡",
+          "cantidad": 24,
+          "funcion": "Delimitar las seis zonas"
+        }
+      ],
+      "acciones": [
+        {
+          "tipo": "linea_blanca",
+          "nombre": "Pase",
+          "estilo": "continua",
+          "trazo": "──────▶",
+          "color": "#FFFFFF",
+          "significado": "Pase"
+        },
+        {
+          "tipo": "linea_azul_discontinua",
+          "nombre": "Desplazamiento",
+          "estilo": "discontinua",
+          "trazo": "- - - - ▶",
+          "color": "#429FE2",
+          "significado": "Desplazamiento"
+        }
+      ],
+      "zonas": null
+    },
+    "media": {
+      "preview": "library-v2/assets/previews/f7-1999160.png",
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-1999160/ejercicio.mp4"
+    },
+    "_qa": {
+      "source_folder": "1999160_duelo-de-malabares-competir-90-segundos-y-ascender-o-descender-entre-seis-zonas",
+      "collection": "Fútbol 7 (1001-1050)",
+      "lote": "1001-1050"
+    }
+  },
+  {
+    "id": "f7-1999161",
+    "nombre": "Relevos de malabares a 8 metros: ocupar el puesto del compañero y contar los cruces",
+    "titulo_original_fuente": "EJERCICIO",
+    "categoria": "Técnico-táctico",
+    "subcategoria": "Relevos con balón aéreo y competición por continuidad",
+    "formato_juego": "todos",
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ],
+    "format": "F7",
+    "etiquetas": [
+      "Malabares",
+      "Relevos",
+      "Control aéreo",
+      "Empeine",
+      "Equilibrio",
+      "Coordinación",
+      "Competición",
+      "Fútbol 7",
+      "U11+",
+      "Lúdico"
+    ],
+    "categorias_adicionales": [
+      "Lúdico"
+    ],
+    "ludico": true,
+    "que_se_trabaja": [
+      "Malabares en desplazamiento y pase aéreo al compañero.",
+      "Equilibrio, coordinación de apoyos y alternancia de ambos empeines.",
+      "Continuidad del relevo, cambio de puesto y dominio del balón sin que caiga."
+    ],
+    "objetivo_principal": "Encadenar el mayor número de idas y vueltas sin caída del balón durante el intervalo de dos minutos, relevando al compañero después de cada recorrido.",
+    "objetivos_secundarios": [],
+    "datos_rapidos": {
+      "jugadores": "6 jugadores",
+      "duracion": "15 min",
+      "espacio": "Zona de entrenamiento",
+      "material": "2 Balón, 8 Seta"
+    },
+    "organizacion": {
+      "resumen_jugadores": "6 jugadores",
+      "participantes_totales": 6,
+      "porteros": 0,
+      "entrenadores": 1,
+      "roles": [
+        {
+          "id": "A1",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A2",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A3",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A4",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A5",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A6",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "E",
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "funcion": "entrenador",
+          "posicion": null,
+          "grupo": "entrenador"
+        }
+      ],
+      "grupos": [
+        {
+          "rol": "atacante",
+          "cantidad_representada": 6
+        },
+        {
+          "rol": "entrenador",
+          "cantidad_representada": 1
+        }
+      ],
+      "equipos": null,
+      "oposicion": "Sin oposición"
+    },
+    "montaje": {
+      "explicacion": "Organizar dos tríos, cada uno con un balón, dos puestos a ocho metros y dos jugadores inicialmente en el lado de salida.",
+      "dimensiones": "Zona de entrenamiento",
+      "espacio_tipo": "Zona de entrenamiento"
+    },
+    "materiales": [
+      {
+        "nombre": "Balón",
+        "cantidad": 2,
+        "funcion": "Malabares y pase aéreo",
+        "icono": "⚽"
+      },
+      {
+        "nombre": "Seta",
+        "cantidad": 8,
+        "funcion": "Dos referencias en cada extremo",
+        "icono": "🟡"
+      }
+    ],
+    "como_se_hace": [
+      "Organizar dos tríos, cada uno con un balón, dos puestos a ocho metros y dos jugadores inicialmente en el lado de salida.",
+      "A la señal del entrenador, avanzar haciendo malabares hasta el compañero de enfrente y entregarle el balón por el aire.",
+      "Ocupar el puesto del compañero después del pase; el nuevo receptor continúa hacia el tercer jugador.",
+      "Mantener el relevo de tres y contar los cruces durante un intervalo de dos minutos.",
+      "Si cae el balón, volver a cero; al final conservar el mejor tanteo y comparar los equipos."
+    ],
+    "fases": [
+      {
+        "orden": 1,
+        "titulo": "Paso 1",
+        "descripcion": "Organizar dos tríos, cada uno con un balón, dos puestos a ocho metros y dos jugadores inicialmente en el lado de salida.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "A la señal del entrenador, avanzar haciendo malabares hasta el compañero de enfrente y entregarle el balón por el aire.",
+        "condicion_final": null
+      },
+      {
+        "orden": 2,
+        "titulo": "Paso 2",
+        "descripcion": "A la señal del entrenador, avanzar haciendo malabares hasta el compañero de enfrente y entregarle el balón por el aire.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Ocupar el puesto del compañero después del pase; el nuevo receptor continúa hacia el tercer jugador.",
+        "condicion_final": null
+      },
+      {
+        "orden": 3,
+        "titulo": "Paso 3",
+        "descripcion": "Ocupar el puesto del compañero después del pase; el nuevo receptor continúa hacia el tercer jugador.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Mantener el relevo de tres y contar los cruces durante un intervalo de dos minutos.",
+        "condicion_final": null
+      },
+      {
+        "orden": 4,
+        "titulo": "Paso 4",
+        "descripcion": "Mantener el relevo de tres y contar los cruces durante un intervalo de dos minutos.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Si cae el balón, volver a cero; al final conservar el mejor tanteo y comparar los equipos.",
+        "condicion_final": null
+      },
+      {
+        "orden": 5,
+        "titulo": "Paso 5",
+        "descripcion": "Si cae el balón, volver a cero; al final conservar el mejor tanteo y comparar los equipos.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reinicio del ejercicio según consigna.",
+        "condicion_final": null
+      }
+    ],
+    "carga": {
+      "duracion": "15 min",
+      "series": "",
+      "repeticiones": "",
+      "descanso": null,
+      "ciclo_repeticion": "Mantener continuidad de la tarea."
+    },
+    "rotacion": {
+      "hay_rotacion": true,
+      "explicacion": "A ocupa el puesto de B después de pasar.",
+      "detalles": [
+        "A ocupa el puesto de B después de pasar.",
+        "B ocupa el puesto de C después de pasar.",
+        "C ocupa el puesto de A después de pasar."
+      ]
+    },
+    "que_observar": [
+      "Evitar que el balón caiga durante el desplazamiento y el pase.",
+      "Regular la altura y orientarse hacia el siguiente compañero.",
+      "Completar el cambio de puesto sin invadir el recorrido del receptor."
+    ],
+    "consignas": [
+      "Grupos de tres con un balón por grupo, entre dos puestos separados ocho metros. A la señal, el primer jugador avanza haciendo malabares hasta el compañero de enfrente y le pasa el balón por el aire; después ocupa su puesto. El segundo hace lo mismo hacia el tercero y el tercero hacia el primero, manteniendo el relevo. Se cuentan las idas y vueltas sin errores durante dos minutos y gana el equipo que realiza más. Si el balón cae, se vuelve a contar desde cero y se conserva el mejor tanteo al final. La demostración utiliza dos tríos, seis jugadores del panel, aunque el gráfico ilustra tres grupos. El MP4 muestra un intervalo real de ciento veinte segundos desde la señal, con quince cruces en el primer grupo y doce en el segundo; cada jugador conduce el balón por el aire, lo entrega y cambia de puesto. Al acabar el recuento, el receptor conserva el balón con malabares mientras se presenta el resultado. La duración total indicada por la fuente es diez minutos."
+    ],
+    "errores_correcciones": [],
+    "variantes": [
+      "Añadir obstáculos que evitar: conos, setas o estacas.",
+      "Reducir a cuatro metros: pasar el balón en el aire y correr hacia el puesto del compañero."
+    ],
+    "vista_rapida": {
+      "explicacion_breve": "Encadenar el mayor número de idas y vueltas sin caída del balón durante el intervalo de dos minutos, relevando al compañero después de cada recorrido.",
+      "que_se_trabaja": [
+        "Malabares en desplazamiento y pase aéreo al compañero.",
+        "Equilibrio, coordinación de apoyos y alternancia de ambos empeines.",
+        "Continuidad del relevo, cambio de puesto y dominio del balón sin que caiga."
+      ],
+      "material": "2 Balón, 8 Seta",
+      "jugadores": "6 jugadores",
+      "tiempo": "15 min"
+    },
+    "leyenda_visual": {
+      "jugadores": [
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "entrenador",
+          "color": "#CBD5E1",
+          "letra": "E",
+          "funcion": "entrenador"
+        }
+      ],
+      "materiales": [
+        {
+          "nombre": "Balón",
+          "icono": "⚽",
+          "cantidad": 2,
+          "funcion": "Malabares y pase aéreo"
+        },
+        {
+          "nombre": "Seta",
+          "icono": "🟡",
+          "cantidad": 8,
+          "funcion": "Dos referencias en cada extremo"
+        }
+      ],
+      "acciones": [
+        {
+          "tipo": "linea_blanca",
+          "nombre": "Pase",
+          "estilo": "continua",
+          "trazo": "──────▶",
+          "color": "#FFFFFF",
+          "significado": "Pase"
+        },
+        {
+          "tipo": "linea_azul_discontinua",
+          "nombre": "Desplazamiento",
+          "estilo": "discontinua",
+          "trazo": "- - - - ▶",
+          "color": "#429FE2",
+          "significado": "Desplazamiento"
+        }
+      ],
+      "zonas": null
+    },
+    "media": {
+      "preview": "library-v2/assets/previews/f7-1999161.png",
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-1999161/ejercicio.mp4"
+    },
+    "_qa": {
+      "source_folder": "1999161_relevos-de-malabares-a-8-metros-ocupar-el-puesto-del-companero-y-contar-los-cruces",
+      "collection": "Fútbol 7 (1001-1050)",
+      "lote": "1001-1050"
+    }
+  },
+  {
+    "id": "f7-1999162",
+    "nombre": "Malabares por tríos: rodear la estaca a 20 metros y volver sin que caiga el balón",
+    "titulo_original_fuente": "EJERCICIO",
+    "categoria": "Técnico-táctico",
+    "subcategoria": "Malabares y cooperación en desplazamiento",
+    "formato_juego": "todos",
+    "formatos_juego": [
+      "futbol_7",
+      "futbol_11"
+    ],
+    "format": "F7",
+    "etiquetas": [
+      "Malabares",
+      "Control aéreo",
+      "Empeine",
+      "Pase aéreo",
+      "Cooperación",
+      "Coordinación",
+      "U13+"
+    ],
+    "categorias_adicionales": [],
+    "ludico": false,
+    "que_se_trabaja": [
+      "Toques con ambos empeines y control de la altura del balón.",
+      "Pases aéreos cortos y coordinación de los apoyos durante el desplazamiento.",
+      "Cooperación y reparto de contactos para mantener el balón en el aire."
+    ],
+    "objetivo_principal": "Completar juntos la ida y la vuelta alrededor de la estaca manteniendo el balón en el aire y respetando el máximo de toques por jugador.",
+    "objetivos_secundarios": [],
+    "datos_rapidos": {
+      "jugadores": "6 jugadores",
+      "duracion": "15 min",
+      "espacio": "Zona de entrenamiento",
+      "material": "2 Balón, 2 Estaca, 4 Seta"
+    },
+    "organizacion": {
+      "resumen_jugadores": "6 jugadores",
+      "participantes_totales": 6,
+      "porteros": 0,
+      "entrenadores": 0,
+      "roles": [
+        {
+          "id": "A1",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A2",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A3",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A4",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A5",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        },
+        {
+          "id": "A6",
+          "rol": "atacante",
+          "color": "#2563EB",
+          "funcion": "atacante",
+          "posicion": null,
+          "grupo": "atacante"
+        }
+      ],
+      "grupos": [
+        {
+          "rol": "atacante",
+          "cantidad_representada": 6
+        }
+      ],
+      "equipos": null,
+      "oposicion": "Sin oposición"
+    },
+    "montaje": {
+      "explicacion": "Organizar dos equipos de tres, cada uno con un balón y una estaca situada a veinte metros de la línea de salida.",
+      "dimensiones": "Zona de entrenamiento",
+      "espacio_tipo": "Zona de entrenamiento"
+    },
+    "materiales": [
+      {
+        "nombre": "Balón",
+        "cantidad": 2,
+        "funcion": "Mantenerlo en el aire",
+        "icono": "⚽"
+      },
+      {
+        "nombre": "Estaca",
+        "cantidad": 2,
+        "funcion": "Rodeo a veinte metros",
+        "icono": "📦"
+      },
+      {
+        "nombre": "Seta",
+        "cantidad": 4,
+        "funcion": "Dos referencias de salida por equipo",
+        "icono": "🟡"
+      }
+    ],
+    "como_se_hace": [
+      "Organizar dos equipos de tres, cada uno con un balón y una estaca situada a veinte metros de la línea de salida.",
+      "Empezar detrás de la línea y avanzar juntos mediante toques y pases aéreos.",
+      "Respetar un máximo de tres contactos por jugador antes de entregar al compañero.",
+      "Rodear la estaca con los tres participantes manteniendo el balón en el aire.",
+      "Regresar a la línea de salida; si el balón cae, volver al principio y recomenzar."
+    ],
+    "fases": [
+      {
+        "orden": 1,
+        "titulo": "Paso 1",
+        "descripcion": "Organizar dos equipos de tres, cada uno con un balón y una estaca situada a veinte metros de la línea de salida.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Empezar detrás de la línea y avanzar juntos mediante toques y pases aéreos.",
+        "condicion_final": null
+      },
+      {
+        "orden": 2,
+        "titulo": "Paso 2",
+        "descripcion": "Empezar detrás de la línea y avanzar juntos mediante toques y pases aéreos.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Respetar un máximo de tres contactos por jugador antes de entregar al compañero.",
+        "condicion_final": null
+      },
+      {
+        "orden": 3,
+        "titulo": "Paso 3",
+        "descripcion": "Respetar un máximo de tres contactos por jugador antes de entregar al compañero.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Rodear la estaca con los tres participantes manteniendo el balón en el aire.",
+        "condicion_final": null
+      },
+      {
+        "orden": 4,
+        "titulo": "Paso 4",
+        "descripcion": "Rodear la estaca con los tres participantes manteniendo el balón en el aire.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Regresar a la línea de salida; si el balón cae, volver al principio y recomenzar.",
+        "condicion_final": null
+      },
+      {
+        "orden": 5,
+        "titulo": "Paso 5",
+        "descripcion": "Regresar a la línea de salida; si el balón cae, volver al principio y recomenzar.",
+        "poseedor_balon": null,
+        "que_ocurre_despues": "Reinicio del ejercicio según consigna.",
+        "condicion_final": null
+      }
+    ],
+    "carga": {
+      "duracion": "15 min",
+      "series": "",
+      "repeticiones": "",
+      "descanso": null,
+      "ciclo_repeticion": "Mantener continuidad de la tarea."
+    },
+    "rotacion": {
+      "hay_rotacion": false,
+      "explicacion": "Sin rotación documentada.",
+      "detalles": []
+    },
+    "que_observar": [
+      "Regular la altura del balón para facilitar el siguiente contacto.",
+      "Coordinar el avance de los tres sin exceder los toques permitidos.",
+      "Reorganizarse durante el rodeo de la estaca y conservar el balón elevado."
+    ],
+    "consignas": [
+      "Se forman equipos de tres con un balón por equipo. El panel fija seis jugadores: la demostración utiliza dos tríos, aunque el gráfico ilustra tres. Cada equipo parte detrás de su línea, con una estaca a veinte metros. Los tres avanzan manteniendo el balón en el aire, rodean su estaca y regresan a la salida sin que caiga. Cada jugador puede dar como máximo tres toques. Si el balón cae, el equipo vuelve al inicio y recomienza. El MP4 representa dos contactos sucesivos con ambos empeines por intervención antes de enviarlo al compañero, por debajo del máximo permitido; muestra la ida, el rodeo completo y la vuelta de todos los participantes. Los toques se realizan con figuras transparentes y el balón permanece elevado, sin convertir el ejercicio en conducción por el suelo. La duración indicada es diez minutos."
+    ],
+    "errores_correcciones": [],
+    "variantes": [
+      "Realizar la tarea a un toque.",
+      "Imponer una superficie corporal concreta: pie derecho, pie izquierdo o cabeza.",
+      "Organizar grupos de dos, cuatro o cinco."
+    ],
+    "vista_rapida": {
+      "explicacion_breve": "Completar juntos la ida y la vuelta alrededor de la estaca manteniendo el balón en el aire y respetando el máximo de toques por jugador.",
+      "que_se_trabaja": [
+        "Toques con ambos empeines y control de la altura del balón.",
+        "Pases aéreos cortos y coordinación de los apoyos durante el desplazamiento.",
+        "Cooperación y reparto de contactos para mantener el balón en el aire."
+      ],
+      "material": "2 Balón, 2 Estaca, 4 Seta",
+      "jugadores": "6 jugadores",
+      "tiempo": "15 min"
+    },
+    "leyenda_visual": {
+      "jugadores": [
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        },
+        {
+          "rol": "atacante",
+          "color": "#2563EB",
+          "letra": "A",
+          "funcion": "atacante"
+        }
+      ],
+      "materiales": [
+        {
+          "nombre": "Balón",
+          "icono": "⚽",
+          "cantidad": 2,
+          "funcion": "Mantenerlo en el aire"
+        },
+        {
+          "nombre": "Estaca",
+          "icono": "📦",
+          "cantidad": 2,
+          "funcion": "Rodeo a veinte metros"
+        },
+        {
+          "nombre": "Seta",
+          "icono": "🟡",
+          "cantidad": 4,
+          "funcion": "Dos referencias de salida por equipo"
+        }
+      ],
+      "acciones": [
+        {
+          "tipo": "linea_blanca",
+          "nombre": "Pase",
+          "estilo": "continua",
+          "trazo": "──────▶",
+          "color": "#FFFFFF",
+          "significado": "Pase"
+        },
+        {
+          "tipo": "linea_azul_discontinua",
+          "nombre": "Desplazamiento",
+          "estilo": "discontinua",
+          "trazo": "- - - - ▶",
+          "color": "#429FE2",
+          "significado": "Desplazamiento"
+        }
+      ],
+      "zonas": null
+    },
+    "media": {
+      "preview": "library-v2/assets/previews/f7-1999162.png",
+      "video": "https://mdzpygfwugawlmknywxa.supabase.co/storage/v1/object/public/ejercicio-videos/library-v2-preview/f7-1999162/ejercicio.mp4"
+    },
+    "_qa": {
+      "source_folder": "1999162_malabares-por-trios-rodear-la-estaca-a-20-metros-y-volver-sin-que-caiga-el-balon",
+      "collection": "Fútbol 7 (1001-1050)",
+      "lote": "1001-1050"
+    }
+  },
   {
     "id": "f7-1999163",
     "nombre": "Partido aéreo: centro y remate de cabeza, despeje defensivo hacia banda",
