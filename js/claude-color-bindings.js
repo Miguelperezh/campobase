@@ -40,6 +40,11 @@ for(const [prefix,[view,card]] of Object.entries(others)){
  bind(prefix+'.ban',root+' .cbx-banner',{title:'h2',sub:'.eyebrow'});bind(prefix+'.cta',root+' .cbx-banner .primary');bind(prefix+'.card',root+' '+card,{title:'h3',sub:'.meta',name:'h3',info:'.meta'});
  bind(prefix+'.btn2',root+' .secondary');bind(prefix+'.wa',root+' [class*=whatsapp], '+root+' .cbx-btn-wa');
 }
+bind('con.card','#convocatorias .cbx-callup-card, #convocatorias .cbx-callup-distribution, #convocatorias .cbx-callup-plan, #convocatorias .cbx-callup-layout .panel, #convocatorias .callup-card');
+bind('con.done','#convocatorias .cbx-btn-completed');
+bind('con.btn2','#convocatorias .callup-open-prep');
+bind('con.edit','#convocatorias .edit-callup');
+bind('con.del','#convocatorias .delete-callup');
 bind('con.riv','#convocatorias .cbx-callup-card > header',{title:'h3',sub:'.meta'});bind('con.cnt','#convocatorias .cbx-callup-badge-in');bind('con.out','#convocatorias .cbx-callup-badge-out');bind('con.num','#convocatorias .cbx-callup-dorsal');bind('con.row','#convocatorias .cbx-callup-player',{name:'strong',pos:'.meta'});bind('con.ok','#convocatorias .cbx-callup-status');
 bind('ses.btn2','#sesiones .cbx-btn-whistle, #sesiones .print-session, #sesiones .edit-session, #sesiones .cbx-btn-completed');
 bind('eje.close','#exercise-detail-dialog .dialog-close-prominent-btn, #exercise-detail-dialog .modal-bottom-close-btn');

@@ -1,4 +1,5 @@
 import { isTrainingSessionCompleted, withTrainingSessionCompleted } from './training-session-status.js';
+import { isMatchPlayed } from './match-calendar-sync.js';
 import './exercise-view-mode-ui.js?v=2519';
 import './modo-campo-integration.js?v=1';
 import { put } from './db.js';
@@ -33,7 +34,7 @@ function sessionIsArchived(session) {
 }
 
 function matchIsArchived(match) {
-  return match?.status === 'finished' || match?.status === 'closed' || Boolean(match?.closedAt);
+  return isMatchPlayed(match);
 }
 
 function makeAccordion({ id, title, count }) {
