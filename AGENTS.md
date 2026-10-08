@@ -4642,3 +4642,14 @@ La cabecera exclusiva del delegado debe conservar Actualizar junto a Cerrar sesi
 
 ## 7/10/2026 · Actualización fluida y estados realizados SDD037
 Actualizar sincroniza en la pantalla actual, sin navegación forzada ni pérdida de PIN, vista, formularios o colores. Agrupar sincronizaciones simultáneas y consultas repetidas al contexto del mismo equipo; no reutilizar contextos entre cuentas ni cachear errores. No construir la biblioteca oculta en cada refresco. Esperar a que los datos estén preparados antes de revelar la app; permitir datos conservados del equipo autenticado cuando falle la red, sin inventar datos. Leer de forma compatible completed/status/closedAt/archived de las sesiones: consultar no reescribe registros; solo la acción explícita del usuario marca o reabre. Probar entrada, salida, Actualizar, recarga y fallos de red con titular/delegado y pantalla móvil. No borrar datos, asistencias, colores, sesiones, colas pendientes ni cambiar permisos/PIN/RLS.
+
+
+## SDD 039 — Contexto de WhatsApp y cola (08/10/2026)
+- Mantener diseño y datos reales; no escribir semillas ni modificar Supabase/RLS.
+- Resolver IDs explícitos; nunca sustituir partido/sesión desconocidos por el primero ni inventar campos/horarios.
+- Selector genérico solo pendientes sin convocatoria; envío directo conserva su convocatoria.
+- Citación 45 minutos antes. Descansos sin motivos en grupo; motivos privados solo al excluido.
+- Guardado local durable primero; confirmaciones antiguas no borran ediciones nuevas. Respetar base de origen y tombstones remotos.
+- Conservar varias sesiones diarias y el domingo en el resumen semanal.
+- Versionar todos los módulos cambiados. Ver specs/039-whatsapp-contexto-cola.
+- Distinguir prueba de IndexedDB real con nube simulada de validación en móvil físico y autenticación real. No afirmar que un error de autenticación es un simple fallo de conexión.

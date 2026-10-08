@@ -93,8 +93,9 @@ export function mergeCloudRecord(store, localRecord, cloudRecord) {
   return merged;
 }
 
-export function reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations = []) {
+export function reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations = [], deletedIds = []) {
   assertStore(store);
+  const remoteDeleteIds = new Set(deletedIds);
   const localById = new Map(localRecords.map((record) => [record.id, record]));
   const reconciled = new Map(cloudRecords.map((record) => [
     record.id,
@@ -112,14 +113,14 @@ export function reconcileCloudSnapshot(store, localRecords, cloudRecords, pendin
   );
 
   for (const [id, localRecord] of localById.entries()) {
-    if (!reconciled.has(id) && !pendingDeleteIds.has(id)) {
+    if (!reconciled.has(id) && !pendingDeleteIds.has(id) && !remoteDeleteIds.has(id)) {
       reconciled.set(id, structuredClone(localRecord));
     }
   }
 
   const mainDeletePending = pendingDeleteIds.has('main');
   const localMain = localById.get('main');
-  if (store === 'settings' && localMain && !reconciled.has('main') && !mainDeletePending) {
+  if (store === 'settings' && localMain && !reconciled.has('main') && !mainDeletePending && !remoteDeleteIds.has('main')) {
     reconciled.set('main', structuredClone(localMain));
   }
   return [...reconciled.values()];

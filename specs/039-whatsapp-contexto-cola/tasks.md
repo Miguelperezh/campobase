@@ -1,0 +1,13 @@
+# Tareas
+- [x] Resolver selección exacta sin fallback a primer partido/sesión.
+- [x] Filtrar selector genérico y conservar envío desde convocatoria.
+- [x] Hora/campo/mapa reales y citación 45 minutos antes.
+- [x] Retirar horarios/campos/programaciones ficticios de entrenamiento y semana.
+- [x] Conservar múltiples sesiones del mismo día y domingo.
+- [x] Guardado durable inmediato del lote y confirmación exacta de mutación.
+- [x] Serializar flush y proteger cola frente a reparación obsoleta.
+- [x] Reconciliar eliminaciones explícitas remotas.
+- [x] Prueba UI del mensaje y cambio de partido con datos ficticios aislados.
+- [x] Seis pruebas de IndexedDB real con nube simulada aislada, dos almacenamientos y reapertura.
+- [ ] CI y Pages con verificación de archivos servidos.
+- [ ] Validación final móvil físico ↔ ordenador con cuenta real, sin que el agente altere los datos del usuario para probar.

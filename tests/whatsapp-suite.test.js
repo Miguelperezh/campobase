@@ -720,9 +720,11 @@ test('WhatsApp de torneo avisa del torneo sin convocatoria y conserva los datos 
 
 test('el controlador de WhatsApp usa el location real del partido seleccionado', async () => {
   const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
-  assert.match(app, /eventValue\.startsWith\('match:'\)/);
-  assert.match(app, /eventValue\.slice\('match:'\.length\)/);
-  assert.match(app, /const fieldName = String\(match\.location \|\| ''\)\.trim\(\)/);
+  assert.match(app, /resolveWhatsAppEvent/);
+  const { resolveWhatsAppEvent, matchCommunicationDetails } = await import('../js/whatsapp-event-context.js');
+  const selected = resolveWhatsAppEvent('match:b', [{id:'a',location:'Mundial 82'},{id:'b',location:'Campo real'}]);
+  assert.equal(matchCommunicationDetails(selected.match).fieldName, 'Campo real');
+  assert.equal(resolveWhatsAppEvent('match:missing', [{id:'a',location:'Mundial 82'}]).match, null);
   assert.match(app, /populateWhatsAppEvents\(matchId, callupId, sessionId\);\s*if \(waCurrentMode === 'callup'\) syncWhatsAppMatchLocation\(\)/);
   assert.doesNotMatch(app, /match\.location \|\| 'Campo Alfonso Silva \(La Ballena\)'/);
 });
@@ -802,7 +804,10 @@ test('buildWhatsAppMatchConvocatoria para grupo incluye sección Descansan sin m
 test('syncWhatsAppMatchLocation calcula hora de citación 45 min antes a partir de la hora del partido', async () => {
   const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(app, /syncWhatsAppMatchLocation\(\)/);
-  assert.match(app, /mins = h \* 60 \+ m - 45/);
+  const { matchCommunicationDetails } = await import('../js/whatsapp-event-context.js');
+  assert.equal(matchCommunicationDetails({time:'09:00'}).callTime, '08:15');
+  assert.equal(matchCommunicationDetails({time:'00:15'}).callTime, '23:30');
+  assert.equal(matchCommunicationDetails({}).callTime, '');
   assert.match(app, /#wa-game-time/);
   assert.match(app, /#wa-call-time/);
 });

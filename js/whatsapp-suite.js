@@ -1,3 +1,4 @@
+import { matchCommunicationDetails } from './whatsapp-event-context.js';
 // ==========================================================================
 // SUITE DE COMUNICACIONES WHATSAPP — CAMPOBASE
 // Generadores de mensajes para partidos, entrenos y planificación semanal.
@@ -149,9 +150,9 @@ export function buildWhatsAppMatchConvocatoria({
   players = [],
   kit = '1.ª Oficial (Roja y Negra)',
   competition = '',
-  callTime = '08:15',
-  gameTime = '09:00',
-  fieldName = 'Campo Alfonso Silva (La Ballena)',
+  callTime = '',
+  gameTime = '',
+  fieldName = '',
   mapsUrl = '',
   includeBibs = false,
   bibsConfig = 'Verdes y Amarillos',
@@ -169,8 +170,11 @@ export function buildWhatsAppMatchConvocatoria({
   const opponent = match.opponent || 'Rival';
   const rawDate = match.date || callup?.date || '';
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
-  const effectiveFieldName = (fieldName || '').trim() || 'Campo Alfonso Silva (La Ballena)';
-  const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(effectiveFieldName);
+  const details = matchCommunicationDetails({ ...match, time: gameTime || match.time });
+  gameTime = gameTime || details.gameTime || 'Por confirmar';
+  callTime = details.callTime || callTime || 'Por confirmar';
+  fieldName = String(fieldName || details.fieldName).trim() || 'Por confirmar';
+  const resolvedMapsUrl = mapsUrl || details.mapsUrl || (fieldName !== 'Por confirmar' ? getAutoMapsUrl(fieldName) : 'Por confirmar');
   const verbs = getToneVerbs({ tone, parentType, recipientType });
   const matchType = match?.type || callup?.matchType || 'league';
   const isLeague = matchType === 'league';
@@ -196,10 +200,10 @@ export function buildWhatsAppMatchConvocatoria({
     });
   }
   
-  // Si no hay callup específico, todos los jugadores recibidos se asumen convocados
+  // Liga exige una convocatoria explícita; amistosos y torneos incluyen toda la plantilla.
   const calledPlayers = effectiveCallup
     ? players.filter(p => availableSet.has(p.id))
-    : players;
+    : (isLeague ? [] : players);
 
   // CASO 1: Mensaje individual a progenitores
   if (recipientType === 'parent' && targetPlayerId) {
@@ -308,7 +312,7 @@ ${closing}`.trim();
         const num = cleanPlayerNumber(p.number);
         return `${idx + 1}. ${num ? `${num} ` : ''}${p.name}`.trim();
       }).join('\n')
-    : 'Todos los jugadores de la plantilla convocados.';
+    : 'No hay jugadores seleccionados en esta convocatoria.';
 
   const restingPlayers = isLeague && effectiveCallup && availableSet.size > 0
     ? players.filter(p => !availableSet.has(p.id))
@@ -383,9 +387,9 @@ ${customNote ? `\n⚠️ *Nota importante:* ${customNote}` : ''}
 export function buildWhatsAppTrainingDay({
   teamName = 'C.F. Unión Viera Alevín D',
   session = {},
-  fieldName = 'Campo Alfonso Silva (La Ballena)',
+  fieldName = '',
   mapsUrl = '',
-  kitTraining = 'Equipación oficial de entrenamiento (camiseta técnica y pantalón corto)',
+  kitTraining = 'Camiseta roja de entrenamiento',
   targetPlayer = null,
   parentType = 'father',
   customNote = '',
@@ -395,9 +399,10 @@ export function buildWhatsAppTrainingDay({
   const greeting = getGreetingByHour(now);
   const rawDate = session.date || '';
   const dateFormatted = formatLongDate(rawDate) || 'Hoy';
-  const timeStr = session.time || '16:30';
+  const timeStr = matchCommunicationDetails(session).gameTime || 'Por confirmar';
+  fieldName = fieldName || session.pitch || session.location || 'Por confirmar';
   const duration = session.duration || 60;
-  const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
+  const resolvedMapsUrl = mapsUrl || session.mapsUrl || (fieldName !== 'Por confirmar' ? getAutoMapsUrl(fieldName) : 'Por confirmar');
   const recipientType = targetPlayer ? 'parent' : 'group';
   const verbs = getToneVerbs({ tone, parentType, recipientType });
 
@@ -439,9 +444,9 @@ ${verbs.recuerdo} los detalles de la sesión de entrenamiento:
 📍 *Ubicación:* ${resolvedMapsUrl}
 
 🎒 *Material necesario:*
-• 👕 *Equipación:* *${kitTraining}*
+• 👕 *Equipación:* *${kitTraining}* · Camiseta roja de entrenamiento
 • 💧 *Botella de agua individual* con su nombre
-• ⚽ *Balón de fútbol T4* con la presión adecuada
+• ⚽ *Balón de fútbol T4* con su nombre y la presión adecuada
 ${customNote ? `\n⚠️ *Nota:* *${customNote}*` : ''}
 • *Rogamos puntualidad* para comenzar la sesión a la hora prevista.
 
@@ -477,8 +482,8 @@ export function buildWhatsAppTrainingWeek({
   if (sortedSessions.length) {
     scheduleLines = sortedSessions.map(s => {
       const d = formatLongDate(s.date) || s.date;
-      const f = s.field || s.venue || 'Campo habitual';
-      const t = s.time || '16:30';
+      const f = s.field || s.pitch || s.location || s.venue || 'Por confirmar';
+      const t = matchCommunicationDetails(s).gameTime || 'Por confirmar';
       const rawDur = Number(s.duration) || 0;
       let durStr = '';
       if (rawDur >= 65) {
@@ -492,7 +497,7 @@ export function buildWhatsAppTrainingWeek({
       return `• *${d}:* *${t} h* · ${f}${durStr}`;
     }).join('\n');
   } else {
-    scheduleLines = '• *Lunes y Martes 16:30 h* · Alfonso Silva *(75 min)*\n• *Jueves 16:30 h* · Campo del Pilar *(75 min)*';
+    scheduleLines = 'No hay sesiones programadas en la semana seleccionada.';
   }
 
   // Partidos (soporta 1, 2 o más partidos en la misma semana)
@@ -521,8 +526,8 @@ export function buildWhatsAppTrainingWeek({
           dayUpper = dayNames[d.getDay()] || 'DOMINGO';
         } catch {}
       }
-      const mt = m.time || '09:00';
-      const mf = m.field || (m.venue === 'away' ? 'Campo rival' : 'Alfonso Silva');
+      const mt = matchCommunicationDetails(m).gameTime || 'Por confirmar';
+      const mf = m.field || m.location || m.pitch || 'Por confirmar';
       return `• *${dayUpper}:* *${mt} h* · *PARTIDO* vs *${m.opponent || 'Rival'}* (${mf})`;
     }).join('\n');
   }
@@ -536,7 +541,7 @@ ${verbs.comparto} la planificación de entrenamientos para organizar la semana:
 ${goalBlock}${scheduleLines}${matchLines}
 
 🎒 *Recordatorio para todos los entrenamientos:*
-Llevar camiseta oficial de entreno, botella de agua individual y balón reglamentario T4.
+Llevar camiseta roja de entrenamiento, botella de agua individual y balón reglamentario T4 con su nombre.
 
 ¡Muchas gracias a todos/as!`.trim();
 }

@@ -1,4 +1,4 @@
-import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=delegate-sync-1';
+import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=20261008-whatsapp-context-1';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 
@@ -126,11 +126,25 @@ async function localGetOne(store, id) {
   return requestResult(db.transaction(store, 'readonly').objectStore(store).get(id));
 }
 
-async function removeQueuedMutation(id) {
-  const db = await openDatabase();
+async function removeQueuedMutation(id, acknowledged = null, database = null) {
+  const db = database || await openDatabase();
   const transaction = db.transaction(SYNC_QUEUE, 'readwrite');
-  transaction.objectStore(SYNC_QUEUE).delete(id);
+  const queue = transaction.objectStore(SYNC_QUEUE);
+  if (!acknowledged) queue.delete(id);
+  else {
+    const request = queue.get(id);
+    request.onsuccess = () => {
+      // A newer save may replace this ID while the old network request is running.
+      // Acknowledge only the exact mutation sent, in the same active transaction.
+      if (JSON.stringify(request.result) === JSON.stringify(acknowledged)) queue.delete(id);
+    };
+  }
   await transactionDone(transaction);
+}
+
+function queueCloudUpload() {
+  if (!canUseCloud()) return;
+  void flushSyncQueue().catch(error => console.warn('Cambios guardados en el dispositivo; sincronización pendiente:', error));
 }
 
 function canUseCloud() {
@@ -252,8 +266,8 @@ export async function putBatch(recordsByStore) {
     }
   }
   await transactionDone(transaction);
-  if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(storeNames, 'batch');
+  queueCloudUpload();
 }
 
 export async function remove(store, id) {
@@ -272,7 +286,13 @@ export async function remove(store, id) {
   notifyDataChanged(store, 'delete');
 }
 
-export async function flushSyncQueue() {
+let flushPromise = null;
+export function flushSyncQueue() {
+  if (flushPromise) return flushPromise;
+  flushPromise = flushQueuedMutations().finally(() => { flushPromise = null; });
+  return flushPromise;
+}
+async function flushQueuedMutations() {
   if (isDemoDatabase() || isReadOnlyPreview()) return false;
   if (!canUseCloud()) return false;
   // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
@@ -288,7 +308,8 @@ export async function flushSyncQueue() {
       throw authError;
     }
   }
-  const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
+  const queueDatabase = await openDatabase();
+  const mutations = (await requestResult(queueDatabase.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll())).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
     try {
       // Descartar mutaciones obsoletas de timers en vivo antiguos (evita resucitar partidos fantasma como Calero en móvil)
@@ -298,7 +319,7 @@ export async function flushSyncQueue() {
           const isStalePayload = (payloadTimer.runningSince && (Date.now() - Number(payloadTimer.runningSince) > 6 * 3600 * 1000)) ||
             (Date.now() - Number(mutation.queuedAt || 0) > 24 * 3600 * 1000);
           if (isStalePayload) {
-            await removeQueuedMutation(mutation.id);
+            await removeQueuedMutation(mutation.id, mutation, queueDatabase);
             continue;
           }
         }
@@ -310,12 +331,12 @@ export async function flushSyncQueue() {
       if (!shouldApply) {
         // Supabase ya tiene una versión posterior. La cola local está obsoleta:
         // se elimina sin tocar la fila remota y el snapshot cloud la repondrá localmente.
-        await removeQueuedMutation(mutation.id);
+        await removeQueuedMutation(mutation.id, mutation, queueDatabase);
         continue;
       }
       if (mutation.operation === 'delete') await cloudStore.remove(mutation);
       else await cloudStore.upsert(mutation);
-      await removeQueuedMutation(mutation.id);
+      await removeQueuedMutation(mutation.id, mutation, queueDatabase);
     } catch (mutationError) {
       if (mutationError?.message?.includes('Inicia sesión') || mutationError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return false;
@@ -327,7 +348,7 @@ export async function flushSyncQueue() {
   return true;
 }
 
-async function replaceLocalStore(store, cloudRecords) {
+async function replaceLocalStore(store, cloudRecords, deletedIds = []) {
   const db = await openDatabase();
 
   // Safari/iOS puede cerrar una transacción IndexedDB si se cede el control
@@ -356,7 +377,7 @@ async function replaceLocalStore(store, cloudRecords) {
         return;
       }
 
-      const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations);
+      const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations, deletedIds);
       objectStore.clear();
       for (const record of reconciledRecords) objectStore.put(record);
     };
@@ -383,7 +404,11 @@ async function queueInitialRecords(store, records) {
   const db = await openDatabase();
   const transaction = db.transaction(SYNC_QUEUE, 'readwrite');
   const queue = transaction.objectStore(SYNC_QUEUE);
-  for (const record of records) queue.put(buildMutation(store, 'upsert', record));
+  for (const record of records) {
+    const mutation = buildMutation(store, 'upsert', record);
+    const request = queue.get(mutation.id);
+    request.onsuccess = () => { if (!request.result) queue.put(mutation); };
+  }
   await transactionDone(transaction);
 }
 
@@ -398,7 +423,7 @@ export async function syncFromCloud() {
         let downloaded = 0;
         for (const store of STORES) {
           const snapshot = await cloudStore.getSnapshot(store);
-          await replaceLocalStore(store, snapshot.records);
+          await replaceLocalStore(store, snapshot.records, snapshot.deletedIds || []);
           downloaded += snapshot.records.length;
         }
         return { online:true, pending:0, downloaded, changed:true, readOnly:true };
@@ -478,7 +503,7 @@ export async function syncFromCloud() {
         })();
         if (!areEquivalent) {
           hasChanges = true;
-          await replaceLocalStore(store, snapshot.records);
+          await replaceLocalStore(store, snapshot.records, snapshot.deletedIds || []);
         }
         downloaded += snapshot.records.length;
       }
