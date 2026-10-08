@@ -33,3 +33,17 @@ test('toggleMatchCompleted archiva y desmarca partidos jugados como en sesiones'
   assert.match(appSource, /<span class="cbx-accordion-indicator">▾<\/span>/, 'El acordeon de partidos debe incluir el indicador ▾ como en sesiones');
 });
 
+test('renderCallups incluye seccion desplegable de Convocatorias de partidos jugados con contador y toolbar de busqueda', () => {
+  assert.match(appSource, /id="played-callups-collapsible"/, 'Debe incluir collapsible con id played-callups-collapsible');
+  assert.match(appSource, /Convocatorias de partidos jugados/, 'Debe titular Convocatorias de partidos jugados');
+  assert.match(appSource, /id="cbx-played-callups-search"/, 'Debe incluir input de búsqueda para convocatorias jugadas');
+  assert.match(appSource, /playedCallupsSearchQuery/, 'Debe gestionar variable de búsqueda de convocatorias jugadas');
+  assert.match(appSource, /toggle-callup-completed/, 'Debe incluir clase toggle-callup-completed');
+  assert.match(appSource, /async function toggleCallupCompleted\(id\)/, 'Debe definir toggleCallupCompleted');
+  assert.match(appSource, /function isCallupPlayed\(callup\)/, 'Debe definir isCallupPlayed');
+  assert.match(appSource, /function findMatchForCallup\(callup\)/, 'Debe definir findMatchForCallup');
+  assert.match(appSource, /toggleCallupCompleted\(completedBtn\.dataset\.id\)/, 'wireEvents debe enlazar clic en toggle-callup-completed');
+  assert.match(appSource, /toggleCallupCompleted,/, 'window.__campobase debe exportar toggleCallupCompleted');
+  assert.match(appSource, /isCallupPlayed,/, 'window.__campobase debe exportar isCallupPlayed');
+});
+

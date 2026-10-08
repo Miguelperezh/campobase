@@ -446,7 +446,9 @@ body.cb-redesign-active #calendario .cbx-calendar-actions > summary { cursor: po
 body.cb-redesign-active #calendario .cbx-calendar-actions .button-row button { min-height: 36px; padding: 6px 9px; font-size: 11px; }
 /* Acordeón de partidos jugados / archivados (idéntico a sesiones) */
 body.cb-redesign-active #calendario .cbx-completed-matches-accordion,
-body.cb-redesign-active #calendario .played-matches-accordion {
+body.cb-redesign-active #calendario .played-matches-accordion,
+body.cb-redesign-active #convocatorias .cbx-completed-matches-accordion,
+body.cb-redesign-active #convocatorias .played-matches-accordion {
   margin-top: 24px;
   border: 1px solid var(--cardBorder, #e2e8f0);
   border-radius: var(--cbx-r-card, 16px);
@@ -457,7 +459,9 @@ body.cb-redesign-active #calendario .played-matches-accordion {
 }
 
 body.cb-redesign-active #calendario .cbx-completed-matches-summary,
-body.cb-redesign-active #calendario .played-matches-summary {
+body.cb-redesign-active #calendario .played-matches-summary,
+body.cb-redesign-active #convocatorias .cbx-completed-matches-summary,
+body.cb-redesign-active #convocatorias .played-matches-summary {
   cursor: pointer;
   padding: 14px 18px;
   font: 800 15px var(--cbx-ui);
@@ -472,33 +476,47 @@ body.cb-redesign-active #calendario .played-matches-summary {
 }
 
 body.cb-redesign-active #calendario .cbx-completed-matches-summary::-webkit-details-marker,
-body.cb-redesign-active #calendario .played-matches-summary::-webkit-details-marker {
+body.cb-redesign-active #calendario .played-matches-summary::-webkit-details-marker,
+body.cb-redesign-active #convocatorias .cbx-completed-matches-summary::-webkit-details-marker,
+body.cb-redesign-active #convocatorias .played-matches-summary::-webkit-details-marker {
   display: none;
 }
 
 body.cb-redesign-active #calendario .cbx-completed-matches-summary:hover,
-body.cb-redesign-active #calendario .played-matches-summary:hover {
+body.cb-redesign-active #calendario .played-matches-summary:hover,
+body.cb-redesign-active #convocatorias .cbx-completed-matches-summary:hover,
+body.cb-redesign-active #convocatorias .played-matches-summary:hover {
   background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, #e2e8f0);
 }
 
-body.cb-redesign-active #calendario .cbx-accordion-indicator {
+body.cb-redesign-active #calendario .cbx-accordion-indicator,
+body.cb-redesign-active #convocatorias .cbx-accordion-indicator {
   font-size: 14px;
   transition: transform 0.2s ease;
 }
 
-body.cb-redesign-active #calendario details[open] .cbx-accordion-indicator {
+body.cb-redesign-active #calendario details[open] .cbx-accordion-indicator,
+body.cb-redesign-active #convocatorias details[open] .cbx-accordion-indicator {
   transform: rotate(180deg);
 }
 
 body.cb-redesign-active #calendario .cbx-completed-matches-grid,
-body.cb-redesign-active #calendario .played-matches-cards {
+body.cb-redesign-active #calendario .played-matches-cards,
+body.cb-redesign-active #convocatorias .cbx-completed-matches-grid,
+body.cb-redesign-active #convocatorias .played-matches-cards {
   padding: 16px;
   border-top: 1px solid var(--cardBorder, #e2e8f0);
   opacity: 0.95;
 }
 
-/* Botón Realizado / Pendiente en tarjeta de partido */
-body.cb-redesign-active #calendario .cbx-btn-completed {
+body.cb-redesign-active #convocatorias .played-matches-cards {
+  display: grid;
+  gap: 18px;
+}
+
+/* Botón Realizado / Pendiente en tarjeta de partido y convocatoria */
+body.cb-redesign-active #calendario .cbx-btn-completed,
+body.cb-redesign-active #convocatorias .cbx-btn-completed {
   height: 38px;
   padding: 0 10px;
   border-radius: 10px;
@@ -515,7 +533,8 @@ body.cb-redesign-active #calendario .cbx-btn-completed {
   transition: all .15s ease;
 }
 
-body.cb-redesign-active #calendario .cbx-btn-completed.is-completed {
+body.cb-redesign-active #calendario .cbx-btn-completed.is-completed,
+body.cb-redesign-active #convocatorias .cbx-btn-completed.is-completed {
   background: var(--btn, #10b981) !important;
   color: var(--btnInk, #ffffff) !important;
   border-color: var(--btn, #10b981) !important;

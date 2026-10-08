@@ -1689,6 +1689,63 @@ function suggestCallupRotation(callupId) {
   } catch (error) { toast('No se pudo calcular la sugerencia: ' + error.message); }
 }
 
+let playedCallupsSearchQuery = '';
+
+function findMatchForCallup(callup) {
+  if (!callup) return null;
+  return state.matches.find((m) =>
+    (callup.matchId && m.id === callup.matchId) ||
+    (m.callupId && m.callupId === callup.id) ||
+    (m.opponent && callup.opponent && m.opponent.toLowerCase().trim() === callup.opponent.toLowerCase().trim() &&
+     String(m.date || '').slice(0, 10) === String(callup.date || '').slice(0, 10))
+  ) || null;
+}
+
+function isCallupPlayed(callup) {
+  if (!callup) return false;
+  if (callup.completed === true) return true;
+  if (callup.completed === false) return false;
+  const match = findMatchForCallup(callup);
+  if (match) {
+    return match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt);
+  }
+  return Boolean(callup.closedAt);
+}
+
+async function toggleCallupCompleted(id) {
+  const callup = state.callups.find((c) => c.id === id);
+  if (!callup) return;
+  const isCurrentlyPlayed = isCallupPlayed(callup);
+  const willBeCompleted = !isCurrentlyPlayed;
+  const updatedCallup = {
+    ...callup,
+    completed: willBeCompleted,
+    closedAt: willBeCompleted ? (callup.closedAt || Date.now()) : null,
+    updatedAt: Date.now(),
+  };
+  await put('callups', updatedCallup);
+
+  const match = findMatchForCallup(callup);
+  if (match) {
+    const updatedMatch = {
+      ...match,
+      status: willBeCompleted ? 'finished' : 'planned',
+      closedAt: willBeCompleted ? (match.closedAt || Date.now()) : null,
+      updatedAt: Date.now(),
+    };
+    if (willBeCompleted && state.timer && String(state.timer.matchId) === String(match.id)) {
+      state.timer = null;
+      await put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+    }
+    await put('matches', updatedMatch);
+  }
+
+  await refresh(true);
+  renderCallups();
+  renderMatches();
+  toast(willBeCompleted ? 'Convocatoria archivada en «Partidos jugados».' : 'Convocatoria desmarcada y movida a próximas.');
+}
+
 function renderClaudeCallup(callup) {
   const available = new Set(callup.availableIds || []);
   const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
@@ -1700,8 +1757,9 @@ function renderClaudeCallup(callup) {
   const format = String(callup.format || state.format).toUpperCase();
   const config = FORMATS[format] || FORMATS.F7;
   const mode = callupPlanModes.get(callup.id) || 'escalonado';
-  const match = state.matches.find((item) => item.id === callup.matchId || item.callupId === callup.id);
+  const match = findMatchForCallup(callup);
   const matchId = match?.id || '';
+  const isPlayed = isCallupPlayed(callup);
   const prep = matchId ? prepForMatch(matchId) : null;
   let plan = null;
 
@@ -1798,11 +1856,12 @@ function renderClaudeCallup(callup) {
   }).join('');
   const bars = plan ? renderMinuteTimeline(plan, state.players, 'callup:' + callup.id) : '';
   const changes = plan?.groups.map((group) => `<div class="cbx-plan-change"><strong>${group.m}′</strong><span>${group.list.map((change) => `Sale ${escapeHtml(playerName(change.out))} → entra ${escapeHtml(playerName(change.inn))}`).join('<br>')}</span></div>`).join('') || '';
+  const completedBtnHtml = `<button type="button" class="toggle-callup-completed cbx-btn-completed ${isPlayed ? 'is-completed' : ''}" data-id="${escapeHtml(callup.id)}" title="${isPlayed ? 'Marcar como pendiente' : 'Marcar como realizado y archivar'}">${isPlayed ? '✓ Realizado' : '○ Realizado'}</button>`;
   return `<article class="cbx-callup-layout" data-callup-id="${escapeHtml(callup.id)}">
-    <section class="cbx-callup-card panel"><header><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
+    <section class="cbx-callup-card panel"><header><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;"><small>${escapeHtml(callup.format || format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}${time ? ` · ${escapeHtml(time)}` : ''}</small>${isPlayed ? '<span class="pill" style="background:var(--btn, #10b981);color:var(--btnInk, #ffffff);font-weight:800;font-size:11px;padding:2px 8px;border-radius:999px;">✓ Jugado</span>' : ''}</div><h3>${escapeHtml(callup.opponent)}</h3><div class="cbx-callup-counts"><span class="cbx-callup-badge-in">${available.size} convocados</span><span class="cbx-callup-badge-out">${exclusions.length} fuera</span></div></header>
       <p class="cbx-callup-help">La convocatoria conserva sus datos originales. Edita para cambiar convocados o motivos de exclusión.${missingPlayerCount ? ` ${missingPlayerCount} convocado${missingPlayerCount === 1 ? '' : 's'} histórico${missingPlayerCount === 1 ? '' : 's'} ya no tiene${missingPlayerCount === 1 ? '' : 'n'} ficha en la plantilla actual.` : ''}</p>
       <ul class="cbx-callup-roster">${roster}</ul>
-      <footer><button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && match?.status !== 'finished' ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
+      <footer>${completedBtnHtml}<button type="button" class="open-whatsapp-callup primary" data-id="${escapeHtml(callup.id)}">Enviar por WhatsApp</button>${matchId && !isPlayed ? `<button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}">Preparar partido</button>` : ''}<button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></footer>
     </section>
     <div class="cbx-callup-side"><section class="cbx-callup-distribution panel"><small>Reparto previsto</small><h3>¿Cuánto juega cada uno?</h3><div class="cbx-callup-metrics"><div><small>Jugadores de campo</small><strong>${plan ? `${Math.round(plan.fieldTarget)}′` : '—'}</strong><span>${plan ? `${fieldCount} jugadores · ${Math.max(0, config.players - 1)} puestos` : 'Datos históricos incompletos'}</span></div><div><small>Porteros · aparte</small><strong>${plan ? `${Math.round(plan.gkTarget)}′` : '—'}</strong><span>${plan ? (keeperIds.length === 1 ? 'Un portero, partido completo' : `${keeperIds.length} porteros`) : 'Sin reparto verificable'}</span></div></div><p>${plan ? `${Math.max(0, config.players - 1)} puestos de campo × ${config.duration}′ ÷ ${fieldCount} jugadores de campo. Los porteros se reparten por separado.` : 'La convocatoria se conserva, pero falta al menos una ficha o un portero para reconstruir el reparto sin inventar datos.'}</p></section>
       <section class="cbx-callup-plan panel"><div class="cbx-plan-heading"><h3>Plan por tramos</h3><button type="button" class="cbx-context-gear-btn" data-gear-target="callup-plan" aria-label="Colores de Plan por tramos">⚙️</button>${plan ? `<div role="group" class="cbx-plan-mode-track" aria-label="Modo del plan de cambios"><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="escalonado" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'escalonado'}">Escalonado</button><button type="button" class="cbx-plan-mode-btn" data-callup-plan-mode="partes" data-callup-id="${escapeHtml(callup.id)}" aria-pressed="${mode === 'partes'}">Por partes</button></div>` : ''}</div>${plan ? `${bars}<div class="cbx-plan-changes">${suggested?.mode === mode ? '<p class="meta">Sugerencia de rotaciones · no sustituye el plan guardado.</p>' : ''}<div class="button-row">${matchId ? `<button type="button" class="cbx-edit-callup-windows primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Abrir Plan de tiempos</button><button type="button" class="cbx-copy-callup-plan primary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Copiar a Preparación y editar</button><button type="button" class="cbx-print-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}" data-match-id="${escapeHtml(matchId)}">Imprimir este plan</button>` : ''}<button type="button" class="cbx-generate-callup-rotation-btn primary" data-callup-id="${escapeHtml(callup.id)}">Sugerir rotaciones</button>${suggested ? `<button type="button" class="cbx-restore-callup-plan secondary" data-callup-id="${escapeHtml(callup.id)}">Ver plan guardado</button>` : ''}</div>${changes ? `${changes}${matchId ? `<div style="margin-top:10px;display:flex;justify-content:flex-end;"><button type="button" class="callup-open-prep secondary" data-id="${escapeHtml(matchId)}" style="min-height:34px;padding:0 12px;border-radius:9px;font:700 12px var(--cbx-ui);cursor:pointer;">✏️ Ajustar cambios en Preparación</button></div>` : ''}` : `
@@ -1836,18 +1895,111 @@ function deduplicateCallups(callups = []) {
   return Array.from(map.values());
 }
 
+function renderClassicCallupCard(callup) {
+  const isPlayed = isCallupPlayed(callup);
+  const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
+  const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
+  const targetRows = (callup.targets || []).map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('');
+  const completedBtnHtml = `<button type="button" class="toggle-callup-completed cbx-btn-completed ${isPlayed ? 'is-completed' : ''}" data-id="${escapeHtml(callup.id)}" title="${isPlayed ? 'Marcar como pendiente' : 'Marcar como realizado y archivar'}">${isPlayed ? '✓ Realizado' : '○ Realizado'}</button>`;
+  return `<article class="panel callup-card ${isPlayed ? 'is-completed' : ''}" data-callup-id="${escapeHtml(callup.id)}"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span>${isPlayed ? ' <span class="pill" style="background:var(--btn, #10b981);color:var(--btnInk, #ffffff);font-weight:800;">✓ Jugado</span>' : ''}<h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${(callup.availableIds || []).length} convocados · ${exclusions.length} fuera</p></div><div class="button-row">${completedBtnHtml}<button type="button" class="open-whatsapp-callup icon-button accent" data-id="${escapeHtml(callup.id)}">📱 WhatsApp</button><button type="button" class="edit-callup secondary" data-id="${escapeHtml(callup.id)}">Editar</button><button type="button" class="delete-callup danger" data-id="${escapeHtml(callup.id)}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${targetRows}</table></details></article>`;
+}
+
 function renderCallups() {
+  const root = $('#callups-list');
+  if (!root) return;
   const list = deduplicateCallups(state.callups).sort((a,b)=>b.date.localeCompare(a.date));
-  if (document.body.classList.contains('cb-redesign-active')) {
-    $('#callups-list').innerHTML = list.length ? list.map(renderClaudeCallup).join('') : empty('Todavía no hay convocatorias.');
+  if (!list.length) {
+    root.innerHTML = empty('Todavía no hay convocatorias.');
     return;
   }
-  $('#callups-list').innerHTML = list.length ? list.map((callup) => {
-    const exclusions = callup.exclusions ?? (callup.excludedIds || []).map((playerId) => ({ playerId, reason: 'rotation', automatic: true }));
-    const exclusionRows = (automatic) => exclusions.filter((item) => Boolean(item.automatic) === automatic).map((item) => `<li><strong>${escapeHtml(playerName(item.playerId))}</strong> — ${escapeHtml(exclusionReasonLabel(item))}</li>`).join('') || '<li>Nadie</li>';
-    const targetRows = (callup.targets || []).map((target) => `<tr><td>${escapeHtml(playerName(target.playerId))}</td><td>${target.minutes} min</td></tr>`).join('');
-    return `<article class="panel"><div class="section-head"><div><span class="pill accent">${escapeHtml(callup.format)} · ${escapeHtml(matchTypeLabel(callup.matchType))}</span><h3>${escapeHtml(callup.opponent)}</h3><p class="meta">${escapeHtml(localDate(callup.date))} · ${(callup.availableIds || []).length} convocados · ${exclusions.length} fuera</p></div><div class="button-row"><button type="button" class="open-whatsapp-callup icon-button accent" data-id="${callup.id}">📱 WhatsApp</button><button type="button" class="edit-callup secondary" data-id="${callup.id}">Editar</button><button type="button" class="delete-callup danger" data-id="${callup.id}">Borrar</button></div></div><div class="exclusion-summary"><section><h4>Fuera manualmente</h4><ul class="plain-list">${exclusionRows(false)}</ul></section><h4>Fuera por CampoBase</h4><ul class="plain-list">${exclusionRows(true)}</ul></section></div><details><summary>Ver reparto objetivo</summary><table class="minute-table">${targetRows}</table></details></article>`;
-  }).join('') : empty('Todavía no hay convocatorias.');
+
+  const upcomingCallups = list.filter((c) => !isCallupPlayed(c));
+  const playedCallups = list.filter((c) => isCallupPlayed(c));
+
+  let filteredPlayed = playedCallups;
+  if (playedCallupsSearchQuery) {
+    const q = playedCallupsSearchQuery.toLowerCase().trim();
+    filteredPlayed = filteredPlayed.filter((c) => {
+      const opp = String(c.opponent || '').toLowerCase();
+      const fmt = String(c.format || '').toLowerCase();
+      const type = String(c.matchType || '').toLowerCase();
+      const date = String(c.date || '').toLowerCase();
+      return opp.includes(q) || fmt.includes(q) || type.includes(q) || date.includes(q);
+    });
+  }
+
+  const existingCollapsible = root.querySelector('#played-callups-collapsible') || document.getElementById('played-callups-collapsible');
+  const wasOpen = existingCollapsible ? existingCollapsible.open : (!upcomingCallups.length && playedCallups.length > 0);
+
+  const playedCallupsToolbar = `
+    <div class="cbx-played-matches-toolbar" style="margin-bottom: 14px;">
+      <div style="flex: 1; min-width: 180px;">
+        <input type="search" id="cbx-played-callups-search" class="cbx-filter-input" placeholder="🔍 Buscar convocatoria jugada (rival, fecha...)" value="${escapeHtml(playedCallupsSearchQuery)}">
+      </div>
+    </div>`;
+
+  if (document.body.classList.contains('cb-redesign-active')) {
+    let html = '';
+    if (upcomingCallups.length) {
+      html += `<div class="cbx-upcoming-callups stack">${upcomingCallups.map(renderClaudeCallup).join('')}</div>`;
+    } else if (playedCallups.length) {
+      html += `<div class="cbx-card empty-state" style="text-align:center;padding:24px 16px;margin-bottom:16px;">
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay convocatorias pendientes. Todas las convocatorias están archivadas como jugadas abajo.</p>
+      </div>`;
+    }
+
+    if (playedCallups.length) {
+      html += `
+        <details class="played-matches-accordion cbx-completed-sessions-accordion cbx-completed-matches-accordion" id="played-callups-collapsible"${wasOpen ? ' open' : ''}>
+          <summary class="played-matches-summary cbx-completed-matches-summary">
+            <div class="played-matches-head" style="display:flex;align-items:center;gap:8px;">
+              <span>📁</span>
+              <h3 class="played-matches-title" style="margin:0;font:inherit;">Convocatorias de partidos jugados</h3>
+              <span class="meta played-matches-count">(${playedCallups.length})</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="cbx-accordion-indicator">▾</span>
+            </div>
+          </summary>
+          ${playedCallupsToolbar}
+          <div class="played-matches-cards completed-events-cards cbx-completed-matches-grid stack">
+            ${filteredPlayed.length ? filteredPlayed.map(renderClaudeCallup).join('') : '<p class="meta" style="text-align:center;padding:16px;">No se encontraron convocatorias jugadas para esta búsqueda.</p>'}
+          </div>
+        </details>
+      `;
+    }
+
+    root.innerHTML = html;
+    return;
+  }
+
+  let classicHtml = '';
+  if (upcomingCallups.length) {
+    classicHtml += upcomingCallups.map(renderClassicCallupCard).join('');
+  } else if (playedCallups.length) {
+    classicHtml += `<p class="meta" style="text-align:center;padding:16px;">No hay convocatorias pendientes.</p>`;
+  }
+
+  if (playedCallups.length) {
+    classicHtml += `
+      <details class="played-matches-accordion cbx-completed-sessions-accordion cbx-completed-matches-accordion" id="played-callups-collapsible"${wasOpen ? ' open' : ''}>
+        <summary class="played-matches-summary cbx-completed-matches-summary">
+          <div class="played-matches-head" style="display:flex;align-items:center;gap:8px;">
+            <span>📁</span>
+            <h3 class="played-matches-title" style="margin:0;font:inherit;">Convocatorias de partidos jugados</h3>
+            <span class="meta played-matches-count">(${playedCallups.length})</span>
+          </div>
+          <span class="cbx-accordion-indicator">▾</span>
+        </summary>
+        ${playedCallupsToolbar}
+        <div class="played-matches-cards completed-events-cards cbx-completed-matches-grid stack">
+          ${filteredPlayed.length ? filteredPlayed.map(renderClassicCallupCard).join('') : '<p class="meta" style="text-align:center;padding:16px;">No se encontraron convocatorias jugadas.</p>'}
+        </div>
+      </details>
+    `;
+  }
+
+  root.innerHTML = classicHtml || empty('Todavía no hay convocatorias.');
 }
 
 async function deleteCallup(id) {
@@ -4031,8 +4183,26 @@ async function toggleMatchCompleted(id) {
     await put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
   }
   await put('matches', updated);
+
+  const matchDay = String(match.date || '').slice(0, 10);
+  const relatedCallups = state.callups.filter((c) =>
+    c.matchId === match.id ||
+    c.id === match.callupId ||
+    (c.opponent && match.opponent && c.opponent.toLowerCase().trim() === match.opponent.toLowerCase().trim() &&
+     String(c.date || '').slice(0, 10) === matchDay)
+  );
+  for (const c of relatedCallups) {
+    await put('callups', {
+      ...c,
+      completed: willBeCompleted,
+      closedAt: willBeCompleted ? (c.closedAt || Date.now()) : null,
+      updatedAt: Date.now(),
+    });
+  }
+
   await refresh(true);
   renderMatches();
+  renderCallups();
   toast(willBeCompleted ? 'Partido archivado en «Partidos jugados».' : 'Partido desmarcado y movido a próximos.');
 }
 
@@ -12755,6 +12925,15 @@ function wireEvents() {
         searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
       }
     }
+    if (event.target.id === 'cbx-played-callups-search') {
+      playedCallupsSearchQuery = event.target.value;
+      renderCallups();
+      const searchInput = document.getElementById('cbx-played-callups-search');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+      }
+    }
   });
   document.addEventListener('change', (event) => {
     if (event.target.id === 'cbx-played-matches-type-select') {
@@ -12946,6 +13125,11 @@ function wireEvents() {
     if (target.matches('.toggle-match-completed') || target.closest('.toggle-match-completed')) {
       const completedBtn = target.closest('.toggle-match-completed') || target;
       toggleMatchCompleted(completedBtn.dataset.id).catch(handleError);
+      return;
+    }
+    if (target.matches('.toggle-callup-completed') || target.closest('.toggle-callup-completed')) {
+      const completedBtn = target.closest('.toggle-callup-completed') || target;
+      toggleCallupCompleted(completedBtn.dataset.id).catch(handleError);
       return;
     }
     if (target.matches('.open-whistle-session') || target.closest('.open-whistle-session')) {
@@ -13741,7 +13925,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, toggleMatchCompleted, toggleTrainingSessionCompleted, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, sendDelegateInviteWhatsApp, sendDelegateInviteEmail, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, toggleMatchCompleted, toggleTrainingSessionCompleted, toggleCallupCompleted, isCallupPlayed, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, sendDelegateInviteWhatsApp, sendDelegateInviteEmail, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 
