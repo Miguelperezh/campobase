@@ -107,9 +107,17 @@ export function reconcileCloudSnapshot(store, localRecords, cloudRecords, pendin
     else reconciled.set(mutation.recordId, structuredClone(mutation.payload));
   }
 
-  const mainDeletePending = pendingForStore.some((mutation) => (
-    mutation.operation === 'delete' && mutation.recordId === 'main'
-  ));
+  const pendingDeleteIds = new Set(
+    pendingForStore.filter((m) => m.operation === 'delete').map((m) => m.recordId)
+  );
+
+  for (const [id, localRecord] of localById.entries()) {
+    if (!reconciled.has(id) && !pendingDeleteIds.has(id)) {
+      reconciled.set(id, structuredClone(localRecord));
+    }
+  }
+
+  const mainDeletePending = pendingDeleteIds.has('main');
   const localMain = localById.get('main');
   if (store === 'settings' && localMain && !reconciled.has('main') && !mainDeletePending) {
     reconciled.set('main', structuredClone(localMain));

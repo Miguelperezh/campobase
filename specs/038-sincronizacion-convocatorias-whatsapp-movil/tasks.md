@@ -1,0 +1,22 @@
+# Tareas — SDD 038
+
+- [x] 1. Filtrado estricto en selector de partidos de `callupBuilder` (`js/app.js`).
+  - [x] 1.1 Implementar `matchHasCallup(match, excludeCallupId)` que cubra IDs directos y coincidencias por fecha/rival.
+  - [x] 1.2 Implementar `isMatchOrCallupPlayed(match)` que verifique estado, goles, minutos y convocatoria jugada.
+  - [x] 1.3 Excluir partidos pasados (`matchDay < localDateKey()`) y partidos que ya tienen convocatoria.
+- [x] 2. Blindar creación y clasificación de convocatorias (`js/app.js`).
+  - [x] 2.1 En `saveCallup`, asegurar `completed: existing?.completed ?? false` y `closedAt: existing?.closedAt ?? null`.
+  - [x] 2.2 En `isCallupPlayed`, proteger convocatorias no completadas de coincidencias erróneas con partidos antiguos finalizados.
+- [x] 3. Blindar reconciliación Local-First en sincronización (`js/sync-core.js` y `js/db.js`).
+  - [x] 3.1 En `reconcileCloudSnapshot`, conservar registros locales ausentes en snapshot remoto si no tienen borrado pendiente.
+  - [x] 3.2 En `syncFromCloud`, subir automáticamente a Supabase los registros locales ausentes en la nube.
+- [x] 4. Forzar invalidación de caché para `whatsapp-suite.js` (`js/app.js`, `sw.js`, `index.html`).
+  - [x] 4.1 Añadir `?v=20261008-fix-convocatorias-whatsapp-sync-v6` al import de `whatsapp-suite.js` en `js/app.js`.
+  - [x] 4.2 Actualizar `CACHE`, `ASSETS` en `sw.js` y `window.__CAMPOBASE_BUILD` en `index.html` y `js/app.js`.
+- [x] 5. Validación y pruebas unitarias.
+  - [x] 5.1 Escribir tests en `tests/sdd-038-convocatorias-sync.test.js`.
+  - [x] 5.2 Ejecutar `npm test` y verificar 100% de tests en verde.
+  - [x] 5.3 Ejecutar `npm run check`.
+- [x] 6. Documentación en `agente.md` y despliegue.
+  - [x] 6.1 Añadir registro de cambios en `agente.md`.
+  - [x] 6.2 Commit, PR en GitHub, merge a main y sincronización en Desktop.
