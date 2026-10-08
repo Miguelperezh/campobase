@@ -6249,12 +6249,14 @@ body.cb-redesign-active #sesiones .edit-session.cbx-btn-sub {
   color: var(--edit-ink, var(--btn2Ink, #0f172a)) !important;
 }
 body.cb-redesign-active #sesiones .cbx-btn-completed,
-body.cb-redesign-active #calendario .cbx-btn-completed {
+body.cb-redesign-active #calendario .cbx-btn-completed,
+body.cb-redesign-active #convocatorias .cbx-btn-completed {
   background: var(--completed-bg, #f1f5f9) !important;
   color: var(--completed-ink, #0f172a) !important;
 }
 body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed,
-body.cb-redesign-active #calendario .cbx-btn-completed.is-completed {
+body.cb-redesign-active #calendario .cbx-btn-completed.is-completed,
+body.cb-redesign-active #convocatorias .cbx-btn-completed.is-completed {
   background: var(--btn, #10b981) !important;
   color: var(--btnInk, #ffffff) !important;
 }
