@@ -597,11 +597,67 @@ function renderOrDefer(force = false) {
 
 
 function sanitizeLiveTimer() {
-  if (!state.timer) return;
-  const liveMatch = (state.matches || []).find((m) => String(m.id) === String(state.timer?.matchId));
-  if (!liveMatch || liveMatch.status === 'finished' || liveMatch.status === 'closed' || Boolean(liveMatch.closedAt) || isMatchPlayed(liveMatch)) {
-    state.timer = null;
-    void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+  const todayDay = new Date().toISOString().slice(0, 10);
+  if (state.timer) {
+    const liveMatch = (state.matches || []).find((m) => String(m.id) === String(state.timer?.matchId));
+    const isTerminated = !liveMatch ||
+      liveMatch.status === 'finished' ||
+      liveMatch.status === 'closed' ||
+      Boolean(liveMatch.closedAt) ||
+      Boolean(liveMatch.finishedAt) ||
+      isMatchPlayed(liveMatch);
+
+    let isStale = false;
+    if (state.timer.runningSince && (Date.now() - Number(state.timer.runningSince) > 6 * 3600 * 1000)) {
+      isStale = true;
+    }
+    if (state.timer.updatedAt && (Date.now() - Number(state.timer.updatedAt) > 12 * 3600 * 1000)) {
+      isStale = true;
+    }
+    if (liveMatch) {
+      const matchDay = String(liveMatch.date || '').slice(0, 10);
+      if (matchDay && matchDay < todayDay) isStale = true;
+      if (normalizeOpponentName(liveMatch.opponent).includes('calero')) isStale = true;
+    }
+
+    if (isTerminated || isStale) {
+      state.timer = null;
+      void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+      if (liveMatch && liveMatch.status === 'in_progress') {
+        liveMatch.status = isMatchPlayed(liveMatch) ? 'finished' : 'planned';
+        liveMatch.updatedAt = Date.now();
+        void put('matches', liveMatch);
+      }
+      try {
+        const raw = localStorage.getItem('campobase.directFieldCache');
+        if (raw) {
+          const cache = JSON.parse(raw);
+          if (cache) {
+            cache.timer = null;
+            if (Array.isArray(cache.settings)) {
+              const idx = cache.settings.findIndex((s) => s && s.id === 'live');
+              if (idx >= 0) cache.settings[idx] = { id: 'live', timer: null, updatedAt: Date.now() };
+            }
+            localStorage.setItem('campobase.directFieldCache', JSON.stringify(cache));
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // Sanitizar cualquier partido huérfano con status 'in_progress' en fechas pasadas o Calero
+  for (const m of (state.matches || [])) {
+    if (m.status === 'in_progress') {
+      const mDay = String(m.date || '').slice(0, 10);
+      const isPastMatch = mDay && mDay < todayDay;
+      const isCalero = normalizeOpponentName(m.opponent).includes('calero');
+      const isTimerMatch = state.timer && String(state.timer.matchId) === String(m.id);
+      if (isPastMatch || isCalero || !isTimerMatch) {
+        m.status = isMatchPlayed(m) ? 'finished' : 'planned';
+        m.updatedAt = Date.now();
+        void put('matches', m);
+      }
+    }
   }
 }
 
@@ -617,22 +673,6 @@ async function refresh() {
   const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   sanitizeLiveTimer();
-  for (const match of (state.matches || [])) {
-    if (isMatchPlayed(match) && match.status !== 'finished') {
-      match.status = 'finished';
-      match.closedAt = match.closedAt || match.finishedAt || Date.now();
-      match.updatedAt = Date.now();
-      void put('matches', match).catch(() => {});
-    }
-  }
-  for (const callup of (state.callups || [])) {
-    if (isCallupPlayed(callup) && callup.completed !== true) {
-      callup.completed = true;
-      callup.closedAt = callup.closedAt || Date.now();
-      callup.updatedAt = Date.now();
-      void put('callups', callup).catch(() => {});
-    }
-  }
   await deduplicatePlayers();
 
   // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
@@ -1770,20 +1810,24 @@ function findMatchForCallup(callup) {
 
 function isCallupPlayed(callup) {
   if (!callup) return false;
-  if (callup.completed === true || Boolean(callup.closedAt)) return true;
-  const match = findMatchForCallup(callup);
-  if (match && isMatchPlayed(match)) return true;
-  if (Number.isFinite(callup.goalsFor) || Number.isFinite(callup.goalsAgainst)) return true;
-  if (callup.status === 'finished' || callup.status === 'closed') return true;
-  if (Array.isArray(state.trainings)) {
-    const hasAttendance = state.trainings.some((t) =>
-      t && t.kind === 'match' &&
-      ((match && t.matchId === match.id) || (callup.id && (t.callupId === callup.id || t.matchId === callup.id))) &&
-      Array.isArray(t.records) && t.records.length > 0
-    );
-    if (hasAttendance) return true;
-  }
   if (callup.completed === false) return false;
+  const match = findMatchForCallup(callup);
+  if (match) {
+    if (match.status === 'planned' && !isMatchPlayed(match)) {
+      if (callup.completed === true && !match.closedAt && !callup.goalsFor && !callup.goalsAgainst) {
+        return false;
+      }
+    }
+    if (match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt) || Boolean(match.finishedAt) || isMatchPlayed(match)) {
+      return true;
+    }
+  }
+  if (callup.completed === true || Boolean(callup.closedAt) || callup.status === 'finished' || callup.status === 'closed') {
+    return true;
+  }
+  if (Number.isFinite(callup.goalsFor) || Number.isFinite(callup.goalsAgainst)) {
+    if ((Number(callup.goalsFor) || 0) > 0 || (Number(callup.goalsAgainst) || 0) > 0) return true;
+  }
   return false;
 }
 
@@ -1796,6 +1840,7 @@ async function toggleCallupCompleted(id) {
     ...callup,
     completed: willBeCompleted,
     closedAt: willBeCompleted ? (callup.closedAt || Date.now()) : null,
+    status: willBeCompleted ? 'finished' : 'planned',
     updatedAt: Date.now(),
   };
   await put('callups', updatedCallup);
@@ -1818,7 +1863,7 @@ async function toggleCallupCompleted(id) {
   await refresh(true);
   renderCallups();
   renderMatches();
-  toast(willBeCompleted ? 'Convocatoria archivada en «Partidos jugados».' : 'Convocatoria desmarcada y movida a próximas.');
+  toast(willBeCompleted ? 'Convocatoria archivada en «Convocatorias realizadas».' : 'Convocatoria desmarcada y movida a próximas.');
 }
 
 function renderClaudeCallup(callup) {
@@ -1991,27 +2036,8 @@ function renderCallups() {
   const upcomingCallups = list.filter((c) => !isCallupPlayed(c));
   const playedCallups = list.filter((c) => isCallupPlayed(c));
 
-  let filteredPlayed = playedCallups;
-  if (playedCallupsSearchQuery) {
-    const q = playedCallupsSearchQuery.toLowerCase().trim();
-    filteredPlayed = filteredPlayed.filter((c) => {
-      const opp = String(c.opponent || '').toLowerCase();
-      const fmt = String(c.format || '').toLowerCase();
-      const type = String(c.matchType || '').toLowerCase();
-      const date = String(c.date || '').toLowerCase();
-      return opp.includes(q) || fmt.includes(q) || type.includes(q) || date.includes(q);
-    });
-  }
-
   const existingCollapsible = root.querySelector('#played-callups-collapsible') || document.getElementById('played-callups-collapsible');
   const wasOpen = existingCollapsible ? existingCollapsible.open : (!upcomingCallups.length && playedCallups.length > 0);
-
-  const playedCallupsToolbar = `
-    <div class="cbx-played-matches-toolbar" style="margin-bottom: 14px;">
-      <div style="flex: 1; min-width: 180px;">
-        <input type="search" id="cbx-played-callups-search" class="cbx-filter-input" placeholder="🔍 Buscar convocatoria jugada (rival, fecha...)" value="${escapeHtml(playedCallupsSearchQuery)}">
-      </div>
-    </div>`;
 
   if (document.body.classList.contains('cb-redesign-active')) {
     let html = '';
@@ -2019,26 +2045,19 @@ function renderCallups() {
       html += `<div class="cbx-upcoming-callups stack">${upcomingCallups.map(renderClaudeCallup).join('')}</div>`;
     } else if (playedCallups.length) {
       html += `<div class="cbx-card empty-state" style="text-align:center;padding:24px 16px;margin-bottom:16px;">
-        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay convocatorias pendientes. Todas las convocatorias están archivadas como jugadas abajo.</p>
+        <p class="meta" style="color:var(--cbx-muted);font-size:13px;margin:0;">No hay convocatorias pendientes. Todas las convocatorias están archivadas como realizadas abajo.</p>
       </div>`;
     }
 
     if (playedCallups.length) {
       html += `
-        <details class="played-matches-accordion cbx-completed-sessions-accordion cbx-completed-matches-accordion" id="played-callups-collapsible"${wasOpen ? ' open' : ''}>
-          <summary class="played-matches-summary cbx-completed-matches-summary">
-            <div class="played-matches-head" style="display:flex;align-items:center;gap:8px;">
-              <span>📁</span>
-              <h3 class="played-matches-title" style="margin:0;font:inherit;">Convocatorias de partidos jugados</h3>
-              <span class="meta played-matches-count">(${playedCallups.length})</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="cbx-accordion-indicator">▾</span>
-            </div>
+        <details class="cbx-completed-sessions-accordion" id="played-callups-collapsible" ${!upcomingCallups.length ? 'open' : (wasOpen ? 'open' : '')}>
+          <summary class="cbx-completed-sessions-summary">
+            <span>📁 Convocatorias realizadas (${playedCallups.length})</span>
+            <span class="cbx-accordion-indicator">▾</span>
           </summary>
-          ${playedCallupsToolbar}
-          <div class="played-matches-cards completed-events-cards cbx-completed-matches-grid stack">
-            ${filteredPlayed.length ? filteredPlayed.map(renderClaudeCallup).join('') : '<p class="meta" style="text-align:center;padding:16px;">No se encontraron convocatorias jugadas para esta búsqueda.</p>'}
+          <div class="cbx-sessions-grid cbx-completed-sessions-grid cbx-completed-callups-grid">
+            ${playedCallups.map(renderClaudeCallup).join('')}
           </div>
         </details>
       `;
@@ -2057,18 +2076,13 @@ function renderCallups() {
 
   if (playedCallups.length) {
     classicHtml += `
-      <details class="played-matches-accordion cbx-completed-sessions-accordion cbx-completed-matches-accordion" id="played-callups-collapsible"${wasOpen ? ' open' : ''}>
-        <summary class="played-matches-summary cbx-completed-matches-summary">
-          <div class="played-matches-head" style="display:flex;align-items:center;gap:8px;">
-            <span>📁</span>
-            <h3 class="played-matches-title" style="margin:0;font:inherit;">Convocatorias de partidos jugados</h3>
-            <span class="meta played-matches-count">(${playedCallups.length})</span>
-          </div>
+      <details class="cbx-completed-sessions-accordion" id="played-callups-collapsible" ${!upcomingCallups.length ? 'open' : (wasOpen ? 'open' : '')}>
+        <summary class="cbx-completed-sessions-summary">
+          <span>📁 Convocatorias realizadas (${playedCallups.length})</span>
           <span class="cbx-accordion-indicator">▾</span>
         </summary>
-        ${playedCallupsToolbar}
-        <div class="played-matches-cards completed-events-cards cbx-completed-matches-grid stack">
-          ${filteredPlayed.length ? filteredPlayed.map(renderClassicCallupCard).join('') : '<p class="meta" style="text-align:center;padding:16px;">No se encontraron convocatorias jugadas.</p>'}
+        <div class="cbx-sessions-grid cbx-completed-sessions-grid cbx-completed-callups-grid">
+          ${playedCallups.map(renderClassicCallupCard).join('')}
         </div>
       </details>
     `;
@@ -13895,7 +13909,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-callups-played-sync-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-calero-sync-2').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
