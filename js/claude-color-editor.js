@@ -51,13 +51,13 @@ export function openClaudeColorEditor({viewId,scope,title,readTheme,applyTheme,s
   }).join('')}<button type="button" class="cbp-reset-part" data-action="reset">Restablecer este elemento</button></section><section class="cbp-elements"><small>Elementos de este apartado</small><label>Elige un elemento<select aria-label="Elemento que quieres personalizar" data-element-select>${section.els.map(e=>`<option value="${esc(e.id)}" ${e===element?'selected':''}>${esc(e.name)}</option>`).join('')}</select></label><div>${section.els.map(e=>`<button type="button" data-element="${esc(e.id)}" aria-pressed="${e===element}">${esc(e.name)}</button>`).join('')}</div></section>`;
   foot();updateFields();
  }
- function close(){signalController.abort();previewTheme=null;applyTheme(readTheme());panel.remove();document.body.classList.remove('cbp-editing-colours');document.querySelectorAll('[data-cbp-selected]').forEach(n=>n.removeAttribute('data-cbp-selected'));activeEditor=null;previousFocus?.focus();}
+ function close(){const pd=document.getElementById('player-dialog');if(pd?.dataset.temporaryPreview==='1'){pd.removeAttribute('data-temporaryPreview');pd.close();}signalController.abort();previewTheme=null;applyTheme(readTheme());panel.remove();document.body.classList.remove('cbp-editing-colours');document.querySelectorAll('[data-cbp-selected]').forEach(n=>n.removeAttribute('data-cbp-selected'));activeEditor=null;previousFocus?.focus();}
  activeEditor={close};
  panel.addEventListener('input',event=>{const input=event.target;if(!input.dataset.key)return;const p=element.props.find(p=>p.key===input.dataset.key);change(p,p.css==='font-size'?input.value+'px':input.value);},{signal});
  panel.addEventListener('change',event=>{if(event.target.matches('[data-element-select]'))choose(section.els.find(e=>e.id===event.target.value));},{signal});
  panel.addEventListener('click',async event=>{
   const b=event.target.closest('button');if(!b)return;
-  if(b.dataset.section){section=sections.find(s=>s.id===b.dataset.section);choose(section.els[0]);return;}
+  if(b.dataset.section){section=sections.find(s=>s.id===b.dataset.section);const pd=document.getElementById('player-dialog');if(section.id==='player-dialog-sec'){if(pd&&!pd.open){pd.showModal();pd.dataset.temporaryPreview='1';}}else if(pd?.dataset.temporaryPreview==='1'){pd.removeAttribute('data-temporaryPreview');pd.close();}choose(section.els[0]);return;}
   if(b.dataset.element){choose(section.els.find(e=>e.id===b.dataset.element));return;}
   if(b.dataset.swatch){change(element.props.find(p=>p.key===b.dataset.controlKey),b.dataset.swatch);return;}
   if(b.dataset.original){history.push(structuredClone(changes));delete changes[element.id+'.'+b.dataset.original];apply();render();highlight();return;}

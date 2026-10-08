@@ -57,5 +57,19 @@ test('styles.css y styles-redesign.css garantizan contraste en position-groups',
   const redesign = await readFile(new URL('../styles-redesign.css', import.meta.url), 'utf8');
 
   assert.match(styles, /\.position-groups label[^}]*color:\s*var\(--cb-dialog-pos-ink/);
-  assert.match(redesign, /#player-dialog \.position-groups label/);
+  assert.match(redesign, /#player-dialog \.position-groups label[\s\S]*?!important/);
+  assert.match(redesign, /:not\(dialog label\):not\(\.position-groups label\)/);
+  assert.match(redesign, /:not\(dialog strong\):not\(\.position-groups strong\)/);
 });
+
+test('index.html incluye engranaje de personalización en player-dialog', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /<dialog id="player-dialog"[^>]*data-theme-view="plantilla"/);
+  assert.match(html, /data-gear-target="section" data-theme-section="player-dialog"/);
+});
+
+test('claude-color-editor gestiona previsualización de player-dialog', async () => {
+  const editor = await readFile(new URL('../js/claude-color-editor.js', import.meta.url), 'utf8');
+  assert.match(editor, /player-dialog-sec[\s\S]*?showModal[\s\S]*?temporaryPreview/);
+});
+

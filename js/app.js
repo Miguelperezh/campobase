@@ -14051,7 +14051,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-fix-pin-login-exercise-covers-speed-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-posiciones-v4').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
