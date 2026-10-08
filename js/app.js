@@ -551,8 +551,8 @@ function isUserInteracting() {
   const active = document.activeElement;
   if (active && !active.closest('#auth-dialog') && active.matches('select, input, textarea, summary, details')) return true;
   if (document.querySelector('input[name="sub-out"]:checked, input[name="sub-in"]:checked, input[name="delegate-out"]:checked, input[name="delegate-in"]:checked')) return true;
-  // Si hay algún desplegable o panel details abierto en vivo, no interrumpir al usuario con re-render
-  if (document.querySelector('#live-match details[open], #delegado details[open]')) return true;
+  // Si hay algún desplegable o panel details abierto en vivo en la vista activa, no interrumpir al usuario con re-render
+  if (document.querySelector('#partido.active #live-match details[open], #delegado.active details[open]')) return true;
   // Si hay un reproductor de ejercicio en marcha, no re-renderizar (se reiniciaría).
   if ((window.__viewersPlaying || 0) > 0) return true;
   // Si la pizarra táctica en vivo está ampliada (lightbox abierto), no re-renderizar
@@ -672,15 +672,12 @@ const validatedExerciseOrder = new Map(EJERCICIOS_VALIDADOS.map((item, index) =>
 async function refresh() {
   const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
-  sanitizeLiveTimer();
-  await deduplicatePlayers();
-
-  // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
-  // se reescriben automáticamente durante refresh. Solo Editar jugador cambia
-  // la ficha personal persistida.
-
   state.players = sortPlayersByName(state.players);
   const settingRecords = await getAll('settings');
+  const liveSetting = settingRecords.find(({ id }) => id === 'live');
+  state.timer = liveSetting?.timer ?? null;
+  sanitizeLiveTimer();
+  await deduplicatePlayers();
 
   // Catálogo oficial + ejercicios creados por el entrenador.
   // Los favoritos de ejercicios validados también se guardan como recordType=exercise,
@@ -11780,7 +11777,7 @@ function selectedWhatsAppMatch() {
   if (eventValue.startsWith('callup:')) {
     const callupId = eventValue.slice('callup:'.length);
     const callup = state.callups.find((item) => item.id === callupId) || null;
-    return state.matches.find((match) => match.id === callup?.matchId || match.callupId === callupId) || null;
+    return state.matches.find((match) => match.id === callup?.matchId || match.callupId === callupId || (callup && match.opponent === callup.opponent && String(match.date || '').slice(0, 10) === String(callup.date || '').slice(0, 10))) || null;
   }
   return state.matches.find((match) => match.id === eventValue) || null;
 }
@@ -11793,6 +11790,28 @@ function syncWhatsAppMatchLocation() {
   const mapsInput = $('#wa-maps-url');
   if (fieldInput) fieldInput.value = fieldName;
   if (mapsInput) mapsInput.value = fieldName ? getAutoMapsUrl(fieldName) : '';
+
+  // Sincronizar hora del partido y calcular hora de citación (45 min antes)
+  const rawDate = String(match.date || '');
+  let gameTime = '';
+  if (rawDate.includes('T')) {
+    gameTime = rawDate.split('T')[1].slice(0, 5);
+  } else if (match.time) {
+    gameTime = String(match.time).slice(0, 5);
+  }
+  if (gameTime && /^([01]\d|2[0-3]):[0-5]\d$/.test(gameTime)) {
+    const gameTimeInput = $('#wa-game-time');
+    const callTimeInput = $('#wa-call-time');
+    if (gameTimeInput) gameTimeInput.value = gameTime;
+    if (callTimeInput) {
+      const [h, m] = gameTime.split(':').map(Number);
+      let mins = h * 60 + m - 45;
+      if (mins < 0) mins += 24 * 60;
+      const callH = String(Math.floor(mins / 60)).padStart(2, '0');
+      const callM = String(mins % 60).padStart(2, '0');
+      callTimeInput.value = `${callH}:${callM}`;
+    }
+  }
 }
 
 function populateWhatsAppEvents(matchId, callupId, sessionId) {
@@ -11805,6 +11824,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     if (label) label.firstChild.textContent = 'Partido / Convocatoria ';
     const matches = [...state.matches].sort((a, b) => b.date.localeCompare(a.date));
     const processedCallupIds = new Set();
+    let selectedOptionValue = '';
     matches.forEach((m) => {
       const opt = document.createElement('option');
       opt.value = `match:${m.id}`;
@@ -11813,8 +11833,12 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
       const waTypeLabel = matchTypeLabel(m.type || 'league');
       const callupSuffix = (m.type || 'league') === 'league' && callup ? ' (Convocatoria lista)' : '';
-      opt.textContent = `${localDate(m.date)} · ${waTypeLabel} vs ${m.opponent}${callupSuffix}`;
-      if (isSelected) opt.selected = true;
+      const matchTime = m.date?.includes('T') ? ` · ⏰ ${m.date.split('T')[1].slice(0, 5)}` : '';
+      opt.textContent = `${localDate(m.date)}${matchTime} · ${waTypeLabel} vs ${m.opponent}${callupSuffix}`;
+      if (isSelected) {
+        opt.selected = true;
+        selectedOptionValue = opt.value;
+      }
       select.appendChild(opt);
     });
     // Convocatorias sin partido formal
@@ -11823,10 +11847,14 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
         const opt = document.createElement('option');
         opt.value = `callup:${c.id}`;
         opt.textContent = `${localDate(c.date)} · Convocatoria vs ${c.opponent}`;
-        if (callupId && c.id === callupId) opt.selected = true;
+        if (callupId && c.id === callupId) {
+          opt.selected = true;
+          selectedOptionValue = opt.value;
+        }
         select.appendChild(opt);
       }
     });
+    if (selectedOptionValue) select.value = selectedOptionValue;
     if (!matches.length && !state.callups.length) {
       select.innerHTML = '<option value="">No hay partidos creados</option>';
     }
@@ -13949,6 +13977,7 @@ async function runCloudSynchronization() {
     void ensureRealtimeSubscription();
     if (result?.changed !== false) {
       await refresh();
+      renderAll();
     }
   } catch (error) {
     state.cloudConnected = false;
@@ -14051,7 +14080,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-posiciones-v4').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-whatsapp-sync-v5').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

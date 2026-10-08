@@ -169,7 +169,8 @@ export function buildWhatsAppMatchConvocatoria({
   const opponent = match.opponent || 'Rival';
   const rawDate = match.date || callup?.date || '';
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
-  const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(fieldName);
+  const effectiveFieldName = (fieldName || '').trim() || 'Campo Alfonso Silva (La Ballena)';
+  const resolvedMapsUrl = mapsUrl || getAutoMapsUrl(effectiveFieldName);
   const verbs = getToneVerbs({ tone, parentType, recipientType });
   const matchType = match?.type || callup?.matchType || 'league';
   const isLeague = matchType === 'league';
@@ -289,7 +290,9 @@ ${intro}
 ⏱️ *Inicio de partido:* *${gameTime} h*
 🏟️ *Campo:* *${fieldName}*
 📍 *Ubicación en Google Maps:* ${resolvedMapsUrl}
-👕 *Equipación:* *${kit}*
+👕 *Equipación de juego:* *${kit}* (llevar obligatoriamente las *dos equipaciones completas* en la mochila)
+🚶‍♂️ *Ropa de llegada y paseo:* *Polo y pantalón de paseo de este año*
+🔥 *Calentamiento:* *Camiseta roja de calentamiento (la de entrenamiento)*
 🛡️ *Obligatorio:* *Botella de agua individual y espinilleras*${includeBibs ? `\n🎽 *Petos:* *${bibsConfig}*` : ''}
 ${customNote ? `\n⚠️ *Nota:* *${customNote}*` : ''}
 • *Rogamos máxima puntualidad* en la hora de citación para realizar un buen calentamiento.
@@ -301,10 +304,27 @@ ${closing}`.trim();
 
   // CASO 2: Mensaje al Grupo General de Familias
   const playerListLines = calledPlayers.length
-    ? calledPlayers.map((p, idx) => `${idx + 1}. ${cleanPlayerNumber(p.number)} ${p.name}`.trim()).join('\n')
+    ? calledPlayers.map((p, idx) => {
+        const num = cleanPlayerNumber(p.number);
+        return `${idx + 1}. ${num ? `${num} ` : ''}${p.name}`.trim();
+      }).join('\n')
     : 'Todos los jugadores de la plantilla convocados.';
 
-  let materialBlock = `• 👕 *Equipación:* ${kit}\n• 🛡️ *Obligatorio:* Botella de agua individual y espinilleras`;
+  const restingPlayers = isLeague && effectiveCallup && availableSet.size > 0
+    ? players.filter(p => !availableSet.has(p.id))
+    : [];
+
+  const restingBlock = restingPlayers.length
+    ? `\n*Descansan:*\n${restingPlayers.map((p) => {
+        const num = cleanPlayerNumber(p.number);
+        return `- ${num ? `Dorsal ${num}, ` : ''}${p.name}`;
+      }).join('\n')}\n`
+    : '';
+
+  let materialBlock = `• 👕 *Equipación de juego:* ${kit} (llevar obligatoriamente las *dos equipaciones completas* en la mochila).
+• 🚶‍♂️ *Ropa de llegada y paseo:* Polo y pantalón de paseo de este año.
+• 🔥 *Calentamiento:* Camiseta roja de calentamiento (la de entrenamiento).
+• 🛡️ *Obligatorio:* Botella de agua individual y espinilleras.`;
   if (includeBibs) {
     materialBlock += `\n• 🎽 *Petos:* Se llevarán petos de juego (${bibsConfig})`;
   }
@@ -326,7 +346,7 @@ ${verbs.comparto} la información del próximo ${nonLeagueDescriptor}:
 🏟️ *Campo:* ${fieldName}
 📍 *Ubicación en Google Maps:* ${resolvedMapsUrl}
 
-🎒 *Material y equipación:*
+🎒 *Material y ropa obligatoria:*
 ${materialBlock}
 ${customNote ? `\n⚠️ *Nota importante:* ${customNote}` : ''}
 • Rogamos puntualidad en la hora de citación para realizar un buen calentamiento.
@@ -350,8 +370,8 @@ ${verbs.comparto} la convocatoria para el próximo encuentro:
 
 📋 *JUGADORES CONVOCADOS (${calledPlayers.length}):*
 ${playerListLines}
-
-🎒 *Material y equipación:*
+${restingBlock}
+🎒 *Material y ropa obligatoria:*
 ${materialBlock}
 ${customNote ? `\n⚠️ *Nota importante:* ${customNote}` : ''}
 • Rogamos puntualidad en la hora de citación para realizar un buen calentamiento.

@@ -100,7 +100,7 @@ body.cb-redesign-active #plantilla .cbx-plantilla-leaders .squad-leaderboards-ca
 body.cb-redesign-active #plantilla .cbx-plantilla-leaders .cbx-leaders-more { width: 100%; min-height: 36px; margin-top: 8px; border: 1px solid var(--cbx-line); border-radius: 10px; background: #f8fafc; color: var(--cbx-green-ink); font: 800 12px var(--cbx-ui); }
 
 body.cb-redesign-active #plantilla .cbx-plantilla-players { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) !important; align-items: stretch; gap: 12px !important; }
-body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player { min-width: 0; padding: 14px; gap: 8px; border: 1px solid var(--cbx-line); border-top: 4px solid var(--cbx-mid); border-radius: 16px; background: #fff; box-shadow: var(--cbx-shadow); }
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player { display: flex !important; flex-direction: column !important; break-inside: avoid !important; page-break-inside: avoid !important; min-width: 0; padding: 14px; gap: 8px; border: 1px solid var(--cbx-line); border-top: 4px solid var(--cbx-mid); border-radius: 16px; background: #fff; box-shadow: var(--cbx-shadow); }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-head .avatar { width: 50px; height: 50px; border-radius: 12px; background: var(--dorsal-bg, var(--bn, var(--cbx-hero, #0a251b))); color: var(--dorsal-ink, var(--bnInk, #ffffff)); box-shadow: none; font: 900 16px var(--disp, var(--cbx-disp)); font-family: var(--disp, var(--cbx-disp)) !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-name h3 { color: var(--cbx-ink); font: 800 15px/1.15 var(--cbx-ui) !important; }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-subhead-pill { color: var(--cbx-green-ink); background: var(--cbx-green-soft); font: 800 10px var(--cbx-ui); text-transform: uppercase; }
@@ -275,12 +275,18 @@ body.cb-redesign-active #asistencia .attendance-stat-details .attendance-grid { 
 /* Las fichas deben conservar todo su texto dentro del borde, también con
    tamaños grandes de Ajustes y con el zoom del navegador. */
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player {
-  min-width: 0; overflow: hidden; align-items: stretch !important;
+  min-width: 0; display: flex !important; flex-direction: column !important;
+  break-inside: avoid !important; page-break-inside: avoid !important;
+  overflow: hidden; align-items: stretch !important;
 }
-body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-head,
-body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-identity,
-body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-body {
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-head {
+  order: 0 !important; min-width: 0; width: 100%;
+}
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-identity {
   min-width: 0; width: 100%;
+}
+body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-body {
+  order: 1 !important; min-width: 0; width: 100%;
 }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-minute-meta {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
@@ -302,11 +308,15 @@ body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-da
   flex-wrap: wrap; overflow-wrap: anywhere;
 }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-family-contacts {
-  display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; margin: 8px 0 0;
+  display: flex !important; flex-direction: column !important; gap: 6px !important; margin: 8px 0 0 !important;
+  width: 100% !important; min-width: 0 !important;
 }
 body.cb-redesign-active #plantilla .cbx-plantilla-players .cbx-player .player-family-contacts .contact-pill {
-  min-width: 0; max-width: 100%; padding: 6px 9px; overflow-wrap: anywhere;
-  white-space: normal; line-height: 1.25; text-decoration: none;
+  min-width: 0 !important; max-width: 100% !important; padding: 6px 10px !important;
+  overflow-wrap: break-word !important; word-break: normal !important;
+  white-space: normal !important; line-height: 1.35 !important; text-decoration: none !important;
+  display: flex !important; align-items: center !important; justify-content: space-between !important;
+  gap: 6px !important;
 }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner .button-row { width: auto; flex: 0 0 auto; }
 body.cb-redesign-active #cuerpo-tecnico .cbx-banner .button-row > * { flex: 0 0 auto !important; }
