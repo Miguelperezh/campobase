@@ -291,6 +291,18 @@ export async function flushSyncQueue() {
   const mutations = (await localGetAll(SYNC_QUEUE)).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
     try {
+      // Descartar mutaciones obsoletas de timers en vivo antiguos (evita resucitar partidos fantasma como Calero en móvil)
+      if (mutation.store === 'settings' && mutation.recordId === 'live') {
+        const payloadTimer = mutation.payload?.timer;
+        const isStalePayload = !payloadTimer ||
+          (payloadTimer.runningSince && (Date.now() - Number(payloadTimer.runningSince) > 6 * 3600 * 1000)) ||
+          (Date.now() - Number(mutation.queuedAt || 0) > 24 * 3600 * 1000);
+        if (isStalePayload) {
+          await removeQueuedMutation(mutation.id);
+          continue;
+        }
+      }
+
       const shouldApply = typeof cloudStore?.shouldApplyMutation === 'function'
         ? await cloudStore.shouldApplyMutation(mutation)
         : true;

@@ -147,7 +147,20 @@
   }
 
   function liveRecord() { return state.settings.find((item) => item?.id === 'live') || null; }
-  function liveTimer() { return liveRecord()?.timer || null; }
+  function liveTimer() {
+    const timer = liveRecord()?.timer || null;
+    if (!timer) return null;
+    if (timer.runningSince && (Date.now() - Number(timer.runningSince) > 6 * 3600 * 1000)) return null;
+    const match = state.matches.find((m) => String(m.id) === String(timer.matchId));
+    if (match) {
+      const matchDay = String(match.date || '').slice(0, 10);
+      const todayDay = new Date().toISOString().slice(0, 10);
+      if (matchDay && matchDay < todayDay) return null;
+      if (String(match.opponent || '').toLowerCase().includes('calero')) return null;
+      if (match.status === 'finished' || match.status === 'closed') return null;
+    }
+    return timer;
+  }
   function liveMatch() {
     const timer = liveTimer();
     return timer ? state.matches.find((m) => String(m.id) === String(timer.matchId)) || null : null;

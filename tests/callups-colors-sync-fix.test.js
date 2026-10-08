@@ -50,3 +50,29 @@ test('catálogo y personalización de convocatorias incluye con.card y con.done 
   assert.ok(doneEl, 'Debe existir con.done en el catálogo');
   assert.equal(doneEl.name, 'Botón «Realizado»');
 });
+
+test('app.js no contiene auto-mutacion en refresh() y respeta la decision manual del usuario', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const appSource = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+
+  // refresh() no debe sobreescribir callup.completed ni match.status
+  const refreshMatch = appSource.match(/async function refresh\(\) \{[\s\S]*?await deduplicatePlayers\(\);/);
+  assert.ok(refreshMatch, 'Debe encontrarse refresh()');
+  assert.doesNotMatch(refreshMatch[0], /callup\.completed\s*=\s*true/, 'refresh no debe mutar callup.completed');
+  assert.doesNotMatch(refreshMatch[0], /match\.status\s*=\s*'finished'/, 'refresh no debe mutar match.status');
+
+  // isCallupPlayed no debe inferir jugado a partir de asistencias registradas
+  const isPlayedMatch = appSource.match(/function isCallupPlayed\(callup\) \{[\s\S]*?return false;\s*\}/);
+  assert.ok(isPlayedMatch, 'Debe encontrarse isCallupPlayed()');
+  assert.doesNotMatch(isPlayedMatch[0], /state\.trainings/, 'isCallupPlayed no debe consultar trainings/asistencias');
+  assert.match(isPlayedMatch[0], /if \(callup\.completed === false\) return false;/, 'Decisión manual completed===false manda siempre');
+
+  // renderCallups usa el acordeón idéntico de entrenamientos realizados
+  assert.match(appSource, /📁 Convocatorias realizadas \(\$\{playedCallups\.length\}\)/, 'Título idéntico al de sesiones');
+  assert.match(appSource, /<details class="cbx-completed-sessions-accordion"/, 'Misma clase de acordeón que sesiones');
+  assert.match(appSource, /<summary class="cbx-completed-sessions-summary"/, 'Misma clase de summary que sesiones');
+
+  // sanitizeLiveTimer elimina Calero y partidos pasados
+  assert.match(appSource, /calero/, 'sanitizeLiveTimer debe limpiar Calero');
+  assert.match(appSource, /runningSince.*?6 \* 3600 \* 1000/, 'sanitizeLiveTimer debe purgar timers con más de 6 horas');
+});
