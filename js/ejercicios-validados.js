@@ -19,11 +19,15 @@ export const EJERCICIOS_VALIDADOS = Object.freeze([
   ...EJERCICIOS_VALIDADOS_BASE,
 ]);
 
+const VALIDATED_MAP = new Map();
+for (const item of EJERCICIOS_VALIDADOS_BASE) if (item?.id) VALIDATED_MAP.set(item.id, item);
+for (const item of EJERCICIOS_NUEVO_FORMATO) if (item?.id) VALIDATED_MAP.set(item.id, item);
+for (const item of EJERCICIOS_NUEVOS_LOTES) if (item?.id) VALIDATED_MAP.set(item.id, item);
+for (const item of EJERCICIOS_LOTES_151_650) if (item?.id) VALIDATED_MAP.set(item.id, item);
+
 export function findValidatedExercise(id) {
-  return EJERCICIOS_LOTES_151_650.find((item) => item.id === id)
-    || EJERCICIOS_NUEVOS_LOTES.find((item) => item.id === id)
-    || EJERCICIOS_NUEVO_FORMATO.find((item) => item.id === id)
-    || findValidatedExerciseBase(id);
+  if (!id) return null;
+  return VALIDATED_MAP.get(id) || findValidatedExerciseBase(id) || null;
 }
 
 function humanVideoUrl(item) {
