@@ -13608,15 +13608,15 @@ function wireEvents() {
     if (target.matches('[data-callup-plan-mode]')) { callupSuggestedPlans.delete(target.dataset.callupId); callupPlanModes.set(target.dataset.callupId, target.dataset.callupPlanMode); renderCallups(); }
     const genRotationBtn = target.closest('.cbx-generate-callup-rotation-btn');
     if (genRotationBtn) { suggestCallupRotation(genRotationBtn.dataset.callupId); }
-    const editPlayer=target.closest('[data-minute-edit]');
-    if(editPlayer) {
-      const timeline=editPlayer.closest('[data-minute-timeline]');
-      const playerId=editPlayer.dataset.minuteEdit;
-      if(timeline?.dataset.minuteTimeline.startsWith('prep:'))openPrepWindowEditor(playerId);
+    const minuteEditBtn = target.closest('[data-minute-edit]');
+    if (minuteEditBtn) {
+      const timeline = minuteEditBtn.closest('[data-minute-timeline]');
+      const playerId = minuteEditBtn.dataset.minuteEdit;
+      if (timeline?.dataset.minuteTimeline.startsWith('prep:')) openPrepWindowEditor(playerId);
       else {
-        const card=editPlayer.closest('[data-callup-id]');
-        const callup=state.callups.find(c=>c.id===card?.dataset.callupId);
-        if(callup?.matchId)copyCallupPlanToPrep(callup.id,callup.matchId).then(()=>openPrepWindowEditor(playerId)).catch(handleError);
+        const card = minuteEditBtn.closest('[data-callup-id]');
+        const callup = state.callups.find(c => c.id === card?.dataset.callupId);
+        if (callup?.matchId) copyCallupPlanToPrep(callup.id, callup.matchId).then(() => openPrepWindowEditor(playerId)).catch(handleError);
       }
     }
     const editCallupWindows=target.closest('.cbx-edit-callup-windows');
