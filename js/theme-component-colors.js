@@ -317,7 +317,16 @@ export function applyComponentColors(theme) {
   document.querySelectorAll('dialog[data-theme-view]:not(.cbp-time-plan)').forEach((dialog) => {
     paint(dialog, '.primary', '--btn', '--btnInk');
     paint(dialog, '.secondary', '--btn2', '--btn2Ink');
-    paint(dialog, 'label,p', null, '--view-font-color');
+    const fontColor = dialog.style.getPropertyValue('--view-font-color') || '';
+    const hex = fontColor.replace('#', '').trim();
+    let isLightText = false;
+    if (/^[0-9a-f]{6}$/i.test(hex)) {
+      const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+      isLightText = ((r * 299 + g * 587 + b * 114) / 1000) > 160;
+    }
+    if (!isLightText) {
+      paint(dialog, 'label:not(.position-groups label),p:not(.position-groups p)', null, '--view-font-color');
+    }
   });
   const nav = document.getElementById('cb-bottom-nav');
   const sidebar = document.getElementById('cb-claude-sidebar');
@@ -433,8 +442,10 @@ export function observeComponentColors() {
       dialog.dataset.themeView ||= document.querySelector('.view.active')?.id || 'ajustes';
       if (dialog.querySelector('.cbx-context-gear-btn')) return;
       const button = document.createElement('button');
-      button.type = 'button'; button.className = 'cbx-context-gear-btn';
-      button.dataset.gearTarget = dialog.dataset.themeView; button.textContent = '⚙️';
+      button.type = 'button'; button.className = 'cbx-context-gear-btn cbx-section-gear';
+      button.dataset.gearTarget = 'section';
+      button.dataset.themeSection = dialog.id;
+      button.textContent = '⚙️';
       button.setAttribute('aria-label', 'Ajustar colores de esta ventana');
       (dialog.querySelector('.dialog-head') || dialog).append(button);
     });

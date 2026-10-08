@@ -93,6 +93,22 @@ export function claudeColorSections(viewId,scope) {
    add('cl.'+key,'Botón «'+button.textContent.trim()+'»','#squad-leaderboards ['+attr+'="'+key+'"]','Este botón en todas las clasificaciones');
   }
  }
+ if(viewId==='plantilla'&&(!scope||scope.id==='player-dialog')){
+  const dialogSection={
+   id:'player-dialog-sec',
+   name:'Ficha de jugador y Posiciones',
+   els:[
+    {id:'pd.pos-labels',name:'Texto de posiciones (Lateral, Central, Medio centro...)',scope:'Todas las etiquetas de posiciones en la ficha',props:[{key:'color',label:'Color del texto de posición',css:'color',selector:'#player-dialog .position-groups label',viewId},{key:'font-weight',label:'Grosor de la fuente',css:'font-weight',selector:'#player-dialog .position-groups label',viewId}]},
+    {id:'pd.pos-strong',name:'Encabezados (Portero, Defensa, Centrocampista, Delantero)',scope:'Títulos de las categorías de posición',props:[{key:'color',label:'Color del texto del encabezado',css:'color',selector:'#player-dialog .position-groups strong',viewId}]},
+    {id:'pd.pos-boxes',name:'Bloques de posición (fondo de las tarjetas)',scope:'Las cuatro tarjetas de categorías de posición',props:[{key:'background',label:'Fondo del bloque',css:'background',selector:'#player-dialog .position-groups > div',viewId},{key:'border-color',label:'Borde del bloque',css:'border-color',selector:'#player-dialog .position-groups > div',viewId}]},
+    {id:'pd.labels',name:'Etiquetas del formulario (Nombre, Dorsal, Pierna...)',scope:'Todos los campos de texto del formulario',props:[{key:'color',label:'Color de las etiquetas',css:'color',selector:'#player-dialog label:not(.position-groups label)',viewId}]},
+    {id:'pd.bg',name:'Fondo de la ventana',scope:'Ventana completa de la ficha',props:[{key:'background',label:'Fondo',css:'background',selector:'#player-dialog',viewId}]},
+    {id:'pd.save',name:'Botón «Guardar jugador»',scope:'Botón principal de guardar',props:[{key:'background',label:'Fondo',css:'background',selector:'#player-dialog button.primary',viewId},{key:'color',label:'Texto',css:'color',selector:'#player-dialog button.primary',viewId}]},
+    {id:'pd.cancel',name:'Botón «Cancelar»',scope:'Botón secundario de cancelar',props:[{key:'background',label:'Fondo',css:'background',selector:'#player-dialog button[data-close]',viewId},{key:'color',label:'Texto',css:'color',selector:'#player-dialog button[data-close]',viewId}]}
+   ]
+  };
+  if(scope?.id==='player-dialog'){sections.unshift(dialogSection);}else{sections.push(dialogSection);}
+ }
  const root=scope||document.getElementById(viewId)||document.getElementById({'exercise-detail':'exercise-detail-dialog',comunicador:'whatsapp-dialog'}[viewId]);
  const fallbackRoot=scope?.id==='players-list'?document.getElementById('plantilla'):root;
  if(viewId==='ejercicios'){
