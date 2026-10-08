@@ -71,3 +71,11 @@ test('syncFromCloud comprueba si los datos cambiaron antes de sustituir el almac
     'syncFromCloud debe devolver si hubo cambios en los datos descargados',
   );
 });
+
+test('flushSyncQueue conserva mutaciones de limpieza timer null y syncFromCloud purga timers obsoletos', async () => {
+  const dbJs = await readFile(new URL('../js/db.js', import.meta.url), 'utf8');
+  assert.match(dbJs, /if \(payloadTimer\) \{/);
+  assert.match(dbJs, /const liveCloud = snapshot\.records\.find\(\(\{ id \}\) => id === 'live'\);/);
+  assert.match(dbJs, /liveCloud\.timer = null;/);
+});
+

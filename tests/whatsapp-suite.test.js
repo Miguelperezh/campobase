@@ -760,5 +760,49 @@ test('app.js permite incluir múltiples partidos en la planificación semanal de
   assert.match(app, /Incluir los \$\{matchesThisWeek\.length\} partidos/, 'Debe ofrecer la opción automática de incluir todos los partidos');
 });
 
+test('buildWhatsAppMatchConvocatoria para grupo incluye sección Descansan sin motivos y ropa obligatoria completa', () => {
+  const match = { opponent: 'Barriche', date: '2026-09-20T10:30:00', type: 'league' };
+  const players = [
+    { id: 'p1', name: 'Thiago Hernández', number: '4' },
+    { id: 'p2', name: 'Mateo González', number: '7' },
+    { id: 'p3', name: 'Hugo Ramos Santana', number: '10' },
+  ];
+  const callup = { availableIds: ['p1', 'p2'], excludedIds: ['p3'] };
 
+  const msg = buildWhatsAppMatchConvocatoria({
+    teamName: 'C.F. Unión Viera Alevín D',
+    match,
+    callup,
+    players,
+    kit: 'Azul',
+    fieldName: 'Campo Alfonso Silva',
+    gameTime: '10:30',
+    callTime: '09:45',
+    now: new Date('2026-09-20T08:00:00'),
+  });
 
+  // Convocados
+  assert.ok(msg.includes('JUGADORES CONVOCADOS (2):'));
+  assert.ok(msg.includes('Thiago Hernández'));
+  assert.ok(msg.includes('Mateo González'));
+
+  // Sección Descansan
+  assert.ok(msg.includes('*Descansan:*'));
+  assert.ok(msg.includes('- Dorsal 10, Hugo Ramos Santana'));
+  assert.ok(!msg.includes('motivo'), 'No debe incluir motivos en la lista de Descansan');
+  assert.ok(!msg.includes('rotación'), 'No debe incluir rotación en la lista de Descansan');
+
+  // Ropa obligatoria y equipaciones
+  assert.ok(msg.includes('dos equipaciones completas'));
+  assert.ok(msg.includes('Polo y pantalón de paseo de este año'));
+  assert.ok(msg.includes('Camiseta roja de calentamiento (la de entrenamiento)'));
+  assert.ok(msg.includes('espinilleras'));
+});
+
+test('syncWhatsAppMatchLocation calcula hora de citación 45 min antes a partir de la hora del partido', async () => {
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /syncWhatsAppMatchLocation\(\)/);
+  assert.match(app, /mins = h \* 60 \+ m - 45/);
+  assert.match(app, /#wa-game-time/);
+  assert.match(app, /#wa-call-time/);
+});

@@ -294,12 +294,13 @@ export async function flushSyncQueue() {
       // Descartar mutaciones obsoletas de timers en vivo antiguos (evita resucitar partidos fantasma como Calero en móvil)
       if (mutation.store === 'settings' && mutation.recordId === 'live') {
         const payloadTimer = mutation.payload?.timer;
-        const isStalePayload = !payloadTimer ||
-          (payloadTimer.runningSince && (Date.now() - Number(payloadTimer.runningSince) > 6 * 3600 * 1000)) ||
-          (Date.now() - Number(mutation.queuedAt || 0) > 24 * 3600 * 1000);
-        if (isStalePayload) {
-          await removeQueuedMutation(mutation.id);
-          continue;
+        if (payloadTimer) {
+          const isStalePayload = (payloadTimer.runningSince && (Date.now() - Number(payloadTimer.runningSince) > 6 * 3600 * 1000)) ||
+            (Date.now() - Number(mutation.queuedAt || 0) > 24 * 3600 * 1000);
+          if (isStalePayload) {
+            await removeQueuedMutation(mutation.id);
+            continue;
+          }
         }
       }
 
@@ -440,6 +441,17 @@ export async function syncFromCloud() {
           }
         }
         if (store === 'settings') {
+          const liveCloud = snapshot.records.find(({ id }) => id === 'live');
+          if (liveCloud?.timer) {
+            const t = liveCloud.timer;
+            const isStale = (t.runningSince && (Date.now() - Number(t.runningSince) > 6 * 3600 * 1000)) ||
+              (t.updatedAt && (Date.now() - Number(t.updatedAt) > 12 * 3600 * 1000));
+            if (isStale) {
+              liveCloud.timer = null;
+              liveCloud.updatedAt = Date.now();
+              void cloudStore.upsert?.({ store: 'settings', recordId: 'live', payload: liveCloud }).catch(() => null);
+            }
+          }
           const localMain = localRecords.find(({ id }) => id === 'main');
           const cloudMainIndex = snapshot.records.findIndex(({ id }) => id === 'main');
           if (localMain && cloudMainIndex >= 0) {
