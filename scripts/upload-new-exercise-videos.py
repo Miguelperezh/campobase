@@ -16,6 +16,7 @@ existing_assets = set(a['name'] for a in assets_data)
 print(f"Total assets ya en GitHub Releases ({TAG}): {len(existing_assets)}")
 
 lotes_desc = [
+    '1001-1050',
     '951-1000',
     '901-950',
     '851-900',

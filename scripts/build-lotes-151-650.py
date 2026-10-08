@@ -47,6 +47,7 @@ base_dir = '/Users/miguelperez/Documents/Codex/2026-09-09/files-mentioned-by-the
 
 # Lotes de más nuevos a más antiguos (los más nuevos arriba)
 lotes_desc = [
+    '1001-1050',
     '951-1000',
     '901-950',
     '851-900',

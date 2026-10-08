@@ -37,19 +37,19 @@ test('normalizeFormatoJuego mapea todas las variaciones de Astra para F7 y F11',
   assert.equal(normalizeFormatoJuego('todos'), 'todos');
 });
 
-test('el catálogo conserva los 298 históricos, antepone los 864 nuevos lotes arriba, 100 de lotes anteriores y 12 nuevos después respetando F7/F11', () => {
+test('el catálogo conserva los 298 históricos, antepone los 875 nuevos lotes arriba, 100 de lotes anteriores y 12 nuevos después respetando F7/F11', () => {
   const mapped = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
-  assert.equal(mapped.length, 1274);
-  assert.deepEqual(mapped.slice(0, 864).map((e) => e.id), LOTES_151_650_IDS, 'Los 864 de lotes 151-1050 deben estar en la punta de arriba');
-  assert.deepEqual(mapped.slice(864, 964).map((e) => e.id), NUEVOS_LOTES_IDS, 'Los 100 de lotes anteriores van a continuación');
-  assert.deepEqual(mapped.slice(964, 976).map((e) => e.id), NUEVOS_EJERCICIOS_IDS, 'Los 12 del lote anterior van después');
+  assert.equal(mapped.length, 1285);
+  assert.deepEqual(mapped.slice(0, 875).map((e) => e.id), LOTES_151_650_IDS, 'Los 875 de lotes 151-1050 deben estar en la punta de arriba');
+  assert.deepEqual(mapped.slice(875, 975).map((e) => e.id), NUEVOS_LOTES_IDS, 'Los 100 de lotes anteriores van a continuación');
+  assert.deepEqual(mapped.slice(975, 987).map((e) => e.id), NUEVOS_EJERCICIOS_IDS, 'Los 12 del lote anterior van después');
 
   const f11 = mapped.filter((e) => e.formato_juego === 'futbol_11');
   const f7 = mapped.filter((e) => e.formato_juego === 'futbol_7');
   const todos = mapped.filter((e) => e.formato_juego === 'todos');
-  assert.equal(todos.length, 493);
+  assert.equal(todos.length, 499);
 
-  const nuevosLotes = mapped.slice(0, 864);
+  const nuevosLotes = mapped.slice(0, 875);
   for (const ex of nuevosLotes) {
     assert.ok(Array.isArray(ex.formatos_juego) && ex.formatos_juego.length > 0);
   }
@@ -68,21 +68,21 @@ test('buildExercise asigna por defecto futbol_11 cuando no viene especificado', 
   assert.equal(ex.formato_juego, 'futbol_11');
 });
 
-test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 1274 ejercicios', () => {
+test('filtrado por formato respeta el F7/F11 según reglas en catálogo ampliado a 1285 ejercicios', () => {
   const currentExercises = EJERCICIOS_VALIDADOS.map(toCampoBaseExercise);
 
   const allFiltered = filterExercises(currentExercises, { formato_juego: 'todos' });
-  assert.equal(allFiltered.length, 1274);
-  assert.deepEqual(allFiltered.slice(0, 864).map((e) => e.id), LOTES_151_650_IDS);
+  assert.equal(allFiltered.length, 1285);
+  assert.deepEqual(allFiltered.slice(0, 875).map((e) => e.id), LOTES_151_650_IDS);
 
   const f11Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_11' });
-  assert.equal(f11Filtered.length, 796);
+  assert.equal(f11Filtered.length, 802);
 
   const f7Filtered = filterExercises(currentExercises, { formato_juego: 'futbol_7' });
-  assert.equal(f7Filtered.length, 971);
+  assert.equal(f7Filtered.length, 982);
 
   const f7ByFormatKey = filterExercises(currentExercises, { format: 'futbol_7' });
-  assert.equal(f7ByFormatKey.length, 971);
+  assert.equal(f7ByFormatKey.length, 982);
 });
 
 test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combinado', () => {
@@ -103,15 +103,15 @@ test('inyección de ejercicio Astra F7 con categoría Posesión y filtrado combi
   const pool = [astraExercise, ...baseExercises];
 
   const f7Only = filterExercises(pool, { formato_juego: 'futbol_7' });
-  assert.equal(f7Only.length, 972);
+  assert.equal(f7Only.length, 983);
   assert.ok(f7Only.some(e => e.id === 'astra-f7-001'));
 
   const f11Only = filterExercises(pool, { formato_juego: 'futbol_11' });
-  assert.equal(f11Only.length, 796);
+  assert.equal(f11Only.length, 802);
   assert.ok(!f11Only.some(e => e.id === 'astra-f7-001'));
 
   const todosOnly = filterExercises(pool, { formato_juego: 'todos' });
-  assert.equal(todosOnly.length, 1275);
+  assert.equal(todosOnly.length, 1286);
   assert.ok(todosOnly.some(e => e.id === 'astra-f7-001'));
 
   const textF7 = filterExercises(pool, { text: 'transiciones extra', formato_juego: 'futbol_7' });

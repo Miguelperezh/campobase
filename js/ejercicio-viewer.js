@@ -782,7 +782,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
     <div class="exercise-video-wrap">
       <button type="button" class="theater-exit-btn hidden" title="Salir de pantalla completa" aria-label="Salir de pantalla completa">✕ Salir</button>
       <div class="video-stage" style="${mediaCropStageStyle(graphicCrop)}">
-        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline muted loop preload="none"><source src="${esc(videoSrc)}" type="video/mp4"></video>
+        <video class="frame-video${graphicCrop ? ' frame-video-cropped' : ''}" data-src="${esc(videoSrc)}" poster="${esc(previewSrc)}" data-media-crop="${esc(graphicCropToken)}" style="${mediaCropVideoStyle(graphicCrop)}" playsinline webkit-playsinline loop preload="none"><source src="${esc(videoSrc)}" type="video/mp4"></video>
         <button type="button" class="video-overlay-play" title="Reproducir animación" aria-label="Reproducir animación">
           <span class="overlay-play-icon">▶</span>
         </button>
@@ -817,6 +817,7 @@ export function renderValidatedExerciseHTML(ex, options = {}) {
             <span class="v-time-display">00:00 / 00:00</span>
           </div>
           <div class="v-controls-subgroup">
+            <button type="button" class="v-btn v-btn-audio active" title="Silenciar audio" aria-label="Audio / Sonido">🔊 <span class="v-btn-text">Audio</span></button>
             <button type="button" class="v-btn v-btn-loop active" title="Bucle continuo (repetir)" aria-label="Repetir en bucle">🔁</button>
             <button type="button" class="v-btn v-btn-fullscreen" title="Ampliar a pantalla completa" aria-label="Ampliar a pantalla completa">⛶ <span class="v-btn-text">Ampliar</span></button>
           </div>
@@ -1133,13 +1134,54 @@ export function initValidatedExerciseViewer(root) {
     navigator?.standalone === true
     || window.matchMedia?.('(display-mode: standalone)')?.matches
   );
-  // Configuración estricta para iOS WebKit / Chrome móvil / PWA
-  video.muted = true;
-  video.defaultMuted = true;
+  const btnAudio = root.querySelector('.v-btn-audio');
+
+  // Configuración de audio y controles
+  let audioEnabled = true;
+  try {
+    const savedAudio = localStorage.getItem('campobase.exerciseAudioEnabled');
+    if (savedAudio !== null) audioEnabled = savedAudio === '1';
+  } catch {}
+
+  function updateAudioButton() {
+    if (!btnAudio) return;
+    const isMuted = Boolean(video.muted);
+    btnAudio.innerHTML = isMuted ? '🔇 <span class="v-btn-text">Mudo</span>' : '🔊 <span class="v-btn-text">Audio</span>';
+    btnAudio.title = isMuted ? 'Activar sonido' : 'Silenciar sonido';
+    btnAudio.setAttribute('aria-label', isMuted ? 'Activar sonido' : 'Silenciar sonido');
+    btnAudio.classList.toggle('active', !isMuted);
+  }
+
+  video.muted = !audioEnabled;
+  video.defaultMuted = !audioEnabled;
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
-  video.setAttribute('muted', '');
+  if (!audioEnabled) {
+    video.setAttribute('muted', '');
+  } else {
+    video.removeAttribute('muted');
+    video.volume = 1.0;
+  }
+  updateAudioButton();
+
+  if (btnAudio) {
+    btnAudio.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      video.muted = !video.muted;
+      try {
+        localStorage.setItem('campobase.exerciseAudioEnabled', video.muted ? '0' : '1');
+      } catch {}
+      if (!video.muted) {
+        video.volume = 1.0;
+        video.removeAttribute('muted');
+      } else {
+        video.setAttribute('muted', '');
+      }
+      updateAudioButton();
+    });
+  }
 
   const videoDebugger = attachVideoDebugger(root, video, { isIOS, isStandalone });
 
@@ -1202,12 +1244,15 @@ export function initValidatedExerciseViewer(root) {
     if(message){message.textContent=text;message.hidden=!text;}
   }
   async function togglePlay() {
-    video.muted = true;
-    video.defaultMuted = true;
     video.playsInline = true;
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
-    video.setAttribute('muted', '');
+    if (video.muted) {
+      video.setAttribute('muted', '');
+    } else {
+      video.removeAttribute('muted');
+      video.volume = 1.0;
+    }
 
     if (video.paused) {
       playbackMessage();
@@ -1225,10 +1270,25 @@ export function initValidatedExerciseViewer(root) {
         if (p && typeof p.catch === 'function') {
           p.catch((err) => {
             console.warn('Error al reproducir vídeo:', err);
+            if (err?.name === 'NotAllowedError' && !video.muted) {
+              console.warn('El navegador bloqueó la reproducción con audio, reintentando silenciado');
+              video.muted = true;
+              video.setAttribute('muted', '');
+              updateAudioButton();
+              video.play().catch(() => {});
+              return;
+            }
             if (video.paused) { updatePlayState(false); playbackMessage('No se pudo iniciar el vídeo. Pulsa Play para reintentar.'); }
           });
         }
       } catch (err) {
+        if (err?.name === 'NotAllowedError' && !video.muted) {
+          video.muted = true;
+          video.setAttribute('muted', '');
+          updateAudioButton();
+          video.play().catch(() => {});
+          return;
+        }
         console.warn('Error síncrono al reproducir vídeo:', err);
         if (video.paused) { updatePlayState(false); playbackMessage('No se pudo iniciar el vídeo. Pulsa Play para reintentar.'); }
       }
