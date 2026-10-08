@@ -14,4 +14,7 @@ Fixture reproducible: tests/fixtures/whatsapp-sync-indexeddb.html, servida en un
 La consola del navegador real había mostrado «Inicia sesión para sincronizar esta cuenta» durante el inicio de Realtime, además de un mensaje genérico de conexión. No demuestra una simple lentitud de red. La función pin-login desplegada verifica ownerPinHash; no verifica el PIN legado del delegado. Estas correcciones no cambian ese contrato de autenticación ni afirman resolver por sí solas ese caso. No se ha validado un móvil físico ni una sincronización real bidireccional con datos de usuario. No declarar cerrado ese punto con tests de fixtures.
 
 ## Validación automatizada
-772 tests correctos y comprobación de sintaxis correcta. Versión conjunta: 20261008-whatsapp-context-1. Incluye pruebas de IDs, filtros, horario cruzando medianoche, contenido grupal/privado, entrenamiento y tombstones.
+773 tests correctos y comprobación de sintaxis correcta. Versión conjunta: 20261008-whatsapp-context-1. Incluye pruebas de IDs, filtros, horario cruzando medianoche, contenido grupal/privado, entrenamiento y tombstones.
+
+## Comprobación real de mañana (solo lectura)
+Supabase conserva el partido del 09/10/2026 contra UD. Jinámar, campo E.M. Jinámar Pedro Miranda y fecha 2026-10-09T19:00. Su convocatoria apunta al ID de ese partido, tiene 14 availableIds y completed:false; no tiene campo ni hora duplicados propios. Por ello el comunicador debe resolver el partido vinculado, extraer 19:00 de date y calcular 18:15. Se añadió prueba de ese formato con jugadores ficticios; no se copiaron fichas ni teléfonos reales a los tests. Ningún registro fue modificado.

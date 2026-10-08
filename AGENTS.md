@@ -4647,7 +4647,7 @@ Actualizar sincroniza en la pantalla actual, sin navegación forzada ni pérdida
 ## SDD 039 — Contexto de WhatsApp y cola (08/10/2026)
 - Mantener diseño y datos reales; no escribir semillas ni modificar Supabase/RLS.
 - Resolver IDs explícitos; nunca sustituir partido/sesión desconocidos por el primero ni inventar campos/horarios.
-- Selector genérico solo pendientes sin convocatoria; envío directo conserva su convocatoria.
+- Selector genérico solo pendientes sin convocatoria; envío directo ofrece únicamente su convocatoria.
 - Citación 45 minutos antes. Descansos sin motivos en grupo; motivos privados solo al excluido.
 - Guardado local durable primero; confirmaciones antiguas no borran ediciones nuevas. Respetar base de origen y tombstones remotos.
 - Conservar varias sesiones diarias y el domingo en el resumen semanal.

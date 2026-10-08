@@ -31,7 +31,7 @@ export function whatsappMatchOptions(matches, callups, today, isPlayed, matchId 
   return matches.filter(m => {
     const callup = linkedCallup(m, callups);
     // A direct Send action must retain its exact existing event; generic selectors only offer new pending events.
-    if ((matchId && key(m.id) === key(matchId)) || (callupId && key(callup?.id) === key(callupId))) return true;
+    if (matchId || callupId) return (matchId && key(m.id) === key(matchId)) || (callupId && key(callup?.id) === key(callupId));
     return !isPlayed(m) && m.completed !== true && day(m.date) >= today && !callup && !m.callupId;
   }).sort((a, b) => key(a.date).localeCompare(key(b.date)));
 }

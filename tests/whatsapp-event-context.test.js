@@ -24,7 +24,7 @@ test('asociación histórica exige fecha y rival inequívocos',()=>{
 });
 test('selector genérico excluye pasado, jugados y convocados; enviar desde convocatoria retiene su evento',()=>{
  assert.deepEqual(whatsappMatchOptions(matches,callups,'2026-10-08',m=>m.completed===true).map(m=>m.id),['new']);
- assert.deepEqual(whatsappMatchOptions(matches,callups,'2026-10-08',m=>m.completed===true,'','c').map(m=>m.id),['called','new']);
+ assert.deepEqual(whatsappMatchOptions(matches,callups,'2026-10-08',m=>m.completed===true,'','c').map(m=>m.id),['called']);
 });
 test('hora real, citación menos 45 y datos ausentes sin horario inventado',()=>{
  assert.equal(matchCommunicationDetails({date:'2026-10-09T19:00:00'}).callTime,'18:15');
@@ -56,4 +56,13 @@ test('snapshot reconoce eliminaciones remotas sin borrar una edición local pend
 test('mensaje individual excluido comunica solo su motivo sin campo, mapa ni horas',()=>{
  const text=buildWhatsAppMatchConvocatoria({match:matches[1],callup:callups[0],players,recipientType:'parent',targetPlayerId:'q'});
  assert.ok(text.includes('lesión')); for(const value of ['Campo real','19:00','18:15','maps.google'])assert.ok(!text.includes(value));
+});
+
+test('partido real del 9 de octubre: hora integrada en fecha y campo guardado se conservan',()=>{
+ const match={id:'tomorrow',opponent:'UD. Jinámar',date:'2026-10-09T19:00',location:'E.M. Jinámar Pedro Miranda',callupId:'tomorrow-callup'};
+ const callup={id:'tomorrow-callup',matchId:match.id,availableIds:['p']};
+ const selected=resolveWhatsAppEvent('callup:tomorrow-callup',[matches[0],match],[callup]);
+ const text=buildWhatsAppMatchConvocatoria({...selected,players});
+ for(const value of [match.location,'19:00','18:15','1. 7 Jugador Nombre Completo']) assert.ok(text.includes(value));
+ assert.ok(!text.includes('Mundial 82'));
 });
