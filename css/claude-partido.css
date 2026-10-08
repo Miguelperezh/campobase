@@ -444,9 +444,82 @@ body.cb-redesign-active #calendario .cbx-calendar-score.training-pill { color: #
 body.cb-redesign-active #calendario .cbx-calendar-actions { grid-column: 1/-1; border-top: 1px solid var(--cbx-line); padding-top: 7px; }
 body.cb-redesign-active #calendario .cbx-calendar-actions > summary { cursor: pointer; color: var(--cbx-muted); font-size: 11px; font-weight: 800; }
 body.cb-redesign-active #calendario .cbx-calendar-actions .button-row button { min-height: 36px; padding: 6px 9px; font-size: 11px; }
-body.cb-redesign-active #calendario .cbx-calendar-played { display: grid; gap: 15px; padding: 0; border: 0; background: transparent; box-shadow: none; }
-body.cb-redesign-active #calendario .cbx-calendar-played > summary { margin-bottom: 9px; color: #64748b; cursor: pointer; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
-body.cb-redesign-active #calendario .cbx-calendar-played .cbx-calendar-group { margin-bottom: 15px; }
+/* Acordeón de partidos jugados / archivados (idéntico a sesiones) */
+body.cb-redesign-active #calendario .cbx-completed-matches-accordion,
+body.cb-redesign-active #calendario .played-matches-accordion {
+  margin-top: 24px;
+  border: 1px solid var(--cardBorder, #e2e8f0);
+  border-radius: var(--cbx-r-card, 16px);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 88%, #f8fafc);
+  overflow: hidden;
+  box-shadow: var(--cbx-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+  display: block;
+}
+
+body.cb-redesign-active #calendario .cbx-completed-matches-summary,
+body.cb-redesign-active #calendario .played-matches-summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font: 800 15px var(--cbx-ui);
+  color: var(--cardTitle, #334155);
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 92%, #f1f5f9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s ease;
+}
+
+body.cb-redesign-active #calendario .cbx-completed-matches-summary::-webkit-details-marker,
+body.cb-redesign-active #calendario .played-matches-summary::-webkit-details-marker {
+  display: none;
+}
+
+body.cb-redesign-active #calendario .cbx-completed-matches-summary:hover,
+body.cb-redesign-active #calendario .played-matches-summary:hover {
+  background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, #e2e8f0);
+}
+
+body.cb-redesign-active #calendario .cbx-accordion-indicator {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+body.cb-redesign-active #calendario details[open] .cbx-accordion-indicator {
+  transform: rotate(180deg);
+}
+
+body.cb-redesign-active #calendario .cbx-completed-matches-grid,
+body.cb-redesign-active #calendario .played-matches-cards {
+  padding: 16px;
+  border-top: 1px solid var(--cardBorder, #e2e8f0);
+  opacity: 0.95;
+}
+
+/* Botón Realizado / Pendiente en tarjeta de partido */
+body.cb-redesign-active #calendario .cbx-btn-completed {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--cardBorder, #cbd5e1);
+  background: var(--completed-bg, #f1f5f9) !important;
+  color: var(--completed-ink, #0f172a) !important;
+  font: 700 12.5px var(--cbx-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+
+body.cb-redesign-active #calendario .cbx-btn-completed.is-completed {
+  background: var(--btn, #10b981) !important;
+  color: var(--btnInk, #ffffff) !important;
+  border-color: var(--btn, #10b981) !important;
+}
 @media(max-width:620px){body.cb-redesign-active #calendario > .cbx-banner { display: grid; gap: 10px; justify-items: start; }body.cb-redesign-active #calendario > .cbx-banner h2 { font-size: 26px !important; }body.cb-redesign-active #calendario .cbx-calendar-match,body.cb-redesign-active #calendario .cbx-calendar-training { grid-template-columns: 51px minmax(0,1fr) auto; gap: 8px; padding: 9px; }body.cb-redesign-active #calendario .cbx-calendar-score { min-width: 54px; padding: 7px 5px; font-size: 13px; }body.cb-redesign-active #calendario .cbx-calendar-month { padding: 12px; }}
 
 /* ==========================================================

@@ -21,3 +21,15 @@ test('sanitizeLiveTimer limpia timer huérfano si el partido ya está finalizado
   assert.match(appSource, /state\.timer = null/, 'Debe poner timer a null');
   assert.match(appSource, /put\('settings', \{ id: 'live', timer: null/, 'Debe persistir live en settings como null');
 });
+
+test('toggleMatchCompleted archiva y desmarca partidos jugados como en sesiones', () => {
+  assert.match(appSource, /async function toggleMatchCompleted\(id\)/, 'Debe definir toggleMatchCompleted');
+  assert.match(appSource, /willBeCompleted \? 'finished' : 'planned'/, 'Debe alternar entre finished y planned');
+  assert.match(appSource, /closedAt: willBeCompleted \? \(match\.closedAt \|\| Date\.now\(\)\) : null/, 'Debe gestionar closedAt');
+  assert.match(appSource, /class="toggle-match-completed cbx-btn-completed/, 'renderMatchCard debe incluir boton toggle-match-completed');
+  assert.match(appSource, /\$\{isPlayed \? '✓ Realizado' : '○ Realizado'\}/, 'Debe alternar etiqueta Realizado');
+  assert.match(appSource, /toggleMatchCompleted\(completedBtn\.dataset\.id\)/, 'wireEvents debe enlazar clic en toggle-match-completed');
+  assert.match(appSource, /toggleMatchCompleted,/, 'window.__campobase debe exportar toggleMatchCompleted');
+  assert.match(appSource, /<span class="cbx-accordion-indicator">▾<\/span>/, 'El acordeon de partidos debe incluir el indicador ▾ como en sesiones');
+});
+
