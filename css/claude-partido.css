@@ -521,8 +521,8 @@ body.cb-redesign-active #convocatorias .cbx-btn-completed {
   padding: 0 10px;
   border-radius: 10px;
   border: 1px solid var(--cardBorder, #cbd5e1);
-  background: var(--completed-bg, #f1f5f9) !important;
-  color: var(--completed-ink, #0f172a) !important;
+  background: var(--completed-bg, #f1f5f9);
+  color: var(--completed-ink, #0f172a);
   font: 700 12.5px var(--cbx-ui);
   cursor: pointer;
   display: inline-flex;
@@ -535,9 +535,9 @@ body.cb-redesign-active #convocatorias .cbx-btn-completed {
 
 body.cb-redesign-active #calendario .cbx-btn-completed.is-completed,
 body.cb-redesign-active #convocatorias .cbx-btn-completed.is-completed {
-  background: var(--btn, #10b981) !important;
-  color: var(--btnInk, #ffffff) !important;
-  border-color: var(--btn, #10b981) !important;
+  background: var(--btn, #10b981);
+  color: var(--btnInk, #ffffff);
+  border-color: var(--btn, #10b981);
 }
 @media(max-width:620px){body.cb-redesign-active #calendario > .cbx-banner { display: grid; gap: 10px; justify-items: start; }body.cb-redesign-active #calendario > .cbx-banner h2 { font-size: 26px !important; }body.cb-redesign-active #calendario .cbx-calendar-match,body.cb-redesign-active #calendario .cbx-calendar-training { grid-template-columns: 51px minmax(0,1fr) auto; gap: 8px; padding: 9px; }body.cb-redesign-active #calendario .cbx-calendar-score { min-width: 54px; padding: 7px 5px; font-size: 13px; }body.cb-redesign-active #calendario .cbx-calendar-month { padding: 12px; }}
 

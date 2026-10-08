@@ -38,6 +38,45 @@ export function configurableElements(root) {
       }
       return '#ejercicios .exercise-card'+(shared.length?' '+shared.join(' > '):'');
     }
+    const callupCard=element.closest('#convocatorias .cbx-callup-layout, #convocatorias .cbx-callup-card, #convocatorias .callup-card');
+    if(callupCard){
+      if(element.classList.contains('cbx-callup-card')||element.classList.contains('callup-card')){
+        return '#convocatorias .cbx-callup-card';
+      }
+      if(element.classList.contains('cbx-callup-distribution')){
+        return '#convocatorias .cbx-callup-distribution';
+      }
+      if(element.classList.contains('cbx-callup-plan')){
+        return '#convocatorias .cbx-callup-plan';
+      }
+      if(element.classList.contains('cbx-callup-layout')){
+        return '#convocatorias .cbx-callup-layout .panel';
+      }
+      if(element.classList.contains('cbx-btn-completed')||element.classList.contains('toggle-callup-completed')){
+        return '#convocatorias .cbx-btn-completed';
+      }
+      if(element.classList.contains('open-whatsapp-callup')){
+        return '#convocatorias .open-whatsapp-callup';
+      }
+      if(element.classList.contains('callup-open-prep')){
+        return '#convocatorias .callup-open-prep';
+      }
+      if(element.classList.contains('edit-callup')){
+        return '#convocatorias .edit-callup';
+      }
+      if(element.classList.contains('delete-callup')){
+        return '#convocatorias .delete-callup';
+      }
+      const baseCard=element.closest('.cbx-callup-card, .cbx-callup-distribution, .cbx-callup-plan, .panel')||callupCard;
+      const baseSelector=baseCard.classList.contains('cbx-callup-card')?'#convocatorias .cbx-callup-card':baseCard.classList.contains('cbx-callup-distribution')?'#convocatorias .cbx-callup-distribution':baseCard.classList.contains('cbx-callup-plan')?'#convocatorias .cbx-callup-plan':'#convocatorias .cbx-callup-layout .panel';
+      const shared=[];
+      for(let node=element;node&&node!==baseCard;node=node.parentElement){
+        const classes=[...node.classList].filter(name=>!/^(active|selected|is-|cbp-)/.test(name));
+        const siblings=[...node.parentElement.children].filter(child=>child.tagName===node.tagName);
+        shared.unshift(node.tagName.toLowerCase()+(classes.length?classes.map(name=>'.'+CSS.escape(name)).join(''):':nth-of-type('+(siblings.indexOf(node)+1)+')'));
+      }
+      return baseSelector+(shared.length?' '+shared.join(' > '):'');
+    }
     const parts = [];
     for (let node = element; node && node !== root; node = node.parentElement) {
       if (node.id) { parts.unshift('#' + CSS.escape(node.id)); break; }

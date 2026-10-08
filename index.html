@@ -1656,10 +1656,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261007-fluid-refresh-1';
+    window.__CAMPOBASE_BUILD = '20261008-callups-played-sync-1';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261007-fluid-refresh-1')
+      navigator.serviceWorker.register('./sw.js?v=20261008-callups-played-sync-1')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });

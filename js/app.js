@@ -32,7 +32,7 @@ import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwn
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
 import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
-import { partitionAndSortMatches } from './match-calendar-sync.js';
+import { partitionAndSortMatches, isMatchPlayed } from './match-calendar-sync.js';
 import {
   cleanPlayerNumber,
   formatWhatsAppPhone,
@@ -599,7 +599,7 @@ function renderOrDefer(force = false) {
 function sanitizeLiveTimer() {
   if (!state.timer) return;
   const liveMatch = (state.matches || []).find((m) => String(m.id) === String(state.timer?.matchId));
-  if (!liveMatch || liveMatch.status === 'finished' || liveMatch.status === 'closed' || Boolean(liveMatch.closedAt)) {
+  if (!liveMatch || liveMatch.status === 'finished' || liveMatch.status === 'closed' || Boolean(liveMatch.closedAt) || isMatchPlayed(liveMatch)) {
     state.timer = null;
     void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
   }
@@ -617,6 +617,22 @@ async function refresh() {
   const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
   sanitizeLiveTimer();
+  for (const match of (state.matches || [])) {
+    if (isMatchPlayed(match) && match.status !== 'finished') {
+      match.status = 'finished';
+      match.closedAt = match.closedAt || match.finishedAt || Date.now();
+      match.updatedAt = Date.now();
+      void put('matches', match).catch(() => {});
+    }
+  }
+  for (const callup of (state.callups || [])) {
+    if (isCallupPlayed(callup) && callup.completed !== true) {
+      callup.completed = true;
+      callup.closedAt = callup.closedAt || Date.now();
+      callup.updatedAt = Date.now();
+      void put('callups', callup).catch(() => {});
+    }
+  }
   await deduplicatePlayers();
 
   // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
@@ -1434,11 +1450,36 @@ async function savePlayerStats(event) {
   toast(`Estadísticas de ${values.scope === 'preseason' ? 'Pretemporada' : 'Liga'} guardadas.`);
 }
 
+function normalizeOpponentName(name) {
+  return String(name || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/^(c\.?d\.?|u\.?d\.?|c\.?f\.?|s\.?d\.?|at\.?|atletico|union|deportivo)\s+/i, '')
+    .replace(/[^\w\s]/g, '')
+    .trim();
+}
+
 function callupForMatch(match) {
-  if (!match) return null;
-  const matchId = typeof match === 'string' ? match : match.id;
-  const callupId = typeof match === 'object' ? match.callupId : null;
-  return state.callups.find((item) => (callupId && item.id === callupId) || item.matchId === matchId || item.id === matchId) ?? null;
+  if (!match || !Array.isArray(state.callups)) return null;
+  const matchId = typeof match === 'string' ? match : String(match.id || '');
+  const callupId = typeof match === 'object' && match.callupId ? String(match.callupId) : null;
+  const direct = state.callups.find((item) => (callupId && String(item.id) === callupId) || String(item.matchId || '') === matchId || String(item.id) === matchId);
+  if (direct) return direct;
+  if (typeof match === 'object' && match.opponent && match.date) {
+    const matchDay = String(match.date).slice(0, 10);
+    const normOpp = normalizeOpponentName(match.opponent);
+    if (normOpp) {
+      const sameDay = state.callups.find((c) => {
+        const cDay = String(c.date || '').slice(0, 10);
+        if (cDay !== matchDay) return false;
+        const cNorm = normalizeOpponentName(c.opponent);
+        return cNorm === normOpp || cNorm.includes(normOpp) || normOpp.includes(cNorm);
+      });
+      if (sameDay) return sameDay;
+    }
+  }
+  return null;
 }
 
 function exclusionReasonLabel({ reason, note }) {
@@ -1692,24 +1733,58 @@ function suggestCallupRotation(callupId) {
 let playedCallupsSearchQuery = '';
 
 function findMatchForCallup(callup) {
-  if (!callup) return null;
-  return state.matches.find((m) =>
-    (callup.matchId && m.id === callup.matchId) ||
-    (m.callupId && m.callupId === callup.id) ||
-    (m.opponent && callup.opponent && m.opponent.toLowerCase().trim() === callup.opponent.toLowerCase().trim() &&
-     String(m.date || '').slice(0, 10) === String(callup.date || '').slice(0, 10))
-  ) || null;
+  if (!callup || !Array.isArray(state.matches)) return null;
+  const matchId = String(callup.matchId || '');
+  const callupId = String(callup.id || '');
+  const direct = state.matches.find((m) =>
+    (matchId && String(m.id) === matchId) ||
+    (m.callupId && String(m.callupId) === callupId) ||
+    (callupId && String(m.id) === callupId)
+  );
+  if (direct) return direct;
+
+  const callupDay = String(callup.date || '').slice(0, 10);
+  const normCallupOpp = normalizeOpponentName(callup.opponent);
+  if (normCallupOpp) {
+    const sameDay = state.matches.find((m) => {
+      const matchDay = String(m.date || '').slice(0, 10);
+      if (matchDay !== callupDay) return false;
+      const normMatchOpp = normalizeOpponentName(m.opponent);
+      return normMatchOpp === normCallupOpp || normMatchOpp.includes(normCallupOpp) || normCallupOpp.includes(normMatchOpp);
+    });
+    if (sameDay) return sameDay;
+
+    const callupTime = new Date(callup.date).getTime();
+    if (!Number.isNaN(callupTime)) {
+      const nearMatch = state.matches.find((m) => {
+        const normMatchOpp = normalizeOpponentName(m.opponent);
+        if (normMatchOpp !== normCallupOpp && !normMatchOpp.includes(normCallupOpp) && !normCallupOpp.includes(normMatchOpp)) return false;
+        const matchTime = new Date(m.date).getTime();
+        return !Number.isNaN(matchTime) && Math.abs(matchTime - callupTime) <= 48 * 3600 * 1000;
+      });
+      if (nearMatch) return nearMatch;
+    }
+  }
+  return null;
 }
 
 function isCallupPlayed(callup) {
   if (!callup) return false;
-  if (callup.completed === true) return true;
-  if (callup.completed === false) return false;
+  if (callup.completed === true || Boolean(callup.closedAt)) return true;
   const match = findMatchForCallup(callup);
-  if (match) {
-    return match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt);
+  if (match && isMatchPlayed(match)) return true;
+  if (Number.isFinite(callup.goalsFor) || Number.isFinite(callup.goalsAgainst)) return true;
+  if (callup.status === 'finished' || callup.status === 'closed') return true;
+  if (Array.isArray(state.trainings)) {
+    const hasAttendance = state.trainings.some((t) =>
+      t && t.kind === 'match' &&
+      ((match && t.matchId === match.id) || (callup.id && (t.callupId === callup.id || t.matchId === callup.id))) &&
+      Array.isArray(t.records) && t.records.length > 0
+    );
+    if (hasAttendance) return true;
   }
-  return Boolean(callup.closedAt);
+  if (callup.completed === false) return false;
+  return false;
 }
 
 async function toggleCallupCompleted(id) {
@@ -4054,7 +4129,8 @@ async function finishMatch() {
         { id: uid(), kind: 'match', matchId: match.id, createdAt: Date.now() },
       ));
     }
-    await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
+    const completedCallup = { ...callup, completed: true, closedAt: callup.closedAt || Date.now(), updatedAt: Date.now() };
+    await putBatch({ players: updatedPlayers, matches: [completedMatch], callups: [completedCallup], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
     state.recentFinishedMatchId = match.id;
     state.timer = null; clearInterval(state.tick); liveTactic = null; await refresh();
     closeDelegateMode(); showView('partido');
@@ -4093,7 +4169,8 @@ async function saveMatchRatings(event) {
       { id: uid(), kind: 'match', matchId: match.id, createdAt: Date.now() },
     ));
   }
-  await putBatch({ players: updatedPlayers, matches: [completedMatch], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
+  const completedCallup = { ...callup, completed: true, closedAt: callup.closedAt || Date.now(), updatedAt: Date.now() };
+  await putBatch({ players: updatedPlayers, matches: [completedMatch], callups: [completedCallup], trainings: trainingRecords, settings: [{ id: 'live', timer: null, updatedAt: Date.now() }] });
   $('#rating-dialog').close();
   state.timer = null; clearInterval(state.tick); await refresh(true);
   renderMatches();
@@ -4160,8 +4237,16 @@ async function saveMatch(event) {
     for (const record of state.trainings.filter((item) => item.matchId === savedMatch.id)) {
       if (String(record.date || '').slice(0, 10) !== day) await put('trainings', { ...record, date: day, updatedAt: Date.now() });
     }
+    const isFinished = isMatchPlayed(savedMatch);
     for (const callup of state.callups.filter((item) => item.matchId === savedMatch.id || item.id === savedMatch.callupId)) {
-      if (String(callup.date || '').slice(0, 10) !== day) await put('callups', { ...callup, date: day, matchType: savedMatch.type, updatedAt: Date.now() });
+      await put('callups', {
+        ...callup,
+        date: String(callup.date || '').slice(0, 10) !== day ? day : callup.date,
+        matchType: savedMatch.type,
+        completed: isFinished ? true : callup.completed,
+        closedAt: isFinished ? (callup.closedAt || Date.now()) : callup.closedAt,
+        updatedAt: Date.now(),
+      });
     }
   }
   form.closest('dialog').close(); form.reset(); await refresh(true); renderMatches(); renderPlayers(); renderTrainings(); toast('Partido guardado.');
@@ -4170,7 +4255,7 @@ async function saveMatch(event) {
 async function toggleMatchCompleted(id) {
   const match = state.matches.find((m) => m.id === id);
   if (!match) return;
-  const isCurrentlyPlayed = match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt);
+  const isCurrentlyPlayed = isMatchPlayed(match);
   const willBeCompleted = !isCurrentlyPlayed;
   const updated = {
     ...match,
@@ -4185,11 +4270,12 @@ async function toggleMatchCompleted(id) {
   await put('matches', updated);
 
   const matchDay = String(match.date || '').slice(0, 10);
+  const normMatchOpp = normalizeOpponentName(match.opponent);
   const relatedCallups = state.callups.filter((c) =>
     c.matchId === match.id ||
     c.id === match.callupId ||
-    (c.opponent && match.opponent && c.opponent.toLowerCase().trim() === match.opponent.toLowerCase().trim() &&
-     String(c.date || '').slice(0, 10) === matchDay)
+    String(c.id) === String(match.id) ||
+    (normMatchOpp && normalizeOpponentName(c.opponent) === normMatchOpp && String(c.date || '').slice(0, 10) === matchDay)
   );
   for (const c of relatedCallups) {
     await put('callups', {
@@ -4216,7 +4302,7 @@ function renderMatchCard(match) {
   const awayScore = teams.mySide === 'away' ? gf : ga;
   const isOwner = roleCanUseOwnerFeatures(state.role);
   const isLive = Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(match.id)) || match.status === 'in_progress');
-  const isPlayed = match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt);
+  const isPlayed = isMatchPlayed(match);
   const completedBtnHtml = `<button type="button" class="toggle-match-completed cbx-btn-completed ${isPlayed ? 'is-completed' : ''}" data-id="${match.id}" title="${isPlayed ? 'Marcar como pendiente' : 'Marcar como realizado y archivar'}">${isPlayed ? '✓ Realizado' : '○ Realizado'}</button>`;
 
   if (document.body.classList.contains('cb-redesign-active')) {
@@ -4227,9 +4313,9 @@ function renderMatchCard(match) {
     const liveScore = isLive && state.timer?.details ? `${teams.mySide === 'home' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}–${teams.mySide === 'away' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}` : '';
     const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente'));
     const resultClass = isLive ? 'live' : (hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
-    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles${isPlayed ? ' · ✓ Realizado' : ''}</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
+    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles${isPlayed ? ' · ✓ Realizado' : ''}</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
   }
-  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${match.status !== 'finished' && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${match.status !== 'finished' ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
+  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
 }
 
 let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -11397,6 +11483,7 @@ async function pollLiveState() {
   if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   state.timer = live.timer;
+  sanitizeLiveTimer();
   // Un live remoto nuevo invalida la pizarra en memoria. refresh() cargará
   // primero la preparación sincronizada y renderLive() la reconstruirá exacta.
   liveTactic = null;
@@ -13808,7 +13895,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261007-fluid-refresh-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-callups-played-sync-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

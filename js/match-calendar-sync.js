@@ -161,14 +161,25 @@ export function initMatchCalendarSync() {
   scheduleEnhance();
 }
 
+export function isMatchPlayed(match) {
+  if (!match) return false;
+  if (match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt) || Boolean(match.finishedAt)) return true;
+  if ((Number(match.playedSeconds) || 0) > 0) return true;
+  if (Array.isArray(match.goals) && match.goals.length > 0) return true;
+  if (match.minuteTotals && Object.values(match.minuteTotals).some((sec) => Number(sec) > 0)) return true;
+  if (match.ratings && Object.keys(match.ratings).length > 0) return true;
+  if ((Number(match.goalsFor) || 0) > 0 || (Number(match.goalsAgainst) || 0) > 0) return true;
+  if (match.status !== 'planned' && (Number.isFinite(match.goalsFor) || Number.isFinite(match.goalsAgainst))) return true;
+  return false;
+}
+
 export function partitionAndSortMatches(matches) {
   if (!Array.isArray(matches)) throw new TypeError('Los partidos deben ser una lista.');
-  const isPlayed = (match) => match?.status === 'finished' || match?.status === 'closed' || Boolean(match?.closedAt);
   const upcoming = matches
-    .filter((match) => !isPlayed(match))
+    .filter((match) => !isMatchPlayed(match))
     .sort((a, b) => String(a?.date || '').localeCompare(String(b?.date || '')) || (a?.createdAt ?? 0) - (b?.createdAt ?? 0));
   const played = matches
-    .filter(isPlayed)
+    .filter(isMatchPlayed)
     .sort((a, b) => String(b?.date || '').localeCompare(String(a?.date || '')) || (b?.createdAt ?? 0) - (a?.createdAt ?? 0));
   return { upcoming, played };
 }
