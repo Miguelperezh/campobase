@@ -6,12 +6,17 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ## 1. Resumen de Mejoras Recientes
 
-### 1.0.0 Sincronización de Convocatorias, Desplegables Limpios y Caché de WhatsApp (v82 - SDD 038)
+### 1.0.0 Sincronización de Convocatorias, Desplegables Limpios, Selector de WhatsApp y Caché (v82 - SDD 038)
 - **Causas anteriores:**
   1. *Desplegables de partidos en convocatorias:* Al crear una convocatoria (`callupBuilder`), el desplegable `<select name="matchId">` no filtraba partidos con fecha pasada anterior a hoy ni partidos que ya tenían convocatoria asociada cuando estaban emparejados por rival y fecha en lugar de por ID directo. Además, en el desplegable de WhatsApp (`#wa-event-select`) se mezclaban partidos pasados ya jugados y no se vinculaba la convocatoria si no compartían ID idéntico.
   2. *Convocatoria creada en móvil no visible o perdida:* Al guardar una convocatoria en móvil, `callup` no inicializaba `completed: false` explícitamente, lo que podía provocar que se clasificara como jugada si existía coincidencia de nombre con un partido anterior. Además, durante `syncFromCloud` en `js/db.js` y `reconcileCloudSnapshot` en `js/sync-core.js`, cualquier registro local ausente en el snapshot descargado de Supabase era eliminado de IndexedDB por no estar en la nube, destruyendo convocatorias creadas localmente en el móvil.
-  3. *Textos de WhatsApp no actualizados en ordenador:* El import de `whatsapp-suite.js` en `js/app.js` no disponía de parámetro de versión (`?v=...`), provocando que la caché en memoria del navegador y la caché del Service Worker sirvieran la versión previa sin las directrices obligatorias de vestimenta y la sección `Descansan`.
-- **Solución implementada:**
+  3. *Error de campo "Mundial 82" y lista de convocados vacía en WhatsApp:* En `populateWhatsAppEvents`, la creación de elementos `<option>` para partidos omitía la asignación de `opt.value = match:${m.id}`. Como consecuencia, el DOM devolvía como valor del select el texto completo de la opción, fallando la búsqueda en `state.matches` y recurriendo a un fallback indebido a `state.matches[0]`, el cual correspondía a un partido histórico en "Mundial 82" y sin la convocatoria del partido seleccionado.
+  4. *Textos de WhatsApp no actualizados en ordenador:* El import de `whatsapp-suite.js` en `js/app.js` no disponía de parámetro de versión (`?v=...`), provocando que la caché en memoria del navegador y la caché del Service Worker sirvieran la versión previa sin las directrices obligatorias de vestimenta y la sección `Descansan`.
+- **Solución implementada y validada (100% en verde):**
+  - **Selector y resolución fiel de eventos en WhatsApp (`js/app.js`):**
+    - Asignación estricta de `opt.value = match:${m.id}` en `populateWhatsAppEvents`.
+    - Búsqueda y emparejamiento de convocatorias bidireccional por ID directo (`m.callupId`, `c.matchId`) y por coincidencia de rival normalizado y fecha (`normalizeOpponentName`).
+    - Sincronización de campo (`fieldName`), enlace de Google Maps y hora de citación (45 min antes de la hora del partido) respetando estrictamente los datos del partido seleccionado por el usuario, sin sobreescrituras ni fallbacks espurios.
   - **Filtrado estricto en selector de convocatorias (`js/app.js`):**
     - `callupBuilder` filtra partidos jugados (`isMatchPlayed` o `match.completed === true`).
     - Excluye partidos con fecha anterior a hoy (`matchDay < todayKey`).
@@ -20,6 +25,10 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
     - En `reconcileCloudSnapshot`, los registros locales ausentes en el snapshot remoto se conservan en IndexedDB salvo que exista una mutación `delete` pendiente.
     - En `syncFromCloud`, los registros locales no presentes en Supabase se detectan y encolan automáticamente (`queueInitialRecords`) para subirse con `flushSyncQueue()`, asegurando sincronización bidireccional inmediata.
     - En `saveCallup`, se inicializa explícitamente `completed: existing?.completed ?? false` y `closedAt: existing?.closedAt ?? null` para garantizar que toda convocatoria nueva se mantenga en la vista activa de pendientes.
+  - **Textos obligatorios y formato de WhatsApp (`js/whatsapp-suite.js`):**
+    - Sección de convocados enumerada con dorsal y nombre.
+    - Sección obligatoria `*Descansan:*` en negrita con viñetas `- Dorsal X, Nombre y Apellidos` sin indicar motivos en el mensaje grupal.
+    - Instrucciones de ropa completa: dos equipaciones oficiales completas en mochila, pantalón de paseo de este año y polo, camiseta roja de calentamiento (la de entrenamiento), espinilleras y agua individual.
   - **Actualización inmediata de WhatsApp en ordenador y móvil (`js/app.js`, `sw.js`, `index.html`):**
     - Import versionado: `from './whatsapp-suite.js?v=20261008-fix-convocatorias-whatsapp-sync-v6'`.
     - Renovación de `CACHE` y `ASSETS` en `sw.js` y `window.__CAMPOBASE_BUILD` a `20261008-fix-convocatorias-whatsapp-sync-v6`.

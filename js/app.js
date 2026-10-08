@@ -11857,6 +11857,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     let selectedOptionValue = '';
     matches.forEach((m) => {
       const opt = document.createElement('option');
+      opt.value = `match:${m.id}`;
       const callup = state.callups.find((c) =>
         c.id === m.callupId ||
         c.matchId === m.id ||
@@ -12195,7 +12196,11 @@ function updateWhatsAppPreview() {
     } else {
       const mId = eventVal.startsWith('match:') ? eventVal.replace('match:', '') : eventVal;
       match = state.matches.find((m) => m.id === mId) || state.matches[0] || {};
-      callup = state.callups.find((c) => c.id === match?.callupId || c.matchId === match?.id) || null;
+      callup = state.callups.find((c) =>
+        c.id === match?.callupId ||
+        c.matchId === match?.id ||
+        (c.opponent && match?.opponent && normalizeOpponentName(c.opponent) === normalizeOpponentName(match.opponent) && String(c.date || '').slice(0, 10) === String(match.date || '').slice(0, 10))
+      ) || null;
     }
 
     const selectedMatchType = match?.type || callup?.matchType || 'league';
