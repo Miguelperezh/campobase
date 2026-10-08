@@ -6,6 +6,24 @@ Este documento reúne toda la información técnica, arquitectónica y operativa
 
 ## 1. Resumen de Mejoras Recientes
 
+### 1.0.0 Sincronización de Convocatorias, Desplegables Limpios y Caché de WhatsApp (v82 - SDD 038)
+- **Causas anteriores:**
+  1. *Desplegables de partidos en convocatorias:* Al crear una convocatoria (`callupBuilder`), el desplegable `<select name="matchId">` no filtraba partidos con fecha pasada anterior a hoy ni partidos que ya tenían convocatoria asociada cuando estaban emparejados por rival y fecha en lugar de por ID directo. Además, en el desplegable de WhatsApp (`#wa-event-select`) se mezclaban partidos pasados ya jugados y no se vinculaba la convocatoria si no compartían ID idéntico.
+  2. *Convocatoria creada en móvil no visible o perdida:* Al guardar una convocatoria en móvil, `callup` no inicializaba `completed: false` explícitamente, lo que podía provocar que se clasificara como jugada si existía coincidencia de nombre con un partido anterior. Además, durante `syncFromCloud` en `js/db.js` y `reconcileCloudSnapshot` en `js/sync-core.js`, cualquier registro local ausente en el snapshot descargado de Supabase era eliminado de IndexedDB por no estar en la nube, destruyendo convocatorias creadas localmente en el móvil.
+  3. *Textos de WhatsApp no actualizados en ordenador:* El import de `whatsapp-suite.js` en `js/app.js` no disponía de parámetro de versión (`?v=...`), provocando que la caché en memoria del navegador y la caché del Service Worker sirvieran la versión previa sin las directrices obligatorias de vestimenta y la sección `Descansan`.
+- **Solución implementada:**
+  - **Filtrado estricto en selector de convocatorias (`js/app.js`):**
+    - `callupBuilder` filtra partidos jugados (`isMatchPlayed` o `match.completed === true`).
+    - Excluye partidos con fecha anterior a hoy (`matchDay < todayKey`).
+    - Excluye partidos con convocatoria existente (`matchHasCallup`), comparando IDs directos, `callupId` y la combinación de rival normalizado y fecha.
+  - **Preservación Local-First de convocatorias y subida automática (`js/sync-core.js` y `js/db.js`):**
+    - En `reconcileCloudSnapshot`, los registros locales ausentes en el snapshot remoto se conservan en IndexedDB salvo que exista una mutación `delete` pendiente.
+    - En `syncFromCloud`, los registros locales no presentes en Supabase se detectan y encolan automáticamente (`queueInitialRecords`) para subirse con `flushSyncQueue()`, asegurando sincronización bidireccional inmediata.
+    - En `saveCallup`, se inicializa explícitamente `completed: existing?.completed ?? false` y `closedAt: existing?.closedAt ?? null` para garantizar que toda convocatoria nueva se mantenga en la vista activa de pendientes.
+  - **Actualización inmediata de WhatsApp en ordenador y móvil (`js/app.js`, `sw.js`, `index.html`):**
+    - Import versionado: `from './whatsapp-suite.js?v=20261008-fix-convocatorias-whatsapp-sync-v6'`.
+    - Renovación de `CACHE` y `ASSETS` en `sw.js` y `window.__CAMPOBASE_BUILD` a `20261008-fix-convocatorias-whatsapp-sync-v6`.
+
 ### 1.0 Personalización Cromática Total e Independiente por Pantalla y Archivo de Entrenamientos Realizados (v81 - SDD 015)
 - **Causa anterior:**
   1. Los ajustes cromáticos alteraban de forma global todas las pantallas de la aplicación.

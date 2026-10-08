@@ -47,7 +47,7 @@ import {
   isWeekend,
   formatWeekSpanLabel,
   buildWhatsAppMatchFamilySummary,
-} from './whatsapp-suite.js';
+} from './whatsapp-suite.js?v=20261008-fix-convocatorias-whatsapp-sync-v6';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -1536,11 +1536,24 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   const existing = state.callups.find((callup) => callup.id === editId);
   const selectedMatchId = existing?.matchId ?? preselectedMatchId;
   container.classList.remove('hidden');
+  const todayKey = localDateKey();
   const options = state.matches
     .filter((match) => {
       if (existing && match.id === selectedMatchId) return true;
-      if (isMatchPlayed(match)) return false;
-      const hasCallup = state.callups.some((c) => (c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id)) && (!existing || c.id !== existing.id));
+      if (isMatchPlayed(match) || match.completed === true) return false;
+      const matchDay = String(match.date || '').slice(0, 10);
+      if (matchDay && matchDay < todayKey) return false;
+      const hasCallup = state.callups.some((c) => {
+        if (existing && c.id === existing.id) return false;
+        if (c.matchId && String(c.matchId) === String(match.id)) return true;
+        if (match.callupId && String(match.callupId) === String(c.id)) return true;
+        if (String(c.id) === String(match.id)) return true;
+        const normMatchOpp = normalizeOpponentName(match.opponent);
+        const normCallupOpp = normalizeOpponentName(c.opponent);
+        const callupDay = String(c.date || '').slice(0, 10);
+        if (matchDay && matchDay === callupDay && normMatchOpp && normMatchOpp === normCallupOpp) return true;
+        return false;
+      });
       if (hasCallup) return false;
       return true;
     })
@@ -1659,7 +1672,24 @@ async function saveCallup(event) {
     ? state.callups.find((c) => c.matchId === match.id || c.id === match.callupId || String(c.id) === String(match.id))
     : null;
   const targetId = existing?.id || existingForMatch?.id || uid();
-  const callup = { id: targetId, matchId: match.id, date: match.date, opponent: match.opponent, matchType: match.type ?? 'league', format, availableIds, selectedIds: checkedValues('selected', form), excludedIds, exclusions, targets, rotationDecisions, createdAt: existing?.createdAt ?? existingForMatch?.createdAt ?? Date.now(), updatedAt: Date.now() };
+  const callup = {
+    id: targetId,
+    matchId: match.id,
+    date: match.date,
+    opponent: match.opponent,
+    matchType: match.type ?? 'league',
+    format,
+    availableIds,
+    selectedIds: checkedValues('selected', form),
+    excludedIds,
+    exclusions,
+    targets,
+    rotationDecisions,
+    completed: existing?.completed ?? false,
+    closedAt: existing?.closedAt ?? null,
+    createdAt: existing?.createdAt ?? existingForMatch?.createdAt ?? Date.now(),
+    updatedAt: Date.now(),
+  };
   const nextCallups = [...state.callups.filter(({ id, matchId: mId }) => id !== callup.id && mId !== match.id), callup];
   const matchesToSave = [{ ...match, callupId: callup.id, format }];
   if (existing?.matchId && existing.matchId !== match.id) {
@@ -11827,8 +11857,11 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     let selectedOptionValue = '';
     matches.forEach((m) => {
       const opt = document.createElement('option');
-      opt.value = `match:${m.id}`;
-      const callup = state.callups.find((c) => c.id === m.callupId || c.matchId === m.id);
+      const callup = state.callups.find((c) =>
+        c.id === m.callupId ||
+        c.matchId === m.id ||
+        (c.opponent && m.opponent && normalizeOpponentName(c.opponent) === normalizeOpponentName(m.opponent) && String(c.date || '').slice(0, 10) === String(m.date || '').slice(0, 10))
+      );
       if (callup) processedCallupIds.add(callup.id);
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
       const waTypeLabel = matchTypeLabel(m.type || 'league');
@@ -14080,7 +14113,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-whatsapp-sync-v5').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-whatsapp-sync-v6').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

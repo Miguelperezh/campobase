@@ -164,6 +164,7 @@ export function initMatchCalendarSync() {
 export function isMatchPlayed(match) {
   if (!match) return false;
   if (match.status === 'finished' || match.status === 'closed' || Boolean(match.closedAt) || Boolean(match.finishedAt)) return true;
+  if (match.completed === true) return true;
   if ((Number(match.playedSeconds) || 0) > 0) return true;
   if (Array.isArray(match.goals) && match.goals.length > 0) return true;
   if (match.minuteTotals && Object.values(match.minuteTotals).some((sec) => Number(sec) > 0)) return true;

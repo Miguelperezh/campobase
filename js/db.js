@@ -463,6 +463,13 @@ export async function syncFromCloud() {
             }
           }
         }
+        const cloudIds = new Set(snapshot.records.map((r) => r.id));
+        const deletedIds = new Set(snapshot.deletedIds || []);
+        const missingFromCloud = localRecords.filter((r) => !cloudIds.has(r.id) && !deletedIds.has(r.id));
+        if (missingFromCloud.length > 0) {
+          await queueInitialRecords(store, missingFromCloud);
+          await flushSyncQueue();
+        }
         const areEquivalent = (() => {
           if (localRecords.length !== snapshot.records.length) return false;
           if (localRecords.length === 0) return true;
