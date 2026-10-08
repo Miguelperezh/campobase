@@ -1350,6 +1350,32 @@
     </form>
   </dialog>
 
+  <dialog id="mobile-sync-dialog" class="cbx-mobile-sync-dialog" style="max-width: 520px; width: 92vw; border-radius: 18px; border: 1px solid var(--line, #e2e8f0); padding: 0; background: var(--card, #ffffff); box-shadow: 0 16px 48px rgba(0,0,0,0.22); overflow: hidden;">
+    <div style="padding: 16px 20px; background: var(--paper, #f8fafc); border-bottom: 1px solid var(--line, #e2e8f0); display: flex; align-items: center; justify-content: space-between;">
+      <h2 style="margin: 0; font: 800 1.25rem var(--disp, inherit); text-transform: uppercase; color: var(--ink, #0f172a);">📲 Sincronizar con el móvil</h2>
+      <button type="button" data-close style="background: none; border: 0; font-size: 24px; cursor: pointer; color: var(--muted, #64748b);">×</button>
+    </div>
+    <div style="padding: 20px;" class="stack">
+      <p style="margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--ink, #334155);">
+        Conecta tu móvil al instante para tener los mismos partidos, asistencias y sesiones que en este ordenador:
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" id="mobile-sync-wa-btn" class="primary" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; font-size: 14.5px; font-weight: 700; background: #25d366; color: #fff; border: 0; border-radius: 12px; cursor: pointer;">
+          📱 Abrir en mi WhatsApp
+        </button>
+        <button type="button" id="mobile-sync-copy-btn" class="secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; font-size: 14px; font-weight: 700; border-radius: 12px;">
+          📋 Copiar enlace de sincronización
+        </button>
+      </div>
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line, #e2e8f0);">
+        <p class="meta" style="margin: 0 0 8px; font-size: 12.5px;">O si prefieres transferir manualmente sin nube:</p>
+        <button type="button" id="mobile-sync-json-btn" class="secondary" style="width: 100%; font-size: 13px;">
+          💾 Descargar copia de seguridad JSON
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="confirmation-dialog"><div class="dialog-head"><h2 id="confirmation-title">Confirmar acción</h2></div><p id="confirmation-message"></p><div class="button-row"><button id="confirmation-accept" type="button" class="primary">Confirmar</button><button id="confirmation-cancel" type="button" class="secondary">Cancelar</button></div></dialog>
 
   <dialog id="staff-dialog">

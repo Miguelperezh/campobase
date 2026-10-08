@@ -596,6 +596,15 @@ function renderOrDefer(force = false) {
 }
 
 
+function sanitizeLiveTimer() {
+  if (!state.timer) return;
+  const liveMatch = (state.matches || []).find((m) => String(m.id) === String(state.timer?.matchId));
+  if (!liveMatch || liveMatch.status === 'finished' || liveMatch.status === 'closed' || Boolean(liveMatch.closedAt)) {
+    state.timer = null;
+    void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+  }
+}
+
 async function deduplicatePlayers() {
   // Protección de datos: refresh nunca deduplica, borra ni reescribe jugadores.
   // Cualquier posible duplicado se resuelve manualmente desde la interfaz.
@@ -607,6 +616,7 @@ const validatedExerciseOrder = new Map(EJERCICIOS_VALIDADOS.map((item, index) =>
 async function refresh() {
   const force = arguments[0] === true;
   [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
+  sanitizeLiveTimer();
   await deduplicatePlayers();
 
   // Los dorsales se muestran normalizados con cleanPlayerNumber(), pero nunca
@@ -4032,6 +4042,8 @@ function renderMatchCard(match) {
 let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let claudeCalendarFilter = 'all';
 let claudeCalendarSelectedDay = null;
+let playedMatchesSearchQuery = '';
+let playedMatchesTypeFilter = 'all';
 
 function renderClaudeCalendar() {
   const year = claudeCalendarMonth.getFullYear();
@@ -4126,6 +4138,30 @@ function renderMatches() {
     const league = played.filter((item) => !isPreseasonMatch(item));
     const preseason = played.filter(isPreseasonMatch);
 
+    // Filtrado de partidos jugados (por texto y por tipo de competición)
+    let filteredPlayed = played;
+    if (playedMatchesTypeFilter === 'league') {
+      filteredPlayed = filteredPlayed.filter((m) => (m.type || 'league') === 'league');
+    } else if (playedMatchesTypeFilter === 'preseason') {
+      filteredPlayed = filteredPlayed.filter(isPreseasonMatch);
+    } else if (playedMatchesTypeFilter === 'friendly') {
+      filteredPlayed = filteredPlayed.filter((m) => m.type === 'friendly');
+    }
+
+    if (playedMatchesSearchQuery) {
+      const q = playedMatchesSearchQuery.toLowerCase().trim();
+      filteredPlayed = filteredPlayed.filter((m) => {
+        const opp = String(m.opponent || '').toLowerCase();
+        const loc = String(m.location || '').toLowerCase();
+        const round = String(m.round || '').toLowerCase();
+        const date = String(m.date || '').toLowerCase();
+        return opp.includes(q) || loc.includes(q) || round.includes(q) || date.includes(q);
+      });
+    }
+
+    const filteredLeague = filteredPlayed.filter((item) => !isPreseasonMatch(item));
+    const filteredPreseason = filteredPlayed.filter(isPreseasonMatch);
+
     const todayStr = localDateKey();
     const upcomingTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) >= todayStr).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
     const pastTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) < todayStr).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
@@ -4133,12 +4169,27 @@ function renderMatches() {
     const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
     const trainingGroup = (title, items) => items.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${items.map(renderTrainingCalendarCard).join('')}</div></section>` : '';
 
-    const wasOpen = root.querySelector('#played-matches-collapsible')?.open ?? true;
+    const existingCollapsible = root.querySelector('#played-matches-collapsible');
+    const wasOpen = existingCollapsible ? existingCollapsible.open : (upcoming.length === 0 && !liveMatches.length);
     const selectedDayBanner = claudeCalendarSelectedDay ? `
       <div class="cbx-calendar-selected-day-banner" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f1f5f9;border-radius:12px;margin:8px 0 14px;border:1px solid #e2e8f0;">
         <span style="font-weight:750;font-size:13px;color:#1e293b;">📅 Eventos del <strong>${escapeHtml(claudeCalendarSelectedDay)}</strong></span>
         <button type="button" class="cbx-clear-day-btn" style="padding:4px 12px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:12px;font-weight:750;color:#0f172a;">Ver todo el mes</button>
       </div>` : '';
+
+    const playedMatchesToolbar = `
+      <div class="cbx-played-matches-toolbar">
+        <div style="flex: 1; min-width: 180px;">
+          <input type="search" id="cbx-played-matches-search" class="cbx-filter-input" placeholder="🔍 Buscar partido jugado (rival, jornada...)" value="${escapeHtml(playedMatchesSearchQuery)}">
+        </div>
+        <div style="min-width: 140px;">
+          <select id="cbx-played-matches-type-select">
+            <option value="all"${playedMatchesTypeFilter === 'all' ? ' selected' : ''}>Todos los jugados (${played.length})</option>
+            <option value="league"${playedMatchesTypeFilter === 'league' ? ' selected' : ''}>Liga (${league.length})</option>
+            <option value="preseason"${playedMatchesTypeFilter === 'preseason' ? ' selected' : ''}>Pretemporada (${preseason.length})</option>
+          </select>
+        </div>
+      </div>`;
 
     const hasAnyEvent = liveMatches.length || nonLiveUpcoming.length || played.length || relevantTrainings.length;
     const emptyNotice = !hasAnyEvent ? (state.matches.length ? '<p class="meta" style="text-align:center;padding:24px 12px;">No hay eventos para el filtro seleccionado.</p>' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>') : '';
@@ -4152,10 +4203,22 @@ function renderMatches() {
       ${trainingGroup('Próximos entrenamientos', upcomingTrainings)}
       ${played.length || pastTrainings.length ? `
         <details class="played-matches-accordion cbx-calendar-played" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
-          <summary>Jugados y completados (${played.length + pastTrainings.length})</summary>
-          ${group('Liga · Jugados', league)}
-          ${group('Pretemporada', preseason)}
-          ${trainingGroup('Entrenamientos pasados', pastTrainings)}
+          <summary class="played-matches-summary cbx-completed-matches-summary">
+            <div class="played-matches-head">
+              <span class="pill accent">✓</span>
+              <h3 class="played-matches-title">Partidos jugados</h3>
+              <span class="meta played-matches-count">(${played.length})</span>
+            </div>
+            <span class="pill secondary played-toggle-pill"></span>
+          </summary>
+          ${playedMatchesToolbar}
+          <div class="played-matches-cards completed-events-cards">
+            ${filteredPlayed.length ? `
+              ${group('Liga · Jugados', filteredLeague)}
+              ${group('Pretemporada', filteredPreseason)}
+            ` : (played.length ? '<p class="meta" style="text-align:center;padding:16px;">No se encontraron partidos jugados para este filtro.</p>' : '')}
+          </div>
+          ${pastTrainings.length ? trainingGroup('Entrenamientos pasados', pastTrainings) : ''}
         </details>` : ''}
       ${emptyNotice}
     `;
@@ -4198,6 +4261,23 @@ function renderMatches() {
           return;
         }
       });
+      root.addEventListener('input', (event) => {
+        if (event.target.id === 'cbx-played-matches-search') {
+          playedMatchesSearchQuery = event.target.value;
+          renderMatches();
+          const searchInput = document.getElementById('cbx-played-matches-search');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+          }
+        }
+      });
+      root.addEventListener('change', (event) => {
+        if (event.target.id === 'cbx-played-matches-type-select') {
+          playedMatchesTypeFilter = event.target.value;
+          renderMatches();
+        }
+      });
     }
     return;
   }
@@ -4211,19 +4291,49 @@ function renderMatches() {
     ? '<div class="panel empty-notice"><p class="meta">No hay próximos partidos programados.</p></div>'
     : '';
 
-  const wasOpen = $('#played-matches-collapsible')?.open ?? false;
+  let filteredClassicPlayed = played;
+  if (playedMatchesTypeFilter === 'league') {
+    filteredClassicPlayed = filteredClassicPlayed.filter((m) => (m.type || 'league') === 'league');
+  } else if (playedMatchesTypeFilter === 'preseason') {
+    filteredClassicPlayed = filteredClassicPlayed.filter(isPreseasonMatch);
+  }
+  if (playedMatchesSearchQuery) {
+    const q = playedMatchesSearchQuery.toLowerCase().trim();
+    filteredClassicPlayed = filteredClassicPlayed.filter((m) => {
+      const opp = String(m.opponent || '').toLowerCase();
+      const loc = String(m.location || '').toLowerCase();
+      const round = String(m.round || '').toLowerCase();
+      const date = String(m.date || '').toLowerCase();
+      return opp.includes(q) || loc.includes(q) || round.includes(q) || date.includes(q);
+    });
+  }
+
+  const existingCollapsible = $('#played-matches-collapsible');
+  const wasOpen = existingCollapsible ? existingCollapsible.open : (upcoming.length === 0);
   const playedHtml = played.length ? `
     <details class="panel played-matches-accordion" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
       <summary class="played-matches-summary">
         <div class="played-matches-head">
           <span class="pill accent">✓</span>
-          <h3 class="played-matches-title">Jugados</h3>
+          <h3 class="played-matches-title">Partidos jugados</h3>
           <span class="meta played-matches-count">(${played.length})</span>
         </div>
         <span class="pill secondary played-toggle-pill"></span>
       </summary>
+      <div class="cbx-played-matches-toolbar">
+        <div style="flex: 1; min-width: 180px;">
+          <input type="search" id="cbx-played-matches-search" class="cbx-filter-input" placeholder="🔍 Buscar partido jugado (rival, jornada...)" value="${escapeHtml(playedMatchesSearchQuery)}">
+        </div>
+        <div style="min-width: 140px;">
+          <select id="cbx-played-matches-type-select">
+            <option value="all"${playedMatchesTypeFilter === 'all' ? ' selected' : ''}>Todos los jugados (${played.length})</option>
+            <option value="league"${playedMatchesTypeFilter === 'league' ? ' selected' : ''}>Liga</option>
+            <option value="preseason"${playedMatchesTypeFilter === 'preseason' ? ' selected' : ''}>Pretemporada</option>
+          </select>
+        </div>
+      </div>
       <div class="stack played-matches-cards">
-        ${played.map(renderMatchCard).join('')}
+        ${filteredClassicPlayed.map(renderMatchCard).join('')}
       </div>
     </details>
   ` : '';
@@ -6769,34 +6879,91 @@ async function exportData() {
   const backup = await exportDatabase(); const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `campobase-copia-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('Copia exportada.');
 }
 
+async function downloadBackupJson() {
+  const backup = await exportDatabase();
+  const fileName = `campobase-copia-${new Date().toISOString().slice(0, 10)}.json`;
+  const jsonStr = JSON.stringify(backup, null, 2);
+  const file = new File([jsonStr], fileName, { type: 'application/json' });
+
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+    await navigator.share({
+      title: 'Copia CampoBase',
+      text: `Copia completa de CampoBase (${state.players.length} jugadores, especialistas y partidos)`,
+      files: [file],
+    });
+    toast('Copia enviada correctamente.');
+    return;
+  }
+
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  await askConfirmation({
+    title: '📲 Pasar datos al móvil',
+    message: `Se ha descargado "${fileName}".\n\n1. Envíatelo a tu móvil (por WhatsApp, AirDrop o email).\n2. En el móvil, abre CampoBase > Ajustes > "Importar JSON".\n\n¡Todos tus datos se transferirán de inmediato!`,
+    acceptLabel: 'Entendido',
+  });
+}
+
+async function buildMobileSyncPayload() {
+  const teamId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || state.settings?.saasUserId || '';
+  const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://miguelperezh.github.io/campobase/';
+  let sessionHash = '';
+  try {
+    const client = getSupabaseAuthClient();
+    const { data } = await client.auth.getSession();
+    const session = data?.session;
+    if (session?.access_token && session?.refresh_token) {
+      const tokenObj = { a: session.access_token, r: session.refresh_token, u: session.user.id };
+      sessionHash = `#session=${encodeURIComponent(btoa(JSON.stringify(tokenObj)))}`;
+    }
+  } catch {}
+  const teamParam = teamId ? `&team=${encodeURIComponent(teamId)}` : '';
+  const syncUrl = `${baseUrl}?sync=owner${teamParam}${sessionHash}`;
+  const teamName = myTeamName() || 'mi equipo';
+  const waText = `¡Hola Migue! Abre este enlace en el navegador de tu móvil para sincronizar CampoBase al instante con tu ordenador:\n\n${syncUrl}\n\nSe actualizarán automáticamente todos los partidos, asistencias y sesiones en tu móvil.`;
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+  return { syncUrl, waUrl, teamId, teamName };
+}
+
 async function shareDatabaseToMobile() {
   try {
-    const backup = await exportDatabase();
-    const fileName = `campobase-copia-${new Date().toISOString().slice(0, 10)}.json`;
-    const jsonStr = JSON.stringify(backup, null, 2);
-    const file = new File([jsonStr], fileName, { type: 'application/json' });
-
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: 'Copia CampoBase',
-        text: `Copia completa de CampoBase (${state.players.length} jugadores, especialistas y partidos)`,
-        files: [file],
-      });
-      toast('Copia enviada correctamente.');
+    const dialog = $('#mobile-sync-dialog');
+    if (dialog) {
+      const { syncUrl, waUrl } = await buildMobileSyncPayload();
+      const waBtn = $('#mobile-sync-wa-btn');
+      const copyBtn = $('#mobile-sync-copy-btn');
+      const jsonBtn = $('#mobile-sync-json-btn');
+      if (waBtn) {
+        waBtn.onclick = () => {
+          window.open(waUrl, '_blank');
+          dialog.close();
+        };
+      }
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(syncUrl);
+            toast('Enlace copiado al portapapeles. Pégalo en tu navegador del móvil.');
+          } catch {
+            prompt('Copia este enlace para abrirlo en tu móvil:', syncUrl);
+          }
+          dialog.close();
+        };
+      }
+      if (jsonBtn) {
+        jsonBtn.onclick = async () => {
+          dialog.close();
+          await downloadBackupJson();
+        };
+      }
+      dialog.showModal();
       return;
     }
-
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    await askConfirmation({
-      title: '📲 Pasar datos al móvil',
-      message: `Se ha descargado "${fileName}".\n\n1. Envíatelo a tu móvil (por WhatsApp, AirDrop o email).\n2. En el móvil, abre CampoBase > Ajustes > "Importar JSON".\n\n¡Todos tus jugadores, lanzadores y convocatorias se transferirán de inmediato sin depender de Supabase!`,
-      acceptLabel: 'Entendido',
-    });
+    await downloadBackupJson();
   } catch (err) {
     if (err.name !== 'AbortError') {
       toast(`No se pudo transferir: ${err.message}`);
@@ -6817,7 +6984,9 @@ async function importData(event) {
     })) return;
     await importDatabase(backup);
     state.timer = null;
-    await refresh();
+    void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+    await refresh(true);
+    await synchronizeCloud().catch(() => {});
     toast('✅ Datos cargados: plantilla, partidos, estadísticas y lanzadores actualizados.');
   } catch (error) {
     console.error(error);
@@ -10635,12 +10804,16 @@ function ensureAuthPromptVisible() {
 
 async function completePinLogin(role, pin, userId = '', authenticated = false) {
   const accessRevision = beginPinAccess();
+  const effectiveUserId = userId || getBoundSaasUserId() || state.settings?.saasUserId || getRememberedSaasAccount()?.id || '';
   const currentSession = role === 'owner' && !authenticated
     ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
-  if (role === 'owner' && !authenticated && currentSession?.user?.id !== (userId || getBoundSaasUserId())) {
+  if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
     try {
-      const session = await signInWithCampoBasePin(getSupabaseAuthClient(), userId, pin);
-      if (session?.user?.id) setBoundSaasUserId(session.user.id);
+      const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin);
+      if (session?.user?.id) {
+        setBoundSaasUserId(session.user.id);
+        try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
+      }
     } catch (error) {
       if (navigator.onLine && !state.players.length) throw error;
       console.warn('Acceso PIN con copia local: no se pudo conectar a la nube.', error);
@@ -13413,6 +13586,7 @@ async function init() {
   await refresh();
   const live = await getOne('settings', 'live');
   state.timer = live?.timer ?? null;
+  sanitizeLiveTimer();
   state.liveUpdatedAt = live?.updatedAt ?? 0;
   await reapplyPreparacionToTimer();
   renderLive();
@@ -13420,10 +13594,50 @@ async function init() {
   let autoLoggedInDelegate = false;
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
+    const syncParam = params.get('sync');
     const roleParam = params.get('role');
     const pinParam = params.get('pin');
     const teamParam = params.get('team');
     const permsParam = params.get('perms');
+
+    if (syncParam === 'owner' || (roleParam === 'owner' && teamParam) || (teamParam && roleParam !== 'delegate')) {
+      if (teamParam) {
+        setBoundSaasUserId(teamParam);
+        try {
+          localStorage.setItem('campobase.saasUserId', String(teamParam));
+          sessionStorage.setItem('campobase.saasActiveBrowserSession', String(teamParam));
+        } catch {}
+        configureRealDatabase();
+      }
+
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#session=')) {
+        try {
+          const rawToken = decodeURIComponent(hash.slice('#session='.length));
+          const sess = JSON.parse(atob(rawToken));
+          if (sess?.a && sess?.r) {
+            const client = getSupabaseAuthClient();
+            if (client?.auth?.setSession) {
+              await client.auth.setSession({ access_token: sess.a, refresh_token: sess.r });
+            }
+          }
+        } catch (e) {
+          console.warn('No se pudo restaurar la sesión transferida en el móvil:', e);
+        }
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname + (window.location.search || ''));
+        } catch {}
+      }
+
+      void (async () => {
+        try {
+          await synchronizeCloud();
+          await refresh(true);
+          toast('✅ Móvil sincronizado con el ordenador correctamente.');
+        } catch {}
+      })();
+    }
+
     if (roleParam === 'delegate') {
       if (teamParam) {
         setBoundSaasUserId(teamParam);
