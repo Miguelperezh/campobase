@@ -5852,7 +5852,28 @@ function isUsableExercisePreview(value = '') {
   return true;
 }
 
-function renderExercises() {
+let exerciseBatchLimit = 36;
+let lastRenderedFiltersKey = '';
+let exercisesScrollObserver = null;
+
+function setupExercisesObserver() {
+  if (typeof IntersectionObserver === 'undefined') return;
+  const moreBtn = $('#cbx-btn-more-exercises');
+  if (exercisesScrollObserver) {
+    exercisesScrollObserver.disconnect();
+    exercisesScrollObserver = null;
+  }
+  if (!moreBtn) return;
+  exercisesScrollObserver = new IntersectionObserver((entries) => {
+    if (entries[0]?.isIntersecting) {
+      exerciseBatchLimit += 36;
+      renderExercises(true);
+    }
+  }, { rootMargin: '300px 0px' });
+  exercisesScrollObserver.observe(moreBtn);
+}
+
+function renderExercises(keepLimit = false) {
   const form = $('#exercise-filters');
   if (!form) return;
 
@@ -5884,6 +5905,12 @@ function renderExercises() {
   };
   const mineCategorySelected = filters.category === '__mine__';
   if (mineCategorySelected) filters.category = '';
+
+  const filtersKey = JSON.stringify(filters) + `:${exerciseLibraryMode}`;
+  if (!keepLimit && filtersKey !== lastRenderedFiltersKey) {
+    exerciseBatchLimit = 36;
+    lastRenderedFiltersKey = filtersKey;
+  }
 
   if (document.body.classList.contains('cb-redesign-active')) {
     // Sincronizar estado visual de los chips de dimensión y conmutadores con los filtros actuales
@@ -5937,7 +5964,10 @@ function renderExercises() {
       return;
     }
 
-    list.innerHTML = exercises.map((rawItem) => {
+    const totalCount = exercises.length;
+    const visibleExercises = exercises.slice(0, exerciseBatchLimit);
+
+    let html = visibleExercises.map((rawItem) => {
       const validated = findValidatedExercise(rawItem.id);
       const ex = validated ? { ...validated, favorite: Boolean(rawItem.favorite) } : rawItem;
       const cleanNombre = String(ex.nombre || ex.name || '').replace(/^--\s*/, '').trim();
@@ -5994,6 +6024,27 @@ function renderExercises() {
         </article>
       `;
     }).join('');
+
+    if (totalCount > visibleExercises.length) {
+      html += `
+        <div class="cbx-exercises-pagination-bar" style="grid-column: 1 / -1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin: 20px 0 28px; padding: 14px;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--muted, #64748b);">
+            Mostrando ${visibleExercises.length} de ${totalCount} ejercicios
+          </span>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <button type="button" class="primary cbx-btn-more-exercises" id="cbx-btn-more-exercises" style="min-height: 42px; padding: 10px 20px; font-weight: 700; border-radius: 12px; cursor: pointer;">
+              Mostrar más ejercicios (+36) ▾
+            </button>
+            <button type="button" class="secondary cbx-btn-all-exercises" id="cbx-btn-all-exercises" style="min-height: 42px; padding: 10px 16px; border-radius: 12px; font-size: 13px; cursor: pointer;">
+              Cargar todos (${totalCount})
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    list.innerHTML = html;
+    setupExercisesObserver();
     return;
   }
 
@@ -6024,13 +6075,37 @@ function renderExercises() {
     });
 
   const list = $('#exercises-list');
-  list.innerHTML = exercises.length ? exercises.map((rawItem) => {
+  const totalCount = exercises.length;
+  const visibleExercises = exercises.slice(0, exerciseBatchLimit);
+
+  let html = visibleExercises.map((rawItem) => {
     const validated = findValidatedExercise(rawItem.id);
     if (validated) return renderExerciseGridCard({ ...validated, favorite: Boolean(rawItem.favorite) });
     return exerciseCardHTML(rawItem);
-  }).join('') : empty(exerciseLibraryMode === 'mine'
+  }).join('');
+
+  if (totalCount > visibleExercises.length) {
+    html += `
+      <div class="cbx-exercises-pagination-bar" style="grid-column: 1 / -1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin: 20px 0 28px; padding: 14px;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--muted, #64748b);">
+          Mostrando ${visibleExercises.length} de ${totalCount} ejercicios
+        </span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+          <button type="button" class="primary cbx-btn-more-exercises" id="cbx-btn-more-exercises" style="min-height: 42px; padding: 10px 20px; font-weight: 700; border-radius: 12px; cursor: pointer;">
+            Mostrar más ejercicios (+36) ▾
+          </button>
+          <button type="button" class="secondary cbx-btn-all-exercises" id="cbx-btn-all-exercises" style="min-height: 42px; padding: 10px 16px; border-radius: 12px; font-size: 13px; cursor: pointer;">
+            Cargar todos (${totalCount})
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  list.innerHTML = exercises.length ? html : empty(exerciseLibraryMode === 'mine'
     ? 'Todavía no has creado ejercicios propios con + Ejercicio.'
     : 'No hay ejercicios que coincidan con estos filtros.');
+  setupExercisesObserver();
 }
 function editExercise(id) {
   const item = state.exercises.find((exerciseItem) => exerciseItem.id === id);
@@ -11091,6 +11166,11 @@ async function showAuth(forceInitial = false, { hydrate = true } = {}) {
   // Explicit logout clears this form before opening the next access.
   if (initial) form.reset();
   $('#auth-error').textContent = '';
+  const submitBtn = $('#auth-submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Entrar';
+  }
   if (!$('#auth-dialog').open) $('#auth-dialog').showModal();
 }
 
@@ -11106,6 +11186,35 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   const effectiveUserId = userId || getBoundSaasUserId() || state.settings?.saasUserId || getRememberedSaasAccount()?.id || '';
   const currentSession = role === 'owner' && !authenticated
     ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
+
+  const hasLocal = hasUsableTeamSnapshot(state);
+  if (hasLocal) {
+    if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+    configureRealDatabase();
+    applyRole(role);
+    $('#auth-dialog')?.close();
+    renderAll();
+
+    void (async () => {
+      try {
+        if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
+          const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin).catch(() => null);
+          if (session?.user?.id) {
+            setBoundSaasUserId(session.user.id);
+            try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
+            try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
+          }
+        }
+        await synchronizeCloud();
+        await refresh();
+        renderAll();
+      } catch (error) {
+        console.warn('Acceso PIN con copia local: sincronización secundaria en segundo plano:', error);
+      }
+    })();
+    return;
+  }
+
   if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
     try {
       const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin);
@@ -11160,6 +11269,12 @@ async function loginWithPin(pin) {
 async function submitAuth(event) {
   event.preventDefault();
   const form = event.currentTarget;
+  const submitBtn = $('#auth-submit-btn');
+  const originalBtnText = submitBtn?.textContent || 'Entrar';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Entrando…';
+  }
   const createModeVisible = !$('#initial-pin-fields')?.classList.contains('hidden');
   try {
     // Si la pantalla ya está en modo "Introduce tu PIN", nunca puede saltar a
@@ -11275,7 +11390,16 @@ async function submitAuth(event) {
     $('#auth-dialog').close();
     renderAll();
   } catch (error) {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
     $('#auth-error').textContent = error.message;
+  } finally {
+    if (!$('#auth-dialog')?.open && submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
   }
 }
 
@@ -12882,6 +13006,11 @@ function wireEvents() {
     event.preventDefault();
   });
   $('#auth-dialog').addEventListener('close', () => {
+    const submitBtn = $('#auth-submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Entrar';
+    }
     if (state.role) {
       refresh().then(() => renderAll()).catch(() => renderAll());
     }
@@ -13537,6 +13666,8 @@ function wireEvents() {
     if (target.matches('.prep-toggle-delegate')) await togglePrepDelegateForMatch(target.dataset.id);
     if (target.matches('.prep-delete')) await deletePreparacionById(target.dataset.id);
     if (target.matches('.delete-training') && await askConfirmation({ title: 'Borrar asistencia', message: 'Se eliminará este registro de asistencia y se recalcularán las fichas de jugadores.', acceptLabel: 'Borrar', danger: true })) { await remove('trainings', target.dataset.id); await refresh(true); renderPlayers(); renderTrainings(); }
+    if (target.closest('#cbx-btn-more-exercises')) { exerciseBatchLimit += 36; renderExercises(true); return; }
+    if (target.closest('#cbx-btn-all-exercises')) { exerciseBatchLimit = 999999; renderExercises(true); return; }
     if (target.matches('.edit-exercise')) editExercise(target.dataset.id);
     if (target.matches('.add-exercise-to-session')) {
       if (!$('#session-builder').classList.contains('hidden')) {
@@ -13909,7 +14040,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-calero-sync-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-fix-pin-login-exercise-covers-speed-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
