@@ -93,7 +93,7 @@ export function claudeColorSections(viewId,scope) {
    add('cl.'+key,'Botón «'+button.textContent.trim()+'»','#squad-leaderboards ['+attr+'="'+key+'"]','Este botón en todas las clasificaciones');
   }
  }
- if(viewId==='plantilla'&&(!scope||scope.id==='player-dialog')){
+ if(scope?.id==='player-dialog'||(viewId==='plantilla'&&!scope)){
   const dialogSection={
    id:'player-dialog-sec',
    name:'Ficha de jugador y Posiciones',
@@ -107,7 +107,8 @@ export function claudeColorSections(viewId,scope) {
     {id:'pd.cancel',name:'Botón «Cancelar»',scope:'Botón secundario de cancelar',props:[{key:'background',label:'Fondo',css:'background',selector:'#player-dialog button[data-close]',viewId},{key:'color',label:'Texto',css:'color',selector:'#player-dialog button[data-close]',viewId}]}
    ]
   };
-  if(scope?.id==='player-dialog'){sections.unshift(dialogSection);}else{sections.push(dialogSection);}
+  if(scope?.id==='player-dialog')return [dialogSection];
+  sections.push(dialogSection);
  }
  const root=scope||document.getElementById(viewId)||document.getElementById({'exercise-detail':'exercise-detail-dialog',comunicador:'whatsapp-dialog'}[viewId]);
  const fallbackRoot=scope?.id==='players-list'?document.getElementById('plantilla'):root;

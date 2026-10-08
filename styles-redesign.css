@@ -2764,8 +2764,8 @@ body.cb-redesign-active[data-has-custom-font-color="true"] h3:not(#cb-print-root
 body.cb-redesign-active[data-has-custom-font-color="true"] h4:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
 body.cb-redesign-active[data-has-custom-font-color="true"] h5:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
 body.cb-redesign-active[data-has-custom-font-color="true"] h6:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
-body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
-body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *),
+body.cb-redesign-active[data-has-custom-font-color="true"] p:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *):not(dialog p),
+body.cb-redesign-active[data-has-custom-font-color="true"] label:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(dialog label):not(.position-groups label),
 body.cb-redesign-active[data-has-custom-font-color="true"] select:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] summary:not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
 body.cb-redesign-active[data-has-custom-font-color="true"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not(#cb-print-root *):not(button *):not(.cb-print-sheet *),
@@ -2785,7 +2785,7 @@ body.cb-redesign-active[data-has-custom-font-color="true"] .topbar-brand h1,
 body.cb-redesign-active[data-has-custom-font-color="true"] .card,
 body.cb-redesign-active[data-has-custom-font-color="true"] .panel:not(.cbx-prep-card .section-head),
 body.cb-redesign-active[data-has-custom-font-color="true"] .meta:not(.cbx-banner *):not(.cbx-banner):not(.section-head *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *),
-body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *),
+body.cb-redesign-active[data-has-custom-font-color="true"] strong:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.valor):not(.badge-text):not(.cb-preview-badge):not(.staff-wa-btn *):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *):not(dialog strong):not(.position-groups strong),
 body.cb-redesign-active[data-has-custom-font-color="true"] span:not(#cb-print-root *):not(button *):not(.cb-print-sheet *):not(.theme-chip-dot):not(.color-swatch-btn):not(.font-color-swatch-btn):not(.cb-pulse-dot):not(.badge):not(.badge-text):not(.cb-mode-switcher-btn):not(.format-badge):not(.summary-toggle-icon):not(.valor):not(.cbx-card-pill-players):not(.cbx-card-badge-demo):not(.cbx-card-badge-realvideo):not(.cbx-chip):not(#cbx-preview-banner-btn):not(#preview-sample-btn):not(.cbx-preview-banner-btn):not(.primary):not(.primary *):not(button):not(button *):not(.secondary):not(.secondary *):not(#manual-refresh):not(#open-field-mode):not(.cbx-pmp-min-pill):not(.cbx-pmp-badge-accent):not(.cbx-pmp-tag-in):not(.cbx-pmp-tag-out):not(.cbx-pmp-tag-move):not(.cbx-pmp-tag-gk):not(.cbx-pmp-period-pill):not(.cbx-pmp-badge-sys):not(.cbx-pmp-starter-pos):not(.cbx-pmp-pct-bar-wrap *):not(.cb-print-floating-bar *):not(.cbx-callup-number):not([data-sp-dorsal]):not(.preview-sp-dorsal-circle):not(.dorsal-badge):not(.player-dorsal):not(.specialist-rank):not(.specialist-number):not(.staff-wa-btn):not(.staff-wa-btn *):not([class*="open-whatsapp"]):not([class*="open-whatsapp"] *):not(.cbx-context-gear-btn):not(.cbx-mini-token):not(.cbx-banner *):not(.section-head *):not(.plantilla-staff-bar *):not(#plantilla-staff-top *):not(.cbx-plantilla-staff *):not(.cbx-callup-card > header *):not(.cbx-prep-card .section-head *):not(.cbx-today-match-score *):not(.cbx-tactics-hero *):not(.cbx-callup-counts span) {
   color: var(--cb-font-custom-color) !important;
 }
@@ -8905,16 +8905,25 @@ body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo [id*="field-mod
 #cb-delegate-logout-btn { flex: 0 0 auto; white-space: nowrap; }
 
 /* Ficha de jugador: contraste garantizado de posiciones y formulario */
-#player-dialog .position-groups label {
-  color: var(--cb-dialog-pos-ink, var(--ink, #0f172a));
+#player-dialog .position-groups label,
+body.cb-redesign-active #player-dialog .position-groups label {
+  color: var(--cb-dialog-pos-ink, #0f172a) !important;
 }
-#player-dialog .position-groups strong {
-  color: var(--cb-dialog-pos-strong, var(--ink, #0f172a));
+#player-dialog .position-groups strong,
+body.cb-redesign-active #player-dialog .position-groups strong {
+  color: var(--cb-dialog-pos-strong, #0f172a) !important;
 }
-#player-dialog .position-groups > div {
-  background: var(--cb-dialog-pos-bg, #f7f9f7);
-  color: var(--cb-dialog-pos-ink, var(--ink, #0f172a));
+#player-dialog .position-groups > div,
+body.cb-redesign-active #player-dialog .position-groups > div {
+  background: var(--cb-dialog-pos-bg, #f7f9f7) !important;
+  color: var(--cb-dialog-pos-ink, #0f172a) !important;
+  border: 1px solid var(--cb-dialog-pos-border, #e2e8f0);
 }
-#player-dialog label:not(.position-groups label) {
-  color: var(--cb-dialog-label-ink, #4b5752);
+#player-dialog label:not(.position-groups label),
+body.cb-redesign-active #player-dialog label:not(.position-groups label),
+#player-dialog .form-row label,
+body.cb-redesign-active #player-dialog .form-row label,
+#player-dialog fieldset legend,
+body.cb-redesign-active #player-dialog fieldset legend {
+  color: var(--cb-dialog-label-ink, #334155) !important;
 }
