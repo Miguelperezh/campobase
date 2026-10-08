@@ -388,7 +388,8 @@ body.cb-redesign-active #sesiones .edit-session.cbx-btn-sub {
   white-space: nowrap;
 }
 
-body.cb-redesign-active #sesiones .cbx-btn-completed {
+body.cb-redesign-active #sesiones .cbx-btn-completed,
+body.cb-redesign-active #calendario .cbx-btn-completed {
   height: 38px;
   padding: 0 6px;
   border-radius: 10px;
@@ -405,7 +406,8 @@ body.cb-redesign-active #sesiones .cbx-btn-completed {
   transition: all .15s ease;
 }
 
-body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed {
+body.cb-redesign-active #sesiones .cbx-btn-completed.is-completed,
+body.cb-redesign-active #calendario .cbx-btn-completed.is-completed {
   background: var(--btn, #10b981) !important;
   color: var(--btnInk, #ffffff) !important;
   border-color: var(--btn, #10b981) !important;
@@ -462,8 +464,9 @@ body.cb-redesign-active #sesiones .cbx-session-more-details button {
   font-size: 11.5px;
 }
 
-/* Acordeón de entrenamientos realizados */
-body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion {
+/* Acordeón de entrenamientos realizados y partidos jugados */
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion,
+body.cb-redesign-active #calendario .cbx-completed-sessions-accordion {
   margin-top: 24px;
   border: 1px solid var(--cardBorder, #e2e8f0);
   border-radius: var(--cbx-r-card, 16px);
@@ -471,7 +474,8 @@ body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion {
   overflow: hidden;
   box-shadow: var(--cbx-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-summary {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary,
+body.cb-redesign-active #calendario .cbx-completed-sessions-summary {
   cursor: pointer;
   padding: 14px 18px;
   font: 800 15px var(--cbx-ui);
@@ -484,20 +488,25 @@ body.cb-redesign-active #sesiones .cbx-completed-sessions-summary {
   list-style: none;
   transition: background 0.15s ease;
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-summary::-webkit-details-marker {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary::-webkit-details-marker,
+body.cb-redesign-active #calendario .cbx-completed-sessions-summary::-webkit-details-marker {
   display: none;
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-summary:hover {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary:hover,
+body.cb-redesign-active #calendario .cbx-completed-sessions-summary:hover {
   background: color-mix(in srgb, var(--cardBg, #ffffff) 85%, #e2e8f0);
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-summary .cbx-accordion-indicator {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-summary .cbx-accordion-indicator,
+body.cb-redesign-active #calendario .cbx-completed-sessions-summary .cbx-accordion-indicator {
   font-size: 14px;
   transition: transform 0.2s ease;
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion[open] .cbx-completed-sessions-summary .cbx-accordion-indicator {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-accordion[open] .cbx-completed-sessions-summary .cbx-accordion-indicator,
+body.cb-redesign-active #calendario .cbx-completed-sessions-accordion[open] .cbx-completed-sessions-summary .cbx-accordion-indicator {
   transform: rotate(180deg);
 }
-body.cb-redesign-active #sesiones .cbx-completed-sessions-grid {
+body.cb-redesign-active #sesiones .cbx-completed-sessions-grid,
+body.cb-redesign-active #calendario .cbx-completed-sessions-grid {
   padding: 16px;
   border-top: 1px solid var(--cardBorder, #e2e8f0);
   opacity: 0.92;
