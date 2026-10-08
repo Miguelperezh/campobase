@@ -6,9 +6,9 @@ const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), '
 
 test('la cola local nunca se lee antes de preparar y vincular la sesión cloud', async () => {
   const db = await projectFile('js/db.js');
-  const flush = db.slice(db.indexOf('export async function flushSyncQueue'), db.indexOf('async function replaceLocalStore'));
+  const flush = db.slice(db.indexOf('async function flushQueuedMutations'), db.indexOf('async function replaceLocalStore'));
   const prepareIndex = flush.indexOf("cloudStore.prepare");
-  const queueIndex = flush.indexOf("localGetAll(SYNC_QUEUE)");
+  const queueIndex = flush.indexOf("const queueDatabase = await openDatabase()");
   assert.ok(prepareIndex >= 0, 'flushSyncQueue debe preparar la sesión cloud');
   assert.ok(queueIndex > prepareIndex, 'la sesión debe prepararse antes de abrir la cola local');
 });
@@ -73,7 +73,7 @@ test('una mutación local obsoleta se descarta si Supabase tiene una versión po
     projectFile('js/supabase-client.js'),
   ]);
   assert.match(db, /cloudStore\.shouldApplyMutation\(mutation\)/);
-  assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id\)[\s\S]*continue/);
+  assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id, mutation, queueDatabase\)[\s\S]*continue/);
   assert.match(cloud, /async shouldApplyMutation\(mutation\)/);
   assert.match(cloud, /select\('updated_at,deleted_at'\)/);
   assert.match(cloud, /localQueuedAt >= remoteUpdatedAt/);
@@ -90,7 +90,7 @@ test('una sincronización derivada de jugadores no puede borrar teléfonos o pad
 
 test('un fallo de guardado cloud online no se oculta como si hubiera guardado correctamente', async () => {
   const db = await projectFile('js/db.js');
-  const writeArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function flushSyncQueue'));
+  const writeArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('async function flushQueuedMutations'));
   assert.doesNotMatch(writeArea, /flushSyncQueue\(\)\.catch\(\(\) => false\)/);
   assert.match(writeArea, /if \(canUseCloud\(\)\) await flushSyncQueue\(\)/);
 });
@@ -120,7 +120,7 @@ test('cada escritura intenta recuperar el vínculo SaaS antes de decidir qué In
   const putArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function putPlayerProfile'));
   const profileArea = db.slice(db.indexOf('export async function putPlayerProfile'), db.indexOf('export async function putBatch'));
   const batchArea = db.slice(db.indexOf('export async function putBatch'), db.indexOf('export async function remove(store'));
-  const removeArea = db.slice(db.indexOf('export async function remove(store'), db.indexOf('export async function flushSyncQueue'));
+  const removeArea = db.slice(db.indexOf('export async function remove(store'), db.indexOf('async function flushQueuedMutations'));
   for (const area of [putArea, profileArea, batchArea, removeArea]) {
     assert.match(area, /await prepareStorageBindingForWrite\(\)/);
   }

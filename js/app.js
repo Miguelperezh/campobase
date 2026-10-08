@@ -1,3 +1,4 @@
+import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
 import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=claude-proposal-3';
 import { openMatchWindowEditor } from './claude-time-plan.js?v=claude-proposal-3';
@@ -47,7 +48,7 @@ import {
   isWeekend,
   formatWeekSpanLabel,
   buildWhatsAppMatchFamilySummary,
-} from './whatsapp-suite.js?v=20261008-fix-convocatorias-whatsapp-sync-v6';
+} from './whatsapp-suite.js?v=20261008-whatsapp-context-1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -1678,6 +1679,9 @@ async function saveCallup(event) {
     date: match.date,
     opponent: match.opponent,
     matchType: match.type ?? 'league',
+    location: match.location || existing?.location || '',
+    time: matchCommunicationDetails(match).gameTime,
+    mapsUrl: match.mapsUrl || existing?.mapsUrl || '',
     format,
     availableIds,
     selectedIds: checkedValues('selected', form),
@@ -4737,6 +4741,9 @@ async function ensureCallupForMatch(match) {
     date: match.date,
     opponent: match.opponent,
     matchType: match.type ?? 'league',
+    location: match.location || existing?.location || '',
+    time: matchCommunicationDetails(match).gameTime,
+    mapsUrl: match.mapsUrl || existing?.mapsUrl || '',
     format,
     availableIds,
     selectedIds: [...availableIds],
@@ -11788,6 +11795,11 @@ function openWhatsAppDialog({
   // Llenar selector de eventos
   populateWhatsAppEvents(matchId, callupId, sessionId);
   if (waCurrentMode === 'callup') syncWhatsAppMatchLocation();
+  else if (waCurrentMode === 'training') {
+    const session = state.trainingSessions.find(s => s.id === $('#wa-event-select')?.value);
+    if ($('#wa-field-name')) $('#wa-field-name').value = session?.pitch || '';
+    if ($('#wa-maps-url')) $('#wa-maps-url').value = session?.mapsUrl || (session?.pitch ? getAutoMapsUrl(session.pitch) : '');
+  }
   // Llenar selector de destinatarios
   populateWhatsAppRecipients(playerId);
 
@@ -11799,49 +11811,17 @@ function openWhatsAppDialog({
 }
 
 function selectedWhatsAppMatch() {
-  const eventValue = $('#wa-event-select')?.value || '';
-  if (eventValue.startsWith('match:')) {
-    const matchId = eventValue.slice('match:'.length);
-    return state.matches.find((match) => match.id === matchId) || null;
-  }
-  if (eventValue.startsWith('callup:')) {
-    const callupId = eventValue.slice('callup:'.length);
-    const callup = state.callups.find((item) => item.id === callupId) || null;
-    return state.matches.find((match) => match.id === callup?.matchId || match.callupId === callupId || (callup && match.opponent === callup.opponent && String(match.date || '').slice(0, 10) === String(callup.date || '').slice(0, 10))) || null;
-  }
-  return state.matches.find((match) => match.id === eventValue) || null;
+  return resolveWhatsAppEvent($('#wa-event-select')?.value || '', state.matches, state.callups).match;
 }
 
 function syncWhatsAppMatchLocation() {
-  const match = selectedWhatsAppMatch();
-  if (!match) return;
-  const fieldName = String(match.location || '').trim();
+  const details = matchCommunicationDetails(selectedWhatsAppMatch() || {});
   const fieldInput = $('#wa-field-name');
   const mapsInput = $('#wa-maps-url');
-  if (fieldInput) fieldInput.value = fieldName;
-  if (mapsInput) mapsInput.value = fieldName ? getAutoMapsUrl(fieldName) : '';
-
-  // Sincronizar hora del partido y calcular hora de citación (45 min antes)
-  const rawDate = String(match.date || '');
-  let gameTime = '';
-  if (rawDate.includes('T')) {
-    gameTime = rawDate.split('T')[1].slice(0, 5);
-  } else if (match.time) {
-    gameTime = String(match.time).slice(0, 5);
-  }
-  if (gameTime && /^([01]\d|2[0-3]):[0-5]\d$/.test(gameTime)) {
-    const gameTimeInput = $('#wa-game-time');
-    const callTimeInput = $('#wa-call-time');
-    if (gameTimeInput) gameTimeInput.value = gameTime;
-    if (callTimeInput) {
-      const [h, m] = gameTime.split(':').map(Number);
-      let mins = h * 60 + m - 45;
-      if (mins < 0) mins += 24 * 60;
-      const callH = String(Math.floor(mins / 60)).padStart(2, '0');
-      const callM = String(mins % 60).padStart(2, '0');
-      callTimeInput.value = `${callH}:${callM}`;
-    }
-  }
+  if (fieldInput) fieldInput.value = details.fieldName;
+  if (mapsInput) mapsInput.value = details.mapsUrl || (details.fieldName ? getAutoMapsUrl(details.fieldName) : '');
+  if ($('#wa-game-time')) $('#wa-game-time').value = details.gameTime;
+  if ($('#wa-call-time')) $('#wa-call-time').value = details.callTime;
 }
 
 function populateWhatsAppEvents(matchId, callupId, sessionId) {
@@ -11852,17 +11832,13 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
 
   if (waCurrentMode === 'callup') {
     if (label) label.firstChild.textContent = 'Partido / Convocatoria ';
-    const matches = [...state.matches].sort((a, b) => b.date.localeCompare(a.date));
+    const matches = whatsappMatchOptions(state.matches, state.callups, localDateKey(), isMatchPlayed, matchId, callupId);
     const processedCallupIds = new Set();
     let selectedOptionValue = '';
     matches.forEach((m) => {
       const opt = document.createElement('option');
       opt.value = `match:${m.id}`;
-      const callup = state.callups.find((c) =>
-        c.id === m.callupId ||
-        c.matchId === m.id ||
-        (c.opponent && m.opponent && normalizeOpponentName(c.opponent) === normalizeOpponentName(m.opponent) && String(c.date || '').slice(0, 10) === String(m.date || '').slice(0, 10))
-      );
+      const callup = linkedCallup(m, state.callups);
       if (callup) processedCallupIds.add(callup.id);
       const isSelected = (matchId && m.id === matchId) || (callupId && callup?.id === callupId);
       const waTypeLabel = matchTypeLabel(m.type || 'league');
@@ -11877,7 +11853,7 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
     });
     // Convocatorias sin partido formal
     state.callups.forEach((c) => {
-      if (!processedCallupIds.has(c.id)) {
+      if (callupId && c.id === callupId && !processedCallupIds.has(c.id)) {
         const opt = document.createElement('option');
         opt.value = `callup:${c.id}`;
         opt.textContent = `${localDate(c.date)} · Convocatoria vs ${c.opponent}`;
@@ -11889,8 +11865,8 @@ function populateWhatsAppEvents(matchId, callupId, sessionId) {
       }
     });
     if (selectedOptionValue) select.value = selectedOptionValue;
-    if (!matches.length && !state.callups.length) {
-      select.innerHTML = '<option value="">No hay partidos creados</option>';
+    if (!select.options.length) {
+      select.innerHTML = '<option value="">No hay partidos pendientes sin convocatoria</option>';
     }
   } else if (waCurrentMode === 'training') {
     if (label) label.firstChild.textContent = 'Sesión de entrenamiento ';
@@ -12181,26 +12157,10 @@ function updateWhatsAppPreview() {
 
   if (waCurrentMode === 'callup') {
     const eventVal = $('#wa-event-select')?.value || '';
-    let match = null;
-    let callup = null;
-
-    if (eventVal.startsWith('callup:')) {
-      const cId = eventVal.replace('callup:', '');
-      callup = state.callups.find((c) => c.id === cId) || null;
-      match = state.matches.find((m) => m.callupId === cId || m.id === callup?.matchId) || {
-        opponent: callup?.opponent || 'Rival',
-        date: callup?.date || '',
-        location: 'Campo Alfonso Silva (La Ballena)',
-        type: callup?.matchType || 'league',
-      };
-    } else {
-      const mId = eventVal.startsWith('match:') ? eventVal.replace('match:', '') : eventVal;
-      match = state.matches.find((m) => m.id === mId) || state.matches[0] || {};
-      callup = state.callups.find((c) =>
-        c.id === match?.callupId ||
-        c.matchId === match?.id ||
-        (c.opponent && match?.opponent && normalizeOpponentName(c.opponent) === normalizeOpponentName(match.opponent) && String(c.date || '').slice(0, 10) === String(match.date || '').slice(0, 10))
-      ) || null;
+    const { match, callup } = resolveWhatsAppEvent(eventVal, state.matches, state.callups);
+    if (!match) {
+      preview.value = 'Selecciona un partido pendiente. Para enviar una convocatoria ya creada, abre WhatsApp desde esa convocatoria.';
+      return;
     }
 
     const selectedMatchType = match?.type || callup?.matchType || 'league';
@@ -12280,8 +12240,8 @@ function updateWhatsAppPreview() {
       if (mapsInput) mapsInput.value = mapsUrl;
     }
 
-    const callTime = $('#wa-call-time')?.value?.trim() || '08:15';
-    const gameTime = $('#wa-game-time')?.value?.trim() || '09:00';
+    const callTime = matchCommunicationDetails({ ...match, time: $('#wa-game-time')?.value?.trim() || match.time }).callTime;
+    const gameTime = $('#wa-game-time')?.value?.trim() || matchCommunicationDetails(match).gameTime;
 
     const text = buildWhatsAppMatchConvocatoria({
       match,
@@ -12307,12 +12267,13 @@ function updateWhatsAppPreview() {
   } else if (waCurrentMode === 'training') {
     $('#wa-exclusion-reason-row')?.classList.add('hidden');
     const sessionId = $('#wa-event-select')?.value;
-    const session = state.trainingSessions.find((s) => s.id === sessionId) || state.trainingSessions[0] || {};
+    const session = state.trainingSessions.find((s) => s.id === sessionId);
+    if (!session) { preview.value = 'Selecciona una sesión de entrenamiento.'; return; }
 
     const fieldInput = $('#wa-field-name');
     let fieldName = fieldInput?.value?.trim();
     if (!fieldName) {
-      fieldName = session.pitch || 'Campo Alfonso Silva (La Ballena)';
+      fieldName = session.pitch || '';
       if (fieldInput) fieldInput.value = fieldName;
     }
 
@@ -12345,28 +12306,28 @@ function updateWhatsAppPreview() {
 
     // 1. Sesiones de entrenamiento planificadas en esa semana
     state.trainingSessions
-      .filter((s) => s.date && s.date >= weekRange.start && s.date <= weekRange.end)
+      .filter((s) => s.date && String(s.date).slice(0, 10) >= weekRange.start && String(s.date).slice(0, 10) <= weekRange.end)
       .forEach((s) => {
         let dur = s.totalDuration || s.targetDuration || 75;
         if (dur < 45) dur = 75;
-        weekSessionsMap.set(String(s.date).slice(0, 10), {
+        weekSessionsMap.set(s.id || `${String(s.date).slice(0, 10)}:${s.time || ''}`, {
           date: s.date,
-          time: s.time || '16:30',
-          field: s.pitch || 'Alfonso Silva',
+          time: matchCommunicationDetails(s).gameTime,
+          field: s.pitch || s.location || '',
           duration: dur,
         });
       });
 
     // 2. Asistencias de tipo entrenamiento registradas para esa semana (si no tenían sesión creada)
     state.trainings
-      .filter((t) => (t.kind ?? 'training') === 'training' && t.date && t.date >= weekRange.start && t.date <= weekRange.end)
+      .filter((t) => (t.kind ?? 'training') === 'training' && t.date && String(t.date).slice(0, 10) >= weekRange.start && String(t.date).slice(0, 10) <= weekRange.end)
       .forEach((t) => {
         const dateKey = String(t.date).slice(0, 10);
-        if (!weekSessionsMap.has(dateKey)) {
+        if (![...weekSessionsMap.values()].some(session => String(session.date).slice(0, 10) === dateKey)) {
           weekSessionsMap.set(dateKey, {
             date: t.date,
-            time: '16:30',
-            field: 'Alfonso Silva',
+            time: t.time || '',
+            field: t.pitch || t.location || '',
             duration: 75,
           });
         }
@@ -12399,9 +12360,9 @@ function updateWhatsAppPreview() {
       sessions,
       matches: targetMatches.map((m) => ({
         date: m.date,
-        time: m.date && m.date.includes('T') ? m.date.split('T')[1].slice(0, 5) : (m.time || '09:00'),
+        time: matchCommunicationDetails(m).gameTime,
         opponent: m.opponent,
-        field: m.location || (m.venue === 'away' ? 'Campo rival' : 'Alfonso Silva'),
+        field: m.location || m.pitch || '',
         type: m.type,
       })),
       tacticalGoal,
@@ -12837,8 +12798,8 @@ function wireEvents() {
     } else if (waCurrentMode === 'training') {
       const session = state.trainingSessions.find((s) => s.id === $('#wa-event-select').value);
       if (session) {
-        if ($('#wa-field-name')) $('#wa-field-name').value = session.pitch || 'Campo Alfonso Silva (La Ballena)';
-        if ($('#wa-maps-url')) $('#wa-maps-url').value = getAutoMapsUrl($('#wa-field-name').value);
+        if ($('#wa-field-name')) $('#wa-field-name').value = session.pitch || session.location || '';
+        if ($('#wa-maps-url')) $('#wa-maps-url').value = session.mapsUrl || (getAutoMapsUrl($('#wa-field-name').value) || '');
       }
     }
     updateWhatsAppPreview();
@@ -14118,7 +14079,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261008-fix-convocatorias-whatsapp-sync-v6').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261008-whatsapp-context-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

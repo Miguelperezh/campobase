@@ -1869,3 +1869,14 @@ Ajustes estándar de ejercicios compartidos por todas las tarjetas. Clasificaci�
   - Sincronización bidireccional y actualización reactiva de las casillas en la interfaz al guardar desde cualquier panel.
   - Al abrir Ajustes (`showView('ajustes')`), se invoca reactivamente el refresco del panel de delegado.
 
+
+
+## SDD 039 — Contexto de WhatsApp y cola (08/10/2026)
+- Mantener diseño y datos reales; no escribir semillas ni modificar Supabase/RLS.
+- Resolver IDs explícitos; nunca sustituir partido/sesión desconocidos por el primero ni inventar campos/horarios.
+- Selector genérico solo pendientes sin convocatoria; envío directo ofrece únicamente su convocatoria.
+- Citación 45 minutos antes. Descansos sin motivos en grupo; motivos privados solo al excluido.
+- Guardado local durable primero; confirmaciones antiguas no borran ediciones nuevas. Respetar base de origen y tombstones remotos.
+- Conservar varias sesiones diarias y el domingo en el resumen semanal.
+- Versionar todos los módulos cambiados. Ver specs/039-whatsapp-contexto-cola.
+- Distinguir prueba de IndexedDB real con nube simulada de validación en móvil físico y autenticación real. No afirmar que un error de autenticación es un simple fallo de conexión.

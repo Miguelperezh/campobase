@@ -1,0 +1,24 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Prueba de persistencia aislada</title><button id="run">Comprobar guardado y sincronización</button><pre id="result">Pendiente</pre><script type="module">
+import {setBoundSaasUserId} from '/js/auth-manager.js';
+import {configureCloudStore,configureRealDatabase,putBatch,getOne,flushSyncQueue,openDatabase,syncFromCloud} from '/js/db.js';
+const result=document.querySelector('#result');
+const check=(condition,message)=>{if(!condition)throw Error(message);result.textContent+='\nOK: '+message;};
+document.querySelector('#run').onclick=async()=>{try{
+ result.textContent='Comprobando IndexedDB real, nube simulada y aislada';
+ const remote=new Map();let release,started;const gate=new Promise(r=>release=r),start=new Promise(r=>started=r);let hold=true;
+ configureCloudStore({prepare:async()=>{},getSnapshot:async(store)=>({records:[...(remote.get(store)||new Map()).values()],deletedIds:[]}),upsert:async(m)=>{if(hold){hold=false;started();await gate;}const rows=remote.get(m.store)||new Map();rows.set(m.recordId,structuredClone(m.payload));remote.set(m.store,rows);},remove:async(m)=>remote.get(m.store)?.delete(m.recordId)});
+ const a='fixture-a-'+Date.now(),b='fixture-b-'+Date.now();setBoundSaasUserId(a);configureRealDatabase();
+ await putBatch({callups:[{id:'race',opponent:'Primera edición',completed:false}]});await start;
+ check((await getOne('callups','race')).opponent==='Primera edición','Guardado local visible mientras la red está bloqueada');
+ await putBatch({callups:[{id:'race',opponent:'Segunda edición',completed:false}]});
+ release();await flushSyncQueue();
+ const db=await openDatabase();const queue=await new Promise((resolve,reject)=>{const req=db.transaction('syncQueue').objectStore('syncQueue').getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+ check(queue.length===1&&queue[0].payload.opponent==='Segunda edición','Confirmar la subida antigua conserva la edición nueva en cola');
+ await syncFromCloud();check(remote.get('callups').get('race').opponent==='Segunda edición','La edición nueva llega a la nube en el siguiente ciclo');
+ setBoundSaasUserId(b);configureRealDatabase();await syncFromCloud();check((await getOne('callups','race')).opponent==='Segunda edición','Segundo almacenamiento independiente recibe la convocatoria');
+ await putBatch({callups:[{id:'race',opponent:'Cambio desde segundo dispositivo',completed:true}]});await flushSyncQueue();
+ setBoundSaasUserId(a);configureRealDatabase();await syncFromCloud();const restored=await getOne('callups','race');check(restored.opponent==='Cambio desde segundo dispositivo'&&restored.completed===true,'Sincronización inversa conserva el estado realizado');
+ const {getOne:reopened}=await import('/js/db.js?isolated-reopen='+Date.now());check((await reopened('callups','race')).completed===true,'Reabrir IndexedDB conserva el estado realizado');
+ result.textContent+='\nFINAL: 6 comprobaciones correctas; ninguna conexión a producción';
+ }catch(error){result.textContent+='\nERROR: '+error.message;}}
+</script></html>
