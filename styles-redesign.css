@@ -8903,3 +8903,18 @@ body.delegate-mode.delegate-multi-view.delegate-allow-modo-campo [id*="field-mod
 #cb-delegate-topbar .cb-delegate-topbar-info { flex: 1 1 160px; min-width: 0; flex-wrap: wrap; }
 #cb-delegate-refresh-btn { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
 #cb-delegate-logout-btn { flex: 0 0 auto; white-space: nowrap; }
+
+/* Ficha de jugador: contraste garantizado de posiciones y formulario */
+#player-dialog .position-groups label {
+  color: var(--cb-dialog-pos-ink, var(--ink, #0f172a));
+}
+#player-dialog .position-groups strong {
+  color: var(--cb-dialog-pos-strong, var(--ink, #0f172a));
+}
+#player-dialog .position-groups > div {
+  background: var(--cb-dialog-pos-bg, #f7f9f7);
+  color: var(--cb-dialog-pos-ink, var(--ink, #0f172a));
+}
+#player-dialog label:not(.position-groups label) {
+  color: var(--cb-dialog-label-ink, #4b5752);
+}
