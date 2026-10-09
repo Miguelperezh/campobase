@@ -1,3 +1,4 @@
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-live-colors-1';
 // Component choices take precedence over the legacy blanket button rules.
 let currentTheme = {};
 const originalColours = new WeakMap();
@@ -225,7 +226,7 @@ export function colorControlDescription(prop, label, screen) {
 }
 
 export function applyComponentColors(theme) {
-  if (theme) currentTheme = theme;
+  if (theme) currentTheme = liveDisplayTheme(theme);
   document.querySelectorAll('dialog[data-theme-view]').forEach((dialog) => {
     const source = document.getElementById(dialog.dataset.themeView);
     if (source) [...source.style].filter((prop) => prop.startsWith('--'))
@@ -241,8 +242,15 @@ export function applyComponentColors(theme) {
   });
   const iconSelectors=Object.values(currentTheme.views||{}).flatMap(view=>Object.values(view.uiParts||{})).filter(c=>c.css==='icon').map(c=>c.selector);
   document.querySelectorAll('[data-ui-icon]').forEach(node=>{if(iconSelectors.some(selector=>{try{return node.matches(selector);}catch{return false;}}))return;node.textContent=originalIcons.get(node);node.removeAttribute('data-ui-icon');});
-  const paint = (root, selector, bg, ink) => {
+  const paint = (root, selector, bg, ink, remember = false) => {
     root?.querySelectorAll(selector).forEach((element) => {
+      if (remember && (bg || ink)) {
+        const nodes = ink ? [element,...element.querySelectorAll('span,strong,small,b,svg,h1,h2,h3,h4,p')] : [element];
+        for (const node of nodes) {
+          if (!node.hasAttribute('data-theme-override')) originalColours.set(node, rememberedProperties.map(prop => [prop,node.style.getPropertyValue(prop),node.style.getPropertyPriority(prop)]));
+          node.dataset.themeOverride = '1';
+        }
+      }
       if (bg) element.style.setProperty('background', `var(${bg})`, 'important');
       if (ink) {
         element.style.setProperty('color', `var(${ink})`, 'important');
@@ -250,6 +258,20 @@ export function applyComponentColors(theme) {
       }
     });
   };
+  // The redesign used fixed colours here; saved scoped variables must paint
+  // real score/clock/player nodes before specific semantic choices are applied.
+  for (const id of ['partido','delegado']) {
+    const live = document.getElementById(id);
+    const paintLive = (selector,bg,ink) => paint(live,selector,bg,ink,true);
+    const saved = currentTheme.views?.[id] || {};
+    const has = key => saved[key] || currentTheme[key];
+    paintLive( '.cbx-live-hero', has('bannerBg') ? '--bn' : null, has('bannerInk') ? '--bnInk' : null);
+    paintLive( '.stadium-score,.clock,.half', null, has('bannerInk') ? '--bnInk' : null);
+    paintLive( '.primary,.cbx-live-quick-actions button', has('btnBg') ? '--btn' : null, has('btnInk') ? '--btnInk' : null);
+    paintLive( '.secondary', has('btn2Bg') ? '--btn2' : null, has('btn2Ink') ? '--btn2Ink' : null);
+    paintLive( '.live-player-row,.player-timer,.cbx-live-changes,.live-reparto-visual-dashboard,.cbx-live-plan', has('cardBg') || has('cardHue') ? '--cardBg' : null, has('fontColor') || has('textColor') ? '--view-font-color' : null);
+    paintLive( '.live-player-dorsal', has('dorsalBg') ? '--dorsal-bg' : null, has('dorsalInk') ? '--dorsal-ink' : null);
+  }
   const today = document.getElementById('hoy');
   const todayColours=currentTheme.views?.hoy || {};
   paint(today, '.cbx-season-bars > div > div > i:first-child', '--season-goals-for');

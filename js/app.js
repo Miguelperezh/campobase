@@ -1,16 +1,17 @@
-import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-delegate-pin-7';
-import { resolveDisplayTheme } from './display-theme.js?v=20261009-delegate-pin-7';
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-live-colors-1';
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-live-colors-1';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-live-colors-1';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-delegate-pin-7';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-delegate-pin-7';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-live-colors-1';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-live-colors-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-delegate-pin-7';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-live-colors-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-delegate-pin-7';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-live-colors-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -8002,7 +8003,7 @@ const CAMPOBASE_VIEW_IDS = [
 ];
 
 function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, defaultBtn2, defaultBtn2Ink, defaultCardBg, defaultCardBorder, defaultFontColor) {
-  const viewsData = theme?.views || {};
+  const viewsData = liveDisplayTheme(theme).views || {};
   CAMPOBASE_VIEW_IDS.forEach((viewId) => {
     const viewEl = document.getElementById(viewId) || document.getElementById({ 'exercise-detail': 'exercise-detail-dialog', comunicador: 'whatsapp-dialog' }[viewId]);
     if (!viewEl) return;
@@ -14124,7 +14125,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-delegate-pin-7').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-live-colors-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
