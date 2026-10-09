@@ -27,7 +27,7 @@ test('la recuperación legacy solo añade IDs ausentes y nunca limpia el destino
 
 test('la interfaz avisa de cuota restringida y sigue refrescando datos locales recuperados', () => {
   assert.match(app, /Supabase está temporalmente restringido por cuota/);
-  assert.match(app, /if \(result\?\.changed !== false\)\s*\{\s*await refresh\(\);/);
+  assert.match(app, /if \(result\.changed === true \|\| \(result\.online && result\.changed !== false\)\)\s*\{\s*await refresh\(\);/);
 });
 
 test('se mantienen los respaldos de sincronización actuales', () => {

@@ -21,3 +21,6 @@
 #cbx-window-dialog.cbp-time-plan .cbp-player-name{font-size:13px!important}#cbx-window-dialog.cbp-time-plan .cbp-player-name small{font-size:11px!important}
 #cbx-claude-colors.cbp-colour-drawer button,#cbx-claude-colors.cbp-colour-drawer legend{font:800 12px/1.25 Barlow,sans-serif!important}#cbx-claude-colors.cbp-colour-drawer p{font:600 12px/1.4 Barlow,sans-serif!important;color:#475569!important}#cbx-claude-colors.cbp-colour-drawer [aria-pressed=true]:not([data-swatch]),#cbx-claude-colors.cbp-colour-drawer [data-action=save]{color:#fff!important}
 @media(max-width:800px){#cbx-window-dialog.cbp-time-plan{width:100vw!important;max-width:100vw!important;margin:0!important;border:0!important}.cbp-plan-banner>div:first-child{min-width:0;max-width:100%;overflow-wrap:anywhere}#cbx-window-dialog.cbp-time-plan .cbp-player-name{font-size:11px!important}#cbx-window-dialog.cbp-time-plan .cbp-time-block b{font-size:9px!important}#cbx-claude-colors nav button{max-width:260px;white-space:normal}}
+
+/* One scoped gear per plan subsection; keep existing content and layout. */
+#cbx-window-dialog .cbp-plan-body .cbx-context-gear-btn{float:right;margin:0 0 6px 8px;min-width:28px;min-height:28px;padding:3px;background:transparent}

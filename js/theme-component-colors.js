@@ -390,7 +390,7 @@ export function applyComponentColors(theme) {
       if(!rememberedProperties.includes(choice.css))continue;
       const valid=choice.css==='font-family'?/^[\w ,'-]{1,100}$/.test(choice.value):choice.css==='font-size'?/^([89]|[1-6][0-9]|7[0-2])px$/.test(choice.value):choice.css==='font-weight'?/^[4-9]00$/.test(choice.value):/^#[0-9a-f]{6}$/i.test(choice.value);
       if(!valid)continue;
-      const paintPart=child=>{if(!child.hasAttribute('data-theme-override'))originalColours.set(child,rememberedProperties.map(prop=>[prop,child.style.getPropertyValue(prop),child.style.getPropertyPriority(prop)]));child.dataset.themeOverride='1';child.style.setProperty(choice.css,choice.value,'important');};
+      const paintPart=child=>{if(child.closest('#cbx-claude-colors'))return;if(!child.hasAttribute('data-theme-override'))originalColours.set(child,rememberedProperties.map(prop=>[prop,child.style.getPropertyValue(prop),child.style.getPropertyPriority(prop)]));child.dataset.themeOverride='1';child.style.setProperty(choice.css,choice.value,'important');};
       paintPart(node);
       if(choice.css==='color'||choice.css.startsWith('font-'))node.querySelectorAll('span,strong,small,b,h1,h2,h3,h4,p,a,svg').forEach(paintPart);
       if(node.matches('[data-specialist-rank]')&&choice.css==='background')node.querySelectorAll('.specialist-rank,.specialist-number').forEach(paintPart);
