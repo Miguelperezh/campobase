@@ -5,4 +5,4 @@
 - [x] Autorización del cambio de autenticación en servidor/identidad técnica.
 - [x] Implementación y verificación de permisos en servidor.
 - [x] Pruebas de dos sesiones autenticadas y navegador en escritorio/ancho móvil.
-- [ ] Publicación main/Pages y comprobación de archivos servidos.
+- [x] Publicación main/Pages y comprobación de los nueve archivos servidos. PR130; versión 20261009-delegate-pin-7.
