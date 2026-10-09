@@ -1,4 +1,4 @@
-import { liveDisplayTheme } from './live-display-colors.js?v=20261009-mobile-colors-2';
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-delegate-colors-3';
 // Component choices take precedence over the legacy blanket button rules.
 let currentTheme = {};
 const originalColours = new WeakMap();

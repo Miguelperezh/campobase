@@ -1,4 +1,4 @@
-import { claudeColorSections } from './claude-color-bindings.js?v=20261009-mobile-colors-2';
+import { claudeColorSections } from './claude-color-bindings.js?v=20261009-delegate-colors-3';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const palette=['#0a251b','#1e523d','#10b981','#86efac','#dcfce7','#ffffff','#f8fafc','#e2e8f0','#94a3b8','#475569','#0f172a','#2563eb','#dbeafe','#7c3aed','#f59e0b','#fff0d8','#c8102e','#e02444','#fdf2f4','#facc15'];
 const emojis=['⚽','🥅','🎯','🦶','🚩','📐','©️','👑','⭐','🧤','👟','⏱️','🤝','✅','⏰','❌','⏳','🤒','🩹','📋','🔕','🔄','🟨','🟥','⚠️','🏆','🔥','💪'];
