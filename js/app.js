@@ -1,17 +1,18 @@
-import { liveDisplayTheme } from './live-display-colors.js?v=20261009-delegate-colors-3';
-import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-delegate-colors-3';
-import { resolveDisplayTheme } from './display-theme.js?v=20261009-delegate-colors-3';
+import { installForegroundSync } from './foreground-sync.js?v=20261009-postgame-sync-1';
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-postgame-sync-1';
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-postgame-sync-1';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-postgame-sync-1';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-delegate-colors-3';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-delegate-colors-3';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-postgame-sync-1';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-postgame-sync-1';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-delegate-colors-3';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-postgame-sync-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-delegate-colors-3';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-postgame-sync-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -1225,7 +1226,7 @@ function renderSquadLeaderboards() {
                 </td>
                 <td class="col-num">${item.keeperMatches}</td>
                 <td class="col-num">${item.summary.minutes}</td>
-                <td class="col-num">${item.goalsAgainst}</td>
+                <td class="col-num">${item.goalsAgainst}${item.keeperAssignmentPending ? '<small class="meta"> · Reparto pendiente</small>' : ''}</td>
                 <td class="col-num highlight"><strong>${item.coefficient !== null ? item.coefficient : '—'}</strong></td>
               </tr>`;
             }).join('')}
@@ -11577,7 +11578,7 @@ async function saveDelegateAccountSettings(event) {
   await put('settings', state.settings);
 
   try {
-    const { getBoundSupabaseClient } = await import('./supabase-client.js');
+    const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261009-postgame-sync-1');
     const client = getBoundSupabaseClient?.();
     if (client) {
       await client.rpc('set_delegate_permissions', { p_permissions: perms }).catch(() => {});
@@ -13915,11 +13916,11 @@ function networkStatus() {
   }
   document.body.classList.toggle('offline', !navigator.onLine);
   if (label) {
-    label.textContent = !navigator.onLine ? 'Sin conexión' : '';
+    label.textContent = !navigator.onLine ? 'Sin conexión' : state.cloudError ? 'Sincronización pendiente' : '';
     label.title = !navigator.onLine
       ? 'Sin conexión: cambios guardados localmente'
-      : (state.cloudConnected ? 'En línea' : 'Sincronización pendiente');
-    label.style.display = !navigator.onLine ? 'inline' : 'none';
+      : (state.cloudError || (state.cloudConnected ? 'En línea' : 'Sincronización pendiente'));
+    label.style.display = !navigator.onLine || state.cloudError ? 'inline' : 'none';
   }
 }
 
@@ -14018,11 +14019,10 @@ async function runCloudSynchronization() {
       ? 'Reconecta tu cuenta para sincronizar. Los datos de este dispositivo se conservan.'
       : result?.cloudRestricted
         ? 'Supabase está temporalmente restringido por cuota. CampoBase mantiene los datos locales de este dispositivo.'
-        : result?.online === false ? (result.error || 'Sincronización pendiente. Los datos de este dispositivo se conservan.') : '';
+        : result?.online === false ? (result.error || 'Sincronización pendiente. Los datos de este dispositivo se conservan.') : result.pending > 0 ? (result.uploadError || 'Hay cambios guardados en este dispositivo pendientes de subir.') : '';
     if (result.online) void ensureRealtimeSubscription();
     if (result.changed === true || (result.online && result.changed !== false)) {
       await refresh();
-      renderAll();
     }
   } catch (error) {
     state.cloudConnected = false;
@@ -14125,7 +14125,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-delegate-colors-3').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-postgame-sync-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -14228,6 +14228,7 @@ async function init() {
   synchronizeCloud().catch(handleError);
   setInterval(() => pollLiveState().catch(handleError), 1000);
   setInterval(() => synchronizeCloud().catch(handleError), 10000);
+  installForegroundSync(scheduleRealtimeCloudSync);
 }
 
 if (typeof window !== 'undefined') {

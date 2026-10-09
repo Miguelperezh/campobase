@@ -470,13 +470,7 @@ export function initPlantillaStatsSync() {
   }
 
   document.addEventListener('click', (event) => {
-    const performanceButton = event.target.closest('.edit-match-performance');
-    if (performanceButton) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      openMatchPerformanceEditor(performanceButton.dataset.id).catch((error) => window.alert(error.message || 'No se pudo abrir la edición del partido.'));
-      return;
-    }
+    // Match performance is handled by match-postgame-editor, including goals.
     const statsButton = event.target.closest('.edit-player-stats');
     if (statsButton) window.setTimeout(() => patchStatsDialog(statsButton.dataset.playerId, statsButton.dataset.scope).catch(console.warn), 0);
   }, true);

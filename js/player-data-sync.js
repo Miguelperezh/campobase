@@ -10,7 +10,7 @@ import {
   buildPlayerSummary,
   derivePlayerMatchStats,
 } from './domain.js';
-import { buildPostgameMatchUpdate } from './match-postgame-editor.js';
+import './match-postgame-editor.js?v=20261009-postgame-sync-1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -234,38 +234,6 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
-async function savePostgameSynced(event) {
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  const form = event.target.closest('#postgame-performance-form');
-  if (!form) return;
-  const dialog = form.closest('dialog');
-  const matchId = dialog?.dataset.matchId;
-  const duration = Number(dialog?.dataset.duration) || 70;
-  const playersOnField = Number(dialog?.dataset.playersOnField) || 7;
-  const [players, matches] = await Promise.all(['players', 'matches'].map(getAll));
-  const match = matches.find((item) => item.id === matchId);
-  if (!match) throw new TypeError('No se encontró el partido.');
-  const entries = $$('.postgame-player-row', dialog).map((row) => ({
-    playerId: row.dataset.playerId,
-    minutes: Number($('[data-postgame="minutes"]', row).value),
-    rating: $('[data-postgame="rating"]', row).value,
-    comment: $('[data-postgame="comment"]', row).value,
-  }));
-  const updatedMatch = buildPostgameMatchUpdate(match, entries, $('#postgame-match-comment', dialog)?.value || '', duration, playersOnField);
-  const updatedMatches = matches.map((item) => item.id === match.id ? updatedMatch : item);
-  const affectedIds = new Set(entries.map((entry) => entry.playerId));
-  const updatedPlayers = players.filter((player) => affectedIds.has(player.id)).map((player) => ({
-    ...player,
-    ...derivePlayerMatchStats(player.id, updatedMatches),
-    // statAdjustments se conserva tal cual. Una corrección manual sigue siendo un delta,
-    // pero ya no congela el total cuando cambian los minutos o la puntuación del partido.
-  }));
-  await putBatch({ matches: [updatedMatch], players: updatedPlayers });
-  dialog.close();
-  showToast('Partido guardado. Plantilla y ficha de jugadores actualizadas.');
-}
-
 function install() {
   scheduleCardSync(true);
   document.addEventListener('campobase:data-changed', (event) => {
@@ -275,22 +243,8 @@ function install() {
     scheduleAppRefresh();
   });
 
-  // El editor postpartido anterior rebajaba/subía el ajuste manual para conservar
-  // artificialmente el total previo. Capturamos su guardado y mantenemos la fuente real.
-  document.addEventListener('submit', (event) => {
-    if (!event.target.closest?.('#postgame-performance-form')) return;
-    savePostgameSynced(event).catch((error) => {
-      console.error(error);
-      const dialog = event.target.closest('dialog');
-      let node = $('.player-sync-error', dialog);
-      if (!node) {
-        node = document.createElement('p');
-        node.className = 'warning panel player-sync-error';
-        $('.postgame-player-row', dialog)?.before(node);
-      }
-      node.textContent = error.message || 'No se pudo guardar el partido.';
-    });
-  }, true);
+  // postgame-performance-form now has one canonical save handler, including
+  // goals and goalkeeper allocation. statAdjustments se conserva tal cual.
 
   const players = $('#players-list');
   if (players) new MutationObserver(() => scheduleCardSync(false)).observe(players, { childList: true, subtree: false });

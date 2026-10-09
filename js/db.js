@@ -1,5 +1,5 @@
 import {canWriteMutation} from '../supabase/functions/_shared/delegate-policy.mjs';
-import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=20261009-delegate-colors-3';
+import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=20261009-postgame-sync-1';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
 
@@ -143,9 +143,23 @@ async function removeQueuedMutation(id, acknowledged = null, database = null) {
   await transactionDone(transaction);
 }
 
+let queuedUploadPromise = null;
+let uploadRequestedWhileBusy = false;
 function queueCloudUpload() {
   if (!canUseCloud()) return;
-  void flushSyncQueue().catch(error => console.warn('Cambios guardados en el dispositivo; sincronización pendiente:', error));
+  uploadRequestedWhileBusy = true;
+  if (queuedUploadPromise) return;
+  queuedUploadPromise = (async () => {
+    // A second batch can replace a queued record while the first request is in
+    // flight. Acknowledging the old copy keeps the new one; send it next now,
+    // rather than relying on a mobile interval that may be suspended.
+    for (let cycle = 0; cycle < 3; cycle++) {
+      uploadRequestedWhileBusy = false;
+      const uploaded = await flushSyncQueue();
+      if (!uploaded || !uploadRequestedWhileBusy) break;
+    }
+  })().catch(error => console.warn('Cambios guardados en el dispositivo; sincronización pendiente:', error))
+    .finally(() => { queuedUploadPromise = null; });
 }
 
 function canUseCloud() {
@@ -206,6 +220,7 @@ export async function put(store, value) {
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
@@ -225,6 +240,7 @@ export async function putPlayerProfile(value) {
   transaction.objectStore('players').put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation('players', 'upsert', recordToStore));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged('players', 'profile-upsert');
   return recordToStore;
@@ -283,17 +299,20 @@ export async function remove(store, id) {
   transaction.objectStore(store).delete(id);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'delete');
 }
 
 let flushPromise = null;
+let lastUploadError = null;
 export function flushSyncQueue() {
   if (flushPromise) return flushPromise;
   flushPromise = flushQueuedMutations().finally(() => { flushPromise = null; });
   return flushPromise;
 }
 async function flushQueuedMutations() {
+  lastUploadError = null;
   if (isDemoDatabase() || isReadOnlyPreview()) return false;
   if (!canUseCloud()) return false;
   // Verifica y vincula primero la sesión remota. Es crítico hacerlo ANTES de
@@ -303,6 +322,7 @@ async function flushQueuedMutations() {
     try {
       await cloudStore.prepare();
     } catch (authError) {
+      lastUploadError = authError;
       if (authError?.message?.includes('Inicia sesión') || authError?.code === 'CAMPOBASE_AUTH_REQUIRED' || authError?.name === 'TypeError') {
         return false;
       }
@@ -354,6 +374,7 @@ async function flushQueuedMutations() {
       if (mutationError?.message?.includes('Inicia sesión') || mutationError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return false;
       }
+      lastUploadError = mutationError;
       console.warn('Error aplicando mutación cloud; se reintentará luego:', mutationError);
       return false;
     }
@@ -458,6 +479,7 @@ export async function syncFromCloud() {
     try {
       const syncUserId = getBoundSaasUserId();
       await flushSyncQueue();
+      if (queuedUploadPromise) await queuedUploadPromise;
       if (getBoundSaasUserId() !== syncUserId) return {online:false,changed:false,accessChanged:true};
       let downloaded = 0;
       let hasChanges = false;
@@ -534,7 +556,8 @@ export async function syncFromCloud() {
         }
         downloaded += snapshot.records.length;
       }
-      return { online: true, pending: (await localGetAll(SYNC_QUEUE)).length, downloaded, changed: hasChanges };
+      const pending = (await localGetAll(SYNC_QUEUE)).length;
+      return { online: true, pending, downloaded, changed: hasChanges, uploadError: pending ? lastUploadError?.message || '' : '' };
     } catch (syncError) {
       if (syncError?.message?.includes('Inicia sesión') || syncError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length, authRequired: true };

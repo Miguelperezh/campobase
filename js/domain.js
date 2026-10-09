@@ -1,3 +1,4 @@
+import { keeperGoalAllocation } from './keeper-goals.js?v=20261009-postgame-sync-1';
 import { roleCanUseOwnerFeatures } from './demo-session.js';
 
 const BACKUP_STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
@@ -1021,6 +1022,7 @@ export function buildSquadLeaderboards({
     .map((item) => {
       let keeperGoalsAgainst = 0;
       let matchesWithKeeper = 0;
+      let keeperAssignmentPending = false;
       for (const m of candidateMatches) {
         if (!m || (m.status !== 'finished' && !m.minuteTotals)) continue;
         const playedSec = m.minuteTotals?.[item.player.id];
@@ -1028,14 +1030,16 @@ export function buildSquadLeaderboards({
         const playedInGoal = isRotatedKeeper || (item.isKeeper && Number.isFinite(playedSec) && playedSec > 0);
         if (playedInGoal) {
           matchesWithKeeper++;
-          const ga = Number.isFinite(m.goalsAgainst) ? m.goalsAgainst : 0;
-          keeperGoalsAgainst += ga;
+          const allocation = keeperGoalAllocation(m, players);
+          keeperGoalsAgainst += allocation.assigned[item.player.id] ?? 0;
+          if (!allocation.complete) keeperAssignmentPending = true;
         }
       }
-      const coefficient = matchesWithKeeper > 0 ? Number((keeperGoalsAgainst / matchesWithKeeper).toFixed(2)) : null;
+      const coefficient = matchesWithKeeper > 0 && !keeperAssignmentPending ? Number((keeperGoalsAgainst / matchesWithKeeper).toFixed(2)) : null;
       return {
         ...item,
         keeperMatches: matchesWithKeeper,
+        keeperAssignmentPending,
         goalsAgainst: keeperGoalsAgainst,
         coefficient,
       };

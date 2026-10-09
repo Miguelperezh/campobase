@@ -81,8 +81,8 @@ test('la sincronización y Asistencia se cargan en la app y en la PWA', async ()
   const demo = await projectFile('js/demo-session.js');
   const sw = await projectFile('sw.js');
   assert.match(demo, /attendance-linked-sources\.js\?v=[^'"\s]+/);
-  assert.match(demo, /player-data-sync\.js\?v=2453/);
+  assert.match(demo, /player-data-sync\.js\?v=20261009-postgame-sync-1/);
   assert.match(sw, /attendance-linked-sources\.js\?v=2453/);
-  assert.match(sw, /player-data-sync\.js\?v=2453/);
+  assert.match(sw, /player-data-sync\.js\?v=20261009-postgame-sync-1/);
   assert.match(sw, /campobase-v2\.44\.0-player-sync-attendance-2453/);
 });
