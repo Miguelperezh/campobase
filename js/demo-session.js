@@ -5,7 +5,7 @@ import './session-top-actions.js?v=2458';
 import './session-picker-compat.js?v=2461';
 import './session-planner-ui.js?v=20260927-v66-real-calendar-dates';
 import './attendance-linked-sources.js?v=claude-asistencia-3';
-import './player-data-sync.js?v=2453';
+import './player-data-sync.js?v=20261009-postgame-sync-1';
 import './attendance-history-responsive.js?v=2455';
 import './today-dashboard.js?v=goal-series-1';
 

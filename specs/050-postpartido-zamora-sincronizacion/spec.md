@@ -1,0 +1,3 @@
+# SDD050 · Postpartido y sincronización
+Editar en el mismo formulario minutos, puntuación, marcador, goleador, asistencia, tipo de gol y goles encajados por portero. Conservar eventos y campos no editados. Zamora nunca atribuye todos los goles del equipo a varios porteros; si falta información, mostrar asignación pendiente sin inventar un reparto histórico. Mantener datos, colores, PIN, permisos y planes.
+Sincronizar al volver al móvil desde segundo plano; distinguir cola local de confirmación remota y respetar formularios abiertos. Validar en almacenamientos independientes ida/vuelta, fallos de red y cambios durante una subida. Las pruebas aisladas no equivalen a móvil físico.

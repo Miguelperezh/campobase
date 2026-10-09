@@ -1,0 +1,17 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Postpartido · prueba aislada</title><style>body{font:16px sans-serif}dialog{box-sizing:border-box}label{display:grid;gap:.3rem}input,select,textarea{box-sizing:border-box;padding:8px}fieldset{margin:12px 0}.stack{display:grid;gap:10px}button{padding:12px}</style><body><main><div id="matches-list"><button class="edit-match-performance" data-id="fixture-game">Editar</button></div><div id="players-list"></div><div id="toast" class="hidden"></div></main>
+<script type="module">
+import {configureRealDatabase,configureCloudStore,putBatch,getOne,getAll,syncFromCloud} from '/js/db.js';
+import {setBoundSaasUserId} from '/js/auth-manager.js';
+import '/js/match-postgame-editor.js';
+const identity='postgame-test-'+crypto.randomUUID();
+setBoundSaasUserId(identity);configureRealDatabase();
+let failing=false;
+const remote=new Map();
+configureCloudStore({enabled:()=>true,getSnapshot:async(store)=>({records:[...(remote.get(store)||new Map()).values()],deletedIds:[],rowCount:(remote.get(store)||new Map()).size}),upsert:async(m)=>{if(failing)throw new Error('Red de prueba caída');const rows=remote.get(m.store)||new Map();rows.set(m.recordId,structuredClone(m.payload));remote.set(m.store,rows);},remove:async()=>{}});
+window.__campobase={refresh:async()=>{},renderAll:()=>{},synchronizeCloud:syncFromCloud};
+const players=[{id:'k1',number:1,name:'Portero Uno',positions:['Portero']},{id:'k2',number:13,name:'Portero Dos',positions:['Portero']},{id:'p',number:3,name:'Goleador',positions:['Central']},{id:'a',number:7,name:'Asistente',positions:['Central']}];
+await putBatch({players,matches:[{id:'fixture-game',opponent:'Rival aislado',type:'league',status:'finished',goalsFor:1,goalsAgainst:15,minuteTotals:{k1:2100,k2:2100,p:2100,a:2100},goalkeeperRotation:{firstKeeper:'k1',secondKeeper:'k2'},goals:[{id:'original-goal',playerId:'p',second:600,note:'Nota original'}],plan:{untouched:true},location:'Campo original'}]});
+await syncFromCloud();
+window.fixture={getOne,getAll,syncFromCloud,putBatch,fail:()=>{failing=true;},remote,secondDevice:async()=>{setBoundSaasUserId('second-'+identity);configureRealDatabase();await syncFromCloud();},firstDevice:async()=>{setBoundSaasUserId(identity);configureRealDatabase();await syncFromCloud();}};
+window.fixtureReady=true;
+</script></body></html>

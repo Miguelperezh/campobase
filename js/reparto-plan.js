@@ -1,3 +1,4 @@
+import { keeperGoalAllocation } from './keeper-goals.js?v=20261009-postgame-sync-1';
 import { isPreseasonMatch } from './domain.js';
 
 /**
@@ -910,6 +911,7 @@ export function calculateExtendedPlayerStats(matches = [], playerId, scope = 'le
   let goalsConcededAsKeeper = 0;
   let keeperMinutesPlayed = 0;
   let keeperMatchesPlayed = 0;
+  let keeperAssignmentPending = false;
 
   matchesInScope.forEach((match) => {
     const events = match.extendedEvents || match.events || [];
@@ -949,13 +951,15 @@ export function calculateExtendedPlayerStats(matches = [], playerId, scope = 'le
       if (playedSec > 0) {
         keeperMinutesPlayed += Math.round(playedSec / 60);
         keeperMatchesPlayed += 1;
-        goalsConcededAsKeeper += Number(match.goalsAgainst ?? 0);
+        const allocation = keeperGoalAllocation(match);
+        goalsConcededAsKeeper += allocation.assigned[playerId] ?? 0;
+        if (!allocation.complete) keeperAssignmentPending = true;
       }
     }
   });
 
   const totalGoals = goalsRegular + goalsPenalty + goalsFreekick;
-  const zamoraRatio = keeperMatchesPlayed > 0
+  const zamoraRatio = keeperMatchesPlayed > 0 && !keeperAssignmentPending
     ? Number((goalsConcededAsKeeper / keeperMatchesPlayed).toFixed(2))
     : null;
 
@@ -973,6 +977,7 @@ export function calculateExtendedPlayerStats(matches = [], playerId, scope = 'le
     penaltiesMissed,
     penaltiesSaved,
     keeperMatchesPlayed,
+    keeperAssignmentPending,
     keeperMinutesPlayed,
     goalsConcededAsKeeper,
     zamoraRatio,
