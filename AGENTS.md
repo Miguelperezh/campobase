@@ -4665,3 +4665,7 @@ Mostrar todos los convocados con selector y conteo; no omitir suplentes de 0 min
 
 ## SDD042 — Desplazamiento y propuesta visible (09/10/2026)
 La ventana de tiempos debe desplazar todo su contenido y permitir alcanzar cada convocado. Probar usando todas las hojas de estilos reales: la regla legacy overflow:hidden no debe recortar el plan nuevo. Propuesta muestra tramos/minutos de todos, sin modificar el borrador hasta Aceptar. Mantener tramos múltiples validados. WhatsApp Descansan usa número y nombre sin Dorsal ni coma, resto igual. Publicar solo código/docs, conservar datos. Ver specs/042-plan-desplazamiento-propuesta.
+
+
+## SDD043 — Posiciones en cada ventana del plan (09/10/2026)
+Mantener Entra X por Y y describir intercambios entre titulares con nombres y destinos, una vez por pareja. Las recolocaciones simples/cadenas indican origen, destino y ocupante anterior. Compartir presentación en ventanas, resumen, vivo e impresión; no alterar alineaciones, parejas, minutos ni registros. Ver specs/043-descripciones-posiciones-plan.

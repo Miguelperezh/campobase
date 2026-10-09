@@ -40,6 +40,28 @@ export function describeMoment(before, after) {
     formation: before.formation !== after.formation ? after.formation : '' };
 }
 
+// Presentation only: retain the saved lineup and substitution pairing unchanged.
+export function positionChangeLines(before, after, name = (id) => id) {
+  const moved = describeMoment(before, after).moved;
+  const seen = new Set();
+  const lines = [];
+  for (const move of moved) {
+    if (seen.has(move.playerId)) continue;
+    const old = before.team.find((slot) => slot.playerId === move.playerId);
+    const previousOccupant = before.team.find((slot) => slot.pos === move.position);
+    const partner = moved.find((other) => other.playerId === previousOccupant?.playerId && other.position === old.pos);
+    if (partner) {
+      seen.add(partner.playerId);
+      lines.push(`${name(move.playerId)} intercambia posición con ${name(partner.playerId)}: ${name(move.playerId)} pasa de ${old.pos} a ${move.position}; ${name(partner.playerId)} pasa de ${move.position} a ${old.pos}`);
+    } else {
+      const occupant = previousOccupant?.playerId;
+      lines.push(`${name(move.playerId)} cambia de ${old.pos} a ${move.position}${occupant && occupant !== move.playerId ? ` (puesto que ocupaba ${name(occupant)})` : ''}`);
+    }
+    seen.add(move.playerId);
+  }
+  return lines;
+}
+
 export function plannedMinutes(moments, duration = 70) {
   const minutes = {};
   const ordered = [...moments].sort((a, b) => a.minute - b.minute);

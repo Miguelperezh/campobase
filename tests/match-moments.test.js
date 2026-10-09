@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { describeMoment, plannedMinutes, validLineup } from '../js/match-moments.js';
+import { positionChangeLines, describeMoment, plannedMinutes, validLineup } from '../js/match-moments.js';
 
 const initial = { minute: 0, formation: '1-3-2-1', team: [
   { pos: 'Portero', playerId: 'gk' }, { pos: 'Central', playerId: 'y' },
@@ -42,4 +42,25 @@ test('los minutos previstos siguen las alineaciones de cada tramo', () => {
   assert.equal(minutes.y, 15);
   assert.equal(minutes.x, 55);
   assert.equal(minutes.z, 70);
+});
+
+
+test('recolocación junto a sustitución indica origen, destino y ocupante anterior', () => {
+ const before=structuredClone(initial), after=structuredClone(minute15);
+ assert.deepEqual(positionChangeLines(initial,minute15,id=>id.toUpperCase()),['Z cambia de Lateral derecho a Central (puesto que ocupaba Y)']);
+ assert.deepEqual(describeMoment(initial,minute15).pairs,[{inId:'x',outId:'y'}]);
+ assert.deepEqual(initial,before);assert.deepEqual(minute15,after);
+});
+test('intercambio de dos titulares se describe una vez y no inventa sustituciones', () => {
+ const after=structuredClone(initial);
+ after.team[1].playerId='z';after.team[2].playerId='y';
+ assert.deepEqual(positionChangeLines(initial,after),['z intercambia posición con y: z pasa de Lateral derecho a Central; y pasa de Central a Lateral derecho']);
+ assert.deepEqual(describeMoment(initial,after).pairs,[]);
+ assert.deepEqual(plannedMinutes([initial,{...after,minute:15}]),plannedMinutes([initial]));
+});
+test('cadena de tres recolocaciones explica cada movimiento sin presentarlo como intercambio doble', () => {
+ const after=structuredClone(initial);
+ after.team[1].playerId='z';after.team[2].playerId='a';after.team[3].playerId='y';
+ const lines=positionChangeLines(initial,after);
+ assert.equal(lines.length,3);assert.ok(lines.every(line=>line.includes('puesto que ocupaba')&&!line.includes('intercambia')));
 });
