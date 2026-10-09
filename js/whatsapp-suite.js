@@ -321,7 +321,7 @@ ${closing}`.trim();
   const restingBlock = restingPlayers.length
     ? `\n*Descansan:*\n${restingPlayers.map((p) => {
         const num = cleanPlayerNumber(p.number);
-        return `- ${num ? `Dorsal ${num}, ` : ''}${p.name}`;
+        return `- ${num ? `${num} ` : ''}${p.name}`;
       }).join('\n')}\n`
     : '';
 

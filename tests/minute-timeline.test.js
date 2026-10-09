@@ -60,3 +60,16 @@ test('copiar el plan visible conserva exactamente cada tramo, sin regenerarlo',a
   const html=renderMinuteTimeline(copied,[], 'exact');assert.match(html,/cbx-minute-spans/);assert.match(html,/min/);
  }
 });
+
+
+test('proponer reparto desde un borrador incompleto incluye los 14 y no altera los tramos editados',async()=>{
+ const {intervalsFromMoments,setIndividualIntervals,intervalTotals,timePlanCoverage}=await import('../js/individual-time-plan.js');
+ const draft=setIndividualIntervals(intervalsFromMoments([initial],ids,70),'p11',[{from:0,to:35},{from:60,to:70}],70);
+ const before=structuredClone(draft);
+ const proposed=intervalsFromMoments(proposePrepMoments({initial:structuredClone(initial),playerIds:ids,keeperIds:['g1','g2']}),ids,70);
+ assert.deepEqual(draft,before);
+ assert.equal(intervalTotals(draft).p11,45);
+ assert.equal(Object.keys(proposed).length,14);
+ for(const id of ids)assert.equal(intervalTotals(proposed)[id],35);
+ assert.ok(timePlanCoverage(proposed,['g1','g2'],70,6).every(w=>w.valid));
+});

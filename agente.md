@@ -1888,3 +1888,7 @@ Conservar el estilo validado en la prueba time-plan-colors. Cada apartado del pl
 
 ## SDD041 — Convocados y tramos repetidos (09/10/2026)
 Mostrar todos los convocados con selector y conteo; no omitir suplentes de 0 minutos ni fichas ausentes. Nueva entrada y salida mediante minutos explícitos; no fusionar los cortes del borrador ni cambiar los minutos ajenos. Mantener estilo/ajustes validados, validación de cobertura, imprimir/copiar y guardado explícito. Probar 14 convocados y 0–5,10–15,20–30=20 minutos en navegador antes de publicar código en main/producción sin tocar datos. Ver specs/041-convocados-tramos-multiples.
+
+
+## SDD042 — Desplazamiento y propuesta visible (09/10/2026)
+La ventana de tiempos debe desplazar todo su contenido y permitir alcanzar cada convocado. Probar usando todas las hojas de estilos reales: la regla legacy overflow:hidden no debe recortar el plan nuevo. Propuesta muestra tramos/minutos de todos, sin modificar el borrador hasta Aceptar. Mantener tramos múltiples validados. WhatsApp Descansan usa número y nombre sin Dorsal ni coma, resto igual. Publicar solo código/docs, conservar datos. Ver specs/042-plan-desplazamiento-propuesta.

@@ -34,7 +34,7 @@ test('hora real, citación menos 45 y datos ausentes sin horario inventado',()=>
 });
 test('mensaje grupal conserva lista, descansan sin motivos, mapa y ropa requerida',()=>{
  const text=buildWhatsAppMatchConvocatoria({match:matches[1],callup:callups[0],players});
- for(const value of ['19:00','18:15','Campo real',matches[1].mapsUrl,'1. 7 Jugador Nombre Completo','*Descansan:*','- Dorsal 10, Otro Nombre Completo','dos equipaciones completas','Polo y pantalón de paseo de este año','Camiseta roja de calentamiento']) assert.ok(text.includes(value),value);
+ for(const value of ['19:00','18:15','Campo real',matches[1].mapsUrl,'1. 7 Jugador Nombre Completo','*Descansan:*','- 10 Otro Nombre Completo','dos equipaciones completas','Polo y pantalón de paseo de este año','Camiseta roja de calentamiento']) assert.ok(text.includes(value),value);
  assert.ok(!text.includes('lesión')); assert.ok(!text.includes('Mundial 82'));
 });
 test('entrenamiento usa hora y campo reales, balón identificado y camiseta roja',()=>{
