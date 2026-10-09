@@ -5,3 +5,5 @@ Causas identificadas: CSS de rediseño fijaba fondos/textos aun existiendo varia
 Corrección de lectura/renderizado, sin escrituras ni cambios de autenticación, permisos o backend. Preferencias específicas de Modo Campo conservadas; otras pestañas intactas. No sustituye paletas ni planes. Alias de selectores antiguos aplicados solo a una copia en memoria.
 
 801 tests pasan y npm run check correcto. Browser aislado con DOM completo y todas las hojas reales: 1440/390px, marcador/fondo/nombres/botón automático iguales entre vistas equivalentes; preferencias históricas del marcador funcionan. Regenerar ambos paneles conserva resultados. Tema original mantiene ausencia de views.delegado, probando que proyección no persiste. Cero errores de consola. Todas las conexiones externas bloqueadas: no prueba de móvil físico ni escrituras remotas.
+
+Publicación: PR131 fusionado en main (fc8b90c2), CI y browser smoke correctos. Verify main 37946261947 y Pages 37946261967 terminados con éxito. Producción comprobada byte a byte para index.html, app, theme-component-colors, live-display-colors, bindings, editor y sw: idénticos al código probado. Build 20261009-live-colors-1.
