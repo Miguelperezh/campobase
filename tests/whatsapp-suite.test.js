@@ -790,7 +790,8 @@ test('buildWhatsAppMatchConvocatoria para grupo incluye sección Descansan sin m
 
   // Sección Descansan
   assert.ok(msg.includes('*Descansan:*'));
-  assert.ok(msg.includes('- Dorsal 10, Hugo Ramos Santana'));
+  assert.ok(msg.includes('- 10 Hugo Ramos Santana'));
+  assert.ok(!msg.includes('Dorsal'), 'Convocados y descansan muestran número y nombre sin Dorsal');
   assert.ok(!msg.includes('motivo'), 'No debe incluir motivos en la lista de Descansan');
   assert.ok(!msg.includes('rotación'), 'No debe incluir rotación en la lista de Descansan');
 

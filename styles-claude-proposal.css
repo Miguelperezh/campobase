@@ -35,3 +35,8 @@
 #cbx-window-dialog .cbp-new-interval>small{display:block;margin-top:8px;color:#475569}
 #cbx-window-dialog .cbp-time-row{min-height:46px}
 @media print{.cbp-roster-picker{display:none!important}}
+
+/* The legacy window uses overflow:hidden; this plan scrolls as a single dialog. */
+@media screen{#cbx-window-dialog.cbp-time-plan[open]{height:auto!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;touch-action:pan-y}#cbx-window-dialog.cbp-time-plan .cbp-plan-proposal table{width:100%;border-collapse:collapse}#cbx-window-dialog.cbp-time-plan .cbp-plan-proposal th,#cbx-window-dialog.cbp-time-plan .cbp-plan-proposal td{text-align:left;padding:6px;border-bottom:1px solid #e2e8f0}#cbx-window-dialog.cbp-time-plan .cbp-proposal-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}}
+@media(max-width:800px){#cbx-window-dialog.cbp-time-plan[open]{max-height:100dvh!important}}
+@media print{#cbx-window-dialog.cbp-time-plan[open]{height:auto!important;max-height:none!important;overflow:visible!important}}
