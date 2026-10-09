@@ -4,4 +4,4 @@
 - [x] Zamora sin duplicaciones ni reparto inventado.
 - [x] Reanudación móvil y confirmación de subida.
 - [x] Pruebas y navegador.
-- [ ] Main y producción.
+- [x] Main y producción.
