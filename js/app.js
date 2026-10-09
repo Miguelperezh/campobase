@@ -13976,7 +13976,7 @@ async function runCloudSynchronization() {
         ? 'Supabase está temporalmente restringido por cuota. CampoBase mantiene los datos locales de este dispositivo.'
         : result?.online === false ? (result.error || 'Sincronización pendiente. Los datos de este dispositivo se conservan.') : '';
     if (result.online) void ensureRealtimeSubscription();
-    if (result.online && result.changed !== false) {
+    if (result.changed === true || (result.online && result.changed !== false)) {
       await refresh();
       renderAll();
     }
