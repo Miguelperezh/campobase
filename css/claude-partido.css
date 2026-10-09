@@ -1991,3 +1991,25 @@ body.cb-redesign-active .cbx-plan-heading { flex-wrap:wrap;gap:8px; }
 body.cb-redesign-active .cbx-minute-shortcuts button { flex:1;min-height:40px;font-size:12px;padding:8px;white-space:normal; }
 
 #prep-plan-tramos { scroll-margin-top:140px; }
+
+/* Live layout follows the available panel width, including the sidebar. */
+body.cb-redesign-active #live-match,
+body.cb-redesign-active #delegate-match { container: cb-live / inline-size; min-width:0; max-width:100%; }
+body.cb-redesign-active #partido .cbx-live-main { grid-template-columns:minmax(0,1fr); width:100%; box-sizing:border-box; }
+body.cb-redesign-active :is(#partido,#delegado) .live-reparto-visual-dashboard { container: cb-balance / inline-size; min-width:0; max-width:100%; width:100%; box-sizing:border-box; }
+body.cb-redesign-active :is(#partido,#delegado) .live-reparto-visual-dashboard :is(.reparto-dash-title,.reparto-dash-title>div,.reparto-col,.reparto-card-item,.sub-col) { min-width:0; max-width:100%; }
+body.cb-redesign-active :is(#partido,#delegado) .live-reparto-visual-dashboard :is(h3,p,.reparto-target-pill,.reparto-col-header,.reparto-direct-sub-header,.sub-name,.sub-min,.btn-quick-sub-direct) { white-space:normal!important; overflow-wrap:anywhere; }
+body.cb-redesign-active :is(#partido,#delegado) .live-reparto-visual-dashboard .item-name { min-width:0; }
+@container cb-live (min-width:960px) {
+ body.cb-redesign-active #partido .cbx-live-main { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); max-width:100%; margin:0; }
+ body.cb-redesign-active #partido .cbx-live-main>.live-reparto-visual-dashboard { grid-column:1 / -1; }
+}
+@container cb-live (min-width:1280px) {
+ body.cb-redesign-active #partido .cbx-live-main { grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr); }
+ body.cb-redesign-active #partido .cbx-live-main>.live-reparto-visual-dashboard { grid-column:auto; }
+}
+@container cb-balance (max-width:380px) {
+ body.cb-redesign-active :is(#partido,#delegado) .reparto-balance-grid { grid-template-columns:minmax(0,1fr)!important; }
+ body.cb-redesign-active :is(#partido,#delegado) .reparto-direct-sub-players { flex-wrap:wrap; }
+ body.cb-redesign-active :is(#partido,#delegado) .reparto-direct-sub-players .sub-col { flex:1 1 100px!important; }
+}

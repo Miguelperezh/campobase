@@ -4669,3 +4669,11 @@ La ventana de tiempos debe desplazar todo su contenido y permitir alcanzar cada 
 
 ## SDD043 — Posiciones en cada ventana del plan (09/10/2026)
 Mantener Entra X por Y y describir intercambios entre titulares con nombres y destinos, una vez por pareja. Las recolocaciones simples/cadenas indican origen, destino y ocupante anterior. Compartir presentación en ventanas, resumen, vivo e impresión; no alterar alineaciones, parejas, minutos ni registros. Ver specs/043-descripciones-posiciones-plan.
+
+
+## SDD044 — Reparto en vivo sin recortes (09/10/2026)
+Distribuir las columnas por el ancho real disponible tras la barra lateral. La tarjeta Reparto y balance debe caber completa para entrenador/delegado y móvil, ajustando textos y columnas internas. No ocultar el desbordamiento para disimular recortes. Cambios solo de distribución, conservar colores, planes, datos y acciones. Ver specs/044-reparto-vivo-sin-recorte.
+
+
+## SDD045 — Vivo según plan y colores sincronizados (09/10/2026)
+Automático/reparto con plan aplican siguiente ventana guardada completa y confirmada, nunca redistribuyen fuera del plan ni adelantan automáticamente. Hecho/aplazado no bloquea avisos posteriores. Mantener manual explícito, gol/paradón, posiciones, aplicar/aplazar y preparación. Colores persistidos prevalecen sobre caché antigua; delegado no abre editor. Conservar diseño Claude móvil y permisos reactivos. No escribir datos de pruebas ni compartir sesión owner. Distinguir nube simulada de dos móviles reales. Auditoría de lectura confirma pin-login v3 solo propietario y 0 cuentas delegado: acceso remoto propio pendiente de activar, no prometer piloto sincronizado. Ver specs/045-vivo-plan-colores-sincronizacion.
