@@ -1880,3 +1880,7 @@ Ajustes estándar de ejercicios compartidos por todas las tarjetas. Clasificaci�
 - Conservar varias sesiones diarias y el domingo en el resumen semanal.
 - Versionar todos los módulos cambiados. Ver specs/039-whatsapp-contexto-cola.
 - Distinguir prueba de IndexedDB real con nube simulada de validación en móvil físico y autenticación real. No afirmar que un error de autenticación es un simple fallo de conexión.
+
+
+## SDD040 — Colores del plan sin bloqueo (09/10/2026)
+Conservar el estilo validado en la prueba time-plan-colors. Cada apartado del plan tiene su rueda, partes con nombres concretos y controles solo aplicables al elemento elegido; mismo estilo para filas equivalentes. Los eventos de colores no reconstruyen el plan ni arrastran minutos. Escape cierra solo ajustes; vista previa/Cancelar/Guardar sin alterar intervalos. No anunciar sincronización correcta si falla la nube; distinguir autenticación pendiente. Publicar código/docs sin tocar datos, PIN, permisos ni Supabase. Ver specs/040-plan-colores-sin-bloqueo. Las pruebas locales no validan por sí solas móvil físico ni acceso remoto delegado.

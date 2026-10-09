@@ -1,0 +1,10 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Plan y colores aislados</title><link rel="stylesheet" href="/styles-claude-proposal.css"><button id="open">Abrir plan de prueba</button><output id="evidence"></output><script type="module">
+import {openMatchWindowEditor} from '/js/claude-time-plan.js';
+import {openClaudeColorEditor} from '/js/claude-color-editor.js';
+import {applyComponentColors} from '/js/theme-component-colors.js';
+const read=()=>JSON.parse(localStorage.getItem('fixture-plan-theme')||'{}');
+const ids=['k1','k2','a','b','c'],players=ids.map((id,i)=>({id,number:i+1,name:'Jugador de prueba '+id}));
+const moments=[{id:'start',minute:0,formation:'1-1-1',team:[{pos:'Portero',playerId:'k1'},{pos:'Defensa',playerId:'a'},{pos:'Delantero',playerId:'b'}]},{id:'change',minute:35,formation:'1-1-1',team:[{pos:'Portero',playerId:'k2'},{pos:'Defensa',playerId:'c'},{pos:'Delantero',playerId:'b'}]}];
+document.querySelector('#open').onclick=()=>{openMatchWindowEditor({moments,players,availableIds:ids,keeperIds:['k1','k2'],duration:70,opponent:'Rival de prueba',recommend:()=>moments,onApply:()=>{},onSave:()=>{document.querySelector('#evidence').textContent='El test no debe guardar un plan';}});applyComponentColors(read());};
+document.addEventListener('click',event=>{const gear=event.target.closest('[data-gear-target]');if(!gear)return;const scope=document.getElementById(gear.dataset.themeSection);openClaudeColorEditor({viewId:'preparacion',scope,title:gear.getAttribute('aria-label'),readTheme:read,applyTheme:applyComponentColors,saveTheme:async theme=>{localStorage.setItem('fixture-plan-theme',JSON.stringify(theme));}});});
+</script></html>

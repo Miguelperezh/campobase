@@ -46,10 +46,10 @@ async function refreshNow(button) {
       if (app?.synchronizeCloud) {
         const result = await app.synchronizeCloud();
         if (result?.online === false && !result.demo) {
-          if (button) button.title = result.error || app.state?.cloudError || 'Datos actualizados';
+          if (button) button.title = result.authRequired ? 'Reconecta tu cuenta para sincronizar; tus datos se conservan.' : result.error || app.state?.cloudError || 'Sincronización pendiente';
           try { await app.refresh?.(true); } catch {}
           try { app.renderAll?.(); } catch {}
-          window.__campobase?.toast?.('Datos actualizados.');
+          window.__campobase?.toast?.(result.authRequired ? 'Reconecta tu cuenta para sincronizar. Tus datos se conservan.' : 'No se pudo sincronizar. Tus datos se conservan; puedes volver a actualizar.');
           return;
         }
         try { await app.refresh?.(true); } catch {}
@@ -74,7 +74,7 @@ async function refreshNow(button) {
       if (button) button.title = error.message || 'No se pudo actualizar; vuelve a intentarlo.';
       try { await window.__campobase?.refresh?.(true); } catch {}
       try { window.__campobase?.renderAll?.(); } catch {}
-      window.__campobase?.toast?.('Datos actualizados.');
+      window.__campobase?.toast?.('No se pudo actualizar. Tus datos se conservan; puedes volver a intentarlo.');
     } finally {
       if (button) { button.disabled = false; button.textContent = 'Actualizar'; }
     }

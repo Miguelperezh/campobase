@@ -1,4 +1,4 @@
-import { claudeColorSections } from './claude-color-bindings.js?v=claude-proposal-3';
+import { claudeColorSections } from './claude-color-bindings.js?v=20261009-plan-colors-1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const palette=['#0a251b','#1e523d','#10b981','#86efac','#dcfce7','#ffffff','#f8fafc','#e2e8f0','#94a3b8','#475569','#0f172a','#2563eb','#dbeafe','#7c3aed','#f59e0b','#fff0d8','#c8102e','#e02444','#fdf2f4','#facc15'];
 const emojis=['⚽','🥅','🎯','🦶','🚩','📐','©️','👑','⭐','🧤','👟','⏱️','🤝','✅','⏰','❌','⏳','🤒','🩹','📋','🔕','🔄','🟨','🟥','⚠️','🏆','🔥','💪'];
@@ -27,7 +27,7 @@ export function openClaudeColorEditor({viewId,scope,title,readTheme,applyTheme,s
  let sections=claudeColorSections(viewId,scope);if(!sections.length)return;
  let section=sections[0],element=section.els[0],selectedKey=element.props[0].key,changes={},history=[],future=[],status='',saving=false;
  const initialValues=new Map();
- for(const s of sections)for(const e of s.els)for(const p of e.props){const node=getNodes(p.selector)[0];const value=p.css==='icon'?node?.textContent:getComputedStyle(node).getPropertyValue(p.css==='background'?'background-color':p.css);initialValues.set(e.id+'.'+p.key,p.css==='icon'?value?.trim():p.css.startsWith('font-')?value:hex(value));}
+ for(const s of sections)for(const e of s.els)for(const p of e.props){const node=getNodes(p.selector)[0];if(!node)continue;const value=p.css==='icon'?node.textContent:getComputedStyle(node).getPropertyValue(p.css==='background'?'background-color':p.css);initialValues.set(e.id+'.'+p.key,p.css==='icon'?value?.trim():p.css.startsWith('font-')?value:hex(value));}
  const panel=document.createElement('aside');panel.id='cbx-claude-colors';panel.className='cbp-colour-drawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','false');panel.setAttribute('aria-label','Ajustes de '+title);
  panel.innerHTML=`<header><div><small>Solo cambia esta ${scope?'sección':'pestaña'}</small><h2>Ajustes de ${esc(title)}</h2><p>Toca cualquier parte de la pantalla o elige de la lista.</p></div><button type="button" data-action="close" aria-label="Cerrar ajustes">✕</button></header><nav class="cbp-section-choices"></nav><div class="cbp-colour-scroll"></div><footer><strong class="cbp-pending" role="status"></strong><small class="cbp-save-status"></small><div><button type="button" data-action="undo">Deshacer</button><button type="button" data-action="cancel">Cancelar</button><button type="button" data-action="save">Guardar</button></div></footer>`;
  (scope?.closest('dialog[open]')||document.getElementById({'exercise-detail':'exercise-detail-dialog',comunicador:'whatsapp-dialog'}[viewId])||document.body).append(panel);document.body.classList.add('cbp-editing-colours');
@@ -56,7 +56,7 @@ export function openClaudeColorEditor({viewId,scope,title,readTheme,applyTheme,s
  panel.addEventListener('input',event=>{const input=event.target;if(!input.dataset.key)return;const p=element.props.find(p=>p.key===input.dataset.key);change(p,p.css==='font-size'?input.value+'px':input.value);},{signal});
  panel.addEventListener('change',event=>{if(event.target.matches('[data-element-select]'))choose(section.els.find(e=>e.id===event.target.value));},{signal});
  panel.addEventListener('click',async event=>{
-  const b=event.target.closest('button');if(!b)return;
+  event.stopPropagation();const b=event.target.closest('button');if(!b)return;
   if(b.dataset.section){section=sections.find(s=>s.id===b.dataset.section);const pd=document.getElementById('player-dialog');if(section.id==='player-dialog-sec'){if(pd&&!pd.open){pd.showModal();pd.dataset.temporaryPreview='1';}}else if(pd?.dataset.temporaryPreview==='1'){pd.removeAttribute('data-temporaryPreview');pd.close();}choose(section.els[0]);return;}
   if(b.dataset.element){choose(section.els.find(e=>e.id===b.dataset.element));return;}
   if(b.dataset.swatch){change(element.props.find(p=>p.key===b.dataset.controlKey),b.dataset.swatch);return;}
@@ -72,6 +72,6 @@ export function openClaudeColorEditor({viewId,scope,title,readTheme,applyTheme,s
   const hit=sections.flatMap(s=>s.els.map(e=>({s,e}))).flatMap(({s,e})=>e.props.map(p=>({s,e,p,nodes:getNodes(p.selector)}))).filter(x=>x.nodes.some(n=>n===event.target||n.contains(event.target))).sort((a,b)=>{const depth=x=>{let n=x.nodes.find(n=>n.contains(event.target)),d=0;while(n){d++;n=n.parentElement;}return d;};return depth(b)-depth(a);})[0];
   if(!hit)return;event.preventDefault();event.stopImmediatePropagation();section=hit.s;choose(hit.e,hit.p.key);
  },{capture:true,signal});
- document.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}},{capture:true,signal});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();close();}},{capture:true,signal});
  render();highlight();panel.querySelector('[data-action=close]').focus();
 }
