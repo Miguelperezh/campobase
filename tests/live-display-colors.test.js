@@ -23,3 +23,8 @@ test('old live selectors find actual redesigned score, names, goals and progress
  const theme={views:{partido:{uiParts:{score:{selector:'#partido .cbx-live-score',css:'color',value:'#111111'}}}}};
  const copy=liveDisplayTheme(theme);assert.equal(copy.views.delegado.uiParts.score.selector,'#delegado .score-team > strong');assert.equal(theme.views.partido.uiParts.score.selector,'#partido .cbx-live-score');
 });
+
+test('delegate live keeps clock and historical section identities for saved colours',()=>{
+ assert.equal(delegateLiveSelector('#partido #half'),'#delegado #delegate-half');
+ assert.equal(delegateLiveSelector('#partido #partido-colours-pizarra-tactica-en-vivo-0 > div:nth-of-type(2)'),'#delegado #delegado-colours-pizarra-tactica-en-vivo-0 > div:nth-of-type(2)');
+});

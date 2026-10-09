@@ -1,17 +1,17 @@
-import { liveDisplayTheme } from './live-display-colors.js?v=20261009-mobile-colors-2';
-import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-mobile-colors-2';
-import { resolveDisplayTheme } from './display-theme.js?v=20261009-mobile-colors-2';
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-delegate-colors-3';
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-delegate-colors-3';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-delegate-colors-3';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-mobile-colors-2';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-mobile-colors-2';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-delegate-colors-3';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-delegate-colors-3';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-mobile-colors-2';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-delegate-colors-3';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-mobile-colors-2';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-delegate-colors-3';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -749,7 +749,7 @@ async function refresh() {
       state.settings.theme = resolveDisplayTheme(state.settings.theme, cachedTheme, undefined, isolated);
     }
   } catch {}
-  if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
+  if (!Object.hasOwn(state.settings, 'presets')) {
     try {
       const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
       state.settings.presets = Array.isArray(cachedPresets) && cachedPresets.length ? cachedPresets : [...DEFAULT_PRESETS];
@@ -757,7 +757,7 @@ async function refresh() {
       state.settings.presets = [...DEFAULT_PRESETS];
     }
   }
-  if (!state.settings.sem) {
+  if (!Object.hasOwn(state.settings, 'sem')) {
     try {
       const cachedSem = JSON.parse(localStorage.getItem('campobase.sem') || 'null');
       state.settings.sem = cachedSem && typeof cachedSem === 'object' ? cachedSem : { ...DEFAULT_SEM };
@@ -765,7 +765,7 @@ async function refresh() {
       state.settings.sem = { ...DEFAULT_SEM };
     }
   }
-  if (state.settings.matchPreset === undefined || state.settings.matchPreset === null) {
+  if (!Object.hasOwn(state.settings, 'matchPreset')) {
     try {
       const cachedMatch = JSON.parse(localStorage.getItem('campobase.matchPreset') || 'null');
       state.settings.matchPreset = cachedMatch;
@@ -2269,9 +2269,10 @@ function liveDetailsMarkup(prefix, availableIds, match) {
   return `<details class="match-log" open><summary>Marcador e incidencias</summary><div class="stadium-score">${scoreTeam(teams.home, homeScore, homeTeam)}<span class="score-separator">—</span>${scoreTeam(teams.away, awayScore, awayTeam)}</div><p class="meta match-venue">${teams.mySide === 'home' ? `${escapeHtml(myTeamName())} juega como local` : `${escapeHtml(myTeamName())} juega como visitante`}</p><div class="event-editor"><label>Jugador<select id="${prefix}-event-player">${options}</select></label><label>Tipo<select id="${prefix}-event-kind"><option value="goal">⚽ Gol (suma al marcador)</option><option value="penalty_goal">🎯⚽ Gol de penalti (suma al marcador)</option><option value="penalty_miss">❌🎯 Penalti fallado</option><option value="penalty_saved">🧤🚫 Penalti parado (portero)</option><option value="penalty_conceded">🧤⚽ Penalti encajado (gol rival)</option><option value="own_goal">🥅 Gol P.P. (suma al marcador)</option><option value="yellow">🟨 Tarjeta amarilla</option><option value="red">🟥 Tarjeta roja</option><option value="injury">🩹 Lesión</option><option value="incident">📋 Incidencia</option></select></label><label>Asistencia<select id="${prefix}-event-assistant">${assistantOptions}</select></label><label>Detalle<input id="${prefix}-event-note" maxlength="200" placeholder="Opcional"></label><button class="add-live-event primary" data-prefix="${prefix}">Registrar</button></div>${events.length ? `<ul class="plain-list event-list">${events.sort((a, b) => (a.second - b.second) || String(a.text).localeCompare(String(b.text))).map((ev) => `<li class="live-event-row"><span>${escapeHtml(ev.text)}</span><button type="button" class="remove-live-event-btn" data-prefix="${prefix}" data-id="${ev.id}" title="Anular esta incidencia">✕ Anular</button></li>`).join('')}</ul>` : '<p class="meta">Sin goles, tarjetas, lesiones ni incidencias.</p>'}${comments}<details><summary>Motivo si alguien juega menos</summary><div class="reason-grid">${minuteReasons}</div></details></details>`;
 }
 
-function arrangeClaudeLive(phase, logWasOpen, callup) {
+function arrangeClaudeLive(phase, logWasOpen, callup, which = 'owner') {
   if (!document.body.classList.contains('cb-redesign-active')) return;
-  const root = $('#live-match');
+  const delegate = which === 'delegate';
+  const root = $(delegate ? '#delegate-match' : '#live-match');
   const log = root?.querySelector(':scope > .match-log');
   const clock = root?.querySelector(':scope > .live-clock');
   if (!log || !clock) return;
@@ -2299,10 +2300,10 @@ function arrangeClaudeLive(phase, logWasOpen, callup) {
   venue.remove();
   log.querySelector('summary').textContent = 'Registrar incidencias y ver cronología';
   log.open = logWasOpen;
-  const tactics = root.querySelector(':scope > #live-tactics');
+  const tactics = root.querySelector(delegate ? ':scope > #delegate-tactics' : ':scope > #live-tactics');
   const dashboard = root.querySelector(':scope > .live-reparto-visual-dashboard');
   const grid = root.querySelector(':scope > .live-grid');
-  const actionRow = root.querySelector(':scope > .button-row');
+  const actionRow = root.querySelector(delegate ? ':scope > .delegate-actions' : ':scope > .button-row');
   const actionHelp = actionRow?.nextElementSibling;
   const setPieces = root.querySelector(':scope > .match-set-pieces-quick-card');
   const main = document.createElement('div');
@@ -2320,7 +2321,7 @@ function arrangeClaudeLive(phase, logWasOpen, callup) {
   const preparedPlan = prepForMatch(state.timer.matchId);
   const savedPlan = savedPlanMarkup(preparedPlan);
   if (savedPlan) root.insertAdjacentHTML('beforeend', savedPlan);
-  else if (!preparedPlan) {
+  else if (!preparedPlan && !delegate) {
     const keepers = (callup.availableIds || []).filter((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
     try {
       const known = new Set(state.players.map((player) => player.id));
@@ -3514,6 +3515,7 @@ function renderDelegate() {
   const root = $('#delegate-match');
   if (!root) return;
 
+  const logWasOpen = root.querySelector('.match-log')?.open ?? true;
   const eligibleMatches = preparableMatches();
   const nextMatch = eligibleMatches[0];
   const nextPrep = nextMatch ? prepForMatch(nextMatch.id) : null;
@@ -3717,9 +3719,13 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">${prepForMatch(state.timer?.matchId) ? 'Automático según plan' : 'Automático (1–3)'}</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">${prepForMatch(state.timer?.matchId) ? 'El automático aplica tu ventana guardada completa, incluidos los cambios de posición. Los cambios manuales los decides tú.' : 'El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.'}</p>`;
-  const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
-  if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><span class="pill accent">${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)} · ${escapeHtml(callup.format)}</span><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><div id="delegate-half" class="half">${({ready:'Preparado',first_half:'1.er tiempo',halftime:'Descanso',second_half:state.timer.autoPaused?'2.º tiempo pausado':'2.º tiempo'})[state.timer.phase] || ''} · auto-pausa 38:00/74:00</div><div class="button-row"><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button><button type="button" class="cbx-live-print-plan secondary" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button></div>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions button-row"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">${prepForMatch(state.timer?.matchId) ? 'Automático según plan' : 'Automático (1–3)'}</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">${prepForMatch(state.timer?.matchId) ? 'El automático aplica tu ventana guardada completa, incluidos los cambios de posición. Los cambios manuales los decides tú.' : 'El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.'}</p>`;
+  if (document.body.classList.contains('cb-redesign-active')) {
+    arrangeClaudeLive(state.timer.phase, logWasOpen, callup, 'delegate');
+  } else {
+    const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
+    if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
+  }
   renderDelegateTactics();
   updateLivePlanAlerts();
 }
@@ -14119,7 +14125,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-mobile-colors-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-delegate-colors-3').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

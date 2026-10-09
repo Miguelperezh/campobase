@@ -35,7 +35,7 @@ test('CSS claude-partido.css homogeneiza la pizarra en vivo y delegado a 640px h
 test('CSS claude-partido.css prioriza la pizarra táctica en .cbx-live-main con 1 columna por defecto y 640px en ultra-ancho', () => {
   const css = fs.readFileSync(path.join(rootDir, 'css', 'claude-partido.css'), 'utf8');
   assert.ok(
-    css.includes('body.cb-redesign-active #partido .cbx-live-main { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; max-width: 720px; margin: 0 auto; }'),
+    css.includes('body.cb-redesign-active :is(#partido,#delegado) .cbx-live-main { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; max-width: 720px; margin: 0 auto; }'),
     '.cbx-live-main debe usar 1 columna centrada de hasta 720px por defecto para no estrangular la pizarra táctica en 1024px'
   );
   assert.ok(

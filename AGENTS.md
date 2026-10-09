@@ -4689,3 +4689,7 @@ Los colores guardados de Partido en vivo deben pintar el DOM real por encima del
 
 ## SDD048 — Tema canónico entre dispositivos (09/10/2026)
 Tema del equipo descargado completo prevalece sobre caché de dispositivo, incluidas eliminaciones/tema vacío. No resucitar colores/presets por fecha de otros ajustes ni mezclarlos en main durante lectura. Conservar ediciones pendientes en cola y fallback solo para registros históricos sin tema. Validar caché contradictoria y tema real en prueba aislada sin escrituras, versionando DB/sync y editor/PWA. Ver specs/048-colores-movil-canonicos.
+
+
+## SDD049 — Componentes de Vivo compartidos con delegado (09/10/2026)
+Los ajustes estructurales guardados del titular deben encontrar marcador, reloj, estado y acciones equivalentes en delegado. Compartir presentación Claude sobre nodos originales, conservando IDs y selección propios, acciones/permisos existentes y datos. Proyectar IDs históricos de secciones solo en memoria. refresh no recupera matchPreset nulo ni presets vacíos explícitos de caché. Probar con rol delegado activo y valores reales copiados, no solo DOM oculto; abrir/cerrar acciones sin registrar pruebas deportivas. Ver specs/049-delegado-colores-estructura.
