@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import {pinFingerprint} from "../_shared/delegate-policy.mjs";
 
 const APP_ORIGIN = "https://miguelperezh.github.io";
 const corsHeaders = {
@@ -40,11 +41,12 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceKey) return json({ message: "Servicio no disponible." }, 503);
 
-  let body: { user_id?: string; pin?: string; identifier?: string } = {};
+  let body: { user_id?: string; pin?: string; identifier?: string; role?: string } = {};
   try { body = await req.json(); } catch {}
   let userId = String(body.user_id || "").trim();
   const pin = String(body.pin || "").trim();
   const identifier = String(body.identifier || "").trim().toLowerCase();
+  const requestedRole = body.role === "delegate" ? "delegate" : body.role === "owner" ? "owner" : "auto";
 
   if (!/^\d{4,8}$/.test(pin)) {
     return json({ message: "Acceso no válido." }, 400);
@@ -69,6 +71,13 @@ Deno.serve(async (req) => {
     if (profile?.id) userId = profile.id;
   }
 
+  // A remembered delegate identity resolves only to its trusted owner; PIN is still verified below.
+  if (userId) {
+    const {data: remembered} = await admin.auth.admin.getUserById(userId);
+    if (remembered?.user?.app_metadata?.campobase_role === "delegate_pin") {
+      userId = String(remembered.user.app_metadata.campobase_owner_id || "");
+    }
+  }
   const now = Date.now();
   const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000).toISOString();
   const oneHourAgo = new Date(now - 60 * 60 * 1000).toISOString();
@@ -95,7 +104,7 @@ Deno.serve(async (req) => {
     return json({ message: "Demasiados intentos. Espera unos minutos antes de volver a probar." }, 429);
   }
 
-  let config: { payload?: { pinSalt?: string; ownerPinHash?: string } } | null = null;
+  let config: { payload?: { pinSalt?: string; ownerPinHash?: string; delegatePinHash?: string; delegatePin?: string } } | null = null;
   if (!userId) {
     const { data: configs, error: configsError } = await admin
       .from("configuracion")
@@ -108,11 +117,11 @@ Deno.serve(async (req) => {
       return json({ message: "PIN incorrecto o cuenta no disponible." }, 401);
     }
 
-    const matchedUsers: Array<{ user_id: string; payload: { pinSalt?: string; ownerPinHash?: string } }> = [];
+    const matchedUsers: Array<{ user_id: string; payload: { pinSalt?: string; ownerPinHash?: string; delegatePinHash?: string; delegatePin?: string } }> = [];
     for (const item of configs) {
       if (item?.payload?.pinSalt && item?.payload?.ownerPinHash) {
         const cand = await sha256Hex(`${item.payload.pinSalt}:${pin}`);
-        if (safeEqual(cand, String(item.payload.ownerPinHash || ""))) {
+        if ((requestedRole !== "delegate" && safeEqual(cand, String(item.payload.ownerPinHash || ""))) || (requestedRole !== "owner" && (item.payload.delegatePinHash ? safeEqual(cand, item.payload.delegatePinHash) : safeEqual(pin, String(item.payload.delegatePin || ""))))) {
           matchedUsers.push(item);
         }
       }
@@ -146,7 +155,9 @@ Deno.serve(async (req) => {
   }
 
   const candidate = await sha256Hex(`${config.payload.pinSalt}:${pin}`);
-  const pinOk = safeEqual(candidate, String(config.payload.ownerPinHash || ""));
+  const isOwner = requestedRole !== "delegate" && safeEqual(candidate, String(config.payload.ownerPinHash || ""));
+  const isDelegate = requestedRole !== "owner" && (config.payload.delegatePinHash ? safeEqual(candidate, config.payload.delegatePinHash) : safeEqual(pin, String(config.payload.delegatePin || "")));
+  const pinOk = isOwner || isDelegate;
   if (!pinOk) {
     await admin.from("pin_login_attempts").insert({ user_id: userId, ip_hash: ipHash, success: false });
     return json({ message: "PIN incorrecto." }, 401);
@@ -164,6 +175,39 @@ Deno.serve(async (req) => {
   const commercialAccess = Boolean(subscription) && notExpired
     && ["gift_free", "trial", "active"].includes(String(subscription.estado || ""));
   if (!commercialAccess) return json({ message: "Esta cuenta no tiene acceso activo." }, 403);
+
+  const ownerId = userId;
+  if (!isOwner && isDelegate) {
+    const {data:team,error:teamError}=await admin.from("equipos_cuenta").select("id").eq("owner_user_id",ownerId).maybeSingle();
+    if(teamError||!team)return json({message:"No se pudo vincular el delegado al equipo."},503);
+    const {data:member,error:memberError}=await admin.from("equipo_miembros").select("user_id").eq("equipo_id",team.id).eq("role","delegate").maybeSingle();
+    if(memberError)return json({message:"No se pudo comprobar la cuenta del delegado."},503);
+    const version=await pinFingerprint(config.payload);
+    let existingId = member?.user_id;
+    if (!existingId) {
+      const {data:profile} = await admin.from("perfiles").select("id").eq("email",`pin-delegate+${ownerId}@campobase.invalid`).maybeSingle();
+      existingId = profile?.id;
+    }
+    if(existingId){
+      const {data:existing}=await admin.auth.admin.getUserById(existingId);
+      if(existing?.user?.app_metadata?.campobase_role!=="delegate_pin"||existing.user.app_metadata.campobase_owner_id!==ownerId)return json({message:"Este equipo ya tiene otro acceso de delegado asociado."},409);
+      userId=existingId;
+      const {error}=await admin.auth.admin.updateUserById(userId,{app_metadata:{...existing.user.app_metadata,campobase_pin_version:version}});
+      if(error)return json({message:"No se pudo renovar la sesión del delegado."},503);
+    }else{
+      const {data:created,error}=await admin.auth.admin.createUser({
+        email:`pin-delegate+${ownerId}@campobase.invalid`,email_confirm:true,password:crypto.randomUUID()+crypto.randomUUID(),
+        app_metadata:{campobase_role:"delegate_pin",campobase_owner_id:ownerId,campobase_pin_version:version},
+        user_metadata:{full_name:"Delegado",club_name:"",account_role:"delegate"}
+      });
+      if(error||!created?.user)return json({message:"No se pudo preparar el acceso del delegado. Vuelve a intentar entrar."},503);
+      userId=created.user.id;
+    }
+    // Auth inserts base rows before setting app_metadata. Provision only the trusted
+    // technical identity after createUser returns; all existing team data stays put.
+    const {data:provisioned,error:provisionError}=await admin.rpc("provision_delegate_pin",{p_user:userId,p_owner:ownerId});
+    if(provisionError||!provisioned)return json({message:"No se pudo vincular la sesión del delegado."},503);
+  }
 
   const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
   const email = userData?.user?.email || "";
@@ -186,5 +230,5 @@ Deno.serve(async (req) => {
     .eq("success", false)
     .lt("attempted_at", new Date(now - 60 * 1000).toISOString());
 
-  return json({ token_hash: tokenHash, type: "email", user_id: userId });
+  return json({ token_hash: tokenHash, type: "email", user_id: userId, owner_user_id: ownerId, role: isOwner ? "owner" : "delegate" });
 });

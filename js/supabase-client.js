@@ -63,9 +63,26 @@ export function getCampoBaseSupabaseClient() {
 
 export const getSupabaseAuthClient = getCampoBaseSupabaseClient;
 
+const isPinDelegate = user => user?.app_metadata?.campobase_role === 'delegate_pin';
+async function delegateRequest(client, body) {
+  const {data,error} = await client.functions.invoke('delegate-sync',{body});
+  if (error) {
+    let detail = null;
+    try { detail = await error.context?.clone().json(); } catch {}
+    const failure = new Error(detail?.message || 'No se pudo sincronizar el delegado. Vuelve a actualizar.');
+    failure.code = detail?.code || (error.context?.status === 401 ? 'CAMPOBASE_AUTH_REQUIRED' : 'CAMPOBASE_DELEGATE_SYNC');
+    throw failure;
+  }
+  return data;
+}
+
 export async function getRemoteMainSettings() {
   const client = getCampoBaseSupabaseClient();
-  const { dataOwnerUserId } = await requireBoundUser(client);
+  const { user, dataOwnerUserId } = await requireBoundUser(client);
+  if (isPinDelegate(user)) {
+    const snapshot = await delegateRequest(client,{operation:'snapshot',store:'settings'});
+    return snapshot.records.find(row=>row.id==='main') || null;
+  }
   const rows = checkResult(await client
     .from(CLOUD_TABLES.settings)
     .select('payload,updated_at,deleted_at')
@@ -132,6 +149,7 @@ async function requireBoundUser(client) {
 
 export function createCampoBaseCloudStore() {
   const client = getCampoBaseSupabaseClient();
+  let delegateSnapshots = null;
   let realtimeChannel = null;
   let realtimeOwnerUserId = '';
   let realtimeChangeHandler = null;
@@ -154,7 +172,8 @@ export function createCampoBaseCloudStore() {
     realtimeChangeHandler = onChange;
     realtimeStatusHandler = typeof onStatus === 'function' ? onStatus : null;
 
-    const { dataOwnerUserId } = await requireBoundUser(client);
+    const { user, dataOwnerUserId } = await requireBoundUser(client);
+    if (isPinDelegate(user)) { await stopRealtimeChanges(); return {ownerUserId:dataOwnerUserId,polling:true}; }
     if (realtimeChannel && realtimeOwnerUserId === dataOwnerUserId) {
       return { ownerUserId: dataOwnerUserId, reused: true };
     }
@@ -201,7 +220,7 @@ export function createCampoBaseCloudStore() {
 
   void import('./saas-session-guard.js?v=1')
     .then(({ guardSaasSession }) => guardSaasSession(client))
-    .then(() => import('./saas-auth-ui-v2.js?v=fluid-refresh-1'))
+    .then(() => import('./saas-auth-ui-v2.js?v=20261009-delegate-pin-7'))
     .then(({ initSaasAuth }) => initSaasAuth(client))
     .then(() => import('./legacy-data-link-guard.js?v=1'))
     .then(({ initLegacyDataLinkGuard }) => initLegacyDataLinkGuard())
@@ -230,7 +249,7 @@ export function createCampoBaseCloudStore() {
       console.warn('No se pudo cargar el estado de la cuenta:', error);
     });
 
-  void import('./team-access.js?v=pin-switch-1')
+  void import('./team-access.js?v=20261009-delegate-pin-7')
     .then(({ initTeamAccess }) => initTeamAccess(client))
     .catch((error) => {
       console.warn('No se pudo cargar el acceso del equipo:', error);
@@ -241,12 +260,14 @@ export function createCampoBaseCloudStore() {
     stopRealtimeChanges,
 
     async prepare() {
+      delegateSnapshots = null;
       const { user } = await requireBoundUser(client);
-      return { userId: user.id };
+      return { userId: user.id, delegate: isPinDelegate(user) };
     },
 
     async shouldApplyMutation(mutation) {
-      const { dataOwnerUserId } = await requireBoundUser(client);
+      const { user, dataOwnerUserId } = await requireBoundUser(client);
+      if (isPinDelegate(user)) return (await delegateRequest(client,{operation:'check',store:mutation.store,mutation})).shouldApply;
       const table = CLOUD_TABLES[mutation.store];
       const query = client
         .from(table)
@@ -266,7 +287,14 @@ export function createCampoBaseCloudStore() {
     },
 
     async getSnapshot(store) {
-      const { dataOwnerUserId } = await requireBoundUser(client);
+      const { user, dataOwnerUserId } = await requireBoundUser(client);
+      if (isPinDelegate(user)) {
+        if (!delegateSnapshots) delegateSnapshots = (await delegateRequest(client,{operation:'snapshots'})).snapshots;
+        const result = delegateSnapshots[store];
+        delete delegateSnapshots[store];
+        if (!Object.keys(delegateSnapshots).length) delegateSnapshots = null;
+        return result;
+      }
       const table = CLOUD_TABLES[store];
       const query = client
         .from(table)
@@ -285,6 +313,7 @@ export function createCampoBaseCloudStore() {
 
     async upsert(mutation) {
       const { user, dataOwnerUserId } = await requireBoundUser(client);
+      if (isPinDelegate(user)) return delegateRequest(client,{operation:'upsert',store:mutation.store,mutation});
       const table = CLOUD_TABLES[mutation.store];
       let payload = mutation.payload;
 
@@ -319,7 +348,8 @@ export function createCampoBaseCloudStore() {
     },
 
     async remove(mutation) {
-      const { dataOwnerUserId } = await requireBoundUser(client);
+      const { user, dataOwnerUserId } = await requireBoundUser(client);
+      if (isPinDelegate(user)) return delegateRequest(client,{operation:'delete',store:mutation.store,mutation});
       const table = CLOUD_TABLES[mutation.store];
       checkResult(await client.from(table).upsert({
         user_id: dataOwnerUserId,
@@ -331,7 +361,8 @@ export function createCampoBaseCloudStore() {
     },
 
     async uploadVideo(path, file) {
-      await requireBoundUser(client);
+      const {user} = await requireBoundUser(client);
+      if (isPinDelegate(user)) throw new Error('Solo el entrenador puede cambiar los vídeos.');
       const { data, error } = await client.storage.from(VIDEO_BUCKET).upload(path, file, {
         cacheControl: '3600',
         contentType: file.type || 'video/mp4',
@@ -342,7 +373,8 @@ export function createCampoBaseCloudStore() {
     },
 
     async removeVideo(path) {
-      await requireBoundUser(client);
+      const {user} = await requireBoundUser(client);
+      if (isPinDelegate(user)) throw new Error('Solo el entrenador puede cambiar los vídeos.');
       const { data, error } = await client.storage.from(VIDEO_BUCKET).remove([path]);
       if (error) throw error;
       return data;

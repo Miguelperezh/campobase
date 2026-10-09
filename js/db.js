@@ -1,3 +1,4 @@
+import {canWriteMutation} from '../supabase/functions/_shared/delegate-policy.mjs';
 import { buildMutation, mergeCloudRecord, mergeLocalRecordForWrite, reconcileCloudSnapshot } from './sync-core.js?v=20261008-whatsapp-context-1';
 import { demoDatabaseName, isDemoSessionActive } from './demo-session.js';
 import { getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, userDatabaseName } from './auth-manager.js';
@@ -308,9 +309,12 @@ async function flushQueuedMutations() {
       throw authError;
     }
   }
+  const queueUserId = getBoundSaasUserId();
   const queueDatabase = await openDatabase();
   const mutations = (await requestResult(queueDatabase.transaction(SYNC_QUEUE, 'readonly').objectStore(SYNC_QUEUE).getAll())).sort((a, b) => a.queuedAt - b.queuedAt);
   for (const mutation of mutations) {
+    if (getBoundSaasUserId() !== queueUserId) return false;
+    if (mutation.blockedAt) continue;
     try {
       // Descartar mutaciones obsoletas de timers en vivo antiguos (evita resucitar partidos fantasma como Calero en móvil)
       if (mutation.store === 'settings' && mutation.recordId === 'live') {
@@ -338,6 +342,15 @@ async function flushQueuedMutations() {
       else await cloudStore.upsert(mutation);
       await removeQueuedMutation(mutation.id, mutation, queueDatabase);
     } catch (mutationError) {
+      if (mutationError?.code === 'CAMPOBASE_PERMISSION_REVOKED') {
+        const tx = queueDatabase.transaction(SYNC_QUEUE,'readwrite');
+        const queue = tx.objectStore(SYNC_QUEUE), read = queue.get(mutation.id);
+        read.onsuccess = () => {
+          if (read.result?.queuedAt === mutation.queuedAt) queue.put({...read.result,blockedAt:Date.now()});
+        };
+        await transactionDone(tx);
+        continue; // Preserve the denied draft, but do not replay it on a later grant.
+      }
       if (mutationError?.message?.includes('Inicia sesión') || mutationError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
         return false;
       }
@@ -348,7 +361,7 @@ async function flushQueuedMutations() {
   return true;
 }
 
-async function replaceLocalStore(store, cloudRecords, deletedIds = []) {
+async function replaceLocalStore(store, cloudRecords, deletedIds = [], mirror = null) {
   const db = await openDatabase();
 
   // Safari/iOS puede cerrar una transacción IndexedDB si se cede el control
@@ -377,7 +390,9 @@ async function replaceLocalStore(store, cloudRecords, deletedIds = []) {
         return;
       }
 
-      const reconciledRecords = reconcileCloudSnapshot(store, localRecords, cloudRecords, pendingMutations, deletedIds);
+      const allowedPending = pendingMutations.filter(m => !m.blockedAt && (!mirror || canWriteMutation(m,mirror.permissions||[])));
+      // The delegate receives a filtered replica, never an initial seed or owner settings merge.
+      const reconciledRecords = reconcileCloudSnapshot(store, mirror ? [] : localRecords, cloudRecords, allowedPending, deletedIds);
       objectStore.clear();
       for (const record of reconciledRecords) objectStore.put(record);
     };
@@ -441,12 +456,24 @@ export async function syncFromCloud() {
   if (syncPromise) return syncPromise;
   syncPromise = (async () => {
     try {
+      const syncUserId = getBoundSaasUserId();
       await flushSyncQueue();
+      if (getBoundSaasUserId() !== syncUserId) return {online:false,changed:false,accessChanged:true};
       let downloaded = 0;
       let hasChanges = false;
       for (const store of STORES) {
         const snapshot = await cloudStore.getSnapshot(store);
+        if (getBoundSaasUserId() !== syncUserId) return {online:false,changed:false,accessChanged:true};
         const localRecords = await localGetAll(store);
+        if (snapshot.restricted) continue;
+        if (snapshot.readOnlyMirror) {
+          if (JSON.stringify(localRecords) !== JSON.stringify(snapshot.records)) {
+            await replaceLocalStore(store,snapshot.records,snapshot.deletedIds||[],snapshot);
+            hasChanges = true;
+          }
+          downloaded += snapshot.records.length;
+          continue;
+        }
         if (snapshot.rowCount === 0 && localRecords.length) {
           await queueInitialRecords(store, localRecords);
           await flushSyncQueue();
@@ -513,6 +540,7 @@ export async function syncFromCloud() {
         return { online: false, pending: (await localGetAll(SYNC_QUEUE)).length, authRequired: true };
       }
       if (isCloudServiceRestricted(syncError)) {
+        if ((await cloudStore.prepare())?.delegate) return {online:false,changed:false,cloudRestricted:true};
         const recovery = await mergeMissingLegacyRecordsIntoBoundDatabase().catch((error) => {
           console.warn('No se pudo recuperar la base local anterior:', error);
           return { recovered: 0 };
@@ -662,6 +690,7 @@ export async function getSyncDiagnostics() {
 }
 
 export async function recoverLegacyPendingMutations() {
+  if ((await cloudStore?.prepare?.())?.delegate) throw new Error('Solo el titular puede recuperar datos anteriores.');
   const userId = getBoundSaasUserId();
   if (!userId) throw new Error('Inicia sesión en tu cuenta antes de recuperar cambios locales pendientes.');
   const targetName = userDatabaseName(userId);

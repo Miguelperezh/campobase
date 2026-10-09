@@ -1,16 +1,16 @@
-import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-live-pilot-6';
-import { resolveDisplayTheme } from './display-theme.js?v=20261009-live-pilot-6';
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-delegate-pin-7';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-delegate-pin-7';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-live-pilot-6';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-live-pilot-6';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-delegate-pin-7';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-delegate-pin-7';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-live-pilot-6';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-delegate-pin-7';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=fluid-refresh-1';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-delegate-pin-7';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -11247,6 +11247,30 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   const currentSession = role === 'owner' && !authenticated
     ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
 
+  const sessionNow = await getCurrentSession(getSupabaseAuthClient()).catch(()=>null);
+  const wasDelegate = sessionNow?.user?.app_metadata?.campobase_role === 'delegate_pin';
+  // A role boundary is an authentication boundary, not an owner JWT with hidden buttons.
+  let replacingDelegateReplica = state.role === 'delegate';
+  try { replacingDelegateReplica ||= localStorage.getItem('campobase.lastAuthRole') === 'delegate'; } catch {}
+  if (role === 'delegate' || wasDelegate || (role === 'owner' && replacingDelegateReplica)) {
+    const session = authenticated ? sessionNow
+      : await signInWithCampoBasePin(getSupabaseAuthClient(),effectiveUserId,pin,role);
+    if (!session?.user?.id) throw new Error('No se pudo iniciar la sesión segura.');
+    const isDelegate = session.user.app_metadata?.campobase_role === 'delegate_pin';
+    if ((role === 'delegate') !== isDelegate) throw new Error('La sesión no corresponde a este PIN.');
+    setBoundSaasUserId(session.user.id);
+    configureRealDatabase();
+    try { sessionStorage.setItem('campobase.saasActiveBrowserSession',session.user.id); } catch {}
+    await synchronizeCloud();
+    if (navigator.onLine && !state.cloudConnected) await synchronizeCloud();
+    await refresh(true);
+    if (navigator.onLine && !state.cloudConnected) throw new Error(state.cloudError || 'No se pudo sincronizar este acceso. Vuelve a intentar entrar.');
+    if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+    applyRole(role);
+    $('#auth-dialog')?.close();
+    renderAll();
+    return;
+  }
   const hasLocal = hasUsableTeamSnapshot(state);
   if (hasLocal) {
     if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
@@ -11258,7 +11282,7 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
     void (async () => {
       try {
         if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
-          const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin).catch(() => null);
+          const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin, 'owner').catch(() => null);
           if (session?.user?.id) {
             setBoundSaasUserId(session.user.id);
             try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
@@ -11277,7 +11301,7 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
 
   if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
     try {
-      const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin);
+      const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin, 'owner');
       if (session?.user?.id) {
         setBoundSaasUserId(session.user.id);
         try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
@@ -11321,7 +11345,10 @@ async function loginWithPin(pin) {
   } else if (role) {
     await completePinLogin(role, String(pin).trim(), getBoundSaasUserId() || getRememberedSaasAccount()?.id || '');
   } else {
-    throw new Error('PIN incorrecto.');
+    const session = await signInWithCampoBasePin(getSupabaseAuthClient(),getBoundSaasUserId()||getRememberedSaasAccount()?.id||'',String(pin).trim());
+    const remoteRole = session.user.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'owner';
+    await completePinLogin(remoteRole,String(pin).trim(),session.user.id,true);
+    return remoteRole;
   }
   return role;
 }
@@ -11420,7 +11447,7 @@ async function submitAuth(event) {
               configureRealDatabase();
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
               await hydratePinSettingsFromSupabase();
-              await completePinLogin('owner', pin, session.user.id, true);
+              await completePinLogin(session.user.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'owner', pin, session.user.id, true);
               toast('Sincronizado con CampoBase en la nube.');
               return;
             }
@@ -14097,7 +14124,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-live-pilot-6').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-delegate-pin-7').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -14173,24 +14200,13 @@ async function init() {
         }
       }
       if (pinParam) {
-        const cleanPin = pinParam.trim();
-        const expectedPin = state.settings?.delegatePin || '0000';
-        let pinValid = cleanPin === expectedPin || cleanPin === '0000';
-        if (!pinValid && state.settings?.pinSalt && state.settings?.delegatePinHash) {
-          pinValid = await verifyPin(cleanPin, state.settings.pinSalt, state.settings.delegatePinHash);
-        }
-        if (pinValid) {
-          applyRole('delegate');
-          $('#auth-dialog')?.close();
+        try {
+          await completePinLogin('delegate',pinParam.trim(),teamParam||'');
           autoLoggedInDelegate = true;
-          void (async () => {
-            try {
-              await synchronizeCloud();
-              await refresh(true);
-              renderDelegate();
-            } catch {}
-          })();
-        }
+        } catch (error) { console.warn('No se pudo abrir el acceso delegado:',error); }
+        // Remove the credential from the visible invitation URL after attempting access.
+        params.delete('pin');
+        window.history.replaceState({},document.title,window.location.pathname+'?'+params.toString());
       }
     }
   }

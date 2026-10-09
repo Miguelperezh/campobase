@@ -31,7 +31,6 @@ function normalizedPermissions(value) {
   const allowed = new Set(DELEGATE_VIEW_OPTIONS.map(([id]) => id));
   const raw = Array.isArray(value) ? value : [];
   const clean = [...new Set(raw.map(String).filter((item) => allowed.has(item)))];
-  if (!clean.includes('delegado')) clean.push('delegado');
   return clean;
 }
 
@@ -229,11 +228,13 @@ export function applyTeamAccessContext(context) {
     return;
   }
 
-  const permissions = normalizedPermissions(context?.view_permissions);
+  const app = window.__campobase;
+  const source = Array.isArray(app?.state?.settings?.delegatePermissions) ? app.state.settings.delegatePermissions : context?.view_permissions;
+  const permissions = normalizedPermissions(source);
   window.__campobaseAllowedViews = permissions;
   document.documentElement.dataset.saasTeamRole = 'delegate';
   document.body?.classList.add('saas-delegate-mode');
-  document.body?.classList.remove('delegate-mode');
+  if (!app?.state?.delegateMode) document.body?.classList.remove('delegate-mode');
   installDelegateNavigationGuard();
   applyNavigationVisibility();
 

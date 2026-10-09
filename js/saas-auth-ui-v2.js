@@ -490,7 +490,7 @@ async function getProfileOrFallback(client, user) {
     username: user?.user_metadata?.username || '',
     full_name: user?.user_metadata?.full_name || '',
     club_name: user?.user_metadata?.club_name || 'Mi equipo',
-    role: 'coach',
+    role: user?.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'coach',
   };
 }
 
@@ -613,7 +613,9 @@ async function unlockBoundSession(client) {
 
   const isDelegate = profile.role === 'delegate';
   const isAdmin = profile.role === 'owner' || profile.role === 'admin';
-  const pinDelegate = !isDelegate && sessionStorage.getItem('campobase.sessionRole') === 'delegate';
+  const technicalDelegate = session.user.app_metadata?.campobase_role === 'delegate_pin';
+  if (!technicalDelegate && sessionStorage.getItem('campobase.sessionRole') === 'delegate') { showLocalPin(); return false; }
+  const pinDelegate = technicalDelegate;
   const localRole = isDelegate || pinDelegate ? 'delegate' : 'owner';
   // Keep the access dialog until the bound account's data is loaded.
   if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
@@ -639,7 +641,7 @@ async function unlockBoundSession(client) {
   if (settingsNav) settingsNav.hidden = isDelegate;
   $('#demo-team-panel')?.classList.add('hidden');
   try {
-    const { initTeamAccess } = await import('./team-access.js?v=pin-switch-1');
+    const { initTeamAccess } = await import('./team-access.js?v=20261009-delegate-pin-7');
     await initTeamAccess(client);
   } catch (error) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
@@ -859,7 +861,7 @@ function bindEvents(client) {
 
     clearPinAccess();
     markBrowserSessionActive(session.user.id);
-    try { sessionStorage.setItem('campobase.sessionRole', 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
+    try { sessionStorage.setItem('campobase.sessionRole', session.user.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'owner'); } catch { /* La sesión Supabase sigue siendo válida. */ }
     setMessage('#saas-remembered-message', '');
     await unlockBoundSession(client);
   });
