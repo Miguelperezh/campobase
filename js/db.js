@@ -556,7 +556,7 @@ export async function syncFromCloud() {
         }
         downloaded += snapshot.records.length;
       }
-      const pending = (await localGetAll(SYNC_QUEUE)).filter(mutation => !mutation.blockedAt).length;
+      const pending = (await localGetAll(SYNC_QUEUE)).length;
       return { online: true, pending, downloaded, changed: hasChanges, uploadError: pending ? lastUploadError?.message || '' : '' };
     } catch (syncError) {
       if (syncError?.message?.includes('Inicia sesión') || syncError?.code === 'CAMPOBASE_AUTH_REQUIRED') {
