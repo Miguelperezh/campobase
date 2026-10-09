@@ -24,3 +24,14 @@
 
 /* One scoped gear per plan subsection; keep existing content and layout. */
 #cbx-window-dialog .cbp-plan-body .cbx-context-gear-btn{float:right;margin:0 0 6px 8px;min-width:28px;min-height:28px;padding:3px;background:transparent}
+
+/* SDD041: selección explícita de todos los convocados y entradas repetidas. */
+#cbx-window-dialog .cbp-roster-picker{display:block;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;color:#0f172a;font-weight:800}
+#cbx-window-dialog .cbp-roster-picker select{display:block;width:100%;min-height:44px;margin-top:8px;padding:8px;border:1px solid #94a3b8;border-radius:9px;background:#fff;color:#0f172a;font:700 15px Barlow,system-ui,sans-serif}
+#cbx-window-dialog .cbp-new-interval{padding:12px;border:1px dashed #10b981;border-radius:12px;margin-top:12px}
+#cbx-window-dialog .cbp-new-interval>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#cbx-window-dialog .cbp-new-interval label{font-size:12px;color:#475569;min-width:0}
+#cbx-window-dialog .cbp-new-interval input{box-sizing:border-box;width:100%;min-height:42px;border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#fff;color:#0f172a;font:700 16px Barlow,system-ui,sans-serif}
+#cbx-window-dialog .cbp-new-interval>small{display:block;margin-top:8px;color:#475569}
+#cbx-window-dialog .cbp-time-row{min-height:46px}
+@media print{.cbp-roster-picker{display:none!important}}

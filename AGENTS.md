@@ -4657,3 +4657,7 @@ Actualizar sincroniza en la pantalla actual, sin navegación forzada ni pérdida
 
 ## SDD040 — Colores del plan sin bloqueo (09/10/2026)
 Conservar el estilo validado en la prueba time-plan-colors. Cada apartado del plan tiene su rueda, partes con nombres concretos y controles solo aplicables al elemento elegido; mismo estilo para filas equivalentes. Los eventos de colores no reconstruyen el plan ni arrastran minutos. Escape cierra solo ajustes; vista previa/Cancelar/Guardar sin alterar intervalos. No anunciar sincronización correcta si falla la nube; distinguir autenticación pendiente. Publicar código/docs sin tocar datos, PIN, permisos ni Supabase. Ver specs/040-plan-colores-sin-bloqueo. Las pruebas locales no validan por sí solas móvil físico ni acceso remoto delegado.
+
+
+## SDD041 — Convocados y tramos repetidos (09/10/2026)
+Mostrar todos los convocados con selector y conteo; no omitir suplentes de 0 minutos ni fichas ausentes. Nueva entrada y salida mediante minutos explícitos; no fusionar los cortes del borrador ni cambiar los minutos ajenos. Mantener estilo/ajustes validados, validación de cobertura, imprimir/copiar y guardado explícito. Probar 14 convocados y 0–5,10–15,20–30=20 minutos en navegador antes de publicar código en main/producción sin tocar datos. Ver specs/041-convocados-tramos-multiples.
