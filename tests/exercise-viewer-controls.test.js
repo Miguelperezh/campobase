@@ -69,7 +69,7 @@ test('visor mantiene la integración validada y cachea sus correcciones', () => 
   assert.match(supabaseClient, /exercise-viewer-controls\.js\?v=2475/);
   assert.match(supabaseClient, /exercise-viewer-layout\.js\?v=plan-visual-1/);
   assert.match(supabaseClient, /exercise-board-persistence\.js\?v=20260927-v66-real-calendar-dates/);
-  assert.match(supabaseClient, /runtime-refresh\.js\?v=20261009-plan-colors-1/);
+  assert.match(supabaseClient, /runtime-refresh\.js\?v=20261009-plan-tramos-2/);
   assert.match(serviceWorker, /exerciseboard-2475/);
   assert.match(serviceWorker, /exercise-viewer-controls\.js\?v=2475/);
   assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=plan-visual-1/);

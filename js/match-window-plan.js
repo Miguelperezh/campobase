@@ -27,13 +27,13 @@ export function changeWindowPlayer(moments, index, slotIndex, playerId) {
   team[slotIndex].playerId=playerId;
   return next;
 }
-export function normalizePlayerIntervals(intervals, duration) {
+export function normalizePlayerIntervals(intervals, duration, {mergeAdjacent=true} = {}) {
   const sorted=intervals.map(({from,to})=>({from:Number(from),to:Number(to)})).sort((a,b)=>a.from-b.from);
   const result=[];
   for(const interval of sorted) {
     if(!Number.isFinite(interval.from)||!Number.isFinite(interval.to)||interval.from<0||interval.to>duration||interval.from>=interval.to) throw new Error(`Cada tramo debe tener inicio menor que fin, entre 0 y ${duration}.`);
     if(result.length && interval.from<result.at(-1).to) throw new Error('Los tramos de un jugador no pueden solaparse.');
-    if(result.length && interval.from===result.at(-1).to) result.at(-1).to=interval.to;
+    if(mergeAdjacent && result.length && interval.from===result.at(-1).to) result.at(-1).to=interval.to;
     else result.push(interval);
   }
   return result;

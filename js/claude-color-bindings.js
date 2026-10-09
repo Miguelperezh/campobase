@@ -1,6 +1,6 @@
 import { timePlanColorSections } from './time-plan-color-controls.js';
 import { SECTIONS } from './claude-color-catalog.js';
-import { configurableElements } from './theme-component-colors.js?v=20261009-plan-colors-1';
+import { configurableElements } from './theme-component-colors.js?v=20261009-plan-tramos-2';
 const viewSections={hoy:['hoy'],plantilla:['ind','lz','cl','fi'],'cuerpo-tecnico':['tec'],asistencia:['asi'],convocatorias:['con'],preparacion:['pre'],partido:['viv'],calendario:['cal'],sesiones:['ses'],ejercicios:['eje'],tacticas:['tac'],delegado:['mc'],navegacion:['nav']};
 const mappings={};
 const bind=(id,base,parts={})=>mappings[id]={base,parts};

@@ -1,6 +1,6 @@
 import {normalizePlayerIntervals,playerIntervals,lineupAtMinute,validateWindowPlan} from './match-window-plan.js';
 export function intervalsFromMoments(moments,ids,duration){return Object.fromEntries(ids.map(id=>[id,playerIntervals(moments,id,duration)]));}
-export function setIndividualIntervals(plan,id,intervals,duration){if(!Object.hasOwn(plan,id))throw new Error('El jugador no pertenece a la convocatoria.');return {...structuredClone(plan),[id]:normalizePlayerIntervals(intervals,duration)};}
+export function setIndividualIntervals(plan,id,intervals,duration){if(!Object.hasOwn(plan,id))throw new Error('El jugador no pertenece a la convocatoria.');return {...structuredClone(plan),[id]:normalizePlayerIntervals(intervals,duration,{mergeAdjacent:false})};}
 export function intervalTotals(plan){return Object.fromEntries(Object.entries(plan).map(([id,intervals])=>[id,intervals.reduce((n,s)=>n+s.to-s.from,0)]));}
 export function timePlanCoverage(plan,keeperIds,duration,fieldSlots){
  const cuts=[...new Set([0,duration,...Object.values(plan).flatMap(s=>s.flatMap(v=>[v.from,v.to]))])].sort((a,b)=>a-b);
