@@ -19,7 +19,7 @@ try {
   await page.evaluate(async()=>{
    const app=window.__campobase, s=app.state;
    const theme={views:{partido:{bannerBg:'#246813',bannerInk:'#fedcba',btnBg:'#112233',btnInk:'#abcdef',btn2Bg:'#334455',btn2Ink:'#fefefe',cardBg:'#eeddcc',fontColor:'#223344',uiParts:{score:{selector:'#partido .cbx-live-score',css:'color',value:'#654321',viewId:'partido'},name:{selector:'#partido .live-player-name',css:'color',value:'#334466',viewId:'partido'},auto:{selector:'#partido #owner-auto-sub',css:'background',value:'#774411',viewId:'partido'}}}}};
-   const db=await import('./js/db.js');await db.put('settings',{...s.settings,id:'main',theme,matchPreset:null});await app.refresh(true);
+   const db=await import('./js/db.js');await db.put('settings',{...s.settings,id:'main',theme,matchPreset:null});localStorage.setItem('campobase.theme',JSON.stringify({fontColor:'#ff00ff',views:{delegado:{btnBg:'#ffff00',uiParts:{old:{selector:'#delegado #delegate-auto-sub',css:'background',value:'#ffff00',viewId:'delegado'}}}}}));await app.refresh(true);
    s.players=Array.from({length:14},(_,i)=>({id:'p'+i,name:'Jugador '+i,number:i+1,positions:i<2?['Portero']:['Central']}));
    s.matches=[{id:'m-test',opponent:'Rival',date:'2026-10-09T19:00',status:'planned',type:'league'}];
    s.callups=[{id:'c-test',matchId:'m-test',format:'F7',availableIds:s.players.map(p=>p.id),excludedIds:[]}];

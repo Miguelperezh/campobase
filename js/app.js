@@ -1,17 +1,17 @@
-import { liveDisplayTheme } from './live-display-colors.js?v=20261009-live-colors-1';
-import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-live-colors-1';
-import { resolveDisplayTheme } from './display-theme.js?v=20261009-live-colors-1';
+import { liveDisplayTheme } from './live-display-colors.js?v=20261009-mobile-colors-2';
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-mobile-colors-2';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-mobile-colors-2';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-live-colors-1';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-live-colors-1';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-mobile-colors-2';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-mobile-colors-2';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-live-colors-1';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-mobile-colors-2';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-live-colors-1';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-mobile-colors-2';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -743,16 +743,10 @@ async function refresh() {
   try {
     const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
     if (cachedTheme && typeof cachedTheme === 'object') {
-      const storedTheme = state.settings.theme || {};
       const isolated = window.__CAMPOBASE_READONLY_PREVIEW === true;
-      const viewIds = new Set([...Object.keys(cachedTheme.views || {}), ...Object.keys(storedTheme.views || {})]);
-      state.settings.theme = {
-        ...(isolated ? storedTheme : cachedTheme),
-        ...(isolated ? cachedTheme : storedTheme),
-        views: Object.fromEntries([...viewIds].map((id) => [id, isolated
-          ? { ...(storedTheme.views?.[id] || {}), ...(cachedTheme.views?.[id] || {}) }
-          : { ...(cachedTheme.views?.[id] || {}), ...(storedTheme.views?.[id] || {}) }])),
-      };
+      // Resolve one authoritative palette; never merge stale device controls
+      // into main, where an unrelated later save could upload them again.
+      state.settings.theme = resolveDisplayTheme(state.settings.theme, cachedTheme, undefined, isolated);
     }
   } catch {}
   if (!Array.isArray(state.settings.presets) || !state.settings.presets.length) {
@@ -14125,7 +14119,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-live-colors-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-mobile-colors-2').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

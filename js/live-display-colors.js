@@ -2,7 +2,7 @@
 const ids = {'live-match':'delegate-match','live-tactics':'delegate-tactics','clock':'delegate-clock','make-sub':'delegate-manual-sub','owner-auto-sub':'delegate-auto-sub','propose-reparto':'delegate-propose-reparto'};
 export function delegateLiveSelector(selector) {
   if (typeof selector !== 'string' || !/^#partido(?: |$)/.test(selector)) return null;
-  return selector.replace(/#([\w-]+)/g, (_, id) => '#' + (id === 'partido' ? 'delegado' : ids[id] || id));
+  return selector.replace(/#([\w-]+)/g, (_, id) => '#' + (id === 'partido' ? 'delegado' : ids[id] || (id.startsWith('live-tactics-') ? id.replace(/^live-tactics-/, 'delegate-tactics-') : id)));
 }
 export function liveColorSelector(selector) {
   if (typeof selector !== 'string' || !/^#partido(?: |$)/.test(selector)) return selector;

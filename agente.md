@@ -1912,3 +1912,7 @@ Miguel autoriza adaptar autenticación del servidor para su PIN delegado existen
 
 ## SDD047 — Colores efectivos en vivo (09/10/2026)
 Los colores guardados de Partido en vivo deben pintar el DOM real por encima del CSS fijo del rediseño. Catálogo y preferencias históricas resuelven marcador/reloj/goles/filas reales. Proyectar a componentes equivalentes del delegado solo en memoria, conservando ajustes explícitos de Modo Campo y datos originales. Versionar importaciones internas del editor además del HTML. Probar ambos anchos y regeneración sin escrituras reales. Ver specs/047-colores-vivo-efectivos.
+
+
+## SDD048 — Tema canónico entre dispositivos (09/10/2026)
+Tema del equipo descargado completo prevalece sobre caché de dispositivo, incluidas eliminaciones/tema vacío. No resucitar colores/presets por fecha de otros ajustes ni mezclarlos en main durante lectura. Conservar ediciones pendientes en cola y fallback solo para registros históricos sin tema. Validar caché contradictoria y tema real en prueba aislada sin escrituras, versionando DB/sync y editor/PWA. Ver specs/048-colores-movil-canonicos.

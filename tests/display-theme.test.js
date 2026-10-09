@@ -29,3 +29,11 @@ test('aplicación y editor leen la misma prioridad del tema sincronizado',()=>{
  assert.match(app,/resolveDisplayTheme\(state.settings\?\.theme, localTheme, themeInput/);
  assert.match(app,/readTheme:[\s\S]*?return resolveDisplayTheme\(state.settings\?\.theme,local/);
 });
+
+test('tema de equipo no resucita secciones o propiedades solo presentes en caché móvil',()=>{
+ const cloud={views:{partido:{btnBg:'#123456'}}};
+ const stale={fontColor:'#ff0000',views:{partido:{btnInk:'#00ff00'},delegado:{btnBg:'#ffff00'}}};
+ assert.deepEqual(resolveDisplayTheme(cloud,stale),cloud);
+ assert.deepEqual(resolveDisplayTheme({},stale),{views:{}});
+ assert.deepEqual(resolveDisplayTheme(undefined,stale),stale);
+});
