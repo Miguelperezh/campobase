@@ -16,6 +16,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('confirmado'));
   const result=await page.evaluate(async()=>{await fixture.secondDevice();const m=await fixture.getOne('matches','fixture-game');m.keeperGoalsAgainst={k1:9,k2:6};m.location='Campo cambiado por segundo dispositivo';await fixture.putBatch({matches:[m]});await fixture.syncFromCloud();await fixture.firstDevice();return fixture.getOne('matches','fixture-game');});
   assert.equal(result.goals[0].assistantId,'a');assert.equal(result.goals[0].isPenalty,true);assert.deepEqual(result.keeperGoalsAgainst,{k1:9,k2:6});assert.equal(result.location,'Campo cambiado por segundo dispositivo');assert.equal(result.plan.untouched,true);
+  assert.deepEqual(await page.evaluate(()=>fixture.verifyQueuedReplacement()),{pending:0,remote:'segunda'});
   await page.evaluate(()=>fixture.fail());await page.locator('.edit-match-performance').click();await page.locator('[data-keeper-conceded=k1]').fill('10');await page.locator('[data-keeper-conceded=k2]').fill('5');await page.locator('#postgame-performance-form button[type=submit]').click();await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('pendiente'));
   assert.equal((await page.evaluate(()=>fixture.getOne('matches','fixture-game'))).keeperGoalsAgainst.k1,10);
   assert.deepEqual(errors,[]);console.log('PASS',width,'editor, goals, keepers, independent IndexedDB bidirectional, offline pending, preserved plan');

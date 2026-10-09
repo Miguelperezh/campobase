@@ -143,9 +143,23 @@ async function removeQueuedMutation(id, acknowledged = null, database = null) {
   await transactionDone(transaction);
 }
 
+let queuedUploadPromise = null;
+let uploadRequestedWhileBusy = false;
 function queueCloudUpload() {
   if (!canUseCloud()) return;
-  void flushSyncQueue().catch(error => console.warn('Cambios guardados en el dispositivo; sincronización pendiente:', error));
+  uploadRequestedWhileBusy = true;
+  if (queuedUploadPromise) return;
+  queuedUploadPromise = (async () => {
+    // A second batch can replace a queued record while the first request is in
+    // flight. Acknowledging the old copy keeps the new one; send it next now,
+    // rather than relying on a mobile interval that may be suspended.
+    for (let cycle = 0; cycle < 3; cycle++) {
+      uploadRequestedWhileBusy = false;
+      const uploaded = await flushSyncQueue();
+      if (!uploaded || !uploadRequestedWhileBusy) break;
+    }
+  })().catch(error => console.warn('Cambios guardados en el dispositivo; sincronización pendiente:', error))
+    .finally(() => { queuedUploadPromise = null; });
 }
 
 function canUseCloud() {
@@ -206,6 +220,7 @@ export async function put(store, value) {
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
@@ -225,6 +240,7 @@ export async function putPlayerProfile(value) {
   transaction.objectStore('players').put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation('players', 'upsert', recordToStore));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged('players', 'profile-upsert');
   return recordToStore;
@@ -283,6 +299,7 @@ export async function remove(store, id) {
   transaction.objectStore(store).delete(id);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
+  queueCloudUpload();
   if (canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'delete');
 }
@@ -462,6 +479,7 @@ export async function syncFromCloud() {
     try {
       const syncUserId = getBoundSaasUserId();
       await flushSyncQueue();
+      if (queuedUploadPromise) await queuedUploadPromise;
       if (getBoundSaasUserId() !== syncUserId) return {online:false,changed:false,accessChanged:true};
       let downloaded = 0;
       let hasChanges = false;

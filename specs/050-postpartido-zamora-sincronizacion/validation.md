@@ -6,3 +6,5 @@
 - App completa: browser-v19-smoke pasa en demo escritorio/móvil, consola sin errores del recorrido; preparación persistente, navegación, sesión y +Ejercicio.
 - Reanudar desde segundo plano dispara reconciliación sin esperar un intervalo suspendido; runner deja render a refresh/renderOrDefer. La nube real registra lecturas móviles de partidos 200 y publicación Realtime de las cinco tablas. Esto no demuestra el resultado visual en el móvil físico del usuario.
 - Tests: 813/813 correctos; npm run check y git diff --check correctos. Publicación pendiente.
+
+La repetición final detectó una carrera real: putBatch durante una subida mantiene la edición nueva en cola pero no iniciaba continuación; el guardado quedaba pendiente hasta el polling. queueCloudUpload agrupa solicitudes y continúa hasta tres ciclos si llegó otro lote durante el envío. syncFromCloud espera esa continuación antes de anunciar pendientes. La confirmación de cola vacía se volvió a comprobar a ambos anchos.

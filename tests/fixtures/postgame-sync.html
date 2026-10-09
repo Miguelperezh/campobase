@@ -5,13 +5,22 @@ import {setBoundSaasUserId} from '/js/auth-manager.js';
 import '/js/match-postgame-editor.js';
 const identity='postgame-test-'+crypto.randomUUID();
 setBoundSaasUserId(identity);configureRealDatabase();
-let failing=false;
+let failing=false, holdNext=null;
 const remote=new Map();
-configureCloudStore({enabled:()=>true,getSnapshot:async(store)=>({records:[...(remote.get(store)||new Map()).values()],deletedIds:[],rowCount:(remote.get(store)||new Map()).size}),upsert:async(m)=>{if(failing)throw new Error('Red de prueba caída');const rows=remote.get(m.store)||new Map();rows.set(m.recordId,structuredClone(m.payload));remote.set(m.store,rows);},remove:async()=>{}});
+configureCloudStore({enabled:()=>true,getSnapshot:async(store)=>({records:[...(remote.get(store)||new Map()).values()],deletedIds:[],rowCount:(remote.get(store)||new Map()).size}),upsert:async(m)=>{if(holdNext){const hold=holdNext;holdNext=null;hold.started();await hold.gate;}if(failing)throw new Error('Red de prueba caída');const rows=remote.get(m.store)||new Map();rows.set(m.recordId,structuredClone(m.payload));remote.set(m.store,rows);},remove:async()=>{}});
 window.__campobase={refresh:async()=>{},renderAll:()=>{},synchronizeCloud:syncFromCloud};
 const players=[{id:'k1',number:1,name:'Portero Uno',positions:['Portero']},{id:'k2',number:13,name:'Portero Dos',positions:['Portero']},{id:'p',number:3,name:'Goleador',positions:['Central']},{id:'a',number:7,name:'Asistente',positions:['Central']}];
 await putBatch({players,matches:[{id:'fixture-game',opponent:'Rival aislado',type:'league',status:'finished',goalsFor:1,goalsAgainst:15,minuteTotals:{k1:2100,k2:2100,p:2100,a:2100},goalkeeperRotation:{firstKeeper:'k1',secondKeeper:'k2'},goals:[{id:'original-goal',playerId:'p',second:600,note:'Nota original'}],plan:{untouched:true},location:'Campo original'}]});
 await syncFromCloud();
-window.fixture={getOne,getAll,syncFromCloud,putBatch,fail:()=>{failing=true;},remote,secondDevice:async()=>{setBoundSaasUserId('second-'+identity);configureRealDatabase();await syncFromCloud();},firstDevice:async()=>{setBoundSaasUserId(identity);configureRealDatabase();await syncFromCloud();}};
+window.fixture={verifyQueuedReplacement:async()=>{
+ let started, release;
+ const firstStarted=new Promise(resolve=>{started=resolve;});
+ const gate=new Promise(resolve=>{release=resolve;});holdNext={started,gate};
+ const before=await getOne('matches','fixture-game');
+ await putBatch({matches:[{...before,raceMarker:'primera'}]});await firstStarted;
+ await putBatch({matches:[{...before,raceMarker:'segunda'}]});release();
+ const sync=await syncFromCloud();
+ return {pending:sync.pending,remote:remote.get('matches').get('fixture-game').raceMarker};
+},getOne,getAll,syncFromCloud,putBatch,fail:()=>{failing=true;},remote,secondDevice:async()=>{setBoundSaasUserId('second-'+identity);configureRealDatabase();await syncFromCloud();},firstDevice:async()=>{setBoundSaasUserId(identity);configureRealDatabase();await syncFromCloud();}};
 window.fixtureReady=true;
 </script></body></html>
