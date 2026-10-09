@@ -4,7 +4,7 @@
 // didáctico ("muy bien explicado"), titulares, quién entra por quién con dorsales
 // y puestos, regla del portero, tabla de minutos equitativos y acta de campo.
 
-import { describeMoment, lineupIds, normalizeMoments, plannedMinutes } from './match-moments.js';
+import { positionChangeLines, describeMoment, lineupIds, normalizeMoments, plannedMinutes } from './match-moments.js';
 import { buildAutoPlan } from './reparto-plan.js';
 import { executePrint } from './print-session-export.js';
 
@@ -104,17 +104,12 @@ function renderMomentCardHtml(moment, prevMoment, halfDuration, players, availab
     `);
   });
 
-  // Reubicaciones en el campo
-  diff.moved.forEach(({ playerId, position }) => {
-    const pl = playerById(players, playerId);
-    const num = pl?.number ? `${pl.number} · ` : '';
-    changeItems.push(`
-      <div class="cbx-pmp-change-row is-move">
-        <span class="cbx-pmp-tag-move">🔄 REUBICACIÓN</span>
-        <strong>${esc(num)}${esc(pl?.name || playerId)}</strong>
-        <span>pasa a jugar de <b>${esc(position)}</b></span>
-      </div>
-    `);
+  // Reubicaciones: pareja intercambiada o puesto anterior y nuevo.
+  positionChangeLines(prevMoment, moment, (id) => {
+    const player = playerById(players, id);
+    return `${player?.number ? player.number + ' · ' : ''}${player?.name || id}`;
+  }).forEach((line) => {
+    changeItems.push(`<div class="cbx-pmp-change-row is-move"><span class="cbx-pmp-tag-move">🔄 REUBICACIÓN</span><span>${esc(line)}</span></div>`);
   });
 
   // Relevo de portero explícito

@@ -1,12 +1,12 @@
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-plan-scroll-3';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-plan-scroll-3';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-plan-positions-4';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-plan-positions-4';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-plan-scroll-3';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-plan-positions-4';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=fluid-refresh-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -26,7 +26,7 @@ import { SISTEMAS_F7_ORDEN, getSistemaF7Pdf, getAspectBoardData } from './tactic
 import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-8';
 import { buildAutoPlan } from './reparto-plan.js';
-import { describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
+import { positionChangeLines, describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js?v=plan-visual-2';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=goal-series-1';
@@ -4836,7 +4836,7 @@ function momentLines(before, after) {
     : `ENTRA ${playerName(inId)}`));
   diff.outIds.filter((id) => !diff.pairs.some((pair) => pair.outId === id))
     .forEach((id) => lines.push(`SALE ${playerName(id)}`));
-  diff.moved.forEach(({ playerId, position }) => lines.push(`PUESTO · ${playerName(playerId)} → ${position}`));
+  lines.push(...positionChangeLines(before, after, playerName));
   if (diff.keeperId) lines.push(`PORTERO · ${playerName(diff.keeperId)}`);
   if (diff.formation) lines.push(`SISTEMA · ${diff.formation}`);
   return lines;
@@ -14081,7 +14081,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-plan-scroll-3').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-plan-positions-4').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
