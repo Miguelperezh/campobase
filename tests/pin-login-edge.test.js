@@ -13,7 +13,9 @@ test('el login PIN usa service role solo dentro de Edge y no expone la clave al 
 test('el PIN se compara como SHA-256 de salt:pin y en tiempo constante', () => {
   assert.match(edge, /sha256Hex\(`\$\{config\.payload\.pinSalt\}:\$\{pin\}`\)/);
   assert.match(edge, /function safeEqual/);
-  assert.match(edge, /const pinOk = safeEqual/);
+  assert.match(edge, /const isOwner = .*safeEqual/);
+  assert.match(edge, /const isDelegate = .*safeEqual/);
+  assert.match(edge, /const pinOk = isOwner \|\| isDelegate/);
 });
 
 test('el endpoint limita intentos antes de validar el PIN', () => {

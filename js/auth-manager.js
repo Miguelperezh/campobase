@@ -168,23 +168,27 @@ async function edgeFunctionErrorMessage(error, fallback = 'No se pudo iniciar la
   return error?.message || fallback;
 }
 
-export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin) {
+export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin, requestedRole = "auto") {
   if (!client?.auth || !client?.functions) throw new Error('No se ha podido abrir el acceso por PIN.');
   const cleanInput = String(userIdOrIdentifier || '').trim();
   const cleanPin = String(pin || '').trim();
   if (!/^\d{4,8}$/.test(cleanPin)) throw new Error('El PIN debe tener entre 4 y 8 cifras.');
 
   const isUuid = /^[0-9a-f-]{36}$/i.test(cleanInput);
-  const cleanUserId = isUuid ? cleanInput : '';
+  let cleanUserId = isUuid ? cleanInput : '';
   const cleanIdentifier = !isUuid ? cleanInput : '';
+  try { cleanUserId = localStorage.getItem('campobase.pinOwner.'+cleanUserId) || cleanUserId; } catch {}
 
   const current = await getCurrentSession(client).catch(() => null);
-  if (cleanUserId && current?.user?.id === cleanUserId) {
+  const currentDelegate = current?.user?.app_metadata?.campobase_role === 'delegate_pin';
+  if (currentDelegate && current.user.id === cleanUserId) cleanUserId = current.user.app_metadata.campobase_owner_id;
+  // An explicit delegate login always validates the current configured PIN on the server.
+  // Auto login cannot reuse a session: the entered PIN decides the role.
+  if (requestedRole === 'owner' && !currentDelegate && cleanUserId && current?.user?.id === cleanUserId) {
     setBoundSaasUserId(cleanUserId);
     return current;
   }
-
-  const payload = { pin: cleanPin };
+  const payload = { pin: cleanPin, role: requestedRole };
   if (cleanUserId) payload.user_id = cleanUserId;
   if (cleanIdentifier) payload.identifier = cleanIdentifier;
 
@@ -201,11 +205,16 @@ export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin) {
   if (verifyError || !verified?.session?.user) throw verifyError || new Error('No se pudo crear la sesión segura.');
 
   const authenticatedUserId = verified.session.user.id;
-  if (cleanUserId && authenticatedUserId !== cleanUserId) {
-    await client.auth.signOut().catch(() => {});
+  const delegate = verified.session.user.app_metadata?.campobase_role === 'delegate_pin';
+  const actualOwnerId = delegate ? verified.session.user.app_metadata.campobase_owner_id : authenticatedUserId;
+  if ((cleanUserId && actualOwnerId !== cleanUserId)
+      || data.user_id !== authenticatedUserId || data.owner_user_id !== actualOwnerId
+      || (requestedRole === 'owner' && delegate) || (requestedRole === 'delegate' && !delegate)) {
+    await client.auth.signOut({scope:'local'}).catch(() => {});
     throw new Error('La sesión creada no corresponde a esta cuenta.');
   }
 
+  if (delegate) try { localStorage.setItem('campobase.pinOwner.'+authenticatedUserId,actualOwnerId); } catch {}
   setBoundSaasUserId(authenticatedUserId);
   return verified.session;
 }
