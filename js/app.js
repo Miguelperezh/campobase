@@ -1,12 +1,14 @@
+import { nextSavedPlanWindow } from './live-plan-policy.js?v=20261009-live-pilot-6';
+import { resolveDisplayTheme } from './display-theme.js?v=20261009-live-pilot-6';
 import { resolveWhatsAppEvent, matchCommunicationDetails, whatsappMatchOptions, linkedCallup } from './whatsapp-event-context.js';
 import { isTrainingSessionCompleted, withTrainingSessionCompleted, hasUsableTeamSnapshot } from './training-session-status.js';
-import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-live-balance-5';
-import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-live-balance-5';
+import { openClaudeColorEditor, colorPreviewTheme } from './claude-color-editor.js?v=20261009-live-pilot-6';
+import { openMatchWindowEditor } from './claude-time-plan.js?v=20261009-live-pilot-6';
 import { completeProposedStarters } from './match-window-plan.js?v=windows-1';
 import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
-import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-live-balance-5';
+import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-live-pilot-6';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=fluid-refresh-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
@@ -2681,7 +2683,7 @@ function renderLive() {
   ${renderLiveRepartoDashboard(fieldIds, callup.availableIds.filter((id) => !fieldIds.includes(id)), livePlayedSeconds(), liveTargets(), config, false)}
   <div id="live-tactics"></div>
   ${fieldBenchMarkup(fieldIds, callup, config)}
-  <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">Automático (1–3)</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
+  <div class="button-row"><button id="make-sub" class="primary">Registrar cambio manual (1–7 jugadores)</button><button id="owner-auto-sub" class="secondary">${prepForMatch(state.timer?.matchId) ? 'Automático según plan' : 'Automático (1–3)'}</button><button id="propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">Selecciona el mismo número de salidas y entradas. El reloj parado conserva los minutos.</p>`;
   arrangeClaudeLive(state.timer.phase, openDetailsClasses.has('match-log'), callup);
   renderLiveTactics();
   updateLivePlanAlerts();
@@ -3474,6 +3476,14 @@ function renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config,
     directSubMarkup = `<p class="meta" style="text-align:center;margin:0.5rem 0 0 0;">Todos los jugadores de campo disponibles están jugando.</p>`;
   }
 
+  const savedWindow = currentSavedPlanWindow();
+  if (savedWindow.hasPlan) {
+    const { moment, before } = savedWindow;
+    directSubMarkup = moment
+      ? `<div class="reparto-direct-sub-box"><div class="reparto-direct-sub-header">Tu plan · ventana del ${moment.minute}′</div><p>${momentLines(before, moment).map(escapeHtml).join('<br>') || 'Mantener esta alineación.'}</p><button type="button" class="btn-quick-sub-direct cbx-plan-apply" data-moment-id="${escapeHtml(moment.id)}">Hacer esta ventana del plan</button></div>`
+      : '<p class="meta">Sin ventanas pendientes sin aplazar. Revisa tu Plan de partido.</p>';
+  }
+
   return `
     <article class="panel live-reparto-visual-dashboard">
       <div class="reparto-dash-header">
@@ -3712,7 +3722,7 @@ function renderDelegate() {
   const delegateFieldIds = [...fieldIds].sort(byPlayed);
   const delegateBenchIds = [...benchIds].sort(byPlayed);
   const actionLabels = { ready: 'Comienzo', first_half: 'Descanso', halftime: 'Segundo tiempo', second_half: 'Pausar al final y avisar a Migue' };
-  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">Automático (1–3)</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.</p>`;
+  root.innerHTML = `<div class="delegate-head"><div><p class="eyebrow">Cambios, tiempos e incidencias</p><h2>${escapeHtml(matchTeams(match).home)} — ${escapeHtml(matchTeams(match).away)}</h2></div>${roleCanUseOwnerFeatures(state.role) ? '<button id="close-delegate" class="secondary">Volver</button>' : '<button id="logout" class="secondary">Cerrar sesión</button>'}</div>${liveDetailsMarkup('delegate', callup.availableIds, match)}<div class="live-clock"><div id="delegate-clock" class="clock">${formatMatchClock(seconds)}</div><p>Auto-pausa a 38:00 y 74:00</p><button id="advance-live" class="${state.timer.phase === 'second_half' ? 'danger' : 'primary'}">${actionLabels[state.timer.phase] ?? 'Comienzo'}</button>${targetSummaryMarkup()}</div>${renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config, true)}${setPiecesQuickBanner()}<div id="delegate-tactics"></div><div class="live-grid"><div class="panel on-field"><div class="live-col-head"><span class="live-col-title">Sale del campo</span><span class="live-col-count">(${delegateFieldIds.length})</span></div><div class="check-list">${delegateFieldIds.map((id) => row(id, 'delegate-out', 'f')).join('')}</div></div><div class="panel bench"><div class="live-col-head"><span class="live-col-title">Entra al campo</span><span class="live-col-count">(${delegateBenchIds.length})</span></div><div class="check-list">${delegateBenchIds.map((id) => row(id, 'delegate-in', 'b')).join('')}</div></div></div><div class="delegate-actions"><button id="delegate-manual-sub" class="primary">Registrar cambio (1–7)</button><button id="delegate-auto-sub" class="secondary">${prepForMatch(state.timer?.matchId) ? 'Automático según plan' : 'Automático (1–3)'}</button><button id="delegate-propose-reparto" class="secondary">Proponer reparto</button></div><p class="meta">${prepForMatch(state.timer?.matchId) ? 'El automático aplica tu ventana guardada completa, incluidos los cambios de posición. Los cambios manuales los decides tú.' : 'El modo automático elige a quienes menos han jugado y saca a quienes más minutos llevan. Siempre pide confirmación.'}</p>`;
   const savedPlan = savedPlanMarkup(prepForMatch(state.timer.matchId));
   if (savedPlan) root.querySelector('#delegate-tactics')?.insertAdjacentHTML('beforebegin', savedPlan);
   renderDelegateTactics();
@@ -3833,7 +3843,7 @@ function updateLivePlanAlerts() {
   const now = Math.floor(timerSeconds() / 60);
   const closed = new Set(state.timer.planAlertClosed || []);
   const done = new Set(state.timer.planDone || []);
-  const moment = moments.slice(1).find((item) => !closed.has(item.id) && (done.has(item.id) || now >= item.minute - 1));
+  const { moment } = currentSavedPlanWindow({ alert: true });
   for (const root of [$('#live-match'), $('#delegate-match')]) {
     if (!root?.querySelector('.cbx-live-plan')) continue;
     root.querySelector('.cbx-plan-alert')?.remove();
@@ -3851,7 +3861,22 @@ async function registerDelegateSubstitution(outIds, inIds) {
   return executeLiveSubstitution(outIds, inIds, 'delegate');
 }
 
+function currentSavedPlanWindow(options = {}) {
+  return nextSavedPlanWindow(prepForMatch(state.timer?.matchId), state.timer || {}, { minute: Math.floor(timerSeconds() / 60), ...options });
+}
+
+async function confirmSavedPlanWindow() {
+  const { hasPlan, moment, before } = currentSavedPlanWindow();
+  if (!hasPlan) return false;
+  if (!moment) { toast('No hay ventanas pendientes sin aplazar. Revisa tu Plan de partido.'); return true; }
+  if (state.timer.phase === 'ready') { toast('Inicia el partido antes de aplicar el plan.'); return true; }
+  if (Math.floor(timerSeconds() / 60) < moment.minute) { toast(`La siguiente ventana de tu plan es en el ${moment.minute}′. No se adelantan cambios automáticos.`); return true; }
+  if (await askConfirmation({ title: `Tu plan · ventana del ${moment.minute}′`, message: momentLines(before, moment).join('\n') || 'Mantener esta alineación.', acceptLabel: 'Aplicar ventana completa' })) await applySavedPlanMoment(moment.id);
+  return true;
+}
+
 async function proposeReparto() {
+  if (await confirmSavedPlanWindow()) return;
   const callup = liveCallup();
   if (!callup) return toast('No hay partido en vivo.');
   const played = livePlayedSeconds();
@@ -4036,6 +4061,7 @@ function startTicks() {
 }
 
 function maybeShowRepartoAlert(elapsedSeconds) {
+  if (currentSavedPlanWindow().hasPlan) return;
   if (!state.timer || state.timer.phase === 'halftime' || state.timer.phase === 'ready') return;
   const callup = liveCallup();
   if (!callup?.availableIds?.length) return;
@@ -4071,6 +4097,7 @@ function maybeShowMinuteAlert(played, elapsedSeconds) {
 }
 
 function maybeShowUrgentSubstitution(played, elapsedSeconds) {
+  if (currentSavedPlanWindow().hasPlan) return;
   if (!state.delegateMode || !state.timer || state.timer.phase === 'halftime') return;
   const match = state.matches.find(({ id }) => id === state.timer.matchId);
   const callup = callupForMatch(match);
@@ -4115,7 +4142,7 @@ async function advanceLivePhase() {
     const { firstKeeper, secondKeeper } = state.timer;
     // Fase B: aplica la alineación del 2º tiempo ajustada en la pizarra (quién entra/sale).
     syncTimerFromLiveTactic();
-    if (secondKeeper && firstKeeper !== secondKeeper && !state.timer.onField.includes(secondKeeper)) {
+    if (!currentSavedPlanWindow().hasPlan && secondKeeper && firstKeeper !== secondKeeper && !state.timer.onField.includes(secondKeeper)) {
       const keeperOut = state.timer.onField.includes(firstKeeper) ? firstKeeper : state.timer.onField.find((id) => normalizePositions(state.players.find((player) => player.id === id)).includes('Portero'));
       if (keeperOut) {
         state.timer.events.push({ second: state.timer.elapsed, outIds: [keeperOut], inIds: [secondKeeper], source: 'goalkeeper_rotation' });
@@ -8133,25 +8160,12 @@ function applyCustomTheme(themeInput) {
     localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
   } catch {}
 
-  const mergedViews = {
-    ...(state.settings?.theme?.views || {}),
-    ...(localTheme.views || {}),
-    ...(themeInput?.views || {}),
-  };
-
   const theme = {
-    themeBg: 'default',
-    accentPreset: 'emerald',
-    accentColor: '#10b981',
-    fontFamily: 'system',
-    fontScale: 'normal',
-    fontWeight: 'bold',
-    textColor: 'dark-slate',
-    fontTitle: 'auto',
-    ...(state.settings?.theme || {}),
-    ...localTheme,
-    ...(themeInput || {}),
-    views: mergedViews,
+    themeBg: 'default', accentPreset: 'emerald', accentColor: '#10b981',
+    fontFamily: 'system', fontScale: 'normal', fontWeight: 'bold',
+    textColor: 'dark-slate', fontTitle: 'auto',
+    ...resolveDisplayTheme(state.settings?.theme, localTheme, themeInput,
+      window.__CAMPOBASE_READONLY_PREVIEW === true),
   };
 
   const root = document.documentElement;
@@ -10731,6 +10745,7 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
   dialog.showModal();
 }
 function openQuickColorDialog(targetKind = null, sectionId = null) {
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo el entrenador puede cambiar los colores.');
   const scope=sectionId?document.getElementById(sectionId):null;
   const targets={specialists:'plantilla',dorsales:'plantilla','callup-plan':'convocatorias','prep-plan':'preparacion',callups:'convocatorias',live:'partido','live-board':'partido','delegate-board':'delegado','tactic-board':'tacticas',whatsapp:'cuerpo-tecnico'};
   const viewId=scope?.closest('.view')?.id || scope?.dataset.themeView || targets[targetKind] || (targetKind && (document.getElementById(targetKind)||['navegacion','exercise-detail','comunicador'].includes(targetKind))?targetKind:document.querySelector('.view.active')?.id) || 'plantilla';
@@ -10738,7 +10753,7 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
   const actualScope=scope||planScope||(targetKind==='specialists'?document.getElementById('plantilla-specialists-bar'):null);
   const title=actualScope?.querySelector('h2,h3,h4')?.textContent?.trim() || ({plantilla:'Plantilla',hoy:'Hoy','cuerpo-tecnico':'Cuerpo técnico',asistencia:'Asistencia',convocatorias:'Convocatoria',preparacion:'Preparación',partido:'Partido en vivo',sesiones:'Sesiones',ejercicios:'Ejercicios',tacticas:'Tácticas',navegacion:'Navegación compartida'})[viewId] || viewId;
   openClaudeColorEditor({viewId,scope:actualScope,title,
-    readTheme:()=>{let local={};try{local=JSON.parse(localStorage.getItem('campobase.theme')||'{}');}catch{}return {...state.settings?.theme,...local,views:{...state.settings?.theme?.views,...local.views}};},
+    readTheme:()=>{let local={};try{local=JSON.parse(localStorage.getItem('campobase.theme')||'{}');}catch{}return resolveDisplayTheme(state.settings?.theme,local,undefined,window.__CAMPOBASE_READONLY_PREVIEW === true);},
     applyTheme:applyCustomTheme,
     saveTheme:async theme=>{
       if(!roleCanUseOwnerFeatures(state.role))throw new Error('Solo el entrenador puede guardar estos ajustes.');
@@ -13831,6 +13846,7 @@ function wireEvents() {
       }
     }
     if (target.id === 'owner-auto-sub' || target.id === 'delegate-auto-sub') {
+      if (await confirmSavedPlanWindow()) return;
       const match = state.matches.find(({ id }) => id === state.timer?.matchId); const callup = callupForMatch(match);
       if (!callup) return;
       const bench = callup.availableIds.filter((id) => !state.timer.onField.includes(id));
@@ -14081,7 +14097,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-live-balance-5').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261009-live-pilot-6').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
