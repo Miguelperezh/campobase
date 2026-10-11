@@ -83,8 +83,9 @@ export const MODULE_CONFIG = {
     label: 'Entreno',
     icon: `<svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 18h6"/><path d="M9 10h6"/></svg>`,
     defaultView: 'sesiones',
-    views: ['sesiones', 'ejercicios', 'tacticas'],
+    views: ['sesiones', 'ejercicios', 'tacticas', 'aprendizaje'],
     subTabs: [
+      { id: 'aprendizaje', label: 'Aprendizaje', desc: 'Postpartido, competencias y objetivos', icon: '<svg viewBox="0 0 24 24"><path d="M4 20V4h16v16zM8 8h8M8 12h8M8 16h4"/></svg>' },
       {
         id: 'sesiones',
         label: 'Sesiones',
@@ -117,13 +118,14 @@ export const MODULE_CONFIG = {
 const SHELL_GROUPS = [
   ['Equipo', [['hoy', 'Hoy'], ['plantilla', 'Plantilla'], ['cuerpo-tecnico', 'Cuerpo técnico'], ['asistencia', 'Asistencia']]],
   ['Partido', [['convocatorias', 'Convocatoria'], ['preparacion', 'Preparación'], ['partido', 'Partido en vivo'], ['calendario', 'Calendario']]],
-  ['Entrenamiento', [['sesiones', 'Sesiones'], ['ejercicios', 'Ejercicios'], ['tacticas', 'Tácticas']]],
+  ['Entrenamiento', [['sesiones', 'Sesiones'], ['ejercicios', 'Ejercicios'], ['tacticas', 'Tácticas'], ['aprendizaje', 'Aprendizaje']]],
   ['Sistema', [['ajustes', 'Ajustes']]],
 ];
 
 // Presentation only: keep the existing role and permission sources authoritative.
 export function isShellViewAllowed(viewId) {
   if (typeof window === 'undefined') return true;
+  if (viewId === 'aprendizaje' && (window.__campobase?.state?.role === 'delegate' || document.body.classList.contains('delegate-mode'))) return false;
   const app = window.__campobase;
   const role = app?.state?.role;
   if (viewId === 'ajustes' && role === 'demo') return false;

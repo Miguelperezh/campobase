@@ -91,6 +91,7 @@
     })();
   </script>
 <link rel="stylesheet" href="styles-claude-proposal.css?v=20261009-postgame-sync-1">
+<link rel="stylesheet" href="styles-learning.css?v=20261010-learning-1">
 </head>
 <body class="auth-locked">
   <header class="topbar" id="cbx-header">
@@ -1291,10 +1292,11 @@
         </article>
       </div>
     </section>
+    <section id="aprendizaje" class="view" aria-label="Aprendizaje"></section>
   </main>
 
   <nav class="bottom-nav" aria-label="Navegación principal">
-    <button data-view="plantilla" class="active">Plantilla</button><button data-view="asistencia">Asistencia</button><button data-view="sesiones">Sesiones</button><button data-view="ejercicios">Ejercicios</button><button data-view="tacticas">Tácticas</button><button data-view="calendario">Calendario</button><button data-view="convocatorias">Convocatoria</button><button data-view="preparacion">Preparación de partido</button><button data-view="partido">Partido en vivo</button><button data-view="ajustes" id="settings-nav">Ajustes</button>
+    <button data-view="plantilla" class="active">Plantilla</button><button data-view="asistencia">Asistencia</button><button data-view="sesiones">Sesiones</button><button data-view="ejercicios">Ejercicios</button><button data-view="tacticas">Tácticas</button><button data-view="aprendizaje">Aprendizaje</button><button data-view="calendario">Calendario</button><button data-view="convocatorias">Convocatoria</button><button data-view="preparacion">Preparación de partido</button><button data-view="partido">Partido en vivo</button><button data-view="ajustes" id="settings-nav">Ajustes</button>
   </nav>
 
   <dialog id="player-dialog" data-theme-view="plantilla"><form id="player-form"><div class="dialog-head"><h2>Ficha de jugador</h2><div style="display:inline-flex;align-items:center;gap:.4rem;"><button type="button" class="cbx-context-gear-btn cbx-section-gear" data-gear-target="section" data-theme-section="player-dialog" title="Ajustar colores de Ficha de jugador" aria-label="Ajustar colores">⚙️</button><button type="button" data-close aria-label="Cerrar">×</button></div></div><input name="id" type="hidden"><input name="existingPhoto" type="hidden"><input name="photoRemoved" type="hidden" value="0"><div class="form-row"><div class="photo-cropper-field"><label>Foto (cámara o galería)<input name="photo" type="file" accept="image/*" capture="environment"></label><div class="photo-preview-wrapper"><img id="player-photo-preview" src="" alt="Vista previa" class="avatar-preview-img hidden"><div id="player-photo-placeholder" class="avatar-preview-placeholder">👤</div><div class="photo-adjust-controls hidden" id="player-photo-controls"><button type="button" class="secondary compact" id="player-crop-up-btn" title="Subir encuadre al rostro">▲ Rostro</button><button type="button" class="secondary compact" id="player-crop-down-btn" title="Bajar encuadre">▼ Bajar</button><button type="button" class="ghost-danger compact" id="player-remove-photo-btn">Eliminar foto</button></div></div></div></div><label>Nombre<input name="name" required maxlength="80" autocomplete="off"></label><div class="form-row"><label>Dorsal<input name="number" type="number" min="0" max="99"></label><label>Pierna dominante<select name="foot"><option>Derecha</option><option>Izquierda</option><option>Ambas</option></select></label></div><fieldset class="positions"><legend>Posiciones (puedes marcar varias)</legend><div class="position-groups"><div><strong>Portero</strong><label><input type="checkbox" name="positions" value="Portero"> Portero</label></div><div><strong>Defensa</strong><label><input type="checkbox" name="positions" value="Central"> Central</label><label><input type="checkbox" name="positions" value="Lateral derecho"> Lateral derecho</label><label><input type="checkbox" name="positions" value="Lateral izquierdo"> Lateral izquierdo</label><label><input type="checkbox" name="positions" value="Carrilero"> Carrilero</label></div><div><strong>Centrocampista</strong><label><input type="checkbox" name="positions" value="Pivote/Mediocentro defensivo"> Pivote/Mediocentro defensivo</label><label><input type="checkbox" name="positions" value="Interior"> Interior</label><label><input type="checkbox" name="positions" value="Mediapunta"> Mediapunta</label><label><input type="checkbox" name="positions" value="Extremo"> Extremo</label></div><div><strong>Delantero</strong><label><input type="checkbox" name="positions" value="Delantero centro"> Delantero centro</label><label><input type="checkbox" name="positions" value="Segundo delantero"> Segundo delantero</label></div></div></fieldset><fieldset class="player-family-group"><legend>Contacto de progenitores (WhatsApp para convocatorias)</legend><div class="form-row"><label>Padre (Nombre)<input name="fatherName" maxlength="80" placeholder="Ej. Carlos Hernández" autocomplete="off"></label><label>Teléfono Padre (WhatsApp)<input name="fatherPhone" type="tel" maxlength="30" placeholder="Ej. 600111222" autocomplete="tel"></label></div><div class="form-row"><label>Madre (Nombre)<input name="motherName" maxlength="80" placeholder="Ej. Elena Santana" autocomplete="off"></label><label>Teléfono Madre (WhatsApp)<input name="motherPhone" type="tel" maxlength="30" placeholder="Ej. 600333444" autocomplete="tel"></label></div></fieldset><label>Notas internas<textarea name="notes" maxlength="1000"></textarea></label><div class="button-row"><button class="primary" type="submit">Guardar jugador</button><button type="button" class="secondary" data-close>Cancelar</button></div></form></dialog>
@@ -1680,8 +1682,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20261009-postgame-sync-1"></script>
-  <script type="module" src="js/redesign-nav.js?v=pin-switch-1"></script>
+  <script type="module" src="js/app.js?v=20261010-learning-1"></script>
+  <script type="module" src="js/redesign-nav.js?v=20261010-learning-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

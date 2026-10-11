@@ -1,3 +1,4 @@
+import {learningColorSections} from './learning-color-controls.js?v=20261010-learning-1';
 import { timePlanColorSections } from './time-plan-color-controls.js';
 import { SECTIONS } from './claude-color-catalog.js';
 import { configurableElements } from './theme-component-colors.js?v=20261009-delegate-colors-3';
@@ -70,6 +71,7 @@ const cssProperty=key=>/^emo/.test(key)?'icon':/bg|win|draw|loss|fill|track|gras
 const query=selector=>{try{return [...document.querySelectorAll(selector)];}catch{return [];}};
 const targetSelector=(mapping,key)=>{const part=mapping.parts[key]??'';return part.startsWith('@')?part.slice(1):mapping.base.split(', ').map(base=>part.startsWith('&')?base+part.slice(1):base+(part?' '+part:'')).join(', ');};
 export function claudeColorSections(viewId,scope) {
+ const learningSections=learningColorSections(viewId,scope);if(learningSections)return learningSections;
  const planSections=timePlanColorSections(viewId,scope);if(planSections)return planSections;
  const ids=viewSections[viewId]||[];
  const within=nodes=>nodes.some(node=>!scope||scope===node||scope.contains(node));
