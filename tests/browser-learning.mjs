@@ -33,8 +33,8 @@ try {for(const width of [1440,390]){
  await appPage.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
  await appPage.goto(base+'/index.html?learningSmoke=1');await appPage.waitForFunction(()=>window.__campobase?.state);
  await appPage.evaluate(()=>document.getElementById('auth-demo-btn').click());await appPage.waitForFunction(()=>window.__campobase?.state?.role==='demo');
- // La demo parte vacía: datos únicamente en memoria, nunca en la cuenta real.
- await appPage.evaluate(()=>{window.__campobase.state.players=[{id:'learning-smoke-p',name:'Jugador de prueba',number:1,positions:['Central']}];window.__campobase.renderAll();window.__campobase.showView('aprendizaje')});
+ // La demo parte vacía: registro temporal en su IndexedDB aislado, nunca en la cuenta real.
+ await appPage.evaluate(async()=>{const db=await import('/js/db.js');if(!db.isDemoDatabase())throw new Error('La prueba exige base demo');await db.put('players',{id:'learning-smoke-p',name:'Jugador de prueba',number:1,positions:['Central']});await window.__campobase.refresh();window.__campobase.renderAll();window.__campobase.showView('aprendizaje')});
  await appPage.waitForFunction(()=>document.querySelector('#learn-player').options.length===1);
  for(const tab of ['review','players','plan']){await appPage.locator(`[data-tab="${tab}"]`).click();assert.equal(await appPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`app ${tab} overflow ${width}`);}
  await appPage.locator('[data-theme-section="learn-plan"]').click();await appPage.waitForSelector('#cbx-claude-colors');assert.equal(await appPage.locator('#cbx-claude-colors [data-section]').count(),1);await appPage.locator('#cbx-claude-colors [data-action=close]').click();assert.deepEqual(appErrors,[]);console.log('PASS complete app',width);await appPage.close();
