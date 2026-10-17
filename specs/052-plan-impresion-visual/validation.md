@@ -4,4 +4,4 @@
 - tests/browser-print-visual.mjs con hojas reales y IndexedDB sin uso: 1440/390, escudo cargado, color configurado efectivo, impresión no oculta, botón real descarga PDF, cierre restaura pantalla y estado, otra identidad, F11/25 convocados/nombres extensos. Sin desbordamiento de contenido ni omisiones.
 - PDF nativo 1440/390 y descarga 1440/390: todos tres A4, no vacíos, inspección visual de las tres páginas nativas y las tres descargadas. Cabecera, colores y campos completos en ambos transportes. Archivos de QA fuera del repositorio; datos sintéticos únicamente.
 - No cambiar print-session-export, match-moments, editores, Supabase, datos o estilos globales. No se ha probado móvil físico.
-- Publicación: pendiente de revisión/main/Pages.
+- Publicación verificada 17/10/2026: PR136 fusionada en main 840d2806. CI de revisión y main correctos (39031532526); Pages 39031532451 completado. Nueve archivos públicos verificados por SHA256, incluidos exportador nuevo y módulos/estilos ajenos que permanecen intactos. Build 20261016-print-visual-1.

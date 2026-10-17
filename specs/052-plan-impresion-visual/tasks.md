@@ -4,4 +4,4 @@
 - [x] Verificar sustituciones, recolocaciones e intervalos por parte sin mutar fuente.
 - [x] Renderizar impresión y descarga con estilos reales, revisar páginas y casos largos.
 - [x] Ejecutar check/test y registrar en AGENTS.md/agente.md.
-- [ ] Publicar main/producción y verificar archivos públicos.
+- [x] Publicar main/producción y verificar archivos públicos (PR136, 17/10/2026).
