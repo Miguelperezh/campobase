@@ -121,8 +121,8 @@ test('buildMatchPlanHtml genera estructura A4 completa y explicada para el cuerp
   assert.ok(html.includes('Campo Municipal 1'), 'Debe mostrar el campo');
 
   // 3. Titulares Iniciales (0′) y Suplentes de Salida
-  assert.ok(html.includes('TITULARES Y SISTEMA INICIAL'), 'Debe incluir la sección de titulares');
-  assert.ok(html.includes('cbx-pmp-starter-card is-gk'), 'Debe marcar la tarjeta del portero titular');
+  assert.ok(html.includes('SIETE TITULAR'), 'Debe incluir la sección de titulares');
+  assert.ok(html.includes('cbv-starter is-gk'), 'Debe marcar la tarjeta del portero titular');
   assert.ok(html.includes('Hugo García'), 'Debe mostrar a Hugo García de titular');
   assert.ok(html.includes('SUPLENTES DE INICIO (3)'), 'Debe identificar los 3 suplentes de inicio');
   assert.ok(html.includes('Pablo Romero'), 'Pablo Romero debe figurar en suplentes');
@@ -130,24 +130,24 @@ test('buildMatchPlanHtml genera estructura A4 completa y explicada para el cuerp
   assert.ok(html.includes('Diego Torres'), 'Diego Torres (portero suplente) debe figurar en suplentes');
 
   // 4. Cronograma Detallado y Didáctico de Sustituciones
-  assert.ok(html.includes('VENTANAS DE SUSTITUCIÓN EXPLICADAS'), 'Debe incluir el cronograma didáctico');
+  assert.ok(html.includes('VENTANA 1'), 'Debe incluir el cronograma didáctico');
   assert.ok(html.includes('MINUTO 12′'), 'Debe contener la ventana del minuto 12′');
   assert.ok(html.includes('MINUTO 25′'), 'Debe contener la ventana del descanso (minuto 25′)');
-  assert.ok(html.includes('Descanso'), 'Debe etiquetar el minuto 25′ como Descanso');
-  assert.ok(html.includes('🟢 ENTRA'), 'Debe contener etiqueta ENTRA');
-  assert.ok(html.includes('🔴 SALE'), 'Debe contener etiqueta SALE');
-  assert.ok(html.includes('🧤 PORTERÍA'), 'Debe resaltar el relevo de portería en el descanso');
+  assert.ok(html.includes('DESCANSO Y REINICIO'), 'Debe etiquetar el minuto 25′ como Descanso');
+  assert.ok(html.includes('>ENTRA<'), 'Debe contener etiqueta ENTRA');
+  assert.ok(html.includes('>SALE<'), 'Debe contener etiqueta SALE');
+  assert.ok(html.includes('is-keeper'), 'Debe resaltar el relevo de portería en el descanso');
 
   // 5. Tabla de Minutos y Tramos en el Césped
-  assert.ok(html.includes('MINUTOS PREVISTOS POR JUGADOR'), 'Debe incluir la tabla de reparto');
-  assert.ok(html.includes('cbx-pmp-table'), 'Debe renderizar la tabla cbx-pmp-table');
-  assert.ok(html.includes('Tramos en el césped'), 'Debe tener la columna de tramos');
+  assert.ok(html.includes('MINUTOS DE JUEGO POR JUGADOR'), 'Debe incluir la tabla de reparto');
+  assert.ok(html.includes('cbv-table'), 'Debe renderizar la tabla cbv-table');
+  assert.ok(html.includes('tramos en el césped'), 'Debe tener la columna de tramos');
   assert.ok(html.includes('0′–12′'), 'Debe mostrar tramos específicos de participación');
 
   // 6. Pautas de Banquillo y Acta para Bolígrafo
-  assert.ok(html.includes('PAUTAS CLAVE PARA EL CUERPO TÉCNICO'), 'Debe incluir pautas para el banquillo');
-  assert.ok(html.includes('Regla del portero'), 'Debe incluir la regla del portero');
-  assert.ok(html.includes('ACTA DE CAMPO (Anotaciones a mano)'), 'Debe incluir caja de acta');
+  assert.ok(html.includes('PAUTAS DEL CUERPO TÉCNICO'), 'Debe incluir pautas para el banquillo');
+  assert.ok(html.includes('Portería:'), 'Debe incluir la regla del portero');
+  assert.ok(html.includes('ACTA / ANOTACIONES A MANO'), 'Debe incluir caja de acta');
   assert.ok(html.includes('RESULTADO:'), 'Debe incluir casillas de resultado');
   assert.ok(html.includes('Migue Pérez'), 'Debe incluir el nombre del entrenador en el pie');
 });
@@ -248,7 +248,7 @@ test('buildMatchPlanHtml maneja partidos pendientes sin convocatoria ni preparac
   const html = buildMatchPlanHtml(mockMatch, emptyState);
   assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet'), 'Debe generar la ficha A4 incluso sin preparación');
   assert.ok(html.includes('UD Las Palmas B'), 'Debe reflejar el rival');
-  assert.ok(html.includes('TITULARES Y SISTEMA INICIAL'), 'Debe presentar titulares con la plantilla disponible');
+  assert.ok(html.includes('SIETE TITULAR'), 'Debe presentar titulares con la plantilla disponible');
 });
 
 test('app.js y HTML integran botones de impresión omnipresentes (cabecera, banner, calendario, vivo)', () => {

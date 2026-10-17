@@ -32,7 +32,7 @@ import { initTacticBoard } from './tactic-board-controller.js';
 import { printSingleExercise, printTrainingSession } from './print-session-export.js?v=color-controls-8';
 import { buildAutoPlan } from './reparto-plan.js';
 import { positionChangeLines, describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
-import { printMatchPlan } from './print-match-plan.js?v=plan-visual-2';
+import { printMatchPlan } from './print-match-plan.js?v=20261016-print-visual-1';
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=goal-series-1';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
@@ -14127,7 +14127,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261009-postgame-sync-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261016-print-visual-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

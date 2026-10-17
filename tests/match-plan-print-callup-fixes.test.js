@@ -107,25 +107,25 @@ const mockStateF7 = {
   settings: { teamName: 'Alevín Unión Viera', coachName: 'Migue' },
 };
 
-test('buildMatchPlanHtml estructura el plan de partido en 2 hojas A4 independientes con cb-print-page', () => {
+test('buildMatchPlanHtml estructura el plan de partido por partes y resumen A4 independientes con cb-print-page', () => {
   const html = buildMatchPlanHtml(mockMatchF7, mockStateF7);
 
   // Ambas páginas cuentan con la clase .cb-print-page para html2canvas / jsPDF
   assert.ok(html.includes('cbx-pmp-page-1'), 'Debe contener la hoja 1 (cbx-pmp-page-1)');
   assert.ok(html.includes('cbx-pmp-page-2'), 'Debe contener la hoja 2 (cbx-pmp-page-2)');
-  assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-1'), 'Hoja 1 debe tener cb-print-page');
-  assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet cb-print-page cbx-pmp-page-2'), 'Hoja 2 debe tener cb-print-page');
+  assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet cb-print-page cbv-page cbx-pmp-page-1'), 'Hoja 1 debe tener cb-print-page');
+  assert.ok(html.includes('cb-print-sheet cbx-pmp-sheet cb-print-page cbv-page cbx-pmp-page-2'), 'Hoja 2 debe tener cb-print-page');
 
   // Hoja 1 contiene cronograma y titulares
-  assert.ok(html.includes('TITULARES Y SISTEMA INICIAL'));
-  assert.ok(html.includes('VENTANAS DE SUSTITUCIÓN EXPLICADAS'));
-  assert.ok(html.includes('Página 1 de 2'));
+  assert.ok(html.includes('SIETE TITULAR'));
+  assert.ok(html.includes('VENTANA 1'));
+  assert.ok(html.includes('Página 1 de 3'));
 
   // Hoja 2 contiene reparto de minutos y acta de campo
-  assert.ok(html.includes('REPARTO DE MINUTOS Y ACTA DE CAMPO'));
-  assert.ok(html.includes('PÁGINA 2 DE 2'));
-  assert.ok(html.includes('Página 2 de 2'));
-  assert.ok(html.includes('ACTA DE CAMPO (Anotaciones a mano)'));
+  assert.ok(html.includes('MINUTOS DE JUEGO POR JUGADOR'));
+  assert.ok(html.includes('Página 2 de 3'));
+  assert.ok(html.includes('Página 3 de 3'));
+  assert.ok(html.includes('ACTA / ANOTACIONES A MANO'));
 });
 
 test('buildMatchPlanHtml calcula correctamente 70 min para F7 con tramos hasta 50 min y no corta a 50 min', () => {
@@ -137,11 +137,11 @@ test('buildMatchPlanHtml calcula correctamente 70 min para F7 con tramos hasta 5
 
   // En el minuto 35 debe marcar Descanso
   assert.ok(html.includes('MINUTO 35′'), 'Debe incluir la ventana del min 35');
-  assert.ok(html.includes('Descanso'), 'Debe marcar el minuto 35 como Descanso');
+  assert.ok(html.includes('DESCANSO Y REINICIO'), 'Debe marcar el minuto 35 como Descanso');
 
   // En el minuto 50 los jugadores deben tener tramos válidos 50′–70′ (20 min)
   assert.ok(html.includes('50′–70′'), 'Debe reflejar el tramo final 50′ a 70′');
-  assert.ok(html.includes('relevo en descanso a los 35′'), 'Regla de portero debe usar 35′ en F7 de 70′');
+  assert.ok(html.includes('2 partes × 35 min'), 'Debe respetar las dos partes del partido sin imponer otro relevo de portería');
 });
 
 test('desduplicación de convocatorias y reutilización de id para un mismo matchId', () => {

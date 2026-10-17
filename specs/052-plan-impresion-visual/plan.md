@@ -1,0 +1,4 @@
+# Plan
+Conservar selección y normalización de momentos/duración del exportador. Delegar solo el HTML visual a módulo puro con CSS encapsulado dentro de cb-print-root: evita afectar interfaz y exportaciones ajenas. Reutilizar describeMoment/positionChangeLines/plannedMinutes sin modificarlos. Escudo desde settings.clubCrest; nombre y colores del usuario; fallback neutral sin identidad personal impuesta.
+
+Páginas por parte con presupuesto de contenido y continuación; resumen en lotes de jugadores. Mantener cb-print-page para generador existente. Versionar exportador/app/PWA. Validar unitarios semánticos (actualizar solo expectativas del modelo sustituido), regresión completa y navegador con hojas reales; inspeccionar PDF nativo y descarga real y comparar ventanas/minutos con fuente, datos inmutables y anchos escritorio/móvil.
