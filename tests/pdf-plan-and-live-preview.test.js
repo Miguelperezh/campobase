@@ -39,7 +39,7 @@ const mockMatchF7 = {
   format: 'F7',
 };
 
-test('Paginación dinámica del PDF de Plan de Partido: <= 3 momentos genera 2 páginas', () => {
+test('Paginación dinámica del PDF de Plan de Partido: descanso se separa de la primera parte y del resumen', () => {
   const prep2Moments = {
     matchId: 'match-alevin-test',
     formacion: '1-3-2-1',
@@ -84,9 +84,10 @@ test('Paginación dinámica del PDF de Plan de Partido: <= 3 momentos genera 2 p
 
   assert.ok(html.includes('cbx-pmp-page-1'), 'Debe incluir página 1');
   assert.ok(html.includes('cbx-pmp-page-2'), 'Debe incluir página 2');
-  assert.ok(!html.includes('cbx-pmp-page-1b'), 'No debe incluir página 1b cuando hay <= 3 momentos');
-  assert.ok(html.includes('Página 1 de 2'), 'Pie de página 1 debe indicar "Página 1 de 2"');
-  assert.ok(html.includes('Página 2 de 2'), 'Pie de página 2 debe indicar "Página 2 de 2"');
+  assert.ok(html.includes('DESCANSO Y SEGUNDA PARTE'), 'El descanso debe tener su parte independiente');
+  assert.equal((html.match(/class="cb-print-sheet /g)||[]).length,3);
+  assert.ok(html.includes('Página 1 de 3'), 'Pie de página 1 debe indicar "Página 1 de 3"');
+  assert.ok(html.includes('Página 3 de 3'), 'Pie de página 2 debe indicar "Página 3 de 3"');
 });
 
 test('Paginación dinámica del PDF de Plan de Partido: > 3 momentos pagina a 3 hojas limpias', () => {
