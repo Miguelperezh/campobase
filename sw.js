@@ -6,6 +6,7 @@ const BOARD_PARTS = [
   './assets/exercise-board/part-4.b64',
 ];
 const ASSETS = [
+  './js/match-moments.js?v=claude-partido-5',
   './js/app.js?v=20261018-offline-match-1', './js/postgame-plan.js?v=20261018-offline-match-1', './js/match-postgame-editor.js?v=20261018-offline-match-1', './js/keeper-goals.js?v=20261018-offline-match-1', './js/supabase-client.js?v=20261018-offline-match-1', './js/player-data-sync.js?v=20261018-offline-match-1', './js/completed-events-ui.js?v=20261018-offline-match-1',
   './js/domain.js?v=20261009-postgame-sync-1', './js/match-postgame-editor.js?v=20261009-postgame-sync-1', './js/player-data-sync.js?v=20261009-postgame-sync-1', './js/plantilla-stats-sync.js?v=20261009-postgame-sync-1', './js/supabase-client.js?v=20261009-postgame-sync-1', './js/keeper-goals.js?v=20261009-postgame-sync-1', './js/postgame-goals.js?v=20261009-postgame-sync-1', './js/foreground-sync.js?v=20261009-postgame-sync-1',
   './styles-learning.css?v=20261010-learning-1', './js/learning-ui.js?v=20261010-learning-1', './js/learning-domain.js?v=20261010-learning-1', './js/learning-color-controls.js?v=20261010-learning-1', './js/claude-color-bindings.js?v=20261010-learning-1', './js/app.js?v=20261016-print-visual-1',
