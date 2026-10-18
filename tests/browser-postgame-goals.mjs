@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN,headless:true,args:['--no-sandbox']});
 try {
  for(const width of [1440,390]) {
-  const context=await browser.newContext({viewport:{width,height:900}});const page=await context.newPage();const errors=[];
+  const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});const page=await context.newPage();const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>{if(/\/js\/(completed-events-ui|session-visual-planner|session-planner-ui)\.js/.test(route.request().url()))return route.fulfill({contentType:'application/javascript',body:'export {};'});if(new URL(route.request().url()).hostname!=='127.0.0.1')return route.abort();return route.continue();});
   await page.goto(`${process.env.CAMPOBASE_TEST_URL || 'http://127.0.0.1:4211'}/tests/fixtures/postgame-sync.html`);await page.waitForFunction(()=>window.fixtureReady);

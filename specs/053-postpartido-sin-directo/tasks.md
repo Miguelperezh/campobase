@@ -1,0 +1,6 @@
+- [x] Investigar causas y leer normas vigentes.
+- [x] Incorporar carga explícita del plan y registro sin cronómetro.
+- [x] Mostrar todos los porteros convocados sin atribución inventada.
+- [x] Unificar descarte del partido cerrado de directo y delegado.
+- [x] Validar guardado, conflictos, fuente inmutable y regresión.
+- [ ] Registrar y publicar main/producción.

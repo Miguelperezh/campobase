@@ -1,6 +1,7 @@
-import { keeperGoalAllocation, keeperIdsForMatch } from './keeper-goals.js?v=20261009-postgame-sync-1';
+import { keeperGoalAllocation, keeperIdsForMatch } from './keeper-goals.js?v=20261018-offline-match-1';
 import { POSTGAME_GOAL_TYPES, postgameGoalType, buildPostgameScoreUpdate } from './postgame-goals.js?v=20261009-postgame-sync-1';
-import { getAll, putBatch } from './db.js';
+import {postgameFormat, keeperCandidates, performanceFromSavedPlan} from './postgame-plan.js?v=20261018-offline-match-1';
+import { getAll, putBatch, currentDatabaseName } from './db.js';
 import {
   derivePlayerMatchStats,
   isPreseasonMatch,
@@ -77,8 +78,8 @@ export function buildPostgameMatchUpdate(match, entries, matchComment = '', dura
   };
 }
 
-function durationForMatch(match) { return match.format === 'F11' ? 90 : 70; }
-function playersOnFieldForMatch(match) { return match.format === 'F11' ? 11 : 7; }
+const canEdit=()=>['owner','demo'].includes(window.__campobase?.state?.role);
+const preparation=(settings,id)=>settings.find(p=>p.recordType==='preparacion'&&String(p.matchId)===String(id));
 function participantIds(match, callup) {
   return [...new Set([
     ...(callup?.availableIds ?? []),
@@ -101,13 +102,15 @@ function ensureDialog() {
     <div class="dialog-head"><h2 id="postgame-performance-title">Partido · jugadores</h2><button type="button" data-close-postgame aria-label="Cerrar">×</button></div>
     <p class="meta">Si no pudiste llevar el cronómetro durante el partido, completa aquí los minutos reales. Al guardar se sincronizan el partido, Plantilla, Liga/Pretemporada, medias, temporadas e historiales.</p>
     <label>Comentario general del partido<textarea id="postgame-match-comment" maxlength="1500" placeholder="Lectura general, contexto, sensaciones, aspectos para revisar después"></textarea></label>
-    <section id="postgame-score-editor" class="panel"></section>
+    <section id="postgame-plan-editor" class="postgame-section"></section>
+    <section id="postgame-score-editor" class="postgame-section"></section>
     <div id="postgame-performance-players" class="stack"></div>
     <div class="button-row"><button class="primary" type="submit">Guardar y sincronizar todo</button><button type="button" class="secondary" data-close-postgame>Cancelar</button></div>
   </form>`;
   document.body.appendChild(dialog);
   dialog.querySelectorAll('[data-close-postgame]').forEach((button) => button.addEventListener('click', () => dialog.close()));
   dialog.addEventListener('click', (event) => {
+    if (event.target.closest('[data-use-saved-plan]')) applySavedPlan(dialog);
     if (event.target.closest('[data-add-postgame-goal]')) addGoalRow(dialog, {});
     if (event.target.closest('[data-remove-postgame-goal]')) event.target.closest('.postgame-goal-row').remove();
     updateScoreHint(dialog);
@@ -118,7 +121,7 @@ function ensureDialog() {
 }
 
 function scoreBaseline(match) {
-  return JSON.stringify([match.minuteTotals,match.ratings,match.playerComments,match.comments,match.goalsFor,match.goalsAgainst,match.goals,match.keeperGoalsAgainst]);
+  return JSON.stringify([match.minuteTotals,match.ratings,match.playerComments,match.comments,match.goalsFor,match.goalsAgainst,match.goals,match.keeperGoalsAgainst,match.lineupSnapshot,match.substitutionEvents,match.tacticEvents,match.status,match.completed,match.closedAt]);
 }
 function playerOptions(players, selected, emptyLabel = 'Sin asistencia') {
   const options = [...players];
@@ -139,14 +142,14 @@ function addGoalRow(dialog, goal) {
     <button type="button" class="secondary" data-remove-postgame-goal>Quitar este gol</button></div>`;
   $('#postgame-goal-list',dialog).appendChild(row);
 }
-function setupScoreEditor(dialog, match, players, available) {
+function setupScoreEditor(dialog, match, players, available, callup, prep) {
   dialog.__postgameBaseline = scoreBaseline(match);
   dialog.__goalPlayers = available;
-  const allocation = keeperGoalAllocation(match,players);
-  const keeperIds = keeperIdsForMatch(match,players);
+  const keeperIds = [...new Set([...keeperIdsForMatch(match,players),...keeperCandidates(match,players,callup,prep)])];
+  const allocation = match.goalsAgainst == null ? {assigned:{}} : keeperGoalAllocation(match,players,keeperIds);
   $('#postgame-score-editor',dialog).innerHTML = `<h3>Marcador y goles</h3><div class="postgame-player-grid">
-    <label>Goles a favor<input id="postgame-goals-for" type="number" min="0" step="1" required value="${Number(match.goalsFor || 0)}"></label>
-    <label>Goles en contra<input id="postgame-goals-against" type="number" min="0" step="1" required value="${Number(match.goalsAgainst || 0)}"></label>
+    <label>Goles a favor<input id="postgame-goals-for" type="number" min="0" step="1" required value="${match.goalsFor ?? ''}"></label>
+    <label>Goles en contra<input id="postgame-goals-against" type="number" min="0" step="1" required value="${match.goalsAgainst ?? ''}"></label>
     </div><p>Asigna cada gol a su goleador y, si corresponde, a quien dio la asistencia.</p>
     <div id="postgame-goal-list" class="stack"></div><button type="button" class="secondary" data-add-postgame-goal>+ Añadir gol y asistencia</button>
     <h3>Goles encajados por portero</h3><p>El total debe coincidir con los goles en contra. En blanco significa pendiente de asignar; no se reparte automáticamente entre dos porteros.</p>
@@ -171,7 +174,7 @@ function rowMarkup(player, match, duration) {
   const minutes = Number.isFinite(match.minuteTotals?.[playerId]) ? Math.max(0, Math.round(match.minuteTotals[playerId] / 60)) : 0;
   const rating = Number.isFinite(match.ratings?.[playerId]) ? Number(match.ratings[playerId]) : '';
   const comment = String(match.playerComments?.[playerId] ?? '');
-  return `<fieldset class="panel postgame-player-row" data-player-id="${esc(playerId)}">
+  return `<fieldset class="postgame-section postgame-player-row" data-player-id="${esc(playerId)}">
     <legend>${esc(player.number ? `${player.number} · ${player.name}` : player.name)}</legend>
     <div class="postgame-player-grid">
       <label>Minutos<input data-postgame="minutes" type="number" min="0" max="${duration}" step="1" value="${minutes}" required></label>
@@ -182,24 +185,30 @@ function rowMarkup(player, match, duration) {
 }
 
 async function openPostgame(matchId) {
-  const [matches, players, callups] = await Promise.all(['matches', 'players', 'callups'].map(getAll));
+  if(!canEdit())throw new Error('Solo el entrenador puede completar el postpartido.');
+  const database=currentDatabaseName();
+  const [matches, players, callups, settings] = await Promise.all(['matches', 'players', 'callups', 'settings'].map(getAll));
+  if(database!==currentDatabaseName() || !canEdit())throw new Error('La cuenta ha cambiado. Vuelve a abrir el partido.');
   const match = matches.find((item) => item.id === matchId);
   if (!match) throw new TypeError('No se encontró el partido.');
-  if (match.status !== 'finished') throw new TypeError('Esta edición posterior solo está disponible para partidos finalizados.');
+  const prep=preparation(settings,match.id);
   const callup = callups.find((item) => item.id === match.callupId || item.matchId === match.id);
-  const ids = participantIds(match, callup);
+  const ids = [...new Set([...participantIds(match, callup),...keeperCandidates(match,players,callup,prep)])];
   const byId = new Map(players.map((player) => [player.id, player]));
-  const available = ids.map((id) => byId.get(id)).filter(Boolean)
+  const available = ids.map((id) => byId.get(id) || {id,name:'Jugador del registro original'})
     .sort((a, b) => Number(a.number ?? 999) - Number(b.number ?? 999) || String(a.name).localeCompare(String(b.name), 'es'));
   if (!available.length) throw new TypeError('El partido no tiene jugadores vinculados.');
-  const duration = durationForMatch(match);
+  const {duration,playersOnField}=postgameFormat(match,callup,prep);
   const dialog = ensureDialog();
   dialog.dataset.matchId = match.id;
   dialog.dataset.duration = String(duration);
-  dialog.dataset.playersOnField = String(playersOnFieldForMatch(match));
+  dialog.dataset.playersOnField = String(playersOnField);
   $('#postgame-performance-title', dialog).textContent = `${MATCH_TYPE_LABELS[match.type] ?? 'Partido'} · ${match.opponent || 'Rival'} · minutos, puntuación y goles`;
   $('#postgame-match-comment', dialog).value = match.comments ?? '';
-  setupScoreEditor(dialog, match, players, available, duration);
+  dialog.__database=currentDatabaseName();dialog.__plan=prep;dialog.__callup=callup;dialog.__planApplied=null;dialog.__planBaseline=JSON.stringify(prep || null);dialog.__callupBaseline=JSON.stringify(callup || null);
+  let planError='';try{dialog.__planPerformance=performanceFromSavedPlan(match,callup,prep);}catch(error){dialog.__planPerformance=null;planError=error.message;}
+  $('#postgame-plan-editor',dialog).innerHTML=`<h3>¿Seguiste tu plan de partido?</h3><p>Carga sus minutos sin iniciar el cronómetro. Puedes revisarlos y corregirlos antes de guardar.</p><button type="button" class="secondary" data-use-saved-plan ${dialog.__planPerformance ? '' : 'disabled'}>He seguido el plan · cargar minutos</button><p data-plan-status role="status">${esc(planError || `${duration} min · ${callup.availableIds.length} convocados · plan guardado disponible`)}</p>`;
+  setupScoreEditor(dialog, match, players, available, callup, prep);
   $('#postgame-performance-players', dialog).innerHTML = available.map((player) => rowMarkup(player, match, duration)).join('');
   $('.postgame-performance-error', dialog)?.remove();
   dialog.showModal();
@@ -208,23 +217,38 @@ async function openPostgame(matchId) {
 function showDialogError(error) {
   console.error(error);
   const dialog = $('#postgame-performance-dialog');
-  if (!dialog) return;
+  if (!dialog?.open) {window.__campobase?.toast?.(error.message || 'No se pudo abrir el partido.');return;}
   let node = $('.postgame-performance-error', dialog);
   if (!node) {
     node = document.createElement('p');
-    node.className = 'warning panel postgame-performance-error';
+    node.className = 'warning postgame-section postgame-performance-error';
     $('#postgame-performance-players', dialog)?.before(node);
   }
   node.textContent = error.message || 'No se pudieron guardar los datos del partido.';
 }
 
+function applySavedPlan(dialog) {
+  if(!dialog.__planPerformance)return;
+  const rows=$$('.postgame-player-row',dialog);
+  if(rows.some(row=>Number($('[data-postgame="minutes"]',row).value)>0)&&!window.confirm('¿Sustituir los minutos de este formulario por los del plan guardado? Se usarán también sus alineaciones y movimientos. Tus goles, puntuaciones y comentarios se conservan.'))return;
+  rows.forEach(row=>$('[data-postgame="minutes"]',row).value=(dialog.__planPerformance.minuteTotals[row.dataset.playerId] || 0)/60);
+  dialog.__planApplied=true;
+  $('[data-plan-status]',dialog).textContent='Minutos del plan cargados. Revisa los jugadores y el marcador; aún no se ha guardado nada.';
+}
+
 async function savePostgame(event) {
   event.preventDefault();
   const dialog = event.currentTarget.closest('dialog');
+  if(dialog.__saving)return;
+  if(!canEdit())throw new Error('Solo el entrenador puede guardar el postpartido.');
+  if(dialog.__database!==currentDatabaseName())throw new Error('La cuenta ha cambiado. Vuelve a abrir el partido.');
+  dialog.__saving=true;const submit=$('[type=submit]',dialog);submit.disabled=true;
+  try {
   const matchId = dialog.dataset.matchId;
   const duration = Number(dialog.dataset.duration) || 70;
   const playersOnField = Number(dialog.dataset.playersOnField) || 7;
-  const [players, matches, trainings, callups] = await Promise.all(['players', 'matches', 'trainings', 'callups'].map(getAll));
+  const [players, matches, callups, settings] = await Promise.all(['players', 'matches', 'callups', 'settings'].map(getAll));
+  if(dialog.__database!==currentDatabaseName())throw new Error('La cuenta ha cambiado. Vuelve a abrir el partido.');
   const match = matches.find((item) => item.id === matchId);
   if (!match) throw new TypeError('No se encontró el partido.');
   const entries = $$('.postgame-player-row', dialog).map((row) => ({
@@ -240,7 +264,15 @@ async function savePostgame(event) {
       playerId: $('[data-goal=player]', row).value, assistantId: $('[data-goal=assistant]', row).value,
       goalType: $('[data-goal=type]', row).value, minute: $('[data-goal=minute]', row).value, note: $('[data-goal=note]', row).value})),
     keeperGoalsAgainst: Object.fromEntries($$('[data-keeper-conceded]', dialog).map(input => [input.dataset.keeperConceded,input.value])) };
-  const updatedMatch = buildPostgameScoreUpdate(performance, draft, duration);
+  let updatedMatch = buildPostgameScoreUpdate(performance, draft, duration);
+  if(dialog.__planApplied){
+    const currentPlan=preparation(settings,match.id),currentCallup=callups.find(c=>c.id===match.callupId||c.matchId===match.id);
+    if(JSON.stringify(currentPlan || null)!==dialog.__planBaseline || JSON.stringify(currentCallup || null)!==dialog.__callupBaseline)throw new Error('El plan o la convocatoria han cambiado. Conserva tu borrador y vuelve a abrir el partido antes de aplicar el plan.');
+    const exact=entries.every(entry=>updatedMatch.minuteTotals[entry.playerId]===(dialog.__planPerformance.minuteTotals[entry.playerId] || 0));
+    if(exact)updatedMatch={...updatedMatch,...dialog.__planPerformance};
+    updatedMatch.minuteSource={kind:exact?'saved-plan':'adjusted-plan',prepId:dialog.__plan.id,recordedAt:Date.now()};
+  }
+  updatedMatch={...updatedMatch,completed:true,closedAt:match.closedAt || Date.now(),finishedAt:match.finishedAt || Date.now()};
   const updatedMatches = matches.map((item) => item.id === match.id ? updatedMatch : item);
   const affectedIds = new Set([...entries.map(entry => entry.playerId), ...[...(match.goals ?? []), ...updatedMatch.goals].flatMap(goal => [goal.playerId,goal.assistantId])]);
   const updatedPlayers = players.filter((player) => affectedIds.has(player.id)).map((player) => {
@@ -249,7 +281,12 @@ async function savePostgame(event) {
     const next = { ...player, ...derived };
     return next;
   });
-  await putBatch({ matches: [updatedMatch], players: updatedPlayers });
+  const batch={matches:[updatedMatch],players:updatedPlayers,callups:callups.filter(c=>c.id===match.callupId||c.matchId===match.id).map(c=>({...c,completed:true,closedAt:c.closedAt || Date.now(),updatedAt:Date.now()}))};
+  const live=settings.find(s=>s.id==='live');
+  if(String(live?.timer?.matchId)===String(match.id))batch.settings=[{...live,timer:null,updatedAt:Date.now()}];
+  if(dialog.__database!==currentDatabaseName() || !canEdit())throw new Error('La cuenta ha cambiado. Vuelve a abrir el partido.');
+  await putBatch(batch);
+  window.__campobase?.clearLiveForCompletedMatch?.(match.id);
   dialog.close();
   if (typeof window.__campobase?.refresh === 'function') {
     await window.__campobase.refresh(true);
@@ -264,6 +301,7 @@ async function savePostgame(event) {
     toastEl.classList.remove('hidden');
     setTimeout(() => toastEl.classList.add('hidden'), 3000);
   }
+  } finally {dialog.__saving=false;submit.disabled=false;}
 }
 
 function minuteText(second) {
@@ -361,7 +399,7 @@ function injectStyles() {
   const style = document.createElement('style');
   style.id = 'postgame-editor-style';
   style.textContent = `
-    #postgame-performance-dialog form{min-width:0}#postgame-performance-dialog select,#postgame-performance-dialog input{width:100%;min-width:0}#postgame-performance-dialog{overflow:auto;width:min(980px,94vw);max-height:92vh}.postgame-player-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;align-items:start}.postgame-comment textarea{min-height:76px;resize:vertical}.postgame-history-row{display:grid;gap:.2rem;padding:.55rem 0;border-bottom:1px solid #e5ebe8}.postgame-history-row:last-child{border-bottom:0}.postgame-history-row span{font-size:.82rem;color:#5c6963}.postgame-player-history{margin-top:.65rem}.postgame-comments-detail{margin-top:.8rem}
+    #postgame-performance-dialog .postgame-section{border:1px solid var(--cb-slate-200,#e2e8f0);border-radius:16px;padding:1rem;margin:.8rem 0;color:inherit}#postgame-performance-dialog form{min-width:0}#postgame-performance-dialog select,#postgame-performance-dialog input{width:100%;min-width:0}#postgame-performance-dialog{overflow:auto;width:min(980px,94vw);max-height:92vh}.postgame-player-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;align-items:start}.postgame-comment textarea{min-height:76px;resize:vertical}.postgame-history-row{display:grid;gap:.2rem;padding:.55rem 0;border-bottom:1px solid #e5ebe8}.postgame-history-row:last-child{border-bottom:0}.postgame-history-row span{font-size:.82rem;color:#5c6963}.postgame-player-history{margin-top:.65rem}.postgame-comments-detail{margin-top:.8rem}
     @media(max-width:720px){.postgame-player-grid{grid-template-columns:1fr 1fr}.postgame-comment{grid-column:1/-1}}
     @media(max-width:480px){.postgame-player-grid{grid-template-columns:1fr}.postgame-comment{grid-column:auto}}
   `;
@@ -375,7 +413,7 @@ function bind() {
   patchButtons();
   patchPlayerHistories().catch(console.warn);
   document.addEventListener('click', (event) => {
-    const edit = event.target.closest('.edit-match-performance, .rate-match');
+    const edit = event.target.closest('.edit-match-performance, .rate-match, .record-match-postgame');
     if (edit?.dataset.id) {
       event.preventDefault();
       event.stopPropagation();

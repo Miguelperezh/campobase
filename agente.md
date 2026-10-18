@@ -1941,3 +1941,12 @@ Selección/normalización/duración del exportador conservadas; presentación pu
 Validación: check y 824 tests correctos. Navegador con estilos reales a 1440/390, botón real de descarga .pdf, impresión nativa, escudo/cambio de identidad/colores, cierre con estado intacto y F11 de 25 convocados sin recortes. Cuatro PDF de tres páginas verificados; seis páginas renderizadas revisadas visualmente (papel y descarga móvil). Decoradores ajenos de sesiones simulados solo en fixture mínima. No escrituras deportivas reales ni validación de dispositivo móvil físico.
 
 Publicación SDD052 verificada 17/10/2026: PR136, main 840d2806, CI 39031532526 y Pages 39031532451 correctos. Nueve archivos públicos idénticos a la copia validada por SHA256; build 20261016-print-visual-1. Se preservan datos, planes, colores guardados y pantalla de la app.
+
+
+## SDD053 — Registro posterior sin cronómetro (18/10/2026)
+- Calendario incorpora «Registrar partido sin directo» para partidos sin cierre explícito. Editor canónico de postpartido añade «He seguido el plan · cargar minutos» también en partidos ya terminados. Solo carga un borrador; guardar confirma minutos y marcador. No requiere comienzo, descanso ni fin.
+- `js/postgame-plan.js` valida las ventanas/convocatoria y deriva minutos en segundos, titulares, sustituciones, porteros y movimientos de la preparación exacta; 0 minutos y reentradas incluidos. No genera otro reparto ni escribe planes. Plan inválido queda deshabilitado con motivo, edición manual sigue disponible.
+- `js/match-postgame-editor.js` muestra los dos porteros de la convocatoria/preparación sin exigir minutos previos. Reparto desconocido queda pendiente. Conserva goles/asistencias/tipos, puntuaciones, comentarios, IDs y ajustes manuales como deltas; protección por partido/plan/convocatoria/cuenta y doble envío.
+- Guardado en lote de partido, estadísticas derivadas, convocatorias y cierre de su live. Nunca detiene otro partido. Filtros y guardia de preparación en entrenador/delegado descartan todas las marcas terminales; un gol/minutos en un directo activo ya no lo finalizan. Reabrir explícitamente retira marcas terminales. Mantener el resumen validado del cierre por directo.
+- Menú de acciones del calendario conserva apertura al repintar. Sin cambios en ajustes, colores, permisos, impresión/PDF, sesiones, ejercicios ni datos reales. Caché de código actualizada; no se borra IndexedDB/localStorage.
+- Pruebas y publicación se registran en `specs/053-postpartido-sin-directo/validation.md`.

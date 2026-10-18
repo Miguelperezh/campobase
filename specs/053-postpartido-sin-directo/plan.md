@@ -1,0 +1,4 @@
+# Plan
+Helper puro para duración, validación del plan guardado, minutos y eventos derivados de sus ventanas. No generar repartos ni modificar preparación. Editor canónico recibe acción nueva, carga plan en borrador y guarda explícitamente. Si se ajustan minutos, no afirmar que se ejecutaron exactamente todas las ventanas. Candidatos porteros de convocatoria/preparación separados de la evidencia estadística histórica. Predicado terminal de directo distinto de «tiene participación», que también puede ser un partido aún en juego. Cierre y limpieza de live/convocatoria en lote; filtros y guardia de aplicación de preparación evitan reaparición.
+
+Validar helpers, fuente inmutable, dos porteros sin minutos, 14 convocados/reentradas, conflicto, cierre de otro partido sin detener el actual, repetición sin duplicados y UI completa entrenador/delegado a 1440/390. Check/test, SDD y agentes acumulativos; publicación código/docs autorizada.
