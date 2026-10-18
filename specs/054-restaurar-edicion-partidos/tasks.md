@@ -1,4 +1,4 @@
 - [x] Investigar acceso y estados excluidos.
 - [x] Restaurar botón fijo y acceso desde detalle.
 - [x] Probar edición completa, cancelación y reentrada en estados históricos/móvil.
-- [ ] Documentar y publicar sin alterar datos reales.
+- [x] Documentar y publicar sin alterar datos reales.
