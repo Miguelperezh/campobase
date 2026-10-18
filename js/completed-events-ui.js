@@ -193,6 +193,7 @@ async function completeMatchManually(matchId, button) {
 
   button.disabled = true;
   try {
+    if(typeof window.__campobase?.toggleMatchCompleted==='function'){await window.__campobase.toggleMatchCompleted(matchId);return;}
     const now = Date.now();
     await put('matches', { ...match, status: 'finished', closedAt: now, updatedAt: now });
     if (typeof window.__campobase?.refresh === 'function') {

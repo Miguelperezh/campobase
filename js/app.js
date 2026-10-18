@@ -1,3 +1,4 @@
+import {isMatchTerminal} from './postgame-plan.js?v=20261018-offline-match-1';
 import {initLearning} from './learning-ui.js?v=20261010-learning-1';
 import { installForegroundSync } from './foreground-sync.js?v=20261009-postgame-sync-1';
 import { liveDisplayTheme } from './live-display-colors.js?v=20261009-postgame-sync-1';
@@ -13,7 +14,7 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-postgame-sync-1';
 import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261009-postgame-sync-1';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261018-offline-match-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -611,7 +612,7 @@ function sanitizeLiveTimer() {
       liveMatch.status === 'closed' ||
       Boolean(liveMatch.closedAt) ||
       Boolean(liveMatch.finishedAt) ||
-      isMatchPlayed(liveMatch);
+      liveMatch.completed === true;
 
     let isStale = false;
     if (state.timer.runningSince && (Date.now() - Number(state.timer.runningSince) > 6 * 3600 * 1000)) {
@@ -1885,23 +1886,24 @@ async function toggleCallupCompleted(id) {
     status: willBeCompleted ? 'finished' : 'planned',
     updatedAt: Date.now(),
   };
-  await put('callups', updatedCallup);
+  const batch={callups:[updatedCallup]};
 
   const match = findMatchForCallup(callup);
   if (match) {
     const updatedMatch = {
       ...match,
       status: willBeCompleted ? 'finished' : 'planned',
+      completed:willBeCompleted,finishedAt:willBeCompleted ? (match.finishedAt || Date.now()) : null,
       closedAt: willBeCompleted ? (match.closedAt || Date.now()) : null,
       updatedAt: Date.now(),
     };
-    if (willBeCompleted && state.timer && String(state.timer.matchId) === String(match.id)) {
-      state.timer = null;
-      await put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
-    }
-    await put('matches', updatedMatch);
+    const live=await getOne('settings','live');
+    if(willBeCompleted&&String(live?.timer?.matchId)===String(match.id))batch.settings=[{...live,timer:null,updatedAt:Date.now()}];
+    batch.matches=[updatedMatch];
   }
 
+  await putBatch(batch);
+  if(willBeCompleted && match)clearLiveForCompletedMatch(match.id);
   await refresh(true);
   renderCallups();
   renderMatches();
@@ -2587,16 +2589,22 @@ async function reopenLiveMatch(matchId) {
     delegateUnlocked: true,
   };
   state.recentFinishedMatchId = null;
-  const inProgressMatch = { ...match, status: 'in_progress' };
+  const inProgressMatch = { ...match, status: 'in_progress', completed:false, closedAt:null, finishedAt:null };
   await putBatch({ players: updatedPlayers, matches: [inProgressMatch], settings: [{ id: 'live', timer: state.timer, updatedAt: Date.now() }] });
   await refresh(true);
   showView('partido');
   toast('Partido reabierto en el 2.º tiempo.');
 }
 
+function clearLiveForCompletedMatch(matchId) {
+  if(String(state.recentFinishedMatchId)===String(matchId))state.recentFinishedMatchId=null;
+  if(String(state.timer?.matchId)===String(matchId)){state.timer=null;clearInterval(state.tick);liveTactic=null;}
+}
+
 function renderLive() {
+  if(state.timer&&isMatchTerminal(state.matches.find(m=>String(m.id)===String(state.timer.matchId))))clearLiveForCompletedMatch(state.timer.matchId);
   const root = $('#live-match');
-  const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
+  const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && !isMatchTerminal(match)).sort((a,b)=>a.date.localeCompare(b.date));
   if (!state.timer) {
     if (state.recentFinishedMatchId) {
       const finishedMatch = state.matches.find((m) => m.id === state.recentFinishedMatchId);
@@ -2608,7 +2616,7 @@ function renderLive() {
     const savedPrep = state.preparaciones?.find((p) => {
       if (!p.team?.length) return false;
       const m = state.matches.find((item) => item.id === p.matchId);
-      return m && m.status !== 'finished';
+      return m && !isMatchTerminal(m);
     });
     if (savedPrep) {
       applyPreparacionToLive(savedPrep).catch(() => {});
@@ -3515,6 +3523,7 @@ function renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config,
 }
 
 function renderDelegate() {
+  if(state.timer&&isMatchTerminal(state.matches.find(m=>String(m.id)===String(state.timer.matchId))))clearLiveForCompletedMatch(state.timer.matchId);
   const root = $('#delegate-match');
   if (!root) return;
 
@@ -3527,7 +3536,7 @@ function renderDelegate() {
     : state.preparaciones?.find((p) => {
         if (!p.team?.length) return false;
         const m = state.matches.find((item) => String(item.id) === String(p.matchId));
-        return m && m.status !== 'finished' && (p.delegateShown || state.settings?.delegateAllMatches);
+        return m && !isMatchTerminal(m) && (p.delegateShown || state.settings?.delegateAllMatches);
       });
 
   if (shownPrep && (!state.timer || (state.timer.phase === 'ready' && String(state.timer.matchId) !== String(shownPrep.matchId)))) {
@@ -3565,7 +3574,7 @@ function renderDelegate() {
       }
       return;
     }
-    const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished').sort((a,b)=>a.date.localeCompare(b.date));
+    const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && !isMatchTerminal(match)).sort((a,b)=>a.date.localeCompare(b.date));
     if (eligible.length) {
       root.innerHTML = `
         <div class="delegate-head">
@@ -3929,6 +3938,7 @@ async function applyPreparacionToLive(prep) {
   if (!prep?.team?.length) return false;
   if (state.timer && state.timer.phase !== 'ready') return false;
   const match = state.matches.find(({ id }) => String(id) === String(prep.matchId));
+  if(!match || isMatchTerminal(match))return false;
   const callup = callupForMatch(match);
   if (!callup) return false;
   const team = prep.team.map((position) => ({
@@ -3972,6 +3982,7 @@ async function prepareLive() {
   const selectedMatchId = $('#live-select')?.value || '';
   const match = state.matches.find((item) => item.id === selectedMatchId);
   if (!match) return toast('Selecciona un partido.');
+  if(isMatchTerminal(match))return toast('Este partido ya está realizado. Puedes editarlo en Calendario.');
   const callup = callupForMatch(match);
   if (!callup) return toast('Ese partido no tiene una convocatoria disponible en este dispositivo.');
   const availableIds = Array.isArray(callup.availableIds) ? callup.availableIds : [];
@@ -4342,20 +4353,18 @@ async function saveMatch(event) {
 async function toggleMatchCompleted(id) {
   const match = state.matches.find((m) => m.id === id);
   if (!match) return;
-  const isCurrentlyPlayed = isMatchPlayed(match);
+  const isCurrentlyPlayed = isMatchTerminal(match);
   const willBeCompleted = !isCurrentlyPlayed;
   const updated = {
     ...match,
     status: willBeCompleted ? 'finished' : 'planned',
+    completed:willBeCompleted,finishedAt:willBeCompleted ? (match.finishedAt || Date.now()) : null,
     closedAt: willBeCompleted ? (match.closedAt || Date.now()) : null,
     updatedAt: Date.now(),
   };
-  if (willBeCompleted && state.timer && String(state.timer.matchId) === String(id)) {
-    state.timer = null;
-    await put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
-  }
-  await put('matches', updated);
-
+  const batch={matches:[updated]};
+  const live=await getOne('settings','live');
+  if(willBeCompleted&&String(live?.timer?.matchId)===String(id))batch.settings=[{...live,timer:null,updatedAt:Date.now()}];
   const matchDay = String(match.date || '').slice(0, 10);
   const normMatchOpp = normalizeOpponentName(match.opponent);
   const relatedCallups = state.callups.filter((c) =>
@@ -4364,15 +4373,14 @@ async function toggleMatchCompleted(id) {
     String(c.id) === String(match.id) ||
     (normMatchOpp && normalizeOpponentName(c.opponent) === normMatchOpp && String(c.date || '').slice(0, 10) === matchDay)
   );
-  for (const c of relatedCallups) {
-    await put('callups', {
+  batch.callups=relatedCallups.map(c=>({
       ...c,
       completed: willBeCompleted,
       closedAt: willBeCompleted ? (c.closedAt || Date.now()) : null,
       updatedAt: Date.now(),
-    });
-  }
-
+    }));
+  await putBatch(batch);
+  if(willBeCompleted)clearLiveForCompletedMatch(id);
   await refresh(true);
   renderMatches();
   renderCallups();
@@ -4380,6 +4388,7 @@ async function toggleMatchCompleted(id) {
 }
 
 function renderMatchCard(match) {
+  const actionsOpen = $(`#matches-list .match-card[data-match-id="${CSS.escape(String(match.id))}"] > .cbx-calendar-actions`)?.open || false;
   const teams = matchTeams(match);
   const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
   const hasScore = Number.isFinite(match.goalsFor) || Number.isFinite(match.goalsAgainst) || hasGoalsList;
@@ -4388,9 +4397,10 @@ function renderMatchCard(match) {
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
   const isOwner = roleCanUseOwnerFeatures(state.role);
-  const isLive = Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(match.id)) || match.status === 'in_progress');
+  const isLive = !isMatchTerminal(match) && Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(match.id)) || match.status === 'in_progress');
   const isPlayed = isMatchPlayed(match);
-  const completedBtnHtml = `<button type="button" class="toggle-match-completed cbx-btn-completed ${isPlayed ? 'is-completed' : ''}" data-id="${match.id}" title="${isPlayed ? 'Marcar como pendiente' : 'Marcar como realizado y archivar'}">${isPlayed ? '✓ Realizado' : '○ Realizado'}</button>`;
+  const offlineRecordHtml=isOwner && !isMatchTerminal(match) ? `<button type="button" class="record-match-postgame secondary" data-id="${escapeHtml(match.id)}">Registrar partido sin directo</button>` : '';
+  const completedBtnHtml = `<button type="button" class="toggle-match-completed cbx-btn-completed ${isMatchTerminal(match) ? 'is-completed' : ''}" data-id="${match.id}" title="${isMatchTerminal(match) ? 'Marcar como pendiente' : 'Marcar como realizado y archivar'}">${isMatchTerminal(match) ? '✓ Realizado' : '○ Realizado'}</button>`;
 
   if (document.body.classList.contains('cb-redesign-active')) {
     const date = new Date(`${String(match.date).slice(0, 10)}T12:00:00`);
@@ -4400,9 +4410,9 @@ function renderMatchCard(match) {
     const liveScore = isLive && state.timer?.details ? `${teams.mySide === 'home' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}–${teams.mySide === 'away' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}` : '';
     const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente'));
     const resultClass = isLive ? 'live' : (hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
-    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles${isPlayed ? ' · ✓ Realizado' : ''}</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
+    return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"${actionsOpen ? ' open' : ''}><summary>Acciones y detalles${isPlayed ? ' · ✓ Realizado' : ''}</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${offlineRecordHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
   }
-  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
+  return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${offlineRecordHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${!isPlayed && !match.callupId ? `<button class="callup-match primary" data-id="${match.id}">Convocar</button>` : ''}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
 }
 
 let claudeCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -4728,7 +4738,7 @@ function editMatch(id) {
 
 function preparableMatches() {
   return state.matches
-    .filter((match) => (match.callupId || callupForMatch(match)) && match.status !== 'finished')
+    .filter((match) => (match.callupId || callupForMatch(match)) && !isMatchTerminal(match))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -5694,6 +5704,7 @@ async function togglePrepDelegate() {
 
 function showMatchDetail(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
+  const actionsOpen = $(`#matches-list .match-card[data-match-id="${CSS.escape(String(match.id))}"] > .cbx-calendar-actions`)?.open || false;
   const teams = matchTeams(match);
   const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
   const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (hasGoalsList ? match.goals.length : 0);
@@ -5738,7 +5749,7 @@ function showMatchDetail(id) {
 async function reopenMatch(id) {
   const match = state.matches.find((item) => item.id === id); if (!match) return;
   if (!await askConfirmation({ title: 'Reabrir partido', message: 'Se limpiarán los goles, tarjetas, lesiones y puntuaciones de este partido para poder volver a jugarlo. Los minutos y puntuaciones ya acumulados en las fichas de los jugadores no se revierten.', acceptLabel: 'Reabrir', danger: true })) return;
-  await put('matches', { ...match, status: 'planned', goalsFor: null, goalsAgainst: null, goals: [], cards: [], injuries: [], incidents: [], ratings: null, minuteTotals: null, substitutionEvents: [], comments: '', minuteReasons: {} });
+  await put('matches', { ...match, status: 'planned', completed:false, closedAt:null, finishedAt:null, playedSeconds:0, goalsFor: null, goalsAgainst: null, goals: [], cards: [], injuries: [], incidents: [], ratings: null, minuteTotals: null, substitutionEvents: [], comments: '', minuteReasons: {} });
   await refresh(true);
   renderMatches();
   renderPlayers();
@@ -11580,7 +11591,7 @@ async function saveDelegateAccountSettings(event) {
   await put('settings', state.settings);
 
   try {
-    const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261009-postgame-sync-1');
+    const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261018-offline-match-1');
     const client = getBoundSupabaseClient?.();
     if (client) {
       await client.rpc('set_delegate_permissions', { p_permissions: perms }).catch(() => {});
@@ -14127,7 +14138,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261016-print-visual-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261018-offline-match-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
@@ -14234,7 +14245,7 @@ async function init() {
 }
 
 if (typeof window !== 'undefined') {
-  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, toggleMatchCompleted, toggleTrainingSessionCompleted, toggleCallupCompleted, isCallupPlayed, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, sendDelegateInviteWhatsApp, sendDelegateInviteEmail, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
+  window.__campobase = { refresh, synchronizeCloud, toast, loginWithPin, getConfiguredPinRole, syncDelegateModeDom, renderAll, renderLive, renderDelegate, clearLiveForCompletedMatch, renderPostMatchSummary, reopenLiveMatch, reopenMatch, finishMatch, renderPreparaciones, openPreparacionEditor, ensureCallupForMatch, logoutUser, renderPlayers, renderMatches, renderTrainings, renderTrainingSessions, toggleMatchCompleted, toggleTrainingSessionCompleted, toggleCallupCompleted, isCallupPlayed, renderCallups, renderExercises, renderTactics, showView, showMatchDetail, showExerciseDetail, setExerciseLibraryMode, applyRole, openWhatsAppDialog, printSingleExercise, printTrainingSession, printMatchPlan, getDelegatePermissions, saveDelegatePermissions: persistDelegatePermissions, sendDelegateInviteWhatsApp, sendDelegateInviteEmail, renderClaudeCalendar, get calendarFilter() { return claudeCalendarFilter; }, setCalendarFilter(f) { claudeCalendarFilter = f; renderMatches(); }, get calendarSelectedDay() { return claudeCalendarSelectedDay; }, selectCalendarDay(d) { claudeCalendarSelectedDay = d; renderMatches(); }, get state() { return state; } };
   window.__campobaseState = state;
 }
 

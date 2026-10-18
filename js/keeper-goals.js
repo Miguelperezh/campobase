@@ -7,8 +7,8 @@ export function keeperIdsForMatch(match = {}, players = []) {
   return [...ids].filter(Boolean);
 }
 
-export function keeperGoalAllocation(match = {}, players = []) {
-  const ids = keeperIdsForMatch(match, players);
+export function keeperGoalAllocation(match = {}, players = [], candidateIds = []) {
+  const ids = [...new Set([...keeperIdsForMatch(match, players), ...candidateIds])];
   const total = Math.max(0, Number(match.goalsAgainst) || 0);
   const assigned = {};
   const explicit = match.keeperGoalsAgainst;

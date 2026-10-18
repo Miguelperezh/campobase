@@ -8,7 +8,7 @@ setBoundSaasUserId(identity);configureRealDatabase();
 let failing=false, holdNext=null;
 const remote=new Map();
 configureCloudStore({enabled:()=>true,getSnapshot:async(store)=>({records:[...(remote.get(store)||new Map()).values()],deletedIds:[],rowCount:(remote.get(store)||new Map()).size}),upsert:async(m)=>{if(holdNext){const hold=holdNext;holdNext=null;hold.started();await hold.gate;}if(failing)throw new Error('Red de prueba caída');const rows=remote.get(m.store)||new Map();rows.set(m.recordId,structuredClone(m.payload));remote.set(m.store,rows);},remove:async()=>{}});
-window.__campobase={refresh:async()=>{},renderAll:()=>{},synchronizeCloud:syncFromCloud};
+window.__campobase={state:{role:'owner'},refresh:async()=>{},renderAll:()=>{},synchronizeCloud:syncFromCloud};
 const players=[{id:'k1',number:1,name:'Portero Uno',positions:['Portero']},{id:'k2',number:13,name:'Portero Dos',positions:['Portero']},{id:'p',number:3,name:'Goleador',positions:['Central']},{id:'a',number:7,name:'Asistente',positions:['Central']}];
 await putBatch({players,matches:[{id:'fixture-game',opponent:'Rival aislado',type:'league',status:'finished',goalsFor:1,goalsAgainst:15,minuteTotals:{k1:2100,k2:2100,p:2100,a:2100},goalkeeperRotation:{firstKeeper:'k1',secondKeeper:'k2'},goals:[{id:'original-goal',playerId:'p',second:600,note:'Nota original'}],plan:{untouched:true},location:'Campo original'}]});
 await syncFromCloud();
@@ -23,4 +23,16 @@ window.fixture={verifyQueuedReplacement:async()=>{
  return {pending:sync.pending,remote:remote.get('matches').get('fixture-game').raceMarker};
 },getOne,getAll,syncFromCloud,putBatch,fail:()=>{failing=true;},remote,secondDevice:async()=>{setBoundSaasUserId('second-'+identity);configureRealDatabase();await syncFromCloud();},firstDevice:async()=>{setBoundSaasUserId(identity);configureRealDatabase();await syncFromCloud();}};
 window.fixtureReady=true;
+window.fixture.seedPlan=async()=>{
+ const ids=Array.from({length:14},(_,i)=>'plan-p'+(i+1));
+ const players=ids.map((id,i)=>({id,number:i+1,name:'Plan Jugador '+(i+1),positions:[i===0||i===7?'Portero':'Central']}));
+ const team=ids.slice(0,7).map((playerId,i)=>({playerId,pos:i===0?'Portero':'Puesto '+i}));
+ const second=ids.slice(7).map((playerId,i)=>({playerId,pos:i===0?'Portero':'Puesto '+i}));
+ const prep={id:'plan-prep',recordType:'preparacion',matchId:'plan-match',team,formacion:'1-3-2-1',moments:[{id:'change',minute:35,team:second}]};
+ const match={id:'plan-match',callupId:'plan-callup',opponent:'Plan aislado',format:'F7',status:'planned',location:'Mi campo',comments:'Mi nota',ratings:{'plan-p1':4},goals:[]};
+ const callup={id:'plan-callup',matchId:match.id,format:'F7',availableIds:ids};
+ await putBatch({players,matches:[match],callups:[callup],settings:[prep,{id:'live',timer:{matchId:match.id}}]});
+ document.querySelector('#matches-list').insertAdjacentHTML('beforeend','<button class="record-match-postgame" data-id="plan-match">Registrar sin directo</button>');
+ return {prep,match,callup,ids};
+};
 </script></body></html>
