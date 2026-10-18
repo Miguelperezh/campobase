@@ -211,6 +211,7 @@ async function openPostgame(matchId) {
   setupScoreEditor(dialog, match, players, available, callup, prep);
   $('#postgame-performance-players', dialog).innerHTML = available.map((player) => rowMarkup(player, match, duration)).join('');
   $('.postgame-performance-error', dialog)?.remove();
+  $('#match-detail-dialog')?.close();
   dialog.showModal();
 }
 
@@ -389,8 +390,8 @@ async function patchMatchComments(matchId) {
 
 function patchButtons() {
   $$('.edit-match-performance, .rate-match').forEach((button) => {
-    button.textContent = 'Minutos, puntuación y goles';
-    button.title = 'Completar o corregir datos de jugadores después del partido';
+    button.textContent = 'Editar goles, puntuaciones y minutos';
+    button.title = 'Editar marcador, goleadores, asistencias, tipos de gol, goles encajados, minutos y puntuaciones';
   });
 }
 

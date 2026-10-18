@@ -10,7 +10,7 @@ import {
   buildPlayerSummary,
   derivePlayerMatchStats,
 } from './domain.js';
-import './match-postgame-editor.js?v=20261018-offline-match-1';
+import './match-postgame-editor.js?v=20261018-match-edit-2';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
