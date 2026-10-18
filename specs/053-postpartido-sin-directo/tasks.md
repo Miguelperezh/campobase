@@ -3,4 +3,4 @@
 - [x] Mostrar todos los porteros convocados sin atribución inventada.
 - [x] Unificar descarte del partido cerrado de directo y delegado.
 - [x] Validar guardado, conflictos, fuente inmutable y regresión.
-- [ ] Registrar y publicar main/producción.
+- [x] Registrar y publicar main/producción.
