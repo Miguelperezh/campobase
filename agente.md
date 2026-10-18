@@ -1950,3 +1950,7 @@ Publicación SDD052 verificada 17/10/2026: PR136, main 840d2806, CI 39031532526 
 - Guardado en lote de partido, estadísticas derivadas, convocatorias y cierre de su live. Nunca detiene otro partido. Filtros y guardia de preparación en entrenador/delegado descartan todas las marcas terminales; un gol/minutos en un directo activo ya no lo finalizan. Reabrir explícitamente retira marcas terminales. Mantener el resumen validado del cierre por directo.
 - Menú de acciones del calendario conserva apertura al repintar. Sin cambios en ajustes, colores, permisos, impresión/PDF, sesiones, ejercicios ni datos reales. Caché de código actualizada; no se borra IndexedDB/localStorage.
 - Pruebas y publicación se registran en `specs/053-postpartido-sin-directo/validation.md`.
+
+
+## SDD054 — Restaurar edición de todos los datos del partido (18/10/2026)
+Causa de acceso inconsistente: botón añadido por el enriquecedor asíncrono de Plantilla solo con status finished; otros estados terminales no lo recibían. Las tarjetas y el detalle ahora incluyen directamente el botón canónico «Editar goles, puntuaciones y minutos» para propietario/demo. Se conserva Editar datos generales, carga voluntaria del plan y registro sin directo. El enriquecedor existente detecta el botón y no duplica. Apertura desde detalle cierra ese modal; no se apilan dos ventanas. Sin cambios en lógica de guardado, permisos, campos, planes, colores, impresión, DB/sync ni datos reales. Pruebas/documentación/publicación: specs/054-restaurar-edicion-partidos/validation.md.
