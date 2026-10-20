@@ -7,4 +7,4 @@
 - Capturas de escritorio/móvil revisadas: barra nueva legible, con fondo del apartado y sin adoptar el fondo de una ficha ni añadir rueda redundante. Se preserva la paleta de la fixture y de la app, sin imponer colores.
 - Revisión independiente detectó riesgo de transferir copia al cambiar cuenta: contexto efímero también verificado al guardar y dentro de put. Ninguna escritura real, cambios de permisos, seeds ni migraciones. No prueba móvil físico ni sincronización remota real de esta nueva copia.
 
-Publicación pendiente de comprobar después de CI/Pages.
+Publicación verificada: PR139 fusionada en main 3782ca70525fa9072d847d7dbbb06ff4469a0f39; CI de PR 39505320479/39505326077 y main 39505525388 correctos. Pages 39505525340 correcto. Build público 20261020-sessions-1: 21 recursos públicos idénticos por SHA256, incluidos sesiones, DB, impresión y colores. Publicación exclusiva de código/documentación; datos reales intactos.

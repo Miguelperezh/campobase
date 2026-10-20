@@ -6,4 +6,4 @@
 - Revisión independiente identificó carrera entre guardia del controlador y prepare/open de DB; corregida mediante callback opcional inmediatamente antes de transacción. API existente mantiene comportamiento por defecto. Runner browser-sessions.mjs preparado para repetir las tres comprobaciones de sesiones. El token actual no permite modificar workflows de GitHub; se mantiene CI existente y se ejecutan estas comprobaciones localmente.
 - No se han borrado ni modificado sesiones, asistencia, colores, planes ni datos reales. Ancho móvil simulado; no se ha probado dispositivo móvil físico ni escritura remota real.
 
-Publicación pendiente de comprobar después de CI/Pages.
+Publicación verificada: PR139 fusionada en main 3782ca70525fa9072d847d7dbbb06ff4469a0f39; CI de PR 39505320479/39505326077 y main 39505525388 correctos. Pages 39505525340 correcto. Build público 20261020-sessions-1: 21 recursos públicos idénticos por SHA256, incluidos sesiones, DB, impresión y colores. Publicación exclusiva de código/documentación; datos reales intactos.

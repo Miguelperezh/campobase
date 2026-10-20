@@ -1,4 +1,4 @@
 - [x] Revisar acceso, controlador y asociaciones de asistencia.
 - [x] Hacer visible borrar sesión y proteger alcance del borrado.
 - [x] Probar confirmación/cancelación, asociaciones, estados y móvil.
-- [ ] Documentar y publicar main/producción sin tocar datos reales.
+- [x] Documentar y publicar main/producción sin tocar datos reales.
