@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Borrado de sesiones · guardias aisladas</title>
+<body><h1>Prueba aislada del borrado de sesiones</h1><p>No usa cuentas ni conexión remota reales.</p>
+<script type="module">
+import {configureRealDatabase,configureCloudStore,openDatabase,put,remove,flushSyncQueue,currentDatabaseName} from '/js/db.js';
+import {setBoundSaasUserId,clearBoundSaasUserId,getBoundSaasUserId,getPinAccessRevision,lockPinAccess} from '/js/auth-manager.js';
+
+const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return {promise,resolve};};
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const bounded=async(promise,label)=>Promise.race([promise,delay(1800).then(()=>{throw new Error('Tiempo agotado: '+label);})]);
+const completed=transaction=>new Promise((resolve,reject)=>{transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error);transaction.onabort=()=>reject(transaction.error||new Error('Transacción cancelada'));});
+const requestValue=request=>new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+let role='owner';
+
+async function setup(){
+  configureCloudStore(null);role='owner';
+  const a=crypto.randomUUID(),b=crypto.randomUUID(),databases={};
+  const id='same-session-id',attendanceId='same-attendance-id';
+  for(const identity of [a,b]){
+    setBoundSaasUserId(identity);configureRealDatabase();
+    const db=await openDatabase();databases[identity]=db;
+    const transaction=db.transaction(['settings','trainings'],'readwrite');
+    transaction.objectStore('settings').put({id,recordType:'trainingSession',name:'Sesión de '+identity,date:'2099-01-10',ownerMarker:identity});
+    transaction.objectStore('trainings').put({id:attendanceId,sessionId:id,kind:'training',date:'2099-01-10',ownerMarker:identity});
+    await completed(transaction);
+  }
+  setBoundSaasUserId(a);configureRealDatabase();await openDatabase();
+  return {a,b,id,attendanceId,databases};
+}
+
+async function snapshot(pair){
+  const result={};
+  for(const identity of [pair.a,pair.b]){
+    const db=pair.databases[identity];
+    result[identity]={};
+    for(const store of ['settings','trainings','syncQueue']){
+      result[identity][store]=await requestValue(db.transaction(store,'readonly').objectStore(store).getAll());
+    }
+  }
+  return result;
+}
+
+function contextGuard(pair,afterCheck){
+  const expected={database:'campobase_'+pair.a,user:pair.a,pin:getPinAccessRevision(),role};
+  const calls=[];
+  const assertContext=databaseName=>{
+    calls.push({databaseName:databaseName||null,currentDatabase:currentDatabaseName(),user:getBoundSaasUserId(),role,pin:getPinAccessRevision()});
+    if(role!==expected.role)throw new Error('ROLE_CHANGED');
+    if(getPinAccessRevision()!==expected.pin)throw new Error('PIN_CHANGED');
+    if(getBoundSaasUserId()!==expected.user||currentDatabaseName()!==expected.database||(databaseName&&databaseName!==expected.database))throw new Error('ACCOUNT_CHANGED');
+    afterCheck?.(calls.length);
+  };
+  return {assertContext,calls};
+}
+
+async function attempt(operation){try{await operation;return {resolved:true};}catch(error){return {resolved:false,error:error.message};}}
+const mutate=(operation,pair,options)=>operation==='put'
+  ?put('settings',{id:pair.id,recordType:'trainingSession',name:'Copia que no debe cruzar de cuenta',date:'2099-01-20',ownerMarker:pair.a},options)
+  :remove('settings',pair.id,options);
+
+window.fixture={
+  async prepareSwitch(operation='delete'){
+    const pair=await setup(),before=await snapshot(pair),started=deferred(),gate=deferred();
+    // Auth can disappear after the first check. Force the real binding helper
+    // to await its provider, then let that provider return another account.
+    const guard=contextGuard(pair,count=>{if(count===1)clearBoundSaasUserId();});
+    configureCloudStore({prepare:async()=>{started.resolve();await gate.promise;setBoundSaasUserId(pair.b);configureRealDatabase();},remove:async()=>{throw new Error('No debe enviarse ningún borrado.');},upsert:async()=>{throw new Error('No debe enviarse ninguna escritura.');}});
+    const deletion=attempt(mutate(operation,pair,{assertContext:guard.assertContext,waitForCloud:false}));
+    try{await bounded(started.promise,'esperar el proveedor de identidad');}finally{gate.resolve();}
+    const outcome=await bounded(deletion,'rechazar el cambio de cuenta');
+    return {outcome,calls:guard.calls,before,after:await snapshot(pair)};
+  },
+  async afterPrepareChange(change,operation='delete'){
+    const pair=await setup(),before=await snapshot(pair);
+    const guard=contextGuard(pair,count=>{
+      if(count!==2)return;
+      if(change==='account'){setBoundSaasUserId(pair.b);configureRealDatabase();}
+      if(change==='pin')lockPinAccess();
+      if(change==='role')role='delegate';
+    });
+    const outcome=await attempt(mutate(operation,pair,{assertContext:guard.assertContext,waitForCloud:false}));
+    return {outcome,calls:guard.calls,before,after:await snapshot(pair),expectedDatabase:'campobase_'+(change==='account'?pair.b:pair.a)};
+  },
+  async localFirstDelete(){
+    const pair=await setup(),before=await snapshot(pair),started=deferred(),gate=deferred(),delivered=[];
+    const remote=new Map(before[pair.a].settings.map(record=>[record.id,structuredClone(record)]));
+    const guard=contextGuard(pair);
+    configureCloudStore({prepare:async()=>{},upsert:async()=>{throw new Error('La prueba solo debe borrar.');},remove:async mutation=>{started.resolve();await gate.promise;remote.delete(mutation.recordId);delivered.push(structuredClone(mutation));}});
+    const deletion=attempt(remove('settings',pair.id,{assertContext:guard.assertContext,waitForCloud:false}));
+    let localSettled=false,during;
+    try{
+      await bounded(started.promise,'retener el borrado remoto');
+      localSettled=await Promise.race([deletion.then(()=>true),delay(200).then(()=>false)]);
+      during=await snapshot(pair);
+    }finally{gate.resolve();}
+    const outcome=await bounded(deletion,'completar el borrado local');
+    await bounded(flushSyncQueue(),'entregar el tombstone');
+    return {outcome,localSettled,calls:guard.calls,before,during,after:await snapshot(pair),a:pair.a,b:pair.b,remoteHasSession:remote.has(pair.id),delivered};
+  },
+  async localFirstPut(){
+    const pair=await setup(),before=await snapshot(pair),started=deferred(),gate=deferred(),delivered=[];
+    const record={id:'new-isolated-copy',recordType:'trainingSession',name:'Nueva copia explícita',date:'2099-01-20',ownerMarker:pair.a,completed:false};
+    const remote=new Map(before[pair.a].settings.map(item=>[item.id,structuredClone(item)]));
+    const guard=contextGuard(pair);
+    configureCloudStore({prepare:async()=>{},remove:async()=>{throw new Error('La copia no debe borrar.');},upsert:async mutation=>{started.resolve();await gate.promise;remote.set(mutation.recordId,structuredClone(mutation.payload));delivered.push(structuredClone(mutation));}});
+    const saving=attempt(put('settings',record,{assertContext:guard.assertContext,waitForCloud:false}));
+    let localSettled=false,during;
+    try{
+      await bounded(started.promise,'retener el guardado remoto');
+      localSettled=await Promise.race([saving.then(()=>true),delay(200).then(()=>false)]);
+      during=await snapshot(pair);
+    }finally{gate.resolve();}
+    const outcome=await bounded(saving,'completar el guardado local');
+    await bounded(flushSyncQueue(),'entregar la copia pendiente');
+    return {outcome,localSettled,calls:guard.calls,before,during,after:await snapshot(pair),a:pair.a,b:pair.b,record,remote:[...remote.values()],delivered};
+  },
+};
+window.fixtureReady=true;
+</script></body></html>

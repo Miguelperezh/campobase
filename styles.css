@@ -56,3 +56,13 @@
 /* Convocados en Preparación de partido: chips separados (antes salían pegados). */
 .suplente-list{display:flex;flex-wrap:wrap;gap:.4rem}
 .suplente{display:inline-flex;padding:.3rem .6rem;border-radius:8px;background:#eef4f0;border:1px solid #cfe0d6;font-size:.82rem;font-weight:700;color:var(--green)}
+
+/* Session search stays outside regenerated cards and uses the current theme. */
+#session-list-tools { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto; gap:.75rem; align-items:end; margin-block:1rem; padding:1rem; border:1px solid var(--line, #e2e8f0); border-radius:16px; }
+#session-list-tools label { display:grid; gap:.35rem; min-width:0; }
+#session-list-tools input, #session-list-tools select { width:100%; min-width:0; box-sizing:border-box; }
+#session-list-count { grid-column:1/-1; margin:0; }
+@media(max-width:600px) {
+  #session-list-tools { grid-template-columns:minmax(0,1fr); }
+  #session-list-tools button { width:100%; }
+}

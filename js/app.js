@@ -1,3 +1,5 @@
+import {filterTrainingSessions, reusableSessionDraft} from './training-session-tools.js?v=20261020-sessions-1';
+import {sessionAttendanceToDelete} from './training-session-delete.js?v=20261020-sessions-1';
 import {isMatchTerminal} from './postgame-plan.js?v=20261018-offline-match-1';
 import {initLearning} from './learning-ui.js?v=20261010-learning-1';
 import { installForegroundSync } from './foreground-sync.js?v=20261009-postgame-sync-1';
@@ -13,7 +15,7 @@ import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-postgame-sync-1';
-import { configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
+import { currentDatabaseName, configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261018-match-edit-2';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
@@ -35,7 +37,7 @@ import { buildAutoPlan } from './reparto-plan.js';
 import { positionChangeLines, describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js?v=20261016-print-visual-1';
 
-import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=goal-series-1';
+import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=20261020-sessions-1';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
 import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
@@ -109,6 +111,8 @@ const USER_EXERCISE_PREFIX = 'pdf98-user-';
 let toastTimer;
 let sessionDraftBlocks = [];
 let sessionDraftMeta = null;
+let reusedSessionContext = null;
+let savingTrainingSession = false;
 let pendingExerciseId = '';
 let exerciseLibraryMode = 'all';
 let tacticTool = 'select';
@@ -542,6 +546,7 @@ function applyGlobalSearch() {
   const query = (input?.value ?? '').trim().toLocaleLowerCase('es');
   const view = document.querySelector('.view.active');
   if (!view) return;
+  if (view.id === 'sesiones') { renderTrainingSessions(); return; }
   const containers = view.querySelectorAll('.stack, .card-grid, .exercise-grid, .attendance-grid, .selection-grid');
   containers.forEach((container) => {
     [...container.children].forEach((child) => {
@@ -2141,30 +2146,44 @@ async function deleteCallup(id) {
   await remove('callups', id); await synchronizeRotationCounters(); await refresh(true); renderCallups(); renderMatches(); renderPlayers(); toast('Convocatoria borrada.');
 }
 
+const deletingTrainingSessions=new Set();
 async function deleteTrainingSession(id) {
-  const session = state.trainingSessions.find((item) => item.id === id);
-  if (!session || !await askConfirmation({
-    title: 'Borrar sesión',
-    message: 'Se eliminarán la sesión, su asistencia y todo lo que esa asistencia aporta a las fichas de jugadores.',
-    acceptLabel: 'Borrar',
-    danger: true,
-  })) return;
-
-  const sessionDay = String(session.date || '').slice(0, 10);
-  const sessionsSameDay = state.trainingSessions.filter((item) => String(item.date || '').slice(0, 10) === sessionDay);
-  const relatedAttendance = state.trainings.filter((record) => {
-    if ((record.kind ?? 'training') !== 'training') return false;
-    if (record.sessionId === session.id) return true;
-    return !record.sessionId && sessionsSameDay.length === 1 && String(record.date || '').slice(0, 10) === sessionDay;
-  });
-
-  for (const record of relatedAttendance) await remove('trainings', record.id);
-  await remove('settings', session.id);
-  await refresh(true);
-  renderTrainingSessions();
-  renderPlayers();
-  renderTrainings();
-  toast('Sesión, asistencia y estadísticas relacionadas eliminadas.');
+  if(!roleCanUseOwnerFeatures(state.role))return toast('Solo el entrenador puede borrar sesiones.');
+  const database=currentDatabaseName(),revision=getPinAccessRevision(),userId=getBoundSaasUserId(),key=database+':'+id;
+  if(deletingTrainingSessions.has(key))return;
+  const checkAccount=(openedDatabase)=>{
+    if(currentDatabaseName()!==database || (openedDatabase && openedDatabase!==database) || getPinAccessRevision()!==revision || getBoundSaasUserId()!==userId || !roleCanUseOwnerFeatures(state.role))throw new Error('La cuenta ha cambiado. Vuelve a abrir la sesión antes de borrarla.');
+  };
+  deletingTrainingSessions.add(key);
+  try {
+    const original=await getOne('settings',id);
+    checkAccount();
+    if(!original || original.recordType!=='trainingSession')return toast('La sesión ya no está disponible.');
+    if(!await askConfirmation({
+      title:'Borrar sesión',
+      message:`¿Borrar «${original.name || 'Sesión de entrenamiento'}» (${localDate(original.date)}${original.time ? ' · '+original.time : ''})? Se eliminarán esta sesión y su asistencia vinculada, y se recalcularán las estadísticas de asistencia. Los ejercicios de la biblioteca se conservan.`,
+      acceptLabel:'Borrar sesión',danger:true,
+    }))return;
+    checkAccount();
+    const [session,settings,attendance]=await Promise.all([getOne('settings',id),getAll('settings'),getAll('trainings')]);
+    checkAccount();
+    if(!session)return toast('La sesión ya no está disponible.');
+    if(JSON.stringify(session)!==JSON.stringify(original))throw new Error('La sesión ha cambiado mientras confirmabas. Revisa su última versión antes de borrarla.');
+    const related=sessionAttendanceToDelete(session,settings.filter(s=>s.recordType==='trainingSession'),attendance);
+    const deleteOptions={assertContext:checkAccount,waitForCloud:false};
+    for(const record of related){checkAccount();await remove('trainings',record.id,deleteOptions);}
+    checkAccount();
+    await remove('settings',session.id,deleteOptions);
+    checkAccount();
+    const detail=$('#session-detail-dialog');
+    if(String(detail?.dataset.sessionId)===String(id))detail.close();
+    if(String(sessionDraftMeta?.id)===String(id)){
+      sessionDraftMeta=null;sessionDraftBlocks=[];$('#session-builder')?.classList.add('hidden');
+    }
+    await refresh(true);
+    renderTrainingSessions();renderPlayers();renderTrainings();
+    toast('Sesión y asistencia vinculada borradas.');
+  } finally {deletingTrainingSessions.delete(key);}
 }
 
 async function deleteMatch(id) {
@@ -4464,6 +4483,7 @@ function renderCalendarFilterBar() {
 }
 
 function renderTrainingCalendarCard(training) {
+  const actionsOpen=$(`#matches-list [data-training-id="${CSS.escape(String(training.id || ''))}"] > .cbx-calendar-actions`)?.open || false;
   const dateStr = String(training.date || '').slice(0, 10);
   const date = new Date(`${dateStr}T12:00:00`);
   const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
@@ -4473,7 +4493,7 @@ function renderTrainingCalendarCard(training) {
   const pitch = training.pitch ? ` · ${training.pitch}` : '';
   const duration = training.totalDuration ? ` · ${training.totalDuration} min` : '';
 
-  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>Sesión planificada</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>` : ''}</div></details></article>`;
+  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>Sesión planificada</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"${actionsOpen ? ' open' : ''}><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>${roleCanUseOwnerFeatures(state.role) ? `<button type="button" class="reuse-session secondary" data-id="${escapeHtml(training.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger" data-id="${escapeHtml(training.id)}">Borrar sesión</button>` : ''}` : ''}</div></details></article>`;
 }
 
 function renderMatches() {
@@ -6313,10 +6333,11 @@ function renderSessionDraft() {
       <button type="button" class="add-exercise-to-session primary compact" data-id="${item.id}">+ Añadir</button>
     </article>`;
   }).join('')}</div></div>`;
-  root.innerHTML = `<form id="session-form" novalidate><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" maxlength="120" value="${escapeHtml(sessionDraftMeta?.name || 'Entrenamiento')}" placeholder="Ej. Pase, apoyo y finalización (o Entrenamiento)"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="240" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo (o guarda la sesión ahora y añade los ejercicios más tarde).</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
+  root.innerHTML = `${sessionDraftMeta?._reused ? '<p class="meta" role="status">Nueva sesión a partir de otra. Revisa la fecha. El original se conserva; solo Guardar sesión crea la copia.</p>' : ''}<form id="session-form" novalidate><input name="id" type="hidden" value="${escapeHtml(sessionDraftMeta?.id ?? '')}"><div class="form-row session-datetime-row"><label class="date-field-full">Fecha de la sesión${dateMarkup('date', sessionDraftMeta?.date ?? '', 'Fecha de la sesión')}</label><label class="time-field-full">Hora de la sesión${time24Markup('time', sessionDraftMeta?.time ?? '', 'Hora de la sesión')}</label></div><div class="form-row session-details-row"><label>Nombre de la sesión<input name="name" maxlength="120" value="${escapeHtml(sessionDraftMeta?.name || 'Entrenamiento')}" placeholder="Ej. Pase, apoyo y finalización (o Entrenamiento)"></label><label>Campo de entrenamiento<input name="pitch" maxlength="80" value="${escapeHtml(sessionDraftMeta?.pitch ?? '')}" placeholder="Ej. Campo 1, Pepe Gonçalvez, Municipal..."></label><div class="form-row"><label>Tiempo total de la sesión (min)<input name="targetDuration" type="number" min="1" max="240" required value="${target}"></label><label>¿Es calentamiento de partido/amistoso?<select name="sessionKind"><option value="training" ${sessionDraftMeta?.sessionKind === 'training' ? 'selected' : ''}>Entrenamiento</option><option value="match-warmup" ${sessionDraftMeta?.sessionKind === 'match-warmup' ? 'selected' : ''}>Calentamiento de partido/amistoso</option></select></label></div></div><div class="session-duration ${status.exact ? 'exact' : 'warning'}" role="status"><strong>${status.total} / ${target} min</strong><span>${status.message}</span></div><fieldset><legend>Bloques de la sesión</legend>${sessionDraftBlocks.length ? sessionDraftBlocks.map((block, index) => `<div class="session-block" data-index="${index}"><input name="blockType" type="hidden" value="${block.type}"><div><span class="pill">${sessionBlockLabel(block.type)}</span><label>Ejercicio<select name="blockExerciseId" required>${exerciseOptions(block.exerciseId)}</select></label></div><label>Duración (min)<input name="blockDuration" type="number" min="1" max="240" required value="${block.duration}"></label><label>Consignas / observaciones<input name="blockNotes" maxlength="300" value="${escapeHtml(block.notes ?? '')}"></label><div class="session-block-actions"><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="-1" aria-label="Subir bloque" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" class="move-session-block secondary compact" data-index="${index}" data-direction="1" aria-label="Bajar bloque" ${index === sessionDraftBlocks.length - 1 ? 'disabled' : ''}>↓</button><button type="button" class="remove-session-block danger compact" data-index="${index}">Quitar</button></div></div>`).join('') : '<p class="warning">Añade ejercicios desde la lista de abajo (o guarda la sesión ahora y añade los ejercicios más tarde).</p>'}</fieldset>${picker}<label>Material total (calculado automáticamente)<input name="material" maxlength="300" value="${escapeHtml(sessionDraftMeta?.material ?? '')}" placeholder="Se calcula automáticamente según los ejercicios seleccionados"></label><label>Observaciones generales<textarea name="notes" maxlength="1000">${escapeHtml(sessionDraftMeta?.notes ?? '')}</textarea></label><div class="button-row"><button class="primary" type="submit">Guardar sesión</button><button class="cancel-session secondary" type="button">Cancelar</button></div></form>`;
 }
 
 function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
+  reusedSessionContext = null;
   const existing = state.trainingSessions.find(({ id }) => id === editId);
   const defaultTarget = Number(seedMeta.targetDuration) > 0
     ? Number(seedMeta.targetDuration)
@@ -6334,6 +6355,27 @@ function sessionBuilder(editId = '', seedExerciseId = '', seedMeta = {}) {
   }
   renderSessionDraft();
   $('#session-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function reuseTrainingSession(id) {
+  if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo el entrenador puede crear sesiones.');
+  const database = currentDatabaseName(), revision = getPinAccessRevision(), userId = getBoundSaasUserId();
+  const source = state.trainingSessions.find(session => session.id === id);
+  if (!source) return toast('La sesión ya no está disponible.');
+  const draft = reusableSessionDraft(source, localDateKey(), state.exercises.map(exercise => exercise.id));
+  if (!$('#session-builder').classList.contains('hidden') && !await askConfirmation({
+    title: 'Hay una preparación abierta', message: 'Reutilizar esta sesión sustituirá el borrador abierto. Las sesiones guardadas se conservan.', acceptLabel: 'Abrir nuevo borrador',
+  })) return;
+  if (currentDatabaseName() !== database || getPinAccessRevision() !== revision || getBoundSaasUserId() !== userId || !roleCanUseOwnerFeatures(state.role)) throw new Error('La cuenta ha cambiado. Vuelve a abrir la sesión.');
+  sessionDraftMeta = draft.meta;
+  sessionDraftBlocks = draft.blocks;
+  sessionDraftMeta._reused = true;
+  reusedSessionContext = { database, revision, userId };
+  $('#session-detail-dialog')?.close();
+  showView('sesiones');
+  renderSessionDraft();
+  $('#session-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast('Nuevo borrador preparado. Revisa la fecha y pulsa Guardar sesión para crearlo.');
 }
 
 function openAddToSession(exerciseId) {
@@ -6382,6 +6424,14 @@ async function saveAddToSession(event) {
 }
 
 async function saveTrainingSession(event) {
+  if (savingTrainingSession) return;
+  savingTrainingSession = true;
+  try {
+  const copyContext = sessionDraftMeta?._reused ? reusedSessionContext : null;
+  const assertCopyContext = (openedDatabase) => {
+    if (!copyContext || currentDatabaseName() !== copyContext.database || (openedDatabase && openedDatabase !== copyContext.database) || getPinAccessRevision() !== copyContext.revision || getBoundSaasUserId() !== copyContext.userId || !roleCanUseOwnerFeatures(state.role)) throw new Error('La cuenta ha cambiado. Vuelve a abrir Reutilizar sesión antes de guardar.');
+  };
+  if (sessionDraftMeta?._reused) assertCopyContext();
   const form = event.target.closest('form');
   syncSessionDraft();
   const existing = sessionDraftMeta.id ? state.trainingSessions.find(({ id }) => id === sessionDraftMeta.id) : null;
@@ -6395,7 +6445,8 @@ async function saveTrainingSession(event) {
     exercises: state.exercises,
     createdAt: existing?.createdAt ?? Date.now(), now: Date.now(),
   });
-  await put('settings', session);
+  await put('settings', session, copyContext ? { assertContext: assertCopyContext, waitForCloud: false } : undefined);
+  if (copyContext) assertCopyContext();
   const legacyCandidates = existing
     ? state.trainings.filter((record) => (record.kind ?? 'training') === 'training'
         && !record.sessionId
@@ -6417,6 +6468,7 @@ async function saveTrainingSession(event) {
   showView('sesiones');
   const status = sessionDurationStatus(session.blocks, session.targetDuration);
   toast(existing ? 'Sesión actualizada.' : 'Sesión creada.');
+  } finally { savingTrainingSession = false; }
 }
 
 function videosForExercise(exerciseId) {
@@ -6579,18 +6631,46 @@ function openOwnExercisesPrint() {
   picker.showModal();
 }
 
+let sessionListDatabase = '', sessionListQuery = '', sessionListStatus = 'all';
+function sessionListControls() {
+  if (sessionListDatabase !== currentDatabaseName()) {
+    sessionListDatabase = currentDatabaseName(); sessionListQuery = ''; sessionListStatus = 'all';
+    $('#session-list-query') && ($('#session-list-query').value = '');
+    $('#session-list-status') && ($('#session-list-status').value = 'all');
+  }
+  let controls = $('#session-list-tools');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.id = 'session-list-tools'; controls.className = 'session-list-tools';
+    controls.innerHTML = `<label>Buscar sesiones<input id="session-list-query" type="search" placeholder="Nombre, campo, fecha o ejercicio…" autocomplete="off"></label><label>Mostrar<select id="session-list-status"><option value="all">Todas las sesiones</option><option value="pending">Pendientes</option><option value="completed">Realizadas</option></select></label><button type="button" id="session-list-clear" class="secondary compact">Limpiar filtros</button><p id="session-list-count" class="meta" role="status" aria-live="polite"></p>`;
+    $('#sessions-list').before(controls);
+    $('#session-list-query').addEventListener('input', event => { sessionListQuery = event.target.value; renderTrainingSessions(); });
+    $('#session-list-status').addEventListener('change', event => { sessionListStatus = event.target.value; renderTrainingSessions(); });
+    $('#session-list-clear').addEventListener('click', () => {
+      sessionListQuery = ''; sessionListStatus = 'all'; $('#session-list-query').value = ''; $('#session-list-status').value = 'all';
+      if ($('#sesiones.active') && $('#global-search')) $('#global-search').value = '';
+      renderTrainingSessions(); $('#session-list-query').focus();
+    });
+  }
+}
+
 function renderTrainingSessions() {
   const banner=$('#sesiones .cbx-banner');
   if(banner&&!$('#print-own-exercises')) {
     const button=document.createElement('button');button.id='print-own-exercises';button.type='button';button.className='secondary';button.textContent='Imprimir mis ejercicios';button.addEventListener('click',openOwnExercisesPrint);
     (banner.querySelector('.button-row')||banner).append(button);
   }
-  const allSessions = sortTrainingSessions(state.trainingSessions, localDateKey());
+  sessionListControls();
+  const query = [sessionListQuery, $('#sesiones.active') ? $('#global-search')?.value : ''].filter(Boolean).join(' ');
+  const allSessions = filterTrainingSessions(sortTrainingSessions(state.trainingSessions, localDateKey()), { query, status: sessionListStatus, exercises: state.exercises });
+  $('#session-list-count').textContent = `${allSessions.length} de ${state.trainingSessions.length} sesiones`;
+  if (state.trainingSessions.length && !allSessions.length) { $('#sessions-list').innerHTML = empty('No hay sesiones que coincidan. Prueba otra búsqueda o pulsa Limpiar filtros.'); return; }
   const activeSessions = allSessions.filter((s) => !s.completed);
   const completedSessions = allSessions.filter((s) => !!s.completed);
 
   if (document.body.classList.contains('cb-redesign-active')) {
     const root = $('#sessions-list');
+    const completedOpen=Boolean(query.trim() || sessionListStatus === 'completed') || (root.querySelector('.cbx-completed-sessions-accordion')?.open ?? !activeSessions.length);
     if (!allSessions.length) {
       root.innerHTML = `<div class="cbx-card empty-state" style="text-align:center;padding:32px 16px;">
         <h3 style="font:800 20px var(--cbx-disp);text-transform:uppercase;color:var(--cbx-ink);margin-bottom:8px;">Todavía no hay sesiones de entrenamiento guardadas</h3>
@@ -6695,11 +6775,11 @@ function renderTrainingSessions() {
               ${session.completed ? '✓ Realizado' : '○ Realizado'}
             </button>
           </div>
+          ${roleCanUseOwnerFeatures(state.role) ? `<div class="button-row"><button type="button" class="reuse-session secondary compact" data-id="${escapeHtml(session.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger compact" data-id="${escapeHtml(session.id)}">Borrar sesión</button></div>` : ''}
           <details class="cbx-session-more-details">
             <summary>Más opciones</summary>
             <div class="button-row">
               <button type="button" class="view-session secondary compact" data-id="${session.id}">Ver ficha técnica</button>
-              <button type="button" class="delete-session danger compact" data-id="${session.id}">Borrar sesión</button>
             </div>
           </details>
         </article>
@@ -6717,7 +6797,7 @@ function renderTrainingSessions() {
 
     if (completedSessions.length) {
       html += `
-        <details class="cbx-completed-sessions-accordion" ${!activeSessions.length ? 'open' : ''}>
+        <details class="cbx-completed-sessions-accordion" ${completedOpen ? 'open' : ''}>
           <summary class="cbx-completed-sessions-summary">
             <span>📁 Entrenamientos realizados (${completedSessions.length})</span>
             <span class="cbx-accordion-indicator">▾</span>
@@ -6754,7 +6834,7 @@ function renderTrainingSessions() {
           <button type="button" class="open-whatsapp-session icon-button accent" data-id="${session.id}">📱 WhatsApp</button>
           <button type="button" class="view-session secondary" data-id="${session.id}">Ver</button>
           <button type="button" class="edit-session secondary" data-id="${session.id}">Editar</button>
-          <button type="button" class="delete-session danger" data-id="${session.id}">Borrar</button>
+          ${roleCanUseOwnerFeatures(state.role) ? `<button type="button" class="reuse-session secondary" data-id="${escapeHtml(session.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger" data-id="${escapeHtml(session.id)}">Borrar sesión</button>` : ''}
         </div>
       </div>
       <div class="session-collapsible-header">
@@ -6779,6 +6859,7 @@ function renderTrainingSessions() {
 function showSessionDetail(sessionId) {
   const session = state.trainingSessions.find(({ id }) => id === sessionId);
   if (!session) return toast('La sesión ya no está disponible.');
+  $('#session-detail-dialog').dataset.sessionId=session.id;
   $('#session-detail-title').textContent = session.name || 'Sesión de entrenamiento';
   const durationInfo = formatSessionDurationInfo(session.blocks, session.targetDuration, session.pitch);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, state.exercises);
@@ -6838,6 +6919,7 @@ function showSessionDetail(sessionId) {
       <button type="button" class="edit-session secondary" data-id="${session.id}">✏️ Editar sesión</button>
       <button type="button" class="open-whistle-session primary" data-id="${session.id}">⏱️ Iniciar cronómetro / Silbato</button>
       <button type="button" class="open-whatsapp-session secondary" data-id="${session.id}">📱 Compartir por WhatsApp</button>
+      ${roleCanUseOwnerFeatures(state.role) ? `<button type="button" class="reuse-session secondary" data-id="${escapeHtml(session.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger" data-id="${escapeHtml(session.id)}">Borrar sesión</button>` : ''}
     </div>
     <p class="meta" style="margin-top:.6rem;">Toca cualquier ejercicio de la lista para desplegar solo el que quieras consultar.</p>`;
   $('#session-detail-dialog').showModal();
@@ -13783,6 +13865,8 @@ function wireEvents() {
     }
     if (target.matches('.favorite-exercise')) { const item = state.exercises.find(({ id }) => id === target.dataset.id); if (item) { await put('settings', { ...item, favorite: !item.favorite, updatedAt: Date.now() }); await refresh(true); renderExercises(); } }
     if (target.matches('.delete-exercise') && await askConfirmation({ title: 'Borrar ejercicio', message: 'Se eliminará de la base. Las sesiones antiguas conservarán el bloque como “Ejercicio eliminado”.', acceptLabel: 'Borrar', danger: true })) { await remove('settings', target.dataset.id); await refresh(true); renderExercises(); }
+    const reuseButton = target.closest('.reuse-session');
+    if (reuseButton) { await reuseTrainingSession(reuseButton.dataset.id).catch(handleError); return; }
     if (target.matches('.edit-session')) {
       target.closest('dialog')?.close();
       showView('sesiones');
@@ -13837,7 +13921,8 @@ function wireEvents() {
       printSingleExercise(btn.dataset.id, state);
       return;
     }
-    if (target.matches('.delete-session')) await deleteTrainingSession(target.dataset.id);
+    const deleteSessionBtn=target.closest('.delete-session');
+    if(deleteSessionBtn){deleteTrainingSession(deleteSessionBtn.dataset.id).catch(handleError);return;}
     if (target.id === 'prepare-live') await prepareLive();
     const planPrintBtn = target.closest('.cbx-plan-print');
     if (planPrintBtn) {
@@ -14139,7 +14224,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261018-match-edit-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261020-sessions-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
