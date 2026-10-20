@@ -1,0 +1,9 @@
+# Validación · 20/10/2026
+
+- npm run check correcto y npm test: 839/839.
+- browser-session-delete.mjs con app completa, base demo aislada y estilos reales a 1440/390: botón visible, cinco acciones conservadas, cancelar, conflicto de fuente, pulsación en hijo del botón, pendientes/realizadas, ficha visual real y calendario; archivo/acciones abiertos durante repintado. Biblioteca, sesiones/asistencias ajenas, registros de partido, datos de ficha y main intactos. Delegado y botón falsificado no borran.
+- browser-session-delete-guard.mjs con IndexedDB real de dos UUID ficticios y nube retenida en memoria a 1440/390: cambio de cuenta durante prepare, base real abierta distinta, cambio PIN y rol bloqueados antes de transacción para remove/put; ambas bases y colas intactas. Borrado local se completa sin esperar red; tombstone entregado/confirmado al liberar nube. Sin errores de página ni solicitudes externas.
+- Revisión independiente identificó carrera entre guardia del controlador y prepare/open de DB; corregida mediante callback opcional inmediatamente antes de transacción. API existente mantiene comportamiento por defecto. Runner browser-sessions.mjs preparado para repetir las tres comprobaciones de sesiones. El token actual no permite modificar workflows de GitHub; se mantiene CI existente y se ejecutan estas comprobaciones localmente.
+- No se han borrado ni modificado sesiones, asistencia, colores, planes ni datos reales. Ancho móvil simulado; no se ha probado dispositivo móvil físico ni escritura remota real.
+
+Publicación pendiente de comprobar después de CI/Pages.

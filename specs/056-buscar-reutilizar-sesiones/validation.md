@@ -1,0 +1,10 @@
+# Validación · 20/10/2026
+
+- npm run check correcto; suite completa 839/839, incluidas seis pruebas nuevas de herramientas y cuatro de asociaciones del borrado.
+- browser-session-tools.mjs a 1440/390 con app completa y estilos reales: búsqueda normalizada por datos/ejercicio, filtros y archivo, buscador general integrado, contador, sin resultados y limpieza; barra móvil sin desbordamiento. Reutilización desde tarjeta, ficha visual asíncrona y calendario. Cancelar conserva datos y otro borrador; guardar crea exactamente un ID nuevo pendiente aun con doble submit, conserva bloques/tiempos/material/notas y original/asistencia. Ejercicio ausente muestra aviso sin sustituir ni abrir borrador. Cambio PIN/rol y botón delegado falsificado no escriben.
+- Prueba de persistencia usa IndexedDB real solo dentro de un contexto Playwright nuevo sin usuario vinculado y con nube desactivada. Tras recargar comprueba los registros directamente; no simula ni afirma restauración de autenticación. Demo utiliza memoria y no se usa para afirmar persistencia tras recarga. Main/colores, biblioteca y datos del jugador permanecen iguales.
+- Guardias put y local-first con nube retenida en memoria probadas junto a SDD055: copia local independiente, entrega posterior de cola y originales intactos.
+- Capturas de escritorio/móvil revisadas: barra nueva legible, con fondo del apartado y sin adoptar el fondo de una ficha ni añadir rueda redundante. Se preserva la paleta de la fixture y de la app, sin imponer colores.
+- Revisión independiente detectó riesgo de transferir copia al cambiar cuenta: contexto efímero también verificado al guardar y dentro de put. Ninguna escritura real, cambios de permisos, seeds ni migraciones. No prueba móvil físico ni sincronización remota real de esta nueva copia.
+
+Publicación pendiente de comprobar después de CI/Pages.

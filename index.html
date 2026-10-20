@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <script src="js/preview-readonly.js?v=claude-partido-2"></script>
-  <script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=20261009-postgame-sync-1","./js/live-tactics.js":"./js/live-tactics.js?v=claude-partido-2","./js/domain.js":"./js/domain.js?v=20261009-postgame-sync-1","./js/match-moments.js":"./js/match-moments.js?v=claude-partido-5"}}</script>
+  <script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=20261020-sessions-1","./js/live-tactics.js":"./js/live-tactics.js?v=claude-partido-2","./js/domain.js":"./js/domain.js?v=20261009-postgame-sync-1","./js/match-moments.js":"./js/match-moments.js?v=claude-partido-5"}}</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Oswald:wght@600;700&family=Outfit:wght@500;600;700;800;900&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261008-pos-contrast-4">
+  <link rel="stylesheet" href="styles.css?v=20261020-sessions-1">
   <link rel="stylesheet" href="styles-redesign.css?v=20261008-pos-contrast-4">
   <link rel="stylesheet" href="billing.css?v=1">
   <link rel="stylesheet" href="css/campobase-diseno.css?v=hoy-real-2">
@@ -1658,10 +1658,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261018-match-edit-2';
+    window.__CAMPOBASE_BUILD = '20261020-sessions-1';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261018-match-edit-2')
+      navigator.serviceWorker.register('./sw.js?v=20261020-sessions-1')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1682,7 +1682,7 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20261018-match-edit-2"></script>
+  <script type="module" src="js/app.js?v=20261020-sessions-1"></script>
   <script type="module" src="js/redesign-nav.js?v=20261010-learning-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.

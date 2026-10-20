@@ -275,6 +275,7 @@ async function renderSessionDetail(sessionId) {
   if (token !== detailRenderToken) return;
   const session = snapshot.sessions.find((item) => item.id === sessionId);
   if (!session || !dialog.open) return;
+  dialog.dataset.sessionId=session.id;
   const exercisesById = new Map(snapshot.exercises.map((item) => [item.id, item]));
   const durationInfo = formatSessionDurationInfo(session.blocks || [], session.targetDuration, session.pitch);
   const materialText = session.material || calculateSessionTotalMaterial(session.blocks, snapshot.exercises);
@@ -290,6 +291,7 @@ async function renderSessionDetail(sessionId) {
           <button type="button" class="open-whistle-session primary compact" data-id="${esc(session.id)}">⏱️ Cronómetro / Silbato</button>
           <button type="button" class="open-whatsapp-session secondary compact" data-id="${esc(session.id)}">📱 Compartir WhatsApp</button>
           <button type="button" class="edit-session secondary compact" data-id="${esc(session.id)}">Editar sesión y tiempos</button>
+          ${['owner','demo'].includes(window.__campobase?.state?.role) ? `<button type="button" class="reuse-session secondary compact" data-id="${esc(session.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger compact" data-id="${esc(session.id)}">Borrar sesión</button>` : ''}
         </div>
       </div>
       <p class="meta" style="margin: 0.5rem 0 0.35rem;">👇 Toca un ejercicio para desplegarlo (solo se abrirá el que elijas):</p>
@@ -495,8 +497,8 @@ function install() {
       window.setTimeout(() => renderSessionDetail(detailSessionId).catch((error) => console.warn('No se pudo mostrar la sesión visual:', error)), 0);
     }
 
-    if (event.target.closest('#new-session, #new-session-exercises, .edit-session')) pickerCache = null;
-    if (event.target.closest('.edit-session')) detailRenderToken += 1;
+    if (event.target.closest('#new-session, #new-session-exercises, .edit-session, .reuse-session')) pickerCache = null;
+    if (event.target.closest('.edit-session, .reuse-session')) { detailRenderToken += 1; detailSessionId = ''; }
   }, true);
 
   window.addEventListener('pageshow', scheduleBuilderEnhancement);

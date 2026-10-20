@@ -203,25 +203,28 @@ export async function getOne(store, id) {
   return localGetOne(store, id);
 }
 
-export async function put(store, value) {
+export async function put(store, value, { assertContext, waitForCloud = true } = {}) {
+  assertContext?.();
   if (isDemoDatabase()) {
     demoStores[store].set(value.id, structuredClone(value));
     notifyDataChanged(store, 'upsert');
     return value;
   }
   if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
+  assertContext?.();
   const existing = store === 'players' && value?.id ? await localGetOne(store, value.id) : null;
   const genericRecord = mergeLocalRecordForWrite(store, existing, value);
   const recordToStore = store === 'players' && existing
     ? preservePlayerProfileFields(existing, genericRecord)
     : genericRecord;
   const db = await openDatabase();
+  assertContext?.(db.name);
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).put(recordToStore);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
   await transactionDone(transaction);
   queueCloudUpload();
-  if (canUseCloud()) await flushSyncQueue();
+  if (waitForCloud && canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'upsert');
   return recordToStore;
 }
@@ -287,20 +290,23 @@ export async function putBatch(recordsByStore) {
   queueCloudUpload();
 }
 
-export async function remove(store, id) {
+export async function remove(store, id, { assertContext, waitForCloud = true } = {}) {
+  assertContext?.();
   if (isDemoDatabase()) {
     demoStores[store].delete(id);
     notifyDataChanged(store, 'delete');
     return;
   }
   if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
+  assertContext?.();
   const db = await openDatabase();
+  assertContext?.(db.name);
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
   transaction.objectStore(store).delete(id);
   transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
   await transactionDone(transaction);
   queueCloudUpload();
-  if (canUseCloud()) await flushSyncQueue();
+  if (waitForCloud && canUseCloud()) await flushSyncQueue();
   notifyDataChanged(store, 'delete');
 }
 

@@ -1,5 +1,5 @@
 import './calendar-substitutions-entry.js?v=2447';
-import './session-visual-planner.js?v=plan-visual-1';
+import './session-visual-planner.js?v=20261020-sessions-1';
 import './session-materials.js?v=2452';
 import './session-top-actions.js?v=2458';
 import './session-picker-compat.js?v=2461';
