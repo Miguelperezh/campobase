@@ -1,4 +1,4 @@
 - [x] Investigar filtros, accesos y efectos del guardado.
 - [x] Implementar creación y corrección posteriores sin alterar plan/datos.
 - [x] Validar selección explícita, cancelación, conservación y editor completo.
-- [ ] Actualizar instrucciones y publicar main/producción.
+- [x] Actualizar instrucciones y publicar main/producción.

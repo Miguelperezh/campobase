@@ -9,4 +9,4 @@
 
 Datos ficticios aislados. No se ha probado un móvil físico ni escrito en cuentas reales. Ninguna semilla, migración, limpieza de almacenamiento o cambio de colores/permisos. Versión PWA `20261021-save-postmatch-1` con recursos nuevos y anteriores necesarios para uso offline.
 
-Publicación y comparación de archivos públicos: pendientes de completar tras CI.
+Publicación completada: PR142, commits b78c221c y 60ce568b, merge e0761f30cb149c44a781364f5b2b53fb7d925e4b en main. CI de rama 39614627755 y 39614635555 correctos; CI main 39614897005 y Pages 39614897009 correctos. Lectura pública posterior: build 20261021-save-postmatch-1 y SHA-256 de 16 archivos idénticos a main (index, SW, módulos de la corrección y DB/domain/estilos preservados). Se corrigió una expectativa de texto antigua de test para aceptar ?? y conservar ID cero; la suite final completa está en verde. La limitación previa del revisor de permisos por cuota se resolvió; esta publicación y su comprobación sí se ejecutaron.

@@ -6,4 +6,4 @@
 - [x] Mostrar errores junto al guardado y enfocar dato afectado.
 - [x] Probar botones reales, errores y reentrada a 1440/390.
 - [x] Verificar cola/nube simulada y regresiones.
-- [ ] Actualizar agente/AGENTS, revisar, publicar y verificar versión pública.
+- [x] Actualizar agente/AGENTS, revisar, publicar y verificar versión pública.

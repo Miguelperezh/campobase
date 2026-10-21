@@ -6,6 +6,6 @@
 - IndexedDB de UUID ficticios con nube simulada: browser-session-delete-guard.mjs extendido con putBatch a 1440/390 bloquea cambio de cuenta al preparar conexión, base realmente abierta distinta, PIN/rol antes de transacción; ambas bases/colas intactas. Regresión put/remove y cola local conservadas.
 - Sin escrituras remotas reales, seeds, migraciones ni cambios a planes, colores, datos o permisos reales. No afirma validación de móvil físico ni autenticación remota real. PWA versionada 20261021-postmatch-callups-1, manteniendo recursos anteriores requeridos para uso offline.
 
-Pendiente registrar resultado de CI y despliegue.
+Publicación anterior completada: PR140 merge 0a319ecc (CI main 39574134351 y Pages 39574134364 correctos), seguida de PR141 merge e1eaa7ae (CI main 39575000180 y Pages 39575000334 correctos). La comparación pública adicional quedó entonces sin ejecutar por cuota del revisor automático de permisos. SDD058 documenta la incidencia de guardado posterior, su corrección y la verificación pública final de la versión que la sustituye.
 
 Repaso posterior al primer despliegue: mapear también el motivo genérico «No convocado» en historial clásico y selector privado de WhatsApp. No debe aparecer una clave técnica ni proponerse rotación si no se registró causa. Misma SDD057, sin cambios deportivos. Versión final 20261021-postmatch-callups-2 validada otra vez a 1440/390: historial sin claves internas, resto del flujo correcto.
