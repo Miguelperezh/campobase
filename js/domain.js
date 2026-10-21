@@ -278,7 +278,7 @@ export function buildPlayerHistory(playerId, attendanceRecords, callups, matches
   });
   const exclusions = callups.flatMap((callup) => (callup.exclusions ?? [])
     .filter((entry) => entry.playerId === playerId)
-    .map((entry) => ({ type: 'callup', id: callup.id, date: callup.date, kind: 'callup', detail: entry.reason, automatic: Boolean(entry.automatic), createdAt: callup.createdAt ?? 0 })));
+    .map((entry) => ({ type: 'callup', id: callup.id, date: callup.date, kind: 'callup', detail: entry.reason === 'not_called' ? 'No convocado' : entry.reason, automatic: Boolean(entry.automatic), createdAt: callup.createdAt ?? 0 })));
   const matchEvents = matches.flatMap((match) => {
     const details = [];
     const goals = (match.goals ?? []).filter((item) => item.playerId === playerId).length;

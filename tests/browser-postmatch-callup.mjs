@@ -108,6 +108,8 @@ try {
     assert.ok(savedCallup.exclusions.every((item) => item.reason === 'not_called' && item.automatic === false));
     assert.deepEqual(savedMatch, { ...seed.played, callupId: savedCallup.id });
     await assertPlanAndOtherLive();
+    await page.evaluate(() => window.__campobase.renderPlayers());
+    assert.equal((await page.locator('#players-list').textContent()).includes('not_called'),false);
 
     // The canonical performance editor still exposes every called player and both keepers the next day.
     await showCalendar();

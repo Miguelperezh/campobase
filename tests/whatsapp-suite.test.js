@@ -812,3 +812,9 @@ test('syncWhatsAppMatchLocation calcula hora de citación 45 min antes a partir 
   assert.match(app, /#wa-game-time/);
   assert.match(app, /#wa-call-time/);
 });
+
+
+test('una baja sin motivo en registro posterior no inventa rotación ni otra causa', () => {
+  assert.equal(formatExclusionReasonText('not_called'), '');
+  assert.equal(formatExclusionReasonText('custom', ''), '');
+});
