@@ -1,0 +1,4 @@
+# Plan
+Retirar límites de fecha/estado solo del creador de convocatorias (mantener duplicados). Acciones nativas crear/editar en tarjeta/detalle. Helper puro para selección histórica exacta y conservación de exclusiones. Distinguir registro posterior de convocatoria previa; mantener proceso automático futuro validado. Guardado parte del registro existente, marca la convocatoria/partido históricos realizados, y omite sincronización de preparación/directo. Conservar el editor canónico postpartido. Guardias de cuenta/PIN/rol, fuente modificada y doble envío con callback opcional en putBatch antes de transacción.
+
+Validar unitarias y app completa a 1440/390 con partidos de ayer, estados terminales, no convocatoria, edición sin duplicados, marcador/minutos/puntos/campos extra/plan y directo ajeno conservados. Crear convocatoria y completar después desde editor canónico con dos porteros. Versionar código/PWA, actualizar AGENTS/agente y publicar solo tras pruebas.

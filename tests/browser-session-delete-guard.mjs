@@ -19,7 +19,7 @@ try{
     await page.goto(base+'/tests/fixtures/session-delete-guard.html');
     await page.waitForFunction(()=>window.fixtureReady);
 
-    for(const operation of ['delete','put']){
+    for(const operation of ['delete','put','batch']){
       const prepare=await page.evaluate(operation=>fixture.prepareSwitch(operation),operation);
       assert.deepEqual(prepare.outcome,{resolved:false,error:'ACCOUNT_CHANGED'},operation);
       assert.ok(prepare.calls.length>=2,'la guardia se repite tras preparar la identidad');
