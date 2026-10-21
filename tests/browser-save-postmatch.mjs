@@ -23,6 +23,7 @@ try {
     [{...empty,id:'legacy-date',opponent:'Rival enlace por fecha'},{id:'legacy-date-callup',date:day,opponent:'Rival enlace por fecha'}],
     [{...empty,id:'legacy-pointer',callupId:'legacy-pointer-callup',opponent:'Rival enlace directo'},{id:'legacy-pointer-callup'}],
     [{...empty,id:42,opponent:'Rival ID numérico'},{id:43,matchId:'42'}],
+    [{...empty,id:0,opponent:'Rival ID cero'},{id:0}],
    ];
    const callups=variants.map(([m,c])=>({date:m.date,opponent:m.opponent,...c,format:'F7',availableIds:ids.slice(0,8),selectedIds:ids.slice(0,2),exclusions:[],extra:{keep:'Convocatoria original'}}));
    const prep={id:'save-prep',recordType:'preparacion',matchId:empty.id,team:ids.slice(0,7).map((playerId,i)=>({playerId,pos:i===0?'Portero':'Puesto '+i})),moments:[],extra:{untouched:true}};

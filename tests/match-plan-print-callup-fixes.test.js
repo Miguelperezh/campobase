@@ -151,7 +151,7 @@ test('desduplicación de convocatorias y reutilización de id para un mismo matc
 
   // saveCallup reutiliza convocatoria existente
   assert.match(appSource, /const existingForMatch = \(!existing && match\?\.id\)/, 'saveCallup debe buscar si ya existe convocatoria para match.id');
-  assert.match(appSource, /const targetId = existing\?\.id \|\| existingForMatch\?\.id \|\| uid\(\);/, 'saveCallup debe reutilizar el id existente');
+  assert.match(appSource, /const targetId = existing\?\.id \?\? existingForMatch\?\.id \?\? uid\(\);/, 'saveCallup debe reutilizar el id existente');
   assert.match(appSource, /mId !== match\.id/, 'nextCallups debe filtrar por matchId para evitar duplicados del rival');
 });
 
