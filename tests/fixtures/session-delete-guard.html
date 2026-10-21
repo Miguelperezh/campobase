@@ -5,7 +5,7 @@
 <title>Borrado de sesiones · guardias aisladas</title>
 <body><h1>Prueba aislada del borrado de sesiones</h1><p>No usa cuentas ni conexión remota reales.</p>
 <script type="module">
-import {configureRealDatabase,configureCloudStore,openDatabase,put,remove,flushSyncQueue,currentDatabaseName} from '/js/db.js';
+import {configureRealDatabase,configureCloudStore,openDatabase,put,putBatch,remove,flushSyncQueue,currentDatabaseName} from '/js/db.js';
 import {setBoundSaasUserId,clearBoundSaasUserId,getBoundSaasUserId,getPinAccessRevision,lockPinAccess} from '/js/auth-manager.js';
 
 const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return {promise,resolve};};
@@ -57,7 +57,9 @@ function contextGuard(pair,afterCheck){
 }
 
 async function attempt(operation){try{await operation;return {resolved:true};}catch(error){return {resolved:false,error:error.message};}}
-const mutate=(operation,pair,options)=>operation==='put'
+const mutate=(operation,pair,options)=>operation==='batch'
+  ?putBatch({settings:[{id:pair.id,recordType:'trainingSession',name:'Lote que no debe cruzar de cuenta',date:'2099-01-20'}],trainings:[{id:pair.attendanceId,sessionId:pair.id,kind:'training'}]},options)
+  :operation==='put'
   ?put('settings',{id:pair.id,recordType:'trainingSession',name:'Copia que no debe cruzar de cuenta',date:'2099-01-20',ownerMarker:pair.a},options)
   :remove('settings',pair.id,options);
 

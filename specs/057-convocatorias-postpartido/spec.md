@@ -1,0 +1,4 @@
+# Completar convocatoria después del partido
+El entrenador puede crear o corregir una convocatoria después de jugar, incluso otro día, y continuar con goles/asistencias/tipos, encajados por ambos porteros, minutos, puntuaciones y notas en el editor canónico. Acceso desde Calendario/Partidos jugados, detalle y + Convocatoria. Sin duplicar partidos/convocatorias ni exigir reabrir o simular cronómetro.
+
+Registro posterior: elegir explícitamente quienes fueron convocados, sin completar una rotación inventada. Mantener datos deportivos existentes y campos extra de la convocatoria. Guardar conserva la condición jugada y no recalcula ni sustituye el plan/pizarra/directo. Una fecha pasada no es motivo para impedir correcciones. El selector de WhatsApp y del directo siguen excluyendo jugados. Cancelar no escribe. No ampliar permisos del delegado. Pruebas aisladas, ningún cambio deportivo real para validar/publicar.

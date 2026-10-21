@@ -249,7 +249,8 @@ export async function putPlayerProfile(value) {
   return recordToStore;
 }
 
-export async function putBatch(recordsByStore) {
+export async function putBatch(recordsByStore, { assertContext } = {}) {
+  assertContext?.();
   const storeNames = Object.keys(recordsByStore);
   if (!storeNames.length || storeNames.some((store) => !STORES.includes(store))) {
     throw new TypeError('La operación contiene almacenes no válidos.');
@@ -263,6 +264,7 @@ export async function putBatch(recordsByStore) {
     return;
   }
   if (!isReadOnlyPreview()) await prepareStorageBindingForWrite();
+  assertContext?.();
   const normalizedRecordsByStore = {};
   for (const [storeName, records] of Object.entries(recordsByStore)) {
     if (!Array.isArray(records)) throw new TypeError('Cada lote debe ser una lista.');
@@ -278,6 +280,7 @@ export async function putBatch(recordsByStore) {
   }
 
   const db = await openDatabase();
+  assertContext?.(db.name);
   const transaction = db.transaction([...storeNames, SYNC_QUEUE], 'readwrite');
   for (const [storeName, records] of Object.entries(normalizedRecordsByStore)) {
     for (const record of records) {

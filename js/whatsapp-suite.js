@@ -89,7 +89,7 @@ export function formatExclusionReasonText(reason = '', note = '') {
   const r = String(reason || '').trim().toLowerCase();
   const n = String(note || '').trim();
 
-  if (!r || r === 'none') return '';
+  if (!r || r === 'none' || r === 'not_called') return '';
   if (r === 'rotation') return 'por *rotación*';
   if (r === 'injured') return n ? `por *lesión* (${n})` : 'por *lesión*';
   if (r === 'cards' || r === 'suspended') return n ? `por *sanción de tarjetas* (${n})` : 'por *sanción de tarjetas*';

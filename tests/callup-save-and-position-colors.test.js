@@ -19,16 +19,15 @@ test('saveCallup define targets correctamente y no lanza targets is not defined'
   );
 });
 
-test('callupBuilder filtra partidos jugados y partidos con convocatoria existente', async () => {
+test('callupBuilder permite partidos jugados sin duplicar una convocatoria existente', async () => {
   const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
   const builderStart = app.indexOf('function callupBuilder(');
   const builderEnd = app.indexOf('function currentCallupMatch', builderStart);
   const builderCode = app.slice(builderStart, builderEnd);
 
-  // Verifica que se compruebe isMatchPlayed para descartar partidos ya jugados
-  assert.match(builderCode, /isMatchPlayed\s*\(\s*match\s*\)/);
+  assert.doesNotMatch(builderCode, /if \(isMatchPlayed\(match\).*return false/);
   // Verifica que se compruebe si el partido ya tiene convocatoria existente
-  assert.match(builderCode, /state\.callups\.some/);
+  assert.match(builderCode, /editableCallupForMatch/);
 });
 
 test('theme-component-colors evita texto blanco en etiquetas de dialogs y excluye position-groups', async () => {
