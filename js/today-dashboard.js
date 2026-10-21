@@ -64,6 +64,17 @@ function matchType(match) {
   return 'Liga';
 }
 
+export function todayMatchScore(score = {}, isLive = false) {
+  const side = value => {
+    if (isLive) return String(Number(value) || 0);
+    if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) return '—';
+    const number = Number(value);
+    return Number.isInteger(number) && number >= 0 ? String(number) : '—';
+  };
+  const goalsFor = side(score.goalsFor), goalsAgainst = side(score.goalsAgainst);
+  return {text:`${goalsFor} - ${goalsAgainst}`, pending:goalsFor === '—' || goalsAgainst === '—'};
+}
+
 function attendanceForSession(trainings, sessionId) {
   return trainings.find((record) => record?.sessionId === sessionId);
 }
@@ -226,7 +237,8 @@ function matchCard(match, trainings, callups, today, live = null) {
   const crest = typeof document === 'undefined' ? '' : ($('#topbar-club-crest')?.getAttribute('src') || 'icons/escudo.png');
   const elapsed = Math.max(0, Number(live?.elapsed) || 0) + (live?.runningSince ? Math.max(0, (Date.now() - live.runningSince) / 1000) : 0);
   const clock = `${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
-  const scoreboard = hasResult ? `<div class="cbx-today-score"><div><img src="${esc(crest)}" alt=""><strong>${esc(team)}</strong></div><div><b>${Number(score.goalsFor) || 0} - ${Number(score.goalsAgainst) || 0}</b><small>${isLive ? esc(clock) : 'Finalizado'}</small></div><div><span class="cbx-opponent-crest">${esc((match.opponent || '').split(/\s+/).map(w => w[0]).slice(0,2).join(''))}</span><strong>${esc(match.opponent || 'Rival')}</strong></div></div>` : `<h3>${esc(match.opponent || 'Partido')}</h3>`;
+  const displayedScore = todayMatchScore(score,isLive);
+  const scoreboard = hasResult ? `<div class="cbx-today-score"><div><img src="${esc(crest)}" alt=""><strong>${esc(team)}</strong></div><div><b>${esc(displayedScore.text)}</b><small>${isLive ? esc(clock) : displayedScore.pending ? 'Finalizado · marcador pendiente' : 'Finalizado'}</small></div><div><span class="cbx-opponent-crest">${esc((match.opponent || '').split(/\s+/).map(w => w[0]).slice(0,2).join(''))}</span><strong>${esc(match.opponent || 'Rival')}</strong></div></div>` : `<h3>${esc(match.opponent || 'Partido')}</h3>`;
   return `<article class="panel cbx-card today-event match ${hasResult ? 'cbx-today-match-score' : ''}">
     ${isLive ? '<span class="cbx-live-badge">● EN JUEGO</span>' : ''}
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(match.date))}</span><span class="pill type-${esc(match.type || 'league')}">${esc(matchType(match))}</span>${callup ? '<span class="pill today-ok">Convocatoria lista</span>' : '<span class="pill today-warning">Falta convocatoria</span>'}</div>

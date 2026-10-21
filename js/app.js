@@ -1,4 +1,5 @@
-import {historicalCallupSelection, editableCallupForMatch} from './postmatch-callup.js?v=20261021-postmatch-callups-1';
+import {historicalCallupSelection, editableCallupForMatch, editableMatchForCallup} from './postmatch-callup.js?v=20261021-save-postmatch-1';
+import {assertFormValid, showFormSaveError} from './form-save-feedback.js?v=20261021-save-postmatch-1';
 import {filterTrainingSessions, reusableSessionDraft} from './training-session-tools.js?v=20261020-sessions-1';
 import {sessionAttendanceToDelete} from './training-session-delete.js?v=20261020-sessions-1';
 import {isMatchTerminal} from './postgame-plan.js?v=20261018-offline-match-1';
@@ -17,7 +18,7 @@ import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-postgame-sync-1';
 import { currentDatabaseName, configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
-import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261018-match-edit-2';
+import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261021-save-postmatch-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
 import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
@@ -38,9 +39,9 @@ import { buildAutoPlan } from './reparto-plan.js';
 import { positionChangeLines, describeMoment, lineupIds, normalizeMoments, plannedMinutes, validLineup } from './match-moments.js';
 import { printMatchPlan } from './print-match-plan.js?v=20261016-print-visual-1';
 
-import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=20261020-sessions-1';
+import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=20261021-save-postmatch-1';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=goal-series-1';
+import { renderTodayDashboard } from './today-dashboard.js?v=20261021-save-postmatch-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches, isMatchPlayed } from './match-calendar-sync.js';
 import {
@@ -1558,22 +1559,25 @@ function callupBuilder(preselectedMatchId = '', editId = '') {
   callupDraftContext = {database:currentDatabaseName(),userId:getBoundSaasUserId(),revision:getPinAccessRevision(),matches:new Map(state.matches.map(m=>[m.id,JSON.stringify(m)])),callups:new Map(state.callups.map(c=>[c.id,JSON.stringify(c)]))};
   const container = $('#callup-builder');
   const config = FORMATS[state.format];
-  const existing = state.callups.find((callup) => callup.id === editId);
-  const selectedMatchId = existing?.matchId || preselectedMatchId || (existing ? state.matches.find(m => m.callupId === existing.id)?.id : '');
+  const requested = state.matches.find(match => String(match.id) === String(preselectedMatchId));
+  const existing = state.callups.find(callup => String(callup.id) === String(editId))
+    || editableCallupForMatch(requested,state.matches,state.callups);
+  const selectedMatch = existing ? editableMatchForCallup(existing,state.matches,state.callups) : requested;
+  const selectedMatchId = selectedMatch?.id ?? '';
   container.classList.remove('hidden');
-  const historical = isHistoricalCallupMatch(state.matches.find(m => m.id === selectedMatchId));
+  const historical = isHistoricalCallupMatch(selectedMatch);
   const options = state.matches
     .filter((match) => {
-      if (existing && match.id === selectedMatchId) return true;
+      if (String(match.id) === String(selectedMatchId)) return true;
       if (existing && historical) return false;
       const hasCallup = editableCallupForMatch(match,state.matches,state.callups.filter(c => c.id !== existing?.id));
       if (hasCallup) return false;
       return true;
     })
     .sort((a,b)=>String(a.date || '').localeCompare(String(b.date || '')))
-    .map((match) => `<option value="${match.id}" ${match.id === selectedMatchId ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`)
+    .map((match) => `<option value="${match.id}" ${String(match.id) === String(selectedMatchId) ? 'selected' : ''}>${escapeHtml(localDate(match.date))} · ${escapeHtml(matchTypeLabel(match.type))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''} · ${escapeHtml(match.opponent)}</option>`)
     .join('');
-  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form"><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || (selectedMatchId && options) || (!existing && options) ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!existing && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><label>Partido del calendario<select name="matchId"><option value="">${options ? 'Selecciona…' : 'No hay partidos sin convocatoria'}</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><div class="form-row"><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></fieldset><p id="callup-history-help" class="warning" hidden></p><div class="callup-help panel"><strong>Liga: máximo 14. Amistoso: sin límite de convocados para el reparto de minutos.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${callupRosterPlayers(existing).map((player) => callupPlayerCard(player, existing, historical)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
+  container.innerHTML = `<h3>${existing ? 'Editar' : 'Nueva'} convocatoria · ${existing?.format ?? state.format}</h3><form id="callup-form" novalidate><input type="hidden" name="id" value="${existing?.id ?? ''}"><fieldset><legend>Partido</legend><div class="choice-row"><label><input type="radio" name="matchSource" value="calendar" ${existing || (selectedMatchId && options) || (!existing && options) ? 'checked' : ''}> Elegir del calendario</label>${existing ? '' : `<label><input type="radio" name="matchSource" value="manual" ${!existing && !options ? 'checked' : ''}> Crear partido a mano</label>`}</div><div id="calendar-match-fields"><p id="callup-match-context" role="status"></p><label>Partido del calendario<select name="matchId"><option value="">${options ? 'Selecciona…' : 'No hay partidos sin convocatoria'}</option>${options}</select></label></div><div id="manual-match-fields" class="hidden"><fieldset class="datetime-field"><legend>Fecha y hora (24 h)</legend>${dateMarkup('manualDate', '', 'Fecha del partido manual')}${time24Markup('manualDate', '', 'Hora del partido manual')}</fieldset><div class="form-row"><label>Jornada<input name="manualRound" maxlength="30" placeholder="Ej. 8"></label><div class="form-row"><label>Tipo<select name="manualType"><option value="league">Partido de liga</option><option value="friendly">Amistoso</option><option value="tournament">Torneo</option></select></label><label>Local / Visitante<select name="manualVenue"><option value="home">Local (casa)</option><option value="away">Visitante (fuera)</option></select></label></div><label>Rival<input name="manualOpponent" maxlength="100"></label><label>Lugar<input name="manualLocation" maxlength="120"></label></div></div></fieldset><p id="callup-history-help" class="warning" hidden></p><div class="callup-help panel"><strong>Liga: máximo 14. Amistoso: sin límite de convocados para el reparto de minutos.</strong> Marca solo quienes quieras asegurar en la convocatoria. Para dejar a alguien fuera manualmente, marca “Dejar fuera” e indica el motivo. En liga, CampoBase completa el resto con rotación justa. Si a alguien ya se le excluyó por enfermedad o decisión técnica, te pedirá confirmación antes de dejarle fuera por rotación.</div><div class="selection-grid">${callupRosterPlayers(existing).map((player) => callupPlayerCard(player, existing, historical)).join('')}</div><div id="target-preview"></div><div class="button-row"><button class="primary" type="submit">${existing ? 'Actualizar' : 'Guardar'} convocatoria y reparto</button><button class="secondary cancel-builder" type="button">Cancelar</button></div></form>`;
   updateMatchSource();
   updateTargetPreview();
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1584,7 +1588,7 @@ function currentCallupMatch(form) {
     const parts = ['manualDateYear','manualDateMonth','manualDateDay'].map(name => form.elements[name].value);
     return { type:form.elements.manualType.value, date:parts.every(Boolean) ? parts.join('-') : '' };
   }
-  return state.matches.find((match) => match.id === form.elements.matchId.value) ?? null;
+  return state.matches.find((match) => String(match.id) === form.elements.matchId.value) ?? null;
 }
 
 function manualExclusionsFromForm(form) {
@@ -1616,7 +1620,7 @@ function callupSelectionFromForm(form, rotationDecisions = {}) {
   const match = currentCallupMatch(form);
   if (!match) throw new TypeError('Selecciona un partido o créalo a mano.');
   if (isHistoricalCallupMatch(match)) {
-    const existing = state.callups.find(c => c.id === form.elements.id.value);
+    const existing = state.callups.find(c => String(c.id) === form.elements.id.value);
     return historicalCallupSelection(callupRosterPlayers(existing), {matchType:match.type,selectedIds:checkedValues('selected',form),manualExclusions:manualExclusionsFromForm(form),existing});
   }
   return buildCallupSelection(state.players, {
@@ -1633,6 +1637,8 @@ function updateTargetPreview() {
   const preview = $('#target-preview');
   const match = currentCallupMatch(form);
   const historical = isHistoricalCallupMatch(match);
+  const matchContext = $('#callup-match-context');
+  matchContext.textContent = match ? `${localDate(match.date)} · ${match.opponent || 'Rival'}${historical ? ' · Registro posterior al partido' : ''}` : 'Elige el partido de esta convocatoria en el selector.';
   const historyHelp = $('#callup-history-help');
   historyHelp.hidden = !historical;
   historyHelp.textContent = 'Registro posterior: marca exactamente quiénes fueron convocados. No se añaden jugadores automáticamente. El partido seguirá realizado y se conservarán goles, minutos y plan guardados.';
@@ -1662,12 +1668,15 @@ function updateMatchSource() {
   const manual = form.elements.matchSource.value === 'manual';
   $('#manual-match-fields').classList.toggle('hidden', !manual);
   $('#calendar-match-fields').classList.toggle('hidden', manual);
+  for (const control of $$('#manual-match-fields input, #manual-match-fields select',form)) control.disabled = !manual;
   for (const name of ['manualDateDay', 'manualDateMonth', 'manualDateYear', 'manualDateHour', 'manualDateMinute', 'manualOpponent']) form.elements[name].required = manual;
   form.elements.matchId.required = !manual;
+  form.elements.matchId.disabled = manual;
 }
 
 async function saveCallup(event) {
   event.preventDefault();
+  assertFormValid(event.target.closest('form'));
   if (savingCallup) return;
   const context = callupDraftContext;
   const assertContext = (openedDatabase) => {
@@ -1677,16 +1686,16 @@ async function saveCallup(event) {
   savingCallup = true;
   try {
   const form = event.target.closest('form');
-  const existing = form.elements.id.value ? state.callups.find(({ id }) => id === form.elements.id.value) : null;
+  const existing = form.elements.id.value ? state.callups.find(({ id }) => String(id) === form.elements.id.value) : null;
   let match = currentCallupMatch(form);
-  if (!match) return toast('Selecciona un partido del calendario.');
+  if (!match) throw new Error('Selecciona el partido de esta convocatoria en «Partido del calendario».');
   const manualMatch = form.elements.matchSource.value === 'manual';
   if (manualMatch) {
     match = { id: uid(), date: composeDateTime24(composeDate(form.elements.manualDateDay.value, form.elements.manualDateMonth.value, form.elements.manualDateYear.value), form.elements.manualDateHour.value, form.elements.manualDateMinute.value), round: form.elements.manualRound.value.trim(), type: form.elements.manualType.value, venue: form.elements.manualVenue.value, opponent: form.elements.manualOpponent.value.trim(), location: form.elements.manualLocation.value.trim(), goalsFor: null, goalsAgainst: null, status: 'planned', createdAt: Date.now() };
   }
   const retrospective = isHistoricalCallupMatch(match);
   const manualExclusions = manualExclusionsFromForm(form);
-  if (manualExclusions.some(invalidManualExclusion)) return toast('Indica el motivo de cada jugador que dejas fuera.');
+  if (manualExclusions.some(invalidManualExclusion)) throw new Error('Indica el motivo de cada jugador que dejas fuera.');
   const rotationDecisions = {};
   let selection;
   while (true) {
@@ -1698,7 +1707,7 @@ async function saveCallup(event) {
     rotationDecisions[pending.playerId] = include ? 'include' : 'exclude';
   }
   const { availableIds, exclusions } = selection;
-  if (!availableIds.length) return toast('La convocatoria no puede quedar vacía.');
+  if (!availableIds.length) throw new Error('La convocatoria no puede quedar vacía. Marca quiénes fueron convocados.');
   const excludedIds = exclusions.map(({ playerId }) => playerId);
   const format = existing?.format ?? match.format ?? state.format;
   const config = FORMATS[format];
@@ -1708,7 +1717,7 @@ async function saveCallup(event) {
     ? editableCallupForMatch(match,state.matches,state.callups)
     : null;
   const prior = existing || existingForMatch;
-  const targetId = existing?.id || existingForMatch?.id || uid();
+  const targetId = existing?.id ?? existingForMatch?.id ?? uid();
   const callup = {
     ...prior,
     id: targetId,
@@ -4450,10 +4459,10 @@ async function toggleMatchCompleted(id) {
 function renderMatchCard(match) {
   const actionsOpen = $(`#matches-list .match-card[data-match-id="${CSS.escape(String(match.id))}"] > .cbx-calendar-actions`)?.open || false;
   const teams = matchTeams(match);
-  const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
-  const hasScore = Number.isFinite(match.goalsFor) || Number.isFinite(match.goalsAgainst) || hasGoalsList;
-  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (hasGoalsList ? match.goals.length : 0);
-  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
+  const hasScore = Number.isFinite(match.goalsFor) || Number.isFinite(match.goalsAgainst);
+  const completeScore = Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst);
+  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : '—';
+  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : '—';
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
   const isOwner = roleCanUseOwnerFeatures(state.role);
@@ -4469,8 +4478,8 @@ function renderMatchCard(match) {
     const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
     const time = /^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(match.date || ''))?.[1] || '';
     const liveScore = isLive && state.timer?.details ? `${teams.mySide === 'home' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}–${teams.mySide === 'away' ? (state.timer.details.goalsFor ?? 0) : (state.timer.details.goalsAgainst ?? 0)}` : '';
-    const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (time || 'Pendiente'));
-    const resultClass = isLive ? 'live' : (hasScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
+    const score = isLive ? (liveScore || '0–0') : (hasScore ? `${homeScore}–${awayScore}` : (isPlayed ? 'Marcador pendiente' : (time || 'Pendiente')));
+    const resultClass = isLive ? 'live' : (completeScore ? (gf > ga ? 'win' : gf < ga ? 'loss' : 'draw') : 'pending');
     return `<article class="cbx-calendar-match panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${escapeHtml(match.id)}" data-match-day="${escapeHtml(String(match.date).slice(0, 10))}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${isLive ? '<span class="cbx-calendar-live-pill">🔴 En directo</span> ' : ''}${escapeHtml(match.round ? `J${match.round} · ` : '')}${escapeHtml(matchTypeLabel(match.type))}${time ? ` · ${escapeHtml(time)}` : ''}</small><h3>${escapeHtml(match.opponent)}</h3><p><span>${match.venue === 'away' ? 'Visitante' : 'Local'}</span>${match.location ? ` ${escapeHtml(match.location)}` : ''}</p></div><strong class="cbx-calendar-score ${resultClass}">${escapeHtml(score)}</strong><details class="cbx-calendar-actions"${actionsOpen ? ' open' : ''}><summary>Acciones y detalles${isPlayed ? ' · ✓ Realizado' : ''}</summary>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds / 60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${performanceEditHtml}${offlineRecordHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${callupMatchAction(match)}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></details></article>`;
   }
   return `<article class="panel match-card${isLive ? ' is-live-match' : ''}" data-match-id="${match.id}"><div class="section-head"><div><span class="pill ${isLive ? 'danger' : match.status === 'finished' ? 'accent' : ''}">${isLive ? '🔴 En juego' : match.status === 'finished' ? 'Finalizado' : 'Programado'}</span> <span class="pill type-${match.type}">${escapeHtml(matchTypeLabel(match.type))}</span> <span class="pill">${match.venue === 'away' ? 'Visitante' : 'Local'}</span><h3>${escapeHtml(teams.home)} — ${escapeHtml(teams.away)}</h3><p class="meta">${escapeHtml(localDate(match.date))}${match.round ? ` · Jornada ${escapeHtml(match.round)}` : ''}${match.location ? ` · ${escapeHtml(match.location)}` : ''}</p></div><div>${hasScore || isLive ? `<strong>${homeScore} — ${awayScore}</strong>` : ''}</div></div>${match.ratings ? `<details><summary>Minutos y puntuaciones</summary><table class="minute-table"><tr><th>Jugador</th><th>Min</th><th>1–5</th></tr>${Object.entries(match.minuteTotals ?? {}).map(([id, seconds]) => `<tr><td>${escapeHtml(playerName(id))}</td><td>${Math.round(seconds/60)}</td><td>${match.ratings[id] ?? '—'}</td></tr>`).join('')}</table></details>` : ''}<div class="button-row">${completedBtnHtml}${performanceEditHtml}${offlineRecordHtml}${isOwner && isPlayed ? `<button type="button" class="secondary" data-open-learning="match" data-id="${escapeHtml(match.id)}">Analizar postpartido</button>` : ''}${callupMatchAction(match)}${!isPlayed ? `<button type="button" class="prep-open-from-cal secondary" data-id="${match.id}">Preparar</button>` : ''}<button type="button" class="prep-print-plan secondary" data-id="${match.id}" title="Imprimir plan de partido en Ficha A4">🖨️ Imprimir plan</button><button type="button" class="open-whatsapp-match icon-button accent" data-id="${match.id}">📱 WhatsApp</button><button class="match-detail secondary" data-id="${match.id}">Ver detalle</button>${isOwner ? `<button class="edit-match secondary" data-id="${match.id}">Editar</button><button class="delete-match danger" data-id="${match.id}">Borrar</button>` : ''}</div></article>`;
@@ -5765,12 +5774,11 @@ async function togglePrepDelegate() {
 }
 
 function showMatchDetail(id) {
-  const match = state.matches.find((item) => item.id === id); if (!match) return;
+  const match = state.matches.find((item) => String(item.id) === String(id)); if (!match) return;
   const actionsOpen = $(`#matches-list .match-card[data-match-id="${CSS.escape(String(match.id))}"] > .cbx-calendar-actions`)?.open || false;
   const teams = matchTeams(match);
-  const hasGoalsList = Array.isArray(match.goals) && match.goals.length > 0;
-  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : (hasGoalsList ? match.goals.length : 0);
-  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : 0;
+  const gf = Number.isFinite(match.goalsFor) ? match.goalsFor : match.status === 'in_progress' ? 0 : '—';
+  const ga = Number.isFinite(match.goalsAgainst) ? match.goalsAgainst : match.status === 'in_progress' ? 0 : '—';
   const homeScore = teams.mySide === 'home' ? gf : ga;
   const awayScore = teams.mySide === 'away' ? gf : ga;
   const callup = state.callups.find((item) => item.id === match.callupId || item.matchId === match.id);
@@ -11715,7 +11723,7 @@ async function saveDelegateAccountSettings(event) {
   await put('settings', state.settings);
 
   try {
-    const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261018-match-edit-2');
+    const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261021-save-postmatch-1');
     const client = getBoundSupabaseClient?.();
     if (client) {
       await client.rpc('set_delegate_permissions', { p_permissions: perms }).catch(() => {});
@@ -13465,7 +13473,7 @@ function wireEvents() {
     state.settings = { ...state.settings, id: 'main', format: state.format };
     await put('settings', state.settings);
     renderAll();
-    if (!$('#callup-builder').classList.contains('hidden')) callupBuilder($('#callup-form')?.elements.matchId.value ?? '');
+    if (!$('#callup-builder').classList.contains('hidden')) callupBuilder($('#callup-form')?.elements.matchId.value ?? '', $('#callup-form')?.elements.id.value ?? '');
     toast(`Modalidad ${state.format} guardada y aplicada en toda la app.`);
   });
   document.addEventListener('change', (event) => {
@@ -13550,7 +13558,7 @@ function wireEvents() {
     if (!form) return;
     event.preventDefault();
     const formId = form.getAttribute('id');
-    if (formId === 'callup-form') saveCallup(event).catch(handleError);
+    if (formId === 'callup-form') saveCallup(event).catch(error => showFormSaveError(form,error));
     else if (formId === 'training-form') saveTraining(event).catch(handleError);
     else if (formId === 'rating-form') saveMatchRatings(event).catch(handleError);
     else if (formId === 'exercise-form') saveExercise(event).catch(handleError);
@@ -14266,7 +14274,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261021-postmatch-callups-2').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261021-save-postmatch-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

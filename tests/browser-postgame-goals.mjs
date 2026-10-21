@@ -10,7 +10,7 @@ try {
   await page.locator('.edit-match-performance').click();await page.waitForSelector('#postgame-performance-dialog[open]',{timeout:5000}).catch(async e=>{console.log('DIALOGDEBUG',await page.evaluate(()=>({dialogs:[...document.querySelectorAll('dialog')].map(d=>({id:d.id,open:d.open,text:d.textContent.slice(0,100)})),body:document.body.textContent.slice(-900)})));throw e;});
   await page.locator('[data-goal=assistant]').selectOption('a');await page.locator('[data-goal=type]').selectOption('penalty');
   await page.locator('[data-keeper-conceded=k1]').fill('8');await page.locator('[data-keeper-conceded=k2]').fill('7');
-  assert.match(await page.locator('#postgame-score-hint').textContent(),/15 de 15/);
+  assert.match(await page.locator('#postgame-score-hint').textContent(),/15 goles asignados a porteros/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('#postgame-performance-form button[type=submit]').click();await page.waitForFunction(()=>!document.querySelector('#postgame-performance-dialog').open);
   await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('confirmado'));
