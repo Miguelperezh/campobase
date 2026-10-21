@@ -885,7 +885,7 @@ function renderPlayers() {
       .filter(Boolean)
   );
   $('#players-list').innerHTML = sorted.length ? sorted.map((player, index) => {
-    const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación' };
+    const labels = { present: 'Presente', late: 'Tarde', absent: 'Ausente', sick: 'Enfermedad', coach_decision: 'Decisión del entrenador', missed_training: 'No fue a entrenar', discipline: 'Disciplina', rotation: 'Rotación', not_called: 'No convocado' };
     const history = buildPlayerHistory(player.id, currentTrainings, currentCallups, state.matches);
     const { summary, preseasonSummary } = playerSummaryTotals.get(player.id);
     const derivedMatchStats = derivePlayerMatchStats(player.id, state.matches);
@@ -12384,7 +12384,7 @@ function updateWhatsAppPreview() {
           if (r === 'suspended') detectedReason = 'cards';
           else if (r === 'missed_training') detectedReason = 'training';
           else if (['rotation', 'injured', 'cards', 'training', 'sick', 'coach_decision', 'personal'].includes(r)) detectedReason = r;
-          else if (r === 'other') detectedReason = 'custom';
+          else if (r === 'other' || r === 'not_called') detectedReason = 'custom';
           detectedNote = autoEx.note || '';
         }
         if ($('#wa-exclusion-reason-select')) {
@@ -14266,7 +14266,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261021-postmatch-callups-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261021-postmatch-callups-2').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

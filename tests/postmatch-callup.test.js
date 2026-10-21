@@ -166,3 +166,11 @@ test('una baja manual ya marcada conserva notas y campos históricos si no se ca
   const result = historicalCallupSelection(squad(2), {selectedIds:['historical-p1'],existing:{exclusions:[original]},manualExclusions:[{playerId:'historical-p2',reason:'sick'}]});
   assert.deepEqual(result.exclusions,[original]);
 });
+
+
+test('historial compartido presenta la baja genérica sin claves internas ni motivo inventado', async () => {
+  const {buildPlayerHistory} = await import('../js/domain.js');
+  const callup = {id:'past-callup',date:'2026-10-20',exclusions:[{playerId:'p',reason:'not_called',automatic:false}]};
+  assert.equal(buildPlayerHistory('p',[],[callup])[0].detail,'No convocado');
+  assert.equal(callup.exclusions[0].reason,'not_called');
+});
