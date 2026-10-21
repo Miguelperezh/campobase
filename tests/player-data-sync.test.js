@@ -81,7 +81,9 @@ test('la sincronización y Asistencia se cargan en la app y en la PWA', async ()
   const demo = await projectFile('js/demo-session.js');
   const sw = await projectFile('sw.js');
   assert.match(demo, /attendance-linked-sources\.js\?v=[^'"\s]+/);
-  assert.match(demo, /player-data-sync\.js\?v=20261009-postgame-sync-1/);
+  const resource=demo.match(/player-data-sync\.js\?v=[^'"]+/)?.[0];
+  assert.ok(resource);
+  assert.ok(sw.includes(resource), 'La PWA precarga la misma versión que importa la app');
   assert.match(sw, /attendance-linked-sources\.js\?v=2453/);
   assert.match(sw, /player-data-sync\.js\?v=20261009-postgame-sync-1/);
   assert.match(sw, /campobase-v2\.44\.0-player-sync-attendance-2453/);

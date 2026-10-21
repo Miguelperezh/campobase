@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { historicalCallupSelection, editableCallupForMatch } from '../js/postmatch-callup.js';
+import { historicalCallupSelection, editableCallupForMatch, editableMatchForCallup } from '../js/postmatch-callup.js';
 
 const squad = (count = 16) => Array.from({ length: count }, (_, index) => ({
   id: `historical-p${index + 1}`,
@@ -173,4 +173,70 @@ test('historial compartido presenta la baja genérica sin claves internas ni mot
   const callup = {id:'past-callup',date:'2026-10-20',exclusions:[{playerId:'p',reason:'not_called',automatic:false}]};
   assert.equal(buildPlayerHistory('p',[],[callup])[0].detail,'No convocado');
   assert.equal(callup.exclusions[0].reason,'not_called');
+});
+
+test('abrir una convocatoria antigua encuentra el partido por matchId, callupId o ID legado', () => {
+  const base = { id: 'reverse-match', date: '2026-10-20T19:00:00', opponent: 'Rival histórico' };
+  for (const [match, callup] of [
+    [base, { id: 'reverse-callup', matchId: base.id }],
+    [{ ...base, callupId: 'reverse-callup' }, { id: 'reverse-callup' }],
+    [base, { id: base.id }],
+  ]) {
+    const unrelated = { id: 'reverse-other', date: '2026-10-19', opponent: 'Otro rival' };
+    assert.equal(editableMatchForCallup(callup, [unrelated, match], [callup]), match);
+    assert.equal(editableMatchForCallup(callup, [unrelated, match]), match);
+  }
+});
+
+test('convocatoria sin enlaces recupera únicamente un partido de la misma fecha y rival equivalente', () => {
+  const match = { id: 'reverse-match', date: '2026-10-20T19:00:00', opponent: 'U.D. Jinámar' };
+  const callup = { id: 'reverse-callup', date: '2026-10-20', opponent: 'Jinamar', notes: 'Original' };
+  assert.equal(editableMatchForCallup(callup, [match], [callup]), match);
+  assert.equal(editableMatchForCallup({ ...callup, opponent: 'Jinamar B' }, [match]), null);
+  assert.equal(editableMatchForCallup({ ...callup, date: '2026-10-19' }, [match]), null);
+});
+
+test('la resolución inversa no elige entre partidos o convocatorias ambiguos ni relaciones contradictorias', () => {
+  const match = { id: 'reverse-match', date: '2026-10-20', opponent: 'Rival histórico' };
+  const callup = { id: 'reverse-callup', date: match.date, opponent: match.opponent };
+  assert.equal(editableMatchForCallup(callup, [match, { ...match, id: 'reverse-other' }], [callup]), null);
+  assert.equal(editableMatchForCallup(callup, [match], [callup, { ...callup, id: 'reverse-duplicate' }]), null);
+  assert.equal(editableMatchForCallup(callup, [match], [callup, { ...callup }]), null);
+  const linked = { ...callup, matchId: match.id };
+  const foreignPointer = { id: 'reverse-other', callupId: callup.id };
+  assert.equal(editableMatchForCallup(linked, [match, foreignPointer], [linked]), null);
+});
+
+test('un enlace explícito a otro partido nunca se reemplaza por coincidencia histórica de rival y fecha', () => {
+  const match = { id: 'reverse-match', date: '2026-10-20', opponent: 'Rival histórico' };
+  const callup = { id: 'reverse-callup', matchId: 'reverse-foreign', date: match.date, opponent: match.opponent };
+  assert.equal(editableMatchForCallup(callup, [match], [callup]), null);
+  const foreign = { id: callup.matchId, date: '2026-10-18', opponent: 'Rival realmente vinculado' };
+  assert.equal(editableMatchForCallup(callup, [match, foreign], [callup]), foreign);
+});
+
+test('los enlaces inversos comparan IDs numéricos y de texto conservando sus tipos originales', () => {
+  const cases = [
+    [{ id: 42 }, { id: 7, matchId: '42' }],
+    [{ id: '42', callupId: 7 }, { id: '7' }],
+    [{ id: 42 }, { id: '42' }],
+    [{ id: 0 }, { id: 7, matchId: '0' }],
+    [{ id: '42', callupId: 0 }, { id: '0' }],
+    [{ id: 0 }, { id: '0' }],
+  ];
+  for (const [match, callup] of cases) {
+    const before = structuredClone({ match, callup });
+    assert.equal(editableMatchForCallup(callup, [match], [callup]), match);
+    assert.deepEqual({ match, callup }, before);
+  }
+});
+
+test('resolver el partido de una convocatoria no muta datos y tolera registros sin identidad', () => {
+  const callup = { id: 'reverse-callup', date: '2026-10-20', opponent: 'Rival histórico', extra: { keep: true } };
+  const matches = [{ id: 'reverse-match', date: callup.date, opponent: callup.opponent }], callups = [callup];
+  const before = structuredClone({ matches, callups });
+  assert.equal(editableMatchForCallup(callup, matches, callups), matches[0]);
+  assert.deepEqual({ matches, callups }, before);
+  assert.equal(editableMatchForCallup(null, matches, callups), null);
+  assert.equal(editableMatchForCallup({}, matches, callups), null);
 });
