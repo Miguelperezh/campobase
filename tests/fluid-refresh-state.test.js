@@ -31,9 +31,9 @@ test('Actualizar conserva rol, vista y tema sin navegar, serializa clics y se re
 });
 
 test('polling sin sesión cloud no reconstruye la pantalla ni presenta el fallo como éxito',async()=>{
- const code=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');const a=code.indexOf('async function runCloudSynchronization()');const b=code.indexOf('async function init()',a);let renders=0,refreshes=0,realtime=0;
+ const code=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');const a=code.indexOf('async function runCloudSynchronization(');const b=code.indexOf('async function init()',a);let renders=0,refreshes=0,realtime=0;
  const state={role:'delegate',settings:{theme:{accentColor:'#123456'}},players:[{id:'p'}]};const data=structuredClone(state);
- const context={state,isDemoDatabase:()=>false,navigator:{onLine:true},syncFromCloud:async()=>({online:false,authRequired:true}),refresh:async()=>refreshes++,renderAll:()=>renders++,ensureRealtimeSubscription:()=>realtime++,networkStatus(){},refreshSyncStatusPanel:async()=>{},Date};vm.createContext(context);vm.runInContext('let lastCloudSyncTimestamp=0;'+code.slice(a,b),context);
+ const context={state,viewContext:()=>({database:'campobase_test',userId:'test',pinRevision:1,role:'delegate'}),sameViewContext:(a,b)=>JSON.stringify(a)===JSON.stringify(b),isDemoDatabase:()=>false,navigator:{onLine:true},syncFromCloud:async()=>({online:false,authRequired:true}),refresh:async()=>refreshes++,renderAll:()=>renders++,ensureRealtimeSubscription:()=>realtime++,networkStatus(){},refreshSyncStatusPanel:async()=>{},Date};vm.createContext(context);vm.runInContext('let lastCloudSyncTimestamp=0;'+code.slice(a,b),context);
  const result=await vm.runInContext('runCloudSynchronization()',context);assert.equal(result.authRequired,true);assert.equal(refreshes,0);assert.equal(renders,0);assert.equal(realtime,0);assert.match(state.cloudError,/Reconecta/);assert.deepEqual(state.players,data.players);assert.deepEqual(state.settings,data.settings);assert.equal(state.role,data.role);
  // refresh owns renderOrDefer: the sync runner must not bypass an open editor.
  context.syncFromCloud=async()=>({online:true,changed:true});await vm.runInContext('runCloudSynchronization()',context);assert.equal(refreshes,1);assert.equal(renders,0);assert.equal(realtime,1);assert.equal(state.cloudError,'');

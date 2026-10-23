@@ -1,4 +1,4 @@
-const CACHE = '20261021-save-postmatch-1-20261021-postmatch-callups-2-20261021-postmatch-callups-1-20261020-sessions-1-20261008-whatsapp-context-1-20261008-fix-pin-login-exercise-covers-speed-1-20261008-fix-convocatorias-calero-sync-2-callups-played-sync-1-20261007-fluid-refresh-1-20261006-telefonos-padres-1-campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2457-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2503-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v2-auth-recovery-v1-player-profile-guard-v1-exercise-media-filter-v2-derived-stats-link-v1-manual-player-profile-v1-exercise-cover-humanvideo-hotfix-20260918-force2508-final-preview-own-sessions-emergency-auth-restore-v4-prod-access-recovery-v1-session-rebind-v1-pin-session-preserve-v1-session-data-view-v1-mobile-sync-pin-v1-cloud-restore-v4-20260927-v66-real-calendar-dates-20261001-v69-ajustes-temas-20261002-v70-ajustes-pizarra-sidebar-20261002-v71-ajustes-preview-rico-bg-tacticas-fix-20261002-v72-ajustes-live-preview-completo-20261002-v73-preview-top-hoy-quick-buttons-fix-20261002-v74-mobile-settings-grid-responsive-fix-20261002-v75-remove-dummy-tactics-presets-20261002-v76-mobile-print-pdf-specialists-theme-fix-20261003-v77-match-plan-2pages-70min-callups-theme-fab-fix-20261008-v80-lotes-151-1050-1285-ejercicios-audio-player';
+const CACHE = '20261022-pilot-safety-1-20261021-save-postmatch-1-20261021-postmatch-callups-2-20261021-postmatch-callups-1-20261020-sessions-1-20261008-whatsapp-context-1-20261008-fix-pin-login-exercise-covers-speed-1-20261008-fix-convocatorias-calero-sync-2-callups-played-sync-1-20261007-fluid-refresh-1-20261006-telefonos-padres-1-campobase-v2.44.0-player-sync-attendance-2453-responsive-2455-today-2457-sessiontop-2458-sessionplanner-2461-exerciseboard-2475-themev12-v2-248-fullscreen-dates-playfix-duration-2503-whatsapp-web-f7-50-v2528-exercise-content-audit-mirror-materials-orientation-session-audit-copy-hotfix-badge-cleanup-pwa-install-v2-250917-promo-roster-1-saas-auth-v3-attendance-manual-v4-exercises-hotfix-v2-auth-recovery-v1-player-profile-guard-v1-exercise-media-filter-v2-derived-stats-link-v1-manual-player-profile-v1-exercise-cover-humanvideo-hotfix-20260918-force2508-final-preview-own-sessions-emergency-auth-restore-v4-prod-access-recovery-v1-session-rebind-v1-pin-session-preserve-v1-session-data-view-v1-mobile-sync-pin-v1-cloud-restore-v4-20260927-v66-real-calendar-dates-20261001-v69-ajustes-temas-20261002-v70-ajustes-pizarra-sidebar-20261002-v71-ajustes-preview-rico-bg-tacticas-fix-20261002-v72-ajustes-live-preview-completo-20261002-v73-preview-top-hoy-quick-buttons-fix-20261002-v74-mobile-settings-grid-responsive-fix-20261002-v75-remove-dummy-tactics-presets-20261002-v76-mobile-print-pdf-specialists-theme-fix-20261003-v77-match-plan-2pages-70min-callups-theme-fab-fix-20261008-v80-lotes-151-1050-1285-ejercicios-audio-player';
 const BOARD_PARTS = [
   './assets/exercise-board/part-1.b64',
   './assets/exercise-board/part-2.b64',
@@ -6,6 +6,23 @@ const BOARD_PARTS = [
   './assets/exercise-board/part-4.b64',
 ];
 const ASSETS = [
+  './js/staff-management.js?v=20261022-pilot-safety-1',
+  './js/demo-session-core.js?v=20261022-pilot-safety-1', './js/demo-session.js?v=20261022-pilot-safety-1', './js/domain.js?v=20261022-pilot-safety-1',
+  './js/cloud-ui-bootstrap.js?v=20261022-pilot-safety-1',
+  './js/app.js?v=20261022-pilot-safety-1',
+  './js/db.js?v=20261022-pilot-safety-1',
+  './js/auth-manager.js?v=20261022-pilot-safety-1',
+  './js/backup-safety.js?v=20261022-pilot-safety-1',
+  './js/account-view-context.js?v=20261022-pilot-safety-1',
+  './js/supabase-client.js?v=20261022-pilot-safety-1',
+  './js/team-access.js?v=20261022-pilot-safety-1',
+  './js/redesign-nav.js?v=20261022-pilot-safety-1',
+  './js/modo-campo-directo.js?v=20261022-pilot-safety-1',
+  './js/modo-campo-identity-exercises.js?v=20261022-pilot-safety-1',
+  './js/modo-campo-integration.js?v=20261022-pilot-safety-1',
+  './js/modo-campo-local-theme.js?v=20261022-pilot-safety-1',
+  './js/modo-campo-actions.js?v=20261022-pilot-safety-1',
+  './supabase/functions/_shared/delegate-policy.mjs?v=20261022-pilot-safety-1',
   './js/redesign-nav.js?v=20261021-save-postmatch-1', './js/demo-session.js?v=20261021-save-postmatch-1', './js/today-dashboard.js?v=20261021-save-postmatch-1',
   './js/app.js?v=20261021-save-postmatch-1',
   './js/supabase-client.js?v=20261021-save-postmatch-1',
@@ -81,6 +98,11 @@ const ASSETS = [
 ];
 
 const REVALIDATE_PATHS = [
+  '/js/demo-session-core.js',
+  '/js/cloud-ui-bootstrap.js',
+  '/js/modo-campo-local-theme.js',
+  '/js/account-view-context.js',
+  '/js/backup-safety.js',
   '/js/postgame-plan.js', '/js/match-postgame-editor.js', '/js/keeper-goals.js', '/js/player-data-sync.js',
   '/supabase/functions/_shared/delegate-policy.mjs',
   '/index.html',

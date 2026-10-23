@@ -31,7 +31,7 @@ export function projectRecord(store, row, permissions) {
  return result;
 }
 export function canWriteMutation(mutation, permissions) {
- if(mutation.operation==='delete')return false;
+ if(mutation.operation!=='upsert')return false;
  if(mutation.store==='settings')return mutation.recordId==='live'&&mutation.payload?.id==='live'&&can(permissions,['partido','delegado']);
  return mutation.store==='trainings'&&permissions.includes('asistencia')&&mutation.payload?.id===mutation.recordId;
 }

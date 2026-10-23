@@ -46,6 +46,17 @@ Deno.serve(async (req) => {
   const user = userData?.user;
   if (userError || !user) return json({ message: "Sesión no válida." }, 401);
 
+  let body: { email?: string; fullName?: string; permissions?: string[]; expectedUserId?: string } = {};
+  try { body = await req.json(); } catch {}
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json({ message: "Solicitud no válida." }, 400);
+  }
+  // Older clients do not send this field. New clients bind the invitation to
+  // their opening identity even if the SDK refreshes another account's token.
+  if (Object.hasOwn(body, "expectedUserId") && body.expectedUserId !== user.id) {
+    return json({ message: "La cuenta ha cambiado. Vuelve a abrir la invitación.", code: "CAMPOBASE_AUTH_REQUIRED" }, 401);
+  }
+
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
   const { data: ownerProfile } = await admin.from("perfiles").select("role").eq("id", user.id).maybeSingle();
   if (!ownerProfile || !["owner","admin","coach"].includes(ownerProfile.role)) {
@@ -59,8 +70,6 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (teamError || !team) return json({ message: "No se ha encontrado el equipo de esta cuenta." }, 404);
 
-  let body: { email?: string; fullName?: string; permissions?: string[] } = {};
-  try { body = await req.json(); } catch {}
   const email = String(body.email || "").trim().toLowerCase();
   const fullName = String(body.fullName || "").trim();
   const permissions = cleanPermissions(body.permissions);

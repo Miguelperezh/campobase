@@ -1,5 +1,6 @@
-(() => {
+(async () => {
   'use strict';
+  const {browserCacheContext, readViewCache, cacheBelongsToAccount, sameViewAccount} = await import('./account-view-context.js?v=20261022-pilot-safety-1');
 
   const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -382,7 +383,7 @@
   }
 
   function applyCache(cache) {
-    if (!cache) return;
+    if (!cacheBelongsToAccount(cache, browserCacheContext())) return false;
     if (cache.players?.length) state.players = cache.players;
     if (cache.callups?.length) state.callups = cache.callups;
     if (cache.matches?.length) state.matches = cache.matches;
@@ -398,6 +399,7 @@
 
   async function load() {
     const sync = $('#sync');
+    const context = browserCacheContext();
 
     // 1. Carga inmediata síncrona desde caché provista por la página
     if (globalThis.__CAMPOBASE_CACHE__?.players?.length) {
@@ -407,15 +409,19 @@
     try {
       if (!globalThis.supabase?.createClient) throw new Error('No se cargó el cliente de Supabase.');
       const client = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+      const {data:sessionData} = await client.auth.getSession();
+      if (!context.userId || sessionData?.session?.user?.id !== context.userId || !sameViewAccount(context, browserCacheContext())) return;
       const [players, callups, matches, attendance, settings] = await Promise.all([
         readTable(client,'jugadores'), readTable(client,'convocatorias'), readTable(client,'partidos'), readTable(client,'asistencias'), readTable(client,'configuracion'),
       ]);
+      if (!sameViewAccount(context, browserCacheContext())) return;
       state.players = players; state.callups = callups; state.matches = matches; state.attendance = attendance; state.settings = settings;
       state.sessions = settings.filter((item) => item?.recordType === 'trainingSession');
       state.team = settings.find((item) => item?.id === 'main') || {};
       sync.textContent = sourceText();
       renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
     } catch (error) {
+      if (!sameViewAccount(context, browserCacheContext())) return;
       // Si tenemos datos locales (de __CAMPOBASE_CACHE__), NUNCA mostrar la pantalla roja de error
       if (state.players.length > 0) {
         if (sync) sync.textContent = `Modo local · ${state.players.length} jugadores · ${state.matches.length} partidos`;
@@ -439,28 +445,8 @@
 
   document.addEventListener('change', async (event) => {
     if (event.target?.id === 'campo-direct-file-input') {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        const data = json.data || json;
-        if (data.players || data.matches) {
-          state.players = data.players || [];
-          state.callups = data.callups || [];
-          state.matches = data.matches || [];
-          state.attendance = data.trainings || data.attendance || [];
-          state.settings = data.settings || [];
-          state.sessions = state.settings.filter((item) => item?.recordType === 'trainingSession');
-          state.team = state.settings.find((item) => item?.id === 'main') || {};
-          const sync = $('#sync');
-          if (sync) sync.textContent = `Archivo cargado · ${state.players.length} jugadores · ${state.matches.length} partidos`;
-          renderHoy(); renderEntrenos(); renderPartidos(); renderDelegado(); renderVivo();
-          showToast('Datos cargados correctamente.');
-        }
-      } catch (err) {
-        showToast('Error al leer el archivo JSON.');
-      }
+      event.target.value = '';
+      showToast('Para recuperar una copia, entra en su cuenta original y usa Ajustes → Importar JSON.');
       return;
     }
     const statusSelect = event.target.closest('[data-att-status]');
@@ -514,5 +500,6 @@
     }
   });
 
-  window.addEventListener('DOMContentLoaded', load, { once:true });
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', load, { once:true });
+  else void load();
 })();

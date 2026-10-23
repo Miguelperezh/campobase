@@ -48,7 +48,7 @@ test('reconcileCloudSnapshot preserva registros locales ausentes en la nube cuan
 test('syncFromCloud detecta registros locales ausentes en la nube y los encola para subida', async () => {
   const db = await readFile(new URL('../js/db.js', import.meta.url), 'utf8');
   assert.match(db, /missingFromCloud = localRecords\.filter/);
-  assert.match(db, /await queueInitialRecords\(store, missingFromCloud\)/);
+  assert.match(db, /await queueInitialRecords\(store, missingFromCloud,context\)/);
 });
 
 test('whatsapp-suite.js se importa con versionado de cache en app.js y sw.js', async () => {

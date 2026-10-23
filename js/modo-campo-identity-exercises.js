@@ -1,5 +1,6 @@
-(() => {
+(async () => {
   'use strict';
+  const {browserCacheContext, readViewCache, cacheBelongsToAccount, sameViewAccount} = await import('./account-view-context.js?v=20261022-pilot-safety-1');
 
   const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
@@ -39,7 +40,7 @@
   let activeSession = null;
 
   function readLocalTheme() {
-    try { return JSON.parse(localStorage.getItem('campobase.theme') || '{}') || {}; }
+    try { return readViewCache(localStorage, 'campobase.theme', browserCacheContext()) || {}; }
     catch { return {}; }
   }
 
@@ -56,8 +57,7 @@
     const localTheme = readLocalTheme();
     const theme = {
       themeBg:'default', accentPreset:'emerald', accentColor:'#10b981', fontFamily:'system', fontScale:'normal', fontWeight:'bold', textColor:'dark-slate',
-      ...(main.theme || {}),
-      ...localTheme,
+      ...(main.theme && typeof main.theme === 'object' ? main.theme : localTheme),
     };
     const preset = THEME_PRESETS[theme.themeBg] || THEME_PRESETS.default;
     const fontColor = theme.fontColor || TEXT_COLOR_MAP[theme.textColor] || preset.text;
@@ -256,7 +256,11 @@
 
   async function readSettings() {
     if (!client) return;
+    const context = browserCacheContext();
+    const {data:sessionData} = await client.auth.getSession();
+    if (!context.userId || sessionData?.session?.user?.id !== context.userId || !sameViewAccount(context, browserCacheContext())) return;
     const { data, error } = await client.from('configuracion').select('id,payload,deleted_at').is('deleted_at', null);
+    if (!sameViewAccount(context, browserCacheContext())) return;
     if (error) throw error;
     const payloads = (data || []).map((row) => row.payload).filter(Boolean);
     const main = payloads.find((item) => item.id === 'main') || {};

@@ -1,5 +1,6 @@
-(() => {
+(async () => {
   'use strict';
+  const {browserCacheContext, readViewCache, cacheBelongsToAccount, sameViewAccount} = await import('./account-view-context.js?v=20261022-pilot-safety-1');
 
   const PRESETS = {
     default:{bg:'#071711',card:'#0e261d',nav:'rgba(10,31,23,.96)',input:'#091c15',text:'#f8fafc',border:'#1b4d3a'},
@@ -31,7 +32,7 @@
   function contrast(hex){const c=String(hex||'').replace('#','');if(!/^[0-9a-f]{6}$/i.test(c))return'#fff';const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);return((r*299+g*587+b*114)/1000)>=135?'#0f172a':'#fff'}
   function apply(){
     let theme=null;
-    try{theme=JSON.parse(localStorage.getItem('campobase.theme')||'null')}catch{}
+    try{theme=readViewCache(localStorage, 'campobase.theme', browserCacheContext())}catch{}
     if(!theme||typeof theme!=='object')return;
     const preset=PRESETS[theme.themeBg]||PRESETS.default;
     const accent=theme.accentColor||'#10b981';

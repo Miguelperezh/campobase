@@ -10,17 +10,17 @@ const [appCode, cssCode, printCode, navCode, indexHtml] = await Promise.all([
   readFile(new URL('../index.html', import.meta.url), 'utf8'),
 ]);
 
-test('invitación de delegado incluye &team= y &perms= para escalar a cualquier equipo', () => {
+test('invitación de delegado dirige el PIN al equipo y autentica su identidad propia sin conceder permisos de URL', () => {
   assert.match(appCode, /const teamParam = teamId \? `&team=\$\{encodeURIComponent\(teamId\)\}` : '';/);
-  assert.match(appCode, /const permsParam = `&perms=\$\{encodeURIComponent\(perms\.join\(','\)\)\}`;/);
-  assert.match(appCode, /directUrl = `\$\{baseUrl\}\?role=delegate&pin=\$\{encodeURIComponent\(pin\)\}\$\{teamParam\}\$\{permsParam\}`;/);
+  assert.match(appCode, /directUrl = `\$\{baseUrl\}\?role=delegate&pin=\$\{encodeURIComponent\(pin\)\}/);
 
-  // Comprobación de que init() parsea team y perms y vincula la base de datos SaaS
+  // Team is only a login hint. The signed-in delegate's server context owns
+  // the binding and canonical permissions, regardless of invitation metadata.
   assert.match(appCode, /const teamParam = params\.get\('team'\);/);
-  assert.match(appCode, /const permsParam = params\.get\('perms'\);/);
-  assert.match(appCode, /if \(roleParam === 'delegate'\) \{/);
-  assert.match(appCode, /setBoundSaasUserId\(teamParam\);/);
-  assert.match(appCode, /configureRealDatabase\(\);/);
+  assert.match(appCode, /if \(roleParam === 'delegate' && !legacyMobileLink\.removed\) \{/);
+  assert.match(appCode, /await completePinLogin\('delegate',pinParam\.trim\(\),teamParam\|\|''\)/);
+  assert.doesNotMatch(appCode, /setBoundSaasUserId\(teamParam\)|params\.get\('perms'\)/);
+  assert.match(appCode,/params\.delete\('pin'\)/);
 });
 
 test('delegado con permisos específicos muestra solo esas pestañas (multi-view vs single-view)', () => {

@@ -1,3 +1,4 @@
+import {browserCacheContext, readViewCache, writeViewCache, sameViewAccount} from './account-view-context.js?v=20261022-pilot-safety-1';
 export const DELEGATE_VIEW_OPTIONS = Object.freeze([
   ['delegado', 'Vista delegado del partido'],
   ['hoy', 'Inicio / Hoy'],
@@ -24,6 +25,7 @@ const MODULE_VIEWS = Object.freeze({
 
 let currentClient = null;
 let currentContext = null;
+let currentContextOwner = null;
 let observer = null;
 let panelInitialized = false;
 
@@ -36,15 +38,19 @@ function normalizedPermissions(value) {
 
 export async function fetchTeamContext(client) {
   if (!client) return null;
+  const context = browserCacheContext();
+  if(!context.userId)return null;
   const { data, error } = await client.rpc('mi_equipo_contexto');
+  if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado.');
   if (error) throw error;
   return data || null;
 }
 
 export async function fetchDelegateAccount(client) {
+  const context = browserCacheContext();
   let cached = null;
   try {
-    cached = JSON.parse(localStorage.getItem('campobase.delegateAccount') || 'null');
+    cached = (readViewCache(localStorage, 'campobase.delegateAccount', browserCacheContext()) || {});
   } catch {}
 
   if (!client) {
@@ -57,6 +63,7 @@ export async function fetchDelegateAccount(client) {
     if (!error && data?.user_id) remote = data;
   } catch {}
 
+  if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado.');
   if (!remote) {
     try {
       const { data: member } = await client
@@ -75,6 +82,7 @@ export async function fetchDelegateAccount(client) {
     } catch {}
   }
 
+  if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado.');
   if (remote) {
     const merged = {
       user_id: remote.user_id,
@@ -83,7 +91,7 @@ export async function fetchDelegateAccount(client) {
       username: remote.username || cached?.username || '',
       view_permissions: remote.view_permissions || cached?.view_permissions || ['delegado'],
     };
-    try { localStorage.setItem('campobase.delegateAccount', JSON.stringify(merged)); } catch {}
+    try { writeViewCache(localStorage, 'campobase.delegateAccount', merged, browserCacheContext()); } catch {}
     return merged;
   }
 
@@ -92,6 +100,8 @@ export async function fetchDelegateAccount(client) {
 
 export async function inviteDelegateAccount(client, { email, fullName = '', permissions = [] } = {}) {
   if (!client) throw new Error('No se ha podido abrir la gestión del delegado.');
+  const context = browserCacheContext();
+  if (!context.userId) throw new Error('Inicia sesión antes de gestionar al delegado.');
   const cleanEmail = String(email || '').trim().toLowerCase();
   const cleanName = String(fullName || '').trim();
   const cleanPerms = normalizedPermissions(permissions);
@@ -101,9 +111,11 @@ export async function inviteDelegateAccount(client, { email, fullName = '', perm
       email: cleanEmail,
       fullName: cleanName,
       permissions: cleanPerms,
+      expectedUserId: context.userId,
     },
   });
 
+  if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado.');
   if (error || !data?.success) {
     const msg = error?.message || data?.message || '';
     if (/ya tiene una cuenta|already|asociada/i.test(msg)) {
@@ -113,7 +125,7 @@ export async function inviteDelegateAccount(client, { email, fullName = '', perm
         full_name: cleanName || 'Delegado asociado',
         view_permissions: cleanPerms,
       };
-      try { localStorage.setItem('campobase.delegateAccount', JSON.stringify(existing)); } catch {}
+      try { writeViewCache(localStorage, 'campobase.delegateAccount', existing, browserCacheContext()); } catch {}
       return existing;
     }
     throw new Error(msg || 'No se pudo invitar al delegado.');
@@ -125,28 +137,37 @@ export async function inviteDelegateAccount(client, { email, fullName = '', perm
     full_name: cleanName,
     view_permissions: cleanPerms,
   };
-  try { localStorage.setItem('campobase.delegateAccount', JSON.stringify(delegate)); } catch {}
+  try { writeViewCache(localStorage, 'campobase.delegateAccount', delegate, browserCacheContext()); } catch {}
   return delegate;
 }
 
 export async function saveDelegatePermissions(client, permissions = []) {
+  const context = browserCacheContext();
   const clean = normalizedPermissions(permissions);
   let saved = clean;
   if (client) {
+    if (!context.userId) throw new Error('Inicia sesión antes de gestionar al delegado.');
     try {
-      const { data, error } = await client.rpc('set_delegate_permissions', { p_permissions: clean });
+      const { data, error } = await client.rpc('set_delegate_permissions_v2', {
+        p_permissions: clean,
+        p_expected_user_id: context.userId,
+      });
+      if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado. Vuelve a abrir los permisos.');
+      if (error?.code === '28000' || error?.code === '42501') throw error;
       if (!error && data?.success) {
         saved = normalizedPermissions(data.view_permissions);
       }
     } catch (e) {
+      if (e?.code === '28000' || e?.code === '42501') throw e;
       console.warn('RPC set_delegate_permissions no disponible, guardando localmente:', e);
     }
   }
+  if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado. Vuelve a abrir los permisos.');
   try {
-    const cached = JSON.parse(localStorage.getItem('campobase.delegateAccount') || '{}');
+    const cached = (readViewCache(localStorage, 'campobase.delegateAccount', browserCacheContext()) || {});
     cached.view_permissions = saved;
-    localStorage.setItem('campobase.delegateAccount', JSON.stringify(cached));
-    localStorage.setItem('campobase.delegatePermissions', JSON.stringify(saved));
+    writeViewCache(localStorage, 'campobase.delegateAccount', cached, browserCacheContext());
+    writeViewCache(localStorage, 'campobase.delegatePermissions', saved, browserCacheContext());
   } catch {}
   if (typeof window !== 'undefined' && window.__campobase?.saveDelegatePermissions) {
     await window.__campobase.saveDelegatePermissions(saved);
@@ -205,6 +226,7 @@ function installDelegateNavigationGuard() {
 
 export function applyTeamAccessContext(context) {
   currentContext = context || null;
+  currentContextOwner = browserCacheContext();
   const role = context?.membership_role || '';
   if (role !== 'delegate') {
     const app = typeof window !== 'undefined' ? window.__campobase : null;
@@ -217,7 +239,7 @@ export function applyTeamAccessContext(context) {
     if (isLocalDelegate) {
       const perms = (app?.getDelegatePermissions ? app.getDelegatePermissions() : null)
         || app?.state?.settings?.delegatePermissions
-        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+        || (readViewCache(localStorage, 'campobase.delegatePermissions', browserCacheContext()) || []);
       window.__campobaseAllowedViews = perms;
       if (app?.syncDelegateModeDom) app.syncDelegateModeDom();
       return;
@@ -285,6 +307,7 @@ function ensurePanel(root = document) {
 }
 
 export async function renderDelegatePanel(root = document) {
+  const renderContext = browserCacheContext();
   const panel = root.getElementById('cb-delegate-account-panel');
   const content = root.getElementById('cb-delegate-account-content');
   if (!panel || !content) return;
@@ -306,7 +329,8 @@ export async function renderDelegatePanel(root = document) {
     )) || false
   );
 
-  const context = currentContext || (currentClient ? await fetchTeamContext(currentClient).catch(() => null) : null);
+  const context = (sameViewAccount(currentContextOwner, renderContext) ? currentContext : null) || (currentClient ? await fetchTeamContext(currentClient).catch(() => null) : null);
+  if (!sameViewAccount(renderContext, browserCacheContext())) return;
 
   if (isDelegate || context?.membership_role === 'delegate') {
     panel.classList.add('hidden');
@@ -347,11 +371,12 @@ export async function renderDelegatePanel(root = document) {
   root.getElementById('delegate-account-panel')?.classList.add('hidden');
 
   let delegate = currentClient ? await fetchDelegateAccount(currentClient).catch(() => null) : null;
+  if (!sameViewAccount(renderContext, browserCacheContext())) return;
   const currentSavedPerms = (typeof window !== 'undefined' && window.__campobase?.getDelegatePermissions)
     ? window.__campobase.getDelegatePermissions()
     : (delegate?.view_permissions ||
        window.__campobaseState?.settings?.delegatePermissions ||
-       JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["delegado"]'));
+       (readViewCache(localStorage, 'campobase.delegatePermissions', browserCacheContext()) || []));
 
   const currentPin = (typeof window !== 'undefined' && window.__campobase?.state?.settings?.delegatePin)
     || window.__campobaseState?.settings?.delegatePin
@@ -412,6 +437,7 @@ export async function renderDelegatePanel(root = document) {
     if (feedback) feedback.textContent = 'Guardando permisos…';
 
     try {
+      if (!sameViewAccount(renderContext, browserCacheContext())) throw new Error('La cuenta ha cambiado. Vuelve a abrir los permisos.');
       const perms = selectedPermissions(form);
       const email = String(form.elements.email?.value || '').trim();
       const fullName = String(form.elements.fullName?.value || '').trim();
@@ -430,6 +456,7 @@ export async function renderDelegatePanel(root = document) {
       }
 
       const saved = await saveDelegatePermissions(currentClient, perms);
+      if (!sameViewAccount(renderContext, browserCacheContext())) return;
 
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && currentClient) {
         try {
@@ -439,6 +466,7 @@ export async function renderDelegatePanel(root = document) {
         }
       }
 
+      if (!sameViewAccount(renderContext, browserCacheContext())) return;
       if (feedback) {
         feedback.textContent = `Permisos del delegado guardados correctamente (${saved.length} vistas activas).`;
       }
@@ -446,6 +474,7 @@ export async function renderDelegatePanel(root = document) {
         window.__campobase.toast(`Permisos del delegado guardados correctamente (${saved.length} vistas activas).`);
       }
     } catch (error) {
+      if (!sameViewAccount(renderContext, browserCacheContext())) return;
       if (feedback) feedback.textContent = error.message || 'No se pudieron guardar los permisos.';
       if (typeof window !== 'undefined' && window.__campobase?.toast) {
         window.__campobase.toast(error.message || 'No se pudieron guardar los permisos.');
@@ -489,17 +518,22 @@ function installStyles(root = document) {
 
 export async function initTeamAccess(client, root = document) {
   if (!client || !root) return null;
+  const context = browserCacheContext();
   currentClient = client;
   installStyles(root);
-  currentContext = await fetchTeamContext(client).catch((error) => {
+  const nextContext = await fetchTeamContext(client).catch((error) => {
     console.warn('No se pudo cargar el equipo de la cuenta:', error);
     return null;
   });
+  if (!sameViewAccount(context, browserCacheContext())) return null;
+  currentContext = nextContext;
+  currentContextOwner = context;
   applyTeamAccessContext(currentContext);
 
   if (currentContext?.membership_role !== 'delegate') {
     ensurePanel(root);
     await renderDelegatePanel(root);
+    if (!sameViewAccount(context, browserCacheContext())) return null;
     if (!panelInitialized) {
       panelInitialized = true;
       document.querySelectorAll('[data-view="ajustes"]').forEach((button) => {

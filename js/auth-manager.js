@@ -3,7 +3,7 @@ import { hashPin } from './domain.js';
 export const SAAS_USER_STORAGE_KEY = 'campobase.saasUserId';
 export const REMEMBERED_ACCOUNT_STORAGE_KEY = 'campobase.rememberedAccount.v1';
 export const LEGACY_DATABASE_NAME = 'campobase';
-export const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 3;
 export const DATABASE_STORES = ['players', 'callups', 'matches', 'trainings', 'settings', 'syncQueue'];
 export const PRODUCTION_APP_URL = 'https://miguelperezh.github.io/campobase/';
 
@@ -168,8 +168,22 @@ async function edgeFunctionErrorMessage(error, fallback = 'No se pudo iniciar la
   return error?.message || fallback;
 }
 
+const pinLoginRequests = new WeakMap();
+
 export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin, requestedRole = "auto") {
   if (!client?.auth || !client?.functions) throw new Error('No se ha podido abrir el acceso por PIN.');
+  const request = {}, accessRevision = getPinAccessRevision(), openingUserId = getBoundSaasUserId();
+  let committingUserId = '';
+  pinLoginRequests.set(client, request);
+  const assertCurrent = () => {
+    const bound = getBoundSaasUserId();
+    if (pinLoginRequests.get(client) !== request || getPinAccessRevision() !== accessRevision
+      || (bound !== openingUserId && (!committingUserId || bound !== committingUserId))) {
+      const error = new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+  };
   const cleanInput = String(userIdOrIdentifier || '').trim();
   const cleanPin = String(pin || '').trim();
   if (!/^\d{4,8}$/.test(cleanPin)) throw new Error('El PIN debe tener entre 4 y 8 cifras.');
@@ -180,6 +194,7 @@ export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin, re
   try { cleanUserId = localStorage.getItem('campobase.pinOwner.'+cleanUserId) || cleanUserId; } catch {}
 
   const current = await getCurrentSession(client).catch(() => null);
+  assertCurrent();
   const currentDelegate = current?.user?.app_metadata?.campobase_role === 'delegate_pin';
   if (currentDelegate && current.user.id === cleanUserId) cleanUserId = current.user.app_metadata.campobase_owner_id;
   // An explicit delegate login always validates the current configured PIN on the server.
@@ -195,13 +210,24 @@ export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin, re
   const { data, error } = await client.functions.invoke('pin-login', {
     body: payload,
   });
-  if (error) throw new Error(await edgeFunctionErrorMessage(error));
+  assertCurrent();
+  if (error) {
+    const message = await edgeFunctionErrorMessage(error);
+    assertCurrent();
+    throw new Error(message);
+  }
   if (!data?.token_hash) throw new Error(data?.message || 'No se pudo crear la sesión segura.');
 
-  const { data: verified, error: verifyError } = await client.auth.verifyOtp({
+  // OTP verification mutates its Auth client's session. A disposable verifier
+  // lets a late response finish without ever replacing the visible account.
+  const verifier = typeof client.__campobaseCreatePinVerifier === 'function'
+    ? client.__campobaseCreatePinVerifier() : client;
+  assertCurrent();
+  const { data: verified, error: verifyError } = await verifier.auth.verifyOtp({
     token_hash: data.token_hash,
     type: data.type || 'email',
   });
+  assertCurrent();
   if (verifyError || !verified?.session?.user) throw verifyError || new Error('No se pudo crear la sesión segura.');
 
   const authenticatedUserId = verified.session.user.id;
@@ -210,10 +236,29 @@ export async function signInWithCampoBasePin(client, userIdOrIdentifier, pin, re
   if ((cleanUserId && actualOwnerId !== cleanUserId)
       || data.user_id !== authenticatedUserId || data.owner_user_id !== actualOwnerId
       || (requestedRole === 'owner' && delegate) || (requestedRole === 'delegate' && !delegate)) {
-    await client.auth.signOut({scope:'local'}).catch(() => {});
+    // Compatibility clients may still verify on their main Auth object. Never
+    // sign out after a context change: that could close a newer user's session.
+    if (verifier === client) {
+      assertCurrent();
+      await client.auth.signOut({scope:'local'}).catch(() => {});
+      assertCurrent();
+    }
     throw new Error('La sesión creada no corresponde a esta cuenta.');
   }
 
+  if (verifier !== client) {
+    assertCurrent();
+    committingUserId = authenticatedUserId;
+    const session = verified.session;
+    const result = typeof client.__campobaseCommitPinSession === 'function'
+      ? await client.__campobaseCommitPinSession(session, assertCurrent)
+      : await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token});
+    assertCurrent();
+    if (result.error || result.data?.session?.user?.id !== authenticatedUserId) {
+      throw result.error || new Error('No se pudo conservar la sesión segura de esta cuenta.');
+    }
+  }
+  assertCurrent();
   if (delegate) try { localStorage.setItem('campobase.pinOwner.'+authenticatedUserId,actualOwnerId); } catch {}
   setBoundSaasUserId(authenticatedUserId);
   return verified.session;
@@ -344,15 +389,22 @@ function transactionDone(transaction) {
 
 export function openRawDatabase(name) {
   return new Promise((resolve, reject) => {
+    let rejected=false;
+    const fail=error=>{rejected=true;reject(error);};
     const request = indexedDB.open(name, DATABASE_VERSION);
     request.onupgradeneeded = () => {
-      for (const store of DATABASE_STORES) {
+      for (const store of [...DATABASE_STORES,'localRecovery']) {
         if (!request.result.objectStoreNames.contains(store)) request.result.createObjectStore(store, { keyPath: 'id' });
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Cierra otras pestañas de la aplicación y vuelve a intentarlo.'));
+    request.onsuccess = () => {
+      const database=request.result;
+      if(rejected){database.close();return;}
+      database.onversionchange=()=>database.close();
+      resolve(database);
+    };
+    request.onerror = () => fail(request.error);
+    request.onblocked = () => fail(new Error('Cierra otras pestañas de la aplicación y vuelve a intentarlo.'));
   });
 }
 

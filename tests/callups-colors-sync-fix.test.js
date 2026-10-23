@@ -56,7 +56,7 @@ test('app.js no contiene auto-mutacion en refresh() y respeta la decision manual
   const appSource = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 
   // refresh() no debe sobreescribir callup.completed ni match.status
-  const refreshMatch = appSource.match(/async function refresh\(\) \{[\s\S]*?await deduplicatePlayers\(\);/);
+  const refreshMatch = appSource.match(/async function refresh\(\) \{[\s\S]*?(?=\nfunction |\nasync function )/);
   assert.ok(refreshMatch, 'Debe encontrarse refresh()');
   assert.doesNotMatch(refreshMatch[0], /callup\.completed\s*=\s*true/, 'refresh no debe mutar callup.completed');
   assert.doesNotMatch(refreshMatch[0], /match\.status\s*=\s*'finished'/, 'refresh no debe mutar match.status');
@@ -72,7 +72,8 @@ test('app.js no contiene auto-mutacion en refresh() y respeta la decision manual
   assert.match(appSource, /<details class="cbx-completed-sessions-accordion"/, 'Misma clase de acordeón que sesiones');
   assert.match(appSource, /<summary class="cbx-completed-sessions-summary"/, 'Misma clase de summary que sesiones');
 
-  // sanitizeLiveTimer elimina Calero y partidos pasados
-  assert.match(appSource, /calero/, 'sanitizeLiveTimer debe limpiar Calero');
-  assert.match(appSource, /runningSince.*?6 \* 3600 \* 1000/, 'sanitizeLiveTimer debe purgar timers con más de 6 horas');
+  // Reading projects only terminal state; age or opponent never repairs records.
+  const sanitize = appSource.slice(appSource.indexOf('function sanitizeLiveTimer()'), appSource.indexOf('async function refresh()'));
+  assert.doesNotMatch(sanitize, /await put\(|runningSince.*6 \* 3600|calero/i);
+  assert.match(appSource, /projectLiveTimer\(liveSetting\?\.timer/);
 });

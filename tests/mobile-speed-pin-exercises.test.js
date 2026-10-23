@@ -13,6 +13,7 @@ test('completePinLogin abre la app inmediatamente si el dispositivo ya tiene dat
     getCurrentSession: async () => null,
     hasUsableTeamSnapshot: () => true, // El dispositivo ya tiene datos del equipo
     beginPinAccess: () => 0,
+    getPinAccessRevision: () => 0,
     finishPinAccess: () => true,
     state: { players: [{ id: 'p1' }], cloudConnected: false },
     navigator: { onLine: true },

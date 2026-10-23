@@ -47,6 +47,7 @@ export async function getStaffMembers() {
         || (a.order ?? 99) - (b.order ?? 99)
         || (a.createdAt ?? 0) - (b.createdAt ?? 0));
   } catch (err) {
+    if(err?.code==='CAMPOBASE_CONTEXT_CHANGED')return null;
     console.error('Error al obtener cuerpo técnico:', err);
     return [];
   }
@@ -271,6 +272,7 @@ export async function refreshPlantillaStaff() {
   const container = $('#plantilla-staff-top');
   if (!container) return;
   const members = await getStaffMembers();
+  if(!members)return;
   renderPlantillaStaffTop(members, container);
 }
 
@@ -279,6 +281,7 @@ export async function refreshStaffView() {
   const countBadge = $('#staff-total-count');
 
   const members = await getStaffMembers();
+  if(!members)return;
   if (countBadge) {
     countBadge.textContent = `${members.length} ${members.length === 1 ? 'miembro' : 'miembros'}`;
   }

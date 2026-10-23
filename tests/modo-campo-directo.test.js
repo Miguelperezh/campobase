@@ -9,7 +9,10 @@ const read = (path) => readFile(new URL(path, root), 'utf8');
 
 test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local de datos', async () => {
   const js = await read('js/modo-campo-directo.js');
-  assert.doesNotMatch(js, /from\s+['\"].*db\.js|import\s*\(/);
+  assert.doesNotMatch(js, /from\s+['\"].*db\.js|import\s*\(['\"].*db\.js/);
+  assert.match(js, /account-view-context\.js/);
+  assert.match(js, /cacheBelongsToAccount\(cache, browserCacheContext\(\)\)/);
+  assert.match(js, /sameViewAccount\(context, browserCacheContext\(\)\)/);
   assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
   assert.match(js, /createClient\(SUPABASE_URL, SUPABASE_KEY/);
   for (const table of ['jugadores','convocatorias','partidos','asistencias','configuracion']) assert.match(js, new RegExp(`readTable\\(client,'${table}'\\)`));
@@ -17,13 +20,18 @@ test('Modo Campo directo sigue leyendo Supabase sin almacenamiento local de dato
 
 test('la capa integrada guarda asistencia real y Realizado en Supabase', async () => {
   const js = await read('js/modo-campo-actions.js');
-  assert.match(js, /upsertPayload\('asistencias', record\)/);
-  assert.match(js, /\.upsert\(/);
+  assert.match(js, /upsertPayload\('asistencias', record,access\)/);
+  assert.match(js, /createCampoBaseCloudStore/);
+  assert.match(js, /adapter\.upsert\(buildMutation/);
+  assert.match(js, /expectedContext/);
+  assert.match(js, /auth\.getPinAccessRevision/);
+  assert.match(js, /actionContext\(\{ownerOnly:true\}\)/);
+  assert.doesNotMatch(js, /client\.from|onConflict:'id'/);
   assert.match(js, /status:isMatch \? 'finished' : 'closed'/);
   assert.match(js, /closedAt:now/);
   assert.match(js, /Guardar asistencia/);
   assert.match(js, /✓ Realizado/);
-  assert.doesNotMatch(js, /indexedDB|localStorage|sessionStorage/);
+  assert.doesNotMatch(js, /indexedDB|localStorage/);
 });
 
 test('asistencia de campo conserva estado, tardanza, hora y observaciones', async () => {
@@ -65,9 +73,9 @@ test('Modo Campo usa identidad real y el mismo tema efectivo que Ajustes', async
   assert.doesNotMatch(html, /CampoBase · Uso en campo/);
   assert.match(identity, /main\.clubCrest/);
   assert.match(identity, /main\.teamName/);
-  assert.match(identity, /\.\.\.\(main\.theme \|\| \{\}\)/);
-  assert.match(identity, /localStorage\.getItem\('campobase\.theme'\)/);
-  assert.match(identity, /\.\.\.localTheme/);
+  assert.match(identity, /main\.theme && typeof main\.theme === 'object' \? main\.theme : localTheme/);
+  assert.match(identity, /readViewCache\(localStorage, 'campobase\.theme', browserCacheContext\(\)\)/);
+  assert.doesNotMatch(identity, /\.\.\.localTheme/);
   assert.match(identity, /FONT_SCALE_MAP/);
   assert.match(identity, /FONT_FAMILY_MAP/);
 });
@@ -113,13 +121,13 @@ test('Entrenar ahora muestra los ejercicios uno por uno con anterior y siguiente
 test('la página integrada carga únicamente las capas vigentes', async () => {
   const html = await read('modo-campo-directo.html');
   assert.match(html, /vendor\/supabase\.js/);
-  assert.match(html, /js\/modo-campo-directo\.js\?v=4/);
-  assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=2/);
+  assert.match(html, /js\/modo-campo-directo\.js\?v=20261022-pilot-safety-1/);
+  assert.match(html, /js\/modo-campo-identity-exercises\.js\?v=20261022-pilot-safety-1/);
   assert.match(html, /js\/modo-campo-theme-parity\.js\?v=1/);
-  assert.match(html, /js\/modo-campo-actions\.js\?v=2/);
+  assert.match(html, /js\/modo-campo-actions\.js\?v=20261022-pilot-safety-1/);
   assert.match(html, /modo-campo-theme\.css\?v=3/);
   assert.match(html, /modo-campo-flow\.css\?v=1/);
-  assert.doesNotMatch(html, /modo-campo-preview|js\/app\.js|js\/db\.js/);
+  assert.doesNotMatch(html, /modo-campo-preview|<script[^>]+src="[^\"]*js\/(?:app|db)\.js/);
 });
 
 test('CampoBase normal carga el puente oficial de Modo Campo sin tocar app.js', async () => {
