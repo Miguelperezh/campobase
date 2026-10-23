@@ -1,5 +1,5 @@
 import { keeperGoalAllocation } from './keeper-goals.js?v=20261009-postgame-sync-1';
-import { roleCanUseOwnerFeatures } from './demo-session.js';
+import { roleCanUseOwnerFeatures } from './demo-session-core.js?v=20261022-pilot-safety-1';
 
 const BACKUP_STORES = ['players', 'callups', 'matches', 'trainings', 'settings'];
 

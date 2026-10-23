@@ -135,7 +135,7 @@ test('Modo Campo directo usa sesión persistente para evitar rechazos RLS 401', 
   const exercises = await read('js/modo-campo-identity-exercises.js');
 
   assert.match(directo, /persistSession:\s*true/);
-  assert.match(actions, /persistSession:\s*true/);
+  assert.match(actions, /createCampoBaseCloudStore\(\{initializeUi:false\}\)/);
   assert.match(exercises, /persistSession:\s*true/);
   assert.match(directo, /autoRefreshToken:\s*true/);
 });

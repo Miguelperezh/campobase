@@ -7,8 +7,8 @@ const projectFile = (path) => readFile(new URL(`../${path}`, import.meta.url), '
 test('la cola local nunca se lee antes de preparar y vincular la sesión cloud', async () => {
   const db = await projectFile('js/db.js');
   const flush = db.slice(db.indexOf('async function flushQueuedMutations'), db.indexOf('async function replaceLocalStore'));
-  const prepareIndex = flush.indexOf("cloudStore.prepare");
-  const queueIndex = flush.indexOf("const queueDatabase = await openDatabase()");
+  const prepareIndex = flush.indexOf("await adapter.prepare");
+  const queueIndex = flush.indexOf("const queueDatabase = await contextDatabase(context)");
   assert.ok(prepareIndex >= 0, 'flushSyncQueue debe preparar la sesión cloud');
   assert.ok(queueIndex > prepareIndex, 'la sesión debe prepararse antes de abrir la cola local');
 });
@@ -21,7 +21,7 @@ test('la base IndexedDB real se resuelve de nuevo después de recuperar el usuar
 
 test('el store cloud expone prepare para validar usuario antes de sincronizar', async () => {
   const source = await projectFile('js/supabase-client.js');
-  assert.match(source, /async prepare\(\)\s*\{[\s\S]*requireBoundUser\(client\)/);
+  assert.match(source, /async prepare\([^\n]*expectedContext[^\n]*\)[\s\S]*requireBoundUser\(client,\s*expectedContext\)/);
 });
 
 test('CampoBase conserva la pestaña activa durante una recarga de la misma pestaña', async () => {
@@ -72,9 +72,9 @@ test('una mutación local obsoleta se descarta si Supabase tiene una versión po
     projectFile('js/db.js'),
     projectFile('js/supabase-client.js'),
   ]);
-  assert.match(db, /cloudStore\.shouldApplyMutation\(mutation\)/);
-  assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id, mutation, queueDatabase\)[\s\S]*continue/);
-  assert.match(cloud, /async shouldApplyMutation\(mutation\)/);
+  assert.match(db, /adapter\.shouldApplyMutation\(mutation,cloudOptions\(context\)\)/);
+  assert.match(db, /if \(!shouldApply\)[\s\S]*removeQueuedMutation\(mutation\.id, mutation, queueDatabase,context\)[\s\S]*continue/);
+  assert.match(cloud, /async shouldApplyMutation\(mutation,\s*\{expectedContext\}/);
   assert.match(cloud, /select\('updated_at,deleted_at'\)/);
   assert.match(cloud, /localQueuedAt >= remoteUpdatedAt/);
 });
@@ -92,7 +92,7 @@ test('un fallo de guardado cloud online no se oculta como si hubiera guardado co
   const db = await projectFile('js/db.js');
   const writeArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('async function flushQueuedMutations'));
   assert.doesNotMatch(writeArea, /flushSyncQueue\(\)\.catch\(\(\) => false\)/);
-  assert.match(writeArea, /if \(canUseCloud\(\)\) await flushSyncQueue\(\)/);
+  assert.match(writeArea, /if \(canUseCloud\(\)\) await flushSyncQueue\(cloudOptions\(context\)\)/);
 });
 
 test('Actualizar app conserva sesión, vista y evita una segunda recarga del service worker', async () => {
@@ -115,14 +115,14 @@ test('Actualizar app conserva sesión, vista y evita una segunda recarga del ser
 
 test('cada escritura intenta recuperar el vínculo SaaS antes de decidir qué IndexedDB usar', async () => {
   const db = await projectFile('js/db.js');
-  assert.match(db, /async function prepareStorageBindingForWrite\(\)/);
-  assert.match(db, /await cloudStore\.prepare\(\)/);
+  assert.match(db, /async function prepareStorageBindingForWrite\(context\)/);
+  assert.match(db, /await cloudStore\.prepare\(undefined,cloudOptions\(context\)\)/);
   const putArea = db.slice(db.indexOf('export async function put(store'), db.indexOf('export async function putPlayerProfile'));
   const profileArea = db.slice(db.indexOf('export async function putPlayerProfile'), db.indexOf('export async function putBatch'));
   const batchArea = db.slice(db.indexOf('export async function putBatch'), db.indexOf('export async function remove(store'));
   const removeArea = db.slice(db.indexOf('export async function remove(store'), db.indexOf('async function flushQueuedMutations'));
   for (const area of [putArea, profileArea, batchArea, removeArea]) {
-    assert.match(area, /await prepareStorageBindingForWrite\(\)/);
+    assert.match(area, /await prepareStorageBindingForWrite\(context\)/);
   }
 });
 
@@ -131,8 +131,8 @@ test('la app puede diagnosticar y recuperar una cola legacy pendiente sin borrar
   assert.match(db, /export async function getSyncDiagnostics\(\)/);
   assert.match(db, /export async function recoverLegacyPendingMutations\(\)/);
   const recover = db.slice(db.indexOf('export async function recoverLegacyPendingMutations'), db.indexOf('export async function exportDatabase'));
-  const flushAt = recover.indexOf('await flushSyncQueue()');
-  const cleanupAt = recover.indexOf("legacyDb.transaction(SYNC_QUEUE, 'readwrite')");
+  const flushAt = recover.indexOf('await flushSyncQueue(cloudOptions(context))');
+  const cleanupAt = recover.indexOf("legacyDb.transaction(SYNC_QUEUE,'readwrite')");
   assert.ok(flushAt >= 0 && cleanupAt > flushAt, 'La cola legacy solo debe limpiarse después de sincronizar');
 });
 
@@ -167,7 +167,7 @@ test('mostrar el diálogo de acceso no consume sessionRole y el login PIN restau
   assert.doesNotMatch(showAuth, /removeItem\(SESSION_ROLE_KEY\)/);
 
   const submit = app.slice(app.indexOf('async function submitAuth'), app.indexOf('async function changePins'));
-  assert.match(submit, /if \(!isDemoDatabase\(\)\) \{\s*await synchronizeCloud\(\);\s*await refresh\(\);\s*\}/);
+  assert.match(submit, /if \(!isDemoDatabase\(\)\) \{\s*await synchronizeCloud\(\);\s*assertAuth\(\);\s*await refresh\(\);\s*assertAuth\(\);\s*\}/);
   assert.match(app, /window\.__campobase = \{ refresh, synchronizeCloud,/);
 });
 

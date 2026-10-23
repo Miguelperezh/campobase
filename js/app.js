@@ -1,5 +1,7 @@
 import {historicalCallupSelection, editableCallupForMatch, editableMatchForCallup} from './postmatch-callup.js?v=20261021-save-postmatch-1';
 import {assertFormValid, showFormSaveError} from './form-save-feedback.js?v=20261021-save-postmatch-1';
+import {sameViewAccount, sameViewContext, readViewCache, writeViewCache, projectLiveTimer} from './account-view-context.js?v=20261022-pilot-safety-1';
+import {validateBackupForAccount, backupSummary, mobileAppLink, cleanLegacyMobileLink} from './backup-safety.js?v=20261022-pilot-safety-1';
 import {filterTrainingSessions, reusableSessionDraft} from './training-session-tools.js?v=20261020-sessions-1';
 import {sessionAttendanceToDelete} from './training-session-delete.js?v=20261020-sessions-1';
 import {isMatchTerminal} from './postgame-plan.js?v=20261018-offline-match-1';
@@ -17,10 +19,10 @@ import { suspendSessionDetail } from './session-detail-navigation.js';
 import { enhanceColorSettings } from './settings-visual-ui.js?v=claude-proposal-3';
 import { planFromMoments, rotationPlanMoments, proposePrepMoments, renderMinuteTimeline, wireMinuteTimelines } from './minute-timeline.js?v=player-edit-1';
 import { applyComponentColors, observeComponentColors, configurableElements, colorControlDescription, clearColourConflicts } from './theme-component-colors.js?v=20261009-postgame-sync-1';
-import { currentDatabaseName, configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
+import { currentDatabaseName, configureCloudStore, configureDemoDatabase, configureRealDatabase, deleteDemoDatabase, getAll, getOne, put, putBatch, putPlayerProfile, remove, exportDatabase, importDatabase, getImportRecoveryBackup, isDemoDatabase, syncFromCloud, getSyncDiagnostics, getLocalPinSettingsCandidates, recoverLegacyPendingMutations, uploadVideo, removeVideo } from './db.js';
 import { createCampoBaseCloudStore, getRemoteMainSettings, getSupabaseAuthClient } from './supabase-client.js?v=20261021-save-postmatch-1';
 import { beginPinAccess, finishPinAccess, lockPinAccess, getPinAccessRevision, getCurrentSession, getBoundSaasUserId, setBoundSaasUserId, getRememberedSaasAccount, signInWithCampoBasePin } from './auth-manager.js';
-import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, validateBackup, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
+import { calculateMinuteTargets, buildCallupSelection, buildAttendanceRecord, calculateAttendanceStats, applySubstitution, normalizePositions, calculatePlayedSeconds, formatMatchClock, buildPlayerHistory, sortAttendanceRecords, suggestDelegateSubstitution, suggestRepartoSubstitutions, summarizeMinuteTargets, shouldSuggestUrgentSubstitution, accumulateSeasonMinutes, seasonKey, isPreseasonMatch, shouldAutoPause, hashPin, verifyPin, buildPlayerRatings, replacePlayerRatings, sortPlayersByName, sortPlayersBySquadNumber, updateRotationCounters, calledPlayerOptions, adjustLiveScore, addPlayerMatchEvent, removePlayerMatchEvent, buildPlayerSummary, applyPlayerStatAdjustments, setPlayerStatTotals, removeMatchFromPlayerStats, derivePlayerMatchStats, buildPlayerRecord, calculatePlayerCallupMinutes, getPlayerSetPieceRoles, buildSquadLeaderboards } from './domain.js';
 import { CANONICAL_V2_CATEGORIES, CANONICAL_MATERIALS, PLAYER_COUNT_OPTIONS, FORMAT_OPTIONS, FORMATO_JUEGO_OPTIONS, EXERCISE_CATEGORIES, INITIAL_EXERCISES, WARMUP_TEMPLATES, PHASE2_V3_EXERCISES, buildExercise, filterExercises, planPhase2V2Seed, planPhase2V3Seed, renderExerciseDiagram, buildTrainingSession, sortTrainingSessions } from './training-domain.js';
 import { REAL_EXERCISES, SLIDESHARE_EXERCISES, renderRealDiagram } from './real-exercises.js';
 import { addExerciseToSession, buildFlexibleTrainingSession, calculateSessionTotalMaterial, completeExercise, formatSessionDurationInfo, moveSessionBlock, removeSessionBlock, renderBoardDiagrams, sessionBlockType, sessionDurationStatus } from './exercise-planning.js';
@@ -105,6 +107,22 @@ const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'E
 const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 if (typeof window !== 'undefined') {
   window.__campobaseState = state;
+}
+function viewContext() {
+  const userId = getBoundSaasUserId();
+  const database = isDemoDatabase() ? currentDatabaseName() : (userId ? `campobase_${userId}` : 'campobase');
+  return { userId, database, pinRevision: getPinAccessRevision(), role: state.role };
+}
+let loadedViewContext = null;
+let refreshRevision = 0;
+let colorEditorViewContext = null;
+function viewAccountIsCurrent() { return sameViewAccount(loadedViewContext, viewContext()); }
+function readAccountCache(key, fallback = null) {
+  return readViewCache(localStorage, key, viewContext(), { isolated: window.__CAMPOBASE_READONLY_PREVIEW === true }) ?? fallback;
+}
+function writeAccountCache(key, value) {
+  if (!viewAccountIsCurrent()) return;
+  writeViewCache(localStorage, key, value, viewContext());
 }
 const SESSION_ROLE_KEY = 'campobase.sessionRole';
 const ACTIVE_VIEW_KEY = 'campobase.activeView';
@@ -309,13 +327,13 @@ function storedActiveView() {
 }
 
 function getDelegatePermissions() {
-  const perms = state.settings?.delegatePermissions;
+  const perms = viewAccountIsCurrent() ? state.settings?.delegatePermissions : null;
   if (Array.isArray(perms)) return perms;
   try {
-    const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
+    const cached = readAccountCache('campobase.delegatePermissions', null);
     if (Array.isArray(cached)) return cached;
   } catch {}
-  return ['partido'];
+  return getBoundSaasUserId() ? [] : ['partido'];
 }
 
 function delegateHasPermission(permission) {
@@ -465,6 +483,7 @@ function restoreNormalNavUi() {
 }
 
 function showView(viewId) {
+  if (loadedViewContext && !viewAccountIsCurrent()) return;
   const previousViewId = document.querySelector('.view.active')?.id;
   if (state.role === 'demo' && viewId === 'ajustes') return;
   if (state.role === 'delegate' || state.delegateMode) {
@@ -611,68 +630,7 @@ function renderOrDefer(force = false) {
 
 
 function sanitizeLiveTimer() {
-  const todayDay = new Date().toISOString().slice(0, 10);
-  if (state.timer) {
-    const liveMatch = (state.matches || []).find((m) => String(m.id) === String(state.timer?.matchId));
-    const isTerminated = !liveMatch ||
-      liveMatch.status === 'finished' ||
-      liveMatch.status === 'closed' ||
-      Boolean(liveMatch.closedAt) ||
-      Boolean(liveMatch.finishedAt) ||
-      liveMatch.completed === true;
-
-    let isStale = false;
-    if (state.timer.runningSince && (Date.now() - Number(state.timer.runningSince) > 6 * 3600 * 1000)) {
-      isStale = true;
-    }
-    if (state.timer.updatedAt && (Date.now() - Number(state.timer.updatedAt) > 12 * 3600 * 1000)) {
-      isStale = true;
-    }
-    if (liveMatch) {
-      const matchDay = String(liveMatch.date || '').slice(0, 10);
-      if (matchDay && matchDay < todayDay) isStale = true;
-      if (normalizeOpponentName(liveMatch.opponent).includes('calero')) isStale = true;
-    }
-
-    if (isTerminated || isStale) {
-      state.timer = null;
-      void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
-      if (liveMatch && liveMatch.status === 'in_progress') {
-        liveMatch.status = isMatchPlayed(liveMatch) ? 'finished' : 'planned';
-        liveMatch.updatedAt = Date.now();
-        void put('matches', liveMatch);
-      }
-      try {
-        const raw = localStorage.getItem('campobase.directFieldCache');
-        if (raw) {
-          const cache = JSON.parse(raw);
-          if (cache) {
-            cache.timer = null;
-            if (Array.isArray(cache.settings)) {
-              const idx = cache.settings.findIndex((s) => s && s.id === 'live');
-              if (idx >= 0) cache.settings[idx] = { id: 'live', timer: null, updatedAt: Date.now() };
-            }
-            localStorage.setItem('campobase.directFieldCache', JSON.stringify(cache));
-          }
-        }
-      } catch {}
-    }
-  }
-
-  // Sanitizar cualquier partido huérfano con status 'in_progress' en fechas pasadas o Calero
-  for (const m of (state.matches || [])) {
-    if (m.status === 'in_progress') {
-      const mDay = String(m.date || '').slice(0, 10);
-      const isPastMatch = mDay && mDay < todayDay;
-      const isCalero = normalizeOpponentName(m.opponent).includes('calero');
-      const isTimerMatch = state.timer && String(state.timer.matchId) === String(m.id);
-      if (isPastMatch || isCalero || !isTimerMatch) {
-        m.status = isMatchPlayed(m) ? 'finished' : 'planned';
-        m.updatedAt = Date.now();
-        void put('matches', m);
-      }
-    }
-  }
+  state.timer = projectLiveTimer(state.timer, state.matches);
 }
 
 async function deduplicatePlayers() {
@@ -685,14 +643,13 @@ let validatedExerciseCache = null;
 const validatedExerciseOrder = new Map(EJERCICIOS_VALIDADOS.map((item, index) => [item.id, index]));
 async function refresh() {
   const force = arguments[0] === true;
-  [state.players, state.callups, state.matches, state.trainings] = await Promise.all(['players', 'callups', 'matches', 'trainings'].map(getAll));
-  state.players = sortPlayersByName(state.players);
-  const settingRecords = await getAll('settings');
-  const liveSetting = settingRecords.find(({ id }) => id === 'live');
-  state.timer = liveSetting?.timer ?? null;
-  sanitizeLiveTimer();
-  await deduplicatePlayers();
-
+  const context = viewContext();
+  const revision = ++refreshRevision;
+  const stillCurrent = () => revision === refreshRevision && sameViewContext(context, viewContext());
+  const [players, callups, matches, trainings, settingRecords] = await Promise.all(
+    ['players', 'callups', 'matches', 'trainings', 'settings'].map((store) => getAll(store)),
+  );
+  if (!stillCurrent()) return false;
   // Catálogo oficial + ejercicios creados por el entrenador.
   // Los favoritos de ejercicios validados también se guardan como recordType=exercise,
   // así que solo es "Mis ejercicios" un registro cuyo ID no pertenece al catálogo validado.
@@ -717,25 +674,46 @@ async function refresh() {
       formato_juego: item.formato_juego || (item.format === 'F7' ? 'futbol_7' : 'futbol_11'),
     }));
 
-  state.exercises = [...validatedExercises, ...myExercises];
-  if (state.exercises.length < 400 && !window.__CAMPOBASE_READONLY_PREVIEW && typeof navigator !== 'undefined' && navigator.onLine) {
+  const exercises = [...validatedExercises, ...myExercises];
+  if (exercises.length < 400 && !window.__CAMPOBASE_READONLY_PREVIEW && typeof navigator !== 'undefined' && navigator.onLine) {
     const healKey = 'campobase.auto_catalog_heal_v29';
     try {
       if (!sessionStorage.getItem(healKey)) {
         sessionStorage.setItem(healKey, '1');
         if ('caches' in window) {
           const keys = await caches.keys();
+          if (!stillCurrent()) return false;
           await Promise.all(keys.map((k) => caches.delete(k)));
+          if (!stillCurrent()) return false;
         }
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
+          if (!stillCurrent()) return false;
           await Promise.all(regs.map((r) => r.unregister()));
+          if (!stillCurrent()) return false;
         }
         window.location.reload();
         return;
       }
     } catch {}
   }
+  if (!stillCurrent()) return false;
+  if (loadedViewContext && !sameViewAccount(loadedViewContext, context)) {
+    $('#cbx-claude-colors [data-action="close"]')?.click();
+    liveTactic = null; prepDraft = null; prepMatchId = null; prepMomentsDraft = []; prepMomentIndex = 0;
+    tacticDraft = null; sessionDraftBlocks = []; sessionDraftMeta = null; reusedSessionContext = null;
+    pendingExerciseId = ''; state.urgentAlertKey = ''; state.repartoAlertKey = ''; state.ratingMatchId = null;
+    state.cloudConnected = false; state.cloudError = '';
+    clearInterval(state.tick);
+  }
+  // Commit one complete account snapshot together, with no intervening await.
+  loadedViewContext = context;
+  Object.assign(state, { players: sortPlayersByName(players), callups, matches, trainings });
+  const liveSetting = settingRecords.find(({ id }) => id === 'live');
+  state.timer = projectLiveTimer(liveSetting?.timer ?? null, matches);
+  state.liveUpdatedAt = liveSetting?.updatedAt ?? 0;
+
+  state.exercises = exercises;
   state.trainingSessions = settingRecords
     .filter(({ recordType }) => recordType === 'trainingSession')
     .map((session) => {
@@ -749,9 +727,9 @@ async function refresh() {
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
   const settings = settingRecords.find(({ id }) => id === 'main');
-  state.settings = settings ?? { id: 'main' };
+  state.settings = { ...(settings ?? { id: 'main' }) };
   try {
-    const cachedTheme = JSON.parse(localStorage.getItem('campobase.theme') || 'null');
+    const cachedTheme = readAccountCache('campobase.theme', null);
     if (cachedTheme && typeof cachedTheme === 'object') {
       const isolated = window.__CAMPOBASE_READONLY_PREVIEW === true;
       // Resolve one authoritative palette; never merge stale device controls
@@ -761,7 +739,7 @@ async function refresh() {
   } catch {}
   if (!Object.hasOwn(state.settings, 'presets')) {
     try {
-      const cachedPresets = JSON.parse(localStorage.getItem('campobase.presets') || 'null');
+      const cachedPresets = readAccountCache('campobase.presets', null);
       state.settings.presets = Array.isArray(cachedPresets) && cachedPresets.length ? cachedPresets : [...DEFAULT_PRESETS];
     } catch {
       state.settings.presets = [...DEFAULT_PRESETS];
@@ -769,7 +747,7 @@ async function refresh() {
   }
   if (!Object.hasOwn(state.settings, 'sem')) {
     try {
-      const cachedSem = JSON.parse(localStorage.getItem('campobase.sem') || 'null');
+      const cachedSem = readAccountCache('campobase.sem', null);
       state.settings.sem = cachedSem && typeof cachedSem === 'object' ? cachedSem : { ...DEFAULT_SEM };
     } catch {
       state.settings.sem = { ...DEFAULT_SEM };
@@ -777,21 +755,19 @@ async function refresh() {
   }
   if (!Object.hasOwn(state.settings, 'matchPreset')) {
     try {
-      const cachedMatch = JSON.parse(localStorage.getItem('campobase.matchPreset') || 'null');
+      const cachedMatch = readAccountCache('campobase.matchPreset', null);
       state.settings.matchPreset = cachedMatch;
     } catch {
       state.settings.matchPreset = null;
     }
   }
   if (!Array.isArray(state.settings.delegatePermissions)) {
-    try {
-      const cached = JSON.parse(localStorage.getItem('campobase.delegatePermissions') || 'null');
-      if (Array.isArray(cached) && cached.length) {
-        state.settings.delegatePermissions = cached;
-      }
-    } catch {}
-  } else {
-    try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(state.settings.delegatePermissions)); } catch {}
+    const cached = readAccountCache('campobase.delegatePermissions', null);
+    if (Array.isArray(cached)) state.settings.delegatePermissions = cached;
+  }
+  try { writeAccountCache('campobase.delegatePermissions', getDelegatePermissions()); } catch {}
+  for (const key of ['theme', 'presets', 'sem', 'matchPreset']) {
+    try { writeAccountCache(`campobase.${key}`, state.settings[key] ?? (key === 'theme' ? {} : null)); } catch {}
   }
   state.format = settings?.format ?? 'F7';
   $('#format').value = state.format;
@@ -808,19 +784,21 @@ async function refresh() {
   }
   renderOrDefer(force);
   state.dataLoaded = true;
+  return true;
 }
 
 function syncDirectFieldCache() {
   try {
-    if (typeof localStorage === 'undefined') return;
+    if (typeof localStorage === 'undefined' || !viewAccountIsCurrent()) return;
     const directCache = {
+      database: loadedViewContext.database, saasUserId: loadedViewContext.userId,
       players: state.players || [],
       callups: state.callups || [],
       matches: state.matches || [],
       attendance: state.trainings || [],
       settings: [
         ...(state.trainingSessions || []).map((s) => ({ ...s, recordType: 'trainingSession' })),
-        ...(state.exercises || []).map((e) => ({ ...e, recordType: 'exercise' })),
+        ...(state.exercises || []).filter((e) => e.userCreated === true || e.source === 'personal').map((e) => ({ ...e, recordType: 'exercise' })),
         { id: 'main', teamName: state.settings?.teamName || '', format: state.format, ...(state.settings || {}) },
         ...(state.timer ? [{ id: 'live', timer: state.timer }] : [])
       ],
@@ -829,11 +807,12 @@ function syncDirectFieldCache() {
       team: { id: 'main', teamName: state.settings?.teamName || '', format: state.format, ...(state.settings || {}) },
       at: Date.now(),
     };
-    localStorage.setItem('campobase.directFieldCache', JSON.stringify(directCache));
+    writeAccountCache('campobase.directFieldCache', directCache);
   } catch {}
 }
 
 function renderAll() {
+  if (!viewAccountIsCurrent()) return;
   const config = FORMATS[state.format];
   $('#active-format').textContent = `${state.format} · ${config.players} en campo · ${config.duration} min`;
   renderPlayers(); renderCallups(); renderLive(); renderDelegate(); renderMatches(); renderTrainings();
@@ -2671,6 +2650,7 @@ function clearLiveForCompletedMatch(matchId) {
 }
 
 function renderLive() {
+  if (loadedViewContext && !viewAccountIsCurrent()) return;
   if(state.timer&&isMatchTerminal(state.matches.find(m=>String(m.id)===String(state.timer.matchId))))clearLiveForCompletedMatch(state.timer.matchId);
   const root = $('#live-match');
   const eligible = state.matches.filter((match) => (match.callupId || callupForMatch(match)) && !isMatchTerminal(match)).sort((a,b)=>a.date.localeCompare(b.date));
@@ -3592,6 +3572,7 @@ function renderLiveRepartoDashboard(fieldIds, benchIds, played, targets, config,
 }
 
 function renderDelegate() {
+  if (loadedViewContext && !viewAccountIsCurrent()) return;
   if(state.timer&&isMatchTerminal(state.matches.find(m=>String(m.id)===String(state.timer.matchId))))clearLiveForCompletedMatch(state.timer.matchId);
   const root = $('#delegate-match');
   if (!root) return;
@@ -6525,21 +6506,28 @@ function videosForExercise(exerciseId) {
 }
 
 async function handleVideoUpload(exerciseId, file) {
-  if (state.role !== 'owner') return toast('Solo Migue puede subir vídeos.');
+  if (state.role !== 'owner') return toast('Solo el titular puede subir vídeos.');
+  const context = ownerOperationContext();
   const id = uid();
   const extension = (file.name.split('.').pop() || 'mp4').toLowerCase();
   const path = videoPath(exerciseId, id, extension);
+  let storedPath;
   try {
-    await uploadVideo(path, file);
+    const uploaded = await uploadVideo(path, file);
+    context.assertContext();
+    storedPath = uploaded?.path || uploaded?.data?.path;
+    if (!storedPath) throw new Error('El almacenamiento no ha confirmado la ruta del vídeo. No se ha añadido a la biblioteca.');
   } catch (error) {
     console.warn('Subida de vídeo fallida:', error.message);
-    return toast('No se pudo subir el vídeo. Comprueba la conexión o el almacenamiento.');
+    return toast(`No se pudo añadir el vídeo: ${error.message}`);
   }
   const record = buildVideoRecord(
-    { exerciseId, nombre: file.name, path, mime: file.type, size: file.size, orden: videosForExercise(exerciseId).length },
+    { exerciseId, nombre: file.name, path: storedPath, mime: file.type, size: file.size, orden: videosForExercise(exerciseId).length },
     { id, createdAt: Date.now(), now: Date.now() },
   );
-  await put('settings', record);
+  context.assertContext();
+  await put('settings', record, { assertContext: context.assertContext });
+  context.assertContext();
   await refresh();
   toast('Vídeo subido.');
 }
@@ -7468,123 +7456,160 @@ async function ensureLegacyExercisesNotPresent() {
   await put('settings', { id: 'legacy-exercises-not-present-v2', recordType: 'migration', version: 10, createdAt: Date.now() });
 }
 
+function ownerOperationContext() {
+  const context = { userId: getBoundSaasUserId(), database: currentDatabaseName(), pinRevision: getPinAccessRevision(), role: state.role };
+  const assertContext = (database) => {
+    if (!viewAccountIsCurrent() || !roleCanUseOwnerFeatures(state.role) || state.role !== context.role
+        || getBoundSaasUserId() !== context.userId || currentDatabaseName() !== context.database
+        || getPinAccessRevision() !== context.pinRevision || (database && database !== context.database)) {
+      throw new Error('La cuenta ha cambiado. Vuelve a abrir esta acción antes de continuar.');
+    }
+  };
+  assertContext();
+  return { ...context, assertContext };
+}
+
+function downloadJsonBackup(backup, prefix = 'campobase-copia') {
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${prefix}-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 async function exportData() {
-  const backup = await exportDatabase(); const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `campobase-copia-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('Copia exportada.');
+  const context = ownerOperationContext();
+  const backup = await exportDatabase({ assertContext: context.assertContext });
+  context.assertContext();
+  downloadJsonBackup(backup);
+  toast('Copia de este equipo exportada. Guárdala en un lugar privado.');
+}
+
+function installBackupRecoveryAction() {
+  const actions = $('#export-data')?.parentElement;
+  if (!actions || $('#download-import-recovery')) return;
+  const button = document.createElement('button');
+  button.id = 'download-import-recovery'; button.type = 'button'; button.className = 'secondary';
+  button.textContent = 'Descargar respaldo anterior';
+  button.addEventListener('click', async () => {
+    try {
+      const context = ownerOperationContext();
+      const backup = await getImportRecoveryBackup({ assertContext: context.assertContext });
+      context.assertContext();
+      if (!backup) return toast('No hay un respaldo previo de importación para este equipo en este dispositivo.');
+      downloadJsonBackup(backup, 'campobase-antes-de-importar');
+      toast('Respaldo anterior descargado. Puedes revisarlo antes de importarlo.');
+    } catch (error) { handleError(error); }
+  });
+  actions.append(button);
 }
 
 async function downloadBackupJson() {
-  const backup = await exportDatabase();
+  const context = ownerOperationContext();
+  const backup = await exportDatabase({ assertContext: context.assertContext });
+  context.assertContext();
   const fileName = `campobase-copia-${new Date().toISOString().slice(0, 10)}.json`;
-  const jsonStr = JSON.stringify(backup, null, 2);
-  const file = new File([jsonStr], fileName, { type: 'application/json' });
-
+  const file = new File([JSON.stringify(backup, null, 2)], fileName, { type: 'application/json' });
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
-    await navigator.share({
-      title: 'Copia CampoBase',
-      text: `Copia completa de CampoBase (${state.players.length} jugadores, especialistas y partidos)`,
-      files: [file],
-    });
-    toast('Copia enviada correctamente.');
+    await navigator.share({ title: 'Copia CampoBase', text: 'Copia privada de tu equipo. Impórtala únicamente en su cuenta original.', files: [file] });
+    context.assertContext();
+    toast('Copia compartida. El archivo no transfiere una sesión de acceso.');
     return;
   }
-
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  downloadJsonBackup(backup);
   await askConfirmation({
-    title: '📲 Pasar datos al móvil',
-    message: `Se ha descargado "${fileName}".\n\n1. Envíatelo a tu móvil (por WhatsApp, AirDrop o email).\n2. En el móvil, abre CampoBase > Ajustes > "Importar JSON".\n\n¡Todos tus datos se transferirán de inmediato!`,
+    title: 'Copia de seguridad descargada',
+    message: `Se ha descargado "${fileName}". Guárdala en un lugar privado. Para recuperar datos, entra en la cuenta original y usa Ajustes → Importar JSON. Antes de sustituir los datos verás un resumen y se guardará un respaldo local.`,
     acceptLabel: 'Entendido',
   });
 }
 
 async function buildMobileSyncPayload() {
-  const teamId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || state.settings?.saasUserId || '';
-  const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://miguelperezh.github.io/campobase/';
-  let sessionHash = '';
-  try {
-    const client = getSupabaseAuthClient();
-    const { data } = await client.auth.getSession();
-    const session = data?.session;
-    if (session?.access_token && session?.refresh_token) {
-      const tokenObj = { a: session.access_token, r: session.refresh_token, u: session.user.id };
-      sessionHash = `#session=${encodeURIComponent(btoa(JSON.stringify(tokenObj)))}`;
-    }
-  } catch {}
-  const teamParam = teamId ? `&team=${encodeURIComponent(teamId)}` : '';
-  const syncUrl = `${baseUrl}?sync=owner${teamParam}${sessionHash}`;
+  const syncUrl = mobileAppLink(typeof window !== 'undefined' ? window.location.href : 'https://miguelperezh.github.io/campobase/');
   const teamName = myTeamName() || 'mi equipo';
-  const waText = `¡Hola Migue! Abre este enlace en el navegador de tu móvil para sincronizar CampoBase al instante con tu ordenador:\n\n${syncUrl}\n\nSe actualizarán automáticamente todos los partidos, asistencias y sesiones en tu móvil.`;
-  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
-  return { syncUrl, waUrl, teamId, teamName };
+  const waText = `Abre CampoBase en el navegador de tu móvil e inicia sesión con tu propia cuenta o PIN:\n\n${syncUrl}\n\nComprueba que aparece tu equipo. Los cambios se sincronizan cuando hay conexión; este enlace no comparte ninguna sesión de acceso.`;
+  return { syncUrl, waUrl: `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`, teamName };
 }
 
 async function shareDatabaseToMobile() {
   try {
+    const context = ownerOperationContext();
     const dialog = $('#mobile-sync-dialog');
     if (dialog) {
       const { syncUrl, waUrl } = await buildMobileSyncPayload();
-      const waBtn = $('#mobile-sync-wa-btn');
-      const copyBtn = $('#mobile-sync-copy-btn');
-      const jsonBtn = $('#mobile-sync-json-btn');
-      if (waBtn) {
-        waBtn.onclick = () => {
-          window.open(waUrl, '_blank');
-          dialog.close();
-        };
-      }
+      context.assertContext();
+      const intro = dialog.querySelector('.stack > p');
+      if (intro) intro.textContent = 'Abre la app en tu móvil e inicia sesión con tu propia cuenta o PIN. Comprueba el nombre del equipo y el estado de sincronización. Este enlace no comparte datos de acceso.';
+      const waBtn = $('#mobile-sync-wa-btn'), copyBtn = $('#mobile-sync-copy-btn'), jsonBtn = $('#mobile-sync-json-btn');
+      if (waBtn) waBtn.onclick = () => {
+        try { context.assertContext(); window.open(waUrl, '_blank', 'noopener,noreferrer'); dialog.close(); }
+        catch (error) { handleError(error); }
+      };
       if (copyBtn) {
+        copyBtn.textContent = 'Copiar dirección de la app';
         copyBtn.onclick = async () => {
           try {
-            await navigator.clipboard.writeText(syncUrl);
-            toast('Enlace copiado al portapapeles. Pégalo en tu navegador del móvil.');
-          } catch {
-            prompt('Copia este enlace para abrirlo en tu móvil:', syncUrl);
-          }
-          dialog.close();
+            context.assertContext();
+            try { await navigator.clipboard.writeText(syncUrl); context.assertContext(); toast('Dirección copiada. Abre la app e inicia sesión con tu propio acceso.'); }
+            catch (error) {
+              context.assertContext();
+              prompt('Copia esta dirección para abrir CampoBase en tu móvil:', syncUrl);
+            }
+            dialog.close();
+          } catch (error) { handleError(error); }
         };
       }
-      if (jsonBtn) {
-        jsonBtn.onclick = async () => {
-          dialog.close();
-          await downloadBackupJson();
-        };
-      }
+      if (jsonBtn) jsonBtn.onclick = () => {
+        try { context.assertContext(); dialog.close(); downloadBackupJson().catch(handleError); }
+        catch (error) { handleError(error); }
+      };
       dialog.showModal();
       return;
     }
     await downloadBackupJson();
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      toast(`No se pudo transferir: ${err.message}`);
-    }
+  } catch (error) {
+    if (error.name !== 'AbortError') toast(`No se pudo preparar el acceso: ${error.message}`);
   }
 }
 
+let importingData = false;
 async function importData(event) {
   const file = event.target.files[0]; if (!file) return;
-  if (file.size > 20_000_000) return toast('La copia supera el límite de 20 MB.');
+  if (importingData) return toast('Hay una importación en curso. Espera a que termine.');
+  importingData = true;
   try {
-    const backup = validateBackup(JSON.parse(await file.text()));
+    const context = ownerOperationContext();
+    if (file.size > 20_000_000) throw new Error('La copia supera el límite de 20 MB.');
+    const backup = JSON.parse(await file.text());
+    context.assertContext();
+    const data = validateBackupForAccount(backup, context);
+    const summary = backupSummary(data);
+    const date = typeof backup.exportedAt === 'string' && Number.isFinite(Date.parse(backup.exportedAt))
+      ? localDate(backup.exportedAt) : 'Fecha de copia no indicada';
+    const recoveryNote = isDemoDatabase() ? 'Esta demo es temporal.' : 'Antes de importar se guardará un respaldo local. Lo encontrarás en «Descargar respaldo anterior».';
     if (!await askConfirmation({
-      title: 'Importar datos de CampoBase',
-      message: 'La importación cargará la plantilla, especialistas/lanzadores, estadísticas y partidos desde la copia seleccionada.',
-      acceptLabel: 'Cargar datos',
-      danger: false,
+      title: 'Revisar copia antes de importar',
+      message: `Equipo de la copia: ${summary.teamName}\n${date}\n\n${summary.players} jugadores · ${summary.matches} partidos · ${summary.callups} convocatorias\n${summary.sessions} sesiones · ${summary.attendance} asistencias · ${summary.ownExercises} ejercicios personales\n\nSe sustituirán los datos de este equipo en este dispositivo, incluidos los ajustes y colores de la copia. ${recoveryNote}\n\nConfirma solo si quieres sustituirlos.`,
+      acceptLabel: 'Guardar respaldo e importar', danger: true,
     })) return;
-    await importDatabase(backup);
-    state.timer = null;
-    void put('settings', { id: 'live', timer: null, updatedAt: Date.now() });
+    context.assertContext();
+    await importDatabase(backup, { assertContext: context.assertContext });
+    context.assertContext();
+    state.timer = data.settings.find((record) => record.id === 'live')?.timer ?? null;
     await refresh(true);
-    await synchronizeCloud().catch(() => {});
-    toast('✅ Datos cargados: plantilla, partidos, estadísticas y lanzadores actualizados.');
+    context.assertContext();
+    toast(isDemoDatabase() ? 'Copia importada en la demo temporal.' : 'Copia importada en este dispositivo. Respaldo anterior guardado; comprobando sincronización.');
+    const result = await synchronizeCloud();
+    context.assertContext();
+    if (result?.demo) return;
+    if (result?.online && Number(result.pending || 0) === 0) toast('Copia importada y sincronizada. El respaldo anterior sigue disponible en este dispositivo.');
+    else toast(`Copia importada en este dispositivo. Sincronización pendiente. ${state.cloudError || result?.error || 'Conserva este dispositivo hasta sincronizar.'}`);
   } catch (error) {
     console.error(error);
-    toast(`No se pudo importar: ${error.message}`);
+    toast(`No se pudo completar la importación: ${error.message}`);
   } finally {
+    importingData = false;
     event.target.value = '';
   }
 }
@@ -8301,10 +8326,11 @@ function applyViewScopedTheme(theme, defaultHero, defaultBtn, defaultBtnInk, def
 }
 
 function applyCustomTheme(themeInput) {
-  themeInput = colorPreviewTheme() || themeInput;
+  if (loadedViewContext && !viewAccountIsCurrent()) return;
+  themeInput = (sameViewContext(colorEditorViewContext, viewContext()) ? colorPreviewTheme() : null) || themeInput;
   let localTheme = {};
   try {
-    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    localTheme = readAccountCache('campobase.theme', {});
   } catch {}
 
   const theme = {
@@ -9433,7 +9459,7 @@ async function saveCurrentThemePreset(name) {
   };
   state.settings.presets.push(newPreset);
   try {
-    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
+    writeAccountCache('campobase.presets', state.settings.presets);
   } catch {}
   if (roleCanUseOwnerFeatures(state.role)) {
     await put('settings', state.settings).catch(() => {});
@@ -9456,7 +9482,7 @@ async function applyThemePreset(index) {
   };
   state.settings.theme = updatedTheme;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(updatedTheme));
+    writeAccountCache('campobase.theme', updatedTheme);
   } catch {}
   applyCustomTheme(updatedTheme);
   if (roleCanUseOwnerFeatures(state.role)) {
@@ -9478,7 +9504,7 @@ async function setMatchThemePreset(index) {
     toast(`Tema para partido en vivo: ${p?.name || 'Seleccionado'}`);
   }
   try {
-    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+    writeAccountCache('campobase.matchPreset', state.settings.matchPreset);
   } catch {}
   if (roleCanUseOwnerFeatures(state.role)) {
     await put('settings', state.settings).catch(() => {});
@@ -9495,8 +9521,8 @@ async function deleteThemePreset(index) {
     state.settings.matchPreset--;
   }
   try {
-    localStorage.setItem('campobase.presets', JSON.stringify(state.settings.presets));
-    localStorage.setItem('campobase.matchPreset', JSON.stringify(state.settings.matchPreset));
+    writeAccountCache('campobase.presets', state.settings.presets);
+    writeAccountCache('campobase.matchPreset', state.settings.matchPreset);
   } catch {}
   if (roleCanUseOwnerFeatures(state.role)) {
     await put('settings', state.settings).catch(() => {});
@@ -9519,7 +9545,7 @@ async function resetExtendedColors() {
   t.appBgPct = 12;
   t.cardPct = 6;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(t));
+    writeAccountCache('campobase.theme', t);
   } catch {}
   applyCustomTheme(t);
   if (roleCanUseOwnerFeatures(state.role)) {
@@ -9536,7 +9562,7 @@ async function resetSpecialistsColors() {
   const keysToReset = ['spLeadBg', 'spLeadInk', 'spSubBg', 'spSubInk'];
   keysToReset.forEach((k) => delete t[k]);
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(t));
+    writeAccountCache('campobase.theme', t);
   } catch {}
   applyCustomTheme(t);
   if (roleCanUseOwnerFeatures(state.role)) {
@@ -9554,7 +9580,7 @@ async function resetTacticBoardColors() {
   keysToReset.forEach((k) => delete t[k]);
   if (t.tb) delete t.tb;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(t));
+    writeAccountCache('campobase.theme', t);
   } catch {}
   applyCustomTheme(t);
   if (roleCanUseOwnerFeatures(state.role)) {
@@ -9569,7 +9595,7 @@ async function setSemanticColor(key, color) {
   if (!state.settings.sem) state.settings.sem = { ...DEFAULT_SEM };
   state.settings.sem[key] = color;
   try {
-    localStorage.setItem('campobase.sem', JSON.stringify(state.settings.sem));
+    writeAccountCache('campobase.sem', state.settings.sem);
   } catch {}
   document.documentElement.style.setProperty(`--sem-${key}`, color);
   document.body.style.setProperty(`--sem-${key}`, color);
@@ -9619,7 +9645,7 @@ async function saveThemeSettings(event) {
     ...(state.settings?.theme || {}),
   };
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(theme));
+    writeAccountCache('campobase.theme', theme);
   } catch {}
   applyCustomTheme(theme);
 
@@ -9634,7 +9660,7 @@ function updateThemeProperty(prop, val, extra = {}) {
   if (/^sp(Lead|Sub)(Bg|Ink)$/.test(prop)) { updateViewThemeProperty('plantilla', prop, val); updateThemePreviewBox(state.settings.theme); return; }
   let localTheme = {};
   try {
-    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    localTheme = readAccountCache('campobase.theme', {});
   } catch {}
   const currentTheme = {
     themeBg: 'default',
@@ -9652,7 +9678,7 @@ function updateThemeProperty(prop, val, extra = {}) {
   };
   if (state.settings) state.settings.theme = currentTheme;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+    writeAccountCache('campobase.theme', currentTheme);
   } catch {}
   applyCustomTheme(currentTheme);
   updateThemePreviewBox(currentTheme);
@@ -9661,7 +9687,7 @@ function updateThemeProperty(prop, val, extra = {}) {
 function updateViewThemeProperty(viewId, prop, val) {
   let localTheme = {};
   try {
-    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    localTheme = readAccountCache('campobase.theme', {});
   } catch {}
   const currentTheme = {
     ...(state.settings?.theme || {}),
@@ -9704,7 +9730,7 @@ function updateViewThemeProperty(viewId, prop, val) {
   currentTheme.views[viewId][prop] = val;
   if (state.settings) state.settings.theme = currentTheme;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+    writeAccountCache('campobase.theme', currentTheme);
   } catch {}
   applyCustomTheme(currentTheme);
 }
@@ -9712,7 +9738,7 @@ function updateViewThemeProperty(viewId, prop, val) {
 function resetViewTheme(viewId) {
   let localTheme = {};
   try {
-    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    localTheme = readAccountCache('campobase.theme', {});
   } catch {}
   const currentTheme = {
     ...(state.settings?.theme || {}),
@@ -9725,7 +9751,7 @@ function resetViewTheme(viewId) {
     delete state.settings.theme.views[viewId];
   }
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+    writeAccountCache('campobase.theme', currentTheme);
   } catch {}
   applyCustomTheme(currentTheme);
 }
@@ -9733,7 +9759,7 @@ function resetViewTheme(viewId) {
 function copyViewThemeToAll(viewId) {
   let localTheme = {};
   try {
-    localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}');
+    localTheme = readAccountCache('campobase.theme', {});
   } catch {}
   const currentTheme = {
     ...(state.settings?.theme || {}),
@@ -9746,7 +9772,7 @@ function copyViewThemeToAll(viewId) {
   });
   if (state.settings) state.settings.theme = currentTheme;
   try {
-    localStorage.setItem('campobase.theme', JSON.stringify(currentTheme));
+    writeAccountCache('campobase.theme', currentTheme);
   } catch {}
   applyCustomTheme(currentTheme);
 }
@@ -9941,7 +9967,7 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
 
   function renderContent() {
     let localTheme = {};
-    try { localTheme = JSON.parse(localStorage.getItem('campobase.theme') || '{}'); } catch {}
+    try { localTheme = readAccountCache('campobase.theme', {}); } catch {}
     const theme = {
       ...(state.settings?.theme || {}),
       ...localTheme,
@@ -10779,7 +10805,7 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
         if (item.shared && state.settings.theme.views[currentViewId]) {
           state.settings.theme.views[currentViewId].buttonColors = saved.buttonColors;
           state.settings.theme.views[currentViewId].elementColors = saved.elementColors;
-          localStorage.setItem('campobase.theme', JSON.stringify(state.settings.theme));
+          writeAccountCache('campobase.theme', state.settings.theme);
         }
 
         picker.nextElementSibling.textContent = event.target.value;
@@ -10858,7 +10884,7 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
       for (const entry of currentElementOptions) delete view.elementColors?.[entry.selector];
     }
     state.settings.theme = theme;
-    localStorage.setItem('campobase.theme', JSON.stringify(theme));
+    writeAccountCache('campobase.theme', theme);
     applyCustomTheme(theme);
     if (roleCanUseOwnerFeatures(state.role)) await put('settings', state.settings).catch(() => {});
     toast('Colores de esta sección restablecidos.');
@@ -10874,7 +10900,7 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
       const savedTheme = structuredClone(state.settings?.theme || {});
       applyCustomTheme(savedTheme);
       try {
-        localStorage.setItem('campobase.theme', JSON.stringify(savedTheme));
+        writeAccountCache('campobase.theme', savedTheme);
       } catch {}
       if (roleCanUseOwnerFeatures(state.role)) {
         if (!state.settings) state.settings = { id: 'main' };
@@ -10893,6 +10919,8 @@ function openLegacyQuickColorDialog(targetKind = null, sectionId = null) {
 }
 function openQuickColorDialog(targetKind = null, sectionId = null) {
   if (!roleCanUseOwnerFeatures(state.role)) return toast('Solo el entrenador puede cambiar los colores.');
+  const context = ownerOperationContext();
+  colorEditorViewContext = viewContext();
   const scope=sectionId?document.getElementById(sectionId):null;
   const targets={specialists:'plantilla',dorsales:'plantilla','callup-plan':'convocatorias','prep-plan':'preparacion',callups:'convocatorias',live:'partido','live-board':'partido','delegate-board':'delegado','tactic-board':'tacticas',whatsapp:'cuerpo-tecnico'};
   const viewId=scope?.closest('.view')?.id || scope?.dataset.themeView || targets[targetKind] || (targetKind && (document.getElementById(targetKind)||['navegacion','exercise-detail','comunicador'].includes(targetKind))?targetKind:document.querySelector('.view.active')?.id) || 'plantilla';
@@ -10900,14 +10928,16 @@ function openQuickColorDialog(targetKind = null, sectionId = null) {
   const actualScope=scope||planScope||(targetKind==='specialists'?document.getElementById('plantilla-specialists-bar'):null);
   const title=actualScope?.querySelector('h2,h3,h4')?.textContent?.trim() || ({plantilla:'Plantilla',hoy:'Hoy','cuerpo-tecnico':'Cuerpo técnico',asistencia:'Asistencia',convocatorias:'Convocatoria',preparacion:'Preparación',partido:'Partido en vivo',sesiones:'Sesiones',ejercicios:'Ejercicios',tacticas:'Tácticas',navegacion:'Navegación compartida'})[viewId] || viewId;
   openClaudeColorEditor({viewId,scope:actualScope,title,
-    readTheme:()=>{let local={};try{local=JSON.parse(localStorage.getItem('campobase.theme')||'{}');}catch{}return resolveDisplayTheme(state.settings?.theme,local,undefined,window.__CAMPOBASE_READONLY_PREVIEW === true);},
-    applyTheme:applyCustomTheme,
+    readTheme:()=>{let local={};try{local=readAccountCache('campobase.theme', {});}catch{}return resolveDisplayTheme(state.settings?.theme,local,undefined,window.__CAMPOBASE_READONLY_PREVIEW === true);},
+    applyTheme:theme=>{if(sameViewContext(colorEditorViewContext,viewContext()))applyCustomTheme(theme);},
     saveTheme:async theme=>{
+      context.assertContext();
       if(!roleCanUseOwnerFeatures(state.role))throw new Error('Solo el entrenador puede guardar estos ajustes.');
       const settings={...state.settings,theme,updatedAt:Date.now()};
-      await put('settings',settings);
-      localStorage.setItem('campobase.theme',JSON.stringify(theme));
-      if(localStorage.getItem('campobase.theme')!==JSON.stringify(theme))throw new Error('No coincide la comprobación del guardado.');
+      await put('settings',settings,{assertContext:context.assertContext});
+      context.assertContext();
+      writeAccountCache('campobase.theme', theme);
+      if(JSON.stringify(readAccountCache('campobase.theme'))!==JSON.stringify(theme))throw new Error('No coincide la comprobación del guardado.');
       state.settings=settings;
     }
   });
@@ -11231,9 +11261,6 @@ async function startDemoSession(session) {
   await ensureSlideshareSeeded();
   await ensureLegacyExercisesNotPresent();
   await refresh();
-  const live = await getOne('settings', 'live');
-  state.timer = live?.timer ?? null;
-  state.liveUpdatedAt = live?.updatedAt ?? 0;
   if (!finishPinAccess(accessRevision)) return;
   applyRole('demo');
   networkStatus();
@@ -11318,17 +11345,20 @@ async function restoreSessionRole() {
 }
 
 async function hydratePinSettingsFromSupabase() {
-  if (state.settings.ownerPinHash && state.settings.delegatePinHash && state.settings.pinSalt) return true;
+  const context=viewContext();
+  if (viewAccountIsCurrent() && state.settings.ownerPinHash && state.settings.delegatePinHash && state.settings.pinSalt) return true;
   try {
     const remote = await getRemoteMainSettings();
+    if(!sameViewContext(context,viewContext()))return false;
     if (!remote?.ownerPinHash || !remote?.delegatePinHash || !remote?.pinSalt) return false;
     state.settings = {
-      ...state.settings,
+      ...(viewAccountIsCurrent() ? state.settings : {}),
       ...remote,
       id: 'main',
     };
     return true;
   } catch (error) {
+    if(!sameViewContext(context,viewContext()))return false;
     // Si hay sesión SaaS pero la configuración no carga, no fabricamos PIN nuevos.
     state.cloudError = error?.message || 'No se pudo cargar la configuración de acceso.';
     return false;
@@ -11337,13 +11367,16 @@ async function hydratePinSettingsFromSupabase() {
 
 async function showAuth(forceInitial = false, { hydrate = true } = {}) {
   const accessRevision = getPinAccessRevision();
+  const context=viewContext();
   // El cierre explícito debe bloquear la interfaz sin esperar a la red.
   if (hydrate) await hydratePinSettingsFromSupabase();
+  if(!sameViewContext(context,viewContext()))return;
   if (!state.settings.ownerPinHash || !state.settings.delegatePinHash) {
     const candidates = await getLocalPinSettingsCandidates().catch(() => []);
+    if(!sameViewContext(context,viewContext()))return;
     for (const candidate of candidates) {
       if (candidate.settings?.ownerPinHash && candidate.settings?.delegatePinHash) {
-        state.settings = { ...state.settings, ...candidate.settings, id: 'main' };
+        state.settings = { ...(viewAccountIsCurrent() ? state.settings : {}), ...candidate.settings, id: 'main' };
         break;
       }
     }
@@ -11390,11 +11423,27 @@ function ensureAuthPromptVisible() {
 
 async function completePinLogin(role, pin, userId = '', authenticated = false) {
   const accessRevision = beginPinAccess();
+  let accessUserId = getBoundSaasUserId();
+  const assertAccess = (sessionUserId = accessUserId) => {
+    const bound = getBoundSaasUserId();
+    if (getPinAccessRevision() !== accessRevision || (bound !== accessUserId && bound !== sessionUserId)) {
+      const error = new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+  };
+  const bindSession = session => {
+    assertAccess(session?.user?.id);
+    setBoundSaasUserId(session.user.id);
+    accessUserId = session.user.id;
+  };
   const effectiveUserId = userId || getBoundSaasUserId() || state.settings?.saasUserId || getRememberedSaasAccount()?.id || '';
   const currentSession = role === 'owner' && !authenticated
     ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
+  assertAccess();
 
   const sessionNow = await getCurrentSession(getSupabaseAuthClient()).catch(()=>null);
+  assertAccess();
   const wasDelegate = sessionNow?.user?.app_metadata?.campobase_role === 'delegate_pin';
   // A role boundary is an authentication boundary, not an owner JWT with hidden buttons.
   let replacingDelegateReplica = state.role === 'delegate';
@@ -11402,15 +11451,20 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   if (role === 'delegate' || wasDelegate || (role === 'owner' && replacingDelegateReplica)) {
     const session = authenticated ? sessionNow
       : await signInWithCampoBasePin(getSupabaseAuthClient(),effectiveUserId,pin,role);
+    assertAccess(session?.user?.id);
     if (!session?.user?.id) throw new Error('No se pudo iniciar la sesión segura.');
     const isDelegate = session.user.app_metadata?.campobase_role === 'delegate_pin';
     if ((role === 'delegate') !== isDelegate) throw new Error('La sesión no corresponde a este PIN.');
-    setBoundSaasUserId(session.user.id);
+    bindSession(session);
+    assertAccess();
     configureRealDatabase();
     try { sessionStorage.setItem('campobase.saasActiveBrowserSession',session.user.id); } catch {}
     await synchronizeCloud();
+    assertAccess();
     if (navigator.onLine && !state.cloudConnected) await synchronizeCloud();
+    assertAccess();
     await refresh(true);
+    assertAccess();
     if (navigator.onLine && !state.cloudConnected) throw new Error(state.cloudError || 'No se pudo sincronizar este acceso. Vuelve a intentar entrar.');
     if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
     applyRole(role);
@@ -11420,6 +11474,7 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   }
   const hasLocal = hasUsableTeamSnapshot(state);
   if (hasLocal) {
+    assertAccess();
     if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
     configureRealDatabase();
     applyRole(role);
@@ -11430,14 +11485,18 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
       try {
         if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
           const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin, 'owner').catch(() => null);
+          assertAccess(session?.user?.id);
           if (session?.user?.id) {
-            setBoundSaasUserId(session.user.id);
+            bindSession(session);
             try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
             try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
           }
         }
+        assertAccess();
         await synchronizeCloud();
+        assertAccess();
         await refresh();
+        assertAccess();
         renderAll();
       } catch (error) {
         console.warn('Acceso PIN con copia local: sincronización secundaria en segundo plano:', error);
@@ -11449,23 +11508,29 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
   if (role === 'owner' && !authenticated && currentSession?.user?.id !== (effectiveUserId || getBoundSaasUserId())) {
     try {
       const session = await signInWithCampoBasePin(getSupabaseAuthClient(), effectiveUserId, pin, 'owner');
+      assertAccess(session?.user?.id);
       if (session?.user?.id) {
-        setBoundSaasUserId(session.user.id);
+        bindSession(session);
         try { localStorage.setItem('campobase.saasUserId', String(session.user.id)); } catch {}
       }
     } catch (error) {
+      assertAccess();
       if (navigator.onLine && !state.players.length) throw error;
       console.warn('Acceso PIN con copia local: no se pudo conectar a la nube.', error);
     }
   }
+  assertAccess();
   configureRealDatabase();
   const bound = getBoundSaasUserId();
   if (bound) try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(bound)); } catch {}
   await synchronizeCloud();
+  assertAccess();
   // A startup sync may have begun before authentication; its completed result
   // is not a hydrated session. Retry once now that the account is bound.
   if (navigator.onLine && bound && !state.cloudConnected && !hasUsableTeamSnapshot(state)) await synchronizeCloud();
+  assertAccess();
   await refresh(true);
+  assertAccess();
   if (navigator.onLine && bound && !state.cloudConnected && !hasUsableTeamSnapshot(state)) {
     throw new Error(state.cloudError || 'No se han podido cargar los datos del equipo. Vuelve a intentar entrar; no se ha modificado ningún dato.');
   }
@@ -11485,14 +11550,28 @@ async function getConfiguredPinRole(pin) {
 
 async function loginWithPin(pin) {
   // Both visible PIN forms use the same validated role and data-loading path.
+  const accessRevision = getPinAccessRevision(), openingUserId = getBoundSaasUserId();
+  const assertAccess = (sessionUserId = openingUserId) => {
+    const bound = getBoundSaasUserId();
+    if (getPinAccessRevision() !== accessRevision || (bound !== openingUserId && bound !== sessionUserId)) {
+      const error = new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+  };
   const role = await getConfiguredPinRole(String(pin).trim());
+  assertAccess();
   if (role === 'demo') {
-    await startDemoSession(createDemoSession(crypto.randomUUID()));
+    const startingDemo = startDemoSession(createDemoSession(crypto.randomUUID()));
+    const demoRevision = getPinAccessRevision();
+    await startingDemo;
+    if (getPinAccessRevision() !== demoRevision || getBoundSaasUserId() !== openingUserId) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
     $('#auth-dialog')?.close();
   } else if (role) {
     await completePinLogin(role, String(pin).trim(), getBoundSaasUserId() || getRememberedSaasAccount()?.id || '');
   } else {
     const session = await signInWithCampoBasePin(getSupabaseAuthClient(),getBoundSaasUserId()||getRememberedSaasAccount()?.id||'',String(pin).trim());
+    assertAccess(session?.user?.id);
     const remoteRole = session.user.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'owner';
     await completePinLogin(remoteRole,String(pin).trim(),session.user.id,true);
     return remoteRole;
@@ -11502,6 +11581,16 @@ async function loginWithPin(pin) {
 
 async function submitAuth(event) {
   event.preventDefault();
+  const accessRevision = getPinAccessRevision();
+  let accessUserId = getBoundSaasUserId();
+  const assertAuth = (sessionUserId = accessUserId) => {
+    const bound = getBoundSaasUserId();
+    if (getPinAccessRevision() !== accessRevision || (bound !== accessUserId && bound !== sessionUserId)) {
+      const error = new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+  };
   const form = event.currentTarget;
   const submitBtn = $('#auth-submit-btn');
   const originalBtnText = submitBtn?.textContent || 'Entrar';
@@ -11515,8 +11604,10 @@ async function submitAuth(event) {
     // "crear PIN" durante el submit por una carrera de sincronización.
     if (createModeVisible) {
       const hydrated = await hydratePinSettingsFromSupabase();
+      assertAuth();
       if (hydrated) {
         await showAuth();
+        assertAuth();
         throw new TypeError('La cuenta ya tiene PIN configurados. Introduce tu PIN de CampoBase.');
       }
       const enteredOwnerPin = String(form.elements.newOwnerPin?.value || '').trim();
@@ -11524,21 +11615,31 @@ async function submitAuth(event) {
         try {
           const client = getSupabaseAuthClient();
           const session = await signInWithCampoBasePin(client, '', enteredOwnerPin);
+          assertAuth(session?.user?.id);
           if (session?.user?.id) {
             setBoundSaasUserId(session.user.id);
+            accessUserId = session.user.id;
+            assertAuth();
             configureRealDatabase();
             try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
             await hydratePinSettingsFromSupabase();
+            assertAuth();
             await completePinLogin('owner', enteredOwnerPin, session.user.id, true);
             toast('Sincronizado con CampoBase en la nube.');
             return;
           }
-        } catch {}
+        } catch (error) {
+          if (error?.code === 'CAMPOBASE_CONTEXT_CHANGED') throw error;
+          assertAuth();
+        }
       }
+      assertAuth();
       await savePins(form.elements.newOwnerPin.value, form.elements.newDelegatePin.value);
+      assertAuth();
       applyRole('owner');
     } else {
       if (!state.settings.ownerPinHash) await hydratePinSettingsFromSupabase();
+      assertAuth();
       const pin = String(form.elements.pin.value || '').trim();
       if (!/^\d{4,8}$/.test(pin) && pin.toLowerCase() !== 'demo') {
         throw new TypeError('El PIN debe tener entre 4 y 8 cifras.');
@@ -11550,38 +11651,47 @@ async function submitAuth(event) {
         return;
       } else if (state.settings.pinSalt && state.settings.ownerPinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.ownerPinHash)) {
+        assertAuth();
         await completePinLogin('owner', pin, getBoundSaasUserId() || getRememberedSaasAccount()?.id || '');
         return;
       } else if (pin === '0000' || pin === state.settings?.delegatePin || (state.settings.pinSalt && state.settings.delegatePinHash
           && await verifyPin(pin, state.settings.pinSalt, state.settings.delegatePinHash))) {
+        assertAuth();
         await completePinLogin('delegate', pin);
         return;
       } else if (state.settings.demoPinHash && await verifyPin(pin, state.settings.demoPinSalt, state.settings.demoPinHash)) {
+        assertAuth();
         $('#auth-dialog')?.close();
         await startDemoSession(createDemoSession(crypto.randomUUID()));
         return;
       } else {
+        assertAuth();
         // Último recurso: comprobar copias locales del mismo navegador sin
         // modificar Supabase. Nunca crear PIN nuevos desde una pantalla de login.
         const candidates = await getLocalPinSettingsCandidates();
+        assertAuth();
         let recoveredRole = '';
         let recoveredSettings = null;
         for (const candidate of candidates) {
           const local = candidate.settings;
           if (await verifyPin(pin, local.pinSalt, local.ownerPinHash)) {
+            assertAuth();
             recoveredRole = 'owner';
             recoveredSettings = local;
             if (candidate.userId) setBoundSaasUserId(candidate.userId);
             await completePinLogin('owner', pin, candidate.userId || '');
             return;
           }
+          assertAuth();
           if (pin === '0000' || pin === local.delegatePin || (local.delegatePinHash && await verifyPin(pin, local.pinSalt, local.delegatePinHash))) {
+            assertAuth();
             recoveredRole = 'delegate';
             recoveredSettings = local;
             if (candidate.userId) setBoundSaasUserId(candidate.userId);
             await completePinLogin('delegate', pin, candidate.userId || '');
             return;
           }
+          assertAuth();
         }
         if (!recoveredRole) {
           const userId = getBoundSaasUserId() || getRememberedSaasAccount()?.id || '';
@@ -11589,16 +11699,22 @@ async function submitAuth(event) {
           try {
             const client = getSupabaseAuthClient();
             const session = await signInWithCampoBasePin(client, userId || '', pin);
+            assertAuth(session?.user?.id);
             if (session?.user?.id) {
               setBoundSaasUserId(session.user.id);
+              accessUserId = session.user.id;
+              assertAuth();
               configureRealDatabase();
               try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(session.user.id)); } catch {}
               await hydratePinSettingsFromSupabase();
+              assertAuth();
               await completePinLogin(session.user.app_metadata?.campobase_role === 'delegate_pin' ? 'delegate' : 'owner', pin, session.user.id, true);
               toast('Sincronizado con CampoBase en la nube.');
               return;
             }
           } catch (err) {
+            if (err?.code === 'CAMPOBASE_CONTEXT_CHANGED') throw err;
+            assertAuth();
             supabaseError = err;
             console.warn('Fallo al validar PIN en Supabase:', err);
           }
@@ -11619,11 +11735,14 @@ async function submitAuth(event) {
     }
     if (!isDemoDatabase()) {
       await synchronizeCloud();
+      assertAuth();
       await refresh();
+      assertAuth();
     }
     $('#auth-dialog').close();
     renderAll();
   } catch (error) {
+    if (error?.code === 'CAMPOBASE_CONTEXT_CHANGED') return;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
@@ -11691,6 +11810,7 @@ function populateDelegateAccountForm() {
 async function saveDelegateAccountSettings(event) {
   event.preventDefault();
   if (state.role !== 'owner') return toast('Solo Migue puede configurar la cuenta del delegado.');
+  const context = ownerOperationContext();
   const form = event.currentTarget;
   const pin = String(form.elements.delegatePinInput?.value || '').trim();
   if (!/^\d{4,8}$/.test(pin)) {
@@ -11707,6 +11827,7 @@ async function saveDelegateAccountSettings(event) {
 
   const salt = state.settings.pinSalt || crypto.randomUUID();
   const delegatePinHash = await hashPin(pin, salt);
+  context.assertContext();
   const now = Date.now();
 
   state.settings = {
@@ -11718,9 +11839,10 @@ async function saveDelegateAccountSettings(event) {
     delegatePermissions: perms,
     updatedAt: now,
   };
-  try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(perms)); } catch {}
+  try { writeAccountCache('campobase.delegatePermissions', perms); } catch {}
 
-  await put('settings', state.settings);
+  await put('settings', state.settings, {assertContext: context.assertContext});
+  context.assertContext();
 
   try {
     const { getBoundSupabaseClient } = await import('./supabase-client.js?v=20261021-save-postmatch-1');
@@ -11733,14 +11855,15 @@ async function saveDelegateAccountSettings(event) {
   if (!isDemoDatabase()) {
     await synchronizeCloud().catch(() => {});
   }
+  context.assertContext();
   if (state.role === 'delegate' || state.delegateMode) {
     window.__campobaseAllowedViews = perms;
     syncDelegateModeDom();
   }
   try {
-    const cachedAccount = JSON.parse(localStorage.getItem('campobase.delegateAccount') || '{}');
+    const cachedAccount = readAccountCache('campobase.delegateAccount', {});
     cachedAccount.view_permissions = perms;
-    localStorage.setItem('campobase.delegateAccount', JSON.stringify(cachedAccount));
+    writeAccountCache('campobase.delegateAccount', cachedAccount);
   } catch {}
   const cbForm = document.getElementById('cb-delegate-permissions-form');
   if (cbForm) {
@@ -11755,6 +11878,7 @@ async function saveDelegateAccountSettings(event) {
 }
 
 async function persistDelegatePermissions(newPerms) {
+  const context = ownerOperationContext();
   const clean = Array.isArray(newPerms) ? [...new Set(newPerms.map(String))] : ['partido'];
   if (!clean.includes('partido') && !clean.includes('delegado')) {
     clean.push('partido');
@@ -11767,12 +11891,14 @@ async function persistDelegatePermissions(newPerms) {
     updatedAt: now,
   };
   try {
-    localStorage.setItem('campobase.delegatePermissions', JSON.stringify(clean));
+    writeAccountCache('campobase.delegatePermissions', clean);
   } catch {}
-  await put('settings', state.settings);
+  await put('settings', state.settings, {assertContext: context.assertContext});
+  context.assertContext();
   if (!isDemoDatabase()) {
     await synchronizeCloud().catch(() => {});
   }
+  context.assertContext();
   const cbForm = document.getElementById('cb-delegate-permissions-form');
   if (cbForm) {
     cbForm.querySelectorAll('input[name="delegateViews"]').forEach((chk) => {
@@ -11851,15 +11977,14 @@ async function pollLiveState() {
     await endDemoSession('La demostración ha finalizado al cumplirse el límite de dos horas.');
     return;
   }
+  const context = viewContext();
   const live = await getOne('settings', 'live');
-  if ((live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
-  state.liveUpdatedAt = live?.updatedAt ?? 0;
-  state.timer = live.timer;
-  sanitizeLiveTimer();
+  if (!sameViewContext(context, viewContext()) || (live?.updatedAt ?? 0) <= state.liveUpdatedAt) return;
   // Un live remoto nuevo invalida la pizarra en memoria. refresh() cargará
   // primero la preparación sincronizada y renderLive() la reconstruirá exacta.
   liveTactic = null;
   await refresh();
+  if (!sameViewContext(context, viewContext())) return;
   if (state.role === 'delegate') { enterDelegateMode(); } else { renderLive(); renderDelegate(); }
 }
 
@@ -13326,6 +13451,7 @@ function wireEvents() {
     try {
       await synchronizeCloud();
       const info = await getSyncDiagnostics();
+    if (!sameViewContext(context, viewContext())) return;
       if (info.pending === 0) toast('Sincronización completada.');
       else toast(`Quedan ${info.pending} cambios pendientes.`);
     } catch (error) {
@@ -13468,6 +13594,7 @@ function wireEvents() {
     }
   });
   $('#export-data').addEventListener('click', () => exportData().catch(handleError)); $('#import-data').addEventListener('change', importData);
+  installBackupRecoveryAction();
   $('#format').addEventListener('change', async (event) => {
     state.format = event.target.value;
     state.settings = { ...state.settings, id: 'main', format: state.format };
@@ -14074,6 +14201,7 @@ function networkStatus() {
 }
 
 async function refreshSyncStatusPanel() {
+  const context = viewContext();
   const text = $('#sync-status-text');
   const detail = $('#sync-status-detail');
   const recover = $('#recover-local-pending');
@@ -14094,6 +14222,7 @@ async function refreshSyncStatusPanel() {
       : (state.cloudError || '');
     recover?.classList.toggle('hidden', !(info.boundUserId && info.legacyPending > 0));
   } catch (error) {
+    if (!sameViewContext(context, viewContext())) return;
     text.textContent = 'No se pudo comprobar el estado de sincronización.';
     if (detail) detail.textContent = error.message || '';
     recover?.classList.add('hidden');
@@ -14142,13 +14271,20 @@ async function ensureRealtimeSubscription() {
 }
 
 let cloudSynchronizationPromise = null;
+let cloudSynchronizationContext = null;
 async function synchronizeCloud() {
-  if (cloudSynchronizationPromise) return cloudSynchronizationPromise;
-  cloudSynchronizationPromise = runCloudSynchronization().finally(() => { cloudSynchronizationPromise = null; });
-  return cloudSynchronizationPromise;
+  const context = viewContext();
+  if (cloudSynchronizationPromise && sameViewContext(cloudSynchronizationContext, context)) return cloudSynchronizationPromise;
+  cloudSynchronizationContext = context;
+  const promise = runCloudSynchronization(context).finally(() => {
+    if (cloudSynchronizationPromise === promise) cloudSynchronizationPromise = null;
+  });
+  cloudSynchronizationPromise = promise;
+  return promise;
 }
 
-async function runCloudSynchronization() {
+async function runCloudSynchronization(context = viewContext()) {
+  const stillCurrent = () => sameViewContext(context, viewContext());
   if (isDemoDatabase()) {
     await refresh();
     networkStatus();
@@ -14163,6 +14299,7 @@ async function runCloudSynchronization() {
   let result;
   try {
     result = await syncFromCloud();
+    if (!stillCurrent()) return { online: false, contextChanged: true };
     state.cloudConnected = result.online;
     state.cloudError = result?.authRequired
       ? 'Reconecta tu cuenta para sincronizar. Los datos de este dispositivo se conservan.'
@@ -14174,12 +14311,14 @@ async function runCloudSynchronization() {
       await refresh();
     }
   } catch (error) {
+    if (!stillCurrent()) return { online: false, contextChanged: true };
     state.cloudConnected = false;
     state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
     result = { online: false, error: state.cloudError };
   } finally {
-    lastCloudSyncTimestamp = Date.now();
+    if (stillCurrent()) lastCloudSyncTimestamp = Date.now();
   }
+  if (!stillCurrent()) return { online: false, contextChanged: true };
   networkStatus();
   await refreshSyncStatusPanel();
   return result;
@@ -14274,81 +14413,30 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261021-save-postmatch-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261022-pilot-safety-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
   }
   await ensureLegacyExercisesNotPresent();
   await refresh();
-  const live = await getOne('settings', 'live');
-  state.timer = live?.timer ?? null;
-  sanitizeLiveTimer();
-  state.liveUpdatedAt = live?.updatedAt ?? 0;
   await reapplyPreparacionToTimer();
   renderLive();
   renderDelegate();
   let autoLoggedInDelegate = false;
   if (typeof window !== 'undefined' && window.location) {
     const params = new URLSearchParams(window.location.search);
-    const syncParam = params.get('sync');
     const roleParam = params.get('role');
     const pinParam = params.get('pin');
     const teamParam = params.get('team');
-    const permsParam = params.get('perms');
 
-    if (syncParam === 'owner' || (roleParam === 'owner' && teamParam) || (teamParam && roleParam !== 'delegate')) {
-      if (teamParam) {
-        setBoundSaasUserId(teamParam);
-        try {
-          localStorage.setItem('campobase.saasUserId', String(teamParam));
-          sessionStorage.setItem('campobase.saasActiveBrowserSession', String(teamParam));
-        } catch {}
-        configureRealDatabase();
-      }
-
-      const hash = window.location.hash || '';
-      if (hash.startsWith('#session=')) {
-        try {
-          const rawToken = decodeURIComponent(hash.slice('#session='.length));
-          const sess = JSON.parse(atob(rawToken));
-          if (sess?.a && sess?.r) {
-            const client = getSupabaseAuthClient();
-            if (client?.auth?.setSession) {
-              await client.auth.setSession({ access_token: sess.a, refresh_token: sess.r });
-            }
-          }
-        } catch (e) {
-          console.warn('No se pudo restaurar la sesión transferida en el móvil:', e);
-        }
-        try {
-          window.history.replaceState({}, document.title, window.location.pathname + (window.location.search || ''));
-        } catch {}
-      }
-
-      void (async () => {
-        try {
-          await synchronizeCloud();
-          await refresh(true);
-          toast('✅ Móvil sincronizado con el ordenador correctamente.');
-        } catch {}
-      })();
+    const legacyMobileLink = cleanLegacyMobileLink(window.location.href);
+    if (legacyMobileLink.removed) {
+      try { window.history.replaceState({}, document.title, legacyMobileLink.url); } catch {}
+      toast('Enlace antiguo actualizado. Usa tu propia cuenta o PIN; no se ha transferido ninguna sesión.');
     }
 
-    if (roleParam === 'delegate') {
-      if (teamParam) {
-        setBoundSaasUserId(teamParam);
-        try { sessionStorage.setItem('campobase.saasActiveBrowserSession', String(teamParam)); } catch {}
-        configureRealDatabase();
-      }
-      if (permsParam && !Array.isArray(state.settings?.delegatePermissions)) {
-        const permsList = permsParam.split(',').map((p) => p.trim()).filter(Boolean);
-        if (permsList.length) {
-          state.settings = { ...(state.settings || {}), id: 'main', delegatePermissions: permsList };
-          try { localStorage.setItem('campobase.delegatePermissions', JSON.stringify(permsList)); } catch {}
-          // Invitation hints never overwrite the canonical team settings.
-        }
-      }
+    if (roleParam === 'delegate' && !legacyMobileLink.removed) {
       if (pinParam) {
         try {
           await completePinLogin('delegate',pinParam.trim(),teamParam||'');

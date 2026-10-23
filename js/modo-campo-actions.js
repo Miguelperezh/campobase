@@ -1,11 +1,13 @@
-(() => {
+(async () => {
   'use strict';
 
-  const SUPABASE_URL = 'https://mdzpygfwugawlmknywxa.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_j7duh_i5pNnMZMtT0YT-fg_l76UA_gH';
-  const client = globalThis.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true },
-  });
+  const [auth, {createCampoBaseCloudStore}, {buildMutation}] = await Promise.all([
+    import('./auth-manager.js'), import('./supabase-client.js'), import('./sync-core.js'),
+  ]);
+  const TABLE_STORES = Object.freeze({partidos:'matches',configuracion:'settings',asistencias:'trainings'});
+  let adapter;
+  const attendanceContexts = new WeakMap();
+  let attendanceOpening = null;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -19,30 +21,58 @@
     window.setTimeout(() => toast.classList.remove('show'), 2600);
   }
 
-  function assertClient() {
-    if (!client) throw new Error('No está disponible la conexión de CampoBase con Supabase.');
+  function activeRole() {
+    return globalThis.__campobase?.state?.role || sessionStorage.getItem('campobase.sessionRole') || '';
   }
 
-  async function readPayload(table, id) {
-    assertClient();
-    const { data, error } = await client.from(table).select('id,payload,deleted_at').eq('id', id).limit(1);
-    if (error) throw error;
-    const row = Array.isArray(data) ? data.find((item) => !item.deleted_at) : null;
-    return row?.payload || null;
+  function currentIdentity() {
+    return {userId:auth.getBoundSaasUserId(),pinRevision:auth.getPinAccessRevision(),role:activeRole()};
   }
 
-  async function readActivePayloads(table) {
-    assertClient();
-    const { data, error } = await client.from(table).select('id,payload,deleted_at');
-    if (error) throw error;
-    return (data || []).filter((row) => !row.deleted_at && row.payload).map((row) => row.payload);
+  async function actionContext({ownerOnly=false,expectedIdentity} = {}) {
+    const context={...(expectedIdentity || currentIdentity())};
+    context.database=context.userId ? auth.userDatabaseName(context.userId) : 'campobase';
+    const assertContext=()=>{
+      if(!context.userId || !['owner','delegate'].includes(context.role) || auth.isPinAccessLocked()
+        || auth.getBoundSaasUserId()!==context.userId || auth.getPinAccessRevision()!==context.pinRevision || activeRole()!==context.role) {
+        const error=new Error('La cuenta o el acceso han cambiado. Vuelve a entrar antes de guardar.');
+        error.code='CAMPOBASE_CONTEXT_CHANGED';throw error;
+      }
+      if(ownerOnly && context.role!=='owner')throw new Error('Solo el titular puede marcar este evento como realizado.');
+    };
+    assertContext();
+    adapter ||= createCampoBaseCloudStore({initializeUi:false});
+    const principal=await adapter.prepare(undefined,{expectedContext:context});
+    assertContext();
+    if(principal.userId!==context.userId || (ownerOnly && principal.delegate))throw new Error('Esta cuenta no tiene permiso para completar el evento.');
+    const options={expectedContext:{...context,ownerUserId:principal.ownerUserId,teamId:principal.teamId}};
+    return {assertContext,options,snapshots:new Map()};
   }
 
-  async function upsertPayload(table, record) {
-    assertClient();
-    const updatedAt = Number(record.updatedAt) || Date.now();
-    const { error } = await client.from(table).upsert({ id:record.id, payload:record, updated_at:updatedAt, deleted_at:null }, { onConflict:'id' });
-    if (error) throw error;
+  async function readActivePayloads(table, access) {
+    const store=TABLE_STORES[table];
+    if(!store)throw new Error('El registro no pertenece a una sección de Modo Campo.');
+    access.assertContext();
+    if(!access.snapshots.has(store))access.snapshots.set(store,adapter.getSnapshot(store,access.options));
+    const snapshot=await access.snapshots.get(store);
+    access.assertContext();
+    if(snapshot.restricted)throw new Error('No tienes permiso para abrir estos datos.');
+    return snapshot.records;
+  }
+
+  async function readPayload(table, id, access) {
+    return (await readActivePayloads(table,access)).find(record=>String(record.id)===String(id)) || null;
+  }
+
+  async function upsertPayload(table, record, access) {
+    access.assertContext();
+    const saved=await adapter.upsert(buildMutation(TABLE_STORES[table],'upsert',record),access.options);
+    access.assertContext();
+    if(saved?.applied===false)throw new Error('El registro ha cambiado en otro dispositivo. Conserva tu borrador y vuelve a abrirlo antes de guardar.');
+  }
+
+  function reloadAfterSave(access) {
+    window.setTimeout(()=>{try{access.assertContext();window.location.reload();}catch{/* A later account owns its current screen. */}},450);
   }
 
   function attendanceEntryFromRow(row) {
@@ -60,16 +90,28 @@
   async function saveRealAttendance(form) {
     const kind = form.dataset.attKind === 'match' ? 'match' : 'session';
     const sourceId = form.dataset.attId;
+    if(!sourceId)throw new Error('Vuelve a abrir el evento antes de guardar la asistencia.');
+    const attendance=$$('.attendance-row-full',form).map(attendanceEntryFromRow);
+    const notes=String($('[data-att-record-notes]',form)?.value || '').trim();
+    const opening=attendanceContexts.get(form) || attendanceOpening;
+    if(!opening || opening.kind!==kind || String(opening.id)!==String(sourceId))throw new Error('Vuelve a abrir la asistencia antes de guardar.');
+    const access=await actionContext({expectedIdentity:opening.identity});
     const table = kind === 'match' ? 'partidos' : 'configuracion';
-    const event = await readPayload(table, sourceId);
+    const event = await readPayload(table, sourceId,access);
     if (!event) throw new Error(kind === 'match' ? 'El partido ya no está disponible.' : 'La sesión ya no está disponible.');
 
-    const records = await readActivePayloads('asistencias');
+    const records = await readActivePayloads('asistencias',access);
     const eventDate = dateOnly(event.date);
-    const existing = kind === 'match'
-      ? records.find((record) => record?.kind === 'match' && String(record.matchId || '') === String(sourceId))
-      : records.find((record) => String(record?.sessionId || '') === String(sourceId))
-        || records.find((record) => record?.kind === 'training' && dateOnly(record.date) === eventDate);
+    const exact=records.filter(record=>kind==='match' ? record?.kind==='match'&&String(record.matchId || '')===String(sourceId) : String(record?.sessionId || '')===String(sourceId));
+    if(exact.length>1)throw new Error('Hay varios registros de asistencia para este evento. Revísalos en la app antes de guardar.');
+    let existing=exact[0];
+    if(!existing && kind==='session' && /^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+      const sameDay=(await readActivePayloads('configuracion',access)).filter(record=>record?.recordType==='trainingSession'&&dateOnly(record.date)===eventDate);
+      const legacy=records.filter(record=>!record?.sessionId&&record?.kind==='training'&&dateOnly(record.date)===eventDate);
+      if(sameDay.length===1&&legacy.length===1)existing=legacy[0];
+    }
+    access.assertContext();
+    if(!form.isConnected || form.dataset.attId!==sourceId || (form.dataset.attKind==='match'?'match':'session')!==kind)throw new Error('El formulario ha cambiado. Vuelve a abrir la asistencia.');
 
     const now = Date.now();
     const record = {
@@ -79,15 +121,15 @@
       matchId: kind === 'match' ? sourceId : null,
       sessionId: kind === 'session' ? sourceId : null,
       date: eventDate,
-      notes: String($('[data-att-record-notes]', form)?.value || '').trim(),
-      attendance: $$('.attendance-row-full', form).map(attendanceEntryFromRow),
+      notes,
+      attendance,
       createdAt: existing?.createdAt || now,
       updatedAt: now,
     };
 
-    await upsertPayload('asistencias', record);
+    await upsertPayload('asistencias', record,access);
     showToast('Asistencia guardada y sincronizada.');
-    window.setTimeout(() => window.location.reload(), 450);
+    reloadAfterSave(access);
   }
 
   async function markAsCompleted(kind, id, button) {
@@ -98,13 +140,14 @@
     if (!accepted) return;
     button.disabled = true;
     try {
+      const access=await actionContext({ownerOnly:true});
       const table = isMatch ? 'partidos' : 'configuracion';
-      const current = await readPayload(table, id);
+      const current = await readPayload(table, id,access);
       if (!current) throw new Error(isMatch ? 'El partido ya no está disponible.' : 'La sesión ya no está disponible.');
       const now = Date.now();
-      await upsertPayload(table, { ...current, status:isMatch ? 'finished' : 'closed', closedAt:now, updatedAt:now });
+      await upsertPayload(table, { ...current, status:isMatch ? 'finished' : 'closed', closedAt:now, updatedAt:now },access);
       showToast(isMatch ? 'Partido marcado como realizado.' : 'Sesión marcada como realizada.');
-      window.setTimeout(() => window.location.reload(), 450);
+      reloadAfterSave(access);
     } catch (error) {
       button.disabled = false;
       showToast(error?.message || 'No se pudo guardar el cambio.');
@@ -160,6 +203,10 @@
   function normalizeIntegratedCopy() {
     const form = $('#campo-attendance-form');
     if (form) {
+      const kind=form.dataset.attKind==='match'?'match':'session';
+      if(attendanceOpening && attendanceOpening.kind===kind && String(attendanceOpening.id)===String(form.dataset.attId) && !attendanceContexts.has(form)) {
+        attendanceContexts.set(form,attendanceOpening);
+      }
       const submit = $('button[type="submit"]', form);
       if (submit) submit.textContent = 'Guardar asistencia';
       $$('.note', form).forEach((note) => {
@@ -202,7 +249,10 @@
       return;
     }
 
-    if (event.target.closest('[data-attendance-session], [data-attendance-match]')) {
+    const attendanceButton=event.target.closest('[data-attendance-session], [data-attendance-match]');
+    if (attendanceButton) {
+      const kind=attendanceButton.hasAttribute('data-attendance-match')?'match':'session';
+      attendanceOpening={kind,id:kind==='match'?attendanceButton.dataset.attendanceMatch:attendanceButton.dataset.attendanceSession,identity:currentIdentity()};
       window.setTimeout(normalizeIntegratedCopy, 0);
       window.setTimeout(normalizeIntegratedCopy, 120);
     }
@@ -225,4 +275,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleEnhance, { once:true });
   else scheduleEnhance();
   window.addEventListener('pageshow', scheduleEnhance);
-})();
+})().catch(error=>{
+  const toast=document.querySelector('#toast');
+  if(toast){toast.textContent=error?.message || 'No se pudo preparar el acceso de Modo Campo.';toast.classList.add('show');}
+});

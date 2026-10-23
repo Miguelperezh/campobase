@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Protección de datos del piloto · prueba aislada</title>
+<body><button id="run">Comprobar aislamiento y recuperación</button><pre id="result">Pendiente</pre>
+<script type="module">
+import * as db from '/js/db.js';
+import * as auth from '/js/auth-manager.js';
+import {buildMutation} from '/js/sync-core.js?v=20261009-postgame-sync-1';
+
+const output=document.querySelector('#result'),A='pilot-fixture-a',B='pilot-fixture-b';
+globalThis.__campobase={state:{role:'owner'}};
+const check=(condition,message)=>{if(!condition)throw Error(message);output.textContent+='\nOK: '+message;};
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
+const activate=id=>{auth.setBoundSaasUserId(id);db.configureRealDatabase();globalThis.__campobase.state.role='owner';};
+const result=request=>new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+const done=tx=>new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});
+async function rawDatabase(name,version=auth.DATABASE_VERSION){return new Promise((resolve,reject)=>{const open=globalThis.__cbNativeIndexedDbOpen || indexedDB.open.bind(indexedDB);const request=open(name,version);request.onupgradeneeded=()=>{for(const store of [...db.STORES,'syncQueue',...(version>=3?['localRecovery']:[])])if(!request.result.objectStoreNames.contains(store))request.result.createObjectStore(store,{keyPath:'id'});};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
+async function rows(name,store){const database=await rawDatabase(name);try{return await result(database.transaction(store).objectStore(store).getAll());}finally{database.close();}}
+async function seed(name,data,version){const database=await rawDatabase(name,version);try{const tx=database.transaction(Object.keys(data),'readwrite');for(const [store,records]of Object.entries(data)){const target=tx.objectStore(store);target.clear();for(const record of records)target.put(record);}await done(tx);}finally{database.close();}}
+const empty=()=>Object.fromEntries([...db.STORES,'syncQueue'].map(store=>[store,[]]));
+const copy=(data,user=A)=>({app:'CampoBase',version:1,saasUserId:user,database:auth.userDatabaseName(user),mode:'real',exportedAt:'2026-10-22T10:00:00.000Z',data:Object.fromEntries(db.STORES.map(store=>[store,structuredClone(data[store] || [])]))});
+async function rejects(promise,pattern,message){let error;try{await promise;}catch(cause){error=cause;}check(Boolean(error)&&pattern.test(error.message),message);return error;}
+function holdRead(databaseName,storeName){
+ const started=deferred(),gate=deferred(),original=IDBObjectStore.prototype.getAll;
+ IDBObjectStore.prototype.getAll=function(...args){
+  const request=original.apply(this,args);
+  if(this.transaction.db.name===databaseName&&this.name===storeName){
+   IDBObjectStore.prototype.getAll=original;
+   Object.defineProperty(request,'onsuccess',{configurable:true,set(handler){request.addEventListener('success',event=>{started.resolve();gate.promise.then(()=>handler.call(request,event));},{once:true});}});
+  }
+  return request;
+ };
+ return {started:started.promise,release:()=>gate.resolve()};
+}
+
+window.runPilotDatabaseCases=async()=>{
+ output.textContent='IndexedDB real con cuentas ficticias y nube simulada';
+ db.configureCloudStore(null);activate(A);
+ const upgradeData={players:[{id:'upgrade-player'}],callups:[{id:'upgrade-callup'}],matches:[{id:'upgrade-match'}],trainings:[{id:'upgrade-attendance'}],settings:[{id:'main',teamName:'Conservado'}],syncQueue:[buildMutation('players','upsert',{id:'upgrade-player'},1)]};
+ await seed(auth.userDatabaseName(A),upgradeData,2);
+ const upgraded=await db.openDatabase();
+ check(upgraded.version===3&&upgraded.objectStoreNames.contains('localRecovery'),'La base versión 2 añade el almacén local de recuperación al abrir con versión 3');
+ for(const store of [...db.STORES,'syncQueue'])check(same(await rows(auth.userDatabaseName(A),store),upgradeData[store]),'La actualización conserva íntegro el almacén '+store);
+ const authUpgradeName='campobase_pilot-auth-upgrade';await seed(authUpgradeName,upgradeData,2);
+ const authUpgraded=await auth.openRawDatabase(authUpgradeName);
+ check(authUpgraded.version===3&&authUpgraded.objectStoreNames.contains('localRecovery'),'El acceso PIN/SaaS crea el mismo esquema aditivo versión 3');
+ for(const store of [...db.STORES,'syncQueue'])check(same(await result(authUpgraded.transaction(store).objectStore(store).getAll()),upgradeData[store]),'La apertura de autenticación conserva '+store);
+ const laterVersion=await rawDatabase(authUpgradeName,4);laterVersion.close();
+ let authClosed=false;try{authUpgraded.transaction('players');}catch(error){authClosed=error.name==='InvalidStateError';}
+ check(authClosed,'Autenticación cierra su conexión cuando otra pestaña cambia la versión');
+ const temporaryId='pilot-fixture-versionchange';activate(temporaryId);const temporaryDb=await db.openDatabase();
+ const laterDb=await rawDatabase(auth.userDatabaseName(temporaryId),4);laterDb.close();
+ let localClosed=false;try{temporaryDb.transaction('players');}catch(error){localClosed=error.name==='InvalidStateError';}
+ check(localClosed,'La capa de datos cierra conexiones antiguas al cambiar la versión');activate(A);
+ const blockedId='pilot-fixture-blocked';await seed(auth.userDatabaseName(blockedId),upgradeData,2);
+ const blocking=await rawDatabase(auth.userDatabaseName(blockedId),2);activate(blockedId);
+ await rejects(db.openDatabase(),/Cierra otras pestañas/,'Una conexión versión 2 bloqueante informa cómo continuar sin modificar datos');
+ const retried=db.openDatabase();blocking.close();
+ const retriedDb=await retried;
+ check(retriedDb.version===3&&(await db.getAll('players'))[0].id==='upgrade-player','Tras cerrar la pestaña bloqueante se puede reintentar sin recargar ni reutilizar una promesa fallida');
+ const blockedAuthName='campobase_pilot-auth-blocked';await seed(blockedAuthName,upgradeData,2);
+ const blockingAuth=await rawDatabase(blockedAuthName,2);
+ await rejects(auth.openRawDatabase(blockedAuthName),/Cierra otras pestañas/,'Autenticación también informa una actualización bloqueada');
+ const retriedAuth=auth.openRawDatabase(blockedAuthName);blockingAuth.close();
+ const retriedAuthDb=await retriedAuth;
+ check(retriedAuthDb.version===3&&(await result(retriedAuthDb.transaction('players').objectStore('players').getAll()))[0].id==='upgrade-player','Autenticación cierra la apertura tardía rechazada y conserva datos al reintentar');
+ retriedAuthDb.close();activate(A);
+ await seed(auth.userDatabaseName(A),{...empty(),players:[{id:'same',name:'Jugador A'}]});
+ await seed(auth.userDatabaseName(B),{...empty(),players:[{id:'same',name:'Jugador B'}]});
+ await seed(auth.userDatabaseName(A),{settings:[{id:'main',saasUserId:A,teamName:'Privado A',pinSalt:'salt-a',ownerPinHash:'owner-a'}]});
+ await seed('campobase',{...empty(),settings:[{id:'main',saasUserId:A,pinSalt:'salt-legacy-a',ownerPinHash:'legacy-a'}]});
+ activate(B);const pinCandidatesB=await db.getLocalPinSettingsCandidates();
+ check(pinCandidatesB.length===0,'B sin PIN no recibe candidatos ni ajustes de A aunque sus bases estén pobladas');
+ activate(A);check((await db.getLocalPinSettingsCandidates()).every(candidate=>candidate.userId===A),'Los candidatos PIN se limitan a la cuenta actual y su legado acreditado');
+
+ const read=holdRead(auth.userDatabaseName(A),'players');
+ const pendingRead=db.getAll('players').then(value=>({value}),error=>({error}));
+ await read.started;activate(B);read.release();
+ check((await pendingRead).error?.code==='CAMPOBASE_CONTEXT_CHANGED','Una lectura de A retenida se cancela después de entrar en B');
+ check((await db.getAll('players'))[0].name==='Jugador B','B conserva su jugador aunque el ID coincide con A');
+
+ activate(A);const pinRead=holdRead(auth.userDatabaseName(A),'players');
+ const pendingPinRead=db.getAll('players').catch(error=>error);
+ await pinRead.started;auth.lockPinAccess();pinRead.release();
+ check((await pendingPinRead).code==='CAMPOBASE_CONTEXT_CHANGED','Cambiar la revisión PIN invalida lecturas anteriores');
+
+ const snapshotStarted=deferred(),snapshotGate=deferred();
+ db.configureCloudStore({prepare:async()=>({userId:auth.getBoundSaasUserId(),delegate:false}),getSnapshot:async()=>{snapshotStarted.resolve();await snapshotGate.promise;return {records:[{id:'same',name:'Nube A'}],rowCount:1,deletedIds:[]};}});
+ const pendingSnapshot=db.syncFromCloud();await snapshotStarted.promise;activate(B);snapshotGate.resolve();
+ check((await pendingSnapshot).accessChanged===true&&(await db.getOne('players','same')).name==='Jugador B','Un snapshot remoto de A no sustituye los datos de B');
+
+ const gateA=deferred(),startedA=deferred(),requestedAccounts=[];
+ db.configureCloudStore({prepare:async()=>({userId:auth.getBoundSaasUserId(),delegate:false}),getSnapshot:async(store,options)=>{
+   const user=options.expectedContext.userId;requestedAccounts.push(user);
+   if(user===A){startedA.resolve();await gateA.promise;}
+   return {records:store==='players'?[{id:'same',name:user===B?'Nube propia B':'Nube propia A'}]:[],rowCount:1,deletedIds:[],readOnlyMirror:true,permissions:[]};
+ }});
+ activate(A);const syncA=db.syncFromCloud();await startedA.promise;
+ activate(B);const syncB=db.syncFromCloud();gateA.resolve();
+ check((await syncA).accessChanged===true&&(await syncB).online===true&&requestedAccounts.filter(user=>user===B).length===5,'B espera la operación anterior y descarga sus cinco almacenes sin recibir el resultado de A');
+ check((await db.getOne('players','same')).name==='Nube propia B','La nueva sincronización de B usa exclusivamente su snapshot');
+
+ db.configureCloudStore(null);activate(A);
+ const oldMutation=buildMutation('players','upsert',{id:'same',name:'Edición A'}),newMutation=buildMutation('players','upsert',{id:'same',name:'Edición B'});
+ oldMutation.queuedAt=10;newMutation.queuedAt=20;
+ await seed(auth.userDatabaseName(A),{syncQueue:[oldMutation]});
+ await seed(auth.userDatabaseName(B),{syncQueue:[newMutation]});
+ const uploadStarted=deferred(),uploadGate=deferred(),uploads=[];
+ db.configureCloudStore({prepare:async()=>({userId:auth.getBoundSaasUserId(),delegate:false}),upsert:async(mutation,options)=>{uploads.push({mutation:structuredClone(mutation),expected:options.expectedContext});uploadStarted.resolve();await uploadGate.promise;}});
+ const pendingUpload=db.flushSyncQueue();await uploadStarted.promise;activate(B);uploadGate.resolve();
+ check(await pendingUpload===false,'Una subida retenida pierde autorización cuando cambia la cuenta');
+ check(uploads.length===1&&uploads[0].expected.userId===A&&same(await rows(auth.userDatabaseName(B),'syncQueue'),[newMutation]),'La petición conserva la cuenta A y no confirma ni borra la cola B');
+ check(same(await rows(auth.userDatabaseName(A),'syncQueue'),[oldMutation]),'A conserva su mutación si la respuesta llega después del cambio de cuenta');
+
+ db.configureCloudStore(null);activate(A);
+ await seed(auth.userDatabaseName(A),empty());
+ await seed('campobase',{...empty(),players:[{id:'legacy-player',name:'Dato sin procedencia'}],settings:[{id:'main',teamName:'Equipo histórico'}],syncQueue:[oldMutation]});
+ db.configureCloudStore({prepare:async()=>({userId:A,delegate:false}),getSnapshot:async()=>{const error=new Error('Service for this project is restricted');error.status=402;throw error;}});
+ const restricted=await db.syncFromCloud();
+ const restrictedPlayers=await db.getAll('players');
+ check(restricted.localRecovered===0&&restrictedPlayers.length===0,'Un error de cuota no importa una base histórica sin propietario acreditado');
+ await rejects(db.recoverLegacyPendingMutations(),/demostrar|pertenecen/,'Recuperar explícitamente también exige procedencia de la base histórica');
+ await seed('campobase',{settings:[{id:'main',saasUserId:A}],syncQueue:[oldMutation]});
+ await seed(auth.userDatabaseName(A),{syncQueue:[newMutation]});
+ db.configureCloudStore({prepare:async()=>({userId:A,delegate:false}),upsert:async()=>{throw new TypeError('Red de prueba desconectada');}});
+ await rejects(db.recoverLegacyPendingMutations(),/confirmar|conservados/,'Una recuperación fallida se comunica sin anunciar éxito');
+ check(same(await rows('campobase','syncQueue'),[oldMutation])&&same(await rows(auth.userDatabaseName(A),'syncQueue'),[newMutation]),'La recuperación fallida conserva ambas colas y la versión más nueva');
+
+ db.configureCloudStore(null);
+ const initial={...empty(),players:[{id:'before',name:'Plantilla anterior'}],matches:[{id:'old-match',opponent:'Anterior'}],settings:[{id:'main',saasUserId:A,teamName:'Equipo A',theme:{bg:'red'}},{id:'session-before',recordType:'trainingSession',name:'Sesión anterior'}],syncQueue:[oldMutation]};
+ await seed(auth.userDatabaseName(A),initial);
+ check(await db.getImportRecoveryBackup()===null,'Una cuenta sin importación previa no ofrece un respaldo de otra cuenta');
+ await rejects(db.importDatabase(copy({players:[{id:'foreign'}]},B)),/otra cuenta/,'Una copia de B se bloquea antes de sustituir los datos de A');
+ check((await db.getAll('players'))[0].id==='before','El intento de importar otra cuenta conserva los datos originales');
+ auth.clearBoundSaasUserId();db.configureRealDatabase();
+ await rejects(db.importDatabase(copy({})),/Entra en esa cuenta/,'Un archivo de copia no inicia sesión ni vincula su cuenta');
+ check(auth.getBoundSaasUserId()==='','La importación rechazada deja la cuenta sin vincular');
+ activate(A);globalThis.__campobase.state.role='delegate';
+ await rejects(db.importDatabase(copy({})),/titular/,'El delegado no puede importar copias del titular');
+ globalThis.__campobase.state.role='owner';
+
+ const prepareStarted=deferred(),prepareGate=deferred();
+ db.configureCloudStore({prepare:async()=>{prepareStarted.resolve();await prepareGate.promise;return {userId:A,delegate:false};}});
+ const importRace=db.importDatabase(copy({players:[{id:'race'}]})).catch(error=>error);
+ await prepareStarted.promise;globalThis.__campobase.state.role='delegate';prepareGate.resolve();
+ check((await importRace).code==='CAMPOBASE_CONTEXT_CHANGED'&&(await rows(auth.userDatabaseName(A),'players'))[0].id==='before','Cambiar el rol durante la preparación cancela la importación antes de escribir');
+ globalThis.__campobase.state.role='owner';db.configureCloudStore(null);
+
+ const imported={players:[{id:'after',name:'Plantilla restaurada',profileUpdatedAt:1}],settings:[{id:'main',saasUserId:A,teamName:'Equipo restaurado',theme:{bg:'blue'}}]};
+ const beforeImportUploadStarted=deferred(),beforeImportUploadGate=deferred();
+ db.configureCloudStore({prepare:async()=>({userId:A,delegate:false}),upsert:async()=>{beforeImportUploadStarted.resolve();await beforeImportUploadGate.promise;}});
+ const beforeImportUpload=db.flushSyncQueue();await beforeImportUploadStarted.promise;
+ await db.importDatabase(copy(imported));
+ check((await db.getOne('players','after')).profileUpdatedAt>imported.players[0].profileUpdatedAt,'Importar una ficha es una revisión nueva sin alterar la fecha del archivo original');
+ const importedQueue=await rows(auth.userDatabaseName(A),'syncQueue');
+ beforeImportUploadGate.resolve();
+ check(await beforeImportUpload===false&&same(await rows(auth.userDatabaseName(A),'syncQueue'),importedQueue),'Una respuesta anterior a la importación no confirma ni elimina las mutaciones restauradas');
+ db.configureCloudStore(null);
+ const recovery=await db.getImportRecoveryBackup();
+ check(recovery.database===auth.userDatabaseName(A)&&recovery.saasUserId===A&&recovery.data.players[0].id==='before'&&recovery.data.settings.some(row=>row.id==='session-before'),'La importación guarda una copia recuperable de los cinco almacenes anteriores');
+ const localSettings=await rows(auth.userDatabaseName(A),'settings'),internal=(await rows(auth.userDatabaseName(A),'localRecovery'))[0];
+ check(!localSettings.some(row=>row.recordType==='localImportRecovery')&&internal?.recordType==='localImportRecovery','El respaldo solo existe en localRecovery, fuera de los cinco almacenes del equipo');
+ check(same(internal.pendingMutations,[oldMutation]),'El respaldo local conserva también las versiones previas de la cola');
+ check(!(await db.getAll('settings')).some(row=>row.recordType==='localImportRecovery')&&!(await db.exportDatabase()).data.settings.some(row=>row.recordType==='localImportRecovery'),'El respaldo interno no aparece en lecturas normales ni se incluye recursivamente en exportaciones');
+ const queued=await rows(auth.userDatabaseName(A),'syncQueue');
+ check(queued.some(row=>row.recordId==='before'&&row.operation==='delete')&&queued.some(row=>row.recordId==='same'&&row.operation==='delete')&&!queued.some(row=>row.recordId===internal.id),'La nueva cola evita resucitar filas omitidas y no sube el respaldo local');
+ activate(B);check(await db.getImportRecoveryBackup()===null,'El respaldo previo de A permanece inaccesible desde B');activate(A);
+
+ const beforeFailedImport={players:await rows(auth.userDatabaseName(A),'players'),settings:await rows(auth.userDatabaseName(A),'settings'),queue:await rows(auth.userDatabaseName(A),'syncQueue'),recovery:await rows(auth.userDatabaseName(A),'localRecovery')};
+ const nativePut=IDBObjectStore.prototype.put;
+ IDBObjectStore.prototype.put=function(value,...args){if(value?.id==='restore-fail')throw new DOMException('Fallo simulado después del clear','DataCloneError');return nativePut.call(this,value,...args);};
+ try {await rejects(db.importDatabase(copy({players:[{id:'restore-fail'}]})),/Fallo simulado/,'Un fallo durante la escritura aborta la transacción de importación');}finally{IDBObjectStore.prototype.put=nativePut;}
+ check(same(await rows(auth.userDatabaseName(A),'players'),beforeFailedImport.players)&&same(await rows(auth.userDatabaseName(A),'settings'),beforeFailedImport.settings)&&same(await rows(auth.userDatabaseName(A),'syncQueue'),beforeFailedImport.queue)&&same(await rows(auth.userDatabaseName(A),'localRecovery'),beforeFailedImport.recovery),'El aborto conserva datos, cola y respaldo anterior de forma atómica');
+ await db.importDatabase(recovery);
+ check((await db.getOne('players','before')).name==='Plantilla anterior'&&(await db.getOne('settings','main')).theme.bg==='red','El respaldo anterior se puede restaurar con sus datos y colores');
+
+ const remote=Object.fromEntries(db.STORES.map(store=>[store,new Map()])),sent=[];
+ db.configureCloudStore({prepare:async()=>({userId:A,delegate:false}),upsert:async mutation=>{sent.push(structuredClone(mutation));remote[mutation.store].set(mutation.recordId,mutation.payload);},remove:async mutation=>{sent.push(structuredClone(mutation));remote[mutation.store].delete(mutation.recordId);},getSnapshot:async store=>({records:[...remote[store].values()],rowCount:remote[store].size,deletedIds:[]})});
+ await db.syncFromCloud();
+ check(!sent.some(mutation=>mutation.recordId===internal.id||mutation.payload?.recordType==='localImportRecovery'),'Sincronizar después de importar nunca envía el respaldo local a la nube');
+ remote.settings.set('main',{id:'main',saasUserId:A,teamName:'Actualización remota',theme:{bg:'green'},updatedAt:Date.now()});
+ await db.syncFromCloud();
+ check((await db.getImportRecoveryBackup()).data.players[0].id==='after','Reconciliar un snapshot remoto conserva el respaldo previo local');
+ const oldLive={id:'live',timer:{matchId:'old-unfinished-match',runningSince:1,updatedAt:2,phase:'first',elapsedSeconds:720},updatedAt:3};
+ const sentBeforeOldLive=sent.length;remote.settings.set('live',structuredClone(oldLive));
+ await db.syncFromCloud();
+ check(same(await db.getOne('settings','live'),oldLive)&&same(remote.settings.get('live'),oldLive)&&sent.length===sentBeforeOldLive,'Leer un reloj antiguo conserva el registro byte a byte y no sube ninguna reparación');
+ const oldLiveMutation=buildMutation('settings','upsert',oldLive,1);
+ await seed(auth.userDatabaseName(A),{syncQueue:[oldLiveMutation]});
+ await db.flushSyncQueue();
+ check(sent.at(-1)?.recordId==='live'&&same(sent.at(-1)?.payload,oldLive),'Una mutación pendiente de reloj conserva su contenido aunque su fecha sea antigua');
+ window.pilotDatabaseResult={checks:output.textContent.split('\nOK:').length-1,userId:A};
+ output.textContent+='\nFINAL: '+window.pilotDatabaseResult.checks+' comprobaciones correctas; solo datos ficticios y nube simulada.';
+ return window.pilotDatabaseResult;
+};
+window.reopenPilotRecovery=async()=>{activate(A);const recovery=await db.getImportRecoveryBackup();return {before:recovery.data.players[0].id,current:(await db.getAll('players'))[0].id};};
+document.querySelector('#run').onclick=()=>window.runPilotDatabaseCases().catch(error=>{output.textContent+='\nERROR: '+error.stack;throw error;});
+</script></body></html>

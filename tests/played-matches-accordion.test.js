@@ -15,11 +15,10 @@ test('renderMatches incluye seccion desplegable de Partidos jugados con contador
   assert.match(appSource, /playedMatchesTypeFilter/, 'Debe gestionar filtro de tipo de competición');
 });
 
-test('sanitizeLiveTimer limpia timer huérfano si el partido ya está finalizado', () => {
-  assert.match(appSource, /function sanitizeLiveTimer\(\)/, 'Debe existir función sanitizeLiveTimer');
-  assert.match(appSource, /liveMatch\.status === 'finished'/, 'Debe verificar si el partido del timer está finalizado');
-  assert.match(appSource, /state\.timer = null/, 'Debe poner timer a null');
-  assert.match(appSource, /put\('settings', \{ id: 'live', timer: null/, 'Debe persistir live en settings como null');
+test('sanitizeLiveTimer oculta solo un timer terminal en memoria sin escribir durante lectura', () => {
+  const sanitize = appSource.slice(appSource.indexOf('function sanitizeLiveTimer()'), appSource.indexOf('async function refresh()'));
+  assert.match(sanitize, /projectLiveTimer\(state\.timer, state\.matches\)/);
+  assert.doesNotMatch(sanitize, /put\(|Date\.now|calero/i);
 });
 
 test('toggleMatchCompleted archiva y desmarca partidos jugados como en sesiones', () => {

@@ -47,7 +47,7 @@ test('cada mutación de datos emite el evento transversal que actualiza Plantill
   assert.match(db, /notifyDataChanged\(store, 'upsert'\)/);
   assert.match(db, /notifyDataChanged\(storeNames, 'batch'\)/);
   assert.match(db, /notifyDataChanged\(store, 'delete'\)/);
-  assert.match(db, /notifyDataChanged\(STORES, 'import'\)/);
+  assert.match(db, /notifyDataChanged\(STORES,\s*'import'\)/);
 });
 
 test('Plantilla se recalcula desde partidos, asistencias y convocatorias y conserva el ajuste manual como delta', async () => {

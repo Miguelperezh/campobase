@@ -1,3 +1,4 @@
+import {browserCacheContext, readViewCache, writeViewCache, sameViewAccount} from './account-view-context.js?v=20261022-pilot-safety-1';
 import './session-reorder-ui.js?v=1';
 import './session-editor-usability.js?v=1';
 import './custom-exercise-persistence.js?v=1';
@@ -121,7 +122,9 @@ function saveCacheAndNavigate() {
   try {
     const app = window.__campobase;
     if (app?.state) {
+      const context = browserCacheContext();
       const cache = {
+        database: context.database, saasUserId: context.userId,
         players: app.state.players || [],
         callups: app.state.callups || [],
         matches: app.state.matches || [],
@@ -129,7 +132,7 @@ function saveCacheAndNavigate() {
         settings: app.state.settings || [],
         at: Date.now(),
       };
-      localStorage.setItem('campobase.directFieldCache', JSON.stringify(cache));
+      writeViewCache(localStorage, 'campobase.directFieldCache', cache, context);
     }
   } catch {}
   window.location.href = './modo-campo-directo.html';
@@ -301,7 +304,7 @@ function installPlayerDorsalGuard() {
 
 function readDetailBadgeSettings() {
   try {
-    const value = JSON.parse(localStorage.getItem(DETAIL_BADGE_KEY) || 'null');
+    const value = readViewCache(localStorage, DETAIL_BADGE_KEY, browserCacheContext());
     return value && typeof value === 'object' ? value : null;
   } catch {
     return null;
@@ -449,7 +452,7 @@ function installDetailBadgeSettings() {
       font: form.elements.font.value === 'inter' ? 'inter' : 'barlow',
       bold: form.elements.bold.checked,
     };
-    localStorage.setItem(DETAIL_BADGE_KEY, JSON.stringify(settings));
+    writeViewCache(localStorage, DETAIL_BADGE_KEY, settings, browserCacheContext());
     applyDetailBadgeSettings(settings);
     const toast = document.getElementById('toast');
     if (toast) {

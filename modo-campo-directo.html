@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+<script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=20261022-pilot-safety-1","./js/auth-manager.js":"./js/auth-manager.js?v=20261022-pilot-safety-1","./js/backup-safety.js":"./js/backup-safety.js?v=20261022-pilot-safety-1","./js/supabase-client.js":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/account-view-context.js":"./js/account-view-context.js?v=20261022-pilot-safety-1","./js/team-access.js":"./js/team-access.js?v=20261022-pilot-safety-1","./js/modo-campo-integration.js":"./js/modo-campo-integration.js?v=20261022-pilot-safety-1","./js/supabase-client.js?v=20261021-save-postmatch-1":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/team-access.js?v=20261009-delegate-pin-7":"./js/team-access.js?v=20261022-pilot-safety-1","./supabase/functions/_shared/delegate-policy.mjs":"./supabase/functions/_shared/delegate-policy.mjs?v=20261022-pilot-safety-1","./js/domain.js":"./js/domain.js?v=20261022-pilot-safety-1","./js/domain.js?v=20261021-postmatch-callups-2":"./js/domain.js?v=20261022-pilot-safety-1","./js/demo-session.js":"./js/demo-session.js?v=20261022-pilot-safety-1","./js/demo-session.js?v=20261021-save-postmatch-1":"./js/demo-session.js?v=20261022-pilot-safety-1"}}</script>
 <script src="js/preview-readonly.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -48,10 +49,12 @@
 
   <script src="./vendor/supabase.js"></script>
   <script>
-    (() => {
+    (async () => {
+      const {browserCacheContext, readViewCache, writeViewCache, cacheBelongsToAccount, sameViewAccount} = await import('./js/account-view-context.js?v=20261022-pilot-safety-1');
+      const context = browserCacheContext();
       try {
-        const raw = localStorage.getItem('campobase.directFieldCache');
-        if (raw) window.__CAMPOBASE_CACHE__ = JSON.parse(raw);
+        const cache = readViewCache(localStorage, 'campobase.directFieldCache', context);
+        if (cacheBelongsToAccount(cache, context)) window.__CAMPOBASE_CACHE__ = cache;
       } catch {}
 
       if (typeof indexedDB === 'undefined') return;
@@ -89,13 +92,14 @@
       });
 
       const loadFromStorage = async () => {
-        const boundUser = (() => { try { return localStorage.getItem('campobase.saasUserId'); } catch { return ''; } })();
-        const names = [boundUser ? `campobase_${boundUser}` : '', 'campobase'].filter(Boolean);
+        const names = [context.database];
         for (const name of names) {
           const result = await tryReadDb(name);
+          if (!sameViewAccount(context, browserCacheContext())) return;
           if (result && result.players && result.players.length > 0) {
+            result.database = context.database; result.saasUserId = context.userId;
             window.__CAMPOBASE_CACHE__ = result;
-            try { localStorage.setItem('campobase.directFieldCache', JSON.stringify(result)); } catch {}
+            try { writeViewCache(localStorage, 'campobase.directFieldCache', result, context); } catch {}
             window.dispatchEvent(new CustomEvent('campobase:cache-ready', { detail: result }));
             break;
           }
@@ -105,10 +109,10 @@
       loadFromStorage();
     })();
   </script>
-  <script src="./js/modo-campo-directo.js?v=4"></script>
-  <script src="./js/modo-campo-identity-exercises.js?v=2"></script>
+  <script src="./js/modo-campo-directo.js?v=20261022-pilot-safety-1"></script>
+  <script src="./js/modo-campo-identity-exercises.js?v=20261022-pilot-safety-1"></script>
   <script src="./js/modo-campo-theme-parity.js?v=1"></script>
-  <script src="./js/modo-campo-actions.js?v=2"></script>
+  <script src="./js/modo-campo-actions.js?v=20261022-pilot-safety-1"></script>
   <script>
     (() => {
       const REMOVE = new Set(['Grande, directo y sin menús innecesarios', 'Lo esencial a golpe de vista']);

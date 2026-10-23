@@ -72,10 +72,8 @@ test('syncFromCloud comprueba si los datos cambiaron antes de sustituir el almac
   );
 });
 
-test('flushSyncQueue conserva mutaciones de limpieza timer null y syncFromCloud purga timers obsoletos', async () => {
+test('sincronizar no descarta ni reescribe timers por antigüedad o rival', async () => {
   const dbJs = await readFile(new URL('../js/db.js', import.meta.url), 'utf8');
-  assert.match(dbJs, /if \(payloadTimer\) \{/);
-  assert.match(dbJs, /const liveCloud = snapshot\.records\.find\(\(\{ id \}\) => id === 'live'\);/);
-  assert.match(dbJs, /liveCloud\.timer = null;/);
+  assert.doesNotMatch(dbJs, /isStalePayload|liveCloud\.timer = null|6 \* 3600 \* 1000|24 \* 3600 \* 1000/);
+  assert.match(dbJs, /shouldApplyMutation\(mutation,cloudOptions\(context\)\)/);
 });
-

@@ -9,23 +9,54 @@ Deno.serve(async req=>{
  if(req.headers.get('Origin')&&req.headers.get('Origin')!==cors['Access-Control-Allow-Origin'])return json({message:'Origen no permitido.'},403);
  try {
   const token=(req.headers.get('Authorization')||'').replace(/^Bearer /i,'');
+  if(!token)return json({message:'Sesión de delegado no válida.'},401);
   const admin=createClient(Deno.env.get('SUPABASE_URL'),Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),{auth:{persistSession:false}});
   const {data:identity,error:authError}=await admin.auth.getUser(token);
   const user=identity?.user;
-  if(authError||!user||user.app_metadata?.campobase_role!=='delegate_pin')return json({message:'Sesión de delegado no válida.'},401);
-  const owner=user.app_metadata.campobase_owner_id;
+  if(authError||!user)return json({message:'Sesión de delegado no válida.'},401);
+  const body=await req.json();
+  if(!body||typeof body!=='object'||Array.isArray(body))return json({message:'Solicitud no válida.'},400);
+  if(body.expectedUserId&&body.expectedUserId!==user.id)return json({message:'La cuenta ha cambiado. Vuelve a entrar.',code:'CAMPOBASE_AUTH_REQUIRED'},401);
+  const pinDelegate=user.app_metadata?.campobase_role==='delegate_pin';
+  // Email invitations and PIN sessions are authorized by the same fresh server
+  // membership. Caller-supplied owner IDs and user_metadata never grant access.
   const {data:member,error:memberError}=await admin.from('equipo_miembros').select('equipo_id,role').eq('user_id',user.id).eq('role','delegate').maybeSingle();
-  const {data:team}=member?await admin.from('equipos_cuenta').select('owner_user_id').eq('id',member.equipo_id).maybeSingle():{data:null};
-  if(memberError||!member||team?.owner_user_id!==owner)return json({message:'Acceso al equipo retirado.'},403);
+  const {data:team,error:teamError}=member?await admin.from('equipos_cuenta').select('owner_user_id').eq('id',member.equipo_id).maybeSingle():{data:null,error:null};
+  const owner=team?.owner_user_id;
+  if(memberError||teamError)return json({message:'No se pudo comprobar el equipo.'},503);
+  if(!member||!owner||(pinDelegate&&user.app_metadata.campobase_owner_id!==owner))return json({message:'Acceso al equipo retirado.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
+  if(body.expectedOwnerUserId&&body.expectedOwnerUserId!==owner)return json({message:'El equipo ha cambiado. Vuelve a entrar.',code:'CAMPOBASE_AUTH_REQUIRED'},401);
+  if(body.expectedTeamId&&body.expectedTeamId!==member.equipo_id)return json({message:'El equipo ha cambiado. Vuelve a entrar.',code:'CAMPOBASE_AUTH_REQUIRED'},401);
   const {data:main,error:mainError}=await admin.from('configuracion').select('payload').eq('user_id',owner).eq('id','main').is('deleted_at',null).maybeSingle();
   if(mainError||!main?.payload)return json({message:'No se pudieron comprobar los permisos.'},503);
-  const jwt=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))));
-  if(jwt.app_metadata?.campobase_pin_version!==await pinFingerprint(main.payload))return json({message:'El PIN ha cambiado. Vuelve a entrar.'},401);
+  let pinVersion=null;
+  if(pinDelegate){
+   let jwt;
+   try{jwt=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))));}
+   catch{return json({message:'Sesión de delegado no válida.'},401);}
+   pinVersion=await pinFingerprint(main.payload);
+   if(jwt.app_metadata?.campobase_role!=='delegate_pin'||jwt.app_metadata?.campobase_owner_id!==owner
+    ||jwt.app_metadata?.campobase_pin_version!==pinVersion)return json({message:'El PIN ha cambiado. Vuelve a entrar.'},401);
+  }
   const permissions=Array.isArray(main.payload.delegatePermissions)?main.payload.delegatePermissions:[];
   const {data:subscription,error:subscriptionError}=await admin.from('suscripciones').select('estado,expira_en').eq('user_id',owner).maybeSingle();
   if(subscriptionError)return json({message:'No se pudo comprobar el acceso del equipo.'},503);
-  if(!subscription||!['gift_free','trial','active'].includes(subscription.estado)||(subscription.expira_en&&Date.parse(subscription.expira_en)<=Date.now()))return json({message:'El equipo no tiene acceso activo.'},403);
-  const body=await req.json(),store=body.store,table=TABLES[store];
+  if(!subscription||!['gift_free','trial','active'].includes(subscription.estado)||(subscription.expira_en&&(!Number.isFinite(Date.parse(subscription.expira_en))||Date.parse(subscription.expira_en)<=Date.now())))return json({message:'El equipo no tiene acceso activo.'},403);
+  // A request may wait while the owner removes membership or permissions.
+  // Recheck before releasing its data or sending its service-only write.
+  const confirmAccess = async () => {
+   const {data:currentMember,error:currentMemberError}=await admin.from('equipo_miembros').select('equipo_id,role').eq('user_id',user.id).eq('role','delegate').maybeSingle();
+   const {data:currentTeam,error:currentTeamError}=await admin.from('equipos_cuenta').select('owner_user_id').eq('id',member.equipo_id).maybeSingle();
+   if(currentMemberError||currentTeamError)throw new Error('No se pudo comprobar el equipo.');
+   if(currentMember?.equipo_id!==member.equipo_id||currentTeam?.owner_user_id!==owner)return json({message:'Acceso al equipo retirado.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
+   const {data:currentMain,error:currentMainError}=await admin.from('configuracion').select('payload').eq('user_id',owner).eq('id','main').is('deleted_at',null).maybeSingle();
+   if(currentMainError||!currentMain?.payload)throw new Error('No se pudieron comprobar los permisos.');
+   const currentPermissions=Array.isArray(currentMain.payload.delegatePermissions)?currentMain.payload.delegatePermissions:[];
+   if(JSON.stringify(currentPermissions)!==JSON.stringify(permissions))return json({message:'Los permisos han cambiado. Vuelve a actualizar.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
+   if(pinDelegate&&await pinFingerprint(currentMain.payload)!==pinVersion)return json({message:'El PIN ha cambiado. Vuelve a entrar.',code:'CAMPOBASE_AUTH_REQUIRED'},401);
+   return null;
+  };
+  const store=body.store,table=TABLES[store];
   const snapshot = async (name) => {
    if(!canReadStore(name,permissions))return {records:[],deletedIds:[],rowCount:0,restricted:true,permissions};
    const {data:rows,error}=await admin.from(TABLES[name]).select('id,payload,updated_at,deleted_at').eq('user_id',owner);
@@ -33,23 +64,35 @@ Deno.serve(async req=>{
    const visible=(rows||[]).filter(r=>name!=='settings'||readableSetting(r.payload||{id:r.id},permissions));
    return {records:visible.filter(r=>!r.deleted_at).map(r=>projectRecord(name,r.payload,permissions)),deletedIds:visible.filter(r=>r.deleted_at).map(r=>r.id),rowCount:visible.length,readOnlyMirror:true,permissions};
   };
-  if(body.operation==='snapshots')return json({snapshots:Object.fromEntries(await Promise.all(Object.keys(TABLES).map(async name=>[name,await snapshot(name)])))});
+  if(body.operation==='snapshots'){
+   const snapshots=Object.fromEntries(await Promise.all(Object.keys(TABLES).map(async name=>[name,await snapshot(name)])));
+   return await confirmAccess()||json({snapshots});
+  }
   if(!table)return json({message:'Almacén no válido.'},400);
-  if(body.operation==='snapshot')return json(await snapshot(store));
+  if(body.operation==='snapshot'){
+   const result=await snapshot(store);
+   return await confirmAccess()||json(result);
+  }
   const mutation=body.mutation;
   if(mutation&&(!Number.isSafeInteger(mutation.queuedAt)||mutation.queuedAt<0||mutation.queuedAt>Date.now()+60000||typeof mutation.recordId!=='string'||mutation.recordId.length>250))return json({message:'Cambio no válido.'},400);
   if(!mutation||mutation.store!==store||!canWriteMutation(mutation,permissions))return json({message:'Esta operación no está permitida al delegado.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
   const {data:existing,error:readError}=await admin.from(table).select('updated_at,payload,deleted_at').eq('user_id',owner).eq('id',mutation.recordId).maybeSingle();
   if(readError)throw readError;
   const fresh=!existing||Number(mutation.queuedAt)>=Number(existing.updated_at||existing.deleted_at||0);
-  if(body.operation==='check')return json({shouldApply:fresh});
+  if(body.operation==='check')return await confirmAccess()||json({shouldApply:fresh});
   if(body.operation!=='upsert')return json({message:'Operación no válida.'},400);
   if(!fresh)return json({applied:false});
   if(store==='settings') {
    const matchId=mutation.payload?.timer?.matchId;
    if(!existing||!matchId||existing.payload?.timer?.matchId!==matchId)return json({message:'El entrenador debe activar este partido.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
   }
-  const {data:applied,error}=await admin.rpc('delegate_sync_upsert',{p_owner:owner,p_store:store,p_record_id:mutation.recordId,p_payload:mutation.payload,p_updated:mutation.queuedAt});
+  const accessChanged=await confirmAccess();
+  if(accessChanged)return accessChanged;
+  const {data:applied,error}=await admin.rpc('delegate_sync_upsert_v2',{
+   p_actor:user.id,p_owner:owner,p_store:store,p_record_id:mutation.recordId,p_payload:mutation.payload,p_updated:mutation.queuedAt,p_pin_version:pinVersion,
+  });
+  if(error?.code==='42501')return json({message:'El acceso o los permisos han cambiado. Conserva tu borrador.',code:'CAMPOBASE_PERMISSION_REVOKED'},403);
+  if(error?.code==='28000')return json({message:'El PIN ha cambiado. Vuelve a entrar.',code:'CAMPOBASE_AUTH_REQUIRED'},401);
   if(error)throw error;
   return json({applied:Boolean(applied)});
  }catch(error){console.error('delegate-sync:',error?.message);return json({message:'No se pudo sincronizar. Conserva tu copia local y vuelve a actualizar.'},503);}

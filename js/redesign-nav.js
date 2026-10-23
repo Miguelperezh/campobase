@@ -1,3 +1,4 @@
+import {browserCacheContext, readViewCache, writeViewCache, sameViewAccount} from './account-view-context.js?v=20261022-pilot-safety-1';
 // ==========================================================================
 // CONTROLADOR DE NAVEGACIÓN Y EXPERIENCIA REDISEÑADA V1 (CampoBase)
 // Gestiona la barra maestra de 5 pestañas, los submenús segmentados
@@ -359,7 +360,7 @@ export function renderSubNav() {
     try {
       perms = window.__campobase?.getDelegatePermissions?.()
         || window.__campobase?.state?.settings?.delegatePermissions
-        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+        || (readViewCache(localStorage, 'campobase.delegatePermissions', browserCacheContext()) || []);
     } catch {}
     subTabs = subTabs.filter((tab) => {
       if (tab.id === 'partido' || tab.id === 'delegado') return perms.includes('partido') || perms.includes('delegado');
@@ -454,7 +455,7 @@ export function toggleQuickSheet(moduleKey, triggerBtn) {
     try {
       perms = window.__campobase?.getDelegatePermissions?.()
         || window.__campobase?.state?.settings?.delegatePermissions
-        || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+        || (readViewCache(localStorage, 'campobase.delegatePermissions', browserCacheContext()) || []);
     } catch {}
     allowedSubTabs = allowedSubTabs.filter((tab) => {
       if (tab.id === 'ajustes') return false;
@@ -548,7 +549,7 @@ export function renderBottomNav() {
           closeQuickSheet();
           const perms = (window.__campobase?.getDelegatePermissions?.())
             || window.__campobase?.state?.settings?.delegatePermissions
-            || JSON.parse(localStorage.getItem('campobase.delegatePermissions') || '["partido"]');
+            || (readViewCache(localStorage, 'campobase.delegatePermissions', browserCacheContext()) || []);
 
           const allowed = mod.views.filter((v) => {
             if (v === 'ajustes') return false;
