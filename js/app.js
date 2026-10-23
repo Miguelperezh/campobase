@@ -60,7 +60,7 @@ import {
   isWeekend,
   formatWeekSpanLabel,
   buildWhatsAppMatchFamilySummary,
-} from './whatsapp-suite.js?v=20261021-postmatch-callups-1';
+} from './whatsapp-suite.js?v=20261023-whatsapp-call-time-1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -12135,7 +12135,11 @@ function syncWhatsAppMatchLocation() {
   if (fieldInput) fieldInput.value = details.fieldName;
   if (mapsInput) mapsInput.value = details.mapsUrl || (details.fieldName ? getAutoMapsUrl(details.fieldName) : '');
   if ($('#wa-game-time')) $('#wa-game-time').value = details.gameTime;
-  if ($('#wa-call-time')) $('#wa-call-time').value = details.callTime;
+  const callTimeInput = $('#wa-call-time');
+  if (callTimeInput) {
+    callTimeInput.value = details.callTime;
+    delete callTimeInput.dataset.waManualTime;
+  }
 }
 
 function populateWhatsAppEvents(matchId, callupId, sessionId) {
@@ -12554,7 +12558,8 @@ function updateWhatsAppPreview() {
       if (mapsInput) mapsInput.value = mapsUrl;
     }
 
-    const callTime = matchCommunicationDetails({ ...match, time: $('#wa-game-time')?.value?.trim() || match.time }).callTime;
+    const callTime = $('#wa-call-time')?.value?.trim()
+      || matchCommunicationDetails({ ...match, time: $('#wa-game-time')?.value?.trim() || match.time }).callTime;
     const gameTime = $('#wa-game-time')?.value?.trim() || matchCommunicationDetails(match).gameTime;
 
     const text = buildWhatsAppMatchConvocatoria({
@@ -13101,6 +13106,7 @@ function wireEvents() {
       $('#wa-week-tactical-row')?.classList.toggle('hidden', waCurrentMode !== 'week');
       if (waCurrentMode === 'week') populateWhatsAppWeekSelector();
       populateWhatsAppEvents();
+      if (waCurrentMode === 'callup') syncWhatsAppMatchLocation();
       updateWhatsAppPreview();
     });
   });
@@ -13145,8 +13151,17 @@ function wireEvents() {
   $('#wa-exclusion-custom-note')?.addEventListener('input', updateWhatsAppPreview);
   $('#wa-kit-select')?.addEventListener('change', updateWhatsAppPreview);
   $('#wa-include-bibs')?.addEventListener('change', updateWhatsAppPreview);
-  $('#wa-call-time')?.addEventListener('input', updateWhatsAppPreview);
-  $('#wa-game-time')?.addEventListener('input', updateWhatsAppPreview);
+  $('#wa-call-time')?.addEventListener('input', (event) => {
+    event.currentTarget.dataset.waManualTime = 'true';
+    updateWhatsAppPreview();
+  });
+  $('#wa-game-time')?.addEventListener('input', () => {
+    const callTimeInput = $('#wa-call-time');
+    if (waCurrentMode === 'callup' && callTimeInput && callTimeInput.dataset.waManualTime !== 'true') {
+      callTimeInput.value = matchCommunicationDetails({ ...selectedWhatsAppMatch(), time: $('#wa-game-time').value.trim() }).callTime;
+    }
+    updateWhatsAppPreview();
+  });
   $('#wa-week-tactical')?.addEventListener('input', updateWhatsAppPreview);
   $('#wa-week-select')?.addEventListener('change', () => {
     populateWhatsAppEvents();
@@ -14413,7 +14428,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261022-pilot-safety-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261023-whatsapp-call-time-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

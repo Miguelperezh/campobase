@@ -172,7 +172,7 @@ export function buildWhatsAppMatchConvocatoria({
   const dateFormatted = formatLongDate(rawDate) || 'Próximo partido';
   const details = matchCommunicationDetails({ ...match, time: gameTime || match.time });
   gameTime = gameTime || details.gameTime || 'Por confirmar';
-  callTime = details.callTime || callTime || 'Por confirmar';
+  callTime = callTime || details.callTime || 'Por confirmar';
   fieldName = String(fieldName || details.fieldName).trim() || 'Por confirmar';
   const resolvedMapsUrl = mapsUrl || details.mapsUrl || (fieldName !== 'Por confirmar' ? getAutoMapsUrl(fieldName) : 'Por confirmar');
   const verbs = getToneVerbs({ tone, parentType, recipientType });

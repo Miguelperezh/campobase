@@ -55,8 +55,9 @@ test('whatsapp-suite.js se importa con versionado de cache en app.js y sw.js', a
   const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
   const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
 
-  assert.match(app, /from '\.\/whatsapp-suite\.js\?v=20261021-postmatch-callups-1'/);
-  assert.match(sw, /'\.\/js\/whatsapp-suite\.js\?v=20261021-postmatch-callups-1'/);
+  const version = app.match(/from '\.\/whatsapp-suite\.js\?v=([^']+)'/)?.[1];
+  assert.ok(version, 'La plantilla debe importarse con una versión de caché');
+  assert.ok(sw.includes(`'./js/whatsapp-suite.js?v=${version}'`), 'La caché debe incluir la misma versión que usa la app');
 });
 
 test('populateWhatsAppEvents asigna opt.value match:id y vincula convocatoria por rival y fecha', async () => {
