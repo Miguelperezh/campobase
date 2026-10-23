@@ -39,6 +39,7 @@ function normalizedPermissions(value) {
 export async function fetchTeamContext(client) {
   if (!client) return null;
   const context = browserCacheContext();
+  if(!context.userId)return null;
   const { data, error } = await client.rpc('mi_equipo_contexto');
   if (!sameViewAccount(context, browserCacheContext())) throw new Error('La cuenta ha cambiado.');
   if (error) throw error;

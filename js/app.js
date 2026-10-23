@@ -14178,7 +14178,7 @@ function wireEvents() {
   });
 }
 
-function handleError(error) { console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
+function handleError(error) { if(error?.code==='CAMPOBASE_CONTEXT_CHANGED')return; console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
 function networkStatus() {
   const label = $('#network-label');
   if (isDemoDatabase()) {
@@ -14418,8 +14418,12 @@ async function init() {
       }).catch(handleError);
     }
   }
-  await ensureLegacyExercisesNotPresent();
-  await refresh();
+  // Reading on boot never deletes historical exercises. An account/role switch
+  // cancels its old read without aborting the remaining background setup.
+  for(let attempt=0;attempt<3;attempt++) {
+    try {await refresh();break;}
+    catch(error){if(error?.code!=='CAMPOBASE_CONTEXT_CHANGED')throw error;}
+  }
   await reapplyPreparacionToTimer();
   renderLive();
   renderDelegate();

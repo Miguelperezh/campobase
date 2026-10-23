@@ -6,6 +6,7 @@ const BOARD_PARTS = [
   './assets/exercise-board/part-4.b64',
 ];
 const ASSETS = [
+  './js/staff-management.js?v=20261022-pilot-safety-1',
   './js/demo-session-core.js?v=20261022-pilot-safety-1', './js/demo-session.js?v=20261022-pilot-safety-1', './js/domain.js?v=20261022-pilot-safety-1',
   './js/cloud-ui-bootstrap.js?v=20261022-pilot-safety-1',
   './js/app.js?v=20261022-pilot-safety-1',

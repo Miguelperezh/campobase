@@ -35,3 +35,10 @@ Probes de permisos ejecutan roles simulados solo en transacciones READ ONLY y de
 ## Límites
 
 Nube de pruebas simulada para escrituras; no se escriben deportes, invitaciones o permisos reales para comprobar. No se promete cero fallos ni se declara móvil físico validado. El bucket existente de biblioteca conserva su lectura pública; no se convierte en un repositorio privado de archivos. Históricos sin procedencia se conservan separados para recuperación revisada. Las pestañas con código antiguo deben actualizarse para recibir todas las guardias nuevas.
+
+
+## Corrección detectada por CI antes de publicar
+
+La primera prueba crítica de GitHub falló porque entrar en demo durante el arranque cancelaba correctamente una lectura antigua, pero el consumidor de Cuerpo técnico la registraba como error y la rutina de inicialización dejaba de continuar. Se cancela ese render sin vaciar la pantalla nueva, el arranque reintenta su snapshot actual y no ejecuta la limpieza automática histórica de ejercicios. Una sesión anónima/demo tampoco pide contexto de equipo al servidor. Prueba crítica v19 completa repetida localmente: correcta (subpestañas, preparación, guardado, + Ejercicio y móvil). Se añaden tres regresiones de cancelación/arranque; no se fusiona el control fallido.
+
+La cuenta GitHub no permite modificar workflows con su alcance OAuth actual. Se conservó el workflow original; las tres suites nuevas están versionadas y se ejecutaron localmente con sus resultados registrados arriba. CI mantiene sintaxis, suite Node y prueba crítica existente.
