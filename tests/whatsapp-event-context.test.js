@@ -37,6 +37,24 @@ test('mensaje grupal conserva lista, descansan sin motivos, mapa y ropa requerid
  for(const value of ['19:00','18:15','Campo real',matches[1].mapsUrl,'1. 7 Jugador Nombre Completo','*Descansan:*','- 10 Otro Nombre Completo','dos equipaciones completas','Polo y pantalón de paseo de este año','Camiseta roja de calentamiento']) assert.ok(text.includes(value),value);
  assert.ok(!text.includes('lesión')); assert.ok(!text.includes('Mundial 82'));
 });
+test('la citación editada prevalece sobre los 45 minutos automáticos en grupo y familia',()=>{
+ const now = new Date('2026-10-09T10:00:00');
+ for (const tone of ['canary','peninsular','formal']) {
+  for (const recipient of [{recipientType:'group'},{recipientType:'parent',targetPlayerId:'p'}]) {
+   const input = {match:matches[1],callup:callups[0],players,now,tone,...recipient};
+   const automatic = buildWhatsAppMatchConvocatoria(input);
+   const edited = buildWhatsAppMatchConvocatoria({...input,callTime:'18:30'});
+   assert.ok(automatic.includes('18:15'));
+   assert.equal(edited,automatic.replaceAll('18:15','18:30'));
+  }
+ }
+});
+test('citación explícita funciona sin hora de inicio; ausente mantiene cálculo y pendiente',()=>{
+ const input={match:{...matches[1],time:''},callup:callups[0],players};
+ assert.ok(buildWhatsAppMatchConvocatoria({...input,callTime:'18:30'}).includes('18:30'));
+ assert.ok(buildWhatsAppMatchConvocatoria(input).includes('Por confirmar'));
+ assert.ok(buildWhatsAppMatchConvocatoria({...input,gameTime:'00:20'}).includes('23:35'));
+});
 test('entrenamiento usa hora y campo reales, balón identificado y camiseta roja',()=>{
  const text=buildWhatsAppTrainingDay({session:{date:'2026-10-09',time:'17:30',pitch:'Campo Pilar'}});
  for(const value of ['17:30','Campo Pilar','Camiseta roja','con su nombre'])assert.ok(text.includes(value));
