@@ -110,7 +110,7 @@ test('Color de fuentes aplica data-has-custom-font-color y --cb-font-custom-colo
 test('attendance-linked-sources.js vincula asistencia por id o fecha y no ejecuta borrado destructivo en arranque', () => {
   const attendanceJs = fs.readFileSync('js/attendance-linked-sources.js', 'utf8');
   assert.doesNotMatch(attendanceJs, /function install\(\)\s*\{[^}]*scheduleCleanup\(\);/s, 'install() no debe llamar a scheduleCleanup() automáticamente');
-  assert.match(attendanceJs, /dateOnly\(record\?\.date\)\s*===\s*dateOnly\(sessionDate\)/, 'attendanceForSession debe enlazar por fecha como respaldo');
+  assert.match(attendanceJs, /dateOnly\(record(?:\?)?\.date\)\s*===\s*dateOnly\(sessionDate\)/, 'attendanceForSession conserva el respaldo por fecha para registros sin vínculo inequívoco');
 });
 
 test('Sincronización bidireccional entre textColor y fontColor y bootstrap en el head', () => {

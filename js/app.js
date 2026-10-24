@@ -1,5 +1,6 @@
 import {historicalCallupSelection, editableCallupForMatch, editableMatchForCallup} from './postmatch-callup.js?v=20261021-save-postmatch-1';
 import {assertFormValid, showFormSaveError} from './form-save-feedback.js?v=20261021-save-postmatch-1';
+import {syncStatus, syncSupportReport} from './sync-status.js';
 import {sameViewAccount, sameViewContext, readViewCache, writeViewCache, projectLiveTimer} from './account-view-context.js?v=20261022-pilot-safety-1';
 import {validateBackupForAccount, backupSummary, mobileAppLink, cleanLegacyMobileLink} from './backup-safety.js?v=20261022-pilot-safety-1';
 import {filterTrainingSessions, reusableSessionDraft} from './training-session-tools.js?v=20261020-sessions-1';
@@ -43,7 +44,7 @@ import { printMatchPlan } from './print-match-plan.js?v=20261016-print-visual-1'
 
 import { DEMO_DURATION_MS, createDemoSession, isDemoSessionActive, roleCanUseOwnerFeatures } from './demo-session.js?v=20261021-save-postmatch-1';
 import { refreshPlantillaStaff, refreshStaffView } from './staff-management.js?v=claude-tecnicos-1';
-import { renderTodayDashboard } from './today-dashboard.js?v=20261021-save-postmatch-1';
+import { renderTodayDashboard } from './today-dashboard.js?v=20261024-pilot-flows-1';
 import { compressAndCropImage, wirePhotoCropperField, optimizeCrestImage } from './image-crop-utils.js';
 import { partitionAndSortMatches, isMatchPlayed } from './match-calendar-sync.js';
 import {
@@ -4519,12 +4520,13 @@ function renderTrainingCalendarCard(training) {
   const date = new Date(`${dateStr}T12:00:00`);
   const day = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
   const month = Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
-  const time = training.time || (/^\d{4}-\d\d-\d\dT(\d\d:\d\d)/.exec(String(training.date || ''))?.[1]) || '17:30';
+  const time = matchCommunicationDetails(training).gameTime || 'Hora pendiente';
+  const completionLabel = isTrainingSessionCompleted(training) ? 'Sesión realizada' : 'Sesión planificada';
   const name = training.name || 'Entrenamiento del equipo';
   const pitch = training.pitch ? ` · ${training.pitch}` : '';
   const duration = training.totalDuration ? ` · ${training.totalDuration} min` : '';
 
-  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>Sesión planificada</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"${actionsOpen ? ' open' : ''}><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>${roleCanUseOwnerFeatures(state.role) ? `<button type="button" class="reuse-session secondary" data-id="${escapeHtml(training.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger" data-id="${escapeHtml(training.id)}">Borrar sesión</button>` : ''}` : ''}</div></details></article>`;
+  return `<article class="cbx-calendar-training panel" data-training-id="${escapeHtml(training.id || '')}" data-match-day="${escapeHtml(dateStr)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${escapeHtml(String(date.getDate()))}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>Entrenamiento · ${escapeHtml(time)}${escapeHtml(pitch)}${escapeHtml(duration)}</small><h3>${escapeHtml(name)}</h3><p><span>${completionLabel}</span>${training.notes ? ` · ${escapeHtml(training.notes)}` : ''}</p></div><strong class="cbx-calendar-score training-pill">Entreno</strong><details class="cbx-calendar-actions"${actionsOpen ? ' open' : ''}><summary>Acciones y detalles</summary><div class="button-row">${training.id ? `<button type="button" class="print-session secondary" data-id="${escapeHtml(training.id)}" title="Imprimir o guardar ficha en PDF">🖨️ Imprimir sesión</button><button type="button" class="open-whatsapp-session icon-button accent" data-id="${escapeHtml(training.id)}">📱 WhatsApp</button><button type="button" class="view-session secondary" data-id="${escapeHtml(training.id)}">Ver sesión</button>${roleCanUseOwnerFeatures(state.role) ? `<button type="button" class="reuse-session secondary" data-id="${escapeHtml(training.id)}">Reutilizar sesión</button><button type="button" class="delete-session danger" data-id="${escapeHtml(training.id)}">Borrar sesión</button>` : ''}` : ''}</div></details></article>`;
 }
 
 function renderMatches() {
@@ -12961,6 +12963,43 @@ function toggleWhistleTimer() {
 }
 
 function wireEvents() {
+  window.addEventListener('campobase:today-action', (event) => {
+    const {action, id, source, callupId} = event.detail || {};
+    if (!id || !state.role || !viewAccountIsCurrent()) return;
+    const owner = roleCanUseOwnerFeatures(state.role);
+    const allowed = (view) => owner || (state.role === 'delegate' && getDelegatePermissions().includes(view));
+    const destination = {session:'sesiones',match:'calendario',callup:'convocatorias',attendance:'asistencia'}[action];
+    if (destination && !allowed(destination)) return toast('El entrenador no ha habilitado este apartado para tu acceso.');
+    if (action === 'session' && allowed('sesiones')) {
+      const session = state.trainingSessions.find(item => String(item.id) === String(id));
+      if (!session) return toast('Esta sesión ya no está disponible. Actualiza para comprobarla.');
+      showView('sesiones'); showSessionDetail(session.id);
+    } else if (action === 'match' && allowed('calendario')) {
+      const match = state.matches.find(item => String(item.id) === String(id));
+      if (!match) return toast('Este partido ya no está disponible. Actualiza para comprobarlo.');
+      showView('calendario'); showMatchDetail(match.id);
+    } else if (action === 'callup' && allowed('convocatorias')) {
+      const match = state.matches.find(item => String(item.id) === String(id));
+      if (!match) return toast('Este partido ya no está disponible.');
+      const callup = editableCallupForMatch(match, state.matches, state.callups);
+      if (callupId && String(callup?.id) !== String(callupId)) return toast('La convocatoria ha cambiado. Actualiza antes de abrirla.');
+      showView('convocatorias');
+      if (callup) {
+        const card = $(`#callups-list article[data-callup-id="${CSS.escape(String(callup.id))}"]`);
+        if (card) {
+          const archive = card.closest('details');
+          if (archive) archive.open = true;
+          card.tabIndex = -1; card.focus({preventScroll:true}); card.scrollIntoView({block:'start'});
+        }
+      } else if (owner) callupBuilder(match.id);
+    } else if (action === 'attendance' && allowed('asistencia') && ['session','match'].includes(source)) {
+      const collection = source === 'session' ? state.trainingSessions : state.matches;
+      const activity = collection.find(item => String(item.id) === String(id));
+      if (!activity) return toast('Esta actividad ya no está disponible.');
+      showView('asistencia');
+      window.dispatchEvent(new CustomEvent('campobase:attendance-open', {detail:{source,id:activity.id}}));
+    }
+  });
   $$('.bottom-nav button').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#global-search').addEventListener('input', applyGlobalSearch);
   $$('[data-dialog]').forEach((button) => button.addEventListener('click', async (event) => {
@@ -13461,20 +13500,50 @@ function wireEvents() {
     }
   });
   $('#sync-now')?.addEventListener('click', async () => {
+    const context = viewContext();
     const button = $('#sync-now');
     if (button) button.disabled = true;
+    syncManualContext = context;
+    renderSyncFeedback(sameViewContext(syncDiagnosticsSnapshot?.context, context) ? syncDiagnosticsSnapshot.info : {});
     try {
-      await synchronizeCloud();
+      const result = await synchronizeCloud();
+      if (!sameViewContext(context, viewContext()) || result?.contextChanged) return;
       const info = await getSyncDiagnostics();
-    if (!sameViewContext(context, viewContext())) return;
-      if (info.pending === 0) toast('Sincronización completada.');
-      else toast(`Quedan ${info.pending} cambios pendientes.`);
+      if (!sameViewContext(context, viewContext())) return;
+      const status = describeSyncStatus(info, result);
+      toast(status.confirmed ? 'Sincronización completada.' : `${status.label}. ${status.detail}`);
     } catch (error) {
       handleError(error);
     } finally {
-      if (button) button.disabled = false;
+      if (syncManualContext === context) {
+        syncManualContext = null;
+        if (button) button.disabled = false;
+      }
       await refreshSyncStatusPanel();
     }
+  });
+  $('#copy-sync-report')?.addEventListener('click', async () => {
+    if (!roleCanUseOwnerFeatures(state.role)) return;
+    const context = viewContext();
+    try {
+      const info = await getSyncDiagnostics();
+      if (!sameViewContext(context, viewContext())) return;
+      const report = syncSupportReport({
+        version:window.__CAMPOBASE_BUILD, role:state.role, online:info.online,
+        pending:info.pending, blocked:info.blocked, statusKey:describeSyncStatus(info).key,
+      });
+      const field = $('#sync-support-report');
+      field.value = report;
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error('Portapapeles no disponible');
+        await navigator.clipboard.writeText(report);
+        if (sameViewContext(context, viewContext())) toast('Informe copiado sin datos personales ni credenciales.');
+      } catch {
+        if (!sameViewContext(context, viewContext())) return;
+        field.classList.remove('hidden'); field.focus(); field.select();
+        toast('Selecciona y copia el informe de este recuadro.');
+      }
+    } catch (error) { handleError(error); }
   });
   $('#recover-local-pending')?.addEventListener('click', async () => {
     const info = await getSyncDiagnostics();
@@ -14193,6 +14262,35 @@ function wireEvents() {
   });
 }
 
+let syncFeedback = null;
+let syncDiagnosticsSnapshot = null;
+let syncPanelRevision = 0;
+let syncManualContext = null;
+function describeSyncStatus(info = {}, result = null) {
+  const context = viewContext();
+  const feedback = sameViewContext(syncFeedback?.context, context) ? syncFeedback : null;
+  const outcome = result || feedback?.result;
+  return syncStatus({
+    demo:isDemoDatabase(), online:info.online ?? navigator.onLine,
+    bound:Boolean(getBoundSaasUserId()), connected:outcome?.online === true,
+    checking:!result && sameViewContext(syncManualContext, context),
+    pending:info.pending, blocked:info.blocked,
+    error:info.diagnosticError || outcome?.uploadError || outcome?.error
+      || (!outcome && sameViewContext(loadedViewContext, context) ? state.cloudError : ''),
+    authRequired:outcome?.authRequired, restricted:outcome?.cloudRestricted,
+  });
+}
+function renderSyncFeedback(info = {}) {
+  const status = describeSyncStatus(info);
+  const root = $('#sync-feedback');
+  if (root) {
+    root.hidden = !state.role;
+    root.dataset.state = status.key;
+    root.querySelector('[data-sync-label]').textContent = status.label;
+    root.querySelector('[data-sync-detail]').textContent = status.confirmed ? '' : status.detail;
+  }
+  return status;
+}
 function handleError(error) { if(error?.code==='CAMPOBASE_CONTEXT_CHANGED')return; console.error(error); toast(error.message || 'Ha ocurrido un error.'); }
 function networkStatus() {
   const label = $('#network-label');
@@ -14217,28 +14315,37 @@ function networkStatus() {
 
 async function refreshSyncStatusPanel() {
   const context = viewContext();
+  const revision = ++syncPanelRevision;
   const text = $('#sync-status-text');
   const detail = $('#sync-status-detail');
   const recover = $('#recover-local-pending');
   if (!text) return;
+  if (!sameViewContext(syncDiagnosticsSnapshot?.context, context)) {
+    const status = renderSyncFeedback();
+    text.textContent = status.label; detail.textContent = status.detail;
+    recover?.classList.add('hidden');
+    const report = $('#sync-support-report');
+    if (report) { report.value = ''; report.classList.add('hidden'); }
+    if (syncManualContext && !sameViewContext(syncManualContext, context)) {
+      syncManualContext = null;
+      if ($('#sync-now')) $('#sync-now').disabled = false;
+    }
+  }
   try {
     const info = await getSyncDiagnostics();
-    if (!info.online) {
-      text.textContent = 'Sin conexión · los cambios quedan pendientes en este dispositivo.';
-    } else if (state.cloudError) {
-      text.textContent = 'Error de sincronización.';
-    } else if (info.pending > 0) {
-      text.textContent = `Pendiente de sincronizar: ${info.pending} cambio${info.pending === 1 ? '' : 's'}.`;
-    } else {
-      text.textContent = 'Sincronizado con Supabase.';
-    }
-    detail.textContent = info.legacyPending > 0
-      ? `Hay ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento local anterior de este dispositivo.`
-      : (state.cloudError || '');
-    recover?.classList.toggle('hidden', !(info.boundUserId && info.legacyPending > 0));
+    if (!sameViewContext(context, viewContext()) || revision !== syncPanelRevision) return;
+    syncDiagnosticsSnapshot = {context,info};
+    const status = renderSyncFeedback(info);
+    text.textContent = status.label;
+    detail.textContent = status.detail + (info.legacyPending > 0
+      ? ` Hay ${info.legacyPending} cambio${info.legacyPending === 1 ? '' : 's'} pendiente${info.legacyPending === 1 ? '' : 's'} en el almacenamiento local anterior de este dispositivo.`
+      : '');
+    recover?.classList.toggle('hidden', !(roleCanUseOwnerFeatures(state.role) && info.boundUserId && info.legacyPending > 0));
+    return info;
   } catch (error) {
-    if (!sameViewContext(context, viewContext())) return;
+    if (!sameViewContext(context, viewContext()) || revision !== syncPanelRevision) return;
     text.textContent = 'No se pudo comprobar el estado de sincronización.';
+    renderSyncFeedback({diagnosticError:'No se pudo comprobar el estado local de sincronización.'});
     if (detail) detail.textContent = error.message || '';
     recover?.classList.add('hidden');
   }
@@ -14300,13 +14407,19 @@ async function synchronizeCloud() {
 
 async function runCloudSynchronization(context = viewContext()) {
   const stillCurrent = () => sameViewContext(context, viewContext());
+  if (!stillCurrent()) return {online:false,contextChanged:true};
+  const feedback = {context,result:sameViewContext(syncFeedback?.context,context) ? syncFeedback.result : null};
+  syncFeedback = feedback;
   if (isDemoDatabase()) {
     await refresh();
+    if (!stillCurrent()) return {online:false,contextChanged:true};
+    feedback.result = {online:false,demo:true};
     networkStatus();
     await refreshSyncStatusPanel();
     return { online: false, demo: true };
   }
   if (!navigator.onLine) {
+    feedback.result = {online:false,error:'Sin conexión. Se conservan los datos de este dispositivo.'};
     networkStatus();
     await refreshSyncStatusPanel();
     return { online: false, error: 'Sin conexión. Se conservan los datos de este dispositivo.' };
@@ -14331,12 +14444,13 @@ async function runCloudSynchronization(context = viewContext()) {
     state.cloudError = error.message || 'No se pudo sincronizar en la nube.';
     result = { online: false, error: state.cloudError };
   } finally {
-    if (stillCurrent()) lastCloudSyncTimestamp = Date.now();
+    if (stillCurrent()) { lastCloudSyncTimestamp = Date.now(); feedback.result = result; }
   }
   if (!stillCurrent()) return { online: false, contextChanged: true };
   networkStatus();
-  await refreshSyncStatusPanel();
-  return result;
+  const diagnostics = await refreshSyncStatusPanel();
+  if (!stillCurrent()) return {online:false,contextChanged:true};
+  return diagnostics ? {...result,pending:diagnostics.pending,blocked:diagnostics.blocked,retryable:diagnostics.retryable} : result;
 }
 
 async function init() {
@@ -14401,6 +14515,12 @@ async function init() {
   realtimeCloudStore = createCampoBaseCloudStore();
   configureCloudStore(realtimeCloudStore);
   window.addEventListener('online', () => synchronizeCloud().catch(handleError));
+  window.addEventListener('offline', () => { networkStatus(); refreshSyncStatusPanel().catch(handleError); });
+  let syncFeedbackTimer = null;
+  window.addEventListener('campobase:data-changed', () => {
+    if (syncFeedbackTimer) clearTimeout(syncFeedbackTimer);
+    syncFeedbackTimer = setTimeout(() => { syncFeedbackTimer = null; refreshSyncStatusPanel().catch(handleError); }, 50);
+  });
   window.addEventListener('offline', networkStatus);
   // En desarrollo local (localhost) NO usamos el service worker: cachea el código
   // y hace que los cambios no se vean. Desregistramos el que ya esté activo y, en
@@ -14428,7 +14548,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261023-whatsapp-call-time-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261024-pilot-flows-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

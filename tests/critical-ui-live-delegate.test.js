@@ -173,8 +173,10 @@ test('subpestañas superiores tienen listener directo y no dependen solo de docu
   assert.match(nav, /triggerStandardView\(viewId\)/);
 });
 
-test('Actualizar hace recarga controlada preservando sesión y vista', () => {
+test('Actualizar sincroniza preservando sesión y vista sin reconstruir un editor', () => {
   assert.match(runtime, /campobase\.activeView/);
   assert.match(runtime, /campobase\.sessionRole/);
-  assert.match(runtime, /window\.location\.replace/);
+  assert.doesNotMatch(runtime, /window\.location\.(?:replace|reload)/);
+  assert.doesNotMatch(runtime, /app\.refresh\?\.\(true\)|app\.renderAll\?\.\(/);
+  assert.match(runtime, /await app\.synchronizeCloud\(\)/);
 });

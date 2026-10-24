@@ -1,0 +1,84 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Sincronización · prueba aislada</title>
+<body><p>Diagnóstico y guardado con IndexedDB real, datos ficticios y ninguna conexión remota.</p><script type="module">
+import * as db from '/js/db.js';
+import * as auth from '/js/auth-manager.js';
+import {createDemoSession} from '/js/demo-session-core.js?v=20261022-pilot-safety-1';
+globalThis.__campobase={state:{role:'owner'}};
+const result=request=>new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+const done=tx=>new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});
+const activate=id=>{auth.setBoundSaasUserId(id);db.configureRealDatabase();globalThis.__campobase.state.role='owner';};
+const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+async function raw(store,mode='readonly') {const database=await db.openDatabase();return database.transaction(store,mode);}
+async function rows(store) {const tx=await raw(store);return result(tx.objectStore(store).getAll());}
+async function seed(data) {const tx=await raw(Object.keys(data),'readwrite');for(const [store,records]of Object.entries(data)){const target=tx.objectStore(store);target.clear();for(const record of records)target.put(record);}await done(tx);}
+function holdQueueRead(databaseName){
+ const started=deferred(),gate=deferred(),original=IDBObjectStore.prototype.getAll;
+ IDBObjectStore.prototype.getAll=function(...args){
+  const request=original.apply(this,args);
+  if(this.transaction.db.name===databaseName&&this.name==='syncQueue'){
+   IDBObjectStore.prototype.getAll=original;
+   Object.defineProperty(request,'onsuccess',{configurable:true,set(handler){request.addEventListener('success',event=>{started.resolve();gate.promise.then(()=>handler.call(request,event));},{once:true});}});
+  }
+  return request;
+ };
+ return {started:started.promise,release:()=>gate.resolve()};
+}
+window.runSyncDiagnosticCases=async()=>{
+ let checks=0;const check=(condition,message)=>{if(!condition)throw Error(message);checks++;};
+ db.configureCloudStore(null);activate('diagnostics-A');
+ const source={id:'source',recordType:'trainingSession',notes:'Original'},attendance={id:'attendance',sourceId:'source',present:['p1']};
+ await seed({settings:[source],trainings:[attendance],syncQueue:[{id:'allowed',store:'trainings',recordId:'allowed',payload:{secret:'never in diagnostics'}},{id:'denied',store:'trainings',recordId:'denied',blockedAt:1}]});
+ const diagnostics=await db.getSyncDiagnostics();
+ check(diagnostics.pending===2&&diagnostics.blocked===1&&diagnostics.retryable===1,'Cuenta todos los cambios y distingue los bloqueados');
+ check(!JSON.stringify(diagnostics).includes('never in diagnostics')&&!JSON.stringify(diagnostics).includes('denied'),'No expone registros de la cola');
+ const hold=holdQueueRead(auth.userDatabaseName('diagnostics-A'));
+ const old=db.getSyncDiagnostics().then(()=>null,error=>error.code);await hold.started;
+ activate('diagnostics-B');hold.release();
+ check(await old==='CAMPOBASE_CONTEXT_CHANGED','Una lectura de A retenida no termina en B');
+ const own=await db.getSyncDiagnostics();check(own.pending===0&&own.boundUserId==='diagnostics-B','B recibe únicamente su propio diagnóstico');
+ const original=IDBObjectStore.prototype.getAll;
+ IDBObjectStore.prototype.getAll=function(){throw Error('La demo no debe leer una base real');};
+ db.configureDemoDatabase(createDemoSession('diagnostics-demo'));
+ try {const demo=await db.getSyncDiagnostics();check(demo.demo&&demo.pending===0&&demo.blocked===0&&demo.retryable===0&&!demo.boundUserId,'La demo no consulta datos reales');}
+ finally {IDBObjectStore.prototype.getAll=original;}
+ activate('diagnostics-A');
+ const queueBefore=await rows('syncQueue');
+ await seed({settings:[{...source,notes:'Editado en otra pestaña'}]});
+ let stale;try{await db.put('trainings',{...attendance,present:['p2']},{waitForCloud:false,expectedRecords:[{store:'settings',id:source.id,record:source},{store:'trainings',id:attendance.id,record:attendance}]});}catch(error){stale=error;}
+ check(stale?.code==='CAMPOBASE_RECORD_CHANGED','Una dependencia cambiada cancela el guardado con motivo explícito');
+ check(same(await db.getOne('trainings',attendance.id),attendance),'El conflicto no modifica la asistencia');
+ check(same(await rows('syncQueue'),queueBefore),'El conflicto no añade ni elimina cambios pendientes');
+ const currentSource=await db.getOne('settings',source.id),next={...attendance,present:['p2']};
+ await db.put('trainings',next,{waitForCloud:false,expectedRecords:[{store:'settings',id:source.id,record:currentSource},{store:'trainings',id:attendance.id,record:attendance}]});
+ check(same(await db.getOne('trainings',attendance.id),next),'La misma operación con dependencias vigentes guarda la asistencia');
+ check((await rows('syncQueue')).length===queueBefore.length+1,'La asistencia y su mutación se guardan juntas');
+ const queueAfter=await rows('syncQueue');
+ let missing;try{await db.put('trainings',{...next,present:[]},{waitForCloud:false,expectedRecords:[{store:'trainings',id:attendance.id,record:null}]});}catch(error){missing=error;}
+ check(missing?.code==='CAMPOBASE_RECORD_CHANGED'&&same(await rows('syncQueue'),queueAfter),'Una referencia que debía estar ausente no pisa datos existentes');
+ const baseline=await rows('trainings'),beforeBaseline=JSON.stringify(baseline),newAttendance={id:'attendance-new',sourceId:'source',present:['p3']};
+ await seed({trainings:[...baseline,{id:'created-in-another-tab',sourceId:'source'}]});
+ let collectionConflict;try{await db.put('trainings',newAttendance,{waitForCloud:false,expectedStores:[{store:'trainings',records:baseline}]});}catch(error){collectionConflict=error;}
+ check(collectionConflict?.code==='CAMPOBASE_RECORD_CHANGED'&&!(await db.getOne('trainings',newAttendance.id)),'Otra asistencia creada durante la edición impide crear un duplicado local');
+ check(same(await rows('syncQueue'),queueAfter)&&JSON.stringify(baseline)===beforeBaseline,'El conflicto de colección conserva cola y snapshot sin mutarlos');
+ const updatedBaseline=await rows('trainings'),reversed=[...updatedBaseline].reverse(),beforeReversed=JSON.stringify(reversed);
+ await db.put('trainings',newAttendance,{waitForCloud:false,expectedRecords:[{store:'settings',id:source.id,record:currentSource}],expectedStores:[{store:'trainings',records:reversed}]});
+ check(same(await db.getOne('trainings',newAttendance.id),newAttendance)&&JSON.stringify(reversed)===beforeReversed,'Colecciones equivalentes en otro orden guardan sin mutar el snapshot');
+ const currentQueue=await rows('syncQueue'),nativeGet=IDBObjectStore.prototype.get;
+ IDBObjectStore.prototype.get=function(...args){const request=nativeGet.apply(this,args);if(this.name==='trainings'&&args[0]===attendance.id){IDBObjectStore.prototype.get=nativeGet;request.addEventListener('success',()=>activate('diagnostics-B'),{once:true});}return request;};
+ let changedContext;try{await db.put('trainings',{...next,present:[]},{waitForCloud:false,expectedRecords:[{store:'trainings',id:attendance.id,record:next}]});}catch(error){changedContext=error;}
+ activate('diagnostics-A');
+ check(changedContext?.code==='CAMPOBASE_CONTEXT_CHANGED'&&same(await db.getOne('trainings',attendance.id),next)&&same(await rows('syncQueue'),currentQueue),'Cambiar de cuenta dentro de la lectura de la transacción cancela datos y cola juntos');
+ await seed({players:[{id:'roster-player',name:'Jugador de prueba'}]});
+ const openingPlayers=await rows('players');await seed({players:[]});
+ let rosterConflict;try{await db.put('trainings',{...next,present:['roster-player']},{waitForCloud:false,expectedStores:[{store:'players',records:openingPlayers}]});}catch(error){rosterConflict=error;}
+ check(rosterConflict?.code==='CAMPOBASE_RECORD_CHANGED'&&same(await db.getOne('trainings',attendance.id),next)&&same(await rows('syncQueue'),currentQueue),'Un cambio de plantilla desde otra transacción impide guardar una asistencia obsoleta sin alterar datos ni cola');
+ db.configureDemoDatabase(createDemoSession('conditional-demo'));await db.put('settings',source);
+ await db.put('settings',{...source,notes:'Demo actualizada'});
+ let conflict;try{await db.put('trainings',attendance,{expectedRecords:[{store:'settings',id:source.id,record:source}]});}catch(error){conflict=error;}
+ check(conflict?.code==='CAMPOBASE_RECORD_CHANGED'&&!(await db.getOne('trainings',attendance.id)),'La demo conserva la misma protección ante cambios de fuente');
+ let demoCollection;try{await db.put('trainings',attendance,{expectedStores:[{store:'settings',records:[source]}]});}catch(error){demoCollection=error;}
+ check(demoCollection?.code==='CAMPOBASE_RECORD_CHANGED'&&!(await db.getOne('trainings',attendance.id)),'La demo también protege las dependencias de colección');
+ return {checks};
+};
+</script></body></html>

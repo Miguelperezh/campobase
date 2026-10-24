@@ -273,11 +273,36 @@ export async function getOne(store, id) {
   return localGetOne(store, id);
 }
 
-export async function put(store, value, { assertContext, waitForCloud = true } = {}) {
+export async function put(store, value, { assertContext, waitForCloud = true, expectedRecords = [], expectedStores = [] } = {}) {
   const context=storageContext(), guard=operationGuard(context,assertContext);
   guard();
+  if (!Array.isArray(expectedRecords) || expectedRecords.some(expected => !STORES.includes(expected?.store) || expected.id === undefined || expected.id === null)) {
+    throw new TypeError('Las referencias del guardado no son válidas. Vuelve a abrir el formulario.');
+  }
+  if (!Array.isArray(expectedStores) || expectedStores.some(expected => !STORES.includes(expected?.store) || !Array.isArray(expected.records))) {
+    throw new TypeError('Las colecciones del guardado no son válidas. Vuelve a abrir el formulario.');
+  }
+  const expectations = structuredClone(expectedRecords);
+  const storeExpectations = structuredClone(expectedStores);
+  const conflict = () => {
+    const error = new Error('Los datos han cambiado mientras editabas. Vuelve a abrir el formulario para revisar la versión actual; tu borrador se conserva.');
+    error.code = 'CAMPOBASE_RECORD_CHANGED';
+    return error;
+  };
+  const matchesExpected = (current, expected) => JSON.stringify(current ?? null) === JSON.stringify(expected.record ?? null);
+  const sortedRecords = records => [...records].sort((a, b) => `${typeof a.id}:${String(a.id)}`.localeCompare(`${typeof b.id}:${String(b.id)}`));
+  const matchesStore = (current, expected) => JSON.stringify(sortedRecords(visibleRecords(expected.store,current))) === JSON.stringify(sortedRecords(expected.records));
   if (store === 'settings' && isLocalRecovery(value)) throw new TypeError('El respaldo local solo se administra mediante la importación.');
   if (isDemoDatabase()) {
+    for (const expected of expectations) {
+      guard();
+      if (!matchesExpected(demoStores[expected.store].get(expected.id), expected)) throw conflict();
+    }
+    for (const expected of storeExpectations) {
+      guard();
+      if (!matchesStore([...demoStores[expected.store].values()], expected)) throw conflict();
+    }
+    guard();
     demoStores[store].set(value.id, structuredClone(value));
     notifyDataChanged(store, 'upsert');
     return value;
@@ -291,10 +316,40 @@ export async function put(store, value, { assertContext, waitForCloud = true } =
     : genericRecord;
   const db = await contextDatabase(context);
   guard(db.name);
-  const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  transaction.objectStore(store).put(recordToStore);
-  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
-  await transactionDone(transaction);
+  const transaction = db.transaction([...new Set([store, SYNC_QUEUE, ...expectations.map(expected => expected.store), ...storeExpectations.map(expected => expected.store)])], 'readwrite');
+  let guardedError = null;
+  const write = () => {
+    guard(db.name);
+    transaction.objectStore(store).put(recordToStore);
+    transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'upsert', recordToStore));
+  };
+  if (!expectations.length && !storeExpectations.length) write();
+  else {
+    // The reads and both writes share one transaction. Another tab cannot
+    // change a dependency between its comparison and saving the attendance.
+    let remaining = expectations.length + storeExpectations.length;
+    const verify = (read, matches) => {
+      read.onsuccess = () => {
+        if (guardedError) return;
+        try {
+          guard(db.name);
+          if (!matches(read.result)) throw conflict();
+          if (--remaining === 0) write();
+        } catch (error) {
+          guardedError = error;
+          transaction.abort();
+        }
+      };
+    };
+    for (const expected of expectations) {
+      verify(transaction.objectStore(expected.store).get(expected.id), current => matchesExpected(current, expected));
+    }
+    for (const expected of storeExpectations) {
+      verify(transaction.objectStore(expected.store).getAll(), current => matchesStore(current, expected));
+    }
+  }
+  try { await transactionDone(transaction); }
+  catch (error) { throw guardedError || error; }
   queueCloudUpload(context);
   if (waitForCloud && canUseCloud()) await flushSyncQueue(cloudOptions(context));
   notifyDataChanged(store, 'upsert');
@@ -796,16 +851,32 @@ export async function getLocalPinSettingsCandidates() {
 }
 
 export async function getSyncDiagnostics() {
-  const boundUserId = getBoundSaasUserId();
-  const activeName = boundUserId ? userDatabaseName(boundUserId) : REAL_DB_NAME;
+  const context = storageContext();
+  assertStorageContext(context);
+  // A demo has no remote queue. In particular, never inspect the last real
+  // account (or its legacy database) to describe a temporary demo session.
+  if (isDemoDatabase()) return {
+    boundUserId: '', activeDatabase: context.database,
+    pending: 0, blocked: 0, retryable: 0, legacyPending: 0,
+    online: typeof navigator === 'undefined' ? true : navigator.onLine,
+    demo: true,
+  };
+  const boundUserId = context.userId;
+  const activeName = context.database;
   const pending = await queueFromDatabaseName(activeName);
+  assertStorageContext(context);
   const legacyPending = activeName === REAL_DB_NAME ? pending : await queueFromDatabaseName(REAL_DB_NAME);
+  assertStorageContext(context);
+  const blocked = pending.filter(mutation => Boolean(mutation.blockedAt)).length;
   return {
     boundUserId,
     activeDatabase: activeName,
     pending: pending.length,
+    blocked,
+    retryable: pending.length - blocked,
     legacyPending: activeName === REAL_DB_NAME ? 0 : legacyPending.length,
     online: typeof navigator === 'undefined' ? true : navigator.onLine,
+    demo: false,
   };
 }
 

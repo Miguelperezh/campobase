@@ -2,7 +2,9 @@
 // Sesiones y partidos se editan sin duplicarlos. Los registros siguen viviendo en
 // `trainings`, por lo que Plantilla, historial y estadísticas leen la misma fuente.
 
-import { getAll, put, remove } from './db.js';
+import { getAll, put, currentDatabaseName } from './db.js';
+import { getBoundSaasUserId, getPinAccessRevision, isPinAccessLocked } from './auth-manager.js';
+import { roleCanUseOwnerFeatures } from './demo-session-core.js?v=20261022-pilot-safety-1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -12,8 +14,60 @@ const esc = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
 
 let renderQueued = false;
 let rendering = false;
-let cleanupQueued = false;
 let activeFilter = 'all';
+let attendanceOpenRevision = 0;
+const attendanceForms = new WeakMap();
+const attendanceSaves = new WeakSet();
+const attendanceIdentity = () => JSON.stringify([getBoundSaasUserId(), currentDatabaseName(), getPinAccessRevision(), window.__campobase?.state?.role]);
+
+function attendanceContext() {
+  const app = window.__campobase;
+  const context = {
+    userId: getBoundSaasUserId(), database: currentDatabaseName(),
+    revision: getPinAccessRevision(), role: app?.state?.role,
+  };
+  const assertContext = (database) => {
+    const current = window.__campobase;
+    const allowed = roleCanUseOwnerFeatures(current?.state?.role)
+      || (current?.state?.role === 'delegate' && current.getDelegatePermissions?.().includes('asistencia'));
+    if (!allowed || isPinAccessLocked() || !context.database
+        || getBoundSaasUserId() !== context.userId || currentDatabaseName() !== context.database
+        || getPinAccessRevision() !== context.revision || current?.state?.role !== context.role
+        || (database && database !== context.database)) {
+      const error = new Error('La cuenta o tus permisos han cambiado. Vuelve a abrir la asistencia; el borrador se conserva.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+  };
+  assertContext();
+  return { ...context, assertContext };
+}
+
+function attendanceSource(data, source, sourceId) {
+  const session = source === 'session' ? data.sessions.find((item) => String(item.id) === String(sourceId)) : null;
+  const match = source === 'match' ? data.matches.find((item) => String(item.id) === String(sourceId)) : null;
+  if (source === 'session' && !session) throw new Error('La sesión ya no está disponible.');
+  if (source === 'match' && !match) throw new Error('El partido ya no está disponible.');
+  if (!session && !match) throw new Error('No se ha identificado la actividad de esta asistencia.');
+  const callup = match ? data.callups.find((item) => String(item.id) === String(match.callupId) || String(item.matchId) === String(match.id)) : null;
+  if (match && !callup?.availableIds?.length) throw new Error('Este partido necesita una convocatoria antes de pasar asistencia.');
+  const selected = new Set((callup?.availableIds || []).map(String));
+  const players = match ? data.players.filter((player) => selected.has(String(player.id))) : data.players;
+  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session, data.sessions);
+  return { session, match, callup, players, existing };
+}
+
+const attendanceFingerprint = (value) => JSON.stringify(value ?? null);
+function assertAttendanceBaseline(editor, current) {
+  if (attendanceFingerprint(editor.sourceRecord) !== attendanceFingerprint(current.match || current.session)
+      || attendanceFingerprint(editor.callup) !== attendanceFingerprint(current.callup)
+      || attendanceFingerprint(editor.existing) !== attendanceFingerprint(current.existing)
+      || attendanceFingerprint(editor.playerIds) !== attendanceFingerprint(current.players.map((player) => String(player.id)))) {
+    const error = new Error('La actividad o su asistencia ha cambiado en otro dispositivo. El borrador se conserva; vuelve a abrirla para revisar la última versión.');
+    error.code = 'CAMPOBASE_RECORD_CHANGED';
+    throw error;
+  }
+}
 
 function formatDate(value = '') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
@@ -47,10 +101,11 @@ function sourcePanel() {
   return panel;
 }
 
-async function snapshot() {
+async function snapshot(assertContext) {
   const [matches, trainings, settings, callups, players] = await Promise.all([
     getAll('matches'), getAll('trainings'), getAll('settings'), getAll('callups'), getAll('players'),
   ]);
+  assertContext?.();
   return {
     matches,
     trainings,
@@ -61,17 +116,21 @@ async function snapshot() {
 }
 
 function attendanceForMatch(trainings, matchId) {
-  return trainings.find((record) => record?.kind === 'match' && record.matchId === matchId);
+  return trainings.find((record) => record?.kind === 'match' && String(record.matchId ?? '') === String(matchId ?? '') && String(matchId ?? '') !== '');
 }
 
-function attendanceForSession(trainings, session) {
-  const sessionId = typeof session === 'string' ? session : session?.id;
+function attendanceForSession(trainings, session, sessions = []) {
+  const sessionId = typeof session === 'object' ? session?.id : session;
   const sessionDate = typeof session === 'object' ? session?.date : null;
-  return trainings.find((record) => {
-    if (sessionId && record?.sessionId === sessionId) return true;
-    if (sessionDate && record?.kind === 'training' && dateOnly(record?.date) === dateOnly(sessionDate)) return true;
-    return false;
-  });
+  const exact = String(sessionId ?? '') === '' ? null : trainings.find((record) => String(record?.sessionId ?? '') === String(sessionId));
+  if (exact) return exact;
+  // A date alone cannot move attendance from another session or select one of
+  // several activities/records on the same day.
+  if (!sessionDate || sessions.filter((item) => dateOnly(item?.date) === dateOnly(sessionDate)).length !== 1) return undefined;
+  const legacy = trainings.filter((record) => record?.kind === 'training'
+    && String(record.sessionId ?? '') === '' && String(record.matchId ?? '') === ''
+    && dateOnly(record.date) === dateOnly(sessionDate));
+  return legacy.length === 1 ? legacy[0] : undefined;
 }
 
 export function summarizeAttendance(records = []) {
@@ -123,7 +182,7 @@ export function buildAttendanceActivities({ sessions = [], matches = [], trainin
     ...sessions.map((session) => ({
       source: 'session', id: session.id, date: activityDate(session), title: sessionName(session),
       subtitle: `${session.blocks?.length || 0} ejercicios · ${Number(session.totalDuration) || 0} min`,
-      attendance: attendanceForSession(trainings, session), ready: true,
+      attendance: attendanceForSession(trainings, session, sessions), ready: true,
     })),
     ...matches.map((match) => ({
       source: 'match', id: match.id, date: activityDate(match), title: String(match.opponent || 'Partido'),
@@ -161,10 +220,11 @@ function activityCard(row) {
 async function renderSources() {
   const panel = sourcePanel();
   if (!panel || rendering) return;
+  const identity = attendanceIdentity();
   rendering = true;
   try {
     const data = await snapshot();
-    if (!panel.isConnected) return;
+    if (!panel.isConnected || identity !== attendanceIdentity()) return;
     const todayKey = (() => {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -223,9 +283,11 @@ async function renderSources() {
       </div>
       ${contentHTML}`;
   } catch (error) {
+    if (identity !== attendanceIdentity() || error?.code === 'CAMPOBASE_CONTEXT_CHANGED') return;
     panel.innerHTML = `<p class="error panel">No se pudieron cargar las actividades para asistencia: ${esc(error?.message || 'error desconocido')}</p>`;
   } finally {
     rendering = false;
+    if (identity !== attendanceIdentity()) scheduleRender();
   }
 }
 
@@ -236,26 +298,6 @@ function scheduleRender() {
     renderQueued = false;
     renderSources();
   }, 60);
-}
-
-async function cleanupOrphanSessionAttendance() {
-  const [settings, trainings] = await Promise.all([getAll('settings'), getAll('trainings')]);
-  const sessions = settings.filter((item) => item?.recordType === 'trainingSession');
-  if (!sessions.length) return 0; // Evita borrar si settings aún no ha sincronizado del servidor
-  const sessionIds = new Set(sessions.map((item) => item.id));
-  const orphans = trainings.filter((record) => record?.sessionId && !sessionIds.has(record.sessionId));
-  for (const record of orphans) await remove('trainings', record.id);
-  if (orphans.length) scheduleRender();
-  return orphans.length;
-}
-
-function scheduleCleanup() {
-  if (cleanupQueued) return;
-  cleanupQueued = true;
-  window.setTimeout(() => {
-    cleanupQueued = false;
-    cleanupOrphanSessionAttendance().catch((error) => console.warn('No se pudo limpiar una asistencia huérfana:', error));
-  }, 150);
 }
 
 function statusChoice(playerId, value, selected, label) {
@@ -315,15 +357,12 @@ function updateEditorSummary(form) {
 }
 
 async function openActivityAttendance(source, sourceId) {
-  const data = await snapshot();
-  const session = source === 'session' ? data.sessions.find((item) => item.id === sourceId) : null;
-  const match = source === 'match' ? data.matches.find((item) => item.id === sourceId) : null;
-  if (source === 'session' && !session) throw new Error('La sesión ya no está disponible.');
-  if (source === 'match' && !match) throw new Error('El partido ya no está disponible.');
-  const callup = match ? data.callups.find((item) => item.id === match.callupId || item.matchId === match.id) : null;
-  if (match && !callup?.availableIds?.length) throw new Error('Este partido necesita una convocatoria antes de pasar asistencia.');
-  const players = match ? data.players.filter((player) => callup.availableIds.includes(player.id)) : data.players;
-  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session);
+  const context = attendanceContext();
+  const opening = ++attendanceOpenRevision;
+  const data = await snapshot(context.assertContext);
+  context.assertContext();
+  if (opening !== attendanceOpenRevision) return;
+  const { session, match, callup, players, existing } = attendanceSource(data, source, sourceId);
   const byPlayer = new Map((existing?.attendance || []).map((entry) => [entry.playerId, entry]));
   const root = $('#training-builder');
   if (!root) return;
@@ -343,62 +382,102 @@ async function openActivityAttendance(source, sourceId) {
     <label>Notas generales<textarea name="notes" maxlength="1000" placeholder="Opcional: contexto general de la sesión o partido">${esc(existing?.notes || '')}</textarea></label>
     <div class="button-row attendance-save-row"><button class="primary" type="submit">Guardar asistencia</button><button type="button" class="secondary cancel-training">Cancelar</button></div>
   </form>`;
-  updateEditorSummary($('#training-form', root));
+  const form = $('#training-form', root);
+  attendanceForms.set(form, {
+    context, source, sourceId: String(sourceId),
+    sourceRecord: structuredClone(match || session), callup: structuredClone(callup),
+    existing: structuredClone(existing), playerIds: players.map((player) => String(player.id)),
+    playerRecords: structuredClone(data.players),
+    attendanceRecords: existing ? null : structuredClone(data.trainings),
+    recordId: existing?.id || crypto.randomUUID(),
+  });
+  updateEditorSummary(form);
   root.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function saveVisualAttendance(form) {
-  const source = form.dataset.attendanceSource;
-  const sourceId = form.dataset.sourceId;
-  const data = await snapshot();
-  const session = source === 'session' ? data.sessions.find((item) => item.id === sourceId) : null;
-  const match = source === 'match' ? data.matches.find((item) => item.id === sourceId) : null;
-  if (source === 'session' && !session) throw new Error('La sesión ya no está disponible.');
-  if (source === 'match' && !match) throw new Error('El partido ya no está disponible.');
-  const callup = match ? data.callups.find((item) => item.id === match.callupId || item.matchId === match.id) : null;
-  if (match && !callup?.availableIds?.length) throw new Error('El partido ya no tiene una convocatoria válida.');
-  const players = match ? data.players.filter((player) => callup.availableIds.includes(player.id)) : data.players;
-  const existing = match ? attendanceForMatch(data.trainings, match.id) : attendanceForSession(data.trainings, session);
-  const attendance = players.map((player) => {
-    const status = form.elements[`status-${player.id}`]?.value || 'present';
-    if (!['present', 'late', 'absent'].includes(status)) throw new Error(`Estado no válido para ${player.name}.`);
-    const hour = form.elements[`arrivalHour-${player.id}`]?.value || '';
-    const minute = form.elements[`arrivalMinute-${player.id}`]?.value || '';
-    const arrivalTime = status === 'late' && hour && minute ? `${hour}:${minute}` : '';
-    return {
-      playerId: player.id,
-      status,
-      arrivalTime,
-      note: String(form.elements[`note-${player.id}`]?.value || '').trim(),
-    };
-  });
-  const record = {
-    ...(existing || {}),
-    id: existing?.id || crypto.randomUUID(),
-    kind: match ? 'match' : 'training',
-    matchId: match?.id || null,
-    sessionId: session?.id || null,
-    date: dateOnly(match?.date || session?.date),
-    notes: String(form.elements.notes?.value || '').trim(),
-    attendance,
-    createdAt: existing?.createdAt || Date.now(),
-    updatedAt: Date.now(),
+  if (attendanceSaves.has(form)) return;
+  const editor = attendanceForms.get(form);
+  const assertContext = (database) => {
+    if (!editor || attendanceForms.get(form) !== editor || $('#training-form') !== form || !form.isConnected
+        || form.dataset.attendanceSource !== editor.source || form.dataset.sourceId !== editor.sourceId
+        || form.closest('#training-builder')?.classList.contains('hidden')) {
+      throw new Error('Vuelve a abrir la asistencia antes de guardar. El borrador se conserva.');
+    }
+    editor.context.assertContext(database);
   };
-  await put('trainings', record);
-  $('#training-builder')?.classList.add('hidden');
-  await renderSources();
-  showToast('Asistencia guardada. La ficha de cada jugador se ha actualizado.');
+  assertContext();
+  attendanceSaves.add(form);
+  const buttons = [...form.querySelectorAll('button[type="submit"]')];
+  buttons.forEach((button) => { button.disabled = true; });
+  try {
+    const data = await snapshot(assertContext);
+    assertContext();
+    const current = attendanceSource(data, editor.source, editor.sourceId);
+    assertAttendanceBaseline(editor, current);
+    const { session, match, players, existing } = current;
+    const attendance = players.map((player) => {
+      const status = form.elements[`status-${player.id}`]?.value || 'present';
+      if (!['present', 'late', 'absent'].includes(status)) throw new Error(`Estado no válido para ${player.name}.`);
+      const hour = form.elements[`arrivalHour-${player.id}`]?.value || '';
+      const minute = form.elements[`arrivalMinute-${player.id}`]?.value || '';
+      const arrivalTime = status === 'late' && hour && minute ? `${hour}:${minute}` : '';
+      return {
+        playerId: player.id,
+        status,
+        arrivalTime,
+        note: String(form.elements[`note-${player.id}`]?.value || '').trim(),
+      };
+    });
+    const record = {
+      ...(existing || {}),
+      id: editor.recordId,
+      kind: match ? 'match' : 'training',
+      matchId: match?.id || null,
+      sessionId: session?.id || null,
+      date: dateOnly(match?.date || session?.date),
+      notes: String(form.elements.notes?.value || '').trim(),
+      attendance,
+      createdAt: existing?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+    const expectedRecords = [
+      { store: match ? 'matches' : 'settings', id: editor.sourceRecord.id, record: editor.sourceRecord },
+      { store: 'trainings', id: editor.recordId, record: editor.existing ?? null },
+      ...(editor.callup ? [{ store: 'callups', id: editor.callup.id, record: editor.callup }] : []),
+    ];
+    await put('trainings', record, {
+      assertContext, expectedRecords, waitForCloud: false,
+      expectedStores: [
+        { store: 'players', records: editor.playerRecords },
+        ...(editor.existing ? [] : [{ store: 'trainings', records: editor.attendanceRecords }]),
+      ],
+    });
+    assertContext();
+    attendanceForms.delete(form);
+    $('#training-builder')?.classList.add('hidden');
+    await renderSources();
+    editor.context.assertContext();
+    showToast('Asistencia guardada en este dispositivo.');
+  } finally {
+    attendanceSaves.delete(form);
+    buttons.forEach((button) => { button.disabled = false; });
+  }
 }
 
 async function openAttendanceRecord(button) {
+  const context = attendanceContext();
   const [trainings, settings] = await Promise.all([getAll('trainings'), getAll('settings')]);
-  const record = trainings.find((item) => item.id === button.dataset.id);
+  context.assertContext();
+  const record = trainings.find((item) => String(item.id) === String(button.dataset.id));
   if (!record) throw new Error('El registro de asistencia ya no existe.');
-  if (record.sessionId) return openActivityAttendance('session', record.sessionId);
-  if (record.matchId) return openActivityAttendance('match', record.matchId);
+  if (String(record.sessionId ?? '') !== '') return openActivityAttendance('session', record.sessionId);
+  if (String(record.matchId ?? '') !== '') return openActivityAttendance('match', record.matchId);
   if (record.kind === 'training' && record.date) {
-    const session = settings.find((item) => item?.recordType === 'trainingSession' && dateOnly(item.date) === dateOnly(record.date));
-    if (session) return openActivityAttendance('session', session.id);
+    const sessions = settings.filter((item) => item?.recordType === 'trainingSession');
+    const candidates = sessions.filter((item) => dateOnly(item.date) === dateOnly(record.date));
+    const session = candidates.length === 1 ? candidates[0] : null;
+    if (session && attendanceForSession(trainings, session, sessions)?.id === record.id) return openActivityAttendance('session', session.id);
   }
   // Registro histórico sin vínculo: conserva el editor antiguo en lugar de perderlo.
   button.dataset.visualFallback = '1';
@@ -412,6 +491,22 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   window.setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function showAttendanceError(error, form = $('#training-form[data-visual-attendance="1"]')) {
+  const message = error?.message || 'No se pudo guardar la asistencia. El borrador se conserva.';
+  if (form?.isConnected) {
+    let notice = form.querySelector('[data-attendance-error]');
+    if (!notice) {
+      notice = document.createElement('p');
+      notice.dataset.attendanceError = '1';
+      notice.className = 'error panel';
+      notice.setAttribute('role', 'alert');
+      form.prepend(notice);
+    }
+    notice.textContent = message;
+  }
+  showToast(message);
 }
 
 function installStyles() {
@@ -433,6 +528,12 @@ function install() {
   installStyles();
   sourcePanel();
   scheduleRender();
+
+  window.addEventListener('campobase:attendance-open', (event) => {
+    const {source, id} = event.detail || {};
+    if (!['session', 'match'].includes(source) || id === undefined || id === null) return;
+    openActivityAttendance(source, id).catch((error) => showAttendanceError(error));
+  });
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('#new-training') && document.body.classList.contains('cb-redesign-active')) {
@@ -484,7 +585,6 @@ function install() {
       return;
     }
     if (event.target.closest('[data-view="asistencia"]')) scheduleRender();
-    if (event.target.closest('.delete-session')) scheduleCleanup();
   }, true);
 
   document.addEventListener('change', (event) => {
@@ -510,7 +610,7 @@ function install() {
     if (!form) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    saveVisualAttendance(form).catch((error) => showToast(error.message || 'No se pudo guardar la asistencia.'));
+    saveVisualAttendance(form).catch((error) => showAttendanceError(error, form));
   }, true);
 
   document.addEventListener('campobase:data-changed', (event) => {
