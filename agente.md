@@ -1979,3 +1979,7 @@ Servidor: RPC owner con actor esperado y versión atómica; delegado correo/PIN 
 
 ## SDD060 — Hora de citación editable en WhatsApp (23/10/2026)
 Causa doble: updateWhatsAppPreview calculaba siempre inicio menos 45 minutos e ignoraba wa-call-time; buildWhatsAppMatchConvocatoria volvía a anteponer el cálculo a la hora recibida. Se lee el campo editable y se da prioridad a la elección explícita, conservando el cálculo por defecto y el resto del comunicado. El formulario distingue la citación automática de la editada: un cambio de inicio recalcula solo la automática; elegir otro evento o volver a Convocatoria reinicia sus datos propios. Sin escrituras de datos ni cambios de formato. Pruebas y publicación en specs/060-whatsapp-hora-citacion/validation.md.
+
+
+## SDD059 — Servidor final verificado (24/10/2026)
+Frontend PR143 y WhatsApp PR144 publicados. Políticas finales aplicadas por ALTER/CREATE en fases cortas tras confirmar que el lote con requestState expirado no había cambiado nada. Separación authenticated/anon evita exigir permiso de helper privado a anon. Probes reales READ ONLY: titular54 propios/0 ajenos, delegado0 por REST y contexto disponible, anon0; RPC antiguo revocado, v2 solo servidor. Biblioteca conserva lectura. Nueve conteos/huellas idénticos en la ventana final; sin DML deportivo, PIN ni permisos manuales. Registro completo y límites en SDD059/validation.md.

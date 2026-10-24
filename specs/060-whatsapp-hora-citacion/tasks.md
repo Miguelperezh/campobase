@@ -5,4 +5,4 @@
 - [x] Añadir regresiones de mensaje completo y hora automática.
 - [x] Verificar formulario real, copia y enlace a 1440/390.
 - [x] Ejecutar sintaxis y suite completa.
-- [ ] Publicar y verificar recursos públicos.
+- [x] Publicar y verificar recursos públicos.

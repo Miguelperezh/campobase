@@ -113,11 +113,14 @@ begin
  foreach target in array array['jugadores','convocatorias','partidos','asistencias','configuracion'] loop
   execute format('drop policy if exists campobase_authenticated_team_gate on public.%I',target);
   execute format('create policy campobase_authenticated_team_gate on public.%I as restrictive
-   for all to anon,authenticated
+   for all to authenticated
    using (case when auth.uid() is null then false else user_id=auth.uid()
     and not campobase_private.is_delegate_actor() end)
    with check (case when auth.uid() is null then false else user_id=auth.uid()
     and not campobase_private.is_delegate_actor() end)',target);
+  execute format('drop policy if exists campobase_anon_team_deny on public.%I',target);
+  execute format('create policy campobase_anon_team_deny on public.%I as restrictive
+   for all to anon using (false) with check (false)',target);
  end loop;
 end;
 $$;
@@ -126,14 +129,14 @@ $$;
 -- an authenticated non-delegate, matching Storage owner and own path prefix.
 drop policy if exists campobase_own_video_insert on storage.objects;
 create policy campobase_own_video_insert on storage.objects as restrictive
-for insert to anon,authenticated with check (
+for insert to authenticated with check (
  case when bucket_id<>'ejercicio-videos' then true when auth.uid() is null then false
  else not campobase_private.is_delegate_actor()
  and coalesce(owner_id,owner::text)=auth.uid()::text
  and split_part(name,'/',1)=auth.uid()::text end);
 drop policy if exists campobase_own_video_update on storage.objects;
 create policy campobase_own_video_update on storage.objects as restrictive
-for update to anon,authenticated using (
+for update to authenticated using (
  case when bucket_id<>'ejercicio-videos' then true when auth.uid() is null then false
  else not campobase_private.is_delegate_actor()
  and coalesce(owner_id,owner::text)=auth.uid()::text
@@ -145,11 +148,23 @@ with check (
  and split_part(name,'/',1)=auth.uid()::text end);
 drop policy if exists campobase_own_video_delete on storage.objects;
 create policy campobase_own_video_delete on storage.objects as restrictive
-for delete to anon,authenticated using (
+for delete to authenticated using (
  case when bucket_id<>'ejercicio-videos' then true when auth.uid() is null then false
  else not campobase_private.is_delegate_actor()
  and coalesce(owner_id,owner::text)=auth.uid()::text
  and split_part(name,'/',1)=auth.uid()::text end);
+
+-- Anonymous denials have no private helper dependency. PostgreSQL checks function
+-- permissions even when a CASE branch would be false; do not grant anon the helper.
+drop policy if exists campobase_anon_video_insert on storage.objects;
+create policy campobase_anon_video_insert on storage.objects as restrictive
+for insert to anon with check (bucket_id<>'ejercicio-videos');
+drop policy if exists campobase_anon_video_update on storage.objects;
+create policy campobase_anon_video_update on storage.objects as restrictive
+for update to anon using (bucket_id<>'ejercicio-videos') with check (bucket_id<>'ejercicio-videos');
+drop policy if exists campobase_anon_video_delete on storage.objects;
+create policy campobase_anon_video_delete on storage.objects as restrictive
+for delete to anon using (bucket_id<>'ejercicio-videos');
 
 -- Finalize only after delegate-sync v2 is active. No actor-less service writes.
 revoke all on function public.delegate_sync_upsert(uuid,text,text,jsonb,bigint) from public,anon,authenticated,service_role;
