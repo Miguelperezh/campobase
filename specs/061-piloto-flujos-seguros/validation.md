@@ -1,10 +1,10 @@
 # Validación SDD061 — Flujos claros y seguros para el piloto
 
-Fecha: 24/10/2026. Rama de trabajo: `feat/piloto-estado-recuperacion`. Esta entrega está implementada y probada en un entorno aislado; su publicación en main y producción sigue pendiente.
+Fecha: 24/10/2026. Rama de trabajo: `feat/piloto-estado-recuperacion`. Entrega implementada, probada e integrada mediante PR146 en main; publicación de producción verificada.
 
 ## Alcance comprobado
 
-- El estado de sincronización distingue comprobación, desconexión, acceso pendiente, cambios pendientes, borradores bloqueados y confirmación de nube. Tener conexión o una cola vacía por sí solos no anuncian éxito. El informe de soporte utiliza una lista cerrada de siete campos y no incluye credenciales, contactos, identidades ni contenido deportivo.
+- El estado de sincronización distingue comprobación, desconexión, acceso pendiente, cambios pendientes, borradores bloqueados y confirmación de nube. Tener conexión o una cola vacía por sí solos no anuncian éxito. El informe de soporte utiliza una lista cerrada de información técnica y no incluye credenciales, contactos, identidades ni contenido deportivo.
 - Actualizar conserva el formulario y las selecciones en uso; una respuesta anterior de otra cuenta no cambia el estado actual ni confirma una sincronización cancelada.
 - La asistencia visual comprueba cuenta, base, revisión PIN, rol y permiso al abrir, después de las esperas y antes de guardar. La actividad, convocatoria, asistencia original y plantilla se comparan dentro de la misma transacción que guarda el registro y su mutación en cola. Un conflicto o rechazo conserva el borrador y los datos existentes. El guardado local no espera a la nube y su mensaje dice expresamente «en este dispositivo».
 - Se retiró la limpieza general automática de asistencias huérfanas. Cancelar el borrado de una sesión conserva esos registros. Dos sesiones del mismo día no adoptan la asistencia vinculada a otra: se busca primero el ID exacto; el legado por fecha requiere una única sesión y un único registro sin vínculos.
@@ -45,4 +45,11 @@ Revisión independiente final sin bloqueantes de cuenta o confirmación. Se endu
 - Los datos utilizados son sintéticos y viven en perfiles/almacenamientos de prueba. Las pruebas sí crean y editan esos registros locales de prueba; **no escriben en la nube ni alteran datos deportivos reales**.
 - Esta entrega no aplica cambios de backend, SQL, RLS, Edge Functions, PIN ni permisos reales. Conserva los diseños, colores, planes y datos existentes; la integración toca código de cliente, pruebas y documentación.
 - Las pruebas con nube simulada no certifican sincronización real entre dos móviles ni la calidad de su conexión durante un partido.
-- Quedan pendientes el PR, los controles de CI y la verificación de main/Pages con los recursos públicos correspondientes. No hay confirmación de publicación de SDD061 en este documento.
+- La publicación comprobada corresponde al código validado; no implica una garantía de ausencia de fallos ni sustituye las pruebas con los dispositivos físicos y la conexión del usuario.
+
+## Publicación verificada
+
+- PR146 integrada en main `d3ee40079ad16951acb6590bb98165284f1bcc92` desde la rama probada, commit `cd3816df2f68cb08a0993381b1e429b04cc932a2`.
+- CI de rama `40111469407` y de PR `40111473172` correctos; este último incluye el smoke crítico de navegador. CI de main `40111600776` y Pages `40111600788` correctos para el mismo commit integrado.
+- Build pública `20261024-pilot-flows-1`. Comparación SHA-256 de los 12 recursos públicos modificados: todos idénticos al código integrado, incluidos HTML, SW, estado/CSS de sincronización, DB, asistencia, Hoy y consumidores versionados.
+- Publicación exclusivamente de código, pruebas y documentación; sin escrituras deportivas, cambios de ajustes reales ni operaciones de backend durante SDD061.

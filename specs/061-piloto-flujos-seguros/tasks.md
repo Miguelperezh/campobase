@@ -9,4 +9,4 @@
 - [x] Sintaxis, suite de 959 pruebas y navegadores específicos aislados 1440/390.
 - [x] Documentar resultados, límites y normas en validation.md, AGENTS.md y agente.md.
 - [x] Investigar el timeout inicial: servidor local reiniciaba la descarga de un módulo; corregir cola HTTP del test y verificar el smoke general completo sin ampliar el tiempo límite.
-- [ ] Revisión final, PR, CI, main y producción verificados.
+- [x] Revisión final, PR146, CI de rama/PR/main y Pages correctos; 12 recursos públicos idénticos por SHA-256.
