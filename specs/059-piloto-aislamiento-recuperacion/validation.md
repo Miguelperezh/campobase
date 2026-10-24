@@ -22,7 +22,7 @@ Consultadas documentación vigente Supabase RLS/sesiones/changelog, políticas/f
 
 Secuencia: funciones privadas/contexto/RPC owner/delegate v2 → Edge delegate-sync → wrapper de permisos/invite → frontend validado → políticas restrictivas/revocación RPC actor-less → probes READ ONLY y huellas. Ninguna migración ejecuta DML sobre datos existentes.
 
-Aplicado primer tramo de funciones/contexto/RPC mediante `pilot_context_and_atomic_writes`; delegate-sync v4 ACTIVE, verify_jwt=true. Wrapper de gestión aplicado mediante pilot_delegate_management_actor; invite-delegate v2 ACTIVE, verify_jwt=true. Resto pendiente de registrar al completar.
+Aplicado primer tramo de funciones/contexto/RPC mediante `pilot_context_and_atomic_writes`; delegate-sync v4 ACTIVE, verify_jwt=true. Wrapper de gestión aplicado mediante pilot_delegate_management_actor; invite-delegate v2 ACTIVE, verify_jwt=true. El cierre de políticas y sus pruebas finales se registra abajo.
 
 La primera publicación de invite-delegate fue rechazada automáticamente por borrados de entidades provisionales presentes en su código. Se contrastó con la función v1 desplegada: exactamente el mismo archivo base y bloque de limpieza idéntico byte a byte. Solo se añaden validación/actor esperado antes de operaciones privilegiadas; no se invoca la función. Con esa evidencia, el segundo despliegue fue aprobado. No se envió ningún correo ni se creó/eliminó un invitado.
 
@@ -42,3 +42,23 @@ Nube de pruebas simulada para escrituras; no se escriben deportes, invitaciones 
 La primera prueba crítica de GitHub falló porque entrar en demo durante el arranque cancelaba correctamente una lectura antigua, pero el consumidor de Cuerpo técnico la registraba como error y la rutina de inicialización dejaba de continuar. Se cancela ese render sin vaciar la pantalla nueva, el arranque reintenta su snapshot actual y no ejecuta la limpieza automática histórica de ejercicios. Una sesión anónima/demo tampoco pide contexto de equipo al servidor. Prueba crítica v19 completa repetida localmente: correcta (subpestañas, preparación, guardado, + Ejercicio y móvil). Se añaden tres regresiones de cancelación/arranque; no se fusiona el control fallido.
 
 La cuenta GitHub no permite modificar workflows con su alcance OAuth actual. Se conservó el workflow original; las tres suites nuevas están versionadas y se ejecutaron localmente con sus resultados registrados arriba. CI mantiene sintaxis, suite Node y prueba crítica existente.
+
+
+## Cierre de servidor y publicación — 24/10/2026
+
+Frontend integrado mediante PR143, main c553bb5e; 923 pruebas, CI de PR39959206707, main39959478277 y Pages39959478255 correctos. Publicación de21 recursos verificada por SHA256. La corrección posterior de WhatsApp SDD060 está integrada en main791892dd y verificada con22 recursos públicos idénticos; no altera la lógica del piloto.
+
+El intento agrupado de políticas devolvió «Invalid or expired requestState»; la inspección posterior confirmó que no se habían aplicado. No se siguió repitiendo el mismo lote: se aplicaron cambios pequeños, ALTER sobre políticas existentes y CREATE para las nuevas, con lock_timeout3s y statement_timeout15s. Migraciones confirmadas:
+
+- pilot_owner_isolation_gate_final.
+- pilot_media_own_writes_final.
+- pilot_legacy_rpc_gate_final.
+- pilot_anonymous_explicit_denial_final.
+
+Las políticas con helper privado se limitan a authenticated. La primera prueba anon detectó permiso de función requerido incluso con CASE; se resolvió mediante denegaciones anon separadas sin conceder acceso al helper. Las cinco tablas deportivas tienen puerta restrictiva propia y denegación anónima. Storage conserva SELECT público de biblioteca; INSERT/UPDATE/DELETE requieren titular, propietario y prefijo propios, con denegación anon de ese bucket. No se elimina ninguna fila ni objeto. RPC antiguo no ejecutable por PUBLIC/anon/authenticated/service_role; v2 solo service_role y RPC owner solo authenticated.
+
+Probe final READ ONLY correcto: titular ve54 jugadores propios,0 ajenos y sus ajustes; delegado por correo ve0 jugadores/ajustes por REST, conserva contexto de equipo y no puede ejecutar ninguna RPC de escritura directamente; anon ve0 jugadores/ajustes y no puede ejecutar el helper. Es verificación real de permisos del servidor mediante roles simulados, sin escribir datos ni iniciar sesión en móviles físicos.
+
+Comparación inmediatamente antes/después del último cierre: conteos y huellas de9 conjuntos idénticos (jugadores54, partidos34, convocatorias44, asistencias42, configuración206, miembros3, equipos3, perfiles3, objetos0). En las lecturas más separadas durante la actividad de la app cambiaron huellas de jugadores/configuración sin cambio de conteos; ninguna operación de este trabajo ejecutó DML deportivo y no se revirtió ninguna edición ni se igualó una foto antigua.
+
+Asesores de seguridad consultados después: no se declaran cero avisos. Persisten avisos anteriores de funciones públicas y funciones/tabla de administración que necesitan revisión independiente; no se amplían concesiones para silenciarlos. Referencia del [asesor de funciones públicas](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable). Esto no equivale a una auditoría completa de seguridad ni a garantía de cero incidencias.

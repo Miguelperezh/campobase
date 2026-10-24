@@ -4736,3 +4736,7 @@ Modo Campo usa el adaptador canónico sin inicializar ayudas DOM de la app princ
 
 ## SDD060 — Hora propia en el comunicado de WhatsApp (23/10/2026)
 La hora de citación escrita por el usuario prevalece sobre el cálculo inicial de inicio menos 45 minutos, tanto en el controlador como en la plantilla. Mantener esa elección al cambiar tono/destinatario/equipación; otro partido carga sus propios datos. Vista previa, copia y enlace usan el mismo texto. No modificar registros de partido/convocatoria ni el resto del mensaje. Probar formulario real con datos aislados a 1440/390 y versionar recursos de caché. Ver specs/060-whatsapp-hora-citacion.
+
+
+## SDD059 — Cierre de políticas del piloto (24/10/2026)
+Las políticas que llaman al helper privado solo se aplican a authenticated; anon usa denegaciones independientes sin helper, pues PostgreSQL comprueba su permiso aunque CASE no ejecute la rama. Mantener SELECT público de biblioteca, guardias restrictivas de escritura propia y RPC antiguo revocado incluso a service_role. La finalización se verificó con probes READ ONLY y huellas de integridad, sin DML deportivo. Ante requestState expirado comprobar estado real y aplicar metadatos por fases cortas con límites de espera; no repetir lotes sin investigar. Ver cierre en specs/059-piloto-aislamiento-recuperacion/validation.md.
