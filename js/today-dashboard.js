@@ -1,7 +1,10 @@
 // Inicio "Hoy" de CampoBase.
 // Resume sesiones, partidos y tareas pendientes sin crear ni modificar datos.
 
-import { getAll } from './db.js';
+import { getAll, currentDatabaseName, isDemoDatabase } from './db.js';
+import { getBoundSaasUserId, getPinAccessRevision } from './auth-manager.js';
+import { sameViewContext } from './account-view-context.js?v=20261022-pilot-safety-1';
+import { isMatchTerminal } from './postgame-plan.js?v=20261018-offline-match-1';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
@@ -9,8 +12,28 @@ const esc = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
 })[character]);
 
 let renderQueued = false;
-let rendering = false;
+let renderRevision = 0;
+let displayedContext = null;
 let retryTimer = 0;
+
+function todayViewContext() {
+  const userId = getBoundSaasUserId();
+  const state = window.__campobase?.state || window.__campobaseState;
+  return {
+    userId,
+    database: isDemoDatabase() ? currentDatabaseName() : (userId ? `campobase_${userId}` : 'campobase'),
+    pinRevision: getPinAccessRevision(),
+    role: state?.role ?? null,
+  };
+}
+
+function discardForeignTodayView(root) {
+  if (!root) return;
+  if (displayedContext && !sameViewContext(displayedContext, todayViewContext())) {
+    root.innerHTML = '<div class="panel empty" role="status">Preparando el resumen de este equipo…</div>';
+    displayedContext = null;
+  }
+}
 
 export function localDayKey(date = new Date()) {
   const year = date.getFullYear();
@@ -100,7 +123,7 @@ export function buildTodaySummary({ sessions = [], matches = [], trainings = [],
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))[0] || null;
 
   const nextMatch = [...usableMatches]
-    .filter((match) => match?.status !== 'finished' && dateOnly(match.date) >= today)
+    .filter((match) => !isMatchTerminal(match) && dateOnly(match.date) >= today)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))[0] || null;
 
   const attendancePending = [
@@ -111,7 +134,7 @@ export function buildTodaySummary({ sessions = [], matches = [], trainings = [],
   ].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
   const callupPending = usableMatches
-    .filter((match) => match?.status !== 'finished' && dateOnly(match.date) >= today && !callupForMatch(callups, match))
+    .filter((match) => !isMatchTerminal(match) && dateOnly(match.date) >= today && !callupForMatch(callups, match))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
   const upcomingSessions = [...usableSessions].filter(session => dateOnly(session.date) > today).sort((a,b) => String(a.date).localeCompare(String(b.date)));
@@ -170,27 +193,34 @@ function installStyles() {
   document.head.append(style);
 }
 
-async function snapshot() {
+async function snapshot(context) {
   const [matches, trainings, settings, callups] = await Promise.all([
     getAll('matches'), getAll('trainings'), getAll('settings'), getAll('callups'),
   ]);
-  const stateSessions = (typeof window !== 'undefined' && window.__campobase?.state?.trainingSessions) || [];
-  const settingsSessions = settings.filter((item) => item?.recordType === 'trainingSession');
-  const sessionMap = new Map();
-  for (const s of settingsSessions) if (s?.id) sessionMap.set(s.id, s);
-  for (const s of stateSessions) if (s?.id) sessionMap.set(s.id, s);
+  if (!sameViewContext(context, todayViewContext())) return null;
+  const main = settings.find(item => item?.id === 'main');
 
   return {
     matches,
     trainings,
     callups,
-    sessions: [...sessionMap.values()],
+    // Sessions belong to this durable snapshot, never to a main view that may
+    // still contain the previous account while its own refresh is pending.
+    sessions: settings.filter((item) => item?.recordType === 'trainingSession' && item?.id),
     live: settings.find(item => item?.id === 'live')?.timer || null,
+    identity: {
+      teamName: String(main?.teamName || '').trim() || 'Equipo',
+      clubCrest: typeof main?.clubCrest === 'string' ? main.clubCrest.trim() : '',
+    },
   };
 }
 
 function goButton(view, label, primary = false) {
   return `<button type="button" class="${primary ? 'primary cbx-btn' : 'secondary cbx-btn-secondary'}" data-today-view="${esc(view)}">${esc(label)}</button>`;
+}
+
+function activityButton(action, id, label, primary = false, {source = '', callupId = ''} = {}) {
+  return `<button type="button" class="${primary ? 'primary cbx-btn' : 'secondary cbx-btn-secondary'}" data-today-action="${esc(action)}" data-id="${esc(id)}"${source ? ` data-source="${esc(source)}"` : ''}${callupId ? ` data-callup-id="${esc(callupId)}"` : ''}>${esc(label)}</button>`;
 }
 
 function sessionCard(session, trainings, today) {
@@ -220,50 +250,50 @@ function sessionCard(session, trainings, today) {
     <h3>${esc(sessionTitle(session))}</h3>
     <div class="today-event-meta">${session.time ? `<span>${esc(session.time)}</span>` : ''}<span><strong>${esc(durationStr)}</strong> · ${blocks} ${blocks === 1 ? 'ejercicio' : 'ejercicios'}</span>${session.pitch ? `<span>${esc(session.pitch)}</span>` : ''}${session.material ? `<span>Material: ${esc(session.material)}</span>` : ''}</div>
     <div class="cbx-session-track" aria-label="Duración por bloques">${(session.blocks || []).map((block, index) => `<span style="flex:${Math.max(0, Number(block.duration) || 0)};background:${index === 0 ? 'var(--cbx-amber)' : index === blocks - 1 ? 'var(--cbx-blue)' : 'var(--cbx-acc)'}"></span>`).join('')}${target > total ? `<span style="flex:${target-total};background:var(--cbx-line)"></span>` : ''}</div>
-    <div class="button-row">${goButton('sesiones', 'Ver sesión', true)}${goButton('asistencia', attendance ? 'Ver asistencia' : 'Pasar asistencia')}<button type="button" class="accent open-whistle-session" data-id="${esc(session.id)}">Silbato</button><button type="button" class="accent open-whatsapp-session" data-id="${esc(session.id)}">WhatsApp</button></div>
+    <div class="button-row">${activityButton('session', session.id, 'Ver sesión', true)}${activityButton('attendance', session.id, attendance ? 'Ver asistencia' : 'Pasar asistencia', false, {source:'session'})}<button type="button" class="accent open-whistle-session" data-id="${esc(session.id)}">Silbato</button><button type="button" class="accent open-whatsapp-session" data-id="${esc(session.id)}">WhatsApp</button></div>
   </article>`;
 }
 
-function matchCard(match, trainings, callups, today, live = null) {
+function matchCard(match, trainings, callups, today, live = null, identity = {}) {
   const attendance = attendanceForMatch(trainings, match.id);
   const callup = callupForMatch(callups, match);
   const isToday = dateOnly(match.date) === today;
   const time = formatMatchTime(match.date);
   const venue = match.venue === 'away' ? 'Fuera' : 'Casa';
-  const isLive = live?.matchId === match.id && live.phase !== 'finished' && live.phase !== 'ready';
-  const hasResult = match.status === 'finished' || isLive;
+  const isLive = !isMatchTerminal(match) && live?.matchId === match.id && live.phase !== 'finished' && live.phase !== 'ready';
+  const hasResult = isMatchTerminal(match) || isLive;
   const score = isLive ? (live.details || match) : match;
-  const team = typeof document === 'undefined' ? '' : ($('#topbar-team-name')?.textContent || 'Equipo');
-  const crest = typeof document === 'undefined' ? '' : ($('#topbar-club-crest')?.getAttribute('src') || 'icons/escudo.png');
+  const team = identity.teamName || 'Equipo';
+  const crest = identity.clubCrest || '';
   const elapsed = Math.max(0, Number(live?.elapsed) || 0) + (live?.runningSince ? Math.max(0, (Date.now() - live.runningSince) / 1000) : 0);
   const clock = `${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
   const displayedScore = todayMatchScore(score,isLive);
-  const scoreboard = hasResult ? `<div class="cbx-today-score"><div><img src="${esc(crest)}" alt=""><strong>${esc(team)}</strong></div><div><b>${esc(displayedScore.text)}</b><small>${isLive ? esc(clock) : displayedScore.pending ? 'Finalizado · marcador pendiente' : 'Finalizado'}</small></div><div><span class="cbx-opponent-crest">${esc((match.opponent || '').split(/\s+/).map(w => w[0]).slice(0,2).join(''))}</span><strong>${esc(match.opponent || 'Rival')}</strong></div></div>` : `<h3>${esc(match.opponent || 'Partido')}</h3>`;
+  const scoreboard = hasResult ? `<div class="cbx-today-score"><div>${crest ? `<img src="${esc(crest)}" alt="">` : ''}<strong>${esc(team)}</strong></div><div><b>${esc(displayedScore.text)}</b><small>${isLive ? esc(clock) : displayedScore.pending ? 'Finalizado · marcador pendiente' : 'Finalizado'}</small></div><div><span class="cbx-opponent-crest">${esc((match.opponent || '').split(/\s+/).map(w => w[0]).slice(0,2).join(''))}</span><strong>${esc(match.opponent || 'Rival')}</strong></div></div>` : `<h3>${esc(match.opponent || 'Partido')}</h3>`;
   return `<article class="panel cbx-card today-event match ${hasResult ? 'cbx-today-match-score' : ''}">
     ${isLive ? '<span class="cbx-live-badge">● EN JUEGO</span>' : ''}
     <div class="today-status-row"><span class="pill accent">${isToday ? 'HOY' : esc(formatDay(match.date))}</span><span class="pill type-${esc(match.type || 'league')}">${esc(matchType(match))}</span>${callup ? '<span class="pill today-ok">Convocatoria lista</span>' : '<span class="pill today-warning">Falta convocatoria</span>'}</div>
     ${scoreboard}
     <div class="today-event-meta"><span><strong>${time || 'Hora pendiente'}</strong> · ${venue}</span>${match.location ? `<span>${esc(match.location)}</span>` : ''}${attendance ? '<span>Asistencia registrada</span>' : '<span>Asistencia pendiente</span>'}</div>
-    <div class="button-row">${isLive ? goButton('partido', 'Abrir partido en vivo', true) : ''}${goButton('calendario', 'Ver partido', true)}${callup ? goButton('convocatorias', 'Ver convocatoria') : goButton('convocatorias', 'Crear convocatoria')}${callup ? `<button type="button" class="accent open-whatsapp-callup" data-id="${esc(callup.id)}">WhatsApp</button>` : `<button type="button" class="accent open-whatsapp-match" data-id="${esc(match.id)}">WhatsApp</button>`}</div>
+    <div class="button-row">${isLive ? goButton('partido', 'Abrir partido en vivo', true) : ''}${activityButton('match', match.id, 'Ver partido', true)}${activityButton('callup', match.id, callup ? 'Ver convocatoria' : 'Crear convocatoria', false, {callupId:callup?.id || ''})}${callup ? `<button type="button" class="accent open-whatsapp-callup" data-id="${esc(callup.id)}">WhatsApp</button>` : `<button type="button" class="accent open-whatsapp-match" data-id="${esc(match.id)}">WhatsApp</button>`}</div>
   </article>`;
 }
 
 function pendingPanel(summary) {
-  const attendanceRows = summary.attendancePending.slice(0, 3).map((item) => `<div class="today-pending"><div><strong>Asistencia pendiente</strong><small>${esc(item.title)} · ${esc(formatDay(item.date))}</small></div>${goButton('asistencia', 'Abrir')}</div>`).join('');
-  const callupRows = summary.callupPending.slice(0, 3).map((match) => `<div class="today-pending"><div><strong>Falta convocatoria</strong><small>${esc(match.opponent || 'Partido')} · ${esc(formatDay(match.date))}${formatMatchTime(match.date) ? ` · ${esc(formatMatchTime(match.date))}` : ''}</small></div>${goButton('convocatorias', 'Abrir')}</div>`).join('');
+  const attendanceRows = summary.attendancePending.slice(0, 3).map((item) => `<div class="today-pending"><div><strong>Asistencia pendiente</strong><small>${esc(item.title)} · ${esc(formatDay(item.date))}</small></div>${activityButton('attendance', item.id, 'Abrir', false, {source:item.kind})}</div>`).join('');
+  const callupRows = summary.callupPending.slice(0, 3).map((match) => `<div class="today-pending"><div><strong>Falta convocatoria</strong><small>${esc(match.opponent || 'Partido')} · ${esc(formatDay(match.date))}${formatMatchTime(match.date) ? ` · ${esc(formatMatchTime(match.date))}` : ''}</small></div>${activityButton('callup', match.id, 'Abrir')}</div>`).join('');
   const rows = `${callupRows}${attendanceRows}`;
   return `<article class="panel"><div class="today-title-row"><h3>Pendiente de hacer</h3><span class="pill ${rows ? 'today-warning' : 'today-ok'}">${summary.callupPending.length + summary.attendancePending.length}</span></div>${rows ? `<div class="today-pending-list">${rows}</div>` : '<div class="today-empty">No tienes tareas pendientes detectadas.</div>'}</article>`;
 }
 
 function nextPanel(summary, data) {
   const items = (summary.upcomingSessions || []).slice(0, 3).map(session => ({date:session.date, markup:sessionCard(session, data.trainings, summary.today)}));
-  if (summary.nextMatch && dateOnly(summary.nextMatch.date) !== summary.today) items.push({date:summary.nextMatch.date, markup:matchCard(summary.nextMatch, data.trainings, data.callups, summary.today)});
+  if (summary.nextMatch && dateOnly(summary.nextMatch.date) !== summary.today) items.push({date:summary.nextMatch.date, markup:matchCard(summary.nextMatch, data.trainings, data.callups, summary.today, null, data.identity)});
   items.sort((a,b) => String(a.date).localeCompare(String(b.date)));
   return `<article class="panel"><div class="today-title-row"><h3>Lo próximo</h3></div>${items.length ? `<div class="today-event-grid">${items.map(item=>item.markup).join('')}</div>` : '<div class="today-empty">Lo próximo ya está incluido en las actividades de hoy.</div>'}</article>`;
 }
 
 export function buildLeagueSummary(matches = []) {
-  const games = matches.filter(match => match.type === 'league' && match.status === 'finished'
+  const games = matches.filter(match => match.type === 'league' && isMatchTerminal(match)
     && Number.isFinite(match.goalsFor) && Number.isFinite(match.goalsAgainst))
     .sort((a,b) => String(a.date).localeCompare(String(b.date)));
   return { games, goalsFor: games.reduce((n,m) => n + m.goalsFor, 0), goalsAgainst: games.reduce((n,m) => n + m.goalsAgainst, 0),
@@ -281,7 +311,7 @@ function seasonPanel(matches) {
 
 function renderMarkup(summary, data) {
   const todayCards = [
-    ...summary.todayMatches.map((match) => matchCard(match, data.trainings, data.callups, summary.today, data.live)),
+    ...summary.todayMatches.map((match) => matchCard(match, data.trainings, data.callups, summary.today, data.live, data.identity)),
     ...summary.todaySessions.map((session) => sessionCard(session, data.trainings, summary.today)),
   ];
   const pendingCount = summary.callupPending.length + summary.attendancePending.length;
@@ -306,19 +336,32 @@ function renderMarkup(summary, data) {
 export async function renderTodayDashboard() {
   const section = ensureShell();
   const root = $('#today-dashboard');
-  if (!section || !root || rendering) return;
-  rendering = true;
+  if (!section || !root) return;
+  const context = todayViewContext();
+  const revision = ++renderRevision;
+  const stillCurrent = () => revision === renderRevision && sameViewContext(context, todayViewContext());
+  discardForeignTodayView(root);
+  window.clearTimeout(retryTimer);
   try {
-    const data = await snapshot();
+    const data = await snapshot(context);
+    if (!data || !stillCurrent()) {
+      discardForeignTodayView(root);
+      if (revision === renderRevision) scheduleRender();
+      return false;
+    }
     const summary = buildTodaySummary({ ...data, now: new Date() });
     root.innerHTML = renderMarkup(summary, data);
-    window.clearTimeout(retryTimer);
+    displayedContext = context;
+    return true;
   } catch (error) {
+    if (!stillCurrent()) {
+      discardForeignTodayView(root);
+      if (revision === renderRevision) scheduleRender();
+      return false;
+    }
     root.innerHTML = '<div class="panel empty">Preparando el resumen de hoy…</div>';
-    window.clearTimeout(retryTimer);
     retryTimer = window.setTimeout(() => scheduleRender(), 500);
-  } finally {
-    rendering = false;
+    return false;
   }
 }
 
@@ -336,13 +379,29 @@ function bind() {
   if (!section) return;
 
   document.addEventListener('click', (event) => {
+    const activity = event.target.closest('[data-today-action]');
     const match = event.target.closest('[data-today-match]');
-    if (match) { window.__campobase?.showMatchDetail?.(match.dataset.todayMatch); return; }
+    const control = event.target.closest('#today-dashboard button');
+    if ((activity || match || control) && !sameViewContext(displayedContext, todayViewContext())) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      discardForeignTodayView($('#today-dashboard'));
+      scheduleRender();
+      return;
+    }
+    if (activity || match) {
+      const detail = activity ? {
+        action:activity.dataset.todayAction, id:activity.dataset.id,
+        source:activity.dataset.source || '', callupId:activity.dataset.callupId || '',
+      } : {action:'match', id:match.dataset.todayMatch, source:'', callupId:''};
+      window.dispatchEvent(new CustomEvent('campobase:today-action', {detail}));
+      return;
+    }
     const target = event.target.closest('[data-today-view]');
     if (!target) return;
     const view = target.dataset.todayView;
     document.querySelector(`.bottom-nav button[data-view="${view}"]`)?.click();
-  });
+  }, true);
 
   const observer = new MutationObserver(() => {
     if (section.classList.contains('active')) scheduleRender();
@@ -350,6 +409,7 @@ function bind() {
   observer.observe(section, { attributes: true, attributeFilter: ['class'] });
 
   window.addEventListener('campobase:data-changed', () => scheduleRender());
+  window.addEventListener('campobase:data-updated', () => scheduleRender());
   window.addEventListener('load', () => scheduleRender(), { once: true });
   window.setTimeout(() => scheduleRender(), 250);
   window.setTimeout(() => scheduleRender(), 1000);

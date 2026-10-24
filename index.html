@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <script src="js/preview-readonly.js?v=claude-partido-2"></script>
-  <script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=20261022-pilot-safety-1","./js/live-tactics.js":"./js/live-tactics.js?v=claude-partido-2","./js/domain.js":"./js/domain.js?v=20261022-pilot-safety-1","./js/match-moments.js":"./js/match-moments.js?v=claude-partido-5","./js/auth-manager.js":"./js/auth-manager.js?v=20261022-pilot-safety-1","./js/backup-safety.js":"./js/backup-safety.js?v=20261022-pilot-safety-1","./js/supabase-client.js":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/account-view-context.js":"./js/account-view-context.js?v=20261022-pilot-safety-1","./js/team-access.js":"./js/team-access.js?v=20261022-pilot-safety-1","./js/modo-campo-integration.js":"./js/modo-campo-integration.js?v=20261022-pilot-safety-1","./js/supabase-client.js?v=20261021-save-postmatch-1":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/team-access.js?v=20261009-delegate-pin-7":"./js/team-access.js?v=20261022-pilot-safety-1","./supabase/functions/_shared/delegate-policy.mjs":"./supabase/functions/_shared/delegate-policy.mjs?v=20261022-pilot-safety-1","./js/domain.js?v=20261021-postmatch-callups-2":"./js/domain.js?v=20261022-pilot-safety-1","./js/demo-session.js":"./js/demo-session.js?v=20261022-pilot-safety-1","./js/demo-session.js?v=20261021-save-postmatch-1":"./js/demo-session.js?v=20261022-pilot-safety-1","./js/staff-management.js":"./js/staff-management.js?v=20261022-pilot-safety-1","./js/staff-management.js?v=claude-tecnicos-1":"./js/staff-management.js?v=20261022-pilot-safety-1"}}</script>
+  <script type="importmap">{"imports":{"./js/db.js":"./js/db.js?v=20261024-pilot-flows-1","./js/live-tactics.js":"./js/live-tactics.js?v=claude-partido-2","./js/domain.js":"./js/domain.js?v=20261022-pilot-safety-1","./js/match-moments.js":"./js/match-moments.js?v=claude-partido-5","./js/auth-manager.js":"./js/auth-manager.js?v=20261022-pilot-safety-1","./js/backup-safety.js":"./js/backup-safety.js?v=20261022-pilot-safety-1","./js/supabase-client.js":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/account-view-context.js":"./js/account-view-context.js?v=20261022-pilot-safety-1","./js/team-access.js":"./js/team-access.js?v=20261022-pilot-safety-1","./js/modo-campo-integration.js":"./js/modo-campo-integration.js?v=20261022-pilot-safety-1","./js/supabase-client.js?v=20261021-save-postmatch-1":"./js/supabase-client.js?v=20261022-pilot-safety-1","./js/team-access.js?v=20261009-delegate-pin-7":"./js/team-access.js?v=20261022-pilot-safety-1","./supabase/functions/_shared/delegate-policy.mjs":"./supabase/functions/_shared/delegate-policy.mjs?v=20261022-pilot-safety-1","./js/domain.js?v=20261021-postmatch-callups-2":"./js/domain.js?v=20261022-pilot-safety-1","./js/demo-session.js":"./js/demo-session.js?v=20261024-pilot-flows-1","./js/demo-session.js?v=20261021-save-postmatch-1":"./js/demo-session.js?v=20261024-pilot-flows-1","./js/staff-management.js":"./js/staff-management.js?v=20261022-pilot-safety-1","./js/staff-management.js?v=claude-tecnicos-1":"./js/staff-management.js?v=20261022-pilot-safety-1","./js/today-dashboard.js":"./js/today-dashboard.js?v=20261024-pilot-flows-1","./js/runtime-refresh.js":"./js/runtime-refresh.js?v=20261024-pilot-flows-1","./js/attendance-linked-sources.js":"./js/attendance-linked-sources.js?v=20261024-pilot-flows-1","./js/sync-status.js":"./js/sync-status.js?v=20261024-pilot-flows-1","./js/today-dashboard.js?v=20261021-save-postmatch-1":"./js/today-dashboard.js?v=20261024-pilot-flows-1","./js/db.js?v=20261022-pilot-safety-1":"./js/db.js?v=20261024-pilot-flows-1","./js/demo-session.js?v=20261022-pilot-safety-1":"./js/demo-session.js?v=20261024-pilot-flows-1","./js/cloud-ui-bootstrap.js":"./js/cloud-ui-bootstrap.js?v=20261024-pilot-flows-1","./js/cloud-ui-bootstrap.js?v=20261022-pilot-safety-1":"./js/cloud-ui-bootstrap.js?v=20261024-pilot-flows-1","./js/runtime-refresh.js?v=20261009-plan-tramos-2":"./js/runtime-refresh.js?v=20261024-pilot-flows-1","./js/attendance-linked-sources.js?v=claude-asistencia-3":"./js/attendance-linked-sources.js?v=20261024-pilot-flows-1"}}</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover">
   <meta name="theme-color" content="#173f35">
@@ -99,6 +99,7 @@
   </script>
 <link rel="stylesheet" href="styles-claude-proposal.css?v=20261009-postgame-sync-1">
 <link rel="stylesheet" href="styles-learning.css?v=20261010-learning-1">
+  <link rel="stylesheet" href="css/sync-feedback.css?v=20261024-pilot-flows-1">
 </head>
 <body class="auth-locked">
   <header class="topbar" id="cbx-header">
@@ -115,6 +116,9 @@
   <div class="search-bar"><input id="global-search" type="search" placeholder="Buscar por nombre o palabra…" aria-label="Buscar en la pestaña actual" autocomplete="off"></div>
 
   <main id="app" tabindex="-1">
+    <aside id="sync-feedback" class="cb-sync-feedback" role="status" aria-live="polite" hidden>
+      <strong data-sync-label></strong><span data-sync-detail></span>
+    </aside>
     <section id="hoy" class="view active" aria-labelledby="title-hoy">
       <div class="section-head today-section-head">
         <div><p class="eyebrow">Resumen del equipo</p><h2 id="title-hoy">Hoy</h2></div>
@@ -910,12 +914,16 @@
         <article class="panel"><h3>PIN de demostración</h3><p>Solo Migue puede crear o cambiar este PIN. Abre una prueba aislada durante un máximo de dos horas, sin acceso a tus datos ni a Ajustes.</p><form id="demo-pin-settings-form"><label>PIN actual de Migue<input name="currentPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="current-password"></label><label>Nuevo PIN de demo<input name="demoPin" type="password" inputmode="numeric" minlength="4" maxlength="8" required autocomplete="new-password"></label><button class="primary" type="submit">Guardar PIN de demo</button></form></article>
         <article class="panel" id="sync-status-panel">
           <h3>Sincronización</h3>
-          <p id="sync-status-text" class="meta">Comprobando estado…</p>
+          <p id="sync-status-text" class="meta" role="status" aria-live="polite">Comprobando estado…</p>
           <div class="button-row">
             <button type="button" id="sync-now" class="primary">Sincronizar ahora</button>
             <button type="button" id="recover-local-pending" class="secondary hidden">Recuperar cambios locales pendientes</button>
+            <button type="button" id="copy-sync-report" class="secondary">Copiar informe para soporte</button>
           </div>
           <p id="sync-status-detail" class="meta"></p>
+          <p class="meta">Sincronizar envía lo que ya has guardado. Para conservar cambios en un formulario abierto, pulsa su botón Guardar.</p>
+          <p class="meta">El informe incluye versión, conexión y número de cambios pendientes. No incluye jugadores, contactos, PIN ni credenciales.</p>
+          <textarea id="sync-support-report" class="hidden" readonly aria-label="Informe de sincronización para copiar"></textarea>
         </article>
         <article class="panel">
           <h3>Sesión y sistema</h3>
@@ -1665,10 +1673,10 @@
   <script>
     // Arranque de emergencia: fuerza a la PWA instalada a comprobar el service worker
     // actual incluso si un bundle JavaScript anterior quedó roto en memoria/caché.
-    window.__CAMPOBASE_BUILD = '20261023-whatsapp-call-time-1';
+    window.__CAMPOBASE_BUILD = '20261024-pilot-flows-1';
     if ('serviceWorker' in navigator && !window.__CAMPOBASE_READONLY_PREVIEW) {
       const reloadKey = 'campobase.forceCurrentBuild';
-      navigator.serviceWorker.register('./sw.js?v=20261023-whatsapp-call-time-1')
+      navigator.serviceWorker.register('./sw.js?v=20261024-pilot-flows-1')
         .then((registration) => registration.update().then(() => registration))
         .then((registration) => {
           if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -1689,8 +1697,8 @@
   </script>
   <script src="vendor/html2canvas.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
-  <script type="module" src="js/app.js?v=20261023-whatsapp-call-time-1"></script>
-  <script type="module" src="js/redesign-nav.js?v=20261022-pilot-safety-1"></script>
+  <script type="module" src="js/app.js?v=20261024-pilot-flows-1"></script>
+  <script type="module" src="js/redesign-nav.js?v=20261024-pilot-flows-1"></script>
   <script>
     // Salvavidas del arranque: CampoBase no puede quedar abierto sin un rol activo.
     window.addEventListener('load', () => {

@@ -71,7 +71,9 @@ test('visor mantiene la integración validada y cachea sus correcciones', () => 
   assert.match(bootstrapSource, /exercise-viewer-layout\.js\?v=plan-visual-1/);
   assert.match(bootstrapSource, /exercise-board-persistence\.js\?v=20260927-v66-real-calendar-dates/);
   assert.match(supabaseClient, /cloud-ui-bootstrap\.js\?v=/);
-  assert.match(bootstrapSource, /runtime-refresh\.js\?v=20261009-plan-tramos-2/);
+  const refreshResource = bootstrapSource.match(/runtime-refresh\.js\?v=[^'"]+/)?.[0];
+  assert.ok(refreshResource, 'Actualizar debe importarse con versión de caché');
+  assert.ok(serviceWorker.includes(refreshResource), 'La versión de Actualizar debe estar disponible offline');
   assert.match(serviceWorker, /exerciseboard-2475/);
   assert.match(serviceWorker, /exercise-viewer-controls\.js\?v=2475/);
   assert.match(serviceWorker, /exercise-viewer-layout\.js\?v=plan-visual-1/);

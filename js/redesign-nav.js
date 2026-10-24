@@ -6,7 +6,7 @@ import {browserCacheContext, readViewCache, writeViewCache, sameViewAccount} fro
 // Totalmente desacoplado de la lógica de negocio y datos reales.
 // ==========================================================================
 
-import { renderTodayDashboard } from './today-dashboard.js?v=20261021-save-postmatch-1';
+import { renderTodayDashboard } from './today-dashboard.js?v=20261024-pilot-flows-1';
 import { refreshStaffView, initStaffManagement } from './staff-management.js?v=claude-tecnicos-1';
 import './pwa-install-manager.js?v=1';
 

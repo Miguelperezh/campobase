@@ -29,9 +29,11 @@ test('Mis ejercicios se rehidrata, traduce el formato de Supabase y usa visor re
 
   source = source.replace("import { suspendSessionDetail } from './session-detail-navigation.js';", "const suspendSessionDetail=()=>()=>{};");
   source = source.replace(
-    "import { syncFromCloud, getAll } from './db.js';",
-    "const syncFromCloud=async()=>{globalThis.__syncCalls=(globalThis.__syncCalls||0)+1; if(globalThis.__syncCalls<3)return {online:false,pending:0}; globalThis.__cloudReady=true; return {online:true,pending:0};}; const getAll=async()=>globalThis.__cloudReady?globalThis.__persisted:[];",
+    "import { syncFromCloud, getAll, currentDatabaseName, isDemoDatabase } from './db.js';",
+    "const syncFromCloud=async()=>{globalThis.__syncCalls=(globalThis.__syncCalls||0)+1; if(globalThis.__syncCalls<3)return {online:false,pending:0}; globalThis.__cloudReady=true; return {online:true,pending:0};}; const getAll=async()=>globalThis.__cloudReady?globalThis.__persisted:[]; const currentDatabaseName=()=> 'campobase-test';const isDemoDatabase=()=>false;",
   );
+  source = source.replace("import { getBoundSaasUserId, getPinAccessRevision } from './auth-manager.js';", "const getBoundSaasUserId=()=> 'test';const getPinAccessRevision=()=>1;");
+  source = source.replace("import { syncStatus } from './sync-status.js';", "const syncStatus=()=>({confirmed:false,label:'Pendiente',detail:'Datos locales'});");
   source = source.replace('export function installRuntimeRefresh()', 'function installRuntimeRefresh()');
   source += '\nglobalThis.__renderCustomBoardCard = customBoardCardMarkup; globalThis.__hydrate = hydrateCustomExercises; globalThis.__toBoardExercise = toBoardExercise; globalThis.__viewerMetadataMarkup = viewerMetadataMarkup;';
 

@@ -1,5 +1,7 @@
 import { suspendSessionDetail } from './session-detail-navigation.js';
-import { syncFromCloud, getAll } from './db.js';
+import { syncFromCloud, getAll, currentDatabaseName, isDemoDatabase } from './db.js';
+import { getBoundSaasUserId, getPinAccessRevision } from './auth-manager.js';
+import { syncStatus } from './sync-status.js';
 
 const BUTTON_ID = 'manual-refresh';
 const CATEGORY = 'Mis ejercicios';
@@ -33,10 +35,20 @@ function buttonMarkup(id = BUTTON_ID) {
 }
 
 let manualRefreshPromise = null;
+let manualRefreshContext = null;
+const refreshButtons = new WeakMap();
+function refreshContext() {
+  return JSON.stringify([getBoundSaasUserId(), currentDatabaseName(), getPinAccessRevision(), window.__campobase?.state?.role || '']);
+}
 async function refreshNow(button) {
-  if (manualRefreshPromise) return manualRefreshPromise;
+  const context = refreshContext();
+  if (manualRefreshPromise && manualRefreshContext === context) return manualRefreshPromise;
+  manualRefreshContext = context;
+  const token = {};
+  const current = () => context === refreshContext();
+  if (button) refreshButtons.set(button, token);
   if (button) { button.disabled = true; button.textContent = 'Actualizando…'; }
-  manualRefreshPromise = (async () => {
+  const promise = (async () => {
     try {
       const activeView = document.querySelector('.view.active')?.id || '';
       const role = window.__campobase?.state?.role || '';
@@ -45,23 +57,25 @@ async function refreshNow(button) {
       const app = window.__campobase;
       if (app?.synchronizeCloud) {
         const result = await app.synchronizeCloud();
-        if (result?.online === false && !result.demo) {
-          if (button) button.title = result.authRequired ? 'Reconecta tu cuenta para sincronizar; tus datos se conservan.' : result.error || app.state?.cloudError || 'Sincronización pendiente';
-          try { await app.refresh?.(true); } catch {}
-          try { app.renderAll?.(); } catch {}
-          window.__campobase?.toast?.(result.authRequired ? 'Reconecta tu cuenta para sincronizar. Tus datos se conservan.' : 'No se pudo sincronizar. Tus datos se conservan; puedes volver a actualizar.');
-          return;
-        }
-        try { await app.refresh?.(true); } catch {}
-        try { app.renderAll?.(); } catch {}
-        if (button) button.title = 'Datos actualizados';
-        window.__campobase?.toast?.('Sincronizado con CampoBase en la nube.');
+        if (!current() || result?.contextChanged || result?.accessChanged) return;
+        // synchronizeCloud owns refresh/renderOrDefer. A manual update must not
+        // reconstruct a form or live substitutions which the user is editing.
+        const status = syncStatus({
+          demo: result?.demo || isDemoDatabase(), online: navigator.onLine !== false,
+          bound: Boolean(getBoundSaasUserId()), connected: result?.online === true,
+          pending: result?.pending ?? NaN, blocked: result?.blocked ?? 0,
+          authRequired: result?.authRequired, restricted: result?.cloudRestricted,
+          error: result?.uploadError || result?.error || app.state?.cloudError || '',
+        });
+        const message = status.confirmed ? 'Sincronizado con CampoBase en la nube.' : `${status.label}. ${status.detail}`;
+        if (button) button.title = message;
+        app.toast?.(message);
       } else {
-        // Compatibility only for a previous bundle without the public sync API.
-        await syncFromCloud();
-        const url = new URL(window.location.href);
-        url.searchParams.set('_cb', String(Date.now()));
-        window.location.replace(url.toString());
+        // Compatibility for a previous bundle, still preserving the editor and
+        // the identity captured before the request.
+        const result = await syncFromCloud();
+        if (!current() || result?.contextChanged || result?.accessChanged) return;
+        await app?.refresh?.();
       }
       if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
         // Check code updates in the background; a slow worker never blocks data.
@@ -70,16 +84,16 @@ async function refreshNow(button) {
         )).catch(() => null);
       }
     } catch (error) {
+      if (!current() || error?.code === 'CAMPOBASE_CONTEXT_CHANGED') return;
       console.warn('No se pudo completar la actualización:', error);
       if (button) button.title = error.message || 'No se pudo actualizar; vuelve a intentarlo.';
-      try { await window.__campobase?.refresh?.(true); } catch {}
-      try { window.__campobase?.renderAll?.(); } catch {}
       window.__campobase?.toast?.('No se pudo actualizar. Tus datos se conservan; puedes volver a intentarlo.');
     } finally {
-      if (button) { button.disabled = false; button.textContent = 'Actualizar'; }
+      if (button && refreshButtons.get(button) === token) { button.disabled = false; button.textContent = 'Actualizar'; }
     }
-  })().finally(() => { manualRefreshPromise = null; });
-  return manualRefreshPromise;
+  })().finally(() => { if (manualRefreshPromise === promise) manualRefreshPromise = null; });
+  manualRefreshPromise = promise;
+  return promise;
 }
 
 export function installRuntimeRefresh() {

@@ -4,7 +4,13 @@ import { spawn } from 'node:child_process';
 const chrome = process.env.CHROME_BIN;
 if (!chrome) throw new Error('CHROME_BIN no está definido.');
 
-const server = spawn('python3', ['-m', 'http.server', '4173', '--bind', '127.0.0.1'], {
+// Python 3.9's default backlog is only five connections. A cold browser module
+// graph can overflow it, resetting a required local import before app startup.
+const server = spawn('python3', ['-u', '-c', [
+  'from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler',
+  'ThreadingHTTPServer.request_queue_size = 128',
+  "ThreadingHTTPServer(('127.0.0.1', 4173), SimpleHTTPRequestHandler).serve_forever()",
+].join('\n')], {
   stdio: ['ignore', 'ignore', 'inherit'],
 });
 
@@ -24,9 +30,7 @@ const browserErrors = [];
 let browser;
 
 async function enterDemo(page) {
-  await page.goto('http://127.0.0.1:4173/index.html?browserSmoke=1', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => Boolean(window.__campobase?.state), null, { timeout: 20000 });
-
+  // Startup failures happen before the API exists; collect them before goto.
   page.on('pageerror', (error) => browserErrors.push(error.message));
   page.on('console', (message) => {
     if (message.type() !== 'error') return;
@@ -41,6 +45,27 @@ async function enterDemo(page) {
     browserErrors.push('dialog: ' + dialog.message());
     await dialog.dismiss();
   });
+
+  let apiReady = false;
+  let rejectBoot;
+  const bootFailure = new Promise((resolve, reject) => { rejectBoot = reject; });
+  // A failed module can precede DOMContentLoaded. Keep that rejection handled
+  // until goto completes and the diagnostic races the unchanged startup limit.
+  bootFailure.catch(() => {});
+  page.on('requestfailed', (request) => {
+    const url = new URL(request.url());
+    if (apiReady || request.resourceType() !== 'script' || url.origin !== 'http://127.0.0.1:4173') return;
+    const failure = `No se pudo cargar el módulo local ${url.pathname}: ${request.failure()?.errorText || 'error de conexión'}`;
+    browserErrors.push(failure);
+    rejectBoot(new Error(failure));
+  });
+
+  await page.goto('http://127.0.0.1:4173/index.html?browserSmoke=1', { waitUntil: 'domcontentloaded' });
+  await Promise.race([
+    page.waitForFunction(() => Boolean(window.__campobase?.state), null, { timeout: 20000 }),
+    bootFailure,
+  ]);
+  apiReady = true;
 
   const isDemo = await page.evaluate(() => window.__campobase?.state?.role === 'demo');
   if (!isDemo) {

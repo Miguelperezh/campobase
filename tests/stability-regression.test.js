@@ -38,16 +38,16 @@ test('Sesiones mantiene selector por categorías, MP4 lazy y flujo de añadir si
 
 test('Asistencia enlaza sesiones por sessionId y partidos por matchId sin dejar sesiones huérfanas', async () => {
   const source = await projectFile('js/attendance-linked-sources.js');
-  assert.match(source, /record\?\.sessionId === sessionId/);
-  assert.match(source, /record\?\.kind === 'match' && record\.matchId === matchId/);
+  assert.match(source, /String\(record\?\.sessionId \?\? ''\) === String\(sessionId\)/);
+  assert.match(source, /record\?\.kind === 'match' && String\(record\.matchId \?\? ''\) === String\(matchId \?\? ''\)/);
   assert.match(source, /sessionId: session\?\.id \|\| null/);
   assert.match(source, /matchId: match\?\.id \|\| null/);
   assert.match(source, /kind: match \? 'match' : 'training'/);
   assert.match(source, /data-attendance-source/);
   assert.match(source, /data-source-id/);
   assert.match(source, /Editar asistencia/);
-  assert.match(source, /cleanupOrphanSessionAttendance/);
-  assert.match(source, /remove\('trainings', record\.id\)/);
+  assert.doesNotMatch(source, /cleanupOrphanSessionAttendance|scheduleCleanup/);
+  assert.doesNotMatch(source, /remove\('trainings'/, 'Cancelar un borrado no debe programar eliminación de asistencias históricas');
 });
 
 test('los módulos nuevos se cargan desde CampoBase y están incluidos en la caché PWA', async () => {
