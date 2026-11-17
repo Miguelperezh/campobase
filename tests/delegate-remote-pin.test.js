@@ -164,3 +164,92 @@ test('revocación atómica del RPC se comunica como denegada o autenticación pe
   assert.equal(result.body.applied,undefined);assert.equal(JSON.stringify(rows),before);
  }
 });
+
+const calendarRestRows = [
+ {id:'calendar-rest-6',recordType:'calendarRest',date:'2027-01-24',round:'6',title:'Descansa',competitionType:'league',season:'2026-2027'},
+ {id:'calendar-rest-15',recordType:'calendarRest',date:'2027-04-18',round:'15',title:'Descansa',competitionType:'league',season:'2026-2027'},
+];
+function addCalendarRests(rows) {
+ rows.configuracion.push(...calendarRestRows.map(payload=>({id:payload.id,user_id:'owner',payload:structuredClone(payload)})));
+}
+
+test('descansos del calendario son visibles por PIN y correo solo con calendario y para su propio equipo',async()=>{
+ for(const permissions of [[],['hoy'],['partido'],['sesiones'],['asistencia'],['preparacion'],['convocatorias'],['modo-campo'],['plantilla'],['tacticas'],['cuerpo-tecnico']]){
+  assert.equal(readableSetting(calendarRestRows[0],permissions),false);
+ }
+ assert.equal(readableSetting(calendarRestRows[0],['calendario']),true);
+ for(const emailDelegate of [false,true]){
+  const {rows,request,state}=await harness({emailDelegate});
+  addCalendarRests(rows);
+  // Same IDs in another team must not replace or add data to this snapshot.
+  rows.configuracion.push(...calendarRestRows.map(payload=>({id:payload.id,user_id:'another-owner',payload:{...payload,title:'Descanso de otro equipo'}})),
+   {id:'foreign-rest',user_id:'another-owner',payload:{...calendarRestRows[0],id:'foreign-rest'}});
+  rows.configuracion[0].payload.delegatePermissions=['calendario'];
+  const before=JSON.stringify(rows);
+  const snapshot=await request({operation:'snapshot',store:'settings',expectedUserId:'delegate',expectedOwnerUserId:'owner'});
+  assert.equal(snapshot.status,200);
+  assert.deepEqual(snapshot.body.records.filter(row=>row.recordType==='calendarRest'),calendarRestRows);
+  assert.equal(snapshot.body.records.some(row=>row.id==='foreign-rest'),false);
+  assert.equal(snapshot.body.records.find(row=>row.id==='main').ownerPinHash,undefined);
+  assert.equal(JSON.stringify(rows),before);
+  for(const permissions of [[],['hoy'],['partido']]){
+   rows.configuracion[0].payload.delegatePermissions=permissions;
+   const hidden=await request({operation:'snapshot',store:'settings'});
+   assert.equal(hidden.status,200);
+   assert.equal(hidden.body.records.some(row=>row.recordType==='calendarRest'),false);
+  }
+  rows.configuracion[0].payload.delegatePermissions=['calendario'];
+  const restored=await request({operation:'snapshots'});
+  assert.deepEqual(restored.body.snapshots.settings.records.filter(row=>row.recordType==='calendarRest'),calendarRestRows);
+  assert.equal(state.rpcs.length,0);
+ }
+});
+
+test('permiso calendario no permite al delegado crear, editar ni borrar descansos',async()=>{
+ for(const emailDelegate of [false,true]){
+  const {rows,request,state}=await harness({emailDelegate});
+  addCalendarRests(rows);
+  rows.configuracion[0].payload.delegatePermissions=['calendario','partido','asistencia'];
+  const before=JSON.stringify(rows);
+  for(const recordId of ['calendar-rest-6','new-calendar-rest']){
+   for(const operation of ['upsert','delete']){
+    const mutation={store:'settings',recordId,operation,queuedAt:100,payload:operation==='upsert'?{...calendarRestRows[0],id:recordId,title:'Modificado'}:null};
+    assert.equal(canWriteMutation(mutation,rows.configuracion[0].payload.delegatePermissions),false);
+    const result=await request({operation,store:'settings',mutation});
+    assert.equal(result.status,403);
+    assert.equal(result.body.code,'CAMPOBASE_PERMISSION_REVOKED');
+    assert.equal(result.body.applied,undefined);
+   }
+  }
+  assert.equal(state.rpcs.length,0);
+  assert.equal(JSON.stringify(rows),before);
+ }
+});
+
+test('revocación durante lectura de descansos retiene el snapshot antes de entregar sus datos',async()=>{
+ for(const emailDelegate of [false,true]){
+  for(const change of emailDelegate?['permissions','membership']:['permissions','membership','pin']){
+   const {rows,request,state}=await harness({emailDelegate});
+   addCalendarRests(rows);
+   rows.configuracion[0].payload.delegatePermissions=['calendario'];
+   let release,signal;
+   const reached=new Promise(resolve=>signal=resolve),hold=new Promise(resolve=>release=resolve);
+   state.queryGate=(table,result)=>{
+    if(table==='configuracion'&&Array.isArray(result.data)){signal();return hold.then(()=>result);}
+    return Promise.resolve(result);
+   };
+   const pending=request({operation:'snapshot',store:'settings'});
+   await reached;
+   if(change==='permissions')rows.configuracion[0].payload.delegatePermissions=[];
+   else if(change==='membership')rows.equipo_miembros.length=0;
+   else rows.configuracion[0].payload.delegatePinHash='replacement';
+   release();
+   const result=await pending;
+   assert.equal(result.status,change==='pin'?401:403);
+   assert.equal(result.body.code,change==='pin'?'CAMPOBASE_AUTH_REQUIRED':'CAMPOBASE_PERMISSION_REVOKED');
+   assert.equal(result.body.records,undefined);
+   assert.equal(state.rpcs.length,0);
+   assert.deepEqual(rows.configuracion.filter(row=>row.payload?.recordType==='calendarRest').map(row=>row.payload),calendarRestRows);
+  }
+ }
+});

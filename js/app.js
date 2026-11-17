@@ -105,7 +105,7 @@ const MATCH_TYPES = { league: 'Liga', friendly: 'Amistoso', tournament: 'Torneo'
 const EXCLUSION_REASONS = { sick: 'Enfermo', injured: 'Lesionado', suspended: 'Sancionado', missed_training: 'No fue a entrenar', discipline: 'Disciplina (notas/padres)', coach_decision: 'Decisión del entrenador', other: 'Otro motivo', rotation: 'Rotación equitativa' };
 const MINUTE_REASONS = { discipline: 'Disciplina', absence: 'Falta', illness: 'Enfermedad', goalkeeper_rotation: 'Rotación de porteros', sin_indicar: 'Sin indicar' };
 
-const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
+const state = { players: [], callups: [], matches: [], trainings: [], exercises: [], trainingSessions: [], calendarRests: [], tactics: [], videos: [], preparaciones: [], settings: {}, format: 'F7', timer: null, liveUpdatedAt: 0, tick: null, role: null, demoSession: null, delegateMode: false, urgentAlertKey: '', repartoAlertKey: '', finishing: false, ratingMatchId: null, cloudConnected: false, cloudError: '' };
 if (typeof window !== 'undefined') {
   window.__campobaseState = state;
 }
@@ -724,6 +724,8 @@ async function refresh() {
       }
       return { ...session, ...(isTrainingSessionCompleted(session) ? { completed: true } : {}), targetDuration: target };
     });
+  // Calendar notes stay outside matches, attendance and every sporting flow.
+  state.calendarRests = calendarRestEvents(settingRecords);
   state.tactics = settingRecords.filter(({ recordType }) => recordType === 'tactic');
   state.videos = settingRecords.filter(({ recordType }) => recordType === 'exerciseVideo');
   state.preparaciones = settingRecords.filter(({ recordType }) => recordType === 'preparacion');
@@ -4473,6 +4475,21 @@ let claudeCalendarSelectedDay = null;
 let playedMatchesSearchQuery = '';
 let playedMatchesTypeFilter = 'all';
 
+function calendarRestEvents(records = []) {
+  return records.filter((item) => {
+    if (item?.recordType !== 'calendarRest' || !item.id || typeof item.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.date)) return false;
+    const [year, month, day] = item.date.split('-');
+    return isRealCalendarDate(day, month, year);
+  }).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function renderCalendarRestCard(rest) {
+  const date = new Date(`${rest.date}T12:00:00`);
+  const day = new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(date).replace('.', '').toUpperCase();
+  const month = new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(date).replace('.', '').toUpperCase();
+  return `<article class="cbx-calendar-match cbx-calendar-rest panel" data-calendar-rest-id="${escapeHtml(rest.id)}" data-match-day="${escapeHtml(rest.date)}"><div class="cbx-calendar-date"><small>${escapeHtml(day)}</small><strong>${date.getDate()}</strong><small>${escapeHtml(month)}</small></div><div class="cbx-calendar-info"><small>${rest.round ? `J${escapeHtml(rest.round)} · ` : ''}${escapeHtml(matchTypeLabel(rest.competitionType || 'league'))}</small><h3>${escapeHtml(rest.title || 'Descansa')}</h3><p>Jornada sin partido</p></div><strong class="cbx-calendar-score pending">Descanso</strong></article>`;
+}
+
 function renderClaudeCalendar() {
   const year = claudeCalendarMonth.getFullYear();
   const month = claudeCalendarMonth.getMonth();
@@ -4480,6 +4497,7 @@ function renderClaudeCalendar() {
   const days = new Date(year, month + 1, 0).getDate();
   const matchDays = new Set(state.matches.map((item) => String(item.date || '').slice(0, 10)));
   const trainingDays = new Set([...state.trainingSessions, ...state.trainings.filter((item) => item.kind !== 'match')].map((item) => String(item.date || '').slice(0, 10)));
+  const restDays = new Set(state.calendarRests.map((item) => item.date));
   const dateKey = (day) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   const cells = Array.from({ length: firstWeekday }, () => '<span class="cbx-calendar-spacer"></span>').concat(Array.from({ length: days }, (_, index) => {
     const day = index + 1;
@@ -4488,17 +4506,18 @@ function renderClaudeCalendar() {
     const isSelected = claudeCalendarSelectedDay === key;
     const hasMatch = matchDays.has(key);
     const hasTraining = trainingDays.has(key);
-    const dotsHtml = (hasMatch || hasTraining)
-      ? `<span class="cbx-cal-dots">${hasMatch ? '<i class="has-match"></i>' : ''}${hasTraining ? '<i class="has-training"></i>' : ''}</span>`
+    const hasRest = restDays.has(key);
+    const dotsHtml = (hasMatch || hasTraining || hasRest)
+      ? `<span class="cbx-cal-dots">${hasMatch ? '<i class="has-match"></i>' : ''}${hasTraining ? '<i class="has-training"></i>' : ''}${hasRest ? '<i class="has-rest" style="border:1px solid currentColor;background:transparent" aria-hidden="true"></i>' : ''}</span>`
       : '<span class="cbx-cal-dots"></span>';
-    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${hasMatch ? ', partido' : ''}${hasTraining ? ', entrenamiento' : ''}"><span>${day}</span>${dotsHtml}</button>`;
+    return `<button type="button" class="cbx-calendar-day${isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}" data-calendar-day="${key}" aria-label="${day} de ${new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(claudeCalendarMonth)}${hasMatch ? ', partido' : ''}${hasTraining ? ', entrenamiento' : ''}${hasRest ? ', descanso' : ''}"><span>${day}</span>${dotsHtml}</button>`;
   })).join('');
-  return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span></div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
+  return `<section class="cbx-calendar-month panel"><header><h3>${new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(claudeCalendarMonth)}</h3><div><span>● Partido</span><span>● Entreno</span>${state.calendarRests.length ? '<span>○ Descanso</span>' : ''}</div></header><div class="cbx-calendar-weekdays">${['L','M','X','J','V','S','D'].map((item) => `<b>${item}</b>`).join('')}</div><div class="cbx-calendar-days">${cells}</div><footer><button type="button" data-calendar-move="-1" aria-label="Mes anterior">←</button><button type="button" data-calendar-now="1">Hoy</button><button type="button" data-calendar-move="1" aria-label="Mes siguiente">→</button></footer></section>`;
 }
 
 function renderCalendarFilterBar() {
-  const allCount = state.matches.length + state.trainingSessions.length;
-  const leagueCount = state.matches.filter((m) => (m.type || 'league') === 'league').length;
+  const allCount = state.matches.length + state.trainingSessions.length + state.calendarRests.length;
+  const leagueCount = state.matches.filter((m) => (m.type || 'league') === 'league').length + state.calendarRests.filter((item) => (item.competitionType || 'league') === 'league').length;
   const friendlyCount = state.matches.filter((m) => m.type === 'friendly').length;
   const tournamentCount = state.matches.filter((m) => m.type === 'tournament').length;
   const trainingCount = state.trainingSessions.length;
@@ -4560,6 +4579,10 @@ function renderMatches() {
         relevantTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) === claudeCalendarSelectedDay);
       }
     }
+    const relevantRests = (claudeCalendarFilter === 'all' || claudeCalendarFilter === 'league')
+      ? state.calendarRests.filter((item) => (!claudeCalendarSelectedDay || item.date === claudeCalendarSelectedDay)
+          && (item.competitionType || 'league') === 'league')
+      : [];
 
     const { upcoming, played } = partitionAndSortMatches(matchesToRender);
     const isLiveMatch = (m) => Boolean((state.timer && state.timer.phase && state.timer.phase !== 'ready' && String(state.timer.matchId) === String(m.id)) || m.status === 'in_progress');
@@ -4595,9 +4618,16 @@ function renderMatches() {
     const todayStr = localDateKey();
     const upcomingTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) >= todayStr).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
     const pastTrainings = relevantTrainings.filter((t) => String(t.date || '').slice(0, 10) < todayStr).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    const upcomingCalendarEntries = [
+      ...nonLiveUpcoming.map((item) => ({ date: item.date, match: item })),
+      ...relevantRests.filter((item) => item.date >= todayStr).map((item) => ({ date: item.date, rest: item })),
+    ].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const pastRests = relevantRests.filter((item) => item.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
 
     const group = (title, matches) => matches.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${matches.map(renderMatchCard).join('')}</div></section>` : '';
     const trainingGroup = (title, items) => items.length ? `<section class="cbx-calendar-group"><h3>${title}</h3><div class="stack">${items.map(renderTrainingCalendarCard).join('')}</div></section>` : '';
+    const upcomingGroup = upcomingCalendarEntries.length ? `<section class="cbx-calendar-group"><h3>Próximos</h3><div class="stack">${upcomingCalendarEntries.map((entry) => entry.rest ? renderCalendarRestCard(entry.rest) : renderMatchCard(entry.match)).join('')}</div></section>` : '';
+    const pastRestsGroup = pastRests.length ? `<section class="cbx-calendar-group"><h3>Jornadas de descanso anteriores</h3><div class="stack">${pastRests.map(renderCalendarRestCard).join('')}</div></section>` : '';
 
     const existingCollapsible = root.querySelector('#played-matches-collapsible');
     const wasOpen = existingCollapsible ? existingCollapsible.open : (upcoming.length === 0 && !liveMatches.length);
@@ -4621,7 +4651,7 @@ function renderMatches() {
         </div>
       </div>`;
 
-    const hasAnyEvent = liveMatches.length || nonLiveUpcoming.length || played.length || relevantTrainings.length;
+    const hasAnyEvent = liveMatches.length || nonLiveUpcoming.length || played.length || relevantTrainings.length || relevantRests.length;
     const emptyNotice = !hasAnyEvent ? (state.matches.length ? '<p class="meta" style="text-align:center;padding:24px 12px;">No hay eventos para el filtro seleccionado.</p>' : '<p class="meta">Todavía no hay partidos. Usa «+ Partido» para añadir uno.</p>') : '';
 
     root.innerHTML = `
@@ -4629,8 +4659,9 @@ function renderMatches() {
       ${renderCalendarFilterBar()}
       ${selectedDayBanner}
       ${group('🔴 En juego', liveMatches)}
-      ${group('Próximos', nonLiveUpcoming)}
+      ${upcomingGroup}
       ${trainingGroup('Próximos entrenamientos', upcomingTrainings)}
+      ${pastRestsGroup}
       ${state.matches.length || pastTrainings.length ? `
         <details class="played-matches-accordion cbx-completed-sessions-accordion cbx-completed-matches-accordion" id="played-matches-collapsible"${wasOpen ? ' open' : ''}>
           <summary class="played-matches-summary cbx-completed-matches-summary">
@@ -4714,13 +4745,17 @@ function renderMatches() {
     }
     return;
   }
-  if (!state.matches.length) {
+  if (!state.matches.length && !state.calendarRests.length) {
     $('#matches-list').innerHTML = empty('Añade el calendario de partidos manualmente.');
     return;
   }
   const { upcoming, played } = partitionAndSortMatches(state.matches);
-  const upcomingHtml = upcoming.map(renderMatchCard).join('');
-  const emptyUpcomingHtml = !upcoming.length && played.length
+  const upcomingHtml = [
+    ...upcoming.map((item) => ({ date: item.date, match: item })),
+    ...state.calendarRests.map((item) => ({ date: item.date, rest: item })),
+  ].sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .map((entry) => entry.rest ? renderCalendarRestCard(entry.rest) : renderMatchCard(entry.match)).join('');
+  const emptyUpcomingHtml = !upcoming.length && !state.calendarRests.some((item) => item.date >= localDateKey()) && played.length
     ? '<div class="panel empty-notice"><p class="meta">No hay próximos partidos programados.</p></div>'
     : '';
 
@@ -14548,7 +14583,7 @@ async function init() {
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
     } else {
       // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261024-pilot-flows-1').then((reg) => {
+      navigator.serviceWorker.register('./sw.js?v=20261117-calendar-rests-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }
