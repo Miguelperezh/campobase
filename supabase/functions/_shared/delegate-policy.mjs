@@ -12,6 +12,7 @@ export function canReadStore(store, permissions) {
 export function readableSetting(row, permissions) {
  if(row.id==='main')return true;
  if(row.id==='live')return can(permissions,['partido','delegado']);
+ if(row.recordType==='calendarRest')return permissions.includes('calendario');
  if(row.recordType==='preparacion')return can(permissions,['preparacion','partido','delegado','convocatorias']);
  if(['exercise','exerciseVideo'].includes(row.recordType))return can(permissions,['ejercicios','sesiones','modo-campo']);
  if(row.recordType==='trainingSession')return can(permissions,trainingViews);

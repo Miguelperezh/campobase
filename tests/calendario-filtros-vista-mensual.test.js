@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 
 const appSource = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const stylesSource = fs.readFileSync(new URL('../css/claude-partido.css', import.meta.url), 'utf8');
@@ -18,9 +19,19 @@ test('claude-partido.css contiene estilos completos para calendario, filtros, pu
   assert.match(stylesSource, /\.cbx-calendar-score\.training-pill/, 'Debe existir clase .training-pill para tarjeta de entreno');
 });
 
-test('renderClaudeCalendar soporta puntos múltiples independientes para partido y entrenamiento en el mismo día', () => {
-  assert.match(appSource, /const dotsHtml\s*=\s*\(hasMatch\s*\|\|\s*hasTraining\)/, 'Debe comprobar match y training para generar puntos');
-  assert.match(appSource, /<span class="cbx-cal-dots">\$\{hasMatch \? '<i class="has-match"><\/i>' : ''\}\$\{hasTraining \? '<i class="has-training"><\/i>' : ''\}<\/span>/, 'Debe renderizar ambos puntos dentro de .cbx-cal-dots sin anularse');
+test('renderClaudeCalendar mantiene puntos independientes y distingue un descanso de un partido', () => {
+  const block = appSource.slice(appSource.indexOf('function renderClaudeCalendar()'), appSource.indexOf('function renderCalendarFilterBar()'));
+  const html = vm.runInNewContext(`${block}; renderClaudeCalendar()`, {
+    state: { matches: [{ date: '2027-01-10T09:00' }], trainingSessions: [{ date: '2027-01-10' }], trainings: [], calendarRests: [{ date: '2027-01-24' }] },
+    claudeCalendarMonth: new Date(2027, 0, 1), claudeCalendarSelectedDay: null, Date, Intl,
+  });
+  const sameDay = html.match(/<button[^>]*data-calendar-day="2027-01-10"[\s\S]*?<\/button>/)?.[0];
+  const rest = html.match(/<button[^>]*data-calendar-day="2027-01-24"[\s\S]*?<\/button>/)?.[0];
+  assert.match(sameDay, /class="has-match"/);
+  assert.match(sameDay, /class="has-training"/);
+  assert.match(rest, /aria-label="[^"]*descanso/);
+  assert.match(rest, /class="has-rest"/);
+  assert.doesNotMatch(rest, /class="has-match"/);
 });
 
 test('renderCalendarFilterBar define los 5 filtros esenciales con recuentos', () => {

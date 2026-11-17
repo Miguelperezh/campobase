@@ -6,17 +6,19 @@ import {sameViewAccount, sameViewContext, readViewCache, writeViewCache, project
 
 const source = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const refreshSource = source.slice(source.indexOf('async function refresh() {'), source.indexOf('\nfunction syncDirectFieldCache()'));
+const calendarDatesSource = source.slice(source.indexOf('function daysInMonth'), source.indexOf('function askConfirmation'));
+const calendarRestsSource = source.slice(source.indexOf('function calendarRestEvents'), source.indexOf('function renderCalendarRestCard'));
 const storage = () => {
   const records = new Map();
   return {getItem: key => records.get(key) ?? null, setItem: (key, value) => records.set(key, String(value)), records};
 };
 const account = name => ({userId: name, database: `campobase_${name}`, pinRevision: 1, role: 'owner'});
-const snapshot = name => ({players:[{id:'same-player',name}], callups:[{id:'same-callup',name}], matches:[{id:'same-match',opponent:name,status:'in_progress',date:'2000-01-01'}], trainings:[{id:'same-attendance',name}], settings:[{id:'main',teamName:name,theme:{accentColor:name},delegatePermissions:[]},{id:'live',timer:{matchId:'same-match',phase:'first',runningSince:1}}]});
+const snapshot = name => ({players:[{id:'same-player',name}], callups:[{id:'same-callup',name}], matches:[{id:'same-match',opponent:name,status:'in_progress',date:'2000-01-01'}], trainings:[{id:'same-attendance',name}], settings:[{id:'main',teamName:name,theme:{accentColor:name},delegatePermissions:[]},{id:'live',timer:{matchId:'same-match',phase:'first',runningSince:1}},{id:'same-rest',recordType:'calendarRest',date:'2099-01-01',round:'6',title:`Descansa ${name}`,competitionType:'league'}]});
 function harness() {
   const env = {context:account('A'), snapshots:{A:snapshot('A'),B:snapshot('B')}, wait:null, renders:[],writes:[]};
   const store = storage();
   const node = {elements:{teamName:{},format:{}}};
-  const state = {players:[],callups:[],matches:[],trainings:[],settings:{}};
+  const state = {players:[],callups:[],matches:[],trainings:[],calendarRests:[],settings:{}};
   const scope = {
     state, viewContext:()=>({...env.context}), sameViewContext,sameViewAccount,projectLiveTimer,
     getAll: async key => {const name=env.context.userId, data=structuredClone(env.snapshots[name][key]); if(env.wait && key==='settings')await env.wait;return data;},
@@ -33,7 +35,7 @@ function harness() {
     put:(...args)=>env.writes.push(args),
   };
   vm.createContext(scope);
-  vm.runInContext(`let refreshRevision=0,loadedViewContext=null,validatedExerciseCache=null;
+  vm.runInContext(`${calendarDatesSource}\n${calendarRestsSource}\nlet refreshRevision=0,loadedViewContext=null,validatedExerciseCache=null;
     let liveTactic,prepDraft,prepMatchId,prepMomentsDraft,prepMomentIndex,tacticDraft,sessionDraftBlocks,sessionDraftMeta,reusedSessionContext,pendingExerciseId;
     ${refreshSource};this.refresh=refresh;`,scope);
   return {...env,env,state,scope,store};
@@ -49,6 +51,7 @@ test('a retained settings read from A cannot commit or render after B completes'
   assert.equal(await scope.refresh(true),true);
   release();assert.equal(await old,false);
   assert.equal(state.players[0].name,'B');assert.equal(state.settings.teamName,'B');
+  assert.equal(state.calendarRests[0].title,'Descansa B','calendar notes belong to the same committed account snapshot');
   assert.deepEqual(env.renders.map(value=>value.players[0].name),['B']);
   assert.equal(env.writes.length,0);
 });
@@ -57,7 +60,7 @@ test('PIN or role change while loading cancels the old view, including identical
   for(const change of [{pinRevision:2},{role:'delegate'}]) {
     const {env,state,scope}=harness();let release;env.wait=new Promise(resolve=>{release=resolve;});
     const pending=scope.refresh();env.context={...env.context,...change};release();
-    assert.equal(await pending,false);assert.deepEqual(state.players,[]);assert.equal(env.renders.length,0);
+    assert.equal(await pending,false);assert.deepEqual(state.players,[]);assert.deepEqual(state.calendarRests,[]);assert.equal(env.renders.length,0);
   }
 });
 
