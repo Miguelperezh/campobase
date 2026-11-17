@@ -31,4 +31,6 @@ Los anchos de navegador no son una prueba en un teléfono físico. Las pruebas n
 
 ## Publicación
 
-Build preparada `20261117-calendar-rests-1`, con HTML, registro SW y recursos cambiados versionados. Pendiente de registrar revisión/CI, integración en main y comprobación de los recursos públicos; la inserción y verificación de los dos datos ya está confirmada arriba.
+Publicación verificada mediante PR147: commit de rama `7b25222199dc4390acb3897a49b0308e2f758485`, integrado en main `084de4784386bbaeac6823917461b72a01c7464d`. CI de rama `44161729035` y PR `44161742362` correctos, incluido navegador crítico. Main `44162011072` y Pages `44162011055` correctos para ese mismo commit.
+
+Build pública `20261117-calendar-rests-1`: los cuatro recursos cambiados (HTML, app, SW y helper de permisos) son idénticos por SHA-256 al código integrado. La inserción real de las dos anotaciones, la preservación de datos y el servidor v5 se verificaron por separado como se detalla arriba. AGENTS.md y agente.md se ampliaron únicamente con su sección SDD062; sin reemplazar historial ajeno.
