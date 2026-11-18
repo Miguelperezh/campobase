@@ -601,15 +601,19 @@ function waitForApp(timeoutMs = 12000) {
 async function unlockBoundSession(client) {
   if (isPinAccessLocked()) return false;
   const accessRevision = getPinAccessRevision();
-  const session = await getCurrentSession(client).catch(() => null);
   const bound = getBoundSaasUserId();
-  if (!session?.user || !bound || bound !== session.user.id) return false;
+  if (!bound) return false;
+  const accessIsCurrent = () => !isPinAccessLocked()
+    && accessRevision === getPinAccessRevision() && bound === getBoundSaasUserId();
+  const session = await getCurrentSession(client).catch(() => null);
+  if (!accessIsCurrent() || !session?.user || bound !== session.user.id) return false;
   // Mantiene la autorización de esta pestaña mientras la sesión Supabase siga
   // siendo válida. sessionStorage desaparece al cerrar la pestaña/navegador.
   markBrowserSessionActive(session.user.id);
   const profile = await getProfileOrFallback(client, session.user);
+  if (!accessIsCurrent()) return false;
   const app = await waitForApp();
-  if (!app?.state) return false;
+  if (!accessIsCurrent() || !app?.state) return false;
 
   const isDelegate = profile.role === 'delegate';
   const isAdmin = profile.role === 'owner' || profile.role === 'admin';
@@ -619,13 +623,16 @@ async function unlockBoundSession(client) {
   const localRole = isDelegate || pinDelegate ? 'delegate' : 'owner';
   // Keep the access dialog until the bound account's data is loaded.
   if (typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (!accessIsCurrent()) return false;
   if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected
       && !hasUsableTeamSnapshot(app.state) && typeof app.synchronizeCloud === 'function') await app.synchronizeCloud();
+  if (!accessIsCurrent()) return false;
   if (typeof app.refresh === 'function') await app.refresh(true);
+  if (!accessIsCurrent()) return false;
   if (typeof navigator !== 'undefined' && navigator.onLine && !app.state.cloudConnected && !hasUsableTeamSnapshot(app.state)) {
     throw new Error(app.state.cloudError || 'No se han podido cargar los datos del equipo. Intenta entrar de nuevo.');
   }
-  if (isPinAccessLocked() || accessRevision !== getPinAccessRevision()) return false;
+  if (!accessIsCurrent()) return false;
   if (typeof app.renderAll === 'function') app.renderAll();
   app.state.role = localRole;
   // La cuenta SaaS de delegado usa navegación configurable. No activamos el
@@ -642,12 +649,13 @@ async function unlockBoundSession(client) {
   $('#demo-team-panel')?.classList.add('hidden');
   try {
     const { initTeamAccess } = await import('./team-access.js?v=20261009-delegate-pin-7');
+    if (!accessIsCurrent()) return false;
     await initTeamAccess(client);
   } catch (error) {
     console.warn('No se pudo aplicar el acceso del equipo:', error);
   }
 
-  if (isPinAccessLocked() || accessRevision !== getPinAccessRevision()) return false;
+  if (!accessIsCurrent()) return false;
   if (pinDelegate) app.applyRole?.('delegate');
   // Reveal the application only after loading the bound account.
   const dialog = $('#auth-dialog');
@@ -657,12 +665,18 @@ async function unlockBoundSession(client) {
 
 async function handlePersistentSession(client) {
   if (isPinAccessLocked()) { showLocalPin(); return true; }
+  const accessRevision = getPinAccessRevision();
+  let accessUserId = getBoundSaasUserId();
+  const accessIsCurrent = () => !isPinAccessLocked()
+    && accessRevision === getPinAccessRevision() && accessUserId === getBoundSaasUserId();
   const session = await getCurrentSession(client).catch(() => null);
+  if (!accessIsCurrent()) return true;
   if (!session?.user) return false;
   let bound = getBoundSaasUserId();
   if (!bound) {
     setBoundSaasUserId(session.user.id);
     bound = session.user.id;
+    accessUserId = bound;
   }
   const remembered = rememberedAccount();
   if (bound !== session.user.id) return false;
@@ -680,6 +694,7 @@ async function handlePersistentSession(client) {
   // usuario, pedimos el PIN local en lugar de cerrar sesión y dejar una
   // base vacía. Si no llegan, mostramos la cuenta preparada como fallback.
   const app = await waitForApp();
+  if (!accessIsCurrent()) return true;
   const started = Date.now();
   while (app?.state && Date.now() - started < 800) {
     if (isUserAlreadyAuthenticated() || app.state.role) {
@@ -702,8 +717,10 @@ async function handlePersistentSession(client) {
     }
     if (app.state.dataLoaded) break;
     await new Promise((resolve) => window.setTimeout(resolve, 60));
+    if (!accessIsCurrent()) return true;
   }
 
+  if (!accessIsCurrent()) return true;
   await prepareSignedInChoice(client, { session, user: session.user });
   return true;
 }
@@ -994,13 +1011,18 @@ function observeDialog(client) {
       document.body?.classList.remove('auth-locked');
       return;
     }
-    if (await handlePersistentSession(client)) return;
+    const accessRevision = getPinAccessRevision(), bound = getBoundSaasUserId();
+    const accessIsCurrent = () => accessRevision === getPinAccessRevision() && bound === getBoundSaasUserId()
+      && dialog.open && !localPinMode && !recoveryMode;
+    try { if (await handlePersistentSession(client)) return; }
+    catch { if (!accessIsCurrent()) return; }
+    if (!accessIsCurrent()) return;
     showPane('login');
     prefillRememberedIdentifier();
   };
-  const observer = new MutationObserver(() => { sync().catch(() => { showPane('login'); prefillRememberedIdentifier(); }); });
+  const observer = new MutationObserver(() => { sync().catch(() => {}); });
   observer.observe(dialog, { attributes: true, attributeFilter: ['open'] });
-  window.setTimeout(() => sync().catch(() => { showPane('login'); prefillRememberedIdentifier(); }), 0);
+  window.setTimeout(() => sync().catch(() => {}), 0);
 }
 
 export async function initSaasAuth(client) {
@@ -1012,15 +1034,25 @@ export async function initSaasAuth(client) {
   prefillRememberedIdentifier();
   observeDialog(client);
   if (isPinAccessLocked()) { showLocalPin(); return; }
+  // Local PIN access can finish while this module is still being downloaded.
+  // Its controller keeps the authenticated connection without reopening auth.
+  if (isPinAccessSession() && ['owner', 'delegate'].includes(window.__campobase?.state?.role)) return;
 
+  const accessRevision = getPinAccessRevision();
+  let accessUserId = getBoundSaasUserId();
+  const accessIsCurrent = () => !isPinAccessLocked()
+    && accessRevision === getPinAccessRevision() && accessUserId === getBoundSaasUserId();
   const session = await getCurrentSession(client).catch(() => null);
+  if (!accessIsCurrent()) return;
   let bound = getBoundSaasUserId();
   if (session?.user?.id && !bound) {
     setBoundSaasUserId(session.user.id);
     bound = session.user.id;
+    accessUserId = bound;
   } else if (bound && session?.user && session.user.id !== bound) {
     clearBoundSaasUserId();
     bound = '';
+    accessUserId = '';
   }
 
   const activeBrowserRole = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('campobase.sessionRole') : null;
@@ -1042,12 +1074,23 @@ export async function initSaasAuth(client) {
     return;
   }
 
+  // With a cloud-bound account the saved role is a navigation preference.
+  // If renewal failed, leave the PIN form usable until the person authenticates.
+  if (bound && !session?.user) {
+    const dialog = $('#auth-dialog');
+    if (dialog && !dialog.open) dialog.showModal();
+    if (activeBrowserRole || window.__campobase?.state?.settings?.ownerPinHash) showLocalPin();
+    else showPane('login');
+    return;
+  }
+
   if (activeBrowserRole || isUserAlreadyAuthenticated()) {
     const role = activeBrowserRole || window.__campobaseRole || window.__campobase?.state?.role || window.__campobaseState?.role || 'owner';
     const dialog = $('#auth-dialog');
     if (dialog?.open) dialog.close();
     document.body.classList.remove('auth-locked');
     const app = await waitForApp();
+    if (!accessIsCurrent()) return;
     if (app?.state) {
       app.state.role = role;
       app.applyRole?.(role);

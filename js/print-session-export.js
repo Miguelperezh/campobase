@@ -827,17 +827,69 @@ function isMobileDevice() {
 
 export async function ensurePdfLibraries() {
   if (typeof window === 'undefined') return false;
-  if (window.jspdf && window.html2canvas) return true;
-  const loadScript = (src) => new Promise((resolve) => {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.head.appendChild(s);
+  const ready = () => typeof window.jspdf?.jsPDF === 'function' && typeof window.html2canvas === 'function';
+  if (ready()) return true;
+  if (typeof document === 'undefined' || !document.head) return false;
+  // Some legacy consumers import a second URL of this module. Share the load
+  // in the page so simultaneous print/download actions still fetch each file once.
+  if (window.__campobasePdfLibrariesPromise) return window.__campobasePdfLibrariesPromise;
+  const loadScript = (src, available) => {
+    if (available()) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      let finished = false;
+      const finish = (loaded) => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timer);
+        script.onload = script.onerror = null;
+        if (!loaded) script.remove();
+        resolve(loaded);
+      };
+      const timer = window.setTimeout(() => finish(false), 10000);
+      script.src = src;
+      script.async = true;
+      script.onload = () => finish(available());
+      script.onerror = () => finish(false);
+      try { document.head.appendChild(script); } catch { finish(false); }
+    });
+  };
+  const pending = Promise.all([
+    loadScript('./vendor/html2canvas.min.js', () => typeof window.html2canvas === 'function'),
+    loadScript('./vendor/jspdf.umd.min.js', () => typeof window.jspdf?.jsPDF === 'function'),
+  ]).then(() => ready()).finally(() => {
+    // A failed or timed-out request must allow an explicit later retry.
+    if (window.__campobasePdfLibrariesPromise === pending) window.__campobasePdfLibrariesPromise = null;
   });
-  if (!window.html2canvas) await loadScript('./vendor/html2canvas.min.js');
-  if (!window.jspdf) await loadScript('./vendor/jspdf.umd.min.js');
-  return Boolean(window.jspdf && window.html2canvas);
+  window.__campobasePdfLibrariesPromise = pending;
+  return pending;
+}
+
+async function waitForPrintFonts() {
+  const link = document.getElementById('campobase-fonts');
+  await new Promise((resolve) => {
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timer);
+      link?.removeEventListener('load', stylesheetReady);
+      link?.removeEventListener('error', stylesheetReady);
+      resolve();
+    };
+    const stylesheetReady = () => {
+      link?.removeEventListener('load', stylesheetReady);
+      link?.removeEventListener('error', stylesheetReady);
+      // A deferred font stylesheet may not have registered its faces when a
+      // download is requested. Wait here, not during app startup.
+      Promise.resolve(document.fonts?.ready).then(finish, finish);
+    };
+    const timer = window.setTimeout(finish, 8000);
+    if (link?.dataset.fontStatus === 'loading') {
+      link.addEventListener('load', stylesheetReady);
+      link.addEventListener('error', stylesheetReady);
+    } else stylesheetReady();
+  });
 }
 
 export function fitSessionExercisePages(root) {
@@ -858,7 +910,7 @@ export async function generatePdfBlob(targetElement, title = 'CampoBase-Ficha') 
   const { jsPDF } = window.jspdf;
   const element = targetElement || document.getElementById('cb-print-root');
   if (!element) return null;
-  await document.fonts?.ready;
+  await waitForPrintFonts();
   await Promise.all([...element.querySelectorAll('img')].map((img) => img.decode?.().catch(() => {}) || Promise.resolve()));
   fitSessionExercisePages(element);
 

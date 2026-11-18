@@ -11453,8 +11453,16 @@ async function showAuth(forceInitial = false, { hydrate = true } = {}) {
 
 function ensureAuthPromptVisible() {
   if (state.role) return;
-  if (sessionStorage.getItem(SESSION_ROLE_KEY)) return;
   if (isDemoDatabase()) return;
+  const previousRole = sessionStorage.getItem(SESSION_ROLE_KEY);
+  if (previousRole) {
+    // A returning owner may type the local PIN while remote restoration runs.
+    const owner = getBoundSaasUserId();
+    if (previousRole === 'owner' && owner && currentDatabaseName() === `campobase_${owner}`
+        && viewAccountIsCurrent() && state.dataLoaded && state.settings?.ownerPinHash
+        && state.settings?.delegatePinHash && hasUsableTeamSnapshot(state)) void showAuth(false, { hydrate: false });
+    return;
+  }
   void showAuth();
 }
 
@@ -11475,6 +11483,73 @@ async function completePinLogin(role, pin, userId = '', authenticated = false) {
     accessUserId = session.user.id;
   };
   const effectiveUserId = userId || getBoundSaasUserId() || state.settings?.saasUserId || getRememberedSaasAccount()?.id || '';
+  // A verified owner PIN may open only the already loaded, explicitly bound
+  // account. SDK getSession can wait for a token refresh on a weak connection.
+  // Delegates, legacy data and account switches still take the remote path.
+  const localOwnerId = accessUserId;
+  const localOwnerReady = () => {
+    let lastRole = '';
+    try { lastRole = localStorage.getItem('campobase.lastAuthRole') || ''; } catch { return false; }
+    return role === 'owner' && !authenticated && Boolean(localOwnerId)
+      && effectiveUserId === localOwnerId && getBoundSaasUserId() === localOwnerId
+      && state.dataLoaded === true && currentDatabaseName() === `campobase_${localOwnerId}`
+      && viewAccountIsCurrent() && hasUsableTeamSnapshot(state)
+      && (state.role === null || state.role === 'owner') && state.delegateMode !== true
+      && (!lastRole || lastRole === 'owner')
+      && Boolean(state.settings?.pinSalt && state.settings?.ownerPinHash);
+  };
+  if (localOwnerReady()) {
+    const { pinSalt, ownerPinHash } = state.settings;
+    const [validPin, boundSettings] = await Promise.all([
+      verifyPin(String(pin || '').trim(), pinSalt, ownerPinHash),
+      getOne('settings', 'main'),
+    ]);
+    assertAccess();
+    if (!localOwnerReady() || state.settings.pinSalt !== pinSalt || state.settings.ownerPinHash !== ownerPinHash) {
+      const error = new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+      error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+      throw error;
+    }
+    if (!validPin || boundSettings?.pinSalt !== pinSalt || boundSettings?.ownerPinHash !== ownerPinHash) {
+      throw new Error('No se ha podido validar el PIN para este equipo.');
+    }
+    if (!finishPinAccess(accessRevision)) throw new Error('El acceso ha cambiado. Introduce de nuevo tu PIN.');
+    configureRealDatabase();
+    applyRole('owner');
+    $('#auth-dialog')?.close();
+    renderAll();
+
+    void (async () => {
+      try {
+        const assertLocalOwner = session => {
+          assertAccess();
+          if (getBoundSaasUserId() !== localOwnerId || currentDatabaseName() !== `campobase_${localOwnerId}`
+              || !viewAccountIsCurrent() || (session && (session.user?.id !== localOwnerId
+              || session.user?.app_metadata?.campobase_role === 'delegate_pin'))) {
+            const error = new Error('La cuenta ha cambiado. Se conserva la copia local.');
+            error.code = 'CAMPOBASE_CONTEXT_CHANGED';
+            throw error;
+          }
+        };
+        if (navigator.onLine === false) return;
+        const client = getSupabaseAuthClient();
+        let session = await getCurrentSession(client);
+        assertLocalOwner(session);
+        if (!session) {
+          session = await signInWithCampoBasePin(client, localOwnerId, pin, 'owner');
+          assertLocalOwner(session);
+          if (!session?.user?.id) throw new Error('No se pudo renovar la conexión del equipo.');
+        }
+        try { sessionStorage.setItem('campobase.saasActiveBrowserSession', localOwnerId); } catch {}
+        // The shared sync refreshes changed data and defers rendering while editing.
+        await synchronizeCloud();
+        assertLocalOwner();
+      } catch (error) {
+        console.warn('Acceso PIN con copia local: sincronización secundaria en segundo plano:', error);
+      }
+    })();
+    return;
+  }
   const currentSession = role === 'owner' && !authenticated
     ? await getCurrentSession(getSupabaseAuthClient()).catch(() => null) : null;
   assertAccess();
@@ -14581,9 +14656,9 @@ async function init() {
         return;
       }
       if (!wasControlled) sessionStorage.removeItem(reloadKey);
-    } else {
-      // index.html gestiona la activación y la recarga controlada del Service Worker.
-      navigator.serviceWorker.register('./sw.js?v=20261117-calendar-rests-1').then((reg) => {
+    } else if (!window.__CAMPOBASE_SW_UPDATE_SCHEDULED) {
+      // Fallback for shells without the deferred updater in index.html.
+      navigator.serviceWorker.register('./sw.js?v=20261118-mobile-start-1').then((reg) => {
         reg.update().catch(() => {});
       }).catch(handleError);
     }

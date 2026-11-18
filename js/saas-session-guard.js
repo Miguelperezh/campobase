@@ -1,4 +1,4 @@
-import { clearBoundSaasUserId, getBoundSaasUserId, getCurrentSession } from './auth-manager.js';
+import { clearBoundSaasUserId, getBoundSaasUserId, getCurrentSession, getPinAccessRevision, isPinAccessSession, isPinAccessLocked } from './auth-manager.js';
 
 function waitForApp(timeoutMs = 12000) {
   return new Promise((resolve) => {
@@ -34,11 +34,18 @@ export async function guardSaasSession(client) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return true;
   const boundUserId = getBoundSaasUserId();
   if (!boundUserId) return true;
+  // The PIN controller already verified this visible access and owns its
+  // background renewal. An older SDK identity must not undo that decision.
+  if (isPinAccessSession() && !isPinAccessLocked()
+      && ['owner', 'delegate'].includes(window.__campobase?.state?.role)) return true;
+  const accessRevision = getPinAccessRevision();
 
   // Si hay una sesión activa con otro usuario diferente, actualizamos/limpiamos el enlace.
   // Si la sesión ha expirado o el móvil está desconectado, conservamos el vínculo
   // para que el PIN local pueda renovar la sesión en Supabase con signInWithCampoBasePin.
   const session = await getCurrentSession(client).catch(() => null);
+  // A delayed restoration must not clear a different account or a newer PIN.
+  if (boundUserId !== getBoundSaasUserId() || accessRevision !== getPinAccessRevision()) return true;
   if (session?.user?.id && session.user.id !== boundUserId) {
     clearBoundSaasUserId();
   }

@@ -45,7 +45,7 @@ test('completePinLogin abre la app inmediatamente si el dispositivo ya tiene dat
 
 test('Service Worker entrega imágenes y portadas con Cache-First para velocidad en móvil', () => {
   assert.match(swCode, /isImageOrStaticAsset/);
-  assert.match(swCode, /caches\.match\(event\.request\)\.then\(\(cached\) =>/);
+  assert.match(swCode, /if \(cached\) return \{ response: cached, stored: media \? refreshOldMedia/);
   assert.match(swCode, /\/library-v2\//);
 });
 
