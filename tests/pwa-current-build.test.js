@@ -21,13 +21,15 @@ test('index app cloud y service worker apuntan al mismo build actual', () => {
 test('el HTML puede actualizar el service worker aunque un bundle anterior falle', () => {
   assert.match(html, /window\.__CAMPOBASE_BUILD/);
   assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=/);
-  assert.match(html, /registration\.update\(\)/);
+  assert.match(html, /setTimeout\(startUpdate, 8000\)/);
+  assert.match(html, /__CAMPOBASE_SW_UPDATE_SCHEDULED/);
   assert.match(html, /controllerchange/);
 });
 
-test('las navegaciones de la PWA intentan siempre HTML actual desde red', () => {
+test('las navegaciones usan la versión activa y verifican el HTML al recuperarlo', () => {
   assert.match(sw, /event\.request\.mode === 'navigate'/);
-  assert.match(sw, /fetch\(event\.request, \{ cache: 'no-store' \}\)/);
+  assert.match(sw, /matchingShellHtml\(response\)/);
+  assert.match(sw, /caches\.open\(media \? MEDIA_CACHE : CACHE\)/);
 });
 
 test('refresh no contiene la regresión normalizePlayerName ni borra jugadores automáticamente', () => {
