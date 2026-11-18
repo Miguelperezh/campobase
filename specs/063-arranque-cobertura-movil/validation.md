@@ -20,3 +20,16 @@ Las mediciones aisladas prueban cada dependencia; no deben presentarse como prom
 - 1007 pruebas Node y sintaxis correctas. Se cubren instalación incompleta, nuevas versiones, peticiones retenidas, expiración, cambio de identidad durante el PIN, cachés ajenas, carga PDF bajo demanda y compatibilidad.
 - Smoke v19 correcto. Exportación real de PDF desde Chrome a 1440 y 390 píxeles. Se mantienen hoja A4, escudo y colores configurados.
 - Se adelanta la lectura de los dos módulos grandes del catálogo para solaparla con las dependencias iniciales. En la primera visita sigue haciendo falta descargar el catálogo.
+
+## Publicación y medición en producción
+
+[PR 148](https://github.com/Miguelperezh/campobase/pull/148) integrada en `main` en `6b6d54d9`. [Publicación correcta](https://github.com/Miguelperezh/campobase/actions/runs/44348083699) del build `20261118-mobile-start-1`. Se cotejaron por SHA-256 el HTML, el worker, la aplicación, las dos piezas de acceso y la exportación PDF con los archivos publicados.
+
+Mismo Chrome de 390 px, CPU x4 y conexión simulada que en la medición inicial. Tiempo desde navegación hasta datos locales cargados. Una observación por escenario y versión, sin utilizar una cuenta real.
+
+| Apertura | Anterior | Publicada |
+| --- | ---: | ---: |
+| Primera visita, sin copia instalada | 11,129 s | 9,760 s |
+| Reapertura con versión instalada | 1,668 s | 0,542 s |
+
+La primera visita pasó de 362 a 153 peticiones del contexto hasta datos cargados. Las dos mediciones devolvieron la versión esperada y la segunda apertura estuvo controlada por el worker. Sin errores JavaScript. En prueba de red retenida independiente, carga local en 140 ms y sin red en 139 ms, 143 módulos de la copia instalada. El formulario real del titular de prueba desbloqueó su cuenta local offline en 92 ms desde el inicio de la interacción. El delegado sigue necesitando verificar sus permisos vigentes.
