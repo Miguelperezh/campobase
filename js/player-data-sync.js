@@ -3,7 +3,7 @@
 // se recalcula desde esos registros después de cada mutación, incluso si el usuario
 // dejó un <details> abierto y el render general de app.js decidió no repintar.
 
-import { getAll, putBatch } from './db.js';
+import { getAll, put, captureStorageGuard } from './db.js';
 import {
   applyPlayerStatAdjustments,
   buildPlayerHistory,
@@ -147,7 +147,7 @@ function patchPlayerCard(card, player, matches, trainings, callups) {
   return { league, preseason };
 }
 
-async function reconcileDerivedPlayerRecords(players, matches) {
+async function reconcileDerivedPlayerRecords(players, matches, assertContext) {
   if (deriving) return;
   const updates = [];
   for (const player of players) {
@@ -159,22 +159,36 @@ async function reconcileDerivedPlayerRecords(players, matches) {
       && sameJson(player.ratingHistory, derived.ratingHistory)
       && sameJson(player.minuteReasons, derived.minuteReasons)
     ) continue;
-    updates.push({ ...player, ...derived });
+    updates.push({ player, derived });
   }
   if (!updates.length) return;
   deriving = true;
-  try { await putBatch({ players: updates }); }
+  try {
+    for (const { player, derived } of updates) {
+      try {
+        await put('players', { ...player, ...derived }, {
+          assertContext, waitForCloud: false,
+          expectedRecords: [{ store: 'players', id: player.id, record: player }],
+        });
+      } catch (error) {
+        if (error.code !== 'CAMPOBASE_RECORD_CHANGED') throw error;
+      }
+    }
+  }
   finally { deriving = false; }
 }
 
 export async function syncPlayerCards({ reconcile = false } = {}) {
+  const assertContext = captureStorageGuard();
   const root = $('#players-list');
   const [players, matches, trainings, callups] = await Promise.all(['players', 'matches', 'trainings', 'callups'].map(getAll));
   const currentMatchIds = new Set(matches.map((match) => match.id));
   const currentCallups = callups.filter((callup) => !callup.matchId || currentMatchIds.has(callup.matchId));
   const currentTrainings = trainings.filter((record) => !record.matchId || currentMatchIds.has(record.matchId));
 
-  if (reconcile) await reconcileDerivedPlayerRecords(players, matches);
+  assertContext();
+  if (reconcile) await reconcileDerivedPlayerRecords(players, matches, assertContext);
+  assertContext();
   if (!root) return;
   const byId = new Map(players.map((player) => [player.id, player]));
   let squadMinutes = 0;

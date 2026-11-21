@@ -193,6 +193,44 @@ window.runPilotDatabaseCases=async()=>{
  output.textContent+='\nFINAL: '+window.pilotDatabaseResult.checks+' comprobaciones correctas; solo datos ficticios y nube simulada.';
  return window.pilotDatabaseResult;
 };
+// Interleave actual IndexedDB transactions and delayed reads using fictitious data.
+window.runPlayerDeleteRaces=async()=>{
+ const fixtureUser='delete-race-fixture',name=auth.userDatabaseName(fixtureUser);
+ db.configureCloudStore(null);activate(fixtureUser);
+ const {syncPlayerCards}=await import('/js/player-data-sync.js?verifyDelete=1');
+ // Let the decorator's initial refresh finish on the empty team.
+ await new Promise(resolve=>setTimeout(resolve,180));
+ const player={id:'target',name:'Jugador de prueba',totalMinutes:99};
+ const other={id:'other',name:'Otro jugador',totalMinutes:12};
+ const cloudOnly={id:'new',name:'Alta remota'};
+ await seed(name,{...empty(),players:[player,other]});
+ const started=deferred(),release=deferred(),sent=[];
+ db.configureCloudStore({
+   prepare:async()=>({userId:fixtureUser,delegate:false}),
+   remove:async mutation=>{sent.push(mutation);},
+   getSnapshot:async store=>{
+     if(store!=='players')return {records:[],rowCount:0,deletedIds:[]};
+     started.resolve();await release.promise;
+     return {records:[player,other,cloudOnly],rowCount:3,deletedIds:[]};
+   }
+ });
+ const downloading=db.syncFromCloud();await started.promise;
+ await db.remove('players',player.id);
+ const acknowledged=sent.length===1&&(await db.getAll('syncQueue')).length===0;
+ release.resolve();await downloading;
+ const snapshotSafe=acknowledged&&!(await db.getOne('players',player.id))&&Boolean(await db.getOne('players',cloudOnly.id));
+ db.configureCloudStore(null);
+ await seed(name,{...empty(),players:[player,other]});
+ const read=holdRead(name,'players'),updating=syncPlayerCards({reconcile:true});
+ await read.started;await db.remove('players',player.id);read.release();await updating;
+ const recalculationSafe=!(await db.getOne('players',player.id))&&(await db.getOne('players',other.id))?.totalMinutes===0
+   &&(await db.getOne('syncQueue','players:target'))?.operation==='delete';
+ const edited={...player,name:'Editado en otra pestaña'};
+ await seed(name,{players:[edited,other],syncQueue:[]});
+ const conflict=await db.remove('players',player.id,{expectedRecord:player}).then(()=>null,error=>error.code);
+ const confirmationSafe=conflict==='CAMPOBASE_RECORD_CHANGED'&&same(await db.getOne('players',player.id),edited)&&(await db.getAll('syncQueue')).length===0;
+ return {snapshotSafe,recalculationSafe,confirmationSafe};
+};
 window.reopenPilotRecovery=async()=>{activate(A);const recovery=await db.getImportRecoveryBackup();return {before:recovery.data.players[0].id,current:(await db.getAll('players'))[0].id};};
 document.querySelector('#run').onclick=()=>window.runPilotDatabaseCases().catch(error=>{output.textContent+='\nERROR: '+error.stack;throw error;});
 </script></body></html>
