@@ -19,7 +19,7 @@ try {
   await context.route('**/*',async route=>{
    const url=new URL(route.request().url());
    if(url.origin!=='https://campobase.test'){external.push(url.origin);return route.abort();}
-   if(decorators.has(url.pathname))return route.fulfill({status:200,body:'export {};',contentType:'text/javascript'});
+   if(decorators.has(url.pathname)&&!url.searchParams.has('verifyDelete'))return route.fulfill({status:200,body:'export {};',contentType:'text/javascript'});
    const file=path.resolve(source,'.'+decodeURIComponent(url.pathname));
    if(!file.startsWith(source+path.sep))return route.fulfill({status:403,body:''});
    try {return route.fulfill({status:200,body:await fs.readFile(file),contentType:file.endsWith('.html')?'text/html':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':'application/octet-stream'});}
@@ -32,6 +32,8 @@ try {
   assert.ok(result.checks>=27,`Faltan casos de protección a ${width}px`);
   await page.reload();await page.waitForFunction(()=>typeof window.reopenPilotRecovery==='function');
   assert.deepEqual(await page.evaluate(()=>window.reopenPilotRecovery()),{before:'after',current:'before'});
+  const deleteRaces=await page.evaluate(()=>window.runPlayerDeleteRaces());
+  assert.deepEqual(deleteRaces,{snapshotSafe:true,recalculationSafe:true,confirmationSafe:true});
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
   console.log(`PASS ${width}px: ${result.checks} comprobaciones IndexedDB A/B, PIN/rol, colas, importación atómica y respaldo recuperado tras recarga; 0 solicitudes externas.`);
   await context.close();

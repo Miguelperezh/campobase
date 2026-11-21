@@ -1998,3 +1998,8 @@ El delegado recibe solo lectura bajo su permiso Calendario ya vigente; no se con
 ## SDD063 — Arranque con cobertura móvil (18/11/2026)
 Mostrar copia autorizada sin esperar fuentes, PDF, actualización de código o renovación de sesión. Código offline exclusivamente de la caché de la versión activa y completa; instalar cada archivo físico una vez, con concurrencia limitada y URLs históricas conservadas. Un fallo no activa media versión ni borra medios propios o cachés ajenas. Actualizar después del primer render y no recargar primera instalación o usuario con formularios/directo activos.
 El PIN titular local exige hash actual, cuenta explícita, base y snapshot actuales; delegado/legacy/copia ausente mantienen autorización remota. Revalidar cuenta/revisión tras cada espera, incluida la cadena guard→init SaaS. No rebind desde sesiones inesperadas ni ampliar permisos. Fuentes configurables no bloquean apertura; PDF bajo demanda conserva modelo y espera fuentes solo al exportar. Pruebas con red retenida, offline y A/B no sustituyen móviles físicos. Ver specs/063-arranque-cobertura-movil para evidencia, límites y publicación. Sin DML, borrados de IndexedDB ni cambios de preferencias.
+
+
+## SDD064 — Baja individual desde Plantilla
+
+El titular confirma la baja por ficha, nombre y dorsal. Validar identidad de equipo, rol, revisión del PIN y valor de la ficha dentro de la operación de borrado. Conservar los registros de partidos, convocatorias y asistencias. La baja local y su envío pendiente comparten transacción. Un recálculo o una descarga iniciados antes de la baja deben respetarla incluso si ya se confirmó en la nube. Probar con datos ficticios y comprobar la entrega pública sin borrar jugadores reales.

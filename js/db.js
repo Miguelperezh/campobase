@@ -69,6 +69,9 @@ function assertStorageContext(context, openedDatabase) {
 function operationGuard(context, external) {
   return databaseName=>{external?.(databaseName);assertStorageContext(context,databaseName);};
 }
+export function captureStorageGuard() {
+  return operationGuard(storageContext());
+}
 async function contextDatabase(context) {
   assertStorageContext(context);
   activeDatabaseName=context.database;
@@ -425,11 +428,18 @@ export async function putBatch(recordsByStore, { assertContext } = {}) {
   queueCloudUpload(context);
 }
 
-export async function remove(store, id, { assertContext, waitForCloud = true } = {}) {
+export async function remove(store, id, { assertContext, waitForCloud = true, expectedRecord } = {}) {
   const context=storageContext(), guard=operationGuard(context,assertContext);
   guard();
   if (store === 'settings' && id === IMPORT_RECOVERY_ID) throw new TypeError('El respaldo local solo se administra mediante la importación.');
+  const verifyRecord = current => {
+    if (expectedRecord === undefined || (current && JSON.stringify(current) === JSON.stringify(expectedRecord))) return;
+    const error = new Error('La ficha ha cambiado. Vuelve a abrirla y revisa sus datos antes de borrarla.');
+    error.code = 'CAMPOBASE_RECORD_CHANGED';
+    throw error;
+  };
   if (isDemoDatabase()) {
+    verifyRecord(demoStores[store].get(id));
     demoStores[store].delete(id);
     notifyDataChanged(store, 'delete');
     return;
@@ -439,9 +449,23 @@ export async function remove(store, id, { assertContext, waitForCloud = true } =
   const db = await contextDatabase(context);
   guard(db.name);
   const transaction = db.transaction([store, SYNC_QUEUE], 'readwrite');
-  transaction.objectStore(store).delete(id);
-  transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
-  await transactionDone(transaction);
+  const target = transaction.objectStore(store);
+  let conflict;
+  const performDelete = () => {
+    guard(db.name);
+    target.delete(id);
+    transaction.objectStore(SYNC_QUEUE).put(buildMutation(store, 'delete', id));
+  };
+  if (expectedRecord === undefined) performDelete();
+  else {
+    const read = target.get(id);
+    read.onsuccess = () => {
+      try { verifyRecord(read.result); performDelete(); }
+      catch (error) { conflict = error; transaction.abort(); }
+    };
+  }
+  try { await transactionDone(transaction); }
+  catch (error) { throw conflict || error; }
   queueCloudUpload(context);
   if (waitForCloud && canUseCloud()) await flushSyncQueue(cloudOptions(context));
   notifyDataChanged(store, 'delete');
@@ -532,7 +556,19 @@ async function flushQueuedMutations(context) {
   return true;
 }
 
-async function replaceLocalStore(store, cloudRecords, deletedIds = [], mirror = null, context=storageContext()) {
+// A delete can be acknowledged (and disappear from the queue) while a cloud read is in flight.
+async function playerKeysBeforeDownload(context) {
+  const db = await contextDatabase(context);
+  const tx = db.transaction(['players', SYNC_QUEUE], 'readonly');
+  const [keys, pending] = await Promise.all([
+    requestResult(tx.objectStore('players').getAllKeys()),
+    requestResult(tx.objectStore(SYNC_QUEUE).getAllKeys(IDBKeyRange.bound('players:', 'players;', false, true))),
+  ]);
+  const roster = new Set(keys), mutations = new Set(pending);
+  return id => roster.has(id) || mutations.has(`players:${id}`);
+}
+
+async function replaceLocalStore(store, cloudRecords, deletedIds = [], mirror = null, context=storageContext(), knownPlayer = null) {
   const db = await contextDatabase(context);
 
   // Safari/iOS puede cerrar una transacción IndexedDB si se cede el control
@@ -565,7 +601,9 @@ async function replaceLocalStore(store, cloudRecords, deletedIds = [], mirror = 
       const localRecovery = store === 'settings' ? localRecords.filter(isLocalRecovery) : [];
       const allowedPending = pendingMutations.filter(m => !m.blockedAt && !(m.store === 'settings' && (m.recordId === IMPORT_RECOVERY_ID || isLocalRecovery(m.payload))) && (!mirror || canWriteMutation(m,mirror.permissions||[])));
       // The delegate receives a filtered replica, never an initial seed or owner settings merge.
-      const reconciledRecords = reconcileCloudSnapshot(store, mirror ? [] : visibleRecords(store,localRecords), visibleRecords(store,cloudRecords), allowedPending, deletedIds);
+      const localIds = knownPlayer ? new Set(localRecords.map(record => record.id)) : null;
+      const incoming = knownPlayer ? cloudRecords.filter(record => localIds.has(record.id) || !knownPlayer(record.id)) : cloudRecords;
+      const reconciledRecords = reconcileCloudSnapshot(store, mirror ? [] : visibleRecords(store,localRecords), visibleRecords(store,incoming), allowedPending, deletedIds);
       objectStore.clear();
       for (const record of reconciledRecords) objectStore.put(record);
       for (const record of localRecovery) objectStore.put(record);
@@ -592,12 +630,21 @@ async function queueInitialRecords(store, records, context=storageContext()) {
   records=visibleRecords(store,records);
   if (!records.length) return;
   const db = await contextDatabase(context);
-  const transaction = db.transaction(SYNC_QUEUE, 'readwrite');
+  const transaction = db.transaction(store === 'players' ? [store, SYNC_QUEUE] : [SYNC_QUEUE], 'readwrite');
   const queue = transaction.objectStore(SYNC_QUEUE);
   for (const record of records) {
     const mutation = buildMutation(store, 'upsert', record);
-    const request = queue.get(mutation.id);
-    request.onsuccess = () => {try {assertStorageContext(context,db.name);if (!request.result) queue.put(mutation);}catch(error){transaction.abort();}};
+    const enqueue = () => {
+      const request = queue.get(mutation.id);
+      request.onsuccess = () => {
+        try { assertStorageContext(context,db.name); if (!request.result) queue.put(mutation); }
+        catch { transaction.abort(); }
+      };
+    };
+    if (store === 'players') {
+      const exists = transaction.objectStore(store).getKey(record.id);
+      exists.onsuccess = () => { if (exists.result !== undefined) enqueue(); };
+    } else enqueue();
   }
   await transactionDone(transaction);
 }
@@ -654,7 +701,9 @@ export async function syncFromCloud() {
       let downloaded = 0;
       let hasChanges = false;
       for (const store of STORES) {
-          assertActor();
+        assertActor();
+        const knownPlayer = store === 'players' ? await playerKeysBeforeDownload(context) : null;
+        assertActor();
         const snapshot = await adapter.getSnapshot(store,cloudOptions(context));
           assertActor();
         if (getBoundSaasUserId() !== syncUserId) return {online:false,changed:false,accessChanged:true};
@@ -714,7 +763,7 @@ export async function syncFromCloud() {
         })();
         if (!areEquivalent) {
           hasChanges = true;
-          await replaceLocalStore(store, snapshot.records, snapshot.deletedIds || [],null,context);
+          await replaceLocalStore(store, snapshot.records, snapshot.deletedIds || [],null,context,knownPlayer);
         }
         downloaded += snapshot.records.length;
       }
