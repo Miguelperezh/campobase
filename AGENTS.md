@@ -4760,3 +4760,7 @@ El PIN titular local exige hash actual, cuenta explícita, base y snapshot actua
 ## SDD064 — Baja individual desde Plantilla
 
 El titular confirma la baja por ficha, nombre y dorsal. Validar identidad de equipo, rol, revisión del PIN y valor de la ficha dentro de la operación de borrado. Conservar los registros de partidos, convocatorias y asistencias. La baja local y su envío pendiente comparten transacción. Un recálculo o una descarga iniciados antes de la baja deben respetarla incluso si ya se confirmó en la nube. Probar con datos ficticios y comprobar la entrega pública sin borrar jugadores reales.
+
+## SDD065 — Retirada de las pruebas aisladas
+
+Las antiguas rutas de maqueta y validación se retiraron del sitio oficial. Sus versiones se pueden recuperar del historial. Antes de retirar una vista previa, comprobar si se usa como portada de ejercicio, recurso sin conexión o prueba de regresión. El piloto de familias se gestiona por separado.
